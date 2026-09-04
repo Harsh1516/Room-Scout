@@ -1,0 +1,278 @@
+@import "tailwindcss";
+
+/* Updated for Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: dark light;
+}
+
+/* Hide scrollbar for Chrome, Safari, Edge, and Opera */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  scroll-behavior: smooth;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Utility to completely hide scrollbars while preserving scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+/* Prevent ugly browser default square focus outlines around rounded buttons */
+button:focus, button:focus-visible {
+  outline: none;
+}
+
+/* Responsive Root Typography & Element Scaling for Ultra-Compact Mobile/Split-Screen Ratio */
+@media (max-width: 640px) {
+  html {
+    font-size: 13.5px;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  html {
+    font-size: 11px;
+  }
+}
+
+/* Translucent Glass Nav (Frosted Glass Capsule with Decreased Transparency) */
+.apple-liquid-nav {
+  background: rgba(255, 255, 255, 0.55) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.65) !important;
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.08),
+    inset 0 1px 1.5px rgba(255, 255, 255, 0.8),
+    inset 0 -1px 1.5px rgba(0, 0, 0, 0.02) !important;
+}
+
+.dark .apple-liquid-nav {
+  background: rgba(15, 23, 42, 0.65) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 
+    0 15px 35px rgba(0, 0, 0, 0.35),
+    inset 0 1px 1.5px rgba(255, 255, 255, 0.14),
+    inset 0 -1px 1.5px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Apple iOS Crystal Transparent Glass Console Capsule with Defined Floating Shadow */
+.console-clear-capsule {
+  background: rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.45) !important;
+  box-shadow: 
+    0 14px 34px -4px rgba(0, 0, 0, 0.16),
+    0 4px 12px -2px rgba(0, 0, 0, 0.08),
+    inset 0 1px 1px rgba(255, 255, 255, 0.9),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.03) !important;
+}
+
+.dark .console-clear-capsule {
+  background: rgba(15, 23, 42, 0.18) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 
+    0 18px 45px -6px rgba(0, 0, 0, 0.75),
+    0 6px 18px -2px rgba(0, 0, 0, 0.45),
+    inset 0 1px 1px rgba(255, 255, 255, 0.20),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Translucent Glass Dropdown Popouts (Light Balanced Translucency & Glossy Luster) */
+.apple-liquid-dropdown {
+  background: rgba(255, 255, 255, 0.28) !important;
+  backdrop-filter: blur(10px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(150%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.45) !important;
+  box-shadow: 
+    0 20px 40px -10px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.25),
+    inset 0 1px 1.5px rgba(255, 255, 255, 0.7),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.02) !important;
+}
+
+.dark .apple-liquid-dropdown {
+  background: rgba(15, 23, 42, 0.35) !important;
+  backdrop-filter: blur(10px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(150%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 
+    0 20px 40px -10px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 1px 1.5px rgba(255, 255, 255, 0.1),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Translucent Profile Menu (Deep Optical Diffusion & Glossy Luster) */
+.apple-profile-dropdown {
+  background: rgba(255, 255, 255, 0.94) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 
+    0 25px 50px -10px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.95),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.03) !important;
+}
+
+.dark .apple-profile-dropdown {
+  background: rgba(15, 23, 42, 0.94) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 
+    0 25px 50px -10px rgba(0, 0, 0, 0.65),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.18),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Cyan Status Glow Dot */
+.cyan-glow-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 9999px;
+  background-color: #22d3ee;
+  box-shadow: 0 0 10px #22d3ee;
+}
+
+/* High Contrast Drop Shadow for Readable Glass Text */
+.glass-text-shadow {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Frosted Blurred Active Nav Pills */
+.apple-glass-pill {
+  background-color: rgba(6, 166, 184, 0.6);  
+  backdrop-filter: blur(13px) saturate(190%);
+  -webkit-backdrop-filter: blur(13px) saturate(190%);  
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    inset 0 1px 1px rgba(255, 255, 255, 0.1);    
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ⚡ MAXIMUM SMOOTH 60FPS / 120FPS MOBILE PERFORMANCE & ZERO-LAG TOUCH */
+@media (max-width: 768px) {
+  *, ::before, ::after {
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none;
+  }
+
+  /* Disable expensive real-time backdrop blur compositing on mobile for native 60fps/120fps motion */
+  .apple-liquid-nav,
+  .apple-liquid-dropdown,
+  .apple-profile-dropdown,
+  .apple-glass-pill,
+  .console-clear-capsule {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    transform: translate3d(0, 0, 0) !important;
+    backface-visibility: hidden !important;
+    will-change: transform, opacity !important;
+  }
+
+  /* Solid crisp glass fallbacks for instant zero-lag mobile rendering */
+  .apple-liquid-nav {
+    background: rgba(255, 255, 255, 0.98) !important;
+  }
+  .dark .apple-liquid-nav {
+    background: rgba(15, 23, 42, 0.98) !important;
+  }
+
+  .apple-liquid-dropdown {
+    background: rgba(255, 255, 255, 0.98) !important;
+  }
+  .dark .apple-liquid-dropdown {
+    background: rgba(15, 23, 42, 0.98) !important;
+  }
+
+  .apple-profile-dropdown {
+    background: rgba(255, 255, 255, 0.98) !important;
+  }
+  .dark .apple-profile-dropdown {
+    background: rgba(15, 23, 42, 0.98) !important;
+  }
+
+  .console-clear-capsule {
+    background: rgba(255, 255, 255, 0.95) !important;
+  }
+  .dark .console-clear-capsule {
+    background: rgba(15, 23, 42, 0.95) !important;
+  }
+
+  button, a, [role="button"] {
+    touch-action: manipulation !important;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Circulating Google Colors Animated Border (Red, Blue, Green, Yellow) */
+@keyframes googleBorderSpin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+.google-circulating-border-wrapper {
+  position: relative;
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.google-circulating-border-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 280px;
+  height: 280px;
+  background: conic-gradient(
+    from 0deg,
+    #ea4335 0%,
+    #4285f4 25%,
+    #34a853 50%,
+    #fbbc05 75%,
+    #ea4335 100%
+  );
+  animation: googleBorderSpin 3.5s linear infinite;
+  pointer-events: none;
+  border-radius: 50%;
+}
