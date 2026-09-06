@@ -104,13 +104,15 @@ const propertySubSchema = new mongoose.Schema(
     availableRooms: {
       type: Number,
       default: 0,
+      min: 0,
     },
     totalRooms: {
       type: Number,
       default: 0,
+      min: 0,
     },
     price: {
-      type: String,
+      type: mongoose.Schema.Types.Mixed,
       default: '₹4,000',
     },
     rateUnit: {
@@ -154,37 +156,30 @@ const propertySubSchema = new mongoose.Schema(
   { _id: false }
 );
 
-// 🛏️ Default Room Sub-Schema
+// 🛏️ Option A: Clean Room Inventory Sub-Schema (Zero Booking/Guest Duplication)
 const roomSubSchema = new mongoose.Schema(
   {
     id: { type: String },
-    roomNumber: { type: String },
+    roomNumber: { type: String, trim: true },
     roomNumInt: { type: Number },
-    status: { type: String, default: 'Available' },
-    type: { type: String },
-    price: { type: String },
+    status: {
+      type: String,
+      enum: ['Available', 'Occupied', 'Maintenance'],
+      default: 'Available',
+    },
+    type: { type: String, trim: true },
+    price: { type: mongoose.Schema.Types.Mixed, default: '₹4,000' },
     rateUnit: { type: String, default: '/month' },
-    floor: { type: String },
+    floor: { type: String, trim: true },
     bookedDates: [{ type: String }],
     bookedMonths: [{ type: String }],
-    slotBookings: [{ type: mongoose.Schema.Types.Mixed }],
-    guestName: { type: String },
-    guestPhone: { type: String },
-    userPhone: { type: String },
-    phone: { type: String },
-    guestEmail: { type: String },
-    userEmail: { type: String },
-    guestAadhar: { type: String },
-    aadharId: { type: String },
-    adults: { type: Number },
-    children: { type: Number },
   },
   { _id: false }
 );
 
 const hostSchema = new mongoose.Schema(
   {
-    // 🏛️ Default Sub-documents (Domain Architecture)
+    // 🏛️ Domain Sub-documents
     hostDetails: {
       type: hostDetailsSubSchema,
       required: true,
@@ -198,8 +193,8 @@ const hostSchema = new mongoose.Schema(
       {
         id: { type: String },
         type: { type: String },
-        price: { type: String },
-        rateUnit: { type: String, default: '' },
+        price: { type: mongoose.Schema.Types.Mixed },
+        rateUnit: { type: String, default: '/month' },
       },
     ],
 
@@ -279,7 +274,7 @@ hostSchema.pre('save', async function (next) {
     status: currentStatus,
   };
 
-  // Sync property subdocument (ALL property fields live ONLY in this.property)
+  // Sync property subdocument
   const p = this.property || {};
   const currentPropName = p.propertyName || '';
   const currentProps = (Array.isArray(p.properties) && p.properties.length > 0)

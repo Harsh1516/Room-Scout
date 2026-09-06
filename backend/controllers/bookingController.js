@@ -59,6 +59,7 @@ export const createBooking = async (req, res, next) => {
       fullName,
       phone,
       guestGender,
+      gender,
       moveInDate,
       durationMonths,
       durationDays,
@@ -85,6 +86,8 @@ export const createBooking = async (req, res, next) => {
       children,
       guestAadhar,
       aadharId,
+      aadhar,
+      aadharNumber,
       status: clientStatus,
       paymentMethod: clientPaymentMethod,
       paymentStatus: clientPaymentStatus,
@@ -99,7 +102,8 @@ export const createBooking = async (req, res, next) => {
     const resolvedPhone = cleanDigitsPhone ? cleanDigitsPhone : (phone || userPhone || guestPhone || '').trim();
     let resolvedEmail = (email || userEmail || guestEmail || '').trim().toLowerCase();
 
-    const rawAadhar = guestAadhar || aadharId || '';
+    // Canonical Aadhaar normalization
+    const rawAadhar = aadharNumber || guestAadhar || aadharId || aadhar || '';
     const cleanAadharDigits = String(rawAadhar).replace(/\D/g, '').slice(0, 12);
     const resolvedAadhar = cleanAadharDigits.length === 12
       ? cleanAadharDigits.replace(/(\d{4})(?=\d)/g, '$1 ')
@@ -108,7 +112,6 @@ export const createBooking = async (req, res, next) => {
     if (!resolvedFullName) {
       return res.status(400).json({ message: 'User / Guest name is required to book.' });
     }
-    // Ensure name field contains text only (letters and spaces)
     if (!/^[a-zA-Z\s]{2,50}$/.test(resolvedFullName)) {
       return res.status(400).json({ message: 'Guest name must contain text/letters only (no numbers or special characters).' });
     }
@@ -119,17 +122,17 @@ export const createBooking = async (req, res, next) => {
       return res.status(400).json({ message: 'Mobile number must be a valid 10-digit number.' });
     }
 
-    // 🔒 Unique Mobile Number Enforcement: Each booking must be uniquely identified by mobile number
+    // Unique Mobile Number Check
     if (resolvedPhone && roomNumber) {
       const existingBookings = await Booking.find({
-        $or: [{ phone: resolvedPhone }, { userPhone: resolvedPhone }, { guestPhone: resolvedPhone }],
-        stayId: stayId,
+        phone: resolvedPhone,
+        stay: mongoose.Types.ObjectId.isValid(stayId) ? stayId : undefined,
         roomNumber: roomNumber,
-        status: { $nin: ['CANCELLED', 'REJECTED'] }
+        status: { $nin: ['CANCELLED', 'REJECTED'] },
       });
       if (existingBookings.length > 0) {
         return res.status(400).json({
-          message: `Duplicate Mobile Number: A reservation with mobile number ${resolvedPhone} already exists for this room. Each booking must be uniquely identified by a unique mobile number.`,
+          message: `A reservation with mobile number ${resolvedPhone} already exists for this room.`,
         });
       }
     }
@@ -138,14 +141,14 @@ export const createBooking = async (req, res, next) => {
       resolvedEmail = `${resolvedFullName.toLowerCase().replace(/\s+/g, '')}${resolvedPhone.slice(-4)}@stayhub.local`;
     }
 
-    // Determine target user id and ensure unique user record in DB
+    // Determine target user id
     let targetUserId = req.user?._id || req.user?.id || null;
     let targetUserEmail = (resolvedEmail || req.user?.email || '').toLowerCase().trim();
 
     const userQueryOr = [];
     if (resolvedPhone) userQueryOr.push({ phone: resolvedPhone });
     if (resolvedEmail) userQueryOr.push({ email: resolvedEmail });
-    
+
     let matchedUser = null;
     if (userQueryOr.length > 0) {
       matchedUser = await User.findOne({ $or: userQueryOr });
@@ -155,18 +158,17 @@ export const createBooking = async (req, res, next) => {
       targetUserId = matchedUser._id;
       targetUserEmail = matchedUser.email || resolvedEmail;
     } else if (resolvedPhone) {
-      // Auto-register unique user in DB
       const initials = resolvedFullName
         .split(' ')
         .map((n) => n[0])
         .join('')
         .slice(0, 2)
         .toUpperCase() || 'GU';
-      
+
       const salt = await bcrypt.genSalt(10);
       const randomSecret = Math.random().toString(36).slice(-8) + 'A1!';
       const autoHashedPassword = await bcrypt.hash(randomSecret, salt);
-      
+
       matchedUser = await User.create({
         name: resolvedFullName,
         email: resolvedEmail,
@@ -180,52 +182,44 @@ export const createBooking = async (req, res, next) => {
       targetUserEmail = resolvedEmail;
     }
 
-    const bookingReferenceId = clientRef || bookingId || ('STAY-' + Math.floor(100000 + Math.random() * 900000));
+    const bookingReferenceId = clientRef || bookingId || ('BK-' + Math.floor(100000 + Math.random() * 900000));
     const calculatedDuration = durationDisplay || (durationMonths ? `${durationMonths} Months` : '1 Month');
 
+    // Parse clean BSON dates
+    const resolvedCheckIn = checkIn ? new Date(checkIn) : (checkInISO ? new Date(checkInISO) : (moveInDate ? new Date(moveInDate) : new Date()));
+    const resolvedCheckOut = checkOut ? new Date(checkOut) : (checkOutISO ? new Date(checkOutISO) : undefined);
+
+    // Option A: Single canonical payload with zero field aliasing
     const bookingPayload = {
-      user: targetUserId,
-      userId: targetUserId,
-      userEmail: targetUserEmail,
-      email: targetUserEmail,
-      guestEmail: targetUserEmail,
+      user: targetUserId && mongoose.Types.ObjectId.isValid(targetUserId) ? targetUserId : undefined,
+      userId: targetUserId ? targetUserId.toString() : '',
       hostId: hostId || (req.user?.role === 'host' ? req.user?._id?.toString() : ''),
       hostEmail: hostEmail ? hostEmail.toLowerCase().trim() : (req.user?.role === 'host' ? req.user?.email?.toLowerCase().trim() : ''),
-      stayId: stayId || '',
+      stay: stayId && mongoose.Types.ObjectId.isValid(stayId) ? stayId : undefined,
       stayTitle: resolvedTitle,
       location: location || 'Nainital, Uttarakhand',
       fullName: resolvedFullName,
+      email: targetUserEmail,
       phone: resolvedPhone,
-      guestGender: guestGender || req.body.gender || 'Male',
-      gender: req.body.gender || guestGender || 'Male',
+      gender: gender || guestGender || 'Male',
+      aadharNumber: resolvedAadhar,
+      roomNumber: roomNumber || '',
+      roomType: roomType || sharingType || 'Room',
+      rateUnit: rateUnit || '/month',
       moveInDate: moveInDate || checkInISO || checkIn || new Date().toISOString().split('T')[0],
+      checkIn: resolvedCheckIn,
+      checkOut: resolvedCheckOut,
       durationMonths: Number(durationMonths) || 1,
       durationDays: Number(durationDays) || 0,
       durationDisplay: calculatedDuration,
-      sharingType: sharingType || roomType || 'Room',
+      bookedDates: Array.isArray(bookedDates) ? bookedDates : [],
+      bookedMonths: Array.isArray(bookedMonths) ? bookedMonths : [],
+      adults: Number(adults) || 1,
+      children: Number(children) || 0,
       totalAmount: Number(totalAmount) || 0,
       bookingReferenceId,
       slotBookingId: req.body.slotBookingId || '',
       bookingSource: req.body.bookingSource || 'ONLINE',
-      roomNumber: roomNumber || '',
-      roomType: roomType || '',
-      checkIn: checkIn || '',
-      checkOut: checkOut || '',
-      checkInISO: checkInISO || '',
-      checkOutISO: checkOutISO || '',
-      bookedDates: Array.isArray(bookedDates) ? bookedDates : [],
-      bookedMonths: Array.isArray(bookedMonths) ? bookedMonths : [],
-      rateUnit: rateUnit || '/month',
-      guestName: guestName || resolvedFullName,
-      userName: userName || resolvedFullName,
-      guestPhone: guestPhone || resolvedPhone,
-      userPhone: userPhone || resolvedPhone,
-      guestAadhar: resolvedAadhar,
-      aadharId: resolvedAadhar,
-      aadhar: resolvedAadhar,
-      aadharNumber: resolvedAadhar,
-      adults: Number(adults) || 1,
-      children: Number(children) || 0,
       status: clientStatus || 'CONFIRMED',
       paymentMethod: clientPaymentMethod || (req.body.bookingSource === 'OFFLINE_HOST' ? 'OFFLINE' : 'PAY_ON_ARRIVAL'),
       paymentStatus: clientPaymentStatus || (req.body.bookingSource === 'OFFLINE_HOST' ? 'PAID' : (clientPaymentMethod === 'RAZORPAY' ? 'PAID' : 'PENDING')),
@@ -239,7 +233,7 @@ export const createBooking = async (req, res, next) => {
 
     const createdMongo = await Booking.create(bookingPayload);
 
-    // 🏛️ Link booking to native User.bookedPlaces
+    // Link booking to User
     if (createdMongo && (targetUserEmail || targetUserId)) {
       const uConditions = [];
       if (targetUserEmail) uConditions.push({ email: targetUserEmail.toLowerCase() });
@@ -254,15 +248,61 @@ export const createBooking = async (req, res, next) => {
       }
     }
 
-    // Automatically decrement available rooms by 1 ONLY upon confirmed booking
-    if (createdMongo.status === 'CONFIRMED' || createdMongo.status === 'APPROVED') {
-      await adjustAvailableRooms(createdMongo.hostEmail, createdMongo.stayId, -1);
+    // Option A: Update room status in Stay and Host directly (NO slotBookings array bloat)
+    if (roomNumber && (createdMongo.status === 'CONFIRMED' || createdMongo.status === 'APPROVED')) {
+      if (stayId && mongoose.Types.ObjectId.isValid(stayId)) {
+        await Stay.updateOne(
+          { _id: stayId, 'rooms.roomNumber': roomNumber },
+          { $set: { 'rooms.$.status': 'Occupied' } }
+        ).catch(() => {});
+      }
+      if (hostEmail) {
+        await Host.updateOne(
+          { email: hostEmail.toLowerCase().trim(), 'rooms.roomNumber': roomNumber },
+          { $set: { 'rooms.$.status': 'Occupied' } }
+        ).catch(() => {});
+      }
+      await adjustAvailableRooms(createdMongo.hostEmail, stayId, -1);
     }
 
-    console.log(`✅ Booking Confirmed in bookings collection [${targetUserEmail || targetUserId}]: ${resolvedTitle} (Room ${roomNumber})`);
     return res.status(201).json(createdMongo);
   } catch (error) {
     console.error('Booking Creation Error:', error);
+    return next(error);
+  }
+};
+
+// @desc    Get all bookings for a specific host (Direct from Booking collection)
+// @route   GET /api/bookings/host-bookings
+// @access  Private (Host)
+export const getHostBookings = async (req, res, next) => {
+  try {
+    const hostIdentifier = req.user?._id?.toString() || req.user?.id;
+    const hostEmail = (req.user?.email || '').toLowerCase().trim();
+
+    const queryOr = [];
+    if (hostIdentifier) queryOr.push({ hostId: hostIdentifier });
+    if (hostEmail) queryOr.push({ hostEmail });
+
+    if (queryOr.length === 0) {
+      return res.json([]);
+    }
+
+    const bookings = await Booking.find({
+      $or: queryOr,
+      status: { $ne: 'CANCELLED' },
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const mapped = bookings.map((b) => ({
+      ...b,
+      id: b._id?.toString() || b.id,
+      _id: b._id?.toString() || b.id,
+    }));
+
+    return res.json(mapped);
+  } catch (error) {
     return next(error);
   }
 };
@@ -295,10 +335,10 @@ export const updateBookingStatus = async (req, res, next) => {
       guestGender,
     } = req.body;
 
-    const newName = userName || fullName || guestName;
-    const newPhone = userPhone || phone || guestPhone;
-    const newEmail = userEmail || email || guestEmail;
-    const rawAadhar = guestAadhar || aadharId || aadhar || aadharNumber;
+    const newName = fullName || userName || guestName;
+    const newPhone = phone || userPhone || guestPhone;
+    const newEmail = email || userEmail || guestEmail;
+    const rawAadhar = aadharNumber || guestAadhar || aadharId || aadhar;
     const cleanAadharDigits = rawAadhar ? String(rawAadhar).replace(/\D/g, '').slice(0, 12) : '';
     const formattedAadhar = cleanAadharDigits.length === 12
       ? cleanAadharDigits.replace(/(\d{4})(?=\d)/g, '$1 ')
@@ -310,43 +350,23 @@ export const updateBookingStatus = async (req, res, next) => {
     }
 
     const b = await Booking.findOne({ $or: orConds });
-    
     if (!b) {
       return res.status(404).json({ message: 'Booking not found' });
     }
 
     const oldStatus = b.status || 'CONFIRMED';
     const targetHostEmail = hostEmail || b.hostEmail || '';
-    const targetStayId = b.stayId || '';
+    const targetStayId = b.stay || '';
 
     if (status) b.status = status.toUpperCase();
-    if (newName) {
-      b.fullName = newName;
-      b.userName = newName;
-      b.guestName = newName;
-    }
-    if (newPhone) {
-      b.phone = newPhone;
-      b.userPhone = newPhone;
-      b.guestPhone = newPhone;
-    }
-    if (newEmail) {
-      b.email = newEmail;
-      b.userEmail = newEmail;
-      b.guestEmail = newEmail;
-    }
-    if (rawAadhar !== undefined) {
-      b.guestAadhar = formattedAadhar;
-      b.aadharId = formattedAadhar;
-      b.aadhar = formattedAadhar;
-      b.aadharNumber = formattedAadhar;
-    }
+    if (newName) b.fullName = newName.trim();
+    if (newPhone) b.phone = newPhone.replace(/\D/g, '').slice(-10);
+    if (newEmail) b.email = newEmail.toLowerCase().trim();
+    if (rawAadhar !== undefined) b.aadharNumber = formattedAadhar;
     if (adults !== undefined) b.adults = Number(adults) || 1;
     if (children !== undefined) b.children = Number(children) || 0;
-    if (gender || guestGender) {
-      b.gender = gender || guestGender;
-      b.guestGender = guestGender || gender;
-    }
+    if (gender || guestGender) b.gender = gender || guestGender;
+
     await b.save();
 
     const newStatus = status ? status.toUpperCase() : oldStatus;
@@ -357,6 +377,21 @@ export const updateBookingStatus = async (req, res, next) => {
       await adjustAvailableRooms(targetHostEmail, targetStayId, -1);
     } else if (wasActive && !nowActive) {
       await adjustAvailableRooms(targetHostEmail, targetStayId, 1);
+      // Release room status
+      if (b.roomNumber) {
+        if (targetStayId && mongoose.Types.ObjectId.isValid(targetStayId)) {
+          await Stay.updateOne(
+            { _id: targetStayId, 'rooms.roomNumber': b.roomNumber },
+            { $set: { 'rooms.$.status': 'Available' } }
+          ).catch(() => {});
+        }
+        if (targetHostEmail) {
+          await Host.updateOne(
+            { email: targetHostEmail, 'rooms.roomNumber': b.roomNumber },
+            { $set: { 'rooms.$.status': 'Available' } }
+          ).catch(() => {});
+        }
+      }
     }
 
     return res.json({
@@ -384,18 +419,14 @@ export const getMyBookings = async (req, res, next) => {
 
     const conditions = [];
     if (currentUserId) {
-      conditions.push({ user: currentUserId }, { userId: currentUserId });
+      conditions.push({ userId: currentUserId });
       if (mongoose.Types.ObjectId.isValid(currentUserId)) {
         conditions.push({ user: new mongoose.Types.ObjectId(currentUserId) });
       }
     }
     if (currentUserEmail) {
-      const emailRegex = new RegExp(`^${currentUserEmail.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}$`, 'i');
-      conditions.push(
-        { userEmail: emailRegex },
-        { email: emailRegex },
-        { guestEmail: emailRegex }
-      );
+      const emailRegex = new RegExp(`^${currentUserEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
+      conditions.push({ email: emailRegex });
     }
 
     if (conditions.length === 0) {
@@ -403,8 +434,8 @@ export const getMyBookings = async (req, res, next) => {
     }
 
     const mongoBookings = await Booking.find({ $or: conditions }).sort({ createdAt: -1 }).lean();
-    
-    const mapped = mongoBookings.map(b => ({
+
+    const mapped = mongoBookings.map((b) => ({
       ...b,
       id: b._id?.toString() || b.id,
       _id: b._id?.toString() || b.id,
@@ -422,13 +453,10 @@ export const getMyBookings = async (req, res, next) => {
 export const getBookingsByStay = async (req, res, next) => {
   try {
     const { stayId } = req.params;
-    
-    const orConditions = [
-      { stayId: stayId }
-    ];
-    
+
+    const orConditions = [];
     if (mongoose.Types.ObjectId.isValid(stayId)) {
-      orConditions.push({ stayId: new mongoose.Types.ObjectId(stayId) });
+      orConditions.push({ stay: new mongoose.Types.ObjectId(stayId) });
       const host = await Host.findById(stayId);
       if (host && host.email) {
         orConditions.push({ hostEmail: host.email.toLowerCase() });
@@ -442,7 +470,7 @@ export const getBookingsByStay = async (req, res, next) => {
       status: { $nin: ['REJECTED', 'CANCELLED', 'Rejected', 'Cancelled'] },
     }).lean();
 
-    const mapped = mongoBookings.map(b => ({
+    const mapped = mongoBookings.map((b) => ({
       ...b,
       id: b._id?.toString() || b.id,
       _id: b._id?.toString() || b.id,
@@ -454,7 +482,7 @@ export const getBookingsByStay = async (req, res, next) => {
   }
 };
 
-// @desc    Remove an occupant from a host's property and completely delete their booking record from the database
+// @desc    Remove an occupant from a property and release the room back to available inventory
 // @route   POST /api/bookings/occupant/remove
 // @access  Public / Host
 export const removeOccupantBooking = async (req, res, next) => {
@@ -462,156 +490,56 @@ export const removeOccupantBooking = async (req, res, next) => {
     const {
       hostEmail,
       roomNumber,
-      roomId,
       occupantId,
       slotBookingId,
       bookingReferenceId,
       phone,
       guestPhone,
-      name,
-      guestName,
-      bookedDates,
-      bookedMonths,
     } = req.body;
 
     const cleanEmail = (hostEmail || '').toLowerCase().trim();
     const cleanPhone = (phone || guestPhone || '').replace(/\D/g, '').slice(-10);
-    const cleanRoomNum = (roomNumber || '').replace(/[^0-9]/g, '');
 
-    // 1. Permanently delete from Booking collection
+    // 1. Delete from Booking collection
     const bookingOrConditions = [];
     if (occupantId && mongoose.Types.ObjectId.isValid(occupantId)) {
       bookingOrConditions.push({ _id: new mongoose.Types.ObjectId(occupantId) });
     }
     if (occupantId) {
-      bookingOrConditions.push(
-        { id: occupantId },
-        { bookingId: occupantId },
-        { slotBookingId: occupantId }
-      );
-    }
-    if (slotBookingId && mongoose.Types.ObjectId.isValid(slotBookingId)) {
-      bookingOrConditions.push({ _id: new mongoose.Types.ObjectId(slotBookingId) });
+      bookingOrConditions.push({ bookingReferenceId: occupantId }, { slotBookingId: occupantId });
     }
     if (slotBookingId) {
-      bookingOrConditions.push(
-        { slotBookingId: slotBookingId },
-        { id: slotBookingId }
-      );
+      bookingOrConditions.push({ slotBookingId });
     }
     if (bookingReferenceId) {
-      bookingOrConditions.push(
-        { bookingReferenceId: bookingReferenceId },
-        { id: bookingReferenceId }
-      );
+      bookingOrConditions.push({ bookingReferenceId });
     }
-    if (cleanPhone && (cleanEmail || cleanRoomNum)) {
-      const phoneFilter = {
-        $or: [
-          { phone: new RegExp(cleanPhone) },
-          { userPhone: new RegExp(cleanPhone) },
-          { guestPhone: new RegExp(cleanPhone) },
-        ],
-      };
-      if (cleanEmail) phoneFilter.hostEmail = cleanEmail;
-      bookingOrConditions.push(phoneFilter);
+    if (cleanPhone && cleanEmail) {
+      bookingOrConditions.push({ phone: cleanPhone, hostEmail: cleanEmail });
     }
 
     if (bookingOrConditions.length > 0) {
       await Booking.deleteMany({ $or: bookingOrConditions });
     }
 
-    // 2. Permanently remove from Host.rooms and Stay.rooms in MongoDB
-    if (cleanEmail) {
-      const host = await Host.findOne({ email: cleanEmail });
-      if (host && Array.isArray(host.rooms)) {
-        let hostModified = false;
-        const targetDatesToRemove = new Set(Array.isArray(bookedDates) ? bookedDates : []);
-        const targetMonthsToRemove = new Set(Array.isArray(bookedMonths) ? bookedMonths : []);
-
-        host.rooms = host.rooms.map((rm) => {
-          const rmNum = String(rm.roomNumber || '').replace(/[^0-9]/g, '');
-          const matchRoom =
-            (roomId && rm.id === roomId) ||
-            (cleanRoomNum && rmNum === cleanRoomNum) ||
-            !cleanRoomNum;
-
-          if (!matchRoom) return rm;
-
-          if (Array.isArray(rm.slotBookings)) {
-            const initialCount = rm.slotBookings.length;
-            const removedSlots = [];
-
-            rm.slotBookings = rm.slotBookings.filter((sb) => {
-              const sbPhone = (sb.phone || sb.guestPhone || sb.userPhone || '').replace(/\D/g, '').slice(-10);
-              const sbRef = sb.bookingReferenceId || sb.slotBookingId || sb.id || '';
-              const matchThis =
-                (occupantId && (sb.id === occupantId || sb.slotBookingId === occupantId)) ||
-                (slotBookingId && (sb.slotBookingId === slotBookingId || sb.id === slotBookingId)) ||
-                (bookingReferenceId && sbRef === bookingReferenceId) ||
-                (cleanPhone && sbPhone && sbPhone === cleanPhone);
-
-              if (matchThis) {
-                removedSlots.push(sb);
-                return false;
-              }
-              return true;
-            });
-
-            if (rm.slotBookings.length !== initialCount || removedSlots.length > 0) {
-              hostModified = true;
-
-              // Collect all months and dates that were booked by this occupant
-              removedSlots.forEach((s) => {
-                if (Array.isArray(s.bookedMonths)) {
-                  s.bookedMonths.forEach((m) => targetMonthsToRemove.add(m));
-                }
-                if (Array.isArray(s.bookedDates)) {
-                  s.bookedDates.forEach((d) => targetDatesToRemove.add(d));
-                }
-              });
-
-              if (Array.isArray(rm.bookedMonths)) {
-                rm.bookedMonths = rm.bookedMonths.filter((m) => !targetMonthsToRemove.has(m));
-              }
-              if (Array.isArray(rm.bookedDates)) {
-                rm.bookedDates = rm.bookedDates.filter((d) => !targetDatesToRemove.has(d));
-              }
-
-              const hasRemaining =
-                (Array.isArray(rm.bookedMonths) && rm.bookedMonths.length > 0) ||
-                (Array.isArray(rm.bookedDates) && rm.bookedDates.length > 0) ||
-                (Array.isArray(rm.slotBookings) && rm.slotBookings.length > 0);
-
-              rm.status = hasRemaining ? 'Occupied' : 'Available';
-            }
-          }
-          return rm;
-        });
-
-        if (hostModified) {
-          host.markModified('rooms');
-          const availableCount = host.rooms.filter((r) => r.status === 'Available').length;
-          host.availableRooms = availableCount;
-          await host.save();
-
-          // Also synchronize changes to Stay collection if exists
-          await Stay.updateOne(
-            { hostEmail: cleanEmail },
-            {
-              $set: {
-                rooms: host.rooms,
-                availableRooms: availableCount,
-              },
-            }
-          );
-        }
+    // 2. Release room inventory status back to 'Available' in Stay and Host collections
+    if (roomNumber) {
+      if (cleanEmail) {
+        await Host.updateOne(
+          { email: cleanEmail, 'rooms.roomNumber': roomNumber },
+          { $set: { 'rooms.$.status': 'Available' } }
+        ).catch(() => {});
+        await Stay.updateOne(
+          { hostEmail: cleanEmail, 'rooms.roomNumber': roomNumber },
+          { $set: { 'rooms.$.status': 'Available' } }
+        ).catch(() => {});
       }
+      await adjustAvailableRooms(cleanEmail, null, 1);
     }
 
     return res.json({
       success: true,
-      message: 'Occupant deleted from database and slots released successfully.',
+      message: 'Occupant booking removed and room set to Available.',
     });
   } catch (error) {
     console.error('Remove Occupant Controller Error:', error);
@@ -635,14 +563,19 @@ export const deleteBooking = async (req, res, next) => {
     }
     if (!deleted) {
       deleted = await Booking.findOneAndDelete({
-        $or: [{ id: id }, { bookingReferenceId: id }, { slotBookingId: id }],
+        $or: [{ bookingReferenceId: id }, { slotBookingId: id }],
       });
     }
+
     if (deleted && deleted._id) {
       await User.updateMany(
         { bookedPlaces: deleted._id },
         { $pull: { bookedPlaces: deleted._id } }
       ).catch(() => {});
+
+      if (deleted.roomNumber) {
+        await adjustAvailableRooms(deleted.hostEmail, deleted.stay, 1);
+      }
     }
 
     return res.json({
@@ -655,4 +588,3 @@ export const deleteBooking = async (req, res, next) => {
     return next(error);
   }
 };
-

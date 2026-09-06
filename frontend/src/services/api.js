@@ -142,6 +142,8 @@ export const bookingsAPI = {
 
   getMyBookings: () => request('/bookings/my-bookings'),
 
+  getHostBookings: () => request('/bookings/host-bookings'),
+
   getBookingsByStay: (stayId) => request(`/bookings/stay/${encodeURIComponent(stayId)}`),
 
   updateBookingStatus: (id, statusData) =>

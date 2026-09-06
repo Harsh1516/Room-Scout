@@ -1,6 +1,38 @@
 import mongoose from 'mongoose';
+import { v2 as cloudinary } from 'cloudinary';
 import { Stay } from '../models/Stay.js';
 import { Host } from '../models/Host.js';
+
+// Initialize Cloudinary SDK
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+/**
+ * Uploads Base64 image strings to Cloudinary and returns the secure URL.
+ * Passes through existing HTTPS URLs untouched.
+ */
+const processImageUrl = async (imgStr) => {
+  if (!imgStr || typeof imgStr !== 'string') return '';
+  if (imgStr.startsWith('http://') || imgStr.startsWith('https://')) {
+    return imgStr;
+  }
+  if (imgStr.startsWith('data:image/')) {
+    try {
+      const uploadRes = await cloudinary.uploader.upload(imgStr, {
+        folder: 'room-scout/stays',
+        resource_type: 'image',
+      });
+      return uploadRes.secure_url;
+    } catch (err) {
+      console.error('Cloudinary upload error:', err.message);
+      return '';
+    }
+  }
+  return imgStr;
+};
 
 // @desc    Get all property stays created by hosts with optional filters, sorting & high-speed pagination
 // @route   GET /api/stays
@@ -31,6 +63,7 @@ export const getAllStays = async (req, res, next) => {
       const approvedHosts = await Host.find({
         $or: [{ status: 'Approved' }, { 'hostDetails.status': 'Approved' }],
       }).lean();
+      
       const approvedHostEmails = new Set(
         approvedHosts.map((h) => (h.hostDetails?.email || h.email || '').toLowerCase()).filter(Boolean)
       );
@@ -38,9 +71,7 @@ export const getAllStays = async (req, res, next) => {
       const mongoStays = await Stay.find({}).lean();
       for (const s of mongoStays) {
         const hostEmail = (s.hostEmail || '').toLowerCase();
-        // If stay has a hostEmail, strictly only include if host is currently Approved
         if (hostEmail && !approvedHostEmails.has(hostEmail)) {
-          // Permanently delete unapproved/pending host stays from MongoDB stays collection
           await Stay.deleteOne({ _id: s._id }).catch(() => {});
           continue;
         }
@@ -68,8 +99,8 @@ export const getAllStays = async (req, res, next) => {
 
             const firstRate = h.roomRates?.[0];
             const basePrice = firstRate?.price
-              ? (parseInt(String(firstRate.price).replace(/[^0-9]/g, '')) || 0)
-              : (parseInt(String(p.price || h.price || '3500').replace(/[^0-9]/g, '')) || 3500);
+              ? (parseInt(String(firstRate.price).replace(/[^0-9]/g, ''), 10) || 0)
+              : (parseInt(String(p.price || h.price || '3500').replace(/[^0-9]/g, ''), 10) || 3500);
             const rateUnit = firstRate?.rateUnit || p.rateUnit || '/month';
 
             const hostPrimaryImage =
@@ -264,8 +295,8 @@ export const getStayById = async (req, res, next) => {
         if (host && propTitle) {
           const firstRate = host.roomRates?.[0];
           const basePrice = firstRate?.price
-            ? (parseInt(String(firstRate.price).replace(/[^0-9]/g, '')) || 0)
-            : (parseInt(String(p.price || host.price || '3500').replace(/[^0-9]/g, '')) || 3500);
+            ? (parseInt(String(firstRate.price).replace(/[^0-9]/g, ''), 10) || 0)
+            : (parseInt(String(p.price || host.price || '3500').replace(/[^0-9]/g, ''), 10) || 3500);
           const rateUnit = firstRate?.rateUnit || p.rateUnit || '/month';
 
           stay = {
@@ -339,43 +370,81 @@ export const getStayById = async (req, res, next) => {
   }
 };
 
+// @desc    Create a stay listing with automated Cloudinary image offloading
+// @route   POST /api/stays
+// @access  Private
 export const createStay = async (req, res, next) => {
   try {
-    const { title, type, location, price, description, tags, image, badge } = req.body;
+    const {
+      title,
+      type,
+      location,
+      price,
+      description,
+      tags,
+      image,
+      images,
+      badge,
+      latitude,
+      longitude,
+      city,
+      state,
+      pincode,
+      address,
+    } = req.body;
 
     if (!title || !location || !price) {
-      return res.status(400).json({ message: 'Please provide title, location, and monthly price.' });
+      return res.status(400).json({ message: 'Please provide title, location, and price.' });
     }
 
-    const defaultImage =
-      image ||
-      'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80';
+    // Clean numeric price
+    const parsedPrice = parseInt(String(price).replace(/[^0-9]/g, ''), 10) || 0;
+
+    // Process primary image: upload to Cloudinary if Base64
+    let primaryImage = await processImageUrl(image);
+    if (!primaryImage) {
+      primaryImage = 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80';
+    }
+
+    // Process secondary images array
+    let processedImages = [primaryImage];
+    if (Array.isArray(images) && images.length > 0) {
+      const uploadedList = await Promise.all(images.map((img) => processImageUrl(img)));
+      processedImages = uploadedList.filter(Boolean);
+      if (processedImages.length === 0) processedImages = [primaryImage];
+    }
+
+    const latNum = latitude ? parseFloat(latitude) : undefined;
+    const lngNum = longitude ? parseFloat(longitude) : undefined;
 
     const stayPayload = {
       title,
       type: type || 'PG',
       location,
-      price: Number(price),
+      address: address || '',
+      city: city || '',
+      state: state || '',
+      pincode: pincode || '',
+      latitude: latNum,
+      longitude: lngNum,
+      price: parsedPrice,
       rating: 5.0,
       badge: badge || 'VERIFIED HOST',
       tags: Array.isArray(tags) ? tags : ['Wifi', 'Attached Bath', 'Security'],
-      image: defaultImage,
-      images: [defaultImage],
-      description: description || `${title} located in ${location}. Brand new property listing.`,
+      image: primaryImage,
+      images: processedImages,
+      description: description || `${title} located in ${location}.`,
       hostId: req.user?.id || req.user?._id || 'host_user',
-      createdAt: new Date().toISOString(),
     };
 
-    let newStay = null;
-
-    try {
-      newStay = await Stay.create(stayPayload);
-    } catch (dbErr) {
-      console.warn('MongoDB stay creation failed:', dbErr.message);
-      return res.status(500).json({ message: 'Database error while creating stay' });
+    if (latNum != null && lngNum != null) {
+      stayPayload.locationGeo = {
+        type: 'Point',
+        coordinates: [lngNum, latNum],
+      };
     }
 
-    console.log(`✅ Real Host Property Created & Saved: ${newStay.title} (${newStay.location})`);
+    const newStay = await Stay.create(stayPayload);
     return res.status(201).json(newStay);
   } catch (error) {
     console.error('Error creating property stay:', error);
@@ -406,10 +475,7 @@ export const addReviewToStay = async (req, res, next) => {
     let updatedReviews = [];
 
     try {
-      let dbStay = await Stay.findById(stayId);
-      if (!dbStay) {
-        dbStay = await Stay.findOne({ $or: [{ hostId: stayId }, { id: stayId }] });
-      }
+      let dbStay = await Stay.findById(stayId) || await Stay.findOne({ $or: [{ hostId: stayId }, { id: stayId }] });
       if (dbStay) {
         if (!Array.isArray(dbStay.reviews)) dbStay.reviews = [];
         dbStay.reviews.unshift(reviewObj);
@@ -417,10 +483,7 @@ export const addReviewToStay = async (req, res, next) => {
         updatedReviews = dbStay.reviews;
       }
 
-      let dbHost = await Host.findById(stayId);
-      if (!dbHost) {
-        dbHost = await Host.findOne({ email: stayId });
-      }
+      let dbHost = await Host.findById(stayId) || await Host.findOne({ email: stayId });
       if (dbHost) {
         if (!Array.isArray(dbHost.reviews)) dbHost.reviews = [];
         dbHost.reviews.unshift(reviewObj);
@@ -567,7 +630,6 @@ export const resolveMapLink = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid URL format' });
     }
 
-    // SSRF Prevention: Enforce HTTP/HTTPS and restrict hostname strictly to Google Maps domains
     const allowedProtocols = ['http:', 'https:'];
     if (!allowedProtocols.includes(parsedUrl.protocol)) {
       return res.status(400).json({ success: false, message: 'Only HTTP and HTTPS URLs are allowed' });

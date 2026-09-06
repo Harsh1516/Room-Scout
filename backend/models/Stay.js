@@ -36,6 +36,7 @@ const staySchema = new mongoose.Schema(
     city: {
       type: String,
       trim: true,
+      index: true,
     },
     state: {
       type: String,
@@ -44,6 +45,18 @@ const staySchema = new mongoose.Schema(
     pincode: {
       type: String,
       trim: true,
+    },
+    // Standard GeoJSON point for geospatial queries ($near, $geoWithin)
+    locationGeo: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point',
+      },
+      coordinates: {
+        type: [Number], // [longitude, latitude] - GeoJSON strict standard
+        default: [0, 0],
+      },
     },
     latitude: {
       type: Number,
@@ -54,6 +67,7 @@ const staySchema = new mongoose.Schema(
     price: {
       type: Number,
       required: true,
+      min: 0,
     },
     rateUnit: {
       type: String,
@@ -84,21 +98,24 @@ const staySchema = new mongoose.Schema(
         trim: true,
       },
     ],
+    // Clean numeric pricing for room tiers
     roomRates: [
       {
         id: { type: String },
         type: { type: String },
-        price: { type: String },
+        price: { type: Number, default: 0 },
         rateUnit: { type: String, default: '/month' },
       },
     ],
     availableRooms: {
       type: Number,
       default: 1,
+      min: 0,
     },
     totalRooms: {
       type: Number,
       default: 1,
+      min: 1,
     },
     rooms: [
       {
@@ -107,7 +124,7 @@ const staySchema = new mongoose.Schema(
         roomNumInt: { type: Number },
         status: { type: String, default: 'Available' },
         type: { type: String },
-        price: { type: String },
+        price: { type: Number, default: 0 },
         rateUnit: { type: String, default: '/month' },
         floor: { type: String },
         bookedDates: [{ type: String }],
@@ -125,6 +142,7 @@ const staySchema = new mongoose.Schema(
         children: { type: Number },
       },
     ],
+    // Image URLs (Cloudinary / S3 HTTPS links only)
     image: {
       type: String,
       required: true,
@@ -143,7 +161,8 @@ const staySchema = new mongoose.Schema(
       default: '',
     },
     hostId: {
-      type: String,
+      type: mongoose.Schema.Types.Mixed,
+      ref: 'Host',
     },
     hostName: {
       type: String,
@@ -162,7 +181,19 @@ const staySchema = new mongoose.Schema(
   }
 );
 
-// High-speed compound and search indexes for Pan-India scaling
+// Pre-save hook: Syncs latitude/longitude into GeoJSON format automatically
+staySchema.pre('save', function (next) {
+  if (this.latitude != null && this.longitude != null) {
+    this.locationGeo = {
+      type: 'Point',
+      coordinates: [Number(this.longitude), Number(this.latitude)],
+    };
+  }
+  next();
+});
+
+// Indexes for ultra-fast query execution
+staySchema.index({ locationGeo: '2dsphere' });
 staySchema.index({ city: 1, type: 1, price: 1, rating: -1 });
 staySchema.index({ type: 1, price: 1 });
 staySchema.index({ createdAt: -1 });
