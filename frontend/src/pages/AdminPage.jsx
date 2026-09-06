@@ -11,7 +11,15 @@ import { AdminUsersTable } from '../components/admin/AdminUsersTable';
 export function AdminPage() {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
-  const { updateUserSession } = useAuth();
+  const { user, updateUserSession } = useAuth();
+
+  // Admin Access Verification
+  const [isAdminAuthorized, setIsAdminAuthorized] = useState(() => {
+    return Boolean(adminAPI.getAdminKey() || (user && (user.role === 'admin' || user.isAdmin)));
+  });
+  const [passkeyInput, setPasskeyInput] = useState('');
+  const [passkeyError, setPasskeyError] = useState('');
+  const [isVerifyingKey, setIsVerifyingKey] = useState(false);
 
   // Active View Tab: 'hosts' | 'users'
   const [activeTab, setActiveTab] = useState('hosts');
@@ -58,16 +66,20 @@ export function AdminPage() {
     try {
       if (!isBackground) setLoading(true);
       const [usersRes, hostsRes] = await Promise.all([
-        adminAPI.getUsers().catch(() => ({ users: [] })),
-        adminAPI.getHosts().catch(() => ({ hosts: [] })),
+        adminAPI.getUsers(),
+        adminAPI.getHosts(),
       ]);
 
+      setIsAdminAuthorized(true);
       const fetchedUsers = Array.isArray(usersRes) ? usersRes : usersRes?.users || usersRes?.data || [];
       setUsers(fetchedUsers);
 
       const fetchedHosts = Array.isArray(hostsRes) ? hostsRes : hostsRes?.hosts || hostsRes?.data || [];
       setHosts(fetchedHosts);
     } catch (err) {
+      if (err.status === 403 || err.status === 401) {
+        setIsAdminAuthorized(false);
+      }
       console.error('Error fetching admin data:', err);
     } finally {
       if (!isBackground) setLoading(false);
@@ -127,11 +139,18 @@ export function AdminPage() {
     fetchData(false);
   };
 
-  // Broadcast data update across tabs and components
-  const broadcastUpdate = (key = 'stayhub_hosts_updated') => {
+  // Broadcast data update across components
+  const broadcastUpdate = () => {
     try {
-      localStorage.setItem(key, Date.now().toString());
       window.dispatchEvent(new CustomEvent('stayhub_admin_sync'));
+      localStorage.setItem('stayhub_admin_sync_ts', String(Date.now()));
+      if (typeof BroadcastChannel !== 'undefined') {
+        try {
+          const bc = new BroadcastChannel('stayhub_live_channel');
+          bc.postMessage({ type: 'HOST_APPROVED' });
+          bc.close();
+        } catch (e) {}
+      }
     } catch (e) {
       console.warn('Broadcast sync error:', e);
     }
@@ -219,7 +238,7 @@ export function AdminPage() {
       await adminAPI.deleteUser(userId);
       setUsers((prev) => prev.filter((u) => String(u._id) !== String(userId) && String(u.id) !== String(userId)));
       setConfirmDeleteUserId(null);
-      broadcastUpdate('stayhub_users_updated');
+      broadcastUpdate();
       showToast(`User ${userName || ''} deleted`);
     } catch (err) {
       console.error('Failed to delete user:', err);
@@ -241,7 +260,7 @@ export function AdminPage() {
             : h
         )
       );
-      broadcastUpdate('stayhub_hosts_updated');
+      broadcastUpdate();
       showToast(`Property for ${hostName || 'Host'} approved & published live!`);
     } catch (err) {
       console.error('Failed to approve host:', err);
@@ -258,7 +277,7 @@ export function AdminPage() {
       await adminAPI.deleteHost(hostId);
       setHosts((prev) => prev.filter((h) => String(h.id) !== String(hostId) && String(h._id) !== String(hostId)));
       setConfirmDeleteHostId(null);
-      broadcastUpdate('stayhub_hosts_updated');
+      broadcastUpdate();
       showToast(`Host ${hostName || ''} deleted`);
     } catch (err) {
       console.error('Failed to delete host:', err);
@@ -294,10 +313,94 @@ export function AdminPage() {
     );
   }, [hosts, searchQuery]);
 
+  const handleVerifyPasskey = async (e) => {
+    e.preventDefault();
+    if (!passkeyInput.trim()) return;
+    setIsVerifyingKey(true);
+    setPasskeyError('');
+    try {
+      adminAPI.setAdminKey(passkeyInput.trim());
+      await adminAPI.getUsers();
+      setIsAdminAuthorized(true);
+      fetchData();
+    } catch (err) {
+      adminAPI.setAdminKey(null);
+      setPasskeyError(err.message || 'Invalid Master Admin Passkey. Access Denied.');
+    } finally {
+      setIsVerifyingKey(false);
+    }
+  };
+
+  // Render High-Security Admin Passkey Screen if unauthorized
+  if (!isAdminAuthorized) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-black text-slate-800 dark:text-slate-200 flex flex-col items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="w-full max-w-md p-6 sm:p-8 rounded-3xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 shadow-2xl flex flex-col items-center text-center"
+        >
+          <div className="w-14 h-14 rounded-2xl bg-purple-500/10 dark:bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-600 dark:text-purple-400 mb-4 shadow-inner">
+            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </div>
+
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">
+            Administrator Access
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 mb-6 font-medium">
+            This management console requires verified admin credentials or your master security passkey.
+          </p>
+
+          <form onSubmit={handleVerifyPasskey} className="w-full flex flex-col gap-3">
+            <div className="relative w-full">
+              <input
+                type="password"
+                value={passkeyInput}
+                onChange={(e) => {
+                  setPasskeyInput(e.target.value);
+                  setPasskeyError('');
+                }}
+                placeholder="Enter Master Admin Passkey..."
+                className="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-black/60 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                autoFocus
+              />
+            </div>
+
+            {passkeyError && (
+              <p className="text-xs text-rose-500 font-semibold text-left px-1">
+                ⚠️ {passkeyError}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={isVerifyingKey || !passkeyInput.trim()}
+              className="w-full py-3 px-4 rounded-2xl bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm font-semibold transition-all cursor-pointer active:scale-[0.98] shadow-md shadow-purple-600/20 mt-1"
+            >
+              {isVerifyingKey ? 'Verifying Credentials...' : 'Unlock Dashboard'}
+            </button>
+          </form>
+
+          <button
+            type="button"
+            onClick={() => navigate('/explore')}
+            className="mt-4 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-white transition-colors cursor-pointer"
+          >
+            ← Return to Explore
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 transition-colors duration-300 flex flex-col font-sans font-normal w-full overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-black text-slate-800 dark:text-slate-200 transition-colors duration-300 flex flex-col font-sans font-normal w-full overflow-x-hidden">
       {/* TOP ADMIN HEADER */}
-      <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-white/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 shadow-xs transition-colors duration-300">
+      <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-white/90 dark:bg-black/90 border-b border-slate-200 dark:border-slate-800 shadow-xs transition-colors duration-300">
         <div className="w-full px-2.5 sm:px-8 h-13 sm:h-16 flex items-center justify-between gap-1.5 sm:gap-4">
           {/* Left-Most: Back Button */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
@@ -440,7 +543,7 @@ export function AdminPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search name or email..."
-                  className="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 font-normal transition-colors"
+                  className="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-black border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 font-normal transition-colors"
                 />
                 {searchQuery && (
                   <button
@@ -484,7 +587,7 @@ export function AdminPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search host, property, status..."
-                  className="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-slate-400 font-normal transition-colors"
+                  className="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-black border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-slate-400 font-normal transition-colors"
                 />
                 {searchQuery && (
                   <button

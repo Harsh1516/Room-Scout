@@ -22,6 +22,7 @@ export function SearchResultsPage({
 }) {
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'split'
   const [hoveredStayId, setHoveredStayId] = useState(null);
+  const [showMap, setShowMap] = useState(false);
 
   const categories = ['All', 'PG', 'Hostel', 'Hotel', 'Villa', 'Resort', 'Flat'];
   const genders = ['All', 'Boys', 'Girls', 'Unisex'];
@@ -58,13 +59,13 @@ export function SearchResultsPage({
   return (
     <div className="min-h-screen pt-24 sm:pt-28 px-4 sm:px-6 lg:px-10 2xl:px-16 pb-20 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
       <div className="w-full space-y-6 max-w-[1720px] mx-auto">
-        {/* TOP 50/50 SECTION: Left (Search Header + Category/Filter Tab) | Right (Interactive Map) */}
+        {/* TOP SECTION: Left (Search Header + Category/Filter Tab) | Right (Interactive Map) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-          {/* Left 50% Column (lg:col-span-6): Search Result Tab & Category/Filter Tab */}
-          <div className="lg:col-span-6 flex flex-col justify-between space-y-4">
+          {/* Left Column: Top 2 Tabs (Fixed at lg:col-span-6) */}
+          <div className="lg:col-span-6 w-full flex flex-col justify-between space-y-4">
             {/* 1. Search Result Tab */}
             <div className="bg-white/80 dark:bg-slate-900/80 p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm backdrop-blur-xl flex flex-col justify-between space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full">
                     Verified Inventory
@@ -76,76 +77,86 @@ export function SearchResultsPage({
                   )}
                 </div>
 
-                {/* Sort Dropdown */}
-                <select
-                  value={filters.sortOrder || 'price-desc'}
-                  onChange={(e) => setSortOrder && setSortOrder(e.target.value)}
-                  className="p-2 text-xs font-bold rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
-                >
-                  <option value="recent">Recently Added (Fresh)</option>
-                  <option value="price-asc">Price: Low to High</option>
-                  <option value="price-desc">Price: High to Low</option>
-                  <option value="rating-desc">Top Rated (★ 4.5+)</option>
-                  <option value="title-asc">Name (A-Z)</option>
-                </select>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setShowMap(!showMap)}
+                    className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold rounded-2xl shadow-[0_4px_12px_rgba(6,182,212,0.3)] transition-all cursor-pointer active:scale-95"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      {showMap ? (
+                        <>
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </>
+                      ) : (
+                        <>
+                          <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" />
+                          <line x1="9" y1="3" x2="9" y2="18" />
+                          <line x1="15" y1="6" x2="15" y2="21" />
+                        </>
+                      )}
+                    </svg>
+                    {showMap ? 'Hide Map' : 'See Map'}
+                  </button>
+
+                  {/* Sort Dropdown */}
+                  <select
+                    value={filters.sortOrder || 'price-desc'}
+                    onChange={(e) => setSortOrder && setSortOrder(e.target.value)}
+                    className="p-2 text-xs font-bold rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+                  >
+                    <option value="recent">Recently Added (Fresh)</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="rating-desc">Top Rated (★ 4.5+)</option>
+                    <option value="title-asc">Name (A-Z)</option>
+                  </select>
+                </div>
               </div>
 
               <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-950 dark:text-white">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-950 dark:text-white mt-2">
                   Search Results
                   {filters.location && (
                     <span className="text-slate-500 dark:text-slate-400 text-lg sm:text-xl font-bold">
                       {' '}in {filters.location}
                     </span>
                   )}
-                  {filters.type && filters.type !== 'All' && (
-                    <span className="text-cyan-600 dark:text-cyan-400 text-base sm:text-xl font-bold">
-                      {' '}• {filters.type}
-                    </span>
-                  )}
                 </h1>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Showing <strong className="text-slate-950 dark:text-white">{stays.length}</strong> of{' '}
-                  <strong className="text-slate-950 dark:text-white">{totalResults}</strong> verified properties across India.
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                  Showing <span className="font-bold text-slate-900 dark:text-white">{stays.length}</span> of <span className="font-bold text-slate-900 dark:text-white">{totalResults}</span> verified properties across India.
                 </p>
               </div>
             </div>
 
-            {/* 2. Filter Controls Tab (Type, Budget, Ratings, Amenities) */}
-            <div className="bg-white/80 dark:bg-slate-900/80 p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 space-y-2.5 sm:space-y-3.5 shadow-sm backdrop-blur-xl flex-1 flex flex-col justify-center">
-              {/* Row 0: Stay Types / Categories (PG, Hostel, Flat, Hotel, etc.) */}
-              <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
-                <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-0.5 sm:mr-1">
+            {/* 2. Advanced Filters & Categories Tab */}
+            <div className="bg-white/80 dark:bg-slate-900/80 p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm backdrop-blur-xl flex flex-col space-y-4">
+              {/* Row 1: Type Selection */}
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 sm:mr-2">
                   Type:
                 </span>
-                {categories.map((cat) => {
-                  const isSelected =
-                    (!filters.type && cat === 'All') ||
-                    filters.type === cat ||
-                    (cat === 'All' && filters.type === 'All Types');
-                  return (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => setCategoryFilter && setCategoryFilter(cat)}
-                      className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold transition-all cursor-pointer ${
-                        isSelected
-                          ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 font-bold shadow-xs'
-                          : 'bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  );
-                })}
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setCategoryFilter && setCategoryFilter(cat)}
+                    className={`px-3 py-1 sm:px-4 sm:py-1.5 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-bold transition-all cursor-pointer ${
+                      filters.category === cat
+                        ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 shadow-xs'
+                        : 'bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
               </div>
 
               <div className="h-px bg-slate-100 dark:bg-slate-800" />
 
-              {/* Row 1: Budget Presets & Rating & Reset */}
-              <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
-                <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
-                  <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-0.5 sm:mr-1">
+              {/* Row 2: Budget & Rating */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">
                     Budget:
                   </span>
                   {budgetPresets.map((preset, idx) => {
@@ -215,15 +226,25 @@ export function SearchResultsPage({
             </div>
           </div>
 
-          {/* Right 50% Column (lg:col-span-6): Interactive Map fixed to match left tabs height */}
-          <div className="lg:col-span-6 h-full min-h-[360px] sm:min-h-[380px]">
-            <SearchInteractiveMap
-              stays={allFilteredStays.length > 0 ? allFilteredStays : stays}
-              hoveredStayId={hoveredStayId}
-              onStayClick={onStayClick}
-              onStayHover={setHoveredStayId}
-            />
-          </div>
+          {/* Right Column: Interactive Map (Only shown when toggled) */}
+          <AnimatePresence>
+            {showMap && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                className="lg:col-span-6 h-full min-h-[360px] sm:min-h-[380px]"
+              >
+                <SearchInteractiveMap
+                  stays={allFilteredStays.length > 0 ? allFilteredStays : stays}
+                  hoveredStayId={hoveredStayId}
+                  onStayClick={onStayClick}
+                  onStayHover={setHoveredStayId}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Loading Skeletons */}

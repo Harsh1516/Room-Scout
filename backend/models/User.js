@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const userSchema = new mongoose.Schema(
+const userDetailsSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -12,6 +12,58 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       required: [true, 'Please add an email'],
+      lowercase: true,
+      trim: true,
+    },
+    phone: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    password: {
+      type: String,
+      required: [true, 'Please add a password'],
+    },
+    avatar: {
+      type: String,
+      default: 'US',
+    },
+    role: {
+      type: String,
+      enum: ['user', 'host', 'admin'],
+      default: 'user',
+    },
+  },
+  { _id: false }
+);
+
+const userSchema = new mongoose.Schema(
+  {
+    // Default Sub-documents
+    userDetails: {
+      type: userDetailsSchema,
+    },
+    wishlist: [
+      {
+        stayId: { type: String, required: true },
+        stay: { type: Object },
+        addedAt: { type: Date, default: Date.now },
+      },
+    ],
+    bookedPlaces: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Booking',
+      },
+    ],
+
+    // Top-level fields for seamless backward compatibility
+    name: {
+      type: String,
+      trim: true,
+    },
+    email: {
+      type: String,
       unique: true,
       lowercase: true,
       trim: true,
@@ -22,8 +74,6 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, 'Please add a password'],
-      minlength: [6, 'Password must be at least 6 characters'],
     },
     avatar: {
       type: String,
@@ -37,6 +87,7 @@ const userSchema = new mongoose.Schema(
     phone: {
       type: String,
       trim: true,
+      default: '',
     },
   },
   {
@@ -44,39 +95,72 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Bcrypt Password Encryption Pre-Save Hook
+// Bcrypt Password Encryption Pre-Save Hook & Structure Sync
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
-    if (typeof next === 'function') next();
-    return;
+  const currentName = this.name || this.userDetails?.name || '';
+  const currentEmail = (this.email || this.userDetails?.email || '').toLowerCase().trim();
+  const currentPhone = this.phone || this.userDetails?.phone || '';
+  const currentAvatar = this.avatar || this.userDetails?.avatar || (currentName ? currentName.slice(0, 2).toUpperCase() : 'US');
+  const currentRole = this.role || this.userDetails?.role || 'user';
+  let currentPassword = this.password || this.userDetails?.password || '';
+
+  // Password hashing if modified or not yet bcrypt hash
+  const isBcrypt = /^\$2[abxy]\$\d+\$/.test(currentPassword);
+  if (currentPassword && !isBcrypt) {
+    const salt = await bcrypt.genSalt(10);
+    currentPassword = await bcrypt.hash(currentPassword, salt);
   }
 
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  this.name = currentName;
+  this.email = currentEmail;
+  this.phone = currentPhone;
+  this.avatar = currentAvatar;
+  this.role = currentRole;
+  this.password = currentPassword;
+
+  // Enforce native default userDetails sub-document
+  this.userDetails = {
+    name: currentName,
+    email: currentEmail,
+    phone: currentPhone,
+    password: currentPassword,
+    avatar: currentAvatar,
+    role: currentRole,
+  };
+
+  if (!Array.isArray(this.wishlist)) {
+    this.wishlist = [];
+  }
+  if (!Array.isArray(this.bookedPlaces)) {
+    this.bookedPlaces = [];
+  }
+
   if (typeof next === 'function') next();
 });
 
 // Compare Password Instance Method
 userSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
+  const hash = this.password || this.userDetails?.password;
+  if (!hash) return false;
+  return await bcrypt.compare(enteredPassword, hash);
 };
 
 // Generate JWT Token Instance Method
 userSchema.methods.generateToken = async function () {
   try {
-    const secret = process.env.JWT_SECRET || 'super_secret_jwt_key_stayhub_2026';
+    const secret = process.env.JWT_SECRET || 'dev_temporary_fallback_secret_key_roomscout_2026';
     return jwt.sign(
       {
         userId: this._id.toString(),
         id: this._id.toString(),
-        name: this.name,
-        email: this.email,
-        role: this.role,
-        isAdmin: this.role === 'admin',
+        name: this.name || this.userDetails?.name,
+        email: this.email || this.userDetails?.email,
+        role: this.role || this.userDetails?.role || 'user',
+        isAdmin: (this.role || this.userDetails?.role) === 'admin',
       },
       secret,
       {
-        expiresIn: '30d',
+        expiresIn: '7d',
       }
     );
   } catch (error) {

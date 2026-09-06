@@ -1,135 +1,47 @@
 import mongoose from 'mongoose';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import bcrypt from 'bcryptjs';
 import { Booking } from '../models/Booking.js';
 import { Stay } from '../models/Stay.js';
 import { Host } from '../models/Host.js';
 import { User } from '../models/User.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const BOOKINGS_FILE = path.join(__dirname, '../data/bookings_store.json');
-const HOSTS_FILE = path.join(__dirname, '../data/hosts_store.json');
-const USERS_FILE = path.join(__dirname, '../data/users_store.json');
-
-function readUsersFromFile() {
-  try {
-    if (!fs.existsSync(USERS_FILE)) return [];
-    const data = fs.readFileSync(USERS_FILE, 'utf-8');
-    return JSON.parse(data || '[]');
-  } catch (err) {
-    console.error('Error reading users file:', err);
-    return [];
-  }
-}
-
-function writeUsersToFile(users) {
-  try {
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf-8');
-  } catch (err) {
-    console.error('Error writing users file:', err);
-  }
-}
-
-function readBookingsFromFile() {
-  try {
-    if (!fs.existsSync(BOOKINGS_FILE)) {
-      fs.writeFileSync(BOOKINGS_FILE, JSON.stringify([]), 'utf-8');
-      return [];
-    }
-    const data = fs.readFileSync(BOOKINGS_FILE, 'utf-8');
-    return JSON.parse(data || '[]');
-  } catch (err) {
-    console.error('Error reading bookings file:', err);
-    return [];
-  }
-}
-
-function writeBookingsToFile(bookings) {
-  try {
-    fs.writeFileSync(BOOKINGS_FILE, JSON.stringify(bookings, null, 2), 'utf-8');
-  } catch (err) {
-    console.error('Error writing bookings file:', err);
-  }
-}
-
-function readHostsFromFile() {
-  try {
-    if (!fs.existsSync(HOSTS_FILE)) return [];
-    const data = fs.readFileSync(HOSTS_FILE, 'utf-8');
-    return JSON.parse(data || '[]');
-  } catch (err) {
-    console.error('Error reading hosts file:', err);
-    return [];
-  }
-}
-
-function writeHostsToFile(hosts) {
-  try {
-    fs.writeFileSync(HOSTS_FILE, JSON.stringify(hosts, null, 2), 'utf-8');
-  } catch (err) {
-    console.error('Error writing hosts file:', err);
-  }
-}
-
 // Automatic Room Inventory Adjuster on Check-in / Confirmation / Check-out
 async function adjustAvailableRooms(hostEmail, stayId, delta) {
   const cleanEmail = (hostEmail || '').toLowerCase().trim();
 
-  // 1. Update MongoDB Host and Stay collections
-  if (mongoose.connection.readyState === 1) {
-    try {
-      if (cleanEmail) {
-        const host = await Host.findOne({ email: cleanEmail });
-        if (host) {
-          const maxTotal = host.totalRooms || 1;
-          let newRooms = (host.availableRooms !== undefined ? host.availableRooms : maxTotal) + delta;
-          newRooms = Math.max(0, Math.min(maxTotal, newRooms));
-          host.availableRooms = newRooms;
-          await host.save();
-        }
-      }
-
-      if (stayId && mongoose.Types.ObjectId.isValid(stayId)) {
-        const stay = await Stay.findById(stayId);
-        if (stay) {
-          const maxTotal = stay.totalRooms || 1;
-          let newRooms = (stay.availableRooms !== undefined ? stay.availableRooms : maxTotal) + delta;
-          newRooms = Math.max(0, Math.min(maxTotal, newRooms));
-          stay.availableRooms = newRooms;
-          await stay.save();
-        }
-      } else if (cleanEmail) {
-        const stay = await Stay.findOne({ hostEmail: cleanEmail });
-        if (stay) {
-          const maxTotal = stay.totalRooms || 1;
-          let newRooms = (stay.availableRooms !== undefined ? stay.availableRooms : maxTotal) + delta;
-          newRooms = Math.max(0, Math.min(maxTotal, newRooms));
-          stay.availableRooms = newRooms;
-          await stay.save();
-        }
-      }
-    } catch (err) {
-      console.warn('adjustAvailableRooms mongo error:', err.message);
-    }
-  }
-
-  // 2. Update persistent file store
   try {
-    const fileHosts = readHostsFromFile();
-    const hIdx = fileHosts.findIndex(
-      (h) => (h.email && h.email.toLowerCase() === cleanEmail) || String(h.id) === String(stayId) || String(h._id) === String(stayId)
-    );
-    if (hIdx >= 0) {
-      const maxTotal = fileHosts[hIdx].totalRooms || 1;
-      let newRooms = (fileHosts[hIdx].availableRooms !== undefined ? fileHosts[hIdx].availableRooms : maxTotal) + delta;
-      newRooms = Math.max(0, Math.min(maxTotal, newRooms));
-      fileHosts[hIdx].availableRooms = newRooms;
-      writeHostsToFile(fileHosts);
+    if (cleanEmail) {
+      const host = await Host.findOne({ email: cleanEmail });
+      if (host) {
+        const maxTotal = host.totalRooms || 1;
+        let newRooms = (host.availableRooms !== undefined ? host.availableRooms : maxTotal) + delta;
+        newRooms = Math.max(0, Math.min(maxTotal, newRooms));
+        host.availableRooms = newRooms;
+        await host.save();
+      }
+    }
+
+    if (stayId && mongoose.Types.ObjectId.isValid(stayId)) {
+      const stay = await Stay.findById(stayId);
+      if (stay) {
+        const maxTotal = stay.totalRooms || 1;
+        let newRooms = (stay.availableRooms !== undefined ? stay.availableRooms : maxTotal) + delta;
+        newRooms = Math.max(0, Math.min(maxTotal, newRooms));
+        stay.availableRooms = newRooms;
+        await stay.save();
+      }
+    } else if (cleanEmail) {
+      const stay = await Stay.findOne({ hostEmail: cleanEmail });
+      if (stay) {
+        const maxTotal = stay.totalRooms || 1;
+        let newRooms = (stay.availableRooms !== undefined ? stay.availableRooms : maxTotal) + delta;
+        newRooms = Math.max(0, Math.min(maxTotal, newRooms));
+        stay.availableRooms = newRooms;
+        await stay.save();
+      }
     }
   } catch (err) {
-    console.warn('adjustAvailableRooms file error:', err.message);
+    console.warn('adjustAvailableRooms mongo error:', err.message);
   }
 }
 
@@ -174,6 +86,9 @@ export const createBooking = async (req, res, next) => {
       guestAadhar,
       aadharId,
       status: clientStatus,
+      paymentMethod: clientPaymentMethod,
+      paymentStatus: clientPaymentStatus,
+      paymentDetails: clientPaymentDetails,
       bookingReferenceId: clientRef,
       bookingId,
     } = req.body;
@@ -183,6 +98,12 @@ export const createBooking = async (req, res, next) => {
     const cleanDigitsPhone = (phone || userPhone || guestPhone || '').replace(/\D/g, '').slice(-10);
     const resolvedPhone = cleanDigitsPhone ? cleanDigitsPhone : (phone || userPhone || guestPhone || '').trim();
     let resolvedEmail = (email || userEmail || guestEmail || '').trim().toLowerCase();
+
+    const rawAadhar = guestAadhar || aadharId || '';
+    const cleanAadharDigits = String(rawAadhar).replace(/\D/g, '').slice(0, 12);
+    const resolvedAadhar = cleanAadharDigits.length === 12
+      ? cleanAadharDigits.replace(/(\d{4})(?=\d)/g, '$1 ')
+      : String(rawAadhar).trim();
 
     if (!resolvedFullName) {
       return res.status(400).json({ message: 'User / Guest name is required to book.' });
@@ -200,15 +121,13 @@ export const createBooking = async (req, res, next) => {
 
     // 🔒 Unique Mobile Number Enforcement: Each booking must be uniquely identified by mobile number
     if (resolvedPhone && roomNumber) {
-      const existingBookings = readBookingsFromFile();
-      const isDuplicateMobileBooking = existingBookings.some((b) => {
-        if (b.status === 'CANCELLED' || b.status === 'REJECTED') return false;
-        const bPhone = (b.phone || b.userPhone || b.guestPhone || '').replace(/\D/g, '').slice(-10);
-        const sameStay = String(b.stayId) === String(stayId);
-        const sameRoom = String(b.roomNumber || '') === String(roomNumber || '');
-        return bPhone === resolvedPhone && sameStay && sameRoom;
+      const existingBookings = await Booking.find({
+        $or: [{ phone: resolvedPhone }, { userPhone: resolvedPhone }, { guestPhone: resolvedPhone }],
+        stayId: stayId,
+        roomNumber: roomNumber,
+        status: { $nin: ['CANCELLED', 'REJECTED'] }
       });
-      if (isDuplicateMobileBooking) {
+      if (existingBookings.length > 0) {
         return res.status(400).json({
           message: `Duplicate Mobile Number: A reservation with mobile number ${resolvedPhone} already exists for this room. Each booking must be uniquely identified by a unique mobile number.`,
         });
@@ -219,49 +138,50 @@ export const createBooking = async (req, res, next) => {
       resolvedEmail = `${resolvedFullName.toLowerCase().replace(/\s+/g, '')}${resolvedPhone.slice(-4)}@stayhub.local`;
     }
 
-    // Determine target user id and ensure unique user record in users_store.json
-    let targetUserId = (req.user?._id || req.user?.id || 'usr_guest')?.toString();
+    // Determine target user id and ensure unique user record in DB
+    let targetUserId = req.user?._id || req.user?.id || null;
     let targetUserEmail = (resolvedEmail || req.user?.email || '').toLowerCase().trim();
 
-    // Check existing unique user in users_store.json by phone or email
-    const fileUsers = readUsersFromFile();
-    let matchedUser = fileUsers.find((u) => {
-      const uPhone = (u.phone || '').replace(/\D/g, '').slice(-10);
-      const isPhoneMatch = resolvedPhone && uPhone && uPhone === resolvedPhone;
-      const isEmailMatch = resolvedEmail && u.email && u.email.toLowerCase().trim() === resolvedEmail;
-      return isPhoneMatch || isEmailMatch;
-    });
+    const userQueryOr = [];
+    if (resolvedPhone) userQueryOr.push({ phone: resolvedPhone });
+    if (resolvedEmail) userQueryOr.push({ email: resolvedEmail });
+    
+    let matchedUser = null;
+    if (userQueryOr.length > 0) {
+      matchedUser = await User.findOne({ $or: userQueryOr });
+    }
 
     if (matchedUser) {
-      targetUserId = (matchedUser._id || matchedUser.id)?.toString();
+      targetUserId = matchedUser._id;
       targetUserEmail = matchedUser.email || resolvedEmail;
     } else if (resolvedPhone) {
-      // Auto-register unique user in users_store.json
-      const newUserId = 'usr_' + Date.now();
+      // Auto-register unique user in DB
       const initials = resolvedFullName
         .split(' ')
         .map((n) => n[0])
         .join('')
         .slice(0, 2)
         .toUpperCase() || 'GU';
-      const newUserRecord = {
-        _id: newUserId,
+      
+      const salt = await bcrypt.genSalt(10);
+      const randomSecret = Math.random().toString(36).slice(-8) + 'A1!';
+      const autoHashedPassword = await bcrypt.hash(randomSecret, salt);
+      
+      matchedUser = await User.create({
         name: resolvedFullName,
         email: resolvedEmail,
         phone: resolvedPhone,
+        password: autoHashedPassword,
         avatar: initials,
         role: 'user',
         status: 'Active',
-        createdAt: new Date().toISOString(),
-      };
-      fileUsers.push(newUserRecord);
-      writeUsersToFile(fileUsers);
-      targetUserId = newUserId;
+      });
+      targetUserId = matchedUser._id;
       targetUserEmail = resolvedEmail;
     }
 
     const bookingReferenceId = clientRef || bookingId || ('STAY-' + Math.floor(100000 + Math.random() * 900000));
-    const calculatedDuration = durationDisplay || (durationMonths ? `${durationMonths} Months` : '3 Months');
+    const calculatedDuration = durationDisplay || (durationMonths ? `${durationMonths} Months` : '1 Month');
 
     const bookingPayload = {
       user: targetUserId,
@@ -276,14 +196,17 @@ export const createBooking = async (req, res, next) => {
       location: location || 'Nainital, Uttarakhand',
       fullName: resolvedFullName,
       phone: resolvedPhone,
-      guestGender: guestGender || 'Male',
-      moveInDate: resolvedMoveInDate,
-      durationMonths: Number(durationMonths) || 3,
+      guestGender: guestGender || req.body.gender || 'Male',
+      gender: req.body.gender || guestGender || 'Male',
+      moveInDate: moveInDate || checkInISO || checkIn || new Date().toISOString().split('T')[0],
+      durationMonths: Number(durationMonths) || 1,
       durationDays: Number(durationDays) || 0,
       durationDisplay: calculatedDuration,
-      sharingType: sharingType || roomType || 'Double Sharing',
-      totalAmount: resolvedTotalAmount,
+      sharingType: sharingType || roomType || 'Room',
+      totalAmount: Number(totalAmount) || 0,
       bookingReferenceId,
+      slotBookingId: req.body.slotBookingId || '',
+      bookingSource: req.body.bookingSource || 'ONLINE',
       roomNumber: roomNumber || '',
       roomType: roomType || '',
       checkIn: checkIn || '',
@@ -297,41 +220,47 @@ export const createBooking = async (req, res, next) => {
       userName: userName || resolvedFullName,
       guestPhone: guestPhone || resolvedPhone,
       userPhone: userPhone || resolvedPhone,
-      guestAadhar: guestAadhar || aadharId || '',
-      aadharId: guestAadhar || aadharId || '',
+      guestAadhar: resolvedAadhar,
+      aadharId: resolvedAadhar,
+      aadhar: resolvedAadhar,
+      aadharNumber: resolvedAadhar,
       adults: Number(adults) || 1,
       children: Number(children) || 0,
-      status: clientStatus || 'Pending Host Approval',
-      createdAt: new Date().toISOString(),
+      status: clientStatus || 'CONFIRMED',
+      paymentMethod: clientPaymentMethod || (req.body.bookingSource === 'OFFLINE_HOST' ? 'OFFLINE' : 'PAY_ON_ARRIVAL'),
+      paymentStatus: clientPaymentStatus || (req.body.bookingSource === 'OFFLINE_HOST' ? 'PAID' : (clientPaymentMethod === 'RAZORPAY' ? 'PAID' : 'PENDING')),
+      paymentDetails: clientPaymentDetails || {
+        gateway: clientPaymentMethod === 'RAZORPAY' ? 'Razorpay' : 'Offline / Pay at Property',
+        paymentId: '',
+        orderId: '',
+        signature: '',
+      },
     };
 
-    if (mongoose.connection.readyState === 1) {
-      try {
-        const createdMongo = await Booking.create(bookingPayload);
-        if (createdMongo) {
-          bookingPayload._id = createdMongo._id.toString();
-        }
-      } catch (mongoErr) {
-        console.warn('MongoDB Booking creation fallback:', mongoErr.message);
+    const createdMongo = await Booking.create(bookingPayload);
+
+    // 🏛️ Link booking to native User.bookedPlaces
+    if (createdMongo && (targetUserEmail || targetUserId)) {
+      const uConditions = [];
+      if (targetUserEmail) uConditions.push({ email: targetUserEmail.toLowerCase() });
+      if (targetUserId && mongoose.Types.ObjectId.isValid(targetUserId)) {
+        uConditions.push({ _id: new mongoose.Types.ObjectId(targetUserId) });
+      }
+      if (uConditions.length > 0) {
+        await User.updateOne(
+          { $or: uConditions },
+          { $addToSet: { bookedPlaces: createdMongo._id } }
+        ).catch(() => {});
       }
     }
 
-    if (!bookingPayload._id) {
-      bookingPayload._id = 'book_' + Date.now();
-    }
-
-    // Save to persistent file storage
-    const fileBookings = readBookingsFromFile();
-    fileBookings.unshift(bookingPayload);
-    writeBookingsToFile(fileBookings);
-
     // Automatically decrement available rooms by 1 ONLY upon confirmed booking
-    if (bookingPayload.status === 'CONFIRMED' || bookingPayload.status === 'APPROVED') {
-      await adjustAvailableRooms(bookingPayload.hostEmail, bookingPayload.stayId, -1);
+    if (createdMongo.status === 'CONFIRMED' || createdMongo.status === 'APPROVED') {
+      await adjustAvailableRooms(createdMongo.hostEmail, createdMongo.stayId, -1);
     }
 
-    console.log(`✅ Booking Confirmed for User [${currentUserEmail || currentUserId}]: ${stayTitle} (1 room allocated)`);
-    return res.status(201).json(bookingPayload);
+    console.log(`✅ Booking Confirmed in bookings collection [${targetUserEmail || targetUserId}]: ${resolvedTitle} (Room ${roomNumber})`);
+    return res.status(201).json(createdMongo);
   } catch (error) {
     console.error('Booking Creation Error:', error);
     return next(error);
@@ -344,92 +273,81 @@ export const createBooking = async (req, res, next) => {
 export const updateBookingStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { status, hostEmail, fullName, userName, guestName, phone, userPhone, guestPhone, email, userEmail, guestEmail } = req.body;
+    const {
+      status,
+      hostEmail,
+      fullName,
+      userName,
+      guestName,
+      phone,
+      userPhone,
+      guestPhone,
+      email,
+      userEmail,
+      guestEmail,
+      guestAadhar,
+      aadharId,
+      aadhar,
+      aadharNumber,
+      adults,
+      children,
+      gender,
+      guestGender,
+    } = req.body;
 
     const newName = userName || fullName || guestName;
     const newPhone = userPhone || phone || guestPhone;
     const newEmail = userEmail || email || guestEmail;
+    const rawAadhar = guestAadhar || aadharId || aadhar || aadharNumber;
+    const cleanAadharDigits = rawAadhar ? String(rawAadhar).replace(/\D/g, '').slice(0, 12) : '';
+    const formattedAadhar = cleanAadharDigits.length === 12
+      ? cleanAadharDigits.replace(/(\d{4})(?=\d)/g, '$1 ')
+      : (rawAadhar ? String(rawAadhar).trim() : '');
 
-    let updatedBooking = null;
-    let oldStatus = 'CONFIRMED';
-    let targetHostEmail = hostEmail || '';
-    let targetStayId = '';
-
-    // 1. Update in MongoDB
-    if (mongoose.connection.readyState === 1) {
-      try {
-        const orConds = [{ bookingReferenceId: id }, { slotBookingId: id }, { id: id }];
-        if (mongoose.Types.ObjectId.isValid(id)) {
-          orConds.unshift({ _id: new mongoose.Types.ObjectId(id) });
-        } else {
-          orConds.unshift({ _id: id });
-        }
-        const b = await Booking.findOne({ $or: orConds });
-        if (b) {
-          oldStatus = b.status || 'CONFIRMED';
-          targetHostEmail = b.hostEmail || targetHostEmail;
-          targetStayId = b.stayId || targetStayId;
-          if (status) b.status = status.toUpperCase();
-          if (newName) {
-            b.fullName = newName;
-            b.userName = newName;
-            b.guestName = newName;
-          }
-          if (newPhone) {
-            b.phone = newPhone;
-            b.userPhone = newPhone;
-            b.guestPhone = newPhone;
-          }
-          if (newEmail) {
-            b.email = newEmail;
-            b.userEmail = newEmail;
-            b.guestEmail = newEmail;
-          }
-          await b.save();
-          updatedBooking = b.toObject();
-        }
-      } catch (mongoErr) {
-        console.warn('MongoDB updateBookingStatus error:', mongoErr.message);
-      }
+    const orConds = [{ bookingReferenceId: id }, { slotBookingId: id }, { id: id }];
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      orConds.unshift({ _id: new mongoose.Types.ObjectId(id) });
     }
 
-    // 2. Update in persistent file storage
-    const fileBookings = readBookingsFromFile();
-    const idx = fileBookings.findIndex(
-      (b) =>
-        String(b._id) === String(id) ||
-        String(b.id) === String(id) ||
-        b.bookingReferenceId === id ||
-        b.slotBookingId === id
-    );
-
-    if (idx >= 0) {
-      oldStatus = fileBookings[idx].status || oldStatus;
-      targetHostEmail = fileBookings[idx].hostEmail || targetHostEmail;
-      targetStayId = fileBookings[idx].stayId || targetStayId;
-      if (status) fileBookings[idx].status = status.toUpperCase();
-      if (newName) {
-        fileBookings[idx].fullName = newName;
-        fileBookings[idx].userName = newName;
-        fileBookings[idx].guestName = newName;
-      }
-      if (newPhone) {
-        fileBookings[idx].phone = newPhone;
-        fileBookings[idx].userPhone = newPhone;
-        fileBookings[idx].guestPhone = newPhone;
-      }
-      if (newEmail) {
-        fileBookings[idx].email = newEmail;
-        fileBookings[idx].userEmail = newEmail;
-        fileBookings[idx].guestEmail = newEmail;
-      }
-      if (!updatedBooking) updatedBooking = fileBookings[idx];
-      writeBookingsToFile(fileBookings);
-    }
-
-    if (!updatedBooking) {
+    const b = await Booking.findOne({ $or: orConds });
+    
+    if (!b) {
       return res.status(404).json({ message: 'Booking not found' });
     }
+
+    const oldStatus = b.status || 'CONFIRMED';
+    const targetHostEmail = hostEmail || b.hostEmail || '';
+    const targetStayId = b.stayId || '';
+
+    if (status) b.status = status.toUpperCase();
+    if (newName) {
+      b.fullName = newName;
+      b.userName = newName;
+      b.guestName = newName;
+    }
+    if (newPhone) {
+      b.phone = newPhone;
+      b.userPhone = newPhone;
+      b.guestPhone = newPhone;
+    }
+    if (newEmail) {
+      b.email = newEmail;
+      b.userEmail = newEmail;
+      b.guestEmail = newEmail;
+    }
+    if (rawAadhar !== undefined) {
+      b.guestAadhar = formattedAadhar;
+      b.aadharId = formattedAadhar;
+      b.aadhar = formattedAadhar;
+      b.aadharNumber = formattedAadhar;
+    }
+    if (adults !== undefined) b.adults = Number(adults) || 1;
+    if (children !== undefined) b.children = Number(children) || 0;
+    if (gender || guestGender) {
+      b.gender = gender || guestGender;
+      b.guestGender = guestGender || gender;
+    }
+    await b.save();
 
     const newStatus = status ? status.toUpperCase() : oldStatus;
     const wasActive = oldStatus === 'CONFIRMED' || oldStatus === 'CHECKED_IN';
@@ -444,7 +362,7 @@ export const updateBookingStatus = async (req, res, next) => {
     return res.json({
       success: true,
       message: `Booking status updated to ${newStatus}`,
-      booking: updatedBooking,
+      booking: b,
     });
   } catch (error) {
     console.error('Update Booking Status Error:', error);
@@ -464,147 +382,35 @@ export const getMyBookings = async (req, res, next) => {
       return res.json([]);
     }
 
-    let userBookings = [];
-    const existingIds = new Set();
-
-    // 1. Query MongoDB for this specific user
-    if (mongoose.connection.readyState === 1) {
-      try {
-        const conditions = [];
-        if (currentUserId) {
-          conditions.push({ user: currentUserId }, { userId: currentUserId });
-          if (mongoose.Types.ObjectId.isValid(currentUserId)) {
-            conditions.push({ user: new mongoose.Types.ObjectId(currentUserId) });
-          }
-        }
-        if (currentUserEmail) {
-          const emailRegex = new RegExp(`^${currentUserEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
-          conditions.push(
-            { userEmail: emailRegex },
-            { email: emailRegex },
-            { guestEmail: emailRegex }
-          );
-        }
-
-        const mongoBookings = await Booking.find({ $or: conditions }).sort({ createdAt: -1 }).lean();
-        if (mongoBookings && mongoBookings.length > 0) {
-          mongoBookings.forEach((b) => {
-            const bId = String(b._id?.toString() || b.id || b.bookingReferenceId);
-            existingIds.add(bId);
-            if (b.bookingReferenceId) existingIds.add(String(b.bookingReferenceId));
-            userBookings.push({
-              ...b,
-              _id: b._id?.toString() || b.id,
-              id: b._id?.toString() || b.id,
-            });
-          });
-        }
-      } catch (err) {
-        console.warn('MongoDB read my-bookings error:', err.message);
+    const conditions = [];
+    if (currentUserId) {
+      conditions.push({ user: currentUserId }, { userId: currentUserId });
+      if (mongoose.Types.ObjectId.isValid(currentUserId)) {
+        conditions.push({ user: new mongoose.Types.ObjectId(currentUserId) });
       }
     }
-
-    // 2. Merge with persistent file bookings matching this user
-    const fileBookings = readBookingsFromFile();
-    fileBookings.forEach((b) => {
-      const matchId = currentUserId && (String(b.user) === currentUserId || String(b.userId) === currentUserId);
-      const bookingEmail = (b.userEmail || b.email || b.guestEmail || '').toLowerCase().trim();
-      const matchEmail = currentUserEmail && bookingEmail === currentUserEmail;
-
-      const bId = String(b._id || b.id || b.bookingReferenceId);
-      if ((matchId || matchEmail) && !existingIds.has(bId) && !existingIds.has(String(b.bookingReferenceId))) {
-        existingIds.add(bId);
-        if (b.bookingReferenceId) existingIds.add(String(b.bookingReferenceId));
-        userBookings.push({
-          ...b,
-          _id: b._id || b.id || b.bookingReferenceId,
-          id: b._id || b.id || b.bookingReferenceId,
-        });
-      }
-    });
-
-    // 3. Scan host properties' slotBookings to ensure room slot bookings are always fetched in user dashboard
-    try {
-      const fileHosts = readHostsFromFile();
-      fileHosts.forEach((host) => {
-        if (!host || !Array.isArray(host.rooms)) return;
-        host.rooms.forEach((room) => {
-          if (!Array.isArray(room.slotBookings)) return;
-          room.slotBookings.forEach((sb) => {
-            const sbEmail = (sb.guestEmail || sb.userEmail || sb.email || '').toLowerCase().trim();
-            if (currentUserEmail && sbEmail === currentUserEmail) {
-              const bookingRef = sb.id || `SLOT-${host.id || host._id}-${room.roomNumber}-${(sb.bookedDates || []).join('-')}`;
-              if (!existingIds.has(String(bookingRef)) && !existingIds.has(String(sb.id))) {
-                existingIds.add(String(bookingRef));
-                if (sb.id) existingIds.add(String(sb.id));
-                const dates = Array.isArray(sb.bookedDates) ? sb.bookedDates : [];
-                userBookings.push({
-                  _id: bookingRef,
-                  id: bookingRef,
-                  bookingReferenceId: sb.bookingReferenceId || bookingRef,
-                  stayId: host._id || host.id,
-                  stayTitle: host.title || host.propertyName || 'Host Stay',
-                  stayImage: Array.isArray(host.images) && host.images[0] ? host.images[0] : (host.image || ''),
-                  location: host.city || host.location || 'Nainital, Uttarakhand',
-                  roomNumber: room.roomNumber || '',
-                  roomType: room.type || host.propertyType || 'Room',
-                  checkIn: sb.checkIn || (dates[0] ? `${dates[0]} (${sb.rateUnit === '/month' || sb.rateUnit === '/mo' || (Array.isArray(sb.bookedMonths) && sb.bookedMonths.length > 0) ? '12:00 AM' : '12:00 PM'})` : ''),
-                  checkOut: sb.checkOut || (dates[dates.length - 1] ? `${dates[dates.length - 1]} (${sb.rateUnit === '/month' || sb.rateUnit === '/mo' || (Array.isArray(sb.bookedMonths) && sb.bookedMonths.length > 0) ? '11:59 PM' : '11:59 AM'})` : ''),
-                  checkInISO: dates[0] || '',
-                  checkOutISO: dates[dates.length - 1] || '',
-                  bookedDates: dates,
-                  fullName: sb.guestName || sb.userName || req.user?.name || 'User',
-                  userName: sb.guestName || sb.userName || req.user?.name || 'User',
-                  userEmail: currentUserEmail,
-                  email: currentUserEmail,
-                  guestEmail: currentUserEmail,
-                  totalAmount: sb.totalAmount || 0,
-                  status: 'CONFIRMED',
-                  paymentStatus: 'COMPLETED',
-                  source: 'slotBooking',
-                  createdAt: sb.createdAt || new Date().toISOString(),
-                });
-              }
-            }
-          });
-        });
-      });
-    } catch (e) {
-      console.warn('Error reading slotBookings for user:', e.message);
+    if (currentUserEmail) {
+      const emailRegex = new RegExp(`^${currentUserEmail.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}$`, 'i');
+      conditions.push(
+        { userEmail: emailRegex },
+        { email: emailRegex },
+        { guestEmail: emailRegex }
+      );
     }
 
-    // Ensure stayTitle uses the actual propertyName from hosts_store if it was recorded as fallback
-    try {
-      const allHosts = readHostsFromFile();
-      userBookings = userBookings.map((b) => {
-        const hostMatch = allHosts.find(
-          (h) =>
-            String(h._id) === String(b.stayId || b.hostId) ||
-            String(h.id) === String(b.stayId || b.hostId) ||
-            (Array.isArray(h.previousIds) && h.previousIds.some((pid) => pid === String(b.stayId || b.hostId))) ||
-            ((h.email || '').toLowerCase() === (b.hostEmail || '').toLowerCase())
-        );
-        const realName = hostMatch?.propertyName || hostMatch?.title || hostMatch?.name;
-        if (realName && (!b.stayTitle || b.stayTitle === 'Host Room Stay' || b.stayTitle === 'Host Stay')) {
-          return {
-            ...b,
-            stayTitle: realName,
-          };
-        }
-        return b;
-      });
-    } catch (err) {
-      console.warn('Error enriching booking stay titles:', err.message);
+    if (conditions.length === 0) {
+      return res.json([]);
     }
 
-    // Sort newest bookings first
-    userBookings.sort((a, b) => {
-      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return timeB - timeA;
-    });
+    const mongoBookings = await Booking.find({ $or: conditions }).sort({ createdAt: -1 }).lean();
+    
+    const mapped = mongoBookings.map(b => ({
+      ...b,
+      id: b._id?.toString() || b.id,
+      _id: b._id?.toString() || b.id,
+    }));
 
-    return res.json(userBookings);
+    return res.json(mapped);
   } catch (error) {
     return next(error);
   }
@@ -616,92 +422,237 @@ export const getMyBookings = async (req, res, next) => {
 export const getBookingsByStay = async (req, res, next) => {
   try {
     const { stayId } = req.params;
-    let stayBookings = [];
-
-    const fileHosts = readHostsFromFile();
-    const matchedHost =
-      fileHosts.find((h) => {
-        if (!h) return false;
-        return (
-          String(h.id) === String(stayId) ||
-          String(h._id) === String(stayId) ||
-          (Array.isArray(h.previousIds) && h.previousIds.some((pid) => String(pid) === String(stayId))) ||
-          h.email === stayId
-        );
-      }) ||
-      fileHosts.find((h) => {
-        if (!h) return false;
-        return h.propertyName && (
-          String(stayId).toLowerCase().includes(h.propertyName.toLowerCase()) ||
-          h.propertyName.toLowerCase().includes(String(stayId).toLowerCase())
-        );
-      });
-
-    const validStayIds = new Set([
-      String(stayId),
-      ...(matchedHost?.id ? [String(matchedHost.id)] : []),
-      ...(matchedHost?._id ? [String(matchedHost._id)] : []),
-      ...(Array.isArray(matchedHost?.previousIds) ? matchedHost.previousIds.map(String) : []),
-    ]);
-
-    const hostEmail = matchedHost?.email?.toLowerCase();
-    const propertyTitle = matchedHost?.propertyName?.toLowerCase();
-
-    if (mongoose.connection.readyState === 1) {
-      try {
-        const orConditions = [
-          { stayId: { $in: Array.from(validStayIds) } },
-        ];
-        if (hostEmail) orConditions.push({ hostEmail: hostEmail });
-        if (propertyTitle) orConditions.push({ stayTitle: new RegExp(`^${propertyTitle}$`, 'i') });
-
-        const mongoBookings = await Booking.find({
-          $or: orConditions,
-          status: { $nin: ['REJECTED', 'CANCELLED', 'Rejected', 'Cancelled'] },
-        }).lean();
-        if (mongoBookings) {
-          stayBookings = mongoBookings.map((b) => ({
-            ...b,
-            id: b._id?.toString() || b.id,
-            _id: b._id?.toString() || b.id,
-          }));
-        }
-      } catch (err) {
-        console.warn('MongoDB getBookingsByStay error:', err.message);
+    
+    const orConditions = [
+      { stayId: stayId }
+    ];
+    
+    if (mongoose.Types.ObjectId.isValid(stayId)) {
+      orConditions.push({ stayId: new mongoose.Types.ObjectId(stayId) });
+      const host = await Host.findById(stayId);
+      if (host && host.email) {
+        orConditions.push({ hostEmail: host.email.toLowerCase() });
       }
+    } else {
+      orConditions.push({ hostEmail: stayId.toLowerCase() });
     }
 
-    const fileBookings = readBookingsFromFile();
-    fileBookings.forEach((b) => {
-      if (!b) return;
-      const bStatus = String(b.status || '');
-      if (
-        bStatus === 'REJECTED' ||
-        bStatus === 'CANCELLED' ||
-        bStatus === 'Rejected' ||
-        bStatus === 'Cancelled'
-      ) {
-        return;
-      }
+    const mongoBookings = await Booking.find({
+      $or: orConditions,
+      status: { $nin: ['REJECTED', 'CANCELLED', 'Rejected', 'Cancelled'] },
+    }).lean();
 
-      const idMatch = validStayIds.has(String(b.stayId));
-      const emailMatch = hostEmail && b.hostEmail && b.hostEmail.toLowerCase() === hostEmail;
-      const titleMatch = propertyTitle && b.stayTitle && b.stayTitle.toLowerCase() === propertyTitle;
+    const mapped = mongoBookings.map(b => ({
+      ...b,
+      id: b._id?.toString() || b.id,
+      _id: b._id?.toString() || b.id,
+    }));
 
-      if (idMatch || emailMatch || titleMatch) {
-        const bId = String(b.id || b._id || b.bookingReferenceId);
-        if (!stayBookings.some((x) => String(x.id || x._id || x.bookingReferenceId) === bId)) {
-          stayBookings.push({
-            ...b,
-            id: bId,
-            _id: bId,
-          });
-        }
-      }
-    });
-
-    return res.json(stayBookings);
+    return res.json(mapped);
   } catch (error) {
     return next(error);
   }
 };
+
+// @desc    Remove an occupant from a host's property and completely delete their booking record from the database
+// @route   POST /api/bookings/occupant/remove
+// @access  Public / Host
+export const removeOccupantBooking = async (req, res, next) => {
+  try {
+    const {
+      hostEmail,
+      roomNumber,
+      roomId,
+      occupantId,
+      slotBookingId,
+      bookingReferenceId,
+      phone,
+      guestPhone,
+      name,
+      guestName,
+      bookedDates,
+      bookedMonths,
+    } = req.body;
+
+    const cleanEmail = (hostEmail || '').toLowerCase().trim();
+    const cleanPhone = (phone || guestPhone || '').replace(/\D/g, '').slice(-10);
+    const cleanRoomNum = (roomNumber || '').replace(/[^0-9]/g, '');
+
+    // 1. Permanently delete from Booking collection
+    const bookingOrConditions = [];
+    if (occupantId && mongoose.Types.ObjectId.isValid(occupantId)) {
+      bookingOrConditions.push({ _id: new mongoose.Types.ObjectId(occupantId) });
+    }
+    if (occupantId) {
+      bookingOrConditions.push(
+        { id: occupantId },
+        { bookingId: occupantId },
+        { slotBookingId: occupantId }
+      );
+    }
+    if (slotBookingId && mongoose.Types.ObjectId.isValid(slotBookingId)) {
+      bookingOrConditions.push({ _id: new mongoose.Types.ObjectId(slotBookingId) });
+    }
+    if (slotBookingId) {
+      bookingOrConditions.push(
+        { slotBookingId: slotBookingId },
+        { id: slotBookingId }
+      );
+    }
+    if (bookingReferenceId) {
+      bookingOrConditions.push(
+        { bookingReferenceId: bookingReferenceId },
+        { id: bookingReferenceId }
+      );
+    }
+    if (cleanPhone && (cleanEmail || cleanRoomNum)) {
+      const phoneFilter = {
+        $or: [
+          { phone: new RegExp(cleanPhone) },
+          { userPhone: new RegExp(cleanPhone) },
+          { guestPhone: new RegExp(cleanPhone) },
+        ],
+      };
+      if (cleanEmail) phoneFilter.hostEmail = cleanEmail;
+      bookingOrConditions.push(phoneFilter);
+    }
+
+    if (bookingOrConditions.length > 0) {
+      await Booking.deleteMany({ $or: bookingOrConditions });
+    }
+
+    // 2. Permanently remove from Host.rooms and Stay.rooms in MongoDB
+    if (cleanEmail) {
+      const host = await Host.findOne({ email: cleanEmail });
+      if (host && Array.isArray(host.rooms)) {
+        let hostModified = false;
+        const targetDatesToRemove = new Set(Array.isArray(bookedDates) ? bookedDates : []);
+        const targetMonthsToRemove = new Set(Array.isArray(bookedMonths) ? bookedMonths : []);
+
+        host.rooms = host.rooms.map((rm) => {
+          const rmNum = String(rm.roomNumber || '').replace(/[^0-9]/g, '');
+          const matchRoom =
+            (roomId && rm.id === roomId) ||
+            (cleanRoomNum && rmNum === cleanRoomNum) ||
+            !cleanRoomNum;
+
+          if (!matchRoom) return rm;
+
+          if (Array.isArray(rm.slotBookings)) {
+            const initialCount = rm.slotBookings.length;
+            const removedSlots = [];
+
+            rm.slotBookings = rm.slotBookings.filter((sb) => {
+              const sbPhone = (sb.phone || sb.guestPhone || sb.userPhone || '').replace(/\D/g, '').slice(-10);
+              const sbRef = sb.bookingReferenceId || sb.slotBookingId || sb.id || '';
+              const matchThis =
+                (occupantId && (sb.id === occupantId || sb.slotBookingId === occupantId)) ||
+                (slotBookingId && (sb.slotBookingId === slotBookingId || sb.id === slotBookingId)) ||
+                (bookingReferenceId && sbRef === bookingReferenceId) ||
+                (cleanPhone && sbPhone && sbPhone === cleanPhone);
+
+              if (matchThis) {
+                removedSlots.push(sb);
+                return false;
+              }
+              return true;
+            });
+
+            if (rm.slotBookings.length !== initialCount || removedSlots.length > 0) {
+              hostModified = true;
+
+              // Collect all months and dates that were booked by this occupant
+              removedSlots.forEach((s) => {
+                if (Array.isArray(s.bookedMonths)) {
+                  s.bookedMonths.forEach((m) => targetMonthsToRemove.add(m));
+                }
+                if (Array.isArray(s.bookedDates)) {
+                  s.bookedDates.forEach((d) => targetDatesToRemove.add(d));
+                }
+              });
+
+              if (Array.isArray(rm.bookedMonths)) {
+                rm.bookedMonths = rm.bookedMonths.filter((m) => !targetMonthsToRemove.has(m));
+              }
+              if (Array.isArray(rm.bookedDates)) {
+                rm.bookedDates = rm.bookedDates.filter((d) => !targetDatesToRemove.has(d));
+              }
+
+              const hasRemaining =
+                (Array.isArray(rm.bookedMonths) && rm.bookedMonths.length > 0) ||
+                (Array.isArray(rm.bookedDates) && rm.bookedDates.length > 0) ||
+                (Array.isArray(rm.slotBookings) && rm.slotBookings.length > 0);
+
+              rm.status = hasRemaining ? 'Occupied' : 'Available';
+            }
+          }
+          return rm;
+        });
+
+        if (hostModified) {
+          host.markModified('rooms');
+          const availableCount = host.rooms.filter((r) => r.status === 'Available').length;
+          host.availableRooms = availableCount;
+          await host.save();
+
+          // Also synchronize changes to Stay collection if exists
+          await Stay.updateOne(
+            { hostEmail: cleanEmail },
+            {
+              $set: {
+                rooms: host.rooms,
+                availableRooms: availableCount,
+              },
+            }
+          );
+        }
+      }
+    }
+
+    return res.json({
+      success: true,
+      message: 'Occupant deleted from database and slots released successfully.',
+    });
+  } catch (error) {
+    console.error('Remove Occupant Controller Error:', error);
+    return next(error);
+  }
+};
+
+// @desc    Directly delete a booking by ID
+// @route   DELETE /api/bookings/:id
+// @access  Public / Host / Admin
+export const deleteBooking = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'Booking ID is required' });
+    }
+
+    let deleted = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      deleted = await Booking.findByIdAndDelete(id);
+    }
+    if (!deleted) {
+      deleted = await Booking.findOneAndDelete({
+        $or: [{ id: id }, { bookingReferenceId: id }, { slotBookingId: id }],
+      });
+    }
+    if (deleted && deleted._id) {
+      await User.updateMany(
+        { bookedPlaces: deleted._id },
+        { $pull: { bookedPlaces: deleted._id } }
+      ).catch(() => {});
+    }
+
+    return res.json({
+      success: true,
+      message: 'Booking deleted from database successfully.',
+      booking: deleted,
+    });
+  } catch (error) {
+    console.error('Delete Booking Error:', error);
+    return next(error);
+  }
+};
+

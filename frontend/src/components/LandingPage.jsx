@@ -81,23 +81,19 @@ export function LandingPage({ onSelectUpload, onSelectSearch }) {
         </div>
 
         {/* Head Branding & Website Name */}
-        <div className="text-center mb-4 sm:mb-8 space-y-1 sm:space-y-2">
+        <div className="text-center mb-6 sm:mb-10 space-y-2">
           <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
             ROOM <span className="text-emerald-500">SCOUT</span>
           </h1>
 
-          <h2 className="text-base sm:text-xl font-bold text-gray-200">
-            Select Your Destination
-          </h2>
-
-          <p className="text-xs sm:text-sm text-gray-400 max-w-xs sm:max-w-md mx-auto">
-            Are you looking to list a property or search for rooms near you?
+          <p className="text-xs sm:text-sm text-zinc-400 max-w-sm sm:max-w-md mx-auto font-normal">
+            Choose your destination to list a property or find verified rooms near you.
           </p>
         </div>
 
         {/* Dual Gateway Choice Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-6 w-full">
-          {/* TAB 1: UPLOAD YOUR PROPERTY ONLINE */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full">
+          {/* CARD 1: PROPERTY HOST */}
           <div
             onClick={onSelectUpload}
             role="button"
@@ -105,38 +101,34 @@ export function LandingPage({ onSelectUpload, onSelectSearch }) {
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') onSelectUpload();
             }}
-            className="group p-4 sm:p-7 rounded-2xl sm:rounded-3xl bg-zinc-200 hover:bg-white active:bg-white text-zinc-900 border-2 border-zinc-300 hover:border-white shadow-md transition-transform duration-75 cursor-pointer flex flex-col justify-between active:scale-[0.98] touch-manipulation"
+            className="group p-6 sm:p-8 rounded-[2rem] bg-zinc-100 hover:bg-white text-zinc-900 border border-zinc-300/80 hover:border-emerald-500/40 shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:shadow-[0_20px_40px_rgba(16,185,129,0.15)] transition-all duration-200 cursor-pointer flex flex-col justify-between active:scale-[0.98] touch-manipulation select-none"
           >
-            <div className="space-y-2 sm:space-y-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-zinc-300/80 group-hover:bg-emerald-50 border border-zinc-400/30 text-emerald-700 flex items-center justify-center text-xl sm:text-2xl font-bold">
-                🏡
-              </div>
-              <div>
-                <span className="text-[10px] sm:text-xs uppercase font-extrabold tracking-widest text-emerald-700">
-                  For Hosts & Property Owners
-                </span>
-                <h3 className="text-base sm:text-xl font-black text-zinc-950 mt-0.5">
-                  Upload Your Property Online
-                </h3>
-              </div>
-              <p className="text-xs sm:text-sm text-zinc-700 leading-snug font-medium">
-                List your PG, Hostel, Hotel, or Villa. Reach thousands of verified students & guests instantly.
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold tracking-widest uppercase text-emerald-700">
+                Property Host
+              </span>
+              <h3 className="text-xl sm:text-2xl font-extrabold text-zinc-950 tracking-tight">
+                Upload Your Property
+              </h3>
+              <p className="text-xs sm:text-sm text-zinc-600 leading-relaxed font-normal pt-1">
+                List your PG, Hostel, Hotel, or Villa. Connect directly with verified students and guests with zero brokerage.
               </p>
             </div>
 
-            <div className="mt-3 sm:mt-6 pt-2.5 sm:pt-3 border-t border-zinc-300 flex items-center justify-between">
-              <span className="text-xs sm:text-sm font-extrabold text-emerald-800">
-                Upload Property Now
+            <div className="mt-6 pt-4 border-t border-zinc-200/80 flex items-center justify-between">
+              <span className="text-xs sm:text-sm font-bold text-zinc-900 group-hover:text-emerald-700 transition-colors">
+                Get Started
               </span>
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-700 group-hover:bg-emerald-600 text-white flex items-center justify-center text-xs sm:text-sm font-bold shadow-xs">
-                <svg className="w-3.5 h-3.5 ml-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              <div className="w-8 h-8 rounded-full bg-zinc-900 group-hover:bg-emerald-600 text-white flex items-center justify-center transition-all duration-200 shadow-sm group-hover:translate-x-1">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
                 </svg>
               </div>
             </div>
           </div>
 
-          {/* TAB 2: SEARCH ROOMS NEAR YOU */}
+          {/* CARD 2: GUEST & STUDENT */}
           <div
             onClick={onSelectSearch}
             role="button"
@@ -144,32 +136,28 @@ export function LandingPage({ onSelectUpload, onSelectSearch }) {
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') onSelectSearch();
             }}
-            className="group p-4 sm:p-7 rounded-2xl sm:rounded-3xl bg-zinc-200 hover:bg-white active:bg-white text-zinc-900 border-2 border-zinc-300 hover:border-white shadow-md transition-transform duration-75 cursor-pointer flex flex-col justify-between active:scale-[0.98] touch-manipulation"
+            className="group p-6 sm:p-8 rounded-[2rem] bg-zinc-100 hover:bg-white text-zinc-900 border border-zinc-300/80 hover:border-emerald-500/40 shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:shadow-[0_20px_40px_rgba(16,185,129,0.15)] transition-all duration-200 cursor-pointer flex flex-col justify-between active:scale-[0.98] touch-manipulation select-none"
           >
-            <div className="space-y-2 sm:space-y-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-zinc-300/80 group-hover:bg-emerald-50 border border-zinc-400/30 text-emerald-700 flex items-center justify-center text-xl sm:text-2xl font-bold">
-                🔍
-              </div>
-              <div>
-                <span className="text-[10px] sm:text-xs uppercase font-extrabold tracking-widest text-emerald-700">
-                  For Students & Guests
-                </span>
-                <h3 className="text-base sm:text-xl font-black text-zinc-950 mt-0.5">
-                  Search Rooms Near You
-                </h3>
-              </div>
-              <p className="text-xs sm:text-sm text-zinc-700 leading-snug font-medium">
-                Explore verified PGs, hostels, boutique hotels, and luxury homestays with transparent pricing.
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold tracking-widest uppercase text-emerald-700">
+                Student & Guest
+              </span>
+              <h3 className="text-xl sm:text-2xl font-extrabold text-zinc-950 tracking-tight">
+                Search Rooms Near You
+              </h3>
+              <p className="text-xs sm:text-sm text-zinc-600 leading-relaxed font-normal pt-1">
+                Explore verified PGs, hostels, and stays with transparent pricing, honest amenities, and real student reviews.
               </p>
             </div>
 
-            <div className="mt-3 sm:mt-6 pt-2.5 sm:pt-3 border-t border-zinc-300 flex items-center justify-between">
-              <span className="text-xs sm:text-sm font-extrabold text-emerald-800">
-                Explore Stays Now
+            <div className="mt-6 pt-4 border-t border-zinc-200/80 flex items-center justify-between">
+              <span className="text-xs sm:text-sm font-bold text-zinc-900 group-hover:text-emerald-700 transition-colors">
+                Explore Stays
               </span>
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-700 group-hover:bg-emerald-600 text-white flex items-center justify-center text-xs sm:text-sm font-bold shadow-xs">
-                <svg className="w-3.5 h-3.5 ml-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              <div className="w-8 h-8 rounded-full bg-zinc-900 group-hover:bg-emerald-600 text-white flex items-center justify-center transition-all duration-200 shadow-sm group-hover:translate-x-1">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
                 </svg>
               </div>
             </div>

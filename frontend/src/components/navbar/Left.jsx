@@ -15,7 +15,7 @@ export function Left() {
   };
 
   return (
-    <div className="fixed bottom-4 left-4 sm:bottom-5 sm:left-6 z-50 flex items-center select-none">
+    <div className="fixed top-4 left-4 sm:top-5 sm:left-6 z-50 flex items-center select-none">
       {/* Brand Pill - Navigates to User Account Home Page */}
       <button
         type="button"

@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { adminAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
+import { Login } from '../components/navbar/Login';
 
 export function HostRoomsPage() {
   const navigate = useNavigate();
@@ -205,47 +206,50 @@ export function HostRoomsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans overflow-x-clip">
       {/* Top Header Navbar */}
-      <header className="sticky top-0 z-30 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+      <header className="sticky top-0 z-40 backdrop-blur-md bg-white/95 dark:bg-slate-900/95 border-b border-slate-200/80 dark:border-slate-800 shadow-2xs">
+        <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 h-15 flex items-center justify-between gap-3">
           {/* Left: Back button */}
-          <button
-            type="button"
-            onClick={handleBackToDashboard}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-colors cursor-pointer"
-          >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="19" y1="12" x2="5" y2="12" />
-              <polyline points="12 19 5 12 12 5" />
-            </svg>
-            <span>Back to Dashboard</span>
-          </button>
-
-          {/* Center: Title info */}
-          <div className="text-center hidden sm:block">
-            <h1 className="text-sm font-bold text-slate-900 dark:text-white">
-              Room Cards Manager
-            </h1>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              {activeRate.type} • {activeRate.price}{activeRate.rateUnit}
-            </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleBackToDashboard}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100/80 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all cursor-pointer shadow-2xs active:scale-[0.98]"
+              title="Back to Dashboard"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="19" y1="12" x2="5" y2="12" />
+                <polyline points="12 19 5 12 12 5" />
+              </svg>
+              <span>Back</span>
+            </button>
           </div>
 
-          {/* Right: Save & Done Button */}
-          <button
-            type="button"
-            disabled={isSaving}
-            onClick={handleSaveAndReturn}
-            className="px-4 py-1.5 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-semibold hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
-          >
-            {isSaving ? 'Saving...' : 'Save Rooms'}
-          </button>
+          {/* Center: Title Pill Badge */}
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-inner">
+            <span className="px-4 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs">
+              Room Cards Manager • {activeRate.type} ({activeRate.price}{activeRate.rateUnit})
+            </span>
+          </div>
+
+          {/* Right: Save Rooms & Profile */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            <button
+              type="button"
+              disabled={isSaving}
+              onClick={handleSaveAndReturn}
+              className="px-4 py-1.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-semibold hover:bg-slate-800 dark:hover:bg-slate-100 transition-all cursor-pointer disabled:opacity-50 shadow-xs active:scale-95 flex items-center gap-1.5"
+            >
+              {isSaving ? 'Saving...' : 'Save Rooms'}
+            </button>
+            <Login />
+          </div>
         </div>
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <main className="flex-1 w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 py-6 space-y-6 overflow-x-clip">
         {/* Top Control Bar */}
         <div className="p-5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>

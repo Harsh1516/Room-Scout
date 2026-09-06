@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
@@ -8,10 +9,20 @@ import bookingRoutes from './routes/bookingRoutes.js';
 import wishlistRoutes from './routes/wishlistRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import errorMiddleware from './middleware/errorMiddleware.js';
+import { apiLimiter } from './middleware/rateLimitMiddleware.js';
+import { sanitizeInput } from './middleware/sanitizeMiddleware.js';
 
 dotenv.config();
 
 const app = express();
+
+// Security Headers with Helmet (configured for cross-origin image/asset compatibility)
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: false, // Avoid breaking external CDNs/Leaflet in dev
+  })
+);
 
 // CORS Configuration
 const configuredOrigins = process.env.ALLOWED_ORIGINS
@@ -42,6 +53,7 @@ const corsOptions = {
   allowedHeaders: [
     'Content-Type',
     'Authorization',
+    'x-admin-key',
     'X-Requested-With',
     'Accept',
     'Origin',
@@ -53,8 +65,16 @@ const corsOptions = {
 // Apply CORS middleware & handle pre-flight OPTIONS requests
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Body parsers with hardened payload limits (10mb for photo uploads, prevents RAM exhaustion)
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// Global NoSQL Injection Sanitization
+app.use(sanitizeInput);
+
+// Global API Rate Limiter
+app.use('/api', apiLimiter);
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -101,3 +121,4 @@ connectDB().then(() => {
     console.log(`Backend Server running on http://0.0.0.0:${PORT} (Accepting network requests from 192.168.1.37)`);
   });
 });
+

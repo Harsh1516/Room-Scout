@@ -42,6 +42,39 @@ export function DataPage({ onStayClick, onBookClick }) {
 
   useEffect(() => {
     fetchStays();
+
+    // Auto refresh whenever user returns/switches back to this tab
+    const handleFocus = () => fetchStays();
+    window.addEventListener('focus', handleFocus);
+
+    // Custom sync events dispatched when properties/rooms are updated
+    const handleSync = () => fetchStays();
+    window.addEventListener('stayhub_slots_updated', handleSync);
+    window.addEventListener('stayhub_admin_sync', handleSync);
+
+    // Cross-tab broadcast channel & localStorage storage event
+    let bc = null;
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        bc = new BroadcastChannel('stayhub_live_channel');
+        bc.onmessage = () => fetchStays();
+      }
+    } catch {}
+
+    const handleStorage = (e) => {
+      if (e.key === 'stayhub_admin_sync_ts') {
+        fetchStays();
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('stayhub_slots_updated', handleSync);
+      window.removeEventListener('stayhub_admin_sync', handleSync);
+      window.removeEventListener('storage', handleStorage);
+      if (bc) bc.close();
+    };
   }, []);
 
   const handleRefresh = () => {
@@ -383,7 +416,7 @@ export function DataPage({ onStayClick, onBookClick }) {
                     <th className="py-3.5 px-4"># Property</th>
                     <th className="py-3.5 px-4">Type / Gender</th>
                     <th className="py-3.5 px-4">Location</th>
-                    <th className="py-3.5 px-4">Monthly Rate</th>
+                    <th className="py-3.5 px-4">Room Rate</th>
                     <th className="py-3.5 px-4">Rating</th>
                     <th className="py-3.5 px-4">Date Added</th>
                     <th className="py-3.5 px-4 text-right">Actions</th>
@@ -404,15 +437,20 @@ export function DataPage({ onStayClick, onBookClick }) {
                           <div className="flex items-center gap-3">
                             <img
                               src={stay.image || (stay.images && stay.images[0]) || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80'}
-                              alt={stay.title}
+                              alt={stay.title || 'Property'}
                               className="w-10 h-10 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 flex-shrink-0"
                             />
                             <div>
                               <div className="font-bold text-slate-900 dark:text-white line-clamp-1">
-                                {stay.title || stay.propertyName}
+                                {stay.title || stay.propertyName || 'Property Stay'}
                               </div>
-                              <div className="text-[11px] text-slate-400">
-                                {stay.hostName ? `Host: ${stay.hostName}` : 'RoomScout Verified'}
+                              <div className="text-[11px] text-slate-400 flex items-center gap-2">
+                                <span>{stay.hostName ? `Host: ${stay.hostName}` : 'RoomScout Verified'}</span>
+                                {Array.isArray(stay.rooms) && stay.rooms.length > 0 && (
+                                  <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold border border-slate-200 dark:border-slate-700">
+                                    {stay.rooms.length} {stay.rooms.length === 1 ? 'Room' : 'Rooms'}
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -424,9 +462,9 @@ export function DataPage({ onStayClick, onBookClick }) {
                             <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-semibold text-[10px]">
                               {stay.type || stay.propertyType || 'PG'}
                             </span>
-                            {stay.genderType && (
+                            {(stay.genderType || stay.gender) && (
                               <span className="text-[10px] text-slate-400">
-                                {stay.genderType}
+                                {stay.genderType || stay.gender}
                               </span>
                             )}
                           </div>
@@ -434,15 +472,26 @@ export function DataPage({ onStayClick, onBookClick }) {
 
                         {/* Location */}
                         <td className="py-3 px-4 text-slate-600 dark:text-slate-300">
-                          {stay.location || stay.city || 'Uttarakhand'}
+                          {stay.location || (stay.city && stay.state ? `${stay.city}, ${stay.state}` : (stay.city || stay.address || '—'))}
                         </td>
 
-                        {/* Price */}
+                        {/* Price & Rate Unit */}
                         <td className="py-3 px-4">
-                          <span className="font-bold text-slate-900 dark:text-white">
-                            ₹{Number(stay.price || 3500).toLocaleString('en-IN')}
-                          </span>
-                          <span className="text-[10px] text-slate-400">/mo</span>
+                          <div className="flex flex-col items-start">
+                            <div className="flex items-baseline gap-1">
+                              <span className="font-bold text-slate-900 dark:text-white">
+                                ₹{Number(stay.price || 0).toLocaleString('en-IN')}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-medium">
+                                {stay.rateUnit || stay.roomRates?.[0]?.rateUnit || '/month'}
+                              </span>
+                            </div>
+                            {stay.roomRates?.[0]?.type && (
+                              <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">
+                                {stay.roomRates[0].type}
+                              </span>
+                            )}
+                          </div>
                         </td>
 
                         {/* Rating */}

@@ -17,7 +17,10 @@ export const AdminHostRow = React.memo(function AdminHostRow({
   setConfirmDeleteHostId,
 }) {
   const formattedDateTime = formatDateTime(host.createdAt || host.joinedDate);
-  const isPending = host.status === 'Pending Approval';
+  const isApproved = host.status === 'Approved';
+  const hasRooms = Array.isArray(host.rooms) && host.rooms.length > 0;
+  const hasCategories = Array.isArray(host.roomRates) && host.roomRates.length > 0;
+  const canApprove = hasRooms && hasCategories;
 
   return (
     <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
@@ -65,12 +68,12 @@ export const AdminHostRow = React.memo(function AdminHostRow({
       <td className="py-3 px-3 border-r border-slate-100 dark:border-slate-800/80 text-center align-middle">
         <span
           className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-            isPending
-              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-              : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+            isApproved
+              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+              : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
           }`}
         >
-          {isPending ? '⏳ Pending' : '✓ Approved'}
+          {isApproved ? '✓ Approved' : '⏳ Pending'}
         </span>
         <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-1 whitespace-nowrap">
           {formattedDateTime}
@@ -98,14 +101,26 @@ export const AdminHostRow = React.memo(function AdminHostRow({
           </button>
 
           {/* Pending Approval Button */}
-          {isPending && (
+          {!isApproved && (
             <button
               type="button"
-              onClick={() => onApproveHost(host.id, host.name)}
-              disabled={isApproving}
-              className="px-2.5 py-1 text-xs text-amber-700 dark:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-md transition-all cursor-pointer font-medium disabled:opacity-50"
+              onClick={() => {
+                if (!canApprove) return;
+                onApproveHost(host.id, host.name);
+              }}
+              disabled={isApproving || !canApprove}
+              className={`px-2.5 py-1 text-xs rounded-md transition-all font-medium border ${
+                canApprove
+                  ? 'text-amber-700 dark:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 cursor-pointer'
+                  : 'text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 cursor-not-allowed opacity-60'
+              }`}
+              title={
+                canApprove
+                  ? `Approve host property for ${host.name}`
+                  : 'Cannot approve: Host must add at least 1 room card inside a room category'
+              }
             >
-              {isApproving ? 'Approving...' : 'Approve'}
+              {isApproving ? 'Approving...' : canApprove ? 'Approve' : 'No Rooms'}
             </button>
           )}
 
@@ -162,7 +177,7 @@ export function AdminHostsTable({
   return (
     <>
       {/* Desktop Table View - Arranged Columns: Reduced Contact & Property, Expanded Rooms & Rates */}
-      <div className="hidden md:block w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+      <div className="hidden md:block w-full rounded-2xl bg-white dark:bg-black border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <table className="w-full text-left border-collapse table-fixed text-xs">
           <thead>
             <tr className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800 select-none">
@@ -242,7 +257,7 @@ export function AdminHostsTable({
             return (
               <div
                 key={host.id || host.email || idx}
-                className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3"
+                className="p-4 rounded-xl bg-white dark:bg-black border border-slate-200 dark:border-slate-800 shadow-xs space-y-3"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-900 dark:text-white">

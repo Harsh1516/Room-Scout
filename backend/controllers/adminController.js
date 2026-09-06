@@ -1,137 +1,33 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { User } from '../models/User.js';
 import { Stay } from '../models/Stay.js';
 import { Host } from '../models/Host.js';
 import { Booking } from '../models/Booking.js';
+import { Wishlist } from '../models/Wishlist.js';
 import { generateToken } from '../middleware/authMiddleware.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const USERS_FILE = path.join(__dirname, '../data/users_store.json');
-const HOSTS_FILE = path.join(__dirname, '../data/hosts_store.json');
-const BOOKINGS_FILE = path.join(__dirname, '../data/bookings_store.json');
-
-// Helper to read & write local persistent users
-function readUsersFromFile() {
-  try {
-    if (!fs.existsSync(USERS_FILE)) {
-      return [];
-    }
-    const data = fs.readFileSync(USERS_FILE, 'utf-8');
-    return JSON.parse(data || '[]');
-  } catch (err) {
-    console.error('Error reading users file:', err);
-    return [];
-  }
-}
-
-function writeUsersToFile(users) {
-  try {
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf-8');
-  } catch (err) {
-    console.error('Error writing users file:', err);
-  }
-}
-
-// Helper to read & write local persistent hosts
-function readHostsFromFile() {
-  try {
-    if (!fs.existsSync(HOSTS_FILE)) {
-      return [];
-    }
-    const data = fs.readFileSync(HOSTS_FILE, 'utf-8');
-    return JSON.parse(data || '[]');
-  } catch (err) {
-    console.error('Error reading hosts file:', err);
-    return [];
-  }
-}
-
-function writeHostsToFile(hosts) {
-  try {
-    fs.writeFileSync(HOSTS_FILE, JSON.stringify(hosts, null, 2), 'utf-8');
-  } catch (err) {
-    console.error('Error writing hosts file:', err);
-  }
-}
-
-// Helper to read & write local persistent bookings
-function readBookingsFromFile() {
-  try {
-    if (!fs.existsSync(BOOKINGS_FILE)) {
-      return [];
-    }
-    const data = fs.readFileSync(BOOKINGS_FILE, 'utf-8');
-    return JSON.parse(data || '[]');
-  } catch (err) {
-    console.error('Error reading bookings file:', err);
-    return [];
-  }
-}
-
-function writeBookingsToFile(bookings) {
-  try {
-    fs.writeFileSync(BOOKINGS_FILE, JSON.stringify(bookings, null, 2), 'utf-8');
-  } catch (err) {
-    console.error('Error writing bookings file:', err);
-  }
-}
 
 // @desc    Get all users list from database (Guest & Student accounts only)
 // @route   GET /api/admin/users
 // @access  Public / Admin
 export const getUsers = async (req, res, next) => {
   try {
-    let usersList = [];
-    const isDbConnected = mongoose.connection.readyState === 1;
+    const mongoUsers = await User.find({ role: { $ne: 'host' } })
+      .select('-password')
+      .sort({ createdAt: -1 })
+      .lean();
 
-    if (isDbConnected) {
-      try {
-        const mongoUsers = await User.find({}).select('-password').sort({ createdAt: -1 }).lean();
-        if (mongoUsers && mongoUsers.length > 0) {
-          usersList = mongoUsers.map((u) => ({
-            _id: u._id?.toString() || u._id,
-            name: u.name,
-            email: u.email,
-            phone: u.phone || '',
-            avatar: u.avatar || u.name?.slice(0, 2).toUpperCase() || 'US',
-            role: u.role || 'user',
-            createdAt: u.createdAt || new Date(),
-            status: 'Active',
-            source: 'MongoDB',
-          }));
-        }
-      } catch (err) {
-        console.warn('Could not read users from MongoDB:', err.message);
-      }
-    }
-
-    // Merge or fallback to persistent JSON storage
-    const fileUsers = readUsersFromFile();
-    const existingEmails = new Set(usersList.map((u) => u.email.toLowerCase()));
-
-    fileUsers.forEach((u) => {
-      if (!existingEmails.has(u.email.toLowerCase())) {
-        usersList.push({
-          _id: u._id || u.id,
-          name: u.name,
-          email: u.email,
-          phone: u.phone || '',
-          avatar: u.avatar || u.name?.slice(0, 2).toUpperCase() || 'US',
-          role: u.role || 'user',
-          createdAt: u.createdAt || new Date(),
-          status: u.status || 'Active',
-          source: 'Database Store',
-        });
-      }
-    });
-
-    // Filter to only guest / student user accounts
-    const finalUsers = usersList.filter((u) => u.role !== 'host');
+    const finalUsers = mongoUsers.map((u) => ({
+      _id: u._id?.toString() || u._id,
+      name: u.name,
+      email: u.email,
+      phone: u.phone || '',
+      avatar: u.avatar || u.name?.slice(0, 2).toUpperCase() || 'US',
+      role: u.role || 'user',
+      createdAt: u.createdAt || new Date(),
+      status: 'Active',
+      source: 'MongoDB',
+    }));
 
     return res.json({
       success: true,
@@ -151,26 +47,30 @@ export const deleteUser = async (req, res, next) => {
   try {
     const { id } = req.params;
     let mongoDeleted = false;
+    let targetEmail = '';
 
-    if (mongoose.connection.readyState === 1) {
-      try {
-        if (mongoose.Types.ObjectId.isValid(id)) {
-          const resMongo = await User.findByIdAndDelete(id);
-          if (resMongo) mongoDeleted = true;
-        } else {
-          const resMongo = await User.deleteMany({ $or: [{ _id: id }, { email: id }] });
-          if (resMongo.deletedCount > 0) mongoDeleted = true;
-        }
-      } catch (mongoErr) {
-        console.warn('Mongo delete user error:', mongoErr.message);
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      const resMongo = await User.findByIdAndDelete(id);
+      if (resMongo) {
+        mongoDeleted = true;
+        targetEmail = resMongo.email;
+      }
+    } else {
+      const resMongo = await User.findOneAndDelete({ $or: [{ id }, { email: id }] });
+      if (resMongo) {
+        mongoDeleted = true;
+        targetEmail = resMongo.email;
       }
     }
 
-    const fileUsers = readUsersFromFile();
-    const updatedUsers = fileUsers.filter(
-      (u) => String(u._id) !== String(id) && String(u.id) !== String(id) && String(u.email) !== String(id)
-    );
-    writeUsersToFile(updatedUsers);
+    // Clean up associated user bookings and wishlists
+    if (targetEmail) {
+      const cleanTargetEmail = targetEmail.toLowerCase();
+      await Booking.deleteMany({
+        $or: [{ userEmail: cleanTargetEmail }, { email: cleanTargetEmail }, { guestEmail: cleanTargetEmail }],
+      }).catch(() => {});
+      await Wishlist.deleteMany({ userEmail: cleanTargetEmail }).catch(() => {});
+    }
 
     return res.json({
       success: true,
@@ -189,79 +89,72 @@ export const deleteUser = async (req, res, next) => {
 // @access  Public / Admin
 export const getHosts = async (req, res, next) => {
   try {
-    let hostsList = [];
-
     const normalizeRateUnit = (unit) => {
       if (!unit) return '/month';
       const u = String(unit).toLowerCase().trim();
       return (u.includes('night') || u.includes('day')) ? '/night' : '/month';
     };
 
-    // 1. Read from MongoDB if connected
-    if (mongoose.connection.readyState === 1) {
-      try {
-        const mongoHosts = await Host.find({}).sort({ createdAt: -1 }).lean();
-        if (mongoHosts && mongoHosts.length > 0) {
-          hostsList = mongoHosts.map((h) => ({
-            id: h._id?.toString() || h.id,
-            _id: h._id?.toString(),
-            name: h.name,
-            email: h.email,
-            phone: h.phone,
-            propertyName: h.propertyName || (h.properties && h.properties[0]) || `${h.name}'s Stay`,
-            properties: h.properties || (h.propertyName ? [h.propertyName] : []),
-            propertyType: h.propertyType || 'PG',
-            genderType: h.genderType || 'Both',
-            location: h.location,
-            address: h.address || h.location,
-            availableRooms: h.availableRooms !== undefined ? h.availableRooms : 0,
-            totalRooms: h.totalRooms !== undefined ? h.totalRooms : 0,
-            rating: h.rating || 4.8,
-            price: h.price || '₹4,000',
-            rateUnit: normalizeRateUnit(h.rateUnit),
-            roomRates: (h.roomRates || []).map((r) => ({
-              ...r,
-              rateUnit: normalizeRateUnit(r.rateUnit),
-            })),
-            rooms: (h.rooms || []).map((rm) => ({
-              ...rm,
-              rateUnit: normalizeRateUnit(rm.rateUnit),
-            })),
-            amenities: h.amenities || ['Wifi', 'Attached Bath', 'Power Backup'],
-            image: h.image || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80',
-            images: h.images || [],
-            status: h.status || 'Pending Approval',
-            description: h.description || h.bio || '',
-            bio: h.bio || h.description || '',
-            createdAt: h.createdAt ? new Date(h.createdAt).toISOString() : (h.joinedDate || '2026-08-25T10:00:00.000Z'),
-            joinedDate: h.createdAt ? new Date(h.createdAt).toISOString() : (h.joinedDate || '2026-08-25T10:00:00.000Z'),
-          }));
-        }
-      } catch (err) {
-        console.warn('Mongo read hosts error:', err.message);
-      }
-    }
+    const adminKeyHeader = req.headers['x-admin-key'];
+    const isAdmin = (adminKeyHeader && process.env.ADMIN_KEY && adminKeyHeader.trim() === process.env.ADMIN_KEY.trim()) ||
+                    (req.user && (req.user.role === 'admin' || req.user.isAdmin));
 
-    // 2. Merge with persistent JSON file store
-    const fileHosts = readHostsFromFile();
-    const existingEmails = new Set(hostsList.map((h) => h.email.toLowerCase()));
+    const query = isAdmin ? {} : { status: 'Approved' };
+    const mongoHosts = await Host.find(query).sort({ createdAt: -1 }).lean();
+    const hostsList = mongoHosts.map((h) => {
+      const p = h.property || {};
+      const d = h.hostDetails || {};
+      const hostRules = Array.isArray(p.rules) && p.rules.length > 0
+        ? p.rules
+        : (Array.isArray(h.rules) ? h.rules : (Array.isArray(h.houseRules) ? h.houseRules : []));
+      const hostFacilities = Array.isArray(p.facilities) && p.facilities.length > 0
+        ? p.facilities
+        : (Array.isArray(h.facilities) ? h.facilities : (Array.isArray(h.amenities) ? h.amenities : ['Wifi', 'Attached Bath', 'Power Backup']));
 
-    fileHosts.forEach((h) => {
-      if (!existingEmails.has(h.email.toLowerCase())) {
-        hostsList.push({
-          ...h,
-          id: h.id || h._id,
-          rateUnit: normalizeRateUnit(h.rateUnit),
-          roomRates: (h.roomRates || []).map((r) => ({
-            ...r,
-            rateUnit: normalizeRateUnit(r.rateUnit),
-          })),
-          rooms: (h.rooms || []).map((rm) => ({
-            ...rm,
-            rateUnit: normalizeRateUnit(rm.rateUnit),
-          })),
-        });
-      }
+      return {
+        id: h._id?.toString() || h.id,
+        _id: h._id?.toString(),
+        name: d.name || h.name,
+        email: d.email || h.email,
+        phone: d.phone || h.phone,
+        propertyName: p.propertyName || h.propertyName || (p.properties && p.properties[0]) || `${d.name || h.name}'s Stay`,
+        properties: p.properties || h.properties || (p.propertyName ? [p.propertyName] : []),
+        propertyType: p.propertyType || h.propertyType || 'PG',
+        genderType: p.genderType || h.genderType || 'Both',
+        location: p.location || h.location || '',
+        address: p.address || h.address || p.location || h.location || '',
+        roadArea: p.roadArea || h.roadArea || '',
+        pincode: p.pincode || h.pincode || '',
+        city: p.city || h.city || '',
+        state: p.state || h.state || '',
+        latitude: p.latitude ?? h.latitude,
+        longitude: p.longitude ?? h.longitude,
+        availableRooms: p.availableRooms !== undefined ? p.availableRooms : (h.availableRooms !== undefined ? h.availableRooms : 0),
+        totalRooms: p.totalRooms !== undefined ? p.totalRooms : (h.totalRooms !== undefined ? h.totalRooms : 0),
+        rating: p.rating || h.rating || 5.0,
+        price: p.price || h.price || '₹4,000',
+        rateUnit: normalizeRateUnit(p.rateUnit || h.rateUnit),
+        roomRates: (h.roomRates || []).map((r) => ({
+          ...r,
+          rateUnit: normalizeRateUnit(r.rateUnit),
+        })),
+        rooms: (h.rooms || []).map((rm) => ({
+          ...rm,
+          rateUnit: normalizeRateUnit(rm.rateUnit),
+        })),
+        facilities: hostFacilities,
+        amenities: hostFacilities,
+        rules: hostRules,
+        image: p.image || h.image || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80',
+        images: p.images || h.images || [],
+        instagramVideoUrl: p.instagramVideoUrl || h.instagramVideoUrl || '',
+        status: d.status || h.status || 'Pending Approval',
+        description: p.description || h.description || h.bio || '',
+        property: p,
+        hostDetails: d,
+        createdAt: h.createdAt ? new Date(h.createdAt).toISOString() : (h.joinedDate || '2026-08-25T10:00:00.000Z'),
+        joinedDate: h.createdAt ? new Date(h.createdAt).toISOString() : (h.joinedDate || '2026-08-25T10:00:00.000Z'),
+      };
     });
 
     return res.json({
@@ -282,34 +175,60 @@ export const getHostByEmail = async (req, res, next) => {
   try {
     const cleanEmail = req.params.email.trim().toLowerCase();
 
-    // Check MongoDB
-    if (mongoose.connection.readyState === 1) {
-      try {
-        const mongoHost = await Host.findOne({ email: cleanEmail }).lean();
-        if (mongoHost) {
-          return res.json({
-            success: true,
-            hasProperty: true,
-            host: {
-              ...mongoHost,
-              id: mongoHost._id?.toString() || mongoHost.id,
-            },
-          });
-        }
-      } catch (err) {
-        console.warn('Mongo host check error:', err.message);
-      }
-    }
+    const mongoHost = await Host.findOne({
+      $or: [{ email: cleanEmail }, { 'hostDetails.email': cleanEmail }],
+    }).lean();
 
-    // Check persistent file store
-    const fileHosts = readHostsFromFile();
-    const foundHost = fileHosts.find((h) => h.email.toLowerCase() === cleanEmail);
+    if (mongoHost) {
+      const prop = mongoHost.property || {};
+      const hostDet = mongoHost.hostDetails || {};
+      const hostRules = Array.isArray(prop.rules) && prop.rules.length > 0
+        ? prop.rules
+        : (Array.isArray(mongoHost.rules) && mongoHost.rules.length > 0 ? mongoHost.rules : (Array.isArray(mongoHost.houseRules) ? mongoHost.houseRules : []));
+      const hostFacilities = Array.isArray(prop.facilities) && prop.facilities.length > 0
+        ? prop.facilities
+        : (Array.isArray(mongoHost.facilities) && mongoHost.facilities.length > 0 ? mongoHost.facilities : (Array.isArray(mongoHost.amenities) ? mongoHost.amenities : []));
 
-    if (foundHost) {
       return res.json({
         success: true,
         hasProperty: true,
-        host: foundHost,
+        host: {
+          ...prop,
+          ...mongoHost,
+          id: mongoHost._id?.toString() || mongoHost.id,
+          name: hostDet.name || mongoHost.name,
+          email: hostDet.email || mongoHost.email,
+          phone: hostDet.phone || mongoHost.phone,
+          status: hostDet.status || mongoHost.status || 'Pending Approval',
+          role: hostDet.role || mongoHost.role || 'host',
+          avatar: hostDet.avatar || mongoHost.avatar || 'HO',
+          propertyName: prop.propertyName || mongoHost.propertyName || '',
+          properties: prop.properties || mongoHost.properties || (prop.propertyName ? [prop.propertyName] : []),
+          propertyType: prop.propertyType || mongoHost.propertyType || 'PG',
+          genderType: prop.genderType || mongoHost.genderType || 'Boys',
+          location: prop.location || mongoHost.location || '',
+          roadArea: prop.roadArea || mongoHost.roadArea || '',
+          pincode: prop.pincode || mongoHost.pincode || '',
+          city: prop.city || mongoHost.city || '',
+          state: prop.state || mongoHost.state || '',
+          address: prop.address || mongoHost.address || prop.location || '',
+          latitude: prop.latitude ?? mongoHost.latitude,
+          longitude: prop.longitude ?? mongoHost.longitude,
+          availableRooms: prop.availableRooms !== undefined ? prop.availableRooms : (mongoHost.availableRooms !== undefined ? mongoHost.availableRooms : 0),
+          totalRooms: prop.totalRooms !== undefined ? prop.totalRooms : (mongoHost.totalRooms !== undefined ? mongoHost.totalRooms : 0),
+          price: prop.price || mongoHost.price || '₹4,000',
+          rateUnit: prop.rateUnit || mongoHost.rateUnit || '/month',
+          rating: prop.rating || mongoHost.rating || 5.0,
+          rules: hostRules,
+          facilities: hostFacilities,
+          amenities: hostFacilities,
+          image: prop.image || mongoHost.image || '',
+          images: prop.images || mongoHost.images || [],
+          instagramVideoUrl: prop.instagramVideoUrl || mongoHost.instagramVideoUrl || '',
+          description: prop.description || mongoHost.description || mongoHost.bio || '',
+          property: prop,
+          hostDetails: hostDet,
+        },
       });
     }
 
@@ -329,6 +248,14 @@ export const getHostByEmail = async (req, res, next) => {
 // @access  Public / Admin
 export const createHost = async (req, res, next) => {
   try {
+    // 🔒 Strict Role Check: Reject any request from Guest users
+    if (req.user && req.user.role === 'user') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access Denied: Guests cannot list or upload properties. A Property Host account is strictly required.',
+      });
+    }
+
     const {
       name,
       email,
@@ -349,12 +276,12 @@ export const createHost = async (req, res, next) => {
       totalRooms,
       rating,
       roomRates,
+      facilities,
       amenities,
       rules,
       houseRules,
       image,
       images,
-      videos,
       instagramVideoUrl,
       description,
       bio,
@@ -389,20 +316,22 @@ export const createHost = async (req, res, next) => {
             id: r.id || `rate_${Date.now()}_${i}`,
             type: (r.type || '').trim(),
             price: (r.price || '').trim(),
-            rateUnit: r.rateUnit || '/month',
+            rateUnit: r.rateUnit || '',
           }))
-          .filter((r) => r.type !== '')
+          .filter((r) => r.id || r.type !== '')
       : [];
 
-    const parsedAmenities = Array.isArray(amenities)
-      ? amenities.map((a) => String(a).trim()).filter(Boolean)
-      : [];
+    const rawFacilities = Array.isArray(facilities) && facilities.length > 0
+      ? facilities
+      : (Array.isArray(amenities) ? amenities : []);
+    const parsedFacilities = rawFacilities.map((f) => String(f).trim()).filter(Boolean);
 
-    const parsedRules = Array.isArray(rules) && rules.length > 0
-      ? rules.map((r) => String(r).trim()).filter(Boolean)
+    const rawRules = Array.isArray(rules) && rules.length > 0
+      ? rules
       : (Array.isArray(houseRules) && houseRules.length > 0
-      ? houseRules.map((r) => String(r).trim()).filter(Boolean)
+      ? houseRules
       : []);
+    const parsedRules = rawRules.map((r) => String(r).trim()).filter(Boolean);
 
     const formattedLocation = location || (city ? `${city}, ${state || ''}`.trim() : '');
     const formattedAddress = address || [roadArea, city, state, pincode].filter(Boolean).join(', ') || formattedLocation;
@@ -415,23 +344,7 @@ export const createHost = async (req, res, next) => {
       ? manualRooms.filter((r) => r.status === 'Available').length
       : (Number(availableRooms) >= 0 ? Number(availableRooms) : 0);
 
-    const fileHosts = readHostsFromFile();
-    const existingIdx = fileHosts.findIndex((h) => h.email.toLowerCase() === cleanEmail);
-    const existingHost = existingIdx >= 0 ? fileHosts[existingIdx] : null;
-
-    const stableId = existingHost?.id || req.body.id || req.body._id || ('host_' + Date.now());
-    const prevIds = Array.isArray(existingHost?.previousIds) ? [...existingHost.previousIds] : [];
-    if (existingHost?.id && !prevIds.includes(existingHost.id)) prevIds.push(existingHost.id);
-    if (existingHost?._id && !prevIds.includes(existingHost._id)) prevIds.push(existingHost._id);
-    if (req.body.id && !prevIds.includes(req.body.id)) prevIds.push(req.body.id);
-
-    const hostPayload = {
-      id: stableId,
-      _id: existingHost?._id || stableId,
-      previousIds: prevIds,
-      name: name.trim(),
-      email: cleanEmail,
-      phone: phone.trim(),
+    const propertyData = {
       propertyName: propertyName.trim(),
       properties: [propertyName.trim()],
       propertyType: cleanType,
@@ -446,129 +359,183 @@ export const createHost = async (req, res, next) => {
       longitude: Number(longitude) || 79.4542,
       availableRooms: calculatedAvailableRooms,
       totalRooms: calculatedTotalRooms,
-      price: req.body.price ? String(req.body.price).trim() : (parsedRates[0]?.price || '₹4,000'),
-      rateUnit: req.body.rateUnit || parsedRates[0]?.rateUnit || '/month',
+      price: (parsedRates.length > 0 && parsedRates[0]?.price)
+        ? String(parsedRates[0].price).trim()
+        : (req.body.price ? String(req.body.price).trim() : '₹4,000'),
+      rateUnit: (parsedRates.length > 0 && parsedRates[0]?.rateUnit)
+        ? parsedRates[0].rateUnit
+        : (req.body.rateUnit || '/month'),
       rating: Number(rating) || 5.0,
-      roomRates: parsedRates,
-      amenities: parsedAmenities,
+      facilities: parsedFacilities,
       rules: parsedRules,
       image: cleanImage,
       images: Array.isArray(images) && images.length > 0 ? images.slice(0, 5) : (cleanImage ? [cleanImage] : []),
-      videos: Array.isArray(videos) ? videos : [],
       instagramVideoUrl: (instagramVideoUrl || '').trim(),
-      rooms: manualRooms,
-      status: 'Pending Approval',
       description: description ? description.trim() : (bio ? bio.trim() : ''),
-      bio: bio ? bio.trim() : (description ? description.trim() : ''),
-      createdAt: new Date().toISOString(),
-      joinedDate: new Date().toISOString(),
     };
 
-    // Sync name, phone and password in User store
-    const fileUsers = readUsersFromFile();
-    const userIdx = fileUsers.findIndex((u) => u.email.toLowerCase() === cleanEmail);
-    if (userIdx >= 0) {
-      if (hostPayload.name) fileUsers[userIdx].name = hostPayload.name;
-      if (hostPayload.phone) fileUsers[userIdx].phone = hostPayload.phone;
-      if (password && password.length >= 6) {
-        const salt = await bcrypt.genSalt(10);
-        fileUsers[userIdx].password = await bcrypt.hash(password, salt);
-      }
-      writeUsersToFile(fileUsers);
-    }
+    const hostDetailsData = {
+      name: name.trim(),
+      email: cleanEmail,
+      phone: phone.trim(),
+      avatar: 'HO',
+      role: 'host',
+      status: 'Pending Approval',
+    };
 
-    // Save to MongoDB if connected (update if exists, else create)
-    if (mongoose.connection.readyState === 1) {
-      try {
-        // Sync Host's name & phone in User collection as well
-        await User.updateOne(
-          { email: cleanEmail },
-          { $set: { name: hostPayload.name, phone: hostPayload.phone } }
-        ).catch(() => {});
-
-        const existing = await Host.findOne({ email: cleanEmail });
-        if (existing) {
-          // If already approved, preserve approved status
-          if (existing.status === 'Approved') {
-            hostPayload.status = 'Approved';
-          }
-          Object.assign(existing, hostPayload);
-          await existing.save();
-          hostPayload._id = existing._id.toString();
-
-          // If approved, also sync changes to Stay collection in real-time
-          if (existing.status === 'Approved') {
-            const basePrice =
-              parseInt(String(hostPayload.price || hostPayload.roomRates?.[0]?.price || '3500').replace(/[^0-9]/g, '')) || 3500;
-            const stayDoc = {
-              title: hostPayload.propertyName,
-              type: hostPayload.propertyType,
-              genderType: hostPayload.genderType,
-              location: hostPayload.location,
-              address: hostPayload.address,
-              roadArea: hostPayload.roadArea,
-              city: hostPayload.city,
-              state: hostPayload.state,
-              pincode: hostPayload.pincode,
-              latitude: hostPayload.latitude,
-              longitude: hostPayload.longitude,
-              price: basePrice,
-              rateUnit: hostPayload.rateUnit || '/month',
-              tags: hostPayload.amenities,
-              rules: hostPayload.rules,
-              roomRates: hostPayload.roomRates,
-              availableRooms: hostPayload.availableRooms,
-              totalRooms: hostPayload.totalRooms,
-              rooms: hostPayload.rooms || [],
-              image: hostPayload.image,
-              images: hostPayload.images,
-              videos: hostPayload.videos,
-              instagramVideoUrl: hostPayload.instagramVideoUrl,
-              description: hostPayload.description,
-              hostName: hostPayload.name,
-              hostPhone: hostPayload.phone,
-              hostEmail: hostPayload.email,
-              updatedAt: new Date(),
-            };
-            await Stay.updateOne({ hostEmail: cleanEmail }, { $set: stayDoc }, { upsert: true });
-          }
-        } else {
-          const createdHost = await Host.create(hostPayload);
-          if (createdHost) {
-            hostPayload._id = createdHost._id.toString();
-          }
-        }
-      } catch (dbErr) {
-        console.warn('MongoDB host save error:', dbErr.message);
-      }
-    }
-
-    // Save/Update in persistent file store
-    const fileHostsAfter = readHostsFromFile();
-    const existingIdxAfter = fileHostsAfter.findIndex((h) => h.email.toLowerCase() === cleanEmail);
-    if (existingIdxAfter >= 0) {
-      if (fileHostsAfter[existingIdxAfter].status === 'Approved') {
-        hostPayload.status = 'Approved';
-      }
-      const mergedPrevIds = Array.from(
-        new Set([
-          ...(fileHostsAfter[existingIdxAfter].previousIds || []),
-          ...(hostPayload.previousIds || []),
-          fileHostsAfter[existingIdxAfter].id,
-          fileHostsAfter[existingIdxAfter]._id,
-        ].filter(Boolean))
-      );
-      fileHostsAfter[existingIdxAfter] = {
-        ...fileHostsAfter[existingIdxAfter],
-        ...hostPayload,
-        id: hostPayload.id,
-        _id: hostPayload._id,
-        previousIds: mergedPrevIds,
-      };
+    // Determine status according to business requirements:
+    // - If host deletes all rooms (manualRooms.length === 0): status resets to 'Pending Approval'.
+    // - If host did not create its first room card yet: status is 'Pending Approval'.
+    // - Only keep 'Approved' if already approved AND still has at least 1 room card inside a category.
+    const existing = await Host.findOne({ email: cleanEmail });
+    let targetStatus = 'Pending Approval';
+    if (manualRooms.length > 0 && parsedRates.length > 0 && existing && (existing.status === 'Approved' || existing.hostDetails?.status === 'Approved')) {
+      targetStatus = 'Approved';
     } else {
-      fileHostsAfter.unshift(hostPayload);
+      targetStatus = 'Pending Approval';
     }
-    writeHostsToFile(fileHostsAfter);
+
+    hostDetailsData.status = targetStatus;
+
+    if (manualRooms.length === 0) {
+      await Stay.deleteOne({ hostEmail: cleanEmail }).catch(() => {});
+    }
+
+    const hostPayload = {
+      name: name.trim(),
+      email: cleanEmail,
+      phone: phone.trim(),
+      avatar: 'HO',
+      role: 'host',
+      status: targetStatus,
+
+      // 👤 Host Account Details
+      hostDetails: hostDetailsData,
+
+      // 🏨 Property Details Sub-document (ALL property related fields live strictly inside here)
+      property: propertyData,
+
+      rooms: manualRooms,
+      roomRates: parsedRates,
+    };
+
+    // 🔒 Strict Guest Check: If email exists in User collection, reject property creation
+    const guestAccount = await User.findOne({ email: cleanEmail });
+    if (guestAccount) {
+      return res.status(403).json({
+        success: false,
+        message: 'This email is registered as a Guest account. Guests cannot list or upload properties. Please sign in with a Property Host account.',
+      });
+    }
+
+    if (existing) {
+      await Host.findOneAndUpdate(
+        { email: cleanEmail },
+        {
+          $set: hostPayload,
+          $unset: {
+            propertyName: '',
+            properties: '',
+            propertyType: '',
+            genderType: '',
+            location: '',
+            roadArea: '',
+            pincode: '',
+            city: '',
+            state: '',
+            address: '',
+            latitude: '',
+            longitude: '',
+            availableRooms: '',
+            totalRooms: '',
+            price: '',
+            rateUnit: '',
+            rating: '',
+            facilities: '',
+            rules: '',
+            image: '',
+            images: '',
+            instagramVideoUrl: '',
+            description: '',
+            bio: '',
+            videos: '',
+            houseRules: '',
+            amenities: '',
+          },
+        },
+        { new: true }
+      );
+      hostPayload._id = existing._id.toString();
+
+      // If approved, also sync changes to Stay collection in real-time
+      if (targetStatus === 'Approved') {
+        const firstRate = hostPayload.roomRates?.[0];
+        const basePrice = firstRate?.price
+          ? (parseInt(String(firstRate.price).replace(/[^0-9]/g, '')) || 0)
+          : (propertyData.price
+            ? (parseInt(String(propertyData.price).replace(/[^0-9]/g, '')) || 0)
+            : 3500);
+        const rateUnit = firstRate?.rateUnit || propertyData.rateUnit || '/month';
+
+        const stayDoc = {
+          title: propertyData.propertyName,
+          type: propertyData.propertyType,
+          genderType: propertyData.genderType,
+          location: propertyData.location,
+          address: propertyData.address,
+          roadArea: propertyData.roadArea,
+          city: propertyData.city,
+          state: propertyData.state,
+          pincode: propertyData.pincode,
+          latitude: propertyData.latitude,
+          longitude: propertyData.longitude,
+          price: basePrice,
+          rateUnit: rateUnit,
+          tags: propertyData.facilities,
+          facilities: propertyData.facilities,
+          rules: propertyData.rules,
+          roomRates: hostPayload.roomRates,
+          availableRooms: hostPayload.rooms ? hostPayload.rooms.filter(r => r.status === 'Available').length : propertyData.availableRooms,
+          totalRooms: hostPayload.rooms ? hostPayload.rooms.length : propertyData.totalRooms,
+          rooms: hostPayload.rooms || [],
+          image: propertyData.image || (propertyData.images && propertyData.images[0]) || '',
+          images: propertyData.images || [],
+          instagramVideoUrl: propertyData.instagramVideoUrl,
+          description: propertyData.description,
+          hostName: hostDetailsData.name,
+          hostPhone: hostDetailsData.phone,
+          hostEmail: hostDetailsData.email,
+          updatedAt: new Date(),
+        };
+        await Stay.updateOne(
+          { hostEmail: cleanEmail },
+          {
+            $set: stayDoc,
+            $unset: { videos: '', houseRules: '', bio: '', amenities: '' },
+          },
+          { upsert: true }
+        );
+      } else {
+        await Stay.deleteMany({ hostEmail: cleanEmail }).catch(() => {});
+      }
+    } else {
+      if (!hostPayload.password && !password) {
+        return res.status(400).json({
+          success: false,
+          message: 'Host registration required. Please register as a Property Host before listing properties.',
+        });
+      }
+      if (password && !hostPayload.password) {
+        const salt = await bcrypt.genSalt(10);
+        const hashed = await bcrypt.hash(password, salt);
+        hostPayload.password = hashed;
+        hostPayload.hostDetails.password = hashed;
+      }
+      const createdHost = await Host.create(hostPayload);
+      if (createdHost) {
+        hostPayload._id = createdHost._id.toString();
+      }
+    }
 
     return res.status(201).json({
       success: true,
@@ -587,93 +554,123 @@ export const createHost = async (req, res, next) => {
 export const approveHost = async (req, res, next) => {
   try {
     const { id } = req.params;
-    let targetHost = null;
+    let hostDoc = null;
 
-    // 1. Update in MongoDB
-    if (mongoose.connection.readyState === 1) {
-      try {
-        if (mongoose.Types.ObjectId.isValid(id)) {
-          targetHost = await Host.findByIdAndUpdate(id, { status: 'Approved' }, { new: true });
-        } else {
-          targetHost = await Host.findOneAndUpdate(
-            { $or: [{ id }, { email: id }] },
-            { status: 'Approved' },
-            { new: true }
-          );
-        }
-      } catch (err) {
-        console.warn('Mongo approve error:', err.message);
-      }
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      hostDoc = await Host.findById(id);
+    } else {
+      hostDoc = await Host.findOne({ $or: [{ id }, { email: id }] });
     }
 
-    // 2. Update in persistent file store
-    const fileHosts = readHostsFromFile();
-    const hostIdx = fileHosts.findIndex(
-      (h) => String(h.id) === String(id) || String(h._id) === String(id) || String(h.email) === String(id)
-    );
-
-    if (hostIdx >= 0) {
-      fileHosts[hostIdx].status = 'Approved';
-      if (!targetHost) targetHost = fileHosts[hostIdx];
-      writeHostsToFile(fileHosts);
-    }
-
-    if (!targetHost) {
+    if (!hostDoc) {
       return res.status(404).json({ success: false, message: 'Host not found' });
     }
 
-    // 3. Publish active listing to Stay database with exact manual fields
-    const basePrice = targetHost.price
-      ? (parseInt(String(targetHost.price).replace(/[^0-9]/g, '')) || 0)
-      : (targetHost.roomRates?.[0]?.price
-        ? (parseInt(String(targetHost.roomRates[0].price).replace(/[^0-9]/g, '')) || 0)
-        : 0);
+    // Only allow changing status from pending to approved when host has at least one room card inside at least one room category
+    const hasRooms = Array.isArray(hostDoc.rooms) && hostDoc.rooms.length > 0;
+    const hasCategories = Array.isArray(hostDoc.roomRates) && hostDoc.roomRates.length > 0;
+    if (!hasRooms || !hasCategories) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot approve host: Host must have at least one room card inside at least one room category before approval.',
+      });
+    }
+
+    const targetHost = await Host.findByIdAndUpdate(
+      hostDoc._id,
+      { status: 'Approved', 'hostDetails.status': 'Approved' },
+      { new: true }
+    );
+
+    // Publish active listing to Stay database
+    const p = targetHost.property || {};
+    const d = targetHost.hostDetails || {};
+    const cleanEmail = (d.email || targetHost.email || '').toLowerCase().trim();
+
+    const propName = p.propertyName || targetHost.propertyName || `${d.name || targetHost.name}'s Stay`;
+    const propType = p.propertyType || targetHost.propertyType || 'PG';
+    const genderType = p.genderType || targetHost.genderType || 'Boys';
+    const location = p.location || targetHost.location || (p.city && p.state ? `${p.city}, ${p.state}` : (p.city || ''));
+    const address = p.address || targetHost.address || location;
+    const roadArea = p.roadArea || targetHost.roadArea || '';
+    const city = p.city || targetHost.city || '';
+    const state = p.state || targetHost.state || '';
+    const pincode = p.pincode || targetHost.pincode || '';
+    const latitude = Number(p.latitude ?? targetHost.latitude) || 0;
+    const longitude = Number(p.longitude ?? targetHost.longitude) || 0;
+
+    const facilities = (Array.isArray(p.facilities) && p.facilities.length > 0)
+      ? p.facilities
+      : (Array.isArray(targetHost.facilities) && targetHost.facilities.length > 0
+        ? targetHost.facilities
+        : (Array.isArray(targetHost.amenities) ? targetHost.amenities : []));
+
+    const rules = (Array.isArray(p.rules) && p.rules.length > 0)
+      ? p.rules
+      : (Array.isArray(targetHost.rules) && targetHost.rules.length > 0 ? targetHost.rules : []);
+
+    const images = (Array.isArray(p.images) && p.images.length > 0)
+      ? p.images
+      : (Array.isArray(targetHost.images) && targetHost.images.length > 0
+        ? targetHost.images
+        : (p.image ? [p.image] : (targetHost.image ? [targetHost.image] : [])));
+    const image = p.image || images[0] || targetHost.image || '';
+    const videoUrl = p.instagramVideoUrl || targetHost.instagramVideoUrl || '';
+    const description = p.description || targetHost.description || '';
+
+    const firstRate = targetHost.roomRates?.[0];
+    const basePrice = firstRate?.price
+      ? (parseInt(String(firstRate.price).replace(/[^0-9]/g, '')) || 0)
+      : (p.price
+        ? (parseInt(String(p.price).replace(/[^0-9]/g, '')) || 0)
+        : (targetHost.price ? (parseInt(String(targetHost.price).replace(/[^0-9]/g, '')) || 0) : 0));
+    const rateUnit = firstRate?.rateUnit || p.rateUnit || '/month';
 
     const stayPayload = {
-      title: targetHost.propertyName || `${targetHost.name}'s Stay`,
-      type: targetHost.propertyType || '',
-      genderType: targetHost.genderType || '',
-      location: targetHost.location || '',
-      address: targetHost.address || targetHost.location || '',
-      roadArea: targetHost.roadArea || '',
-      city: targetHost.city || '',
-      state: targetHost.state || '',
-      pincode: targetHost.pincode || '',
-      latitude: Number(targetHost.latitude) || 0,
-      longitude: Number(targetHost.longitude) || 0,
+      title: propName,
+      type: propType,
+      genderType: genderType,
+      location: location,
+      address: address,
+      roadArea: roadArea,
+      city: city,
+      state: state,
+      pincode: pincode,
+      latitude: latitude,
+      longitude: longitude,
       price: basePrice,
-      rating: Number(targetHost.rating) || 5.0,
+      rateUnit: rateUnit,
+      rating: Number(p.rating ?? targetHost.rating) || 5.0,
       badge: 'VERIFIED HOST',
-      tags: Array.isArray(targetHost.amenities) ? targetHost.amenities : [],
+      tags: facilities,
+      facilities: facilities,
+      rules: rules,
       roomRates: Array.isArray(targetHost.roomRates) ? targetHost.roomRates : [],
-      availableRooms: Number(targetHost.availableRooms) || 0,
-      totalRooms: Number(targetHost.totalRooms) || 0,
+      availableRooms: Array.isArray(targetHost.rooms)
+        ? targetHost.rooms.filter((r) => r.status === 'Available').length
+        : (Number(p.availableRooms ?? targetHost.availableRooms) || 0),
+      totalRooms: Array.isArray(targetHost.rooms)
+        ? targetHost.rooms.length
+        : (Number(p.totalRooms ?? targetHost.totalRooms) || 0),
       rooms: Array.isArray(targetHost.rooms) ? targetHost.rooms : [],
-      image: targetHost.image || targetHost.images?.[0] || '',
-      images: Array.isArray(targetHost.images) ? targetHost.images : (targetHost.image ? [targetHost.image] : []),
-      videos: targetHost.videos || [],
-      instagramVideoUrl: targetHost.instagramVideoUrl || '',
-      description: targetHost.description || targetHost.bio || '',
+      image: image,
+      images: images,
+      instagramVideoUrl: videoUrl,
+      description: description,
       hostId: targetHost.id || targetHost._id?.toString(),
-      hostName: targetHost.name,
-      hostEmail: targetHost.email ? targetHost.email.toLowerCase() : '',
-      hostPhone: targetHost.phone,
+      hostName: d.name || targetHost.name,
+      hostEmail: cleanEmail,
+      hostPhone: d.phone || targetHost.phone,
     };
 
-    if (mongoose.connection.readyState === 1) {
-      try {
-        const cleanEmail = targetHost.email ? targetHost.email.toLowerCase() : '';
-        const existingStay = await Stay.findOne({ hostEmail: cleanEmail });
-        if (existingStay) {
-          Object.assign(existingStay, stayPayload);
-          await existingStay.save();
-        } else {
-          await Stay.create(stayPayload);
-        }
-      } catch (stayErr) {
-        console.warn('Stay publish error:', stayErr.message);
-      }
-    }
+    await Stay.findOneAndUpdate(
+      { hostEmail: cleanEmail },
+      {
+        $set: stayPayload,
+        $unset: { videos: '', houseRules: '', bio: '', amenities: '' },
+      },
+      { new: true, upsert: true }
+    );
 
     return res.json({
       success: true,
@@ -694,29 +691,19 @@ export const rejectHost = async (req, res, next) => {
     const { id } = req.params;
     let targetEmail = '';
 
-    if (mongoose.connection.readyState === 1) {
-      try {
-        const found = await Host.findOneAndUpdate({ $or: [{ _id: id }, { id }, { email: id }] }, { status: 'Rejected' });
-        if (found) targetEmail = found.email;
-      } catch (err) {
-        console.warn('Mongo reject error:', err.message);
-      }
-    }
-
-    const fileHosts = readHostsFromFile();
-    const hostIdx = fileHosts.findIndex(
-      (h) => String(h.id) === String(id) || String(h._id) === String(id) || String(h.email) === String(id)
-    );
-    if (hostIdx >= 0) {
-      fileHosts[hostIdx].status = 'Rejected';
-      if (!targetEmail) targetEmail = fileHosts[hostIdx].email;
-      writeHostsToFile(fileHosts);
-    }
+    const found = await Host.findOneAndUpdate({ $or: [{ _id: id }, { id }, { email: id }] }, { status: 'Rejected' });
+    if (found) targetEmail = found.email;
 
     // Remove published stay if any
     if (targetEmail) {
-      if (mongoose.connection.readyState === 1) {
-        await Stay.deleteMany({ hostEmail: targetEmail.toLowerCase() });
+      const staysToDelete = await Stay.find({ hostEmail: targetEmail.toLowerCase() });
+      const stayIds = staysToDelete.map(s => String(s._id));
+      
+      await Stay.deleteMany({ hostEmail: targetEmail.toLowerCase() });
+      
+      await Booking.deleteMany({ hostEmail: targetEmail.toLowerCase() });
+      if (stayIds.length > 0) {
+        await Wishlist.deleteMany({ stayId: { $in: stayIds } });
       }
     }
 
@@ -737,48 +724,22 @@ export const getHostGuests = async (req, res, next) => {
   try {
     const cleanEmail = req.params.email.trim().toLowerCase();
 
-    // Get host details to match property name
-    const fileHosts = readHostsFromFile();
-    const currentHost = fileHosts.find((h) => h.email.toLowerCase() === cleanEmail);
-    const hostPropName = currentHost?.propertyName?.toLowerCase() || '';
-
+    const currentHost = await Host.findOne({ email: cleanEmail });
     let guestBookings = [];
 
-    // 1. Check MongoDB Bookings
-    if (mongoose.connection.readyState === 1) {
-      try {
-        const mongoBookings = await Booking.find({
-          $or: [
-            { hostEmail: cleanEmail },
-            { hostId: currentHost?.id },
-            { hostId: currentHost?._id },
-          ],
-        }).sort({ createdAt: -1 }).lean();
+    const mongoBookings = await Booking.find({
+      $or: [
+        { hostEmail: cleanEmail },
+        { hostId: currentHost?.id },
+        { hostId: currentHost?._id },
+      ],
+    }).sort({ createdAt: -1 }).lean();
 
-        if (mongoBookings && mongoBookings.length > 0) {
-          guestBookings = mongoBookings;
-        }
-      } catch (mongoErr) {
-        console.warn('Mongo guest search error:', mongoErr.message);
-      }
+    if (mongoBookings && mongoBookings.length > 0) {
+      guestBookings = mongoBookings;
     }
 
-    // 2. Check persistent file bookings
-    const fileBookings = readBookingsFromFile();
-    const existingBookingIds = new Set(guestBookings.map((b) => String(b._id || b.bookingReferenceId)));
-
-    fileBookings.forEach((b) => {
-      const matchEmail = b.hostEmail && b.hostEmail.toLowerCase() === cleanEmail;
-      const matchStayTitle = hostPropName && b.stayTitle && b.stayTitle.toLowerCase().includes(hostPropName);
-
-      if ((matchEmail || matchStayTitle) && !existingBookingIds.has(String(b._id || b.bookingReferenceId))) {
-        guestBookings.push(b);
-        existingBookingIds.add(String(b._id || b.bookingReferenceId));
-      }
-    });
-
-    // 3. Extract and sync offline slotBookings saved directly on host rooms
-    let hasNewOfflineBookings = false;
+    // Extract and sync offline slotBookings saved directly on host rooms
     if (currentHost && Array.isArray(currentHost.rooms)) {
       currentHost.rooms.forEach((rm) => {
         if (Array.isArray(rm.slotBookings)) {
@@ -843,33 +804,20 @@ export const getHostGuests = async (req, res, next) => {
               };
 
               guestBookings.push(offlineBooking);
-
-              // Auto-persist into fileBookings so it is permanently in database
-              const alreadyInFile = fileBookings.some((fb) => {
-                const fbPhone = (fb.phone || fb.userPhone || fb.guestPhone || '').replace(/\D/g, '').slice(-10);
-                const fbRef = fb.bookingReferenceId || fb.slotBookingId || fb._id || fb.id;
-                return (cleanDigits && fbPhone && cleanDigits === fbPhone) || (slotRef && fbRef && slotRef === fbRef);
-              });
-              if (!alreadyInFile) {
-                fileBookings.push(offlineBooking);
-                hasNewOfflineBookings = true;
-              }
-
-              // Also persist in Mongo if ready
-              if (mongoose.connection.readyState === 1) {
-                Booking.create(offlineBooking).catch((mErr) => {
-                  console.warn('Mongo offline booking sync error:', mErr.message);
-                });
-              }
             }
           });
         }
       });
     }
 
-    if (hasNewOfflineBookings) {
-      writeBookingsToFile(fileBookings);
-    }
+    const formatAadhar = (val) => {
+      if (!val) return '';
+      const digits = String(val).replace(/\D/g, '').slice(0, 12);
+      if (digits.length === 12) {
+        return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+      }
+      return String(val).trim();
+    };
 
     const formattedGuests = guestBookings.map((b) => ({
       _id: b._id?.toString() || b.id || b.bookingReferenceId,
@@ -895,8 +843,8 @@ export const getHostGuests = async (req, res, next) => {
       phone: b.phone || b.userPhone || b.guestPhone || '',
       userPhone: b.userPhone || b.phone || b.guestPhone || '',
       guestPhone: b.guestPhone || b.phone || b.userPhone || '',
-      guestAadhar: b.guestAadhar || b.aadharId || '',
-      aadharId: b.aadharId || b.guestAadhar || '',
+      guestAadhar: formatAadhar(b.guestAadhar || b.aadharId),
+      aadharId: formatAadhar(b.aadharId || b.guestAadhar),
       adults: Number(b.adults) || 1,
       children: Number(b.children) || 0,
       gender: b.guestGender || b.gender || 'Male',
@@ -933,46 +881,31 @@ export const deleteHost = async (req, res, next) => {
     let mongoDeleted = false;
     let targetEmail = '';
 
-    if (mongoose.connection.readyState === 1) {
-      try {
-        if (mongoose.Types.ObjectId.isValid(id)) {
-          const resMongo = await Host.findByIdAndDelete(id);
-          if (resMongo) {
-            mongoDeleted = true;
-            targetEmail = resMongo.email;
-          }
-        } else {
-          const resMongo = await Host.findOneAndDelete({ $or: [{ id }, { email: id }] });
-          if (resMongo) {
-            mongoDeleted = true;
-            targetEmail = resMongo.email;
-          }
-        }
-      } catch (mongoErr) {
-        console.warn('Mongo delete host error:', mongoErr.message);
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      const resMongo = await Host.findByIdAndDelete(id);
+      if (resMongo) {
+        mongoDeleted = true;
+        targetEmail = resMongo.email;
+      }
+    } else {
+      const resMongo = await Host.findOneAndDelete({ $or: [{ id }, { email: id }] });
+      if (resMongo) {
+        mongoDeleted = true;
+        targetEmail = resMongo.email;
       }
     }
 
-    const fileHosts = readHostsFromFile();
-    const hostIdx = fileHosts.findIndex(
-      (h) => String(h.id) === String(id) || String(h._id) === String(id) || String(h.email) === String(id)
-    );
-    if (hostIdx >= 0) {
-      if (!targetEmail) targetEmail = fileHosts[hostIdx].email;
-    }
-    const updatedHosts = fileHosts.filter(
-      (h) => String(h.id) !== String(id) && String(h._id) !== String(id) && String(h.email) !== String(id)
-    );
-    writeHostsToFile(updatedHosts);
-
     // Remove published stay if any
     if (targetEmail) {
-      if (mongoose.connection.readyState === 1) {
-        try {
-          await Stay.deleteMany({ hostEmail: targetEmail.toLowerCase() });
-        } catch (sErr) {
-          console.warn('Stay delete on host delete error:', sErr.message);
-        }
+      const staysToDelete = await Stay.find({ hostEmail: targetEmail.toLowerCase() });
+      const stayIds = staysToDelete.map(s => String(s._id));
+      
+      await Stay.deleteMany({ hostEmail: targetEmail.toLowerCase() });
+      
+      // Also clean up wishlists and bookings associated with this host's stays
+      await Booking.deleteMany({ hostEmail: targetEmail.toLowerCase() });
+      if (stayIds.length > 0) {
+        await Wishlist.deleteMany({ stayId: { $in: stayIds } });
       }
     }
 
@@ -993,28 +926,10 @@ export const deleteHost = async (req, res, next) => {
 // @access  Public / Admin
 export const getStats = async (req, res, next) => {
   try {
-    const fileUsers = readUsersFromFile();
-    const fileHosts = readHostsFromFile();
-    let mongoUsersCount = 0;
-    let mongoHostsCount = 0;
-    let mongoStaysCount = 0;
-    let mongoBookingsCount = 0;
-
-    if (mongoose.connection.readyState === 1) {
-      try {
-        mongoUsersCount = await User.countDocuments({ role: { $ne: 'host' } });
-        mongoHostsCount = await Host.countDocuments();
-        mongoStaysCount = await Stay.countDocuments();
-        mongoBookingsCount = await Booking.countDocuments();
-      } catch (err) {
-        console.warn('Mongo count error:', err.message);
-      }
-    }
-
-    const totalUsers = Math.max(mongoUsersCount, fileUsers.filter((u) => u.role !== 'host').length);
-    const totalHosts = Math.max(mongoHostsCount, fileHosts.length);
-    const totalStays = mongoStaysCount;
-    const totalBookings = Math.max(mongoBookingsCount, 12);
+    const totalUsers = await User.countDocuments({ role: { $ne: 'host' } });
+    const totalHosts = await Host.countDocuments();
+    const totalStays = await Stay.countDocuments();
+    const totalBookings = await Booking.countDocuments();
 
     return res.json({
       success: true,
@@ -1041,28 +956,18 @@ export const impersonateAccount = async (req, res, next) => {
     const { email, role, id } = req.body;
     const cleanEmail = email ? email.toLowerCase().trim() : '';
     const isHost = role === 'host';
-    const isDbConnected = mongoose.connection.readyState === 1;
 
     let targetAccount = null;
 
     if (isHost) {
-      if (isDbConnected) {
-        const query = {
-          $or: [
-            ...(id && mongoose.Types.ObjectId.isValid(id) ? [{ _id: id }] : []),
-            ...(id ? [{ id }] : []),
-            ...(cleanEmail ? [{ email: cleanEmail }] : []),
-          ],
-        };
-        targetAccount = await Host.findOne(query);
-      }
-
-      if (!targetAccount) {
-        const fileHosts = readHostsFromFile();
-        targetAccount = fileHosts.find(
-          (h) => (id && (String(h.id) === String(id) || String(h._id) === String(id))) || (cleanEmail && h.email.toLowerCase() === cleanEmail)
-        );
-      }
+      const query = {
+        $or: [
+          ...(id && mongoose.Types.ObjectId.isValid(id) ? [{ _id: id }] : []),
+          ...(id ? [{ id }] : []),
+          ...(cleanEmail ? [{ email: cleanEmail }] : []),
+        ],
+      };
+      targetAccount = await Host.findOne(query);
 
       if (!targetAccount) {
         return res.status(404).json({ success: false, message: 'Host account not found in database' });
@@ -1088,23 +993,14 @@ export const impersonateAccount = async (req, res, next) => {
         token,
       });
     } else {
-      if (isDbConnected) {
-        const query = {
-          $or: [
-            ...(id && mongoose.Types.ObjectId.isValid(id) ? [{ _id: id }] : []),
-            ...(id ? [{ id }] : []),
-            ...(cleanEmail ? [{ email: cleanEmail }] : []),
-          ],
-        };
-        targetAccount = await User.findOne(query);
-      }
-
-      if (!targetAccount) {
-        const fileUsers = readUsersFromFile();
-        targetAccount = fileUsers.find(
-          (u) => (id && (String(u.id) === String(id) || String(u._id) === String(id))) || (cleanEmail && u.email.toLowerCase() === cleanEmail)
-        );
-      }
+      const query = {
+        $or: [
+          ...(id && mongoose.Types.ObjectId.isValid(id) ? [{ _id: id }] : []),
+          ...(id ? [{ id }] : []),
+          ...(cleanEmail ? [{ email: cleanEmail }] : []),
+        ],
+      };
+      targetAccount = await User.findOne(query);
 
       if (!targetAccount) {
         return res.status(404).json({ success: false, message: 'User account not found in database' });

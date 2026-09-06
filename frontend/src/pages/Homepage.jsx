@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { HeroSection } from '../components/homepage/HeroSection';
 import { Categories } from '../components/homepage/Categories';
-import { FeaturedDestinations } from '../components/homepage/FeaturedDestinations';
 import { RecentlyAdded } from '../components/homepage/RecentlyAdded';
 import { VerificationPipeline } from '../components/homepage/VerificationPipeline';
 import { GuestReviews } from '../components/homepage/GuestReviews';
@@ -38,9 +37,6 @@ export function Homepage({ setCategoryFilter, onStayClick, onBookClick }) {
 
       {/* 2. Room Categories */}
       <Categories onSelectCategory={handleSelectCategory} />
-
-      {/* 3. Curated Top Pan-India Destination Hubs */}
-      <FeaturedDestinations />
 
       {/* 4. Recently Added Verified Listings */}
       <RecentlyAdded onStayClick={onStayClick} onBookClick={onBookClick} />

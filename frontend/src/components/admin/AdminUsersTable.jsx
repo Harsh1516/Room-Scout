@@ -98,7 +98,7 @@ export function AdminUsersTable({
   return (
     <>
       {/* Desktop Table View */}
-      <div className="hidden md:block w-full rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+      <div className="hidden md:block w-full rounded-lg bg-white dark:bg-black border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
         <div className="w-full overflow-x-auto">
           <table className="w-full text-left border-collapse font-normal">
             <thead>
@@ -155,7 +155,7 @@ export function AdminUsersTable({
           <div className="p-8 text-center text-slate-400 text-xs">No users found</div>
         ) : (
           users.map((user, idx) => (
-            <div key={user._id || idx} className="p-3.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
+            <div key={user._id || idx} className="p-3.5 rounded-lg bg-white dark:bg-black border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-slate-900 dark:text-white font-normal">#{idx + 1} {user.name}</span>
                 <span className="text-[11px] text-slate-400">{formatDateTime(user.createdAt)}</span>

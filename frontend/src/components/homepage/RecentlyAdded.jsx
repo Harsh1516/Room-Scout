@@ -74,24 +74,8 @@ export function RecentlyAdded({ onStayClick, onBookClick }) {
             No Properties Listed Yet
           </h3>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-md mx-auto leading-relaxed">
-            All listings on RoomScout are created by verified property hosts. Be the first to list your PG, hostel, or stay!
+            New verified listings are currently being processed. Check back soon for fresh PGs, hostels, and stays!
           </p>
-          <div className="mt-5 flex items-center justify-center gap-3">
-            <button
-              type="button"
-              onClick={() => navigate('/host/upload')}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer"
-            >
-              + List Your Property Now
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('/search')}
-              className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors cursor-pointer"
-            >
-              Search Database
-            </button>
-          </div>
         </div>
       )}
 

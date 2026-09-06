@@ -67,14 +67,14 @@ export function WhereControl({
           e.stopPropagation();
           onToggle();
         }}
-        className={`flex items-center px-2 sm:px-3.5 py-0.5 sm:py-1.5 rounded-full text-[9px] sm:text-xs font-bold tracking-tight transition-all duration-150 cursor-pointer select-none active:scale-95 border focus:outline-none focus:ring-0 focus-visible:outline-none shadow-xs ${
+        className={`flex items-center px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold tracking-tight transition-all duration-150 cursor-pointer select-none active:scale-95 border focus:outline-none focus:ring-0 focus-visible:outline-none shadow-xs ${
           isLocationActive
             ? 'bg-cyan-600 text-white border-cyan-400 font-bold shadow-[0_0_12px_rgba(6,182,212,0.4)]'
             : 'bg-slate-950 text-white hover:bg-slate-900 border-slate-800 dark:border-white/20'
         }`}
         title="Select destination or map location"
       >
-        <span className="max-w-12 sm:max-w-24 truncate">{displayLabel}</span>
+        <span className="max-w-16 sm:max-w-24 truncate">{displayLabel}</span>
       </button>
 
       {/* Pop-up Tab (Deep Optical Diffusion & Glossy Luster) */}
@@ -84,7 +84,7 @@ export function WhereControl({
           className="absolute top-full mt-3.5 left-1/2 -translate-x-1/2 w-72 sm:w-76 p-3 rounded-2xl apple-liquid-dropdown z-50 text-slate-900 dark:text-slate-100 space-y-2.5 animate-in fade-in duration-75"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-1 border-b border-slate-200/60 dark:border-white/10 pb-1.5">
+          <div className="flex items-center justify-between px-1 border-b border-slate-100 dark:border-zinc-800 pb-1.5">
             <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
               Where to?
             </span>
@@ -106,7 +106,7 @@ export function WhereControl({
               placeholder="Search city, area, or state..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full px-3 py-2 text-xs rounded-xl bg-white/8 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-none"
+              className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-none"
               autoFocus
             />
           </form>
@@ -121,7 +121,7 @@ export function WhereControl({
                 onOpenMapModal();
               }
             }}
-            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-900 dark:text-cyan-200 transition-none cursor-pointer focus:outline-none focus:ring-0 active:scale-98"
+            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-cyan-50 dark:bg-cyan-950/40 border border-cyan-500/40 text-cyan-950 dark:text-cyan-200 transition-none cursor-pointer focus:outline-none focus:ring-0 active:scale-98"
           >
             <div className="text-left">
               <div className="text-xs font-bold">Interactive Map Pin</div>

@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useCallback } from 'react';
+import React, { useMemo, useRef, useState, useCallback, useEffect } from 'react';
 import { isMonthlyRateUnit } from '../../utils/dateUtils';
 
 /**
@@ -118,9 +118,28 @@ function CategoryRoomCarousel({
   currentMonthKey,
   isMonthly,
   onAddRoomCard,
+  onSaveCategory,
 }) {
   const scrollRef = useRef(null);
   const [activeDotIndex, setActiveDotIndex] = useState(0);
+  const prevCountRef = useRef(matchingRooms.length);
+
+  // Auto scroll to newly added room card
+  useEffect(() => {
+    if (matchingRooms.length > prevCountRef.current && scrollRef.current) {
+      const timer = setTimeout(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTo({
+            left: scrollRef.current.scrollWidth,
+            behavior: 'smooth',
+          });
+          setActiveDotIndex(matchingRooms.length - 1);
+        }
+      }, 60);
+      return () => clearTimeout(timer);
+    }
+    prevCountRef.current = matchingRooms.length;
+  }, [matchingRooms.length]);
 
   // Wheel listener for horizontal scrolling
   const handleWheel = useCallback((e) => {
@@ -184,7 +203,7 @@ function CategoryRoomCarousel({
   };
 
   return (
-    <div className="pt-3 border-t border-slate-400/90 dark:border-slate-600 space-y-2.5">
+    <div className="pt-2.5 border-t border-slate-200/80 dark:border-slate-800 space-y-2.5">
       {/* Category Room Cards Header with Controls */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 min-w-0">
@@ -344,6 +363,12 @@ function CategoryRoomCarousel({
                           onUpdateRoomNumber(card.id, e.target.value);
                         }
                       }}
+                      onBlur={() => {
+                        if (typeof onSaveCategory === 'function') {
+                          onSaveCategory();
+                        }
+                      }}
+                      maxLength={8}
                       placeholder="101"
                       className={`w-full px-1 py-0.5 rounded-md text-xs font-bold text-center transition-colors focus:outline-none ${
                         isCardSelected
@@ -415,6 +440,7 @@ export default function HostRoomCategories({
   onRemoveRoomCard,
   onUpdateRoomNumber,
 }) {
+  const [confirmDeleteCatIdx, setConfirmDeleteCatIdx] = useState(null);
   const currentMonthKey = useMemo(() => new Date().toISOString().slice(0, 7), []);
 
   // Compute category statistics map (total rooms vs available rooms today)
@@ -520,17 +546,45 @@ export default function HostRoomCategories({
                         </svg>
                       </button>
 
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRemoveCategory(index);
-                        }}
-                        className="w-6 h-6 rounded-md text-slate-400 hover:text-red-500 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
-                        title="Remove category"
-                      >
-                        ✕
-                      </button>
+                      {confirmDeleteCatIdx === index ? (
+                        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setConfirmDeleteCatIdx(null);
+                            }}
+                            className="px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 transition-colors cursor-pointer"
+                            title="Cancel delete"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setConfirmDeleteCatIdx(null);
+                              onRemoveCategory(index);
+                            }}
+                            className="px-1.5 py-0.5 text-[10px] font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded transition-colors cursor-pointer shadow-2xs"
+                            title="Confirm delete category"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setConfirmDeleteCatIdx(index);
+                          }}
+                          className="w-6 h-6 rounded-md text-slate-400 hover:text-red-500 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
+                          title="Remove category"
+                        >
+                          ✕
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -540,7 +594,10 @@ export default function HostRoomCategories({
             return (
               <div
                 key={rowKey}
-                onClick={() => onSelectCategoryIndex(index)}
+                onClick={() => {
+                  if (confirmDeleteCatIdx !== null && confirmDeleteCatIdx !== index) setConfirmDeleteCatIdx(null);
+                  onSelectCategoryIndex(index);
+                }}
                 onFocusCapture={() => onSelectCategoryIndex(index)}
                 className={`p-3 sm:p-3.5 rounded-xl cursor-pointer space-y-2.5 relative transition-colors ${
                   isSelected
@@ -548,67 +605,101 @@ export default function HostRoomCategories({
                     : 'bg-white dark:bg-slate-900/70 border border-slate-200/90 dark:border-slate-800 shadow-2xs'
                 }`}
               >
-                {/* Field 1: Category Name & Live Today Status */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between gap-1">
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                      Room Category Name
-                    </label>
-                    <div className="flex items-center gap-1 shrink-0">
-                      {/* Live Today Availability Text */}
-                      <span
-                        className="text-[11px] font-medium text-slate-900 dark:text-slate-100 select-none px-1"
-                        title={`${stats.availableCount} of ${stats.totalCount} rooms are available today`}
-                      >
-                        {stats.availableCount}/{stats.totalCount} Avail
-                      </span>
+                {/* Header: Category Title & Live Today Status */}
+                <div className="flex items-center justify-between gap-1">
+                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Room Category Details
+                  </span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    {/* Live Today Availability Text */}
+                    <span
+                      className="text-[11px] font-medium text-slate-900 dark:text-slate-100 select-none px-1"
+                      title={`${stats.availableCount} of ${stats.totalCount} rooms are available today`}
+                    >
+                      {stats.availableCount}/{stats.totalCount} Avail
+                    </span>
 
-                      {/* Shrink Button */}
-                      <button
-                        type="button"
-                        onClick={(e) => onToggleCollapseCategory(index, e)}
-                        className="w-5 h-5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
-                        title="Shrink container"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-                        </svg>
-                      </button>
+                    {/* Shrink Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => onToggleCollapseCategory(index, e)}
+                      className="w-5 h-5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
+                      title="Shrink container"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+                      </svg>
+                    </button>
 
-                      {/* Delete Button */}
+                    {/* Delete Button with 2-Step Confirmation */}
+                    {confirmDeleteCatIdx === index ? (
+                      <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setConfirmDeleteCatIdx(null);
+                          }}
+                          className="px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 transition-colors cursor-pointer"
+                          title="Cancel delete"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setConfirmDeleteCatIdx(null);
+                            onRemoveCategory(index);
+                          }}
+                          className="px-1.5 py-0.5 text-[10px] font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded transition-colors cursor-pointer shadow-2xs"
+                          title="Confirm delete category"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ) : (
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onRemoveCategory(index);
+                          setConfirmDeleteCatIdx(index);
                         }}
                         className="w-5 h-5 rounded-md text-slate-400 hover:text-red-500 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
                         title="Remove category"
                       >
                         ✕
                       </button>
-                    </div>
+                    )}
                   </div>
-
-                  <input
-                    type="text"
-                    value={rate.type || ''}
-                    onChange={(e) => {
-                      const textOnly = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-                      onUpdateCategory(index, 'type', textOnly);
-                    }}
-                    onFocus={() => onSelectCategoryIndex(index)}
-                    onClick={() => onSelectCategoryIndex(index)}
-                    onBlur={onSaveCategory}
-                    placeholder="e.g. Deluxe Room"
-                    className="w-full px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:border-emerald-500 placeholder:text-slate-400 transition-colors shadow-2xs"
-                  />
                 </div>
 
-                {/* Fields 2 & 3: Price & Billing Cycle */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                {/* 1-Line Format: Room Category Name, Price, and Cycle */}
+                <div className="flex items-start gap-1.5 sm:gap-2">
+                  {/* Field 1: Category Name */}
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block truncate">
+                      Category Name
+                    </label>
+                    <input
+                      type="text"
+                      value={rate.type || ''}
+                      onChange={(e) => {
+                        const textOnly = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                        onUpdateCategory(index, 'type', textOnly);
+                      }}
+                      onFocus={() => onSelectCategoryIndex(index)}
+                      onClick={() => onSelectCategoryIndex(index)}
+                      onBlur={onSaveCategory}
+                      placeholder="e.g. Deluxe Room"
+                      autoFocus={isSelected && !rate.type}
+                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:border-emerald-500 placeholder:text-slate-400 transition-colors shadow-2xs truncate"
+                    />
+                  </div>
+
+                  {/* Field 2: Price (₹) */}
+                  <div className="w-20 sm:w-24 shrink-0 space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block truncate">
                       Price (₹)
                     </label>
                     <input
@@ -621,15 +712,16 @@ export default function HostRoomCategories({
                       onFocus={() => onSelectCategoryIndex(index)}
                       onClick={() => onSelectCategoryIndex(index)}
                       onBlur={onSaveCategory}
-                      placeholder="e.g. 5000"
-                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:border-emerald-500 placeholder:text-slate-400 transition-colors shadow-2xs"
+                      placeholder="5000"
+                      className="w-full px-2 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:border-emerald-500 placeholder:text-slate-400 transition-colors shadow-2xs"
                     />
                   </div>
 
-                  <div className="space-y-1">
+                  {/* Field 3: Billing Cycle */}
+                  <div className="w-24 sm:w-28 shrink-0 space-y-1">
                     <div className="flex items-center justify-between">
-                      <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Billing Cycle
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block truncate">
+                        Cycle
                       </label>
                       {Boolean(
                         rate.rateUnitLocked === true ||
@@ -644,7 +736,6 @@ export default function HostRoomCategories({
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                             <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                           </svg>
-                          <span>Locked</span>
                         </span>
                       )}
                     </div>
@@ -668,13 +759,12 @@ export default function HostRoomCategories({
                               onChange={(e) => {
                                 const val = e.target.value;
                                 if (!val) return;
-                                onUpdateCategory(index, 'rateUnit', val);
-                                onUpdateCategory(index, 'rateUnitLocked', true);
+                                onUpdateCategory(index, { rateUnit: val, rateUnitLocked: true });
                                 onSaveCategory();
                               }}
                               onFocus={() => onSelectCategoryIndex(index)}
                               onClick={() => onSelectCategoryIndex(index)}
-                              className={`w-full px-2 py-1.5 rounded-lg border text-xs font-semibold shadow-2xs transition-colors appearance-none pr-6 ${
+                              className={`w-full px-2 py-1.5 rounded-lg border text-xs font-semibold shadow-2xs transition-colors appearance-none pr-5 truncate ${
                                 isLocked
                                   ? 'bg-slate-100/90 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 text-slate-600 dark:text-slate-400 cursor-not-allowed opacity-90'
                                   : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:border-emerald-500 cursor-pointer'
@@ -687,13 +777,13 @@ export default function HostRoomCategories({
                             >
                               {!currentUnit && (
                                 <option value="" disabled>
-                                  Select Cycle
+                                  Cycle
                                 </option>
                               )}
                               <option value="/night">Per Night</option>
                               <option value="/month">Per Month</option>
                             </select>
-                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 text-slate-400">
                               {isLocked ? (
                                 <svg className="w-3 h-3 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
@@ -712,21 +802,6 @@ export default function HostRoomCategories({
                   </div>
                 </div>
 
-                {/* Footer: Room count + Active indicator */}
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                  <span className="font-semibold text-slate-600 dark:text-slate-400 text-[10.5px]">
-                    {stats.totalCount} {stats.totalCount === 1 ? 'Room added' : 'Rooms added'}
-                  </span>
-                  {isSelected ? (
-                    <span className="text-[9.5px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/60">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      ACTIVE CATEGORY
-                    </span>
-                  ) : (
-                    <span className="text-[10px] text-slate-400 font-medium">Click to manage</span>
-                  )}
-                </div>
-
                 {/* 🛏️ Attached Respective Room Cards Carousel Section */}
                 <CategoryRoomCarousel
                   matchingRooms={matchingRooms}
@@ -742,6 +817,7 @@ export default function HostRoomCategories({
                   currentMonthKey={currentMonthKey}
                   isMonthly={isMonthly}
                   onAddRoomCard={onAddRoomCard}
+                  onSaveCategory={onSaveCategory}
                 />
               </div>
             );

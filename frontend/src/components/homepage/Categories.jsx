@@ -1,13 +1,16 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { HorizontalCarousel } from '../common/HorizontalCarousel';
+import { staysAPI } from '../../services/api';
 
-const CATEGORIES = [
+const ALL_CATEGORIES = [
   {
     id: 'pg-hostels',
     title: 'PG & Hostels',
     description: 'Fully furnished co-living spaces with Wi-Fi, meals, and security.',
     icon: '🏢',
     tag: 'Co-Living',
+    matchTypes: ['pg', 'hostel']
   },
   {
     id: 'flats',
@@ -15,6 +18,7 @@ const CATEGORIES = [
     description: 'Independent furnished 1BHK, 2BHK, and studio flats with private kitchens.',
     icon: '🏬',
     tag: 'Flats',
+    matchTypes: ['flat', 'apartment']
   },
   {
     id: 'hotels',
@@ -22,6 +26,7 @@ const CATEGORIES = [
     description: 'Prime location stayovers with 24/7 room service and lounges.',
     icon: '🏨',
     tag: 'Short Stays',
+    matchTypes: ['hotel']
   },
   {
     id: 'resorts',
@@ -29,6 +34,7 @@ const CATEGORIES = [
     description: 'Luxury weekend getaways with infinity pools and scenic views.',
     icon: '🌴',
     tag: 'Luxury Havens',
+    matchTypes: ['resort']
   },
   {
     id: 'villas',
@@ -36,14 +42,43 @@ const CATEGORIES = [
     description: 'Authentic local homestays and private villas for family retreats.',
     icon: '🏡',
     tag: 'Private Living',
+    matchTypes: ['villa', 'homestay']
   },
 ];
 
 export function Categories({ selectedCategory, onSelectCategory }) {
+  const [activeCategories, setActiveCategories] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchTypes = async () => {
+      try {
+        const stays = await staysAPI.getStays();
+        const availableTypes = new Set(
+          (Array.isArray(stays) ? stays : (stays.stays || [])).map(s => (s.type || '').toLowerCase())
+        );
+        
+        if (mounted) {
+          const filtered = ALL_CATEGORIES.filter(cat => 
+            cat.matchTypes.some(t => availableTypes.has(t))
+          );
+          setActiveCategories(filtered);
+        }
+      } catch (err) {
+        console.error('Error fetching categories types:', err);
+        if (mounted) setActiveCategories(ALL_CATEGORIES); // Fallback
+      }
+    };
+    fetchTypes();
+    return () => { mounted = false; };
+  }, []);
+
+  if (activeCategories.length === 0) return null;
+
   return (
     <section className="w-full px-2 sm:px-8 lg:px-16 2xl:px-24 py-4 sm:py-10">
-      <HorizontalCarousel itemCount={CATEGORIES.length} trackClassName="gap-3 sm:gap-5">
-        {CATEGORIES.map((cat, idx) => {
+      <HorizontalCarousel itemCount={activeCategories.length} trackClassName="gap-3 sm:gap-5">
+        {activeCategories.map((cat, idx) => {
           const isSelected = selectedCategory === cat.id;
 
           return (

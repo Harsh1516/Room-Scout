@@ -29,13 +29,27 @@ export const signupSchema = z.object({
     .email({ message: 'Please enter a valid email address' }),
   password: z
     .string({ required_error: 'Password is required' })
-    .min(1, { message: 'Password is required' })
-    .min(6, { message: 'Password must be at least 6 characters long' }),
+    .min(8, { message: 'Password must be at least 8 characters long' })
+    .regex(/^(?=.*[A-Za-z])(?=.*\d)/, {
+      message: 'Password must contain at least one letter and one number',
+    }),
   phone: z
-    .string()
+    .string({ required_error: 'Contact phone number is required' })
     .trim()
-    .optional()
-    .default(''),
+    .min(1, { message: 'Contact phone number is required' })
+    .refine(
+      (val) => {
+        const digits = val.replace(/\D/g, '');
+        return digits.length === 10 || (digits.length === 12 && digits.startsWith('91'));
+      },
+      {
+        message: 'Please enter a valid 10-digit mobile number',
+      }
+    )
+    .transform((val) => {
+      const digits = val.replace(/\D/g, '').slice(-10);
+      return `+91 ${digits}`;
+    }),
   role: z
     .enum(['user', 'host', 'admin'], {
       invalid_type_error: 'Role must be user, host, or admin',

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useStaySearch } from './hooks/useStaySearch';
 import { Navbar } from './components/Navbar';
 import { LoginModal } from './components/LoginModal';
@@ -12,20 +12,36 @@ import { BookingsProvider, useBookings } from './context/BookingsContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { bookingsAPI, adminAPI } from './services/api';
-import { Homepage } from './pages/Homepage';
-import { SearchResultsPage } from './pages/SearchResultsPage';
-import { AdminPage } from './pages/AdminPage';
-import { DataPage } from './pages/DataPage';
-import { HostUploadPage } from './pages/HostUploadPage';
-import { HostDashboardPage } from './pages/HostDashboardPage';
-import { HostRoomsPage } from './pages/HostRoomsPage';
-import { AccountPage } from './pages/AccountPage';
-import { PropertyDetailPage } from './pages/PropertyDetailPage';
-import { RoomAvailabilityPage } from './pages/RoomAvailabilityPage';
-import { NotFoundPage } from './pages/NotFoundPage';
 import { ScrollToTop } from './components/ScrollToTop';
 import { ToastProvider, toast } from './context/ToastContext';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+
+// 🚀 Dynamic Lazy-Loaded Route Chunks (Optimizes initial bundle from 1.16MB to <200kB)
+const Homepage = lazy(() => import('./pages/Homepage').then((m) => ({ default: m.Homepage })));
+const SearchResultsPage = lazy(() => import('./pages/SearchResultsPage').then((m) => ({ default: m.SearchResultsPage })));
+const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage })));
+const DataPage = lazy(() => import('./pages/DataPage').then((m) => ({ default: m.DataPage })));
+const HostUploadPage = lazy(() => import('./pages/HostUploadPage').then((m) => ({ default: m.HostUploadPage })));
+const HostDashboardPage = lazy(() => import('./pages/HostDashboardPage').then((m) => ({ default: m.HostDashboardPage })));
+const HostRoomsPage = lazy(() => import('./pages/HostRoomsPage').then((m) => ({ default: m.HostRoomsPage })));
+const AccountPage = lazy(() => import('./pages/AccountPage').then((m) => ({ default: m.AccountPage })));
+const PropertyDetailPage = lazy(() => import('./pages/PropertyDetailPage').then((m) => ({ default: m.PropertyDetailPage })));
+const RoomAvailabilityPage = lazy(() => import('./pages/RoomAvailabilityPage').then((m) => ({ default: m.RoomAvailabilityPage })));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })));
+
+// Liquid-Glass Page Transition Fallback
+function PageFallback() {
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-black flex items-center justify-center p-4">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-9 h-9 rounded-full border-3 border-purple-500/20 border-t-purple-600 animate-spin" />
+        <span className="text-[11px] font-bold tracking-wider uppercase text-slate-400 dark:text-zinc-500">
+          Loading...
+        </span>
+      </div>
+    </div>
+  );
+}
 
 function AppContent() {
   const { user, isAuthenticated } = useAuth();
@@ -205,113 +221,127 @@ function AppContent() {
         />
       )}
 
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <LandingPage
-              onSelectUpload={handleSelectUpload}
-              onSelectSearch={handleSelectSearch}
-            />
-          }
-        />
-        <Route
-          path="/explore"
-          element={
-            isAuthenticated ? (
-              <Homepage
-                setCategoryFilter={setCategoryFilter}
+      <Suspense fallback={<PageFallback />}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <LandingPage
+                onSelectUpload={handleSelectUpload}
+                onSelectSearch={handleSelectSearch}
+              />
+            }
+          />
+          <Route
+            path="/explore"
+            element={
+              isAuthenticated ? (
+                <Homepage
+                  setCategoryFilter={setCategoryFilter}
+                  onStayClick={handleOpenDetail}
+                  onBookClick={handleOpenBooking}
+                />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+          <Route
+            path="/search"
+            element={
+              isAuthenticated ? (
+                <SearchResultsPage
+                  stays={paginatedStays}
+                  allFilteredStays={filteredStays}
+                  pagination={pagination}
+                  isLoading={isLoadingStays}
+                  isBackgroundRefreshing={isBackgroundRefreshing}
+                  filters={filters}
+                  setCategoryFilter={setCategoryFilter}
+                  setGenderFilter={setGenderFilter}
+                  setSortOrder={setSortOrder}
+                  setMinRating={setMinRating}
+                  setPriceRange={setPriceRange}
+                  toggleAmenity={toggleAmenity}
+                  resetFilters={resetFilters}
+                  onStayClick={handleOpenDetail}
+                  onBookClick={handleOpenBooking}
+                />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+          {/* Stays Data Explorer (Sorted as Recently Added First) */}
+          <Route
+            path="/data"
+            element={
+              <DataPage
                 onStayClick={handleOpenDetail}
                 onBookClick={handleOpenBooking}
               />
-            ) : (
-              <Navigate to="/" replace />
-            )
-          }
-        />
-        <Route
-          path="/search"
-          element={
-            isAuthenticated ? (
-              <SearchResultsPage
-                stays={paginatedStays}
-                allFilteredStays={filteredStays}
-                pagination={pagination}
-                isLoading={isLoadingStays}
-                isBackgroundRefreshing={isBackgroundRefreshing}
-                filters={filters}
-                setCategoryFilter={setCategoryFilter}
-                setGenderFilter={setGenderFilter}
-                setSortOrder={setSortOrder}
-                setMinRating={setMinRating}
-                setPriceRange={setPriceRange}
-                toggleAmenity={toggleAmenity}
-                resetFilters={resetFilters}
-                onStayClick={handleOpenDetail}
-                onBookClick={handleOpenBooking}
-              />
-            ) : (
-              <Navigate to="/" replace />
-            )
-          }
-        />
-        {/* Stays Data Explorer (Sorted as Recently Added First) */}
-        <Route
-          path="/data"
-          element={
-            <DataPage
-              onStayClick={handleOpenDetail}
-              onBookClick={handleOpenBooking}
-            />
-          }
-        />
-        {/* Dedicated Host Homepage / Dashboard */}
-        <Route
-          path="/host/dashboard"
-          element={<HostDashboardPage />}
-        />
-        {/* Dedicated Host Room Cards Page */}
-        <Route
-          path="/host/rooms"
-          element={<HostRoomsPage />}
-        />
-        {/* Dedicated Host Property Upload Form */}
-        <Route
-          path="/host/upload"
-          element={
-            isAuthenticated && (user?.role === 'host' || user?.role === 'admin') ? (
-              <HostUploadPage />
-            ) : (
-              <Navigate to="/" replace />
-            )
-          }
-        />
-        {/* Unified Account Center (My Details, Password, Delete Account) */}
-        <Route
-          path="/account"
-          element={
-            isAuthenticated ? (
-              <AccountPage />
-            ) : (
-              <Navigate to="/" replace />
-            )
-          }
-        />
-        {/* Dedicated Full Property Detail Page */}
-        <Route
-          path="/stay/:id"
-          element={<PropertyDetailPage onBookClick={handleOpenBooking} />}
-        />
-        {/* Interactive 2D Room Grid & Slot Schedule Page */}
-        <Route
-          path="/stay/:id/rooms"
-          element={<RoomAvailabilityPage onBookClick={handleOpenBooking} />}
-        />
-        <Route path="/host" element={<Navigate to="/host/dashboard" replace />} />
-        <Route path="/admin" element={<AdminPage />} />
-        {/* 404 Not Found Page Catch-All Route */}
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+            }
+          />
+          {/* Dedicated Host Homepage / Dashboard (Strict Host Route) */}
+          <Route
+            path="/host/dashboard"
+            element={
+              isAuthenticated && (user?.role === 'host' || user?.role === 'admin') ? (
+                <HostDashboardPage />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+          {/* Dedicated Host Room Cards Page (Strict Host Route) */}
+          <Route
+            path="/host/rooms"
+            element={
+              isAuthenticated && (user?.role === 'host' || user?.role === 'admin') ? (
+                <HostRoomsPage />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+          {/* Dedicated Host Property Upload Form (Strict Host Route) */}
+          <Route
+            path="/host/upload"
+            element={
+              isAuthenticated && (user?.role === 'host' || user?.role === 'admin') ? (
+                <HostUploadPage />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+          {/* Unified Account Center (My Details, Password, Delete Account) */}
+          <Route
+            path="/account"
+            element={
+              isAuthenticated ? (
+                <AccountPage />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+          {/* Dedicated Full Property Detail Page */}
+          <Route
+            path="/stay/:id"
+            element={<PropertyDetailPage onBookClick={handleOpenBooking} />}
+          />
+          {/* Interactive 2D Room Grid & Slot Schedule Page */}
+          <Route
+            path="/stay/:id/rooms"
+            element={<RoomAvailabilityPage onBookClick={handleOpenBooking} />}
+          />
+          <Route path="/host" element={<Navigate to="/host/dashboard" replace />} />
+          <Route path="/admin" element={<AdminPage />} />
+          {/* 404 Not Found Page Catch-All Route */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
 
       {/* Global Modals & Drawers */}
       <LoginModal

@@ -27,6 +27,7 @@ export default function HostWeeklySlotSchedule({
     () => isMonthlyRateUnit(selectedRoomCard?.rateUnit || activeCategory?.rateUnit || hostProperty?.rateUnit),
     [selectedRoomCard?.rateUnit, activeCategory?.rateUnit, hostProperty?.rateUnit]
   );
+  const isPropertyApproved = hostProperty?.status === 'Approved';
   const upcomingMonths = useMemo(() => getUpcoming12Months(), []);
   const currentMonthKey = upcomingMonths[0]?.monthKey;
 
@@ -45,6 +46,8 @@ export default function HostWeeklySlotSchedule({
   const [modalChildren, setModalChildren] = useState(0);
   const [modalGender, setModalGender] = useState('Male');
   const [isSavingModalOccupant, setIsSavingModalOccupant] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [confirmModalDelete, setConfirmModalDelete] = useState(false);
 
   // Close modal on Escape key press
   useEffect(() => {
@@ -52,6 +55,7 @@ export default function HostWeeklySlotSchedule({
       if (e.key === 'Escape' && selectedOccupantForModal) {
         setSelectedOccupantForModal(null);
         setIsModalEditing(false);
+        setConfirmModalDelete(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -81,10 +85,16 @@ export default function HostWeeklySlotSchedule({
     setModalPhone(digitsOnly);
   };
 
+  // Helper to format Aadhar strictly into 4 digits with gap: "XXXX XXXX XXXX"
+  const formatAadharNumber = (raw) => {
+    if (!raw) return '';
+    const digits = String(raw).replace(/\D/g, '').slice(0, 12);
+    if (!digits) return String(raw).trim();
+    return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+  };
+
   const handleModalAadharChange = (e) => {
-    const digits = e.target.value.replace(/\D/g, '').slice(0, 12);
-    const formatted = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
-    setModalAadhar(formatted);
+    setModalAadhar(formatAadharNumber(e.target.value));
   };
 
   // Live Data Reload: Poll for new external bookings every 5 seconds & on window focus
@@ -114,6 +124,8 @@ export default function HostWeeklySlotSchedule({
     setSelectedSlotIndices([]);
     setSelectedOccupantForModal(null);
     setIsModalEditing(false);
+    setConfirmDeleteId(null);
+    setConfirmModalDelete(false);
   }, [selectedRoomCard?.id]);
 
   // Map booked dates, booked months, and occupant info for the selected room
@@ -357,6 +369,10 @@ export default function HostWeeklySlotSchedule({
 
   // Toggle or range-select slots for the active room (blocks booked slots from being clicked)
   const handleToggleSlotDay = (index) => {
+    if (!isPropertyApproved) {
+      showToast('🔒 Date slots are locked: Property approval is pending from Admin. Date selection will unlock once approved by Admin.', 'error');
+      return;
+    }
     const slotISO = upcomingWeek[index]?.fullISO;
     if (roomBookingInfo.bookedDates.has(slotISO)) {
       showToast('This date slot is already booked for an occupant.', 'info');
@@ -381,6 +397,10 @@ export default function HostWeeklySlotSchedule({
 
   // Toggle or range-select months for the active room (12-Month schedule)
   const handleToggleSlotMonth = (index) => {
+    if (!isPropertyApproved) {
+      showToast('🔒 Month slots are locked: Property approval is pending from Admin. Month selection will unlock once approved by Admin.', 'error');
+      return;
+    }
     const monthKey = upcomingMonths[index]?.monthKey;
     if (roomBookingInfo.bookedMonths.has(monthKey)) {
       showToast('This month slot is already booked for an occupant.', 'info');
@@ -405,6 +425,10 @@ export default function HostWeeklySlotSchedule({
 
   // Host books selected weekly or monthly slots (auto-syncs to database immediately)
   const handleHostMarkSlotBooked = async () => {
+    if (!isPropertyApproved) {
+      showToast('🔒 Slots are locked: Property must be approved by Admin before reserving slots.', 'error');
+      return;
+    }
     if (!selectedRoomCard || selectedSlotIndices.length === 0) {
       showToast(isMonthly ? 'Please select at least one month.' : 'Please select at least one date slot.', 'error');
       return;
@@ -464,11 +488,74 @@ export default function HostWeeklySlotSchedule({
 
         const cleanEmail = hostUserEmail.trim().toLowerCase() || `${cleanName.toLowerCase().replace(/\s+/g, '')}${cleanPhone.slice(-4)}@stayhub.local`;
         const cleanAadhar = hostUserAadhar.trim().replace(/\D/g, '');
+        const formattedAadhar = formatAadharNumber(cleanAadhar);
 
         const bookingRef = `BK-${cleanPhone}`;
         const slotBookingId = `res_${cleanPhone}`;
+
+        // 1. Directly create booking document in MongoDB 'bookings' collection
+        const stayDbId = hostProperty?._id || hostProperty?.id;
+        let createdBookingMongoId = slotBookingId;
+
+        if (stayDbId) {
+          const bookingPayload = {
+            stayId: stayDbId,
+            stayTitle: hostProperty?.propertyName || hostProperty?.title || hostProperty?.name || 'Host Property',
+            propertyType: hostProperty.propertyType || 'Room',
+            city: hostProperty.city || '',
+            roomType: selectedRoomCard.type || activeCategory?.type || 'Room',
+            roomNumber: selectedRoomCard.roomNumber || '',
+            checkIn: checkInLabel,
+            checkOut: checkOutLabel,
+            checkInISO: checkInISO,
+            checkOutISO: checkOutISO,
+            moveInDate: checkInISO || checkInLabel || new Date().toISOString().split('T')[0],
+            bookedMonths: chosenMonths,
+            bookedDates: chosenDates,
+            durationMonths: chosenMonths.length,
+            rateUnit: selectedRoomCard.rateUnit || activeCategory?.rateUnit || '/month',
+            totalAmount: 0,
+            status: 'CONFIRMED',
+            hostEmail: hostProperty.email || '',
+            hostId: hostProperty.id || hostProperty._id || '',
+            fullName: cleanName,
+            userName: cleanName,
+            guestName: cleanName,
+            email: cleanEmail,
+            userEmail: cleanEmail,
+            guestEmail: cleanEmail,
+            phone: cleanPhone,
+            userPhone: cleanPhone,
+            guestPhone: cleanPhone,
+            guestAadhar: formattedAadhar,
+            aadharId: formattedAadhar,
+            aadhar: formattedAadhar,
+            aadharNumber: formattedAadhar,
+            adults: 1,
+            children: 0,
+            guestGender: hostGender || 'Male',
+            userGender: hostGender || 'Male',
+            gender: hostGender || 'Male',
+            bookingReferenceId: bookingRef,
+            slotBookingId: slotBookingId,
+            bookingSource: 'OFFLINE_HOST',
+            paymentMethod: 'OFFLINE',
+            paymentStatus: 'PAID',
+          };
+
+          try {
+            const res = await bookingsAPI.createBooking(bookingPayload);
+            if (res?._id || res?.data?._id) {
+              createdBookingMongoId = res._id || res.data._id;
+            }
+          } catch (err) {
+            console.warn('Booking create in database error:', err);
+          }
+        }
+
         const newSlotBooking = {
-          id: slotBookingId,
+          id: createdBookingMongoId,
+          _id: createdBookingMongoId,
           bookingReferenceId: bookingRef,
           slotBookingId: slotBookingId,
           guestName: cleanName,
@@ -477,8 +564,10 @@ export default function HostWeeklySlotSchedule({
           guestPhone: cleanPhone,
           userPhone: cleanPhone,
           phone: cleanPhone,
-          guestAadhar: cleanAadhar,
-          aadharId: cleanAadhar,
+          guestAadhar: formattedAadhar,
+          aadharId: formattedAadhar,
+          aadhar: formattedAadhar,
+          aadharNumber: formattedAadhar,
           adults: 1,
           children: 0,
           guestGender: hostGender || 'Male',
@@ -545,55 +634,6 @@ export default function HostWeeklySlotSchedule({
 
         await onAutoSyncProperty(updatedHost);
 
-        const stayDbId = hostProperty?._id || hostProperty?.id;
-        if (stayDbId) {
-          const bookingPayload = {
-            stayId: stayDbId,
-            stayTitle: hostProperty?.propertyName || hostProperty?.title || hostProperty?.name || 'Host Property',
-            propertyType: hostProperty.propertyType || 'Room',
-            city: hostProperty.city || '',
-            roomType: selectedRoomCard.type || activeCategory?.type || 'Room',
-            roomNumber: selectedRoomCard.roomNumber || '',
-            checkIn: checkInLabel,
-            checkOut: checkOutLabel,
-            checkInISO: checkInISO,
-            checkOutISO: checkOutISO,
-            bookedMonths: chosenMonths,
-            bookedDates: chosenDates,
-            durationMonths: chosenMonths.length,
-            rateUnit: selectedRoomCard.rateUnit || activeCategory?.rateUnit || '/month',
-            totalAmount: 0,
-            status: 'CONFIRMED',
-            hostEmail: hostProperty.email || '',
-            hostId: hostProperty.id || hostProperty._id || '',
-            fullName: cleanName,
-            userName: cleanName,
-            guestName: cleanName,
-            email: cleanEmail,
-            userEmail: cleanEmail,
-            guestEmail: cleanEmail,
-            phone: cleanPhone,
-            userPhone: cleanPhone,
-            guestPhone: cleanPhone,
-            guestAadhar: cleanAadhar,
-            aadharId: cleanAadhar,
-            adults: 1,
-            children: 0,
-            guestGender: hostGender || 'Male',
-            userGender: hostGender || 'Male',
-            gender: hostGender || 'Male',
-            bookingReferenceId: bookingRef,
-            slotBookingId: slotBookingId,
-            bookingSource: 'OFFLINE_HOST',
-            paymentMethod: 'Offline Pay at Property',
-            paymentStatus: 'COMPLETED',
-          };
-
-          await bookingsAPI.createBooking(bookingPayload).catch((err) => {
-            console.warn('Silent fallback for booking creation:', err);
-          });
-        }
-
         showToast(`Month(s) reserved successfully for ${cleanName} (${cleanPhone})!`, 'success');
         setSelectedSlotIndices([]);
         setHostUserName('');
@@ -604,7 +644,6 @@ export default function HostWeeklySlotSchedule({
         setHostChildren(0);
 
         try {
-          localStorage.setItem('stayhub_slots_updated_at', Date.now().toString());
           window.dispatchEvent(new CustomEvent('stayhub_slots_updated'));
         } catch (e) {}
 
@@ -633,12 +672,72 @@ export default function HostWeeklySlotSchedule({
 
       const cleanEmail = hostUserEmail.trim().toLowerCase() || `${cleanName.toLowerCase().replace(/\s+/g, '')}${cleanPhone.slice(-4)}@stayhub.local`;
       const cleanAadhar = hostUserAadhar.trim().replace(/\D/g, '');
+      const formattedAadhar = formatAadharNumber(cleanAadhar);
 
       // Uniquely identify and save each booking by unique mobile number
       const bookingRef = `BK-${cleanPhone}`;
       const slotBookingId = `res_${cleanPhone}`;
+
+      // 1. Directly create booking document in MongoDB 'bookings' collection
+      const stayDbId = hostProperty?._id || hostProperty?.id;
+      let createdBookingMongoId = slotBookingId;
+
+      if (stayDbId) {
+        const bookingPayload = {
+          stayId: stayDbId,
+          stayTitle: hostProperty?.propertyName || hostProperty?.title || hostProperty?.name || 'Host Property',
+          propertyType: hostProperty.propertyType || 'Room',
+          city: hostProperty.city || '',
+          roomType: selectedRoomCard.type || activeCategory?.type || 'Room',
+          roomNumber: selectedRoomCard.roomNumber || '',
+          checkIn: `${firstSlot.dayName}, ${firstSlot.monthDay} (12:00 PM)`,
+          checkOut: `${lastSlot.dayName}, ${lastSlot.monthDay} (11:59 AM)`,
+          checkInISO: firstSlot.fullISO,
+          checkOutISO: nextDayISO,
+          moveInDate: firstSlot.fullISO || new Date().toISOString().split('T')[0],
+          bookedDates: chosenDates,
+          totalAmount: 0,
+          status: 'CONFIRMED',
+          hostEmail: hostProperty.email || '',
+          hostId: hostProperty.id || hostProperty._id || '',
+          fullName: cleanName,
+          userName: cleanName,
+          guestName: cleanName,
+          email: cleanEmail,
+          userEmail: cleanEmail,
+          guestEmail: cleanEmail,
+          phone: cleanPhone,
+          userPhone: cleanPhone,
+          guestPhone: cleanPhone,
+          guestAadhar: formattedAadhar,
+          aadharId: formattedAadhar,
+          aadhar: formattedAadhar,
+          aadharNumber: formattedAadhar,
+          adults: hostAdults,
+          children: hostChildren,
+          guestGender: hostGender || 'Male',
+          userGender: hostGender || 'Male',
+          gender: hostGender || 'Male',
+          bookingReferenceId: bookingRef,
+          slotBookingId: slotBookingId,
+          bookingSource: 'OFFLINE_HOST',
+          paymentMethod: 'OFFLINE',
+          paymentStatus: 'PAID',
+        };
+
+        try {
+          const res = await bookingsAPI.createBooking(bookingPayload);
+          if (res?._id || res?.data?._id) {
+            createdBookingMongoId = res._id || res.data._id;
+          }
+        } catch (err) {
+          console.warn('Booking create in database error:', err);
+        }
+      }
+
       const newSlotBooking = {
-        id: slotBookingId,
+        id: createdBookingMongoId,
+        _id: createdBookingMongoId,
         bookingReferenceId: bookingRef,
         slotBookingId: slotBookingId,
         guestName: cleanName,
@@ -647,10 +746,15 @@ export default function HostWeeklySlotSchedule({
         guestPhone: cleanPhone,
         userPhone: cleanPhone,
         phone: cleanPhone,
-        guestAadhar: cleanAadhar,
-        aadharId: cleanAadhar,
+        guestAadhar: formattedAadhar,
+        aadharId: formattedAadhar,
+        aadhar: formattedAadhar,
+        aadharNumber: formattedAadhar,
         adults: hostAdults,
         children: hostChildren,
+        guestGender: hostGender || 'Male',
+        userGender: hostGender || 'Male',
+        gender: hostGender || 'Male',
         guestEmail: cleanEmail,
         userEmail: cleanEmail,
         email: cleanEmail,
@@ -710,52 +814,8 @@ export default function HostWeeklySlotSchedule({
         availableRoomsCount: freeRoomsCount,
       };
 
-      // 1. Live auto-sync stay with database
+      // Live auto-sync stay with database
       await onAutoSyncProperty(updatedHost);
-
-      // 2. Also create reservation record in bookings database uniquely identified by mobile number
-      const stayDbId = hostProperty?._id || hostProperty?.id;
-      if (stayDbId) {
-        const bookingPayload = {
-          stayId: stayDbId,
-          stayTitle: hostProperty?.propertyName || hostProperty?.title || hostProperty?.name || 'Host Property',
-          propertyType: hostProperty.propertyType || 'Room',
-          city: hostProperty.city || '',
-          roomType: selectedRoomCard.type || activeCategory?.type || 'Room',
-          roomNumber: selectedRoomCard.roomNumber || '',
-          checkIn: `${firstSlot.dayName}, ${firstSlot.monthDay} (12:00 PM)`,
-          checkOut: `${lastSlot.dayName}, ${lastSlot.monthDay} (11:59 AM)`,
-          checkInISO: firstSlot.fullISO,
-          checkOutISO: nextDayISO,
-          bookedDates: chosenDates,
-          totalAmount: 0,
-          status: 'CONFIRMED',
-          hostEmail: hostProperty.email || '',
-          hostId: hostProperty.id || hostProperty._id || '',
-          fullName: cleanName,
-          userName: cleanName,
-          guestName: cleanName,
-          email: cleanEmail,
-          userEmail: cleanEmail,
-          guestEmail: cleanEmail,
-          phone: cleanPhone,
-          userPhone: cleanPhone,
-          guestPhone: cleanPhone,
-          guestAadhar: cleanAadhar,
-          aadharId: cleanAadhar,
-          adults: hostAdults,
-          children: hostChildren,
-          bookingReferenceId: bookingRef,
-          slotBookingId: slotBookingId,
-          bookingSource: 'OFFLINE_HOST',
-          paymentMethod: 'Offline Pay at Property',
-          paymentStatus: 'COMPLETED',
-        };
-
-        await bookingsAPI.createBooking(bookingPayload).catch((err) => {
-          console.warn('Silent fallback for booking creation:', err);
-        });
-      }
 
       showToast(`Slot reserved successfully for ${cleanName} (${cleanPhone})!`, 'success');
       setSelectedSlotIndices([]);
@@ -765,11 +825,9 @@ export default function HostWeeklySlotSchedule({
       setHostUserAadhar('');
       setHostAdults(1);
       setHostChildren(0);
-      setHostChildren(0);
 
       // Trigger live data reload & cross-tab sync
       try {
-        localStorage.setItem('stayhub_slots_updated_at', Date.now().toString());
         window.dispatchEvent(new CustomEvent('stayhub_slots_updated'));
       } catch (e) {}
 
@@ -788,6 +846,7 @@ export default function HostWeeklySlotSchedule({
   const handleOpenOccupantModal = (occupant) => {
     setSelectedOccupantForModal(occupant);
     setIsModalEditing(false);
+    setConfirmModalDelete(false);
     setModalName(occupant.name || '');
     setModalPhone((occupant.phone || occupant.userPhone || '').replace(/\D/g, '').slice(-10));
     setModalEmail(
@@ -795,7 +854,11 @@ export default function HostWeeklySlotSchedule({
         ? occupant.email
         : occupant.userEmail || ''
     );
-    setModalAadhar(occupant.aadhar || occupant.aadharNumber || occupant.guestAadhar || '');
+    setModalAadhar(
+      formatAadharNumber(
+        occupant.aadhar || occupant.aadharNumber || occupant.guestAadhar || occupant.aadharId || ''
+      )
+    );
     setModalAdults(Number(occupant.adults) || 1);
     setModalChildren(Number(occupant.children) || 0);
     setModalGender(occupant.gender || 'Male');
@@ -804,6 +867,7 @@ export default function HostWeeklySlotSchedule({
   const handleCloseOccupantModal = () => {
     setSelectedOccupantForModal(null);
     setIsModalEditing(false);
+    setConfirmModalDelete(false);
   };
 
   const handleStartEditFromModal = () => {
@@ -820,7 +884,15 @@ export default function HostWeeklySlotSchedule({
           ? selectedOccupantForModal.email
           : selectedOccupantForModal.userEmail || ''
       );
-      setModalAadhar(selectedOccupantForModal.aadhar || selectedOccupantForModal.aadharNumber || selectedOccupantForModal.guestAadhar || '');
+      setModalAadhar(
+        formatAadharNumber(
+          selectedOccupantForModal.aadhar ||
+            selectedOccupantForModal.aadharNumber ||
+            selectedOccupantForModal.guestAadhar ||
+            selectedOccupantForModal.aadharId ||
+            ''
+        )
+      );
       setModalAdults(Number(selectedOccupantForModal.adults) || 1);
       setModalChildren(Number(selectedOccupantForModal.children) || 0);
       setModalGender(selectedOccupantForModal.gender || 'Male');
@@ -901,6 +973,7 @@ export default function HostWeeklySlotSchedule({
                 guestAadhar: formattedAadhar,
                 aadhar: formattedAadhar,
                 aadharNumber: formattedAadhar,
+                aadharId: formattedAadhar,
                 gender: modalGender,
               };
             }
@@ -963,6 +1036,7 @@ export default function HostWeeklySlotSchedule({
             guestAadhar: formattedAadhar,
             aadhar: formattedAadhar,
             aadharNumber: formattedAadhar,
+            aadharId: formattedAadhar,
             adults: modalAdults,
             children: modalChildren,
             gender: modalGender,
@@ -980,8 +1054,10 @@ export default function HostWeeklySlotSchedule({
         userPhone: cleanPhone,
         email: cleanEmail,
         userEmail: cleanEmail,
+        guestAadhar: formattedAadhar,
         aadhar: formattedAadhar,
         aadharNumber: formattedAadhar,
+        aadharId: formattedAadhar,
         adults: modalAdults,
         children: modalChildren,
         gender: modalGender,
@@ -991,7 +1067,6 @@ export default function HostWeeklySlotSchedule({
       showToast('Occupant details updated successfully in database.', 'success');
 
       try {
-        localStorage.setItem('stayhub_slots_updated_at', Date.now().toString());
         window.dispatchEvent(new CustomEvent('stayhub_slots_updated'));
       } catch (e) {}
 
@@ -1006,32 +1081,74 @@ export default function HostWeeklySlotSchedule({
     }
   };
 
-  // Occupant Removal & Date Release Handler
+  // Occupant Removal & Permanent Database Deletion Handler
   const handleRemoveOccupant = async (occupant) => {
-    if (
-      !window.confirm(
-        `Are you sure you want to remove occupant "${occupant.name}" and release their booked slots?`
-      )
-    ) {
-      return;
-    }
-
     setIsUpdatingSlot(true);
+    setConfirmDeleteId(null);
+    setConfirmModalDelete(false);
     try {
       const datesToRemove = new Set(occupant.bookedDates || []);
       const monthsToRemove = new Set(occupant.bookedMonths || []);
+      const cleanOccPhone = (occupant.phone || occupant.userPhone || occupant.guestPhone || '').replace(/\D/g, '').slice(-10);
       const currentRooms = Array.isArray(hostProperty?.rooms) ? [...hostProperty.rooms] : [];
       const todayISO = upcomingWeek[0]?.fullISO;
 
+      // 1. Permanently delete from MongoDB Database via removeOccupantBooking API
+      await bookingsAPI
+        .removeOccupantBooking({
+          hostEmail: hostProperty?.email,
+          roomNumber: selectedRoomCard?.roomNumber,
+          roomId: selectedRoomCard?.id,
+          occupantId: occupant.id || occupant._id,
+          slotBookingId: occupant.slotBookingId || occupant.id,
+          bookingReferenceId: occupant.bookingReferenceId,
+          phone: occupant.phone || occupant.userPhone || occupant.guestPhone,
+          name: occupant.name || occupant.guestName || occupant.userName,
+          bookedDates: occupant.bookedDates || [],
+          bookedMonths: occupant.bookedMonths || [],
+        })
+        .catch((err) => console.warn('Remove occupant database error:', err));
+
+      // 2. Also locate matching guest booking ID to delete directly from bookings collection
+      const matchingGuest = guests.find(
+        (g) =>
+          (occupant.bookingReferenceId && g.bookingReferenceId === occupant.bookingReferenceId) ||
+          (occupant.id && (g._id === occupant.id || g.id === occupant.id || g.slotBookingId === occupant.id)) ||
+          (g.roomNumber && selectedRoomCard?.roomNumber && String(g.roomNumber).replace(/[^0-9]/g, '') === String(selectedRoomCard.roomNumber).replace(/[^0-9]/g, '') &&
+            ((cleanOccPhone && (g.phone || g.guestPhone || '').replace(/\D/g, '').slice(-10) === cleanOccPhone) ||
+             (Array.isArray(g.bookedDates) && g.bookedDates.some((d) => datesToRemove.has(d)))))
+      );
+
+      const bookingIdToDelete =
+        matchingGuest?._id ||
+        matchingGuest?.id ||
+        matchingGuest?.bookingReferenceId ||
+        occupant.bookingReferenceId ||
+        occupant.id;
+
+      if (bookingIdToDelete) {
+        await bookingsAPI.deleteBooking(bookingIdToDelete).catch(() => {});
+      }
+
+      // 3. Update local rooms state & auto-sync updated host
       const updatedRooms = currentRooms.map((rm) => {
-        if (rm.id === selectedRoomCard.id) {
+        const isTargetRoom =
+          rm.id === selectedRoomCard?.id ||
+          String(rm.roomNumber || '').replace(/[^0-9]/g, '') === String(selectedRoomCard?.roomNumber || '').replace(/[^0-9]/g, '');
+
+        if (isTargetRoom) {
           const prevSlotBookings = Array.isArray(rm.slotBookings) ? rm.slotBookings : [];
           const updatedSlotBookings = prevSlotBookings.filter((sb) => {
-            if (sb.id && sb.id === occupant.id) return false;
-            if (Array.isArray(sb.bookedMonths) && sb.bookedMonths.some((m) => monthsToRemove.has(m))) {
-              return false;
-            }
-            if (Array.isArray(sb.bookedDates) && sb.bookedDates.some((d) => datesToRemove.has(d))) {
+            const cleanSbPhone = (sb.phone || sb.guestPhone || sb.userPhone || '').replace(/\D/g, '').slice(-10);
+            const matchId =
+              (sb.id && (sb.id === occupant.id || sb.id === occupant.slotBookingId)) ||
+              (sb.slotBookingId && (sb.slotBookingId === occupant.id || sb.slotBookingId === occupant.slotBookingId));
+            const matchRef = sb.bookingReferenceId && occupant.bookingReferenceId && sb.bookingReferenceId === occupant.bookingReferenceId;
+            const matchPhone = cleanSbPhone && cleanOccPhone && cleanSbPhone === cleanOccPhone;
+            const matchMonths = Array.isArray(sb.bookedMonths) && sb.bookedMonths.some((m) => monthsToRemove.has(m));
+            const matchDates = Array.isArray(sb.bookedDates) && sb.bookedDates.some((d) => datesToRemove.has(d));
+
+            if (matchId || matchRef || matchPhone || matchMonths || matchDates) {
               return false;
             }
             return true;
@@ -1042,16 +1159,17 @@ export default function HostWeeklySlotSchedule({
           const prevBookedDates = Array.isArray(rm.bookedDates) ? rm.bookedDates : [];
           const remainingBookedDates = prevBookedDates.filter((d) => !datesToRemove.has(d));
 
-          const isOccNow = isMonthly
-            ? remainingBookedMonths.includes(currentMonthKey)
-            : remainingBookedDates.includes(todayISO);
+          const hasRemainingBookings =
+            remainingBookedMonths.length > 0 ||
+            remainingBookedDates.length > 0 ||
+            updatedSlotBookings.length > 0;
 
           return {
             ...rm,
             bookedMonths: remainingBookedMonths,
             bookedDates: remainingBookedDates,
             slotBookings: updatedSlotBookings,
-            status: isOccNow ? 'Occupied' : 'Available',
+            status: hasRemainingBookings ? 'Occupied' : 'Available',
           };
         }
         return rm;
@@ -1075,32 +1193,7 @@ export default function HostWeeklySlotSchedule({
       // Auto-sync stay removal to database
       await onAutoSyncProperty(updatedHost);
 
-      const matchingGuest = guests.find(
-        (g) =>
-          (occupant.bookingReferenceId && g.bookingReferenceId === occupant.bookingReferenceId) ||
-          (occupant.id && (g._id === occupant.id || g.id === occupant.id || g.slotBookingId === occupant.id)) ||
-          (g.roomNumber && selectedRoomCard.roomNumber && String(g.roomNumber) === String(selectedRoomCard.roomNumber) &&
-            Array.isArray(g.bookedDates) &&
-            g.bookedDates.some((d) => datesToRemove.has(d)))
-      );
-
-      const bookingIdToCancel =
-        matchingGuest?._id ||
-        matchingGuest?.id ||
-        matchingGuest?.bookingReferenceId ||
-        occupant.bookingReferenceId ||
-        occupant.id;
-
-      if (bookingIdToCancel) {
-        await bookingsAPI
-          .updateBookingStatus(bookingIdToCancel, {
-            status: 'CANCELLED',
-            hostEmail: hostProperty?.email,
-          })
-          .catch((err) => console.warn('Cancel booking error:', err));
-      }
-
-      showToast(`Occupant "${occupant.name}" removed and slots released successfully.`, 'success');
+      showToast(`Occupant "${occupant.name}" removed from database and slots released successfully.`, 'success');
       setSelectedSlotIndices([]);
 
       if (
@@ -1113,8 +1206,15 @@ export default function HostWeeklySlotSchedule({
       }
 
       try {
-        localStorage.setItem('stayhub_slots_updated_at', Date.now().toString());
         window.dispatchEvent(new CustomEvent('stayhub_slots_updated'));
+        window.dispatchEvent(new CustomEvent('stayhub_rooms_updated'));
+        window.dispatchEvent(new CustomEvent('stayhub_admin_sync'));
+        localStorage.setItem('stayhub_admin_sync_ts', String(Date.now()));
+        if (typeof BroadcastChannel !== 'undefined') {
+          const bc = new BroadcastChannel('stayhub_live_channel');
+          bc.postMessage({ type: 'HOST_UPDATED', hostId: hostProperty?.id || hostProperty?._id });
+          bc.close();
+        }
       } catch (e) {}
 
       if (typeof onRefreshBookings === 'function') {
@@ -1122,10 +1222,20 @@ export default function HostWeeklySlotSchedule({
       }
     } catch (err) {
       console.error('Error removing occupant:', err);
-      showToast('Failed to remove occupant.', 'error');
+      showToast('Failed to remove occupant from database.', 'error');
     } finally {
       setIsUpdatingSlot(false);
     }
+  };
+
+  // Helper to format Date strictly as "Day Date Month Year (Timing)"
+  const formatDateTimeWithTiming = (dateObj, timingStr) => {
+    if (!dateObj || isNaN(dateObj.getTime())) return '';
+    const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+    const dateNum = dateObj.getDate();
+    const monthName = dateObj.toLocaleDateString('en-US', { month: 'short' });
+    const yearNum = dateObj.getFullYear();
+    return `${dayName} ${dateNum} ${monthName} ${yearNum} (${timingStr})`;
   };
 
   // Calculate formatted stay info for the centered occupant modal
@@ -1136,12 +1246,29 @@ export default function HostWeeklySlotSchedule({
     if (occ.bookedMonths && occ.bookedMonths.length > 0) {
       const sortedM = [...occ.bookedMonths].sort();
       const count = sortedM.length;
+
+      // Check-In: 1st of starting month at 12:00 AM
+      const [sY, sM] = sortedM[0].split('-').map(Number);
+      const inDateObj = new Date(sY, sM - 1, 1);
+      const checkInFormatted = formatDateTimeWithTiming(inDateObj, '12:00 AM');
+
+      // Check-Out: Last day of ending month at 11:59 PM
+      const [eY, eM] = sortedM[sortedM.length - 1].split('-').map(Number);
+      const outDateObj = new Date(eY, eM, 0);
+      const checkOutFormatted = formatDateTimeWithTiming(outDateObj, '11:59 PM');
+
+      const formattedMonthsList = sortedM.map((m) => {
+        const [y, mo] = m.split('-').map(Number);
+        const dt = new Date(y, mo - 1, 1);
+        return dt.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      });
+
       return {
         durationLabel: `${count} ${count === 1 ? 'Month' : 'Months'}`,
-        checkInFormatted: `1st ${sortedM[0]}`,
-        checkOutFormatted: `End of ${sortedM[sortedM.length - 1]}`,
-        datesList: sortedM.join(', '),
-        datesArray: sortedM,
+        checkInFormatted,
+        checkOutFormatted,
+        datesList: formattedMonthsList.join(', '),
+        datesArray: formattedMonthsList,
       };
     }
 
@@ -1152,21 +1279,11 @@ export default function HostWeeklySlotSchedule({
       const lastD = sortedD[sortedD.length - 1];
 
       const dtIn = new Date(firstD + 'T00:00:00');
-      const checkInFormatted = dtIn.toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      });
+      const checkInFormatted = formatDateTimeWithTiming(dtIn, '12:00 PM');
 
       const nextD = new Date(lastD + 'T00:00:00');
       nextD.setDate(nextD.getDate() + 1);
-      const checkOutFormatted = nextD.toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      });
+      const checkOutFormatted = formatDateTimeWithTiming(nextD, '11:59 AM');
 
       const datesArray = sortedD.map((d) => {
         const dt = new Date(d + 'T00:00:00');
@@ -1184,14 +1301,27 @@ export default function HostWeeklySlotSchedule({
       };
     }
 
+    const rawCheckIn = occ.checkInISO || (occ.checkIn ? occ.checkIn.split('(')[0].trim() : null);
+    const rawCheckOut = occ.checkOutISO || (occ.checkOut ? occ.checkOut.split('(')[0].trim() : null);
+    const fallbackInDate = rawCheckIn ? new Date(rawCheckIn) : null;
+    const fallbackOutDate = rawCheckOut ? new Date(rawCheckOut) : null;
+
+    const checkInFormatted = fallbackInDate && !isNaN(fallbackInDate.getTime())
+      ? formatDateTimeWithTiming(fallbackInDate, isMonthly ? '12:00 AM' : '12:00 PM')
+      : occ.checkIn || 'Move-in date';
+
+    const checkOutFormatted = fallbackOutDate && !isNaN(fallbackOutDate.getTime())
+      ? formatDateTimeWithTiming(fallbackOutDate, isMonthly ? '11:59 PM' : '11:59 AM')
+      : occ.checkOut || 'Departure date';
+
     return {
       durationLabel: 'Scheduled Slot',
-      checkInFormatted: occ.checkIn || 'Move-in date',
-      checkOutFormatted: occ.checkOut || 'Departure date',
+      checkInFormatted,
+      checkOutFormatted,
       datesList: '',
       datesArray: [],
     };
-  }, [selectedOccupantForModal]);
+  }, [selectedOccupantForModal, isMonthly]);
 
   const sortedSelected = [...selectedSlotIndices].sort((a, b) => a - b);
   const firstSelectedSlot = sortedSelected.length > 0 ? upcomingWeek[sortedSelected[0]] : null;
@@ -1295,16 +1425,16 @@ export default function HostWeeklySlotSchedule({
           - Column 1 (Mid): Month Card Schedule (12-Month Schedule or 30-Day Circular Matrix)
           - Column 2 (Right): Guest Details & Confirmation Form (and Occupants List)
       */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5 xl:gap-5 items-start">
         {/* ========================================================= */}
         {/* 📅 MID COLUMN: MONTH CARD (IDENTICAL FORMAT TO USER SIDE) */}
         {/* ========================================================= */}
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 space-y-4 shadow-2xs">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 p-3.5 sm:p-4 space-y-3.5 shadow-2xs">
           {/* Active Room Title & Live Status */}
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center text-xs shrink-0">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center text-xs shrink-0">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="4" width="18" height="18" rx="2" />
                   <line x1="16" y1="2" x2="16" y2="6" />
                   <line x1="8" y1="2" x2="8" y2="6" />
@@ -1323,7 +1453,7 @@ export default function HostWeeklySlotSchedule({
                     </span>
                   )}
                 </h3>
-                <p className="text-[10.5px] text-slate-400 font-normal mt-0.5">
+                <p className="text-[10px] text-slate-400 font-normal mt-0.5">
                   {isMonthly
                     ? 'Check-in: 1st of Month (12:00 AM) • Check-out: End of Month (11:59 PM)'
                     : 'Check-in: 12:00 PM • Check-out: 11:59 AM'}
@@ -1331,6 +1461,30 @@ export default function HostWeeklySlotSchedule({
               </div>
             </div>
           </div>
+
+          {/* Amber Lock Banner when Property is not approved */}
+          {!isPropertyApproved && (
+            <div className="p-2.5 sm:p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 shadow-2xs">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-xs shrink-0">
+                  🔒
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-white">
+                      Slots Locked — Awaiting Admin Approval
+                    </h4>
+                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 uppercase tracking-wider">
+                      {hostProperty?.status || 'Pending Approval'}
+                    </span>
+                  </div>
+                  <p className="text-[10.5px] text-slate-600 dark:text-slate-300 mt-0.5 leading-snug">
+                    No host can select any month or date slots until an Admin approves this property on the Admin Dashboard.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Header Info & Selection Counter */}
           <div className="flex items-center justify-between gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
@@ -1367,7 +1521,7 @@ export default function HostWeeklySlotSchedule({
                   <span className="text-[10px] text-slate-400 font-medium">1st of Month Check-in</span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-2.5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2">
                   {upcomingMonths.map((m) => {
                     const isBooked = roomBookingInfo.bookedMonths.has(m.monthKey);
                     const isSelected = selectedSlotIndices.includes(m.index);
@@ -1375,16 +1529,19 @@ export default function HostWeeklySlotSchedule({
                     const occupant = roomBookingInfo.monthToGuestMap[m.monthKey];
                     const isStart = sortedSelected.length > 0 && sortedSelected[0] === m.index;
                     const isEnd = sortedSelected.length > 0 && sortedSelected[sortedSelected.length - 1] === m.index;
+                    const isLocked = !isPropertyApproved && !isBooked;
 
                     return (
                       <button
                         type="button"
                         key={m.monthKey}
-                        disabled={isBooked}
+                        disabled={isBooked || !isPropertyApproved}
                         onClick={() => handleToggleSlotMonth(m.index)}
-                        className={`relative p-2.5 sm:p-3 rounded-xl border select-none transition-colors duration-75 flex flex-col justify-between items-center text-center outline-none ${
+                        className={`relative p-2 sm:p-2.5 rounded-xl border select-none transition-colors duration-75 flex flex-col justify-between items-center text-center outline-none ${
                           isBooked
                             ? 'bg-red-50/70 dark:bg-red-950/30 border-red-200 dark:border-red-900/60 text-red-500 dark:text-red-400 cursor-not-allowed line-through opacity-70'
+                            : isLocked
+                            ? 'bg-slate-50/80 dark:bg-slate-800/40 border-dashed border-amber-300 dark:border-amber-700/60 text-slate-500 dark:text-slate-400 cursor-not-allowed opacity-75'
                             : isSelected
                             ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-2 border-slate-900 dark:border-white shadow-xs font-bold cursor-pointer'
                             : isCurrentMonth
@@ -1394,6 +1551,8 @@ export default function HostWeeklySlotSchedule({
                         title={
                           isBooked
                             ? `Booked: ${occupant?.userName || 'Occupant'}${occupant?.userPhone ? ` (${occupant.userPhone})` : ''}`
+                            : isLocked
+                            ? '🔒 Locked: Property approval is pending from Admin'
                             : `${m.monthLong} ${m.year}`
                         }
                       >
@@ -1401,6 +1560,8 @@ export default function HostWeeklySlotSchedule({
                           className={`text-[8px] sm:text-[8.5px] uppercase font-bold px-1.5 py-0.5 rounded-md tracking-wider ${
                             isBooked
                               ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300'
+                              : isLocked
+                              ? 'bg-amber-100/80 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-bold'
                               : isSelected
                               ? 'bg-white/20 text-white dark:bg-slate-900/20 dark:text-slate-900'
                               : isCurrentMonth
@@ -1410,6 +1571,8 @@ export default function HostWeeklySlotSchedule({
                         >
                           {isBooked
                             ? 'Booked'
+                            : isLocked
+                            ? '🔒 Locked'
                             : isStart && sortedSelected.length > 1
                             ? 'Check-In'
                             : isEnd && sortedSelected.length > 1
@@ -1421,11 +1584,11 @@ export default function HostWeeklySlotSchedule({
                             : 'Available'}
                         </span>
 
-                        <div className="my-1.5">
-                          <span className="text-base sm:text-lg font-bold block leading-none">
+                        <div className="my-1">
+                          <span className="text-sm sm:text-base font-bold block leading-none">
                             {m.monthShort}
                           </span>
-                          <span className={`text-xs font-medium mt-0.5 block ${
+                          <span className={`text-[11px] font-medium mt-0.5 block ${
                             isSelected ? 'text-white/80 dark:text-slate-900/80' : 'text-slate-400 dark:text-slate-500'
                           }`}>
                             {m.year}
@@ -1539,16 +1702,19 @@ export default function HostWeeklySlotSchedule({
                           const slotGuest = roomBookingInfo.dateToGuestMap
                             ? roomBookingInfo.dateToGuestMap[slot.fullISO]
                             : null;
+                          const isLocked = !isPropertyApproved && !isBooked;
 
                           return (
                             <div key={slot.fullISO} className="flex flex-col items-center justify-start py-0.5 relative">
                               <button
                                 type="button"
-                                disabled={isBooked}
+                                disabled={isBooked || !isPropertyApproved}
                                 onClick={() => handleToggleSlotDay(slot.index)}
                                 className={`w-7.5 h-7.5 sm:w-8 sm:h-8 md:w-8.5 md:h-8.5 rounded-full flex flex-col items-center justify-center font-bold text-[11px] sm:text-xs select-none outline-none relative transition-colors duration-75 ${
                                   isBooked
                                     ? 'bg-red-50 dark:bg-red-950/40 text-red-500 dark:text-red-400 border border-red-300 dark:border-red-800/80 cursor-not-allowed line-through opacity-75'
+                                    : isLocked
+                                    ? 'bg-slate-50 dark:bg-slate-800/40 border border-dashed border-amber-300 dark:border-amber-700/60 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-75'
                                     : isSelected
                                     ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-2 border-slate-900 dark:border-white font-black cursor-pointer z-10 shadow-xs'
                                     : isCheckoutDepartureDay
@@ -1560,6 +1726,8 @@ export default function HostWeeklySlotSchedule({
                                 title={`${slot.dayName}, ${slot.monthDay} (12:00 PM) - ${
                                   isBooked
                                     ? `Booked: ${slotGuest?.userName || 'Occupant'}${slotGuest?.userPhone ? ` (${slotGuest.userPhone})` : ''}`
+                                    : isLocked
+                                    ? '🔒 Locked: Property approval is pending from Admin'
                                     : isSelected
                                     ? 'Selected Night'
                                     : isCheckoutDepartureDay
@@ -1568,7 +1736,7 @@ export default function HostWeeklySlotSchedule({
                                 }`}
                               >
                                 <span>{slot.dayNum}</span>
-                                {isToday && !isSelected && !isBooked && (
+                                {isToday && !isSelected && !isBooked && !isLocked && (
                                   <span className="w-1 h-1 rounded-full bg-emerald-500 -mt-0.5"></span>
                                 )}
                               </button>
@@ -1578,6 +1746,8 @@ export default function HostWeeklySlotSchedule({
                                 className={`text-[7.5px] sm:text-[8px] tracking-tight uppercase font-bold mt-0.5 leading-none text-center truncate max-w-full ${
                                   isBooked
                                     ? 'text-red-500 dark:text-red-400'
+                                    : isLocked
+                                    ? 'text-amber-600 dark:text-amber-400 font-semibold'
                                     : isSelected
                                     ? slot.index === sortedSelected[0] ? 'text-slate-900 dark:text-white font-black' : 'text-slate-500 dark:text-slate-400'
                                     : isCheckoutDepartureDay
@@ -1589,6 +1759,8 @@ export default function HostWeeklySlotSchedule({
                               >
                                 {isBooked
                                   ? slotGuest?.userName ? (slotGuest.userName.length > 7 ? `${slotGuest.userName.slice(0, 6)}…` : slotGuest.userName) : 'Booked'
+                                  : isLocked
+                                  ? '🔒 Lock'
                                   : isSelected
                                   ? slot.index === sortedSelected[0] ? 'Check-In' : 'Night'
                                   : isCheckoutDepartureDay
@@ -1634,291 +1806,10 @@ export default function HostWeeklySlotSchedule({
         </div>
 
         {/* ========================================================= */}
-        {/* 📝 RIGHT COLUMN: GUEST DETAILS & CONFIRMATION */}
+        {/* 📝 RIGHT COLUMN: OCCUPANTS (TOP) & GUEST DETAILS (BOTTOM) */}
         {/* ========================================================= */}
         <div className="space-y-4">
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 space-y-4 shadow-2xs">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center text-xs shrink-0">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <span>Guest Details &amp; Confirmation</span>
-                  </h3>
-                  <p className="text-[10.5px] text-slate-400 font-normal mt-0.5">
-                    Review reservation and enter details
-                  </p>
-                </div>
-              </div>
-              <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700">
-                Step 3
-              </span>
-            </div>
-
-            {/* Reservation Stay Summary */}
-            {reservationDetails ? (
-              <div className="p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 space-y-2.5 shadow-2xs">
-                {/* Room Header */}
-                <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-700/60 pb-2">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-slate-900 dark:text-white">{roomDisplay}</span>
-                    <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 bg-slate-200/60 dark:bg-slate-700/60 px-1.5 py-0.2 rounded">
-                      {roomTypeDisplay}
-                    </span>
-                  </div>
-                  <span className="text-[10.5px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-800/60">
-                    {reservationDetails.durationLabel}
-                  </span>
-                </div>
-
-                {/* Dates IN / OUT Grid */}
-                <div className="grid grid-cols-2 gap-2 text-left">
-                  <div className="bg-white dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-200/70 dark:border-slate-700/60">
-                    <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Check-In</div>
-                    <div className="text-xs font-bold text-slate-800 dark:text-white mt-0.5">
-                      {reservationDetails.checkInDate}
-                    </div>
-                    <div className="text-[9.5px] text-slate-400 mt-0.5">{reservationDetails.checkInTime}</div>
-                  </div>
-
-                  <div className="bg-white dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-200/70 dark:border-slate-700/60">
-                    <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Check-Out</div>
-                    <div className="text-xs font-bold text-slate-800 dark:text-white mt-0.5">
-                      {reservationDetails.checkOutDate}
-                    </div>
-                    <div className="text-[9.5px] text-slate-400 mt-0.5">{reservationDetails.checkOutTime}</div>
-                  </div>
-                </div>
-
-                {/* Price Breakdown */}
-                {reservationDetails.unitPrice > 0 && (
-                  <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs">
-                    <span className="text-slate-500 dark:text-slate-400 text-[11px]">
-                      {reservationDetails.priceBreakdown}
-                    </span>
-                    <span className="font-bold text-slate-900 dark:text-white text-xs">
-                      Total: ₹{reservationDetails.totalPrice.toLocaleString('en-IN')}
-                    </span>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-800 text-xs flex items-center gap-2.5 text-slate-500 dark:text-slate-400">
-                <div className="w-7 h-7 rounded-lg bg-slate-200/80 dark:bg-slate-700/50 flex items-center justify-center text-slate-500 shrink-0">
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <span className="text-[11px] leading-snug">
-                  {isMonthly
-                    ? 'Select booking months from the Month Card in the middle to view your stay summary.'
-                    : 'Select check-in dates from the Month Card in the middle to view your stay summary.'}
-                </span>
-              </div>
-            )}
-
-            {/* Guest Form */}
-            <form onSubmit={(e) => { e.preventDefault(); handleHostMarkSlotBooked(); }} className="space-y-3">
-              {/* Full Name */}
-              <div>
-                <label className="block text-[10px] font-medium text-slate-500 uppercase mb-1">
-                  Your Full Name (letters only) *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={hostUserName}
-                  onChange={handleHostNameChange}
-                  placeholder="Full Name (letters only)"
-                  className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-normal focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors"
-                />
-              </div>
-
-              {/* Mobile Number: Left static +91, Right 10-digit input */}
-              <div>
-                <label className="block text-[10px] font-medium text-slate-500 uppercase mb-1">
-                  Mobile Number (10 digits) *
-                </label>
-                <div className="flex items-center rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden focus-within:border-slate-900 dark:focus-within:border-white transition-colors">
-                  <div className="px-3 py-2 bg-slate-100 dark:bg-slate-700/60 border-r border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 select-none shrink-0 flex items-center gap-1.5">
-                    <span>🇮🇳</span>
-                    <span>+91</span>
-                  </div>
-                  <input
-                    type="tel"
-                    required
-                    maxLength={10}
-                    value={hostUserPhone}
-                    onChange={handleHostPhoneChange}
-                    placeholder="10-digit Mobile Number"
-                    className="w-full px-3 py-2 bg-transparent text-xs font-medium text-slate-900 dark:text-white focus:outline-none placeholder:text-slate-400"
-                  />
-                </div>
-              </div>
-
-              {/* Gender (Monthly) vs Guests: Adult & Child (Nightly) */}
-              {isMonthly ? (
-                <div>
-                  <label className="block text-[10px] font-medium text-slate-500 uppercase mb-1">
-                    Gender *
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {['Male', 'Female'].map((g) => {
-                      const isSelected = hostGender === g;
-                      return (
-                        <button
-                          key={g}
-                          type="button"
-                          onClick={() => setHostGender(g)}
-                          className={`h-[38px] rounded-lg text-xs font-semibold flex items-center justify-center transition-colors cursor-pointer border ${
-                            isSelected
-                              ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-slate-900 dark:border-white shadow-xs'
-                              : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/60'
-                          }`}
-                        >
-                          {g}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <label className="block text-[10px] font-medium text-slate-500 uppercase mb-1">
-                    Guests (Adult &amp; Child)
-                  </label>
-                  <div className="flex items-center justify-between h-[38px] px-2.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                    {/* Adult */}
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10.5px] font-semibold text-slate-500 dark:text-slate-400">Adult</span>
-                      <button
-                        type="button"
-                        onClick={() => setHostAdults((prev) => Math.max(1, prev - 1))}
-                        disabled={hostAdults <= 1}
-                        className="w-5 h-5 rounded flex items-center justify-center font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 disabled:opacity-30 cursor-pointer"
-                      >
-                        −
-                      </button>
-                      <span className="text-xs font-bold text-slate-900 dark:text-white w-3.5 text-center">
-                        {hostAdults}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setHostAdults((prev) => Math.min(10, prev + 1))}
-                        className="w-5 h-5 rounded flex items-center justify-center font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 cursor-pointer"
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
-
-                    {/* Child */}
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10.5px] font-semibold text-slate-500 dark:text-slate-400">Child</span>
-                      <button
-                        type="button"
-                        onClick={() => setHostChildren((prev) => Math.max(0, prev - 1))}
-                        disabled={hostChildren <= 0}
-                        className="w-5 h-5 rounded flex items-center justify-center font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 disabled:opacity-30 cursor-pointer"
-                      >
-                        −
-                      </button>
-                      <span className="text-xs font-bold text-slate-900 dark:text-white w-3.5 text-center">
-                        {hostChildren}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setHostChildren((prev) => Math.min(10, prev + 1))}
-                        className="w-5 h-5 rounded flex items-center justify-center font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 cursor-pointer"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Email Address */}
-              <div>
-                <label className="block text-[10px] font-medium text-slate-500 uppercase mb-1">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  value={hostUserEmail}
-                  onChange={(e) => setHostUserEmail(e.target.value)}
-                  placeholder="yourname@gmail.com (optional)"
-                  className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-normal focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors"
-                />
-              </div>
-
-              {/* Aadhar ID Number */}
-              <div>
-                <label className="block text-[10px] font-medium text-slate-500 uppercase mb-1">
-                  Aadhar ID Number (12 digits)
-                </label>
-                <div className="relative flex items-center">
-                  <input
-                    type="text"
-                    maxLength={14}
-                    value={hostUserAadhar}
-                    onChange={(e) => {
-                      const digits = e.target.value.replace(/\D/g, '').slice(0, 12);
-                      const formatted = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
-                      setHostUserAadhar(formatted);
-                    }}
-                    placeholder="12-digit Aadhar Number (optional)"
-                    className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-normal focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors tracking-wider placeholder:tracking-normal"
-                  />
-                  <span className="absolute right-3 text-xs text-slate-400 select-none pointer-events-none">
-                    🪪
-                  </span>
-                </div>
-              </div>
-
-              {/* Action Buttons: Clear + Book Selected Slot */}
-              <div className="flex items-center gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedSlotIndices([]);
-                    setHostUserName('');
-                    setHostUserPhone('');
-                    setHostUserEmail('');
-                    setHostUserAadhar('');
-                    setHostAdults(1);
-                    setHostChildren(0);
-                    setHostGender('Male');
-                  }}
-                  className="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                >
-                  Clear
-                </button>
-                <button
-                  type="submit"
-                  disabled={isUpdatingSlot || sortedSelected.length === 0}
-                  className="flex-1 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs transition-colors cursor-pointer shadow-xs active:scale-[0.99] flex items-center justify-center gap-2"
-                >
-                  {isUpdatingSlot ? (
-                    <>
-                      <div className="w-3.5 h-3.5 border-2 border-white dark:border-slate-900 border-t-transparent rounded-full animate-spin" />
-                      <span>Booking...</span>
-                    </>
-                  ) : (
-                    <span>{isMonthly ? 'Book Selected Month(s)' : 'Book Selected Slot'}</span>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Occupants Section */}
+          {/* Occupants Section (Top) */}
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 space-y-3 shadow-2xs">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
               <div className="flex items-center gap-2">
@@ -1942,16 +1833,18 @@ export default function HostWeeklySlotSchedule({
                   if (occupant.bookedDates && occupant.bookedDates.length > 0) {
                     const sortedD = [...occupant.bookedDates].sort();
                     const dt = new Date(sortedD[0] + 'T00:00:00');
-                    checkInDisplay = dt.toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    });
+                    checkInDisplay = formatDateTimeWithTiming(dt, '12:00 PM');
                   } else if (occupant.bookedMonths && occupant.bookedMonths.length > 0) {
                     const sortedM = [...occupant.bookedMonths].sort();
-                    checkInDisplay = `1st ${sortedM[0]}`;
+                    const [sY, sM] = sortedM[0].split('-').map(Number);
+                    const inDateObj = new Date(sY, sM - 1, 1);
+                    checkInDisplay = formatDateTimeWithTiming(inDateObj, '12:00 AM');
                   } else if (occupant.checkIn) {
-                    checkInDisplay = occupant.checkIn.split('(')[0].trim();
+                    const raw = occupant.checkInISO || occupant.checkIn.split('(')[0].trim();
+                    const dt = new Date(raw);
+                    checkInDisplay = !isNaN(dt.getTime())
+                      ? formatDateTimeWithTiming(dt, isMonthly ? '12:00 AM' : '12:00 PM')
+                      : occupant.checkIn;
                   }
 
                   return (
@@ -1987,33 +1880,66 @@ export default function HostWeeklySlotSchedule({
                         </div>
                       </div>
 
-                      {/* Right: Actions (View button + Remove button) */}
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenOccupantModal(occupant)}
-                          className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-slate-900 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs active:scale-[0.98]"
-                          title="View full occupant details"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                          <span>View</span>
-                        </button>
+                      {/* Right: Actions (View button + Remove button / Confirmation state) */}
+                      {confirmDeleteId === occupant.id ? (
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold transition-all cursor-pointer shadow-2xs active:scale-[0.98]"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isUpdatingSlot}
+                            onClick={() => handleRemoveOccupant(occupant)}
+                            className="px-2.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all cursor-pointer shadow-xs flex items-center gap-1 active:scale-[0.98] disabled:opacity-50"
+                            title="Confirm remove from database"
+                          >
+                            {isUpdatingSlot ? (
+                              <>
+                                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                <span>Removing...</span>
+                              </>
+                            ) : (
+                              <>
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Confirm Remove</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenOccupantModal(occupant)}
+                            className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-slate-900 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs active:scale-[0.98]"
+                            title="View full occupant details"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <span>View</span>
+                          </button>
 
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveOccupant(occupant)}
-                          className="px-2.5 py-1.5 rounded-lg border border-red-200/80 dark:border-red-900/50 bg-red-50/70 dark:bg-red-950/30 hover:bg-red-600 hover:text-white dark:hover:bg-red-600 text-red-600 dark:text-red-400 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs active:scale-[0.98]"
-                          title="Remove user and release slot dates"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                          <span>Remove</span>
-                        </button>
-                      </div>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteId(occupant.id)}
+                            className="px-2.5 py-1.5 rounded-lg border border-red-200/80 dark:border-red-900/50 bg-red-50/70 dark:bg-red-950/30 hover:bg-red-600 hover:text-white dark:hover:bg-red-600 text-red-600 dark:text-red-400 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs active:scale-[0.98]"
+                            title="Remove user and release slot dates"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            <span>Remove</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -2023,6 +1949,284 @@ export default function HostWeeklySlotSchedule({
                 No occupants currently scheduled for {roomDisplay}. Select available slots to reserve.
               </div>
             )}
+          </div>
+
+          {/* Guest Details & Booking Form (Bottom) */}
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 p-3.5 sm:p-4 space-y-3 shadow-2xs">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center text-xs shrink-0">
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+                    <span>Guest Details &amp; Booking</span>
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-normal mt-0.5 truncate">
+                    Review reservation and enter details
+                  </p>
+                </div>
+              </div>
+              <span className="text-[9.5px] font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700 shrink-0">
+                Step 3
+              </span>
+            </div>
+
+            {/* Reservation Stay Summary */}
+            {reservationDetails && (
+              <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 space-y-2 shadow-2xs">
+                {/* Room Header */}
+                <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-700/60 pb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white">{roomDisplay}</span>
+                    <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 bg-slate-200/60 dark:bg-slate-700/60 px-1.5 py-0.2 rounded">
+                      {roomTypeDisplay}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-800/60">
+                    {reservationDetails.durationLabel}
+                  </span>
+                </div>
+
+                {/* Dates IN / OUT Grid */}
+                <div className="grid grid-cols-2 gap-2 text-left">
+                  <div className="bg-white dark:bg-slate-900/60 p-2 rounded-lg border border-slate-200/70 dark:border-slate-700/60">
+                    <div className="text-[9.5px] font-semibold text-slate-400 uppercase tracking-wide">Check-In</div>
+                    <div className="text-[11.5px] font-bold text-slate-800 dark:text-white mt-0.5">
+                      {reservationDetails.checkInDate}
+                    </div>
+                    <div className="text-[9px] text-slate-400 mt-0.5">{reservationDetails.checkInTime}</div>
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-900/60 p-2 rounded-lg border border-slate-200/70 dark:border-slate-700/60">
+                    <div className="text-[9.5px] font-semibold text-slate-400 uppercase tracking-wide">Check-Out</div>
+                    <div className="text-[11.5px] font-bold text-slate-800 dark:text-white mt-0.5">
+                      {reservationDetails.checkOutDate}
+                    </div>
+                    <div className="text-[9px] text-slate-400 mt-0.5">{reservationDetails.checkOutTime}</div>
+                  </div>
+                </div>
+
+                {/* Price Breakdown */}
+                {reservationDetails.unitPrice > 0 && (
+                  <div className="pt-1.5 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs">
+                    <span className="text-slate-500 dark:text-slate-400 text-[10.5px]">
+                      {reservationDetails.priceBreakdown}
+                    </span>
+                    <span className="font-bold text-slate-900 dark:text-white text-xs">
+                      Total: ₹{reservationDetails.totalPrice.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Guest Form */}
+            <form onSubmit={(e) => { e.preventDefault(); handleHostMarkSlotBooked(); }} className="space-y-2.5">
+              <fieldset disabled={!isPropertyApproved} className="space-y-2.5 disabled:opacity-60">
+                {/* Full Name */}
+                <div>
+                <label className="block text-[9.5px] font-medium text-slate-500 uppercase mb-0.5">
+                  Your Full Name (letters only) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={hostUserName}
+                  onChange={handleHostNameChange}
+                  placeholder="Full Name (letters only)"
+                  className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-normal focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors"
+                />
+              </div>
+
+              {/* Mobile Number: Left static +91, Right 10-digit input */}
+              <div>
+                <label className="block text-[9.5px] font-medium text-slate-500 uppercase mb-0.5">
+                  Mobile Number (10 digits) *
+                </label>
+                <div className="flex items-center rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden focus-within:border-slate-900 dark:focus-within:border-white transition-colors">
+                  <div className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-700/60 border-r border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 select-none shrink-0 flex items-center gap-1">
+                    <span>🇮🇳</span>
+                    <span>+91</span>
+                  </div>
+                  <input
+                    type="tel"
+                    required
+                    maxLength={10}
+                    value={hostUserPhone}
+                    onChange={handleHostPhoneChange}
+                    placeholder="10-digit Mobile Number"
+                    className="w-full px-2.5 py-1.5 bg-transparent text-xs font-medium text-slate-900 dark:text-white focus:outline-none placeholder:text-slate-400"
+                  />
+                </div>
+              </div>
+
+              {/* Gender (Monthly) vs Guests: Adult & Child (Nightly) */}
+              {isMonthly ? (
+                <div>
+                  <label className="block text-[9.5px] font-medium text-slate-500 uppercase mb-0.5">
+                    Gender *
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {['Male', 'Female'].map((g) => {
+                      const isSelected = hostGender === g;
+                      return (
+                        <button
+                          key={g}
+                          type="button"
+                          onClick={() => setHostGender(g)}
+                          className={`h-[32px] rounded-lg text-xs font-semibold flex items-center justify-center transition-colors cursor-pointer border ${
+                            isSelected
+                              ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-slate-900 dark:border-white shadow-xs'
+                              : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/60'
+                          }`}
+                        >
+                          {g}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-[9.5px] font-medium text-slate-500 uppercase mb-0.5">
+                    Guests (Adult &amp; Child)
+                  </label>
+                  <div className="flex items-center justify-between h-[32px] px-2.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                    {/* Adult */}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">Adult</span>
+                      <button
+                        type="button"
+                        onClick={() => setHostAdults((prev) => Math.max(1, prev - 1))}
+                        disabled={hostAdults <= 1}
+                        className="w-4 h-4 rounded flex items-center justify-center font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 disabled:opacity-30 cursor-pointer"
+                      >
+                        −
+                      </button>
+                      <span className="text-xs font-bold text-slate-900 dark:text-white w-3 text-center">
+                        {hostAdults}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setHostAdults((prev) => Math.min(10, prev + 1))}
+                        className="w-4 h-4 rounded flex items-center justify-center font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 cursor-pointer"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <div className="h-3.5 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
+
+                    {/* Child */}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">Child</span>
+                      <button
+                        type="button"
+                        onClick={() => setHostChildren((prev) => Math.max(0, prev - 1))}
+                        disabled={hostChildren <= 0}
+                        className="w-4 h-4 rounded flex items-center justify-center font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 disabled:opacity-30 cursor-pointer"
+                      >
+                        −
+                      </button>
+                      <span className="text-xs font-bold text-slate-900 dark:text-white w-3 text-center">
+                        {hostChildren}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setHostChildren((prev) => Math.min(10, prev + 1))}
+                        className="w-4 h-4 rounded flex items-center justify-center font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 cursor-pointer"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Email Address */}
+              <div>
+                <label className="block text-[9.5px] font-medium text-slate-500 uppercase mb-0.5">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={hostUserEmail}
+                  onChange={(e) => setHostUserEmail(e.target.value)}
+                  placeholder="yourname@gmail.com (optional)"
+                  className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-normal focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors"
+                />
+              </div>
+
+              {/* Aadhar ID Number */}
+              <div>
+                <label className="block text-[9.5px] font-medium text-slate-500 uppercase mb-0.5">
+                  Aadhar ID Number (12 digits)
+                </label>
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    maxLength={14}
+                    value={hostUserAadhar}
+                    onChange={(e) => {
+                      setHostUserAadhar(formatAadharNumber(e.target.value));
+                    }}
+                    placeholder="12-digit Aadhar Number (optional)"
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-normal focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors tracking-wider placeholder:tracking-normal"
+                  />
+                  <span className="absolute right-2.5 text-xs text-slate-400 select-none pointer-events-none">
+                    🪪
+                  </span>
+                </div>
+              </div>
+            </fieldset>
+
+              {/* Action Buttons: Clear + Book Selected Slot */}
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedSlotIndices([]);
+                    setHostUserName('');
+                    setHostUserPhone('');
+                    setHostUserEmail('');
+                    setHostUserAadhar('');
+                    setHostAdults(1);
+                    setHostChildren(0);
+                    setHostGender('Male');
+                  }}
+                  className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  Clear
+                </button>
+                <button
+                  type="submit"
+                  disabled={!isPropertyApproved || isUpdatingSlot || sortedSelected.length === 0}
+                  className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs transition-colors shadow-xs active:scale-[0.99] flex items-center justify-center gap-1.5 ${
+                    !isPropertyApproved
+                      ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 cursor-not-allowed opacity-60'
+                      : 'bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed'
+                  }`}
+                >
+                  {!isPropertyApproved ? (
+                    <span className="flex items-center gap-1.5">
+                      <span>🔒</span>
+                      <span>Slots Locked (Awaiting Admin Approval)</span>
+                    </span>
+                  ) : isUpdatingSlot ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white dark:border-slate-900 border-t-transparent rounded-full animate-spin" />
+                      <span>Booking...</span>
+                    </>
+                  ) : (
+                    <span>{isMonthly ? 'Book Selected Month(s)' : 'Book Selected Slot'}</span>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
@@ -2036,57 +2240,57 @@ export default function HostWeeklySlotSchedule({
           onClick={handleCloseOccupantModal}
         >
           <div
-            className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden my-8"
+            className="relative w-full max-w-[420px] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden my-6 transition-all"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-xs shrink-0">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
+            {/* Simulated ID Card Lanyard Slot */}
+            <div className="w-12 h-1 rounded-full bg-slate-300/80 dark:bg-slate-700 mx-auto mt-2 mb-1 shrink-0" />
+
+            {/* ID Card Header */}
+            <div className="flex items-center justify-between px-4 py-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/40">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-md bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center text-[10px] font-bold shadow-2xs">
+                  RS
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-                      {isModalEditing ? 'Edit Occupant Details' : 'Occupant Details'}
-                    </h3>
-                    <span className="text-[10px] font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
-                      {roomDisplay}
-                    </span>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-900 dark:text-white leading-none">
+                    Resident ID Pass
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
-                    {isModalEditing ? 'Modify user information and update database' : 'Complete reservation & occupant profile'}
-                  </p>
+                  <div className="text-[8.5px] font-mono text-slate-400 mt-0.5">
+                    RoomScout Verified Occupant
+                  </div>
                 </div>
               </div>
 
-              {/* Close Button */}
-              <button
-                type="button"
-                onClick={handleCloseOccupantModal}
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                title="Close tab"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 uppercase">
+                  {roomDisplay}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCloseOccupantModal}
+                  className="w-6 h-6 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  title="Close ID Card"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {/* Modal Body: Either View Mode or Edit Mode */}
             {isModalEditing ? (
-              /* ✏️ EDIT MODE FORM */
-              <form onSubmit={handleSaveModalEdit} className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs flex items-center gap-2">
+              /* ✏️ EDIT MODE: MINIMAL & COMPACT */
+              <form onSubmit={handleSaveModalEdit} className="p-4 space-y-3 max-h-[75vh] overflow-y-auto text-xs">
+                <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[11px] flex items-center gap-1.5">
                   <span className="text-slate-400">ℹ️</span>
                   <span>Changes will immediately update the stay slot and database records.</span>
                 </div>
 
                 {/* Full Name */}
                 <div>
-                  <label className="block text-[10.5px] font-medium text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
+                  <label className="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">
                     Full Name (letters only) *
                   </label>
                   <input
@@ -2095,17 +2299,17 @@ export default function HostWeeklySlotSchedule({
                     value={modalName}
                     onChange={handleModalNameChange}
                     placeholder="Full Name"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors"
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors"
                   />
                 </div>
 
                 {/* Mobile Number */}
                 <div>
-                  <label className="block text-[10.5px] font-medium text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
+                  <label className="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">
                     Mobile Number (10 digits) *
                   </label>
-                  <div className="flex items-center rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden focus-within:border-slate-900 dark:focus-within:border-white transition-colors">
-                    <div className="px-3 py-2 bg-slate-100 dark:bg-slate-700/60 border-r border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-600 dark:text-slate-300 select-none shrink-0">
+                  <div className="flex items-center rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden focus-within:border-slate-900 dark:focus-within:border-white transition-colors">
+                    <div className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-700/60 border-r border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 select-none shrink-0">
                       +91
                     </div>
                     <input
@@ -2115,14 +2319,14 @@ export default function HostWeeklySlotSchedule({
                       value={modalPhone}
                       onChange={handleModalPhoneChange}
                       placeholder="10-digit Mobile Number"
-                      className="w-full px-3 py-2 bg-transparent text-xs font-medium text-slate-900 dark:text-white focus:outline-none placeholder:text-slate-400"
+                      className="w-full px-2.5 py-1.5 bg-transparent text-xs font-semibold text-slate-900 dark:text-white focus:outline-none placeholder:text-slate-400 font-mono"
                     />
                   </div>
                 </div>
 
                 {/* Email Address */}
                 <div>
-                  <label className="block text-[10.5px] font-medium text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
+                  <label className="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">
                     Email Address
                   </label>
                   <input
@@ -2130,13 +2334,13 @@ export default function HostWeeklySlotSchedule({
                     value={modalEmail}
                     onChange={(e) => setModalEmail(e.target.value)}
                     placeholder="yourname@gmail.com (optional)"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors"
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors"
                   />
                 </div>
 
                 {/* Aadhar ID Number */}
                 <div>
-                  <label className="block text-[10.5px] font-medium text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
+                  <label className="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">
                     Aadhar ID Number (12 digits)
                   </label>
                   <input
@@ -2145,14 +2349,14 @@ export default function HostWeeklySlotSchedule({
                     value={modalAadhar}
                     onChange={handleModalAadharChange}
                     placeholder="12-digit Aadhar Number (optional)"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-medium text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors tracking-wider placeholder:tracking-normal"
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-medium text-slate-900 dark:text-white focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors tracking-wider placeholder:tracking-normal"
                   />
                 </div>
 
                 {/* Guests: Adults & Children (or Gender if monthly) */}
                 {isMonthly ? (
                   <div>
-                    <label className="block text-[10.5px] font-medium text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
+                    <label className="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">
                       Gender *
                     </label>
                     <div className="grid grid-cols-2 gap-2">
@@ -2163,7 +2367,7 @@ export default function HostWeeklySlotSchedule({
                             key={g}
                             type="button"
                             onClick={() => setModalGender(g)}
-                            className={`h-[36px] rounded-xl text-xs font-medium flex items-center justify-center transition-colors cursor-pointer border ${
+                            className={`h-[32px] rounded-lg text-xs font-semibold flex items-center justify-center transition-colors cursor-pointer border ${
                               isSelected
                                 ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-slate-900 dark:border-white'
                                 : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/60'
@@ -2177,18 +2381,18 @@ export default function HostWeeklySlotSchedule({
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-[10.5px] font-medium text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
+                    <label className="block text-[9.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">
                       Guests (Adult &amp; Child)
                     </label>
-                    <div className="flex items-center justify-between h-[38px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center justify-between h-[34px] px-2.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                       {/* Adult */}
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Adult</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Adult</span>
                         <button
                           type="button"
                           onClick={() => setModalAdults((prev) => Math.max(1, prev - 1))}
                           disabled={modalAdults <= 1}
-                          className="w-5 h-5 rounded-md flex items-center justify-center font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 disabled:opacity-30 cursor-pointer"
+                          className="w-4 h-4 rounded flex items-center justify-center font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 disabled:opacity-30 cursor-pointer"
                         >
                           −
                         </button>
@@ -2198,22 +2402,22 @@ export default function HostWeeklySlotSchedule({
                         <button
                           type="button"
                           onClick={() => setModalAdults((prev) => Math.min(10, prev + 1))}
-                          className="w-5 h-5 rounded-md flex items-center justify-center font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 cursor-pointer"
+                          className="w-4 h-4 rounded flex items-center justify-center font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 cursor-pointer"
                         >
                           +
                         </button>
                       </div>
 
-                      <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
+                      <div className="h-3.5 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
 
                       {/* Child */}
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Child</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Child</span>
                         <button
                           type="button"
                           onClick={() => setModalChildren((prev) => Math.max(0, prev - 1))}
                           disabled={modalChildren <= 0}
-                          className="w-5 h-5 rounded-md flex items-center justify-center font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 disabled:opacity-30 cursor-pointer"
+                          className="w-4 h-4 rounded flex items-center justify-center font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 disabled:opacity-30 cursor-pointer"
                         >
                           −
                         </button>
@@ -2223,7 +2427,7 @@ export default function HostWeeklySlotSchedule({
                         <button
                           type="button"
                           onClick={() => setModalChildren((prev) => Math.min(10, prev + 1))}
-                          className="w-5 h-5 rounded-md flex items-center justify-center font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 cursor-pointer"
+                          className="w-4 h-4 rounded flex items-center justify-center font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 cursor-pointer"
                         >
                           +
                         </button>
@@ -2233,204 +2437,303 @@ export default function HostWeeklySlotSchedule({
                 )}
 
                 {/* Bottom Action Footer for Edit Mode */}
-                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                   <button
                     type="button"
                     onClick={handleCancelEditFromModal}
                     disabled={isSavingModalOccupant}
-                    className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+                    className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-[11px] font-medium text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSavingModalOccupant}
-                    className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white text-xs font-medium transition-colors cursor-pointer shadow-xs flex items-center gap-1.5 active:scale-[0.99] disabled:opacity-50"
+                    className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white text-[11px] font-medium transition-colors cursor-pointer shadow-xs flex items-center gap-1.5 active:scale-[0.99] disabled:opacity-50"
                   >
                     {isSavingModalOccupant ? (
                       <>
-                        <div className="w-3.5 h-3.5 border-2 border-white dark:border-slate-900 border-t-transparent rounded-full animate-spin" />
+                        <div className="w-3 h-3 border-2 border-white dark:border-slate-900 border-t-transparent rounded-full animate-spin" />
                         <span>Updating...</span>
                       </>
                     ) : (
                       <>
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
-                        <span>Update in Database</span>
+                        <span>Update Database</span>
                       </>
                     )}
                   </button>
                 </div>
               </form>
             ) : (
-              /* 👁️ VIEW MODE: SIMPLE & PREMIUM */
-              <div className="p-5 space-y-3.5 max-h-[75vh] overflow-y-auto">
-                {/* Top Banner with Avatar, Name, Status, Source */}
-                <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-11 h-11 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 flex items-center justify-center font-semibold text-sm tracking-normal shadow-2xs shrink-0 uppercase">
-                      {selectedOccupantForModal.name ? selectedOccupantForModal.name.slice(0, 2) : 'US'}
-                    </div>
-                    <div className="min-w-0">
-                      <h4 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white truncate">
+              /* 🪪 VIEW MODE: MINIMAL RESIDENT ID CARD */
+              <div className="p-4 space-y-3">
+                {/* Identity Hero Section: Photo badge + Resident Title */}
+                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800">
+                  {/* ID Photo Frame */}
+                  <div className="relative w-12 h-14 rounded-lg bg-gradient-to-b from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 border border-slate-300 dark:border-slate-600 flex flex-col items-center justify-center shrink-0 shadow-2xs">
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200 tracking-wider">
+                      {selectedOccupantForModal.name ? selectedOccupantForModal.name.slice(0, 2).toUpperCase() : 'RS'}
+                    </span>
+                    <span className="text-[7px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-tight mt-0.5">
+                      ID PASS
+                    </span>
+                    <span
+                      className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900"
+                      title="Active Occupant"
+                    />
+                  </div>
+
+                  {/* Identity Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">
                         {selectedOccupantForModal.name}
                       </h4>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/60 uppercase">
-                          {selectedOccupantForModal.status || 'CONFIRMED'}
-                        </span>
-                        <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
-                          {selectedOccupantForModal.source === 'slotBooking' ? 'Offline Occupant' : 'Online Booking'}
-                        </span>
-                      </div>
+                      <span className="text-[8px] font-bold px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 uppercase">
+                        {selectedOccupantForModal.status || 'CONFIRMED'}
+                      </span>
+                    </div>
+
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                      {roomDisplay} • <span className="font-medium text-slate-700 dark:text-slate-300">{roomTypeDisplay}</span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 mt-1 text-[8.5px] font-mono text-slate-400">
+                      <span>#{selectedOccupantForModal.bookingReferenceId || (selectedOccupantForModal.phone ? `BK-${selectedOccupantForModal.phone.slice(-6)}` : 'BK-PASS')}</span>
+                      <span>•</span>
+                      <span>{selectedOccupantForModal.source === 'slotBooking' ? 'Offline Occupant' : 'Online Booking'}</span>
                     </div>
                   </div>
-                  {selectedOccupantForModal.bookingReferenceId && (
-                    <span className="text-[10px] font-mono text-slate-400 hidden sm:inline-block">
-                      #{selectedOccupantForModal.bookingReferenceId}
-                    </span>
-                  )}
                 </div>
 
-                {/* Details Grid (2-columns) - Clean, Minimal & Uniform */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-                  {/* Full Name */}
-                  <div className="p-3 rounded-xl bg-slate-50/60 dark:bg-slate-800/30 border border-slate-200/80 dark:border-slate-800">
-                    <div className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                      Full Name
-                    </div>
-                    <div className="font-semibold text-slate-800 dark:text-slate-100 mt-1">
-                      {selectedOccupantForModal.name}
-                    </div>
-                  </div>
-
+                {/* ID Attributes Micro-Grid (Minimal design, Small text) */}
+                <div className="grid grid-cols-2 gap-x-2.5 gap-y-2 p-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-200/70 dark:border-slate-800 text-xs">
                   {/* Mobile Number */}
-                  <div className="p-3 rounded-xl bg-slate-50/60 dark:bg-slate-800/30 border border-slate-200/80 dark:border-slate-800">
-                    <div className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
                       Mobile Number
-                    </div>
-                    <div className="font-semibold text-slate-800 dark:text-slate-100 mt-1 flex items-center justify-between">
-                      <span className="flex items-center gap-1 font-mono text-xs">
-                        <span className="text-slate-400 font-normal">+91</span>
-                        <span>{selectedOccupantForModal.phone || selectedOccupantForModal.userPhone || '—'}</span>
-                      </span>
-                      {(selectedOccupantForModal.phone || selectedOccupantForModal.userPhone) && (
-                        <a
-                          href={`tel:${selectedOccupantForModal.phone || selectedOccupantForModal.userPhone}`}
-                          className="text-[10.5px] font-medium text-emerald-600 dark:text-emerald-400 hover:underline"
-                          title="Call occupant"
-                        >
-                          Call
-                        </a>
+                    </span>
+                    <div className="mt-0.5">
+                      {(selectedOccupantForModal.phone || selectedOccupantForModal.userPhone) ? (
+                        (() => {
+                          const rawPhone = (selectedOccupantForModal.phone || selectedOccupantForModal.userPhone || '').toString();
+                          const cleanDigits = rawPhone.replace(/\D/g, '').slice(-10);
+                          return (
+                            <a
+                              href={`tel:+91${cleanDigits}`}
+                              className="inline-flex items-center gap-1 font-mono font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors text-[11px] group"
+                              title={`Call +91 ${cleanDigits}`}
+                            >
+                              <svg
+                                className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 group-hover:scale-110 transition-transform"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                              </svg>
+                              <span className="font-sans font-semibold text-[10px] text-emerald-700 dark:text-emerald-300">Call</span>
+                              <span className="tracking-tight text-slate-800 dark:text-slate-200 group-hover:text-emerald-700 dark:group-hover:text-emerald-300 font-mono">+91 {cleanDigits}</span>
+                            </a>
+                          );
+                        })()
+                      ) : (
+                        <span className="text-slate-400 italic text-[10.5px]">Not provided</span>
                       )}
-                    </div>
-                  </div>
-
-                  {/* Email Address */}
-                  <div className="p-3 rounded-xl bg-slate-50/60 dark:bg-slate-800/30 border border-slate-200/80 dark:border-slate-800">
-                    <div className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                      Email Address
-                    </div>
-                    <div className="font-medium text-slate-800 dark:text-slate-200 mt-1 truncate" title={selectedOccupantForModal.email}>
-                      {selectedOccupantForModal.email && !selectedOccupantForModal.email.includes('@stayhub.local')
-                        ? selectedOccupantForModal.email
-                        : <span className="text-slate-400 italic">Not provided</span>}
                     </div>
                   </div>
 
                   {/* Aadhar ID Number */}
-                  <div className="p-3 rounded-xl bg-slate-50/60 dark:bg-slate-800/30 border border-slate-200/80 dark:border-slate-800">
-                    <div className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                      Aadhar ID Number
-                    </div>
-                    <div className="font-mono font-semibold text-slate-800 dark:text-slate-100 mt-1 tracking-wider">
-                      {selectedOccupantForModal.aadhar || selectedOccupantForModal.aadharNumber || (
-                        <span className="text-slate-400 font-sans font-normal italic">Not provided</span>
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+                      Aadhar / Govt ID
+                    </span>
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-100 mt-0.5 block truncate text-[11px] tracking-wider">
+                      {formatAadharNumber(
+                        selectedOccupantForModal.aadhar ||
+                        selectedOccupantForModal.aadharNumber ||
+                        selectedOccupantForModal.guestAadhar ||
+                        selectedOccupantForModal.aadharId
+                      ) || (
+                        <span className="text-slate-400 font-sans italic font-normal text-[10px] tracking-normal">Not provided</span>
                       )}
-                    </div>
+                    </span>
                   </div>
 
-                  {/* Guests Count */}
-                  <div className="p-3 rounded-xl bg-slate-50/60 dark:bg-slate-800/30 border border-slate-200/80 dark:border-slate-800">
-                    <div className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                      Guests Count
-                    </div>
-                    <div className="font-semibold text-slate-800 dark:text-slate-100 mt-1">
+                  {/* Email Address */}
+                  <div className="col-span-2">
+                    <span className="text-[8.5px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+                      Email Address
+                    </span>
+                    <span className="text-slate-800 dark:text-slate-200 mt-0.5 block truncate text-[11px]" title={selectedOccupantForModal.email}>
+                      {selectedOccupantForModal.email && !selectedOccupantForModal.email.includes('@stayhub.local')
+                        ? selectedOccupantForModal.email
+                        : <span className="text-slate-400 italic text-[10px]">Not provided</span>}
+                    </span>
+                  </div>
+
+                  {/* Occupancy */}
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+                      Guests
+                    </span>
+                    <span className="font-medium text-slate-800 dark:text-slate-200 mt-0.5 block truncate text-[11px]">
                       {selectedOccupantForModal.adults || 1} Adult{(selectedOccupantForModal.adults || 1) > 1 ? 's' : ''}
-                      {selectedOccupantForModal.children > 0 ? `, ${selectedOccupantForModal.children} Child${selectedOccupantForModal.children > 1 ? 'ren' : ''}` : ''}
-                    </div>
+                      {selectedOccupantForModal.children > 0 ? `, ${selectedOccupantForModal.children} Ch` : ''}
+                      {selectedOccupantForModal.gender ? ` • ${selectedOccupantForModal.gender}` : ''}
+                    </span>
                   </div>
 
-                  {/* Assigned Room */}
-                  <div className="p-3 rounded-xl bg-slate-50/60 dark:bg-slate-800/30 border border-slate-200/80 dark:border-slate-800">
-                    <div className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                      Assigned Room
-                    </div>
-                    <div className="font-semibold text-slate-800 dark:text-slate-100 mt-1">
-                      {roomDisplay} • <span className="font-normal text-slate-500">{roomTypeDisplay}</span>
-                    </div>
+                  {/* Stay Duration */}
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+                      Duration
+                    </span>
+                    <span className="font-medium text-slate-800 dark:text-slate-200 mt-0.5 block truncate text-[11px]">
+                      {modalStayInfo?.durationLabel || '1 Term'}
+                    </span>
                   </div>
                 </div>
 
-                {/* Stay Schedule Section */}
+                {/* Stay Schedule Validity Strip */}
                 {modalStayInfo && (
-                  <div className="p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Stay Schedule
-                      </span>
-                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                        {modalStayInfo.durationLabel}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/60">
-                        <div className="text-[9.5px] font-medium text-slate-400 uppercase">Check-In</div>
-                        <div className="text-xs font-semibold text-slate-900 dark:text-white mt-0.5">
+                  <div className="p-2.5 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 space-y-1.5">
+                    <div className="flex items-center justify-between text-[10.5px]">
+                      <div>
+                        <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400 block">
+                          Check-In
+                        </span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">
                           {modalStayInfo.checkInFormatted}
-                        </div>
-                        <div className="text-[9.5px] text-slate-400 mt-0.5">{isMonthly ? '12:00 AM' : '12:00 PM'}</div>
+                        </span>
                       </div>
 
-                      <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/60">
-                        <div className="text-[9.5px] font-medium text-slate-400 uppercase">Check-Out</div>
-                        <div className="text-xs font-semibold text-slate-900 dark:text-white mt-0.5">
+                      <div className="text-center px-1.5">
+                        <span className="text-[8px] text-slate-400 block font-mono">──────</span>
+                        <span className="text-[8.5px] font-bold text-emerald-600 dark:text-emerald-400">
+                          {modalStayInfo.durationLabel}
+                        </span>
+                      </div>
+
+                      <div className="text-right">
+                        <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400 block">
+                          Check-Out
+                        </span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">
                           {modalStayInfo.checkOutFormatted}
-                        </div>
-                        <div className="text-[9.5px] text-slate-400 mt-0.5">{isMonthly ? '11:59 PM' : '11:59 AM'}</div>
+                        </span>
                       </div>
                     </div>
 
                     {modalStayInfo.datesList && (
-                      <div className="text-[10.5px] text-slate-500 dark:text-slate-400 pt-1.5 border-t border-slate-200/60 dark:border-slate-700/60">
-                        <span className="font-semibold text-slate-700 dark:text-slate-300">Booked Dates: </span>
+                      <div className="text-[9.5px] text-slate-400 dark:text-slate-500 pt-1 border-t border-slate-200/60 dark:border-slate-700/60 truncate">
+                        <span className="font-medium text-slate-600 dark:text-slate-400">Dates: </span>
                         <span>{modalStayInfo.datesList}</span>
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* Bottom Action Footer for View Mode: Close and Edit Button */}
-                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <button
-                    type="button"
-                    onClick={handleCloseOccupantModal}
-                    className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-                  >
-                    Close
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleStartEditFromModal}
-                    className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white text-xs font-medium transition-colors cursor-pointer shadow-xs flex items-center gap-1.5 active:scale-[0.99]"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                    <span>Edit Details</span>
-                  </button>
+                {/* ID Barcode / Reference Strip */}
+                <div className="flex flex-col items-center justify-center pt-0.5">
+                  <div className="flex items-center gap-[2px] h-4 opacity-40 dark:opacity-30 select-none">
+                    <span className="w-[1.5px] h-full bg-slate-900 dark:bg-white" />
+                    <span className="w-[3px] h-full bg-slate-900 dark:bg-white" />
+                    <span className="w-[1px] h-full bg-slate-900 dark:bg-white" />
+                    <span className="w-[2px] h-full bg-slate-900 dark:bg-white" />
+                    <span className="w-[1px] h-full bg-slate-900 dark:bg-white" />
+                    <span className="w-[3.5px] h-full bg-slate-900 dark:bg-white" />
+                    <span className="w-[1px] h-full bg-slate-900 dark:bg-white" />
+                    <span className="w-[2px] h-full bg-slate-900 dark:bg-white" />
+                    <span className="w-[1.5px] h-full bg-slate-900 dark:bg-white" />
+                    <span className="w-[3px] h-full bg-slate-900 dark:bg-white" />
+                    <span className="w-[1px] h-full bg-slate-900 dark:bg-white" />
+                    <span className="w-[2.5px] h-full bg-slate-900 dark:bg-white" />
+                    <span className="w-[1.5px] h-full bg-slate-900 dark:bg-white" />
+                    <span className="w-[3px] h-full bg-slate-900 dark:bg-white" />
+                    <span className="w-[1px] h-full bg-slate-900 dark:bg-white" />
+                    <span className="w-[2px] h-full bg-slate-900 dark:bg-white" />
+                  </div>
+                  <span className="text-[7.5px] font-mono text-slate-400 tracking-widest mt-0.5">
+                    {selectedOccupantForModal.bookingReferenceId || `RS-${selectedOccupantForModal.phone || '0000'}`}
+                  </span>
+                </div>
+
+                {/* Bottom Action Footer */}
+                <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  {confirmModalDelete ? (
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setConfirmModalDelete(false)}
+                        className="px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-[11px] font-medium text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isUpdatingSlot}
+                        onClick={() => {
+                          const occ = selectedOccupantForModal;
+                          handleRemoveOccupant(occ);
+                        }}
+                        className="px-2.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-[11px] font-bold transition-all cursor-pointer shadow-xs flex items-center gap-1 active:scale-[0.98] disabled:opacity-50"
+                        title="Confirm permanent deletion from database"
+                      >
+                        {isUpdatingSlot ? (
+                          <>
+                            <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <span>Removing...</span>
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Confirm Remove</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmModalDelete(true)}
+                      className="px-2.5 py-1.5 rounded-lg border border-red-200 dark:border-red-900/50 bg-red-50/80 dark:bg-red-950/30 hover:bg-red-600 hover:text-white dark:hover:bg-red-600 text-red-600 dark:text-red-400 text-[11px] font-medium transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5 active:scale-[0.99]"
+                      title="Remove occupant and release slots"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      <span>Remove Occupant</span>
+                    </button>
+                  )}
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleCloseOccupantModal}
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-[11px] font-medium text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+                    >
+                      Close
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleStartEditFromModal}
+                      className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-white text-[11px] font-medium transition-colors cursor-pointer shadow-xs flex items-center gap-1.5 active:scale-[0.99]"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                      <span>Edit Details</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

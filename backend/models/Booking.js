@@ -51,27 +51,30 @@ const bookingSchema = new mongoose.Schema(
     },
     guestGender: {
       type: String,
-      enum: ['Male', 'Female', 'Other'],
+      default: 'Male',
+    },
+    gender: {
+      type: String,
       default: 'Male',
     },
     moveInDate: {
       type: String,
-      required: true,
+      default: '',
     },
     durationMonths: {
       type: Number,
-      default: 3,
+      default: 1,
     },
     durationDays: {
       type: Number,
     },
     durationDisplay: {
       type: String,
-      default: '3 Months',
+      default: '1 Month',
     },
     sharingType: {
       type: String,
-      default: 'Double Sharing',
+      default: 'Room',
     },
     roomNumber: {
       type: String,
@@ -121,6 +124,14 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    aadhar: {
+      type: String,
+      default: '',
+    },
+    aadharNumber: {
+      type: String,
+      default: '',
+    },
     adults: {
       type: Number,
       default: 1,
@@ -131,7 +142,7 @@ const bookingSchema = new mongoose.Schema(
     },
     totalAmount: {
       type: Number,
-      required: true,
+      default: 0,
     },
     taxBreakdown: {
       baseAmount: { type: Number, default: 0 },
@@ -144,31 +155,31 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    slotBookingId: {
+      type: String,
+      default: '',
+    },
+    bookingSource: {
+      type: String,
+      enum: ['ONLINE', 'OFFLINE_HOST', 'WALK_IN', 'ADMIN'],
+      default: 'ONLINE',
+    },
     status: {
       type: String,
-      enum: [
-        'DRAFT',
-        'PAYMENT_PENDING',
-        'CONFIRMED',
-        'COMPLETED',
-        'CANCELLED',
-        'REFUNDED',
-        'Pending Host Approval',
-        'Approved - Payment Pending',
-        'APPROVED',
-        'REJECTED',
-        'CHECKED_IN',
-        'CHECKED_OUT',
-      ],
-      default: 'Pending Host Approval',
+      default: 'CONFIRMED',
     },
     paymentStatus: {
       type: String,
-      enum: ['UNPAID', 'PENDING', 'PAID', 'FAILED', 'REFUNDED'],
+      enum: ['UNPAID', 'PENDING', 'PAID', 'FAILED', 'REFUNDED', 'COMPLETED'],
       default: 'PAID',
     },
+    paymentMethod: {
+      type: String,
+      enum: ['ONLINE', 'RAZORPAY', 'PAY_ON_ARRIVAL', 'CASH', 'OFFLINE', 'Offline Pay at Property'],
+      default: 'OFFLINE',
+    },
     paymentDetails: {
-      gateway: { type: String, default: 'Offline/Advance' },
+      gateway: { type: String, default: 'Offline / Pay at Property' },
       paymentId: { type: String, default: '' },
       orderId: { type: String, default: '' },
       signature: { type: String, default: '' },

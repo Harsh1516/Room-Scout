@@ -36,14 +36,14 @@ export function WhoControl({
           e.stopPropagation();
           onToggle();
         }}
-        className={`flex items-center px-2 sm:px-3.5 py-0.5 sm:py-1.5 rounded-full text-[9px] sm:text-xs font-bold tracking-tight transition-all duration-150 cursor-pointer select-none active:scale-95 border focus:outline-none focus:ring-0 focus-visible:outline-none shadow-xs ${
+        className={`flex items-center px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold tracking-tight transition-all duration-150 cursor-pointer select-none active:scale-95 border focus:outline-none focus:ring-0 focus-visible:outline-none shadow-xs ${
           isWhoActive
             ? 'bg-cyan-600 text-white border-cyan-400 font-bold shadow-[0_0_12px_rgba(6,182,212,0.4)]'
             : 'bg-slate-950 text-white hover:bg-slate-900 border-slate-800 dark:border-white/20'
         }`}
         title="Select occupancy and gender preference"
       >
-        <span className="max-w-12 sm:max-w-20 truncate">{displayLabel}</span>
+        <span className="max-w-16 sm:max-w-20 truncate">{displayLabel}</span>
       </button>
 
       {/* Pop-up Tab (Deep Optical Diffusion & Glossy Luster) */}
@@ -53,7 +53,7 @@ export function WhoControl({
           className="absolute top-full mt-3.5 left-1/2 -translate-x-1/2 w-64 sm:w-68 p-2.5 rounded-2xl apple-liquid-dropdown z-50 text-slate-900 dark:text-slate-100 space-y-1.5 animate-in fade-in duration-75"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-slate-200/60 dark:border-white/10 pb-2 mb-1">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100 dark:border-zinc-800 pb-2 mb-1">
             <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
               Occupancy & Gender
             </span>
@@ -78,8 +78,8 @@ export function WhoControl({
                   onClick={() => handleSelect(o.label)}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-none cursor-pointer focus:outline-none focus:ring-0 active:scale-98 border ${
                     isSelected
-                      ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-900 dark:text-cyan-100 shadow-xs font-bold'
-                      : 'bg-white/8 dark:bg-white/5 border-slate-200/60 dark:border-white/10 text-slate-800 dark:text-slate-200 font-medium'
+                      ? 'bg-cyan-50 dark:bg-cyan-950/40 border-cyan-500/50 text-cyan-900 dark:text-cyan-200 shadow-xs font-bold'
+                      : 'bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 border-slate-200/80 dark:border-zinc-800 text-slate-800 dark:text-slate-200 font-medium'
                   }`}
                 >
                   <div>

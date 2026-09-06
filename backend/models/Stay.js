@@ -17,7 +17,7 @@ const staySchema = new mongoose.Schema(
     },
     genderType: {
       type: String,
-      enum: ['Boys', 'Girls', 'Unisex', 'Family'],
+      enum: ['Boys', 'Girls', 'Both', 'Unisex', 'Family'],
       default: 'Both',
     },
     location: {
@@ -55,6 +55,10 @@ const staySchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    rateUnit: {
+      type: String,
+      default: '/month',
+    },
     rating: {
       type: Number,
       default: 4.8,
@@ -63,9 +67,21 @@ const staySchema = new mongoose.Schema(
       type: String,
       default: 'VERIFIED HOST',
     },
+    facilities: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
     tags: [
       {
         type: String,
+      },
+    ],
+    rules: [
+      {
+        type: String,
+        trim: true,
       },
     ],
     roomRates: [
@@ -94,6 +110,19 @@ const staySchema = new mongoose.Schema(
         price: { type: String },
         rateUnit: { type: String, default: '/month' },
         floor: { type: String },
+        bookedDates: [{ type: String }],
+        bookedMonths: [{ type: String }],
+        slotBookings: [{ type: mongoose.Schema.Types.Mixed }],
+        guestName: { type: String },
+        guestPhone: { type: String },
+        userPhone: { type: String },
+        phone: { type: String },
+        guestEmail: { type: String },
+        userEmail: { type: String },
+        guestAadhar: { type: String },
+        aadharId: { type: String },
+        adults: { type: Number },
+        children: { type: Number },
       },
     ],
     image: {
@@ -101,11 +130,6 @@ const staySchema = new mongoose.Schema(
       required: true,
     },
     images: [
-      {
-        type: String,
-      },
-    ],
-    videos: [
       {
         type: String,
       },

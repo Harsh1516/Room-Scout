@@ -12,21 +12,22 @@ import {
   getStats,
   impersonateAccount,
 } from '../controllers/adminController.js';
+import { requireAdmin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Routes using router.route() style
-router.route('/impersonate').post(impersonateAccount);
-router.route('/users').get(getUsers);
-router.route('/users/:id').delete(deleteUser);
+// Sensitive Admin Privileges (Strictly protected with requireAdmin)
+router.route('/impersonate').post(requireAdmin, impersonateAccount);
+router.route('/users').get(requireAdmin, getUsers);
+router.route('/users/:id').delete(requireAdmin, deleteUser);
+router.route('/stats').get(requireAdmin, getStats);
+router.route('/hosts/:id/approve').put(requireAdmin, approveHost);
+router.route('/hosts/:id/reject').put(requireAdmin, rejectHost);
+router.route('/hosts/:id').delete(requireAdmin, deleteHost);
 
+// Host Registration & Public Host Discovery
 router.route('/hosts').get(getHosts).post(createHost);
 router.route('/hosts/by-email/:email').get(getHostByEmail);
-router.route('/hosts/:id/approve').put(approveHost);
-router.route('/hosts/:id/reject').put(rejectHost);
 router.route('/hosts/my-guests/:email').get(getHostGuests);
-router.route('/hosts/:id').delete(deleteHost);
-
-router.route('/stats').get(getStats);
 
 export default router;

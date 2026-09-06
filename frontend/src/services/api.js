@@ -1,15 +1,18 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 async function request(endpoint, options = {}) {
-  const token = localStorage.getItem('stayhub_jwt_token');
+  const token = localStorage.getItem('roomscout_token') || localStorage.getItem('stayhub_jwt_token');
+  const adminKey = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('roomscout_admin_key') : null;
 
   const headers = {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(adminKey ? { 'x-admin-key': adminKey } : {}),
     ...options.headers,
   };
 
   const config = {
+    credentials: 'include',
     ...options,
     headers,
   };
@@ -20,6 +23,7 @@ async function request(endpoint, options = {}) {
 
     if (!response.ok) {
       if (data.status === 'ACCOUNT_DELETED') {
+        localStorage.removeItem('roomscout_token');
         localStorage.removeItem('stayhub_jwt_token');
         localStorage.removeItem('mal_practice_user');
         if (typeof window !== 'undefined') {
@@ -145,6 +149,29 @@ export const bookingsAPI = {
       method: 'PATCH',
       body: JSON.stringify(statusData),
     }),
+
+  removeOccupantBooking: (payload) =>
+    request('/bookings/occupant/remove', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  deleteBooking: (id) =>
+    request(`/bookings/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    }),
+
+  createPaymentOrder: (orderData) =>
+    request('/bookings/payment/create-order', {
+      method: 'POST',
+      body: JSON.stringify(orderData),
+    }),
+
+  verifyPayment: (paymentData) =>
+    request('/bookings/payment/verify', {
+      method: 'POST',
+      body: JSON.stringify(paymentData),
+    }),
 };
 
 export const wishlistAPI = {
@@ -193,4 +220,11 @@ export const adminAPI = {
       method: 'POST',
       body: JSON.stringify({ email, role, id }),
     }),
+  setAdminKey: (key) => {
+    if (typeof sessionStorage !== 'undefined') {
+      if (key) sessionStorage.setItem('roomscout_admin_key', key.trim());
+      else sessionStorage.removeItem('roomscout_admin_key');
+    }
+  },
+  getAdminKey: () => (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('roomscout_admin_key') : null),
 };

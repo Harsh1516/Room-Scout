@@ -11,6 +11,16 @@ import { Left } from '../components/navbar/Left';
 import { toast } from '../context/ToastContext';
 
 const MAX_PHOTOS = 5;
+const MAX_DESCRIPTION_WORDS = 300;
+
+const COMMON_RULE_PRESETS = [
+  'Valid Govt ID Required at Check-in',
+  'Gate Closes at 10:30 PM',
+  'No Smoking or Alcohol Inside',
+  'Visitors Allowed Till 8:00 PM',
+  'Maintain Quiet Hours After 11:00 PM',
+  'Keep Common Areas & Washrooms Clean',
+];
 
 const PRESET_IMAGES = [
   { label: 'Mountain Chalet', url: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80', slot: '1. Cover / Exterior' },
@@ -29,7 +39,7 @@ const GENDER_OPTIONS = [
   { label: 'Family', value: 'Family' },
 ];
 
-const DEFAULT_AMENITIES = [
+const DEFAULT_FACILITIES = [
   'Attached Bathroom',
 ];
 
@@ -82,7 +92,12 @@ const hostPropertySchema = z.object({
   availableRooms: z.number().min(0, 'Available rooms cannot be negative').optional(),
   rooms: z.array(z.any()).optional(),
   instagramVideoUrl: z.string().optional(),
-  description: z.string().trim().min(10, 'Description must be at least 10 characters'),
+  description: z.string().trim()
+    .min(10, 'Property description must be at least 10 characters')
+    .refine(
+      (val) => val.trim().split(/\s+/).filter(Boolean).length <= MAX_DESCRIPTION_WORDS,
+      { message: `Property description cannot exceed ${MAX_DESCRIPTION_WORDS} words` }
+    ),
 }).passthrough();
 
 export function HostUploadPage() {
@@ -97,8 +112,8 @@ export function HostUploadPage() {
   const [toastMessage, setToastMessage] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
 
-  // Custom Amenity Input
-  const [newAmenityInput, setNewAmenityInput] = useState('');
+  // Custom Facility Input
+  const [newFacilityInput, setNewFacilityInput] = useState('');
 
   // Custom Rules Input
   const [newRuleInput, setNewRuleInput] = useState('');
@@ -143,6 +158,7 @@ export function HostUploadPage() {
     images: [],
     instagramVideoUrl: '',
     description: '',
+    facilities: [],
     amenities: [],
     rules: [],
     roomRates: [],
@@ -198,9 +214,10 @@ export function HostUploadPage() {
             image: h.image || (Array.isArray(h.images) && h.images[0]) || '',
             images: Array.isArray(h.images) ? h.images.slice(0, MAX_PHOTOS) : [],
             instagramVideoUrl: h.instagramVideoUrl || prev.instagramVideoUrl,
-            description: h.description || h.bio || '',
-            amenities: Array.isArray(h.amenities) ? h.amenities : [],
-            rules: Array.isArray(h.rules) && h.rules.length > 0 ? h.rules : (Array.isArray(h.houseRules) ? h.houseRules : []),
+            description: h.description || '',
+            facilities: Array.isArray(h.facilities) && h.facilities.length > 0 ? h.facilities : (Array.isArray(h.amenities) ? h.amenities : []),
+            amenities: Array.isArray(h.facilities) && h.facilities.length > 0 ? h.facilities : (Array.isArray(h.amenities) ? h.amenities : []),
+            rules: Array.isArray(h.rules) && h.rules.length > 0 ? h.rules : [],
             roomRates: loadedRates,
             rooms: loadedRooms,
           }));
@@ -735,29 +752,35 @@ export function HostUploadPage() {
     });
   };
 
-  // Add Amenity via + icon
-  const handleAddAmenity = (e) => {
+  // Add Facility via + icon
+  const handleAddFacility = (e) => {
     e?.preventDefault();
     e?.stopPropagation();
-    const clean = newAmenityInput.trim();
+    const clean = newFacilityInput.trim();
     if (!clean) return;
-    if (formData.amenities.includes(clean)) {
-      showToast('This amenity is already in the list.');
+    const current = formData.facilities?.length > 0 ? formData.facilities : (formData.amenities || []);
+    if (current.includes(clean)) {
+      showToast('This facility is already in the list.');
       return;
     }
+    const updated = [...current, clean];
     setFormData((prev) => ({
       ...prev,
-      amenities: [...prev.amenities, clean],
+      facilities: updated,
+      amenities: updated,
     }));
-    setNewAmenityInput('');
+    setNewFacilityInput('');
   };
 
-  const handleRemoveAmenity = (amenity, e) => {
+  const handleRemoveFacility = (facility, e) => {
     e?.preventDefault();
     e?.stopPropagation();
+    const current = formData.facilities?.length > 0 ? formData.facilities : (formData.amenities || []);
+    const updated = current.filter((f) => f !== facility);
     setFormData((prev) => ({
       ...prev,
-      amenities: prev.amenities.filter((a) => a !== amenity),
+      facilities: updated,
+      amenities: updated,
     }));
   };
 
@@ -785,6 +808,20 @@ export function HostUploadPage() {
       ...prev,
       rules: (prev.rules || []).filter((_, i) => i !== ruleIndex),
     }));
+  };
+
+  const handleAddPresetRule = (preset) => {
+    const clean = (preset || '').trim();
+    if (!clean) return;
+    if ((formData.rules || []).includes(clean)) {
+      showToast('This rule is already added.');
+      return;
+    }
+    setFormData((prev) => ({
+      ...prev,
+      rules: [...(prev.rules || []), clean],
+    }));
+    showToast(`Added rule: "${clean}"`);
   };
 
   // Submit Host Property Upload Request
@@ -853,6 +890,10 @@ export function HostUploadPage() {
       setIsSubmitting(true);
       const res = await adminAPI.createHost({
         ...formData,
+        facilities: (formData.facilities?.length > 0 ? formData.facilities : formData.amenities) || [],
+        amenities: (formData.facilities?.length > 0 ? formData.facilities : formData.amenities) || [],
+        rules: formData.rules || [],
+        description: formData.description?.trim() || '',
         price: String(formData.price || '').trim(),
         rateUnit: formData.rateUnit || '/month',
         roomRates: validRates,
@@ -862,13 +903,11 @@ export function HostUploadPage() {
         totalRooms: finalTotalRooms,
         availableRooms: finalAvailableRooms,
         images: (formData.images || []).slice(0, MAX_PHOTOS),
-        status: 'Pending Approval', // Strictly requires admin approval
+        status: validRooms.length > 0 ? 'Pending Approval' : 'Draft',
       });
 
       if (res?.success) {
         try {
-          localStorage.setItem('stayhub_rooms_updated', Date.now().toString());
-          localStorage.setItem('stayhub_last_stay_id', String(res?.host?.id || res?.host?._id || ''));
           window.dispatchEvent(new CustomEvent('stayhub_rooms_updated'));
           if (typeof BroadcastChannel !== 'undefined') {
             const bc = new BroadcastChannel('stayhub_live_channel');
@@ -899,68 +938,75 @@ export function HostUploadPage() {
     }
   };
 
+  // 🔒 Strict Role Guard: Block Guest accounts from viewing or submitting the Host Upload form
+  if (user && user.role === 'user') {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-black flex items-center justify-center p-4">
+        <div className="max-w-md w-full p-6 sm:p-8 rounded-3xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 text-center shadow-2xl">
+          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto mb-4 border border-amber-500/20">
+            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-2">Host Account Required</h2>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 mb-6 font-medium">
+            You are currently signed in as a Guest ({user.email}). Guest accounts cannot list or upload properties. Please sign in with a Property Host account.
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate('/explore')}
+            className="w-full py-3 px-4 rounded-full bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-md shadow-purple-600/20"
+          >
+            Return to Explore
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 transition-colors duration-300 flex flex-col font-sans font-normal w-full overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 transition-colors duration-300 flex flex-col font-sans font-normal w-full overflow-x-clip">
       {/* Host Portal Dedicated Header */}
-      <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-white/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 shadow-xs transition-colors duration-300">
-        <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-8 lg:px-12 2xl:px-16 h-16 flex items-center justify-between gap-3">
-          {/* Left: Back Button */}
-          <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-white/95 dark:bg-slate-900/95 border-b border-slate-200/80 dark:border-slate-800 shadow-2xs transition-colors duration-300">
+        <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 h-15 flex items-center justify-between gap-3">
+          {/* Left: Simple Back Button */}
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => {
                 if (window.history.length > 1) {
                   navigate(-1);
                 } else {
-                  navigate('/');
+                  navigate('/host/dashboard');
                 }
               }}
-              className="apple-liquid-nav flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-slate-200/80 dark:border-white/15 hover:border-emerald-500/40 hover:bg-white/40 dark:hover:bg-white/10 text-slate-950 dark:text-white text-xs sm:text-sm font-extrabold transition-all cursor-pointer shadow-xs active:scale-95"
-              title="Go Back"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100/80 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all cursor-pointer shadow-2xs active:scale-[0.98]"
+              title="Back"
             >
-              <svg
-                className="w-4 h-4 text-emerald-600 dark:text-emerald-400"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="19" y1="12" x2="5" y2="12" />
                 <polyline points="12 19 5 12 12 5" />
               </svg>
               <span>Back</span>
             </button>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-slate-900 dark:text-white">
-                Host Studio
-              </span>
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                / Property Registration
-              </span>
-            </div>
           </div>
 
-          {/* Right: Theme Toggle & Host Profile */}
-          <div className="flex items-center gap-2.5">
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="apple-liquid-nav w-9 h-9 rounded-full border border-slate-200/80 dark:border-white/15 text-slate-700 dark:text-slate-200 flex items-center justify-center text-sm transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer shadow-xs"
-              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            >
-              <span>{isDark ? '☀️' : '🌙'}</span>
-            </button>
+          {/* Center: Pill container matching Pic 1 style */}
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-inner">
+            <span className="px-4 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs">
+              {isEditing ? 'Edit Property Details' : 'Property Registration'}
+            </span>
+          </div>
 
-            {/* Host Profile Dropdown Menu */}
+          {/* Right: Host Profile Dropdown Menu */}
+          <div className="flex items-center gap-2.5 shrink-0">
             <Login />
           </div>
         </div>
       </header>
 
       {/* Main Form Content */}
-      <main className="w-full max-w-[1720px] mx-auto px-4 sm:px-8 lg:px-12 2xl:px-16 py-8 flex-1 space-y-6">
+      <main className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 py-6 flex-1 space-y-6">
         <form
           onSubmit={handleSubmit}
           onKeyDown={(e) => {
@@ -1278,17 +1324,17 @@ export function HostUploadPage() {
                 <span className="truncate">Facilities</span>
               </div>
 
-              {/* Custom Amenity Adder Bar */}
+              {/* Custom Facility Adder Bar */}
               <div className="flex items-center gap-2">
                 <input
                   type="text"
-                  value={newAmenityInput}
-                  onChange={(e) => setNewAmenityInput(e.target.value)}
+                  value={newFacilityInput}
+                  onChange={(e) => setNewFacilityInput(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
                       e.stopPropagation();
-                      handleAddAmenity(e);
+                      handleAddFacility(e);
                     }
                   }}
                   placeholder="Type feature (e.g. Gym, Mess Food, Geyser)..."
@@ -1296,7 +1342,7 @@ export function HostUploadPage() {
                 />
                 <button
                   type="button"
-                  onClick={handleAddAmenity}
+                  onClick={handleAddFacility}
                   className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs shrink-0"
                 >
                   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -1309,7 +1355,7 @@ export function HostUploadPage() {
 
               {/* Chips List */}
               <div className="flex flex-wrap gap-2 pt-1">
-                {formData.amenities.map((amenity, i) => (
+                {(formData.facilities?.length > 0 ? formData.facilities : (formData.amenities || [])).map((facility, i) => (
                   <span
                     key={i}
                     className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300 font-medium flex items-center gap-2 shadow-2xs"
@@ -1317,10 +1363,10 @@ export function HostUploadPage() {
                     <svg className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
-                    <span>{amenity}</span>
+                    <span>{facility}</span>
                     <button
                       type="button"
-                      onClick={(e) => handleRemoveAmenity(amenity, e)}
+                      onClick={(e) => handleRemoveFacility(facility, e)}
                       className="text-slate-400 hover:text-red-500 text-xs cursor-pointer p-0.5"
                     >
                       ✕
@@ -1332,17 +1378,22 @@ export function HostUploadPage() {
 
             {/* SECTION 4: RULES & RESTRICTIONS */}
             <div className="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-              <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-3">
-                <div className="w-7 h-7 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center shrink-0">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                    <line x1="16" y1="13" x2="8" y2="13" />
-                    <line x1="16" y1="17" x2="8" y2="17" />
-                    <polyline points="10 9 9 9 8 9" />
-                  </svg>
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+                <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-900 dark:text-white">
+                  <div className="w-7 h-7 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center shrink-0">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <line x1="16" y1="13" x2="8" y2="13" />
+                      <line x1="16" y1="17" x2="8" y2="17" />
+                      <polyline points="10 9 9 9 8 9" />
+                    </svg>
+                  </div>
+                  <span className="truncate">Rules & Restrictions</span>
                 </div>
-                <span className="truncate">Rules & Restrictions</span>
+                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                  {formData.rules?.length || 0} active rule(s)
+                </span>
               </div>
 
               {/* Custom Rule Adder Bar */}
@@ -1358,7 +1409,7 @@ export function HostUploadPage() {
                       handleAddRule(e);
                     }
                   }}
-                  placeholder="Type a rule (e.g. Valid Govt ID required)..."
+                  placeholder="Type a rule (e.g. Valid Govt ID required at check-in)..."
                   className="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 font-normal transition-colors"
                 />
                 <button
@@ -1374,15 +1425,41 @@ export function HostUploadPage() {
                 </button>
               </div>
 
+              {/* Quick Suggestions */}
+              <div className="space-y-1.5 pt-0.5">
+                <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Quick Suggestions:</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {COMMON_RULE_PRESETS.map((preset, idx) => {
+                    const isAdded = (formData.rules || []).includes(preset);
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleAddPresetRule(preset)}
+                        disabled={isAdded}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer flex items-center gap-1 ${
+                          isAdded
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 opacity-60 cursor-default'
+                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400 shadow-2xs'
+                        }`}
+                      >
+                        <span>{isAdded ? '✓' : '+'}</span>
+                        <span>{preset}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Rules Chips List */}
-              <div className="flex flex-wrap gap-2 pt-1">
+              <div className="flex flex-wrap gap-2 pt-1 border-t border-slate-200/80 dark:border-slate-800/80">
                 {formData.rules && formData.rules.length > 0 ? (
                   formData.rules.map((rule, idx) => (
                     <span
                       key={idx}
                       className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300 font-medium flex items-center gap-2 shadow-2xs"
                     >
-                      <span className="w-1.5 h-1.5 rounded-full bg-slate-500 shrink-0" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                       <span>{rule}</span>
                       <button
                         type="button"
@@ -1394,33 +1471,36 @@ export function HostUploadPage() {
                     </span>
                   ))
                 ) : (
-                  <p className="text-xs text-slate-400 italic">No custom rules added yet. Add guidelines above.</p>
+                  <p className="text-xs text-slate-400 italic">No custom rules added yet. Type a rule above or click any quick suggestion.</p>
                 )}
               </div>
             </div>
           </div>
 
-          {/* SECTION 5: 5 PHOTOS LIMIT + INSTAGRAM VIDEO TOUR LINK */}
+          {/* SECTION 5: PROPERTY PHOTOS & VIDEO TOUR */}
           <div className="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
+              <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-900 dark:text-white">
                 <div className="w-7 h-7 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center shrink-0">
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
                     <circle cx="12" cy="13" r="4" />
                   </svg>
                 </div>
-                <span className="text-xs sm:text-sm">Property Photos (Max 5 Photos) & Instagram Video Tour</span>
+                <div className="flex flex-col">
+                  <span className="text-xs sm:text-sm font-semibold">Property Photos (Max 5 Photos) & Video Tour</span>
+                  <span className="text-[11px] text-slate-400 font-normal hidden sm:inline">First photo is your main cover photo. Drag photos to change order.</span>
+                </div>
               </div>
               
               {/* Photo Count Tracker Badge */}
-              <div className={`px-2.5 py-0.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 ${
+              <div className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 shrink-0 ${
                 formData.images.length >= MAX_PHOTOS
                   ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
                   : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
               }`}>
                 <span>{formData.images.length} / {MAX_PHOTOS} Photos</span>
-                {formData.images.length >= MAX_PHOTOS && <span className="text-[10px]">(Max Reached)</span>}
+                {formData.images.length >= MAX_PHOTOS && <span className="text-[10px]">(Max Limit)</span>}
               </div>
             </div>
 
@@ -1438,203 +1518,239 @@ export function HostUploadPage() {
               className="hidden"
             />
 
-            {/* 2-COLUMN SPLIT: LEFT (IMAGES + VIDEO) | RIGHT (PROPERTY DESCRIPTION) */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
-              {/* LEFT COLUMN: 5 Photos Gallery + Instagram Video Link */}
-              <div className="lg:col-span-7 space-y-3 flex flex-col justify-between">
-                {/* 📸 LIVE 5-PHOTO GALLERY WITH DRAG-AND-DROP TO SET COVER */}
-                <div className="space-y-1.5">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                    <label className="text-[11px] text-slate-700 dark:text-slate-300 font-semibold block">
-                      Uploaded Showcase Photos ({formData.images.length}/5):
-                    </label>
-                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
-                      Drag any photo to reorder
-                    </span>
-                  </div>
+            {/* FULL WIDTH 5-PHOTO GALLERY */}
+            <div className="space-y-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">
+                  Showcase Gallery Slots ({formData.images.length}/5):
+                </label>
+                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                  ✦ Tip: Drag any photo to reorder or click "Set as Cover"
+                </span>
+              </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                    {formData.images.map((imgUrl, i) => {
-                      const isCover = i === 0;
-                      const isBeingDragged = draggedPhotoIndex === i;
-                      const isDragTarget = dragOverIndex === i;
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                {formData.images.map((imgUrl, i) => {
+                  const isCover = i === 0;
+                  const isBeingDragged = draggedPhotoIndex === i;
+                  const isDragTarget = dragOverIndex === i;
 
-                      return (
-                        <div
-                          key={`img-${imgUrl}-${i}`}
-                          draggable={true}
-                          onDragStart={(e) => handlePhotoDragStart(e, i)}
-                          onDragOver={(e) => handlePhotoDragOver(e, i)}
-                          onDragLeave={(e) => handlePhotoDragLeave(e, i)}
-                          onDrop={(e) => handlePhotoDrop(e, i)}
-                          className={`relative rounded-xl overflow-hidden border-2 h-24 sm:h-28 group bg-slate-100 dark:bg-slate-800 shadow-xs cursor-grab active:cursor-grabbing transition-all select-none ${
-                            isCover
-                              ? 'border-emerald-500 ring-2 ring-emerald-500/20'
-                              : isDragTarget
-                              ? 'border-emerald-400 scale-[1.02] shadow-md ring-2 ring-emerald-400/40'
-                              : 'border-slate-200 dark:border-slate-700 hover:border-slate-400'
-                          } ${isBeingDragged ? 'opacity-40 scale-95' : 'opacity-100'}`}
-                        >
-                          <img
-                            src={imgUrl}
-                            alt={`Property Photo ${i + 1}`}
-                            className="w-full h-full object-cover pointer-events-none"
-                          />
-                          
-                          {/* Top Slot Label */}
-                          <div className="absolute top-1 left-1 pointer-events-none">
-                            <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-bold shadow-xs ${
-                              isCover
-                                ? 'bg-emerald-600 text-white'
-                                : 'bg-slate-900/80 backdrop-blur-md text-white'
-                            }`}>
-                              {isCover ? 'Cover' : `Slot ${i + 1}`}
-                            </span>
-                          </div>
-
-                          {/* Top Right: Drag Grip & Remove Button */}
-                          <div className="absolute top-1 right-1 flex items-center gap-1 z-30">
-                            <span className="w-4 h-4 rounded bg-slate-900/70 backdrop-blur-xs text-white/90 flex items-center justify-center text-[9px] pointer-events-none" title="Drag to reorder">
-                              ⋮⋮
-                            </span>
-
-                            <button
-                              type="button"
-                              onClick={(e) => handleRemovePhoto(imgUrl, e)}
-                              className="w-4 h-4 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center text-[9px] font-black leading-none cursor-pointer shadow-xs transition-transform hover:scale-110 active:scale-90 select-none"
-                              title="Remove photo"
-                            >
-                              ✕
-                            </button>
-                          </div>
-
-                          {/* Cover Photo Badge */}
-                          {isCover ? (
-                            <span className="absolute bottom-1 left-1 right-1 px-1.5 py-0.5 rounded-md bg-emerald-600/95 text-white text-[9px] font-bold text-center shadow-xs">
-                              Cover
-                            </span>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={(e) => handleSetCoverPhoto(imgUrl, e)}
-                              className="absolute bottom-1 left-1 right-1 px-1.5 py-0.5 rounded-md bg-slate-900/80 hover:bg-emerald-600 text-white text-[9px] font-semibold text-center transition-colors shadow-xs cursor-pointer opacity-0 group-hover:opacity-100"
-                            >
-                              Make Cover
-                            </button>
-                          )}
-
-                          {/* Drag Hover Target Overlay */}
-                          {isDragTarget && (
-                            <div className="absolute inset-0 bg-emerald-500/20 backdrop-blur-[1px] flex items-center justify-center text-center p-1 z-20 pointer-events-none">
-                              <span className="px-1.5 py-0.5 rounded-md bg-emerald-600 text-white text-[9px] font-bold shadow-md">
-                                Drop
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-
-                    {/* Empty Photo Slots placeholders up to 5 */}
-                    {Array.from({ length: Math.max(0, MAX_PHOTOS - formData.images.length) }).map((_, idx) => (
-                      <div
-                        key={`empty-${idx}`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          fileInputRef.current?.click();
-                        }}
-                        className="rounded-xl border-2 border-dashed border-indigo-200 dark:border-indigo-800/60 h-24 sm:h-28 flex flex-col items-center justify-center p-1 text-center text-slate-400 bg-white/70 dark:bg-slate-900/60 hover:border-indigo-500 hover:text-indigo-600 hover:bg-indigo-50/50 cursor-pointer transition-colors"
-                      >
-                        <svg className="w-4 h-4 mb-0.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <line x1="12" y1="5" x2="12" y2="19" />
-                          <line x1="5" y1="12" x2="19" y2="12" />
-                        </svg>
-                        <span className="text-[10px] font-medium">Slot {formData.images.length + idx + 1}</span>
+                  return (
+                    <div
+                      key={`img-${imgUrl}-${i}`}
+                      draggable={true}
+                      onDragStart={(e) => handlePhotoDragStart(e, i)}
+                      onDragOver={(e) => handlePhotoDragOver(e, i)}
+                      onDragLeave={(e) => handlePhotoDragLeave(e, i)}
+                      onDrop={(e) => handlePhotoDrop(e, i)}
+                      className={`relative rounded-2xl overflow-hidden border-2 h-32 sm:h-36 group bg-slate-100 dark:bg-slate-800 shadow-xs cursor-grab active:cursor-grabbing transition-all select-none ${
+                        isCover
+                          ? 'border-emerald-500 ring-2 ring-emerald-500/20'
+                          : isDragTarget
+                          ? 'border-emerald-400 scale-[1.02] shadow-md ring-2 ring-emerald-400/40'
+                          : 'border-slate-200 dark:border-slate-700 hover:border-slate-400'
+                      } ${isBeingDragged ? 'opacity-40 scale-95' : 'opacity-100'}`}
+                    >
+                      <img
+                        src={imgUrl}
+                        alt={`Property Photo ${i + 1}`}
+                        className="w-full h-full object-cover pointer-events-none"
+                      />
+                      
+                      {/* Top Slot Label */}
+                      <div className="absolute top-1.5 left-1.5 pointer-events-none">
+                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold shadow-xs ${
+                          isCover
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-slate-900/80 backdrop-blur-md text-white'
+                        }`}>
+                          {isCover ? '⭐ Cover' : `Slot ${i + 1}`}
+                        </span>
                       </div>
-                    ))}
+
+                      {/* Top Right: Drag Grip & Remove Button */}
+                      <div className="absolute top-1.5 right-1.5 flex items-center gap-1 z-30">
+                        <span className="w-5 h-5 rounded bg-slate-900/70 backdrop-blur-xs text-white/90 flex items-center justify-center text-[10px] pointer-events-none" title="Drag to reorder">
+                          ⋮⋮
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={(e) => handleRemovePhoto(imgUrl, e)}
+                          className="w-5 h-5 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center text-[10px] font-black leading-none cursor-pointer shadow-xs transition-transform hover:scale-110 active:scale-90 select-none"
+                          title="Remove photo"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      {/* Cover Photo Badge / Make Cover Action */}
+                      {isCover ? (
+                        <span className="absolute bottom-1.5 left-1.5 right-1.5 px-2 py-0.5 rounded-md bg-emerald-600/95 text-white text-[10px] font-bold text-center shadow-xs">
+                          Primary Cover
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={(e) => handleSetCoverPhoto(imgUrl, e)}
+                          className="absolute bottom-1.5 left-1.5 right-1.5 px-2 py-1 rounded-md bg-slate-900/80 hover:bg-emerald-600 text-white text-[10px] font-semibold text-center transition-colors shadow-xs cursor-pointer opacity-0 group-hover:opacity-100"
+                        >
+                          Set as Cover
+                        </button>
+                      )}
+
+                      {/* Drag Hover Target Overlay */}
+                      {isDragTarget && (
+                        <div className="absolute inset-0 bg-emerald-500/20 backdrop-blur-[1px] flex items-center justify-center text-center p-1 z-20 pointer-events-none">
+                          <span className="px-2 py-1 rounded-md bg-emerald-600 text-white text-[10px] font-bold shadow-md">
+                            Drop Here
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* Empty Photo Slots placeholders up to 5 */}
+                {Array.from({ length: Math.max(0, MAX_PHOTOS - formData.images.length) }).map((_, idx) => (
+                  <div
+                    key={`empty-${idx}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      fileInputRef.current?.click();
+                    }}
+                    className="rounded-2xl border-2 border-dashed border-indigo-200 dark:border-indigo-800/60 h-32 sm:h-36 flex flex-col items-center justify-center p-2 text-center text-slate-400 bg-white/70 dark:bg-slate-900/60 hover:border-indigo-500 hover:text-indigo-600 hover:bg-indigo-50/50 cursor-pointer transition-colors group"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-indigo-600 group-hover:scale-110 transition-transform mb-1">
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                      </svg>
+                    </div>
+                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Upload Photo</span>
+                    <span className="text-[10px] text-slate-400">Slot {formData.images.length + idx + 1}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* FULL WIDTH VIDEO TOUR LINK (YOUTUBE / INSTAGRAM) */}
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-amber-500 via-pink-600 to-purple-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-semibold text-slate-900 dark:text-white">
+                      Video Tour Link (YouTube / Instagram Reel)
+                    </h4>
+                    <p className="text-[10px] text-slate-400">Add a walkthrough video tour link to give students a live preview</p>
                   </div>
                 </div>
 
-                {/* 🎥 INSTAGRAM VIDEO TOUR LINK */}
-                <div className="p-2.5 sm:p-3 rounded-xl bg-white/90 dark:bg-slate-900/80 border border-indigo-200/70 dark:border-indigo-800/40 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 rounded-md bg-gradient-to-tr from-amber-500 via-pink-600 to-purple-600 text-white flex items-center justify-center shadow-xs shrink-0">
-                        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-                        </svg>
-                      </div>
-                      <h4 className="text-xs font-semibold text-slate-900 dark:text-white">
-                        Instagram Reel / Video Tour Link
-                      </h4>
-                    </div>
-
-                    {formData.instagramVideoUrl && formData.instagramVideoUrl.trim() && (
-                      <a
-                        href={formData.instagramVideoUrl.startsWith('http') ? formData.instagramVideoUrl : `https://${formData.instagramVideoUrl}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (!formData.instagramVideoUrl || !formData.instagramVideoUrl.trim()) {
-                            e.preventDefault();
-                          }
-                        }}
-                        className="px-2 py-0.5 rounded-md bg-pink-600 hover:bg-pink-700 text-white text-[10px] font-semibold transition-colors flex items-center gap-1 shadow-xs shrink-0"
-                      >
-                        <span>View</span>
-                      </a>
-                    )}
-                  </div>
-
-                  <input
-                    type="url"
-                    value={formData.instagramVideoUrl}
-                    onChange={(e) => setFormData({ ...formData, instagramVideoUrl: e.target.value })}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
+                {formData.instagramVideoUrl && formData.instagramVideoUrl.trim() && (
+                  <a
+                    href={formData.instagramVideoUrl.startsWith('http') ? formData.instagramVideoUrl : `https://${formData.instagramVideoUrl}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!formData.instagramVideoUrl || !formData.instagramVideoUrl.trim()) {
                         e.preventDefault();
-                        e.stopPropagation();
                       }
                     }}
-                    placeholder="https://www.instagram.com/reel/xyz..."
-                    className="w-full px-3 py-1.5 rounded-lg bg-slate-50/70 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-pink-500 font-normal transition-colors"
-                  />
+                    className="px-2.5 py-1 rounded-lg bg-pink-600 hover:bg-pink-700 text-white text-xs font-semibold transition-colors flex items-center gap-1 shadow-xs shrink-0 cursor-pointer"
+                  >
+                    <span>Preview Tour ↗</span>
+                  </a>
+                )}
+              </div>
+
+              <input
+                type="url"
+                value={formData.instagramVideoUrl}
+                onChange={(e) => setFormData({ ...formData, instagramVideoUrl: e.target.value })}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }
+                }}
+                placeholder="https://www.instagram.com/reel/... or https://www.youtube.com/watch?v=..."
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-pink-500 font-normal transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* SECTION 6: PROPERTY DESCRIPTION */}
+          <div className="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-900 dark:text-white">
+                <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <polyline points="10 9 9 9 8 9" />
+                  </svg>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs sm:text-sm font-semibold">Property Description *</span>
+                  <span className="text-[11px] text-slate-400 font-normal hidden sm:inline">Describe your living atmosphere, student environment, facilities, and locality</span>
                 </div>
               </div>
 
-              {/* RIGHT COLUMN: Property Description & House Rules */}
-              <div className="lg:col-span-5 flex flex-col justify-between p-3.5 rounded-xl bg-white/90 dark:bg-slate-900/80 border border-indigo-200/70 dark:border-indigo-800/40 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                        <polyline points="14 2 14 8 20 8" />
-                        <line x1="16" y1="13" x2="8" y2="13" />
-                        <line x1="16" y1="17" x2="8" y2="17" />
-                      </svg>
-                    </div>
-                    <label className="text-xs font-semibold text-slate-900 dark:text-white">
-                      Property Description & House Rules *
-                    </label>
-                  </div>
-                  <span className="text-[10px] text-slate-400">Min 10 chars</span>
-                </div>
+              {/* Live Word / Character Counter Badge */}
+              <div className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0 ${
+                formData.description && formData.description.trim().split(/\s+/).filter(Boolean).length > MAX_DESCRIPTION_WORDS
+                  ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'
+                  : formData.description && formData.description.trim().split(/\s+/).filter(Boolean).length >= 250
+                  ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30'
+                  : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+              }`}>
+                <span>
+                  {formData.description ? formData.description.trim().split(/\s+/).filter(Boolean).length : 0} / {MAX_DESCRIPTION_WORDS} words
+                </span>
+                <span className="text-[10px] opacity-70">
+                  ({formData.description ? formData.description.length : 0} chars)
+                </span>
+                {formData.description && formData.description.trim().split(/\s+/).filter(Boolean).length > MAX_DESCRIPTION_WORDS && (
+                  <span className="text-[10px] font-bold text-rose-600">(Exceeds Cap)</span>
+                )}
+              </div>
+            </div>
 
-                <textarea
-                  required
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Describe your property rules, quiet hours, student facilities, security, amenities, neighborhood..."
-                  className={`w-full flex-1 min-h-[140px] px-3 py-2 rounded-xl bg-slate-50/70 dark:bg-slate-800/80 border text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500 font-normal transition-colors resize-y ${
-                    fieldErrors.description ? 'border-rose-500 focus:border-rose-500' : 'border-slate-200 dark:border-slate-700'
-                  }`}
-                />
-                {fieldErrors.description && <p className="text-[10px] text-rose-500 font-medium">{fieldErrors.description}</p>}
+            <div className="space-y-2">
+              <textarea
+                required
+                rows={5}
+                value={formData.description}
+                onChange={(e) => {
+                  setFormData((prev) => ({ ...prev, description: e.target.value }));
+                  if (fieldErrors.description) {
+                    setFieldErrors((prev) => ({ ...prev, description: undefined }));
+                  }
+                }}
+                placeholder="Describe your property atmosphere, student-friendly living environment, nearby universities/coaching institutes, security arrangements, study rooms, food & dining quality, and neighborhood highlights..."
+                className={`w-full p-4 rounded-2xl bg-white dark:bg-slate-900 border text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-emerald-500 font-normal leading-relaxed transition-colors resize-y ${
+                  fieldErrors.description || (formData.description && formData.description.trim().split(/\s+/).filter(Boolean).length > MAX_DESCRIPTION_WORDS)
+                    ? 'border-rose-500 focus:border-rose-500'
+                    : 'border-slate-200 dark:border-slate-700'
+                }`}
+              />
+
+              <div className="flex items-center justify-between text-[11px] text-slate-400">
+                <span>Minimum 10 characters • Maximum {MAX_DESCRIPTION_WORDS} words</span>
+                {fieldErrors.description && (
+                  <span className="text-rose-500 font-semibold">{fieldErrors.description}</span>
+                )}
               </div>
             </div>
           </div>

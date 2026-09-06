@@ -25,10 +25,12 @@ export function PropertyOverviewSection({
 }) {
   const propertyTitle = stay?.propertyName || stay?.title || 'Stay Property';
 
-  // Exact Host Amenities
-  const actualAmenities = Array.isArray(stay?.amenities) && stay.amenities.length > 0
+  // Exact Host Facilities / Amenities
+  const actualAmenities = (Array.isArray(stay?.facilities) && stay.facilities.length > 0)
+    ? stay.facilities
+    : (Array.isArray(stay?.amenities) && stay.amenities.length > 0
     ? stay.amenities
-    : (Array.isArray(stay?.tags) && stay.tags.length > 0 ? stay.tags : []);
+    : (Array.isArray(stay?.tags) && stay.tags.length > 0 ? stay.tags : []));
 
   // House Rules & Restrictions (strictly host manual rules)
   const houseRules = Array.isArray(stay?.rules) && stay.rules.length > 0

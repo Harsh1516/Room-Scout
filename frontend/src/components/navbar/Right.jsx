@@ -155,15 +155,15 @@ export function Right({ onLoginClick }) {
         </button>
       </div>
 
-      {/* Mobile Slide-out Actions Menu in Exact Same Row Direction & Format */}
+      {/* Mobile Slide-out Actions Menu (Column Direction) */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.1 }}
-            className="md:hidden absolute top-0 right-12 z-50 flex items-center gap-2 p-1 rounded-full bg-white/98 dark:bg-slate-900/98 border border-slate-200/80 dark:border-slate-800 shadow-lg"
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="md:hidden absolute top-14 right-0 z-50 flex flex-col items-center gap-3 py-4 px-2.5 rounded-[2.5rem] bg-white/98 dark:bg-slate-900/98 border border-slate-200/80 dark:border-slate-800 shadow-xl backdrop-blur-xl"
           >
             {/* 1. Saved Wishlist Button */}
             <button

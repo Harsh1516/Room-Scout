@@ -9,6 +9,7 @@ import HostRoomCategories from '../components/host/HostRoomCategories';
 import HostRoomCards from '../components/host/HostRoomCards';
 import HostWeeklySlotSchedule from '../components/host/HostWeeklySlotSchedule';
 import { HostUsersVisitedSection } from '../components/host/HostUsersVisitedSection';
+import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { getUpcoming30Days } from '../utils/dateUtils';
 
 export function HostDashboardPage() {
@@ -32,6 +33,7 @@ export function HostDashboardPage() {
   const upcomingWeek = useMemo(() => getUpcoming30Days(), []);
   const roomCardsScrollRef = useRef(null);
   const roomCardRefs = useRef({});
+  const prevStatusRef = useRef(hostProperty?.status);
 
   // Active Category & Rooms
   const activeCategory = hostProperty?.roomRates?.[selectedCategoryIndex] || hostProperty?.roomRates?.[0] || null;
@@ -97,20 +99,26 @@ export function HostDashboardPage() {
 
   const broadcastStayUpdate = (stayId) => {
     try {
-      localStorage.setItem('stayhub_rooms_updated', Date.now().toString());
-      if (stayId) localStorage.setItem('stayhub_last_stay_id', String(stayId));
-      window.dispatchEvent(new CustomEvent('stayhub_rooms_updated', { detail: { stayId } }));
+      window.dispatchEvent(new CustomEvent('stayhub_rooms_updated', { detail: { stayId, sender: 'HostDashboard' } }));
       if (typeof BroadcastChannel !== 'undefined') {
         const bc = new BroadcastChannel('stayhub_live_channel');
-        bc.postMessage({ type: 'ROOMS_UPDATED', stayId });
+        bc.postMessage({ type: 'ROOMS_UPDATED', stayId, sender: 'HostDashboard' });
         bc.close();
       }
     } catch {}
   };
 
-  // Add a new room type row directly to persistent roomRates
+  const updateRoomRateDebounceRef = useRef(null);
+  const latestHostPropertyRef = useRef(hostProperty);
+  useEffect(() => {
+    latestHostPropertyRef.current = hostProperty;
+  }, [hostProperty]);
+
+  // Add a new room type row directly to persistent roomRates with clean empty fields
   const handleAddNewRoomTypeRow = () => {
     const newId = `rate_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+    const currentRates = Array.isArray(hostProperty?.roomRates) ? [...hostProperty.roomRates] : [];
+
     const newRate = {
       id: newId,
       type: '',
@@ -118,90 +126,146 @@ export function HostDashboardPage() {
       rateUnit: '',
       rateUnitLocked: false,
     };
-    const currentRates = Array.isArray(hostProperty?.roomRates) ? [...hostProperty.roomRates] : [];
     const updatedRates = [...currentRates, newRate];
+    const newIdx = updatedRates.length - 1;
     const updatedHost = {
       ...(hostProperty || {}),
       roomRates: updatedRates,
     };
+    latestHostPropertyRef.current = updatedHost;
     setHostProperty(updatedHost);
-    setSelectedCategoryIndex(updatedRates.length - 1);
+    setSelectedCategoryIndex(newIdx);
     setCollapsedCategories((prev) => ({
       ...prev,
-      [updatedRates.length - 1]: false,
+      [newIdx]: false,
     }));
-    adminAPI.createHost(updatedHost).then(() => {
-      broadcastStayUpdate(updatedHost.id || updatedHost._id);
-    }).catch(() => {});
+
+    // Immediately save to MongoDB so the new category card is persisted and never lost on background sync
+    adminAPI.createHost(updatedHost)
+      .then(() => broadcastStayUpdate(updatedHost.id || updatedHost._id))
+      .catch((err) => console.warn('Add room rate immediate save error:', err));
   };
 
-  // Inline update of room rate fields
+  // Inline update of room rate fields with debounced auto-save to MongoDB
   const handleUpdateRoomRate = (index, field, value) => {
+    let nextUpdatedHost = null;
     setHostProperty((prev) => {
       if (!prev) return prev;
       const currentRates = Array.isArray(prev.roomRates) ? [...prev.roomRates] : [];
       if (!currentRates[index]) return prev;
 
       const oldType = currentRates[index].type;
-      currentRates[index] = {
-        ...currentRates[index],
-        [field]: value,
-      };
+      if (typeof field === 'object' && field !== null) {
+        currentRates[index] = {
+          ...currentRates[index],
+          ...field,
+        };
+      } else {
+        currentRates[index] = {
+          ...currentRates[index],
+          [field]: value,
+        };
+      }
 
       // If category type name changed, also sync all associated rooms to this new name
       let updatedRooms = prev.rooms;
-      if (field === 'type' && oldType && Array.isArray(prev.rooms)) {
+      const newType = typeof field === 'object' ? field.type : (field === 'type' ? value : undefined);
+      const newPrice = typeof field === 'object' ? field.price : (field === 'price' ? value : undefined);
+      const newRateUnit = typeof field === 'object' ? field.rateUnit : (field === 'rateUnit' ? value : undefined);
+
+      if (newType !== undefined && oldType && Array.isArray(prev.rooms)) {
         updatedRooms = prev.rooms.map((r) =>
-          r.type?.toLowerCase() === oldType.toLowerCase() ? { ...r, type: value } : r
+          r.type?.trim().toLowerCase() === oldType.trim().toLowerCase() ? { ...r, type: newType } : r
         );
       }
-      if (field === 'rateUnit' && currentRates[index].type && Array.isArray(prev.rooms)) {
+      if (newPrice !== undefined && currentRates[index].type && Array.isArray(prev.rooms)) {
         updatedRooms = prev.rooms.map((r) =>
-          r.type?.toLowerCase() === currentRates[index].type.toLowerCase() ? { ...r, rateUnit: value } : r
+          r.type?.trim().toLowerCase() === currentRates[index].type.trim().toLowerCase() ? { ...r, price: newPrice } : r
+        );
+      }
+      if (newRateUnit !== undefined && currentRates[index].type && Array.isArray(prev.rooms)) {
+        updatedRooms = prev.rooms.map((r) =>
+          r.type?.trim().toLowerCase() === currentRates[index].type.trim().toLowerCase() ? { ...r, rateUnit: newRateUnit } : r
         );
       }
 
-      return {
+      nextUpdatedHost = {
         ...prev,
         roomRates: currentRates,
         rooms: updatedRooms,
       };
+      latestHostPropertyRef.current = nextUpdatedHost;
+      return nextUpdatedHost;
     });
+
+    if (updateRoomRateDebounceRef.current) {
+      clearTimeout(updateRoomRateDebounceRef.current);
+    }
+    updateRoomRateDebounceRef.current = setTimeout(() => {
+      const hostToSave = latestHostPropertyRef.current || nextUpdatedHost;
+      if (hostToSave) {
+        adminAPI.createHost(hostToSave)
+          .then(() => broadcastStayUpdate(hostToSave.id || hostToSave._id))
+          .catch((err) => console.warn('Debounced category rate save error:', err));
+      }
+    }, 600);
   };
 
-  // Save room rates to backend on blur
+  // Save room rates to backend immediately on blur
   const handleSaveRoomRateOnBlur = async () => {
-    if (!hostProperty) return;
+    if (updateRoomRateDebounceRef.current) {
+      clearTimeout(updateRoomRateDebounceRef.current);
+    }
+    const targetHost = latestHostPropertyRef.current || hostProperty;
+    if (!targetHost) return;
     try {
-      await adminAPI.createHost(hostProperty);
-      broadcastStayUpdate(hostProperty.id || hostProperty._id);
+      await adminAPI.createHost(targetHost);
+      broadcastStayUpdate(targetHost.id || targetHost._id);
     } catch (err) {
       console.warn('Auto save blur error:', err);
     }
   };
 
-  // Remove a room rate
+  // Remove a room rate / category (Safely updates rates without deleting the host property)
   const handleRemoveRoomRate = async (index) => {
     if (!hostProperty) return;
     const currentRates = Array.isArray(hostProperty.roomRates) ? [...hostProperty.roomRates] : [];
     const removed = currentRates[index];
+    if (!removed) return;
     currentRates.splice(index, 1);
 
+    const removedType = (removed.type || '').trim().toLowerCase();
     const updatedRooms = Array.isArray(hostProperty.rooms)
-      ? hostProperty.rooms.filter((r) => r.type && removed?.type && r.type.toLowerCase() !== removed.type.toLowerCase())
+      ? (removedType
+          ? hostProperty.rooms.filter((r) => (r.type || '').trim().toLowerCase() !== removedType)
+          : hostProperty.rooms)
       : [];
+
+    const totalCount = updatedRooms.length;
+    const availCount = updatedRooms.filter((r) => r.status === 'Available').length;
+
+    // If host deletes all rooms or categories, reset status from Approved to Pending Approval
+    const nextStatus = (updatedRooms.length === 0 || currentRates.length === 0)
+      ? 'Pending Approval'
+      : (hostProperty.status || 'Pending Approval');
 
     const updatedHost = {
       ...hostProperty,
       roomRates: currentRates,
       rooms: updatedRooms,
-      totalRooms: updatedRooms.length,
-      availableRooms: updatedRooms.filter((r) => r.status === 'Available').length,
+      totalRooms: totalCount,
+      availableRooms: availCount,
+      availableRoomsCount: availCount,
+      status: nextStatus,
+      hostDetails: {
+        ...(hostProperty.hostDetails || {}),
+        status: nextStatus,
+      },
     };
 
     setHostProperty(updatedHost);
     setSelectedCategoryIndex((prev) => Math.max(0, Math.min(prev, currentRates.length - 1)));
-    showToast('Room category removed.');
+    toast.info(`Category "${removed.type || 'Unnamed'}" removed.`);
 
     try {
       await adminAPI.createHost(updatedHost);
@@ -215,6 +279,18 @@ export function HostDashboardPage() {
   const selectedRoomCard = useMemo(() => {
     if (!activeCategoryRooms.length) return null;
     return activeCategoryRooms.find((r) => r.id === selectedRoomCardId) || activeCategoryRooms[0];
+  }, [activeCategoryRooms, selectedRoomCardId]);
+
+  // Keep selectedRoomCardId in sync with activeCategoryRooms so active card is always valid
+  useEffect(() => {
+    if (!activeCategoryRooms.length) {
+      if (selectedRoomCardId !== null) setSelectedRoomCardId(null);
+      return;
+    }
+    const exists = activeCategoryRooms.some((r) => r.id === selectedRoomCardId);
+    if (!exists) {
+      setSelectedRoomCardId(activeCategoryRooms[0]?.id || null);
+    }
   }, [activeCategoryRooms, selectedRoomCardId]);
 
   // Selected slot dates for the active room
@@ -785,61 +861,95 @@ export function HostDashboardPage() {
     );
   }, [hostProperty?.roomRates, hostProperty?.rooms]);
 
+  const updateRoomNumberDebounceRef = useRef(null);
+
   // Add a room card to a category
   const handleAddRoomCard = (targetCategory) => {
     const cat = targetCategory || activeCategory;
-    if (!cat || !cat.type) {
+    if (!cat || !cat.type || !cat.type.trim()) {
       showToast('Please enter a category name first.', 'error');
       return;
     }
 
-    const catRooms = Array.isArray(hostProperty?.rooms)
-      ? hostProperty.rooms.filter(
-          (r) => r.type && cat.type && r.type.toLowerCase() === cat.type.toLowerCase()
-        )
-      : [];
+    const cleanCatType = cat.type.trim();
 
-    const countForType = catRooms.length;
-    let nextNum = '101';
-    if (countForType > 0) {
-      const lastNum = parseInt(String(catRooms[countForType - 1]?.roomNumber || '').replace(/[^0-9]/g, ''), 10);
-      nextNum = !isNaN(lastNum) ? String(lastNum + 1) : `${101 + countForType}`;
+    // Collect all existing room numbers across the entire property to guarantee uniqueness
+    const allExistingNumbers = new Set(
+      (Array.isArray(hostProperty?.rooms) ? hostProperty.rooms : [])
+        .map((r) => parseInt(String(r.roomNumber || '').replace(/[^0-9]/g, ''), 10))
+        .filter((n) => !isNaN(n))
+    );
+
+    let nextNumInt = 101;
+    if (allExistingNumbers.size > 0) {
+      const maxNum = Math.max(...Array.from(allExistingNumbers));
+      nextNumInt = maxNum + 1;
     }
+    while (allExistingNumbers.has(nextNumInt)) {
+      nextNumInt++;
+    }
+    const nextNum = String(nextNumInt);
+
+    const rawPrice = String(cat.price || '').replace(/[^0-9]/g, '');
+    const formattedPrice = rawPrice ? `₹${parseInt(rawPrice, 10).toLocaleString('en-IN')}` : (cat.price || '₹4,000');
+    const rateUnit = cat.rateUnit || '/month';
 
     const newCard = {
       id: `room_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
       roomNumber: nextNum,
-      roomNumInt: parseInt(nextNum, 10) || 101,
-      type: cat.type,
-      price: cat.price || '₹4,500',
-      rateUnit: cat.rateUnit || '/month',
+      roomNumInt: nextNumInt,
+      type: cleanCatType,
+      price: formattedPrice,
+      rateUnit: rateUnit,
       status: 'Available',
+      floor: nextNumInt < 100 ? 'Floor 1' : `Floor ${Math.floor(nextNumInt / 100)}`,
+      bookedDates: [],
+      bookedMonths: [],
+      slotBookings: [],
     };
 
     const currentRooms = Array.isArray(hostProperty?.rooms) ? [...hostProperty.rooms] : [];
     const updatedRooms = [...currentRooms, newCard];
+    const totalCount = updatedRooms.length;
+    const availCount = updatedRooms.filter((r) => r.status === 'Available').length;
+
+    const isAlreadyApproved = hostProperty?.status === 'Approved';
+    const nextStatus = isAlreadyApproved ? 'Approved' : 'Pending Approval';
+    const isFirstRoom = currentRooms.length === 0;
+
     const updatedHost = {
-      ...hostProperty,
+      ...(hostProperty || {}),
       rooms: updatedRooms,
-      totalRooms: updatedRooms.length,
-      availableRooms: updatedRooms.filter((r) => r.status === 'Available').length,
+      totalRooms: totalCount,
+      availableRooms: availCount,
+      availableRoomsCount: availCount,
+      status: nextStatus,
     };
 
+    // Auto sync immediately to database
     handleAutoSyncProperty(updatedHost);
-    setSelectedRoomCardId(newCard.id);
+
+    // Switch to active category and select new room card
     if (targetCategory && Array.isArray(hostProperty?.roomRates)) {
       const catIdx = hostProperty.roomRates.findIndex(
-        (r) => r.type && r.type.toLowerCase() === targetCategory.type.toLowerCase()
+        (r) =>
+          (targetCategory.id && r.id === targetCategory.id) ||
+          (r.type && r.type.trim().toLowerCase() === cleanCatType.toLowerCase())
       );
       if (catIdx !== -1) {
         setSelectedCategoryIndex(catIdx);
       }
     }
-    toast.success(`Added Room ${nextNum} to ${cat.type}`);
+    setSelectedRoomCardId(newCard.id);
+    toast.success(`Added Room ${nextNum} to ${cleanCatType}`);
+    if (isFirstRoom && !isAlreadyApproved) {
+      toast.info('🚀 Property sent to Admin for approval. Room scheduling slots will unlock once approved by Admin.');
+    }
   };
 
-  // Inline edit room number with debounced auto-sync
+  // Inline edit room number with debounced auto-sync (outside of state updater)
   const handleUpdateRoomNumber = (roomId, newNumber) => {
+    let nextUpdatedHost = null;
     setHostProperty((prev) => {
       if (!prev) return prev;
       const currentRooms = Array.isArray(prev.rooms) ? [...prev.rooms] : [];
@@ -854,27 +964,56 @@ export function HostDashboardPage() {
         }
         return r;
       });
-      const updated = {
+      nextUpdatedHost = {
         ...prev,
         rooms: updatedRooms,
       };
-      adminAPI.createHost(updated).catch(() => {});
-      return updated;
+      return nextUpdatedHost;
     });
+
+    if (updateRoomNumberDebounceRef.current) {
+      clearTimeout(updateRoomNumberDebounceRef.current);
+    }
+    updateRoomNumberDebounceRef.current = setTimeout(() => {
+      if (nextUpdatedHost) {
+        adminAPI.createHost(nextUpdatedHost).catch((err) => console.warn('Debounced room save error:', err));
+      }
+    }, 600);
   };
 
   // Remove a room card with immediate auto-sync
-  const handleRemoveRoomCard = (roomId) => {
+  const handleRemoveRoomCard = async (roomId) => {
     if (!hostProperty) return;
     const currentRooms = Array.isArray(hostProperty.rooms) ? [...hostProperty.rooms] : [];
     const updatedRooms = currentRooms.filter((r) => r.id !== roomId);
+
+    // Safely update remaining rooms without deleting the host property
+    const totalCount = updatedRooms.length;
+    const availCount = updatedRooms.filter((r) => r.status === 'Available').length;
+
+    // If host deletes all rooms, reset status from Approved to Pending Approval
+    const nextStatus = updatedRooms.length === 0 ? 'Pending Approval' : (hostProperty.status || 'Pending Approval');
+
     const updatedHost = {
       ...hostProperty,
       rooms: updatedRooms,
-      totalRooms: updatedRooms.length,
-      availableRooms: updatedRooms.filter((r) => r.status === 'Available').length,
+      totalRooms: totalCount,
+      availableRooms: availCount,
+      availableRoomsCount: availCount,
+      status: nextStatus,
+      hostDetails: {
+        ...(hostProperty.hostDetails || {}),
+        status: nextStatus,
+      },
     };
     handleAutoSyncProperty(updatedHost);
+
+    if (selectedRoomCardId === roomId) {
+      const remainingForActiveCat = updatedRooms.filter(
+        (r) => r.type && activeCategory?.type && r.type.trim().toLowerCase() === activeCategory.type.trim().toLowerCase()
+      );
+      setSelectedRoomCardId(remainingForActiveCat[0]?.id || updatedRooms[0]?.id || null);
+    }
     toast.info('Room card removed');
   };
 
@@ -888,8 +1027,14 @@ export function HostDashboardPage() {
     try {
       await adminAPI.createHost(updatedHost);
       try {
-        localStorage.setItem('stayhub_slots_updated_at', Date.now().toString());
         window.dispatchEvent(new CustomEvent('stayhub_slots_updated'));
+        window.dispatchEvent(new CustomEvent('stayhub_admin_sync'));
+        localStorage.setItem('stayhub_admin_sync_ts', String(Date.now()));
+        if (typeof BroadcastChannel !== 'undefined') {
+          const bc = new BroadcastChannel('stayhub_live_channel');
+          bc.postMessage({ type: 'HOST_UPDATED', hostId: updatedHost.id || updatedHost._id });
+          bc.close();
+        }
       } catch (e) {}
     } catch (err) {
       console.warn('Auto-sync property error:', err);
@@ -907,7 +1052,7 @@ export function HostDashboardPage() {
 
       const formattedRates = Array.isArray(hostProperty.roomRates)
         ? hostProperty.roomRates
-            .filter((r) => r && (r.type || r.price))
+            .filter((r) => r && (r.id || r.type || r.price))
             .map((r) => {
               const cleanType = (r.type || '').trim();
               const numPrice = parseInt(String(r.price || '').replace(/[^0-9]/g, ''), 10);
@@ -919,7 +1064,7 @@ export function HostDashboardPage() {
                 rateUnit: r.rateUnit || '/month',
               };
             })
-            .filter((r) => r.type !== '')
+            .filter((r) => r.id || r.type !== '')
         : [];
 
       // Only keep rooms that belong to active valid room categories
@@ -1006,56 +1151,28 @@ export function HostDashboardPage() {
     return `${day} ${month} ${year}, ${strHours}:${minutes} ${ampm}`;
   };
 
-  // Live polling helper to reload guests and room slot bookings from backend
+  // Live polling helper to reload guests from backend (strictly guests, without overwriting local rooms)
   const refreshGuests = useCallback(async () => {
     try {
-      const savedUserStr = typeof window !== 'undefined' ? localStorage.getItem('mal_practice_user') : null;
-      let savedUser = null;
-      try {
-        savedUser = savedUserStr ? JSON.parse(savedUserStr) : null;
-      } catch {
-        savedUser = null;
-      }
-      const effectiveUser = user || savedUser;
-      const targetEmail = effectiveUser?.email ? effectiveUser.email.trim().toLowerCase() : 'harshchhikara1516@gmail.com';
+      const targetEmail = hostProperty?.email || (user?.email ? user.email.trim().toLowerCase() : '');
+      if (!targetEmail) return;
 
-      const [guestsRes, propRes] = await Promise.all([
-        adminAPI.getHostGuests(targetEmail).catch(() => ({ guests: [] })),
-        adminAPI.getHostByEmail(targetEmail).catch(() => ({ host: null })),
-      ]);
+      const guestsRes = await adminAPI.getHostGuests(targetEmail).catch(() => ({ guests: [] }));
 
       if (Array.isArray(guestsRes?.guests)) {
         setGuests(guestsRes.guests);
       }
-
-      if (propRes?.hasProperty && propRes?.host?.rooms) {
-        setHostProperty((prev) => {
-          if (!prev) return propRes.host;
-          return {
-            ...prev,
-            rooms: propRes.host.rooms,
-          };
-        });
-      }
     } catch (err) {
       console.warn('refreshGuests error:', err);
     }
-  }, [user]);
+  }, [user?.email, hostProperty?.email]);
 
   const fetchHostData = async () => {
     try {
       if (!hostProperty) {
         setLoading(true);
       }
-      const savedUserStr = typeof window !== 'undefined' ? localStorage.getItem('mal_practice_user') : null;
-      let savedUser = null;
-      try {
-        savedUser = savedUserStr ? JSON.parse(savedUserStr) : null;
-      } catch {
-        savedUser = null;
-      }
-      const effectiveUser = user || savedUser;
-      const targetEmail = effectiveUser?.email ? effectiveUser.email.trim().toLowerCase() : 'harshchhikara1516@gmail.com';
+      const targetEmail = user?.email ? user.email.trim().toLowerCase() : 'harshchhikara1516@gmail.com';
 
       const [propRes, guestsRes] = await Promise.all([
         adminAPI.getHostByEmail(targetEmail).catch(() => ({ host: null })),
@@ -1085,6 +1202,11 @@ export function HostDashboardPage() {
       }
 
       if (foundHost) {
+        if (prevStatusRef.current && prevStatusRef.current !== 'Approved' && foundHost.status === 'Approved') {
+          toast.success('🎉 Property approved by Admin! Room scheduling is now unlocked.');
+        }
+        prevStatusRef.current = foundHost.status;
+
         // Ensure rooms loaded into state strictly match valid room categories
         const rates = Array.isArray(foundHost.roomRates) ? foundHost.roomRates : [];
         const validTypes = rates.map((r) => (r.type || '').trim().toLowerCase()).filter(Boolean);
@@ -1109,7 +1231,7 @@ export function HostDashboardPage() {
               ? location.state.updatedHost.rooms.filter((rm) => rm.type && locValidTypes.includes(rm.type.trim().toLowerCase()))
               : sanitizedHost.rooms;
 
-            return {
+            const res = {
               ...sanitizedHost,
               ...location.state.updatedHost,
               roomRates: locRates,
@@ -1117,9 +1239,30 @@ export function HostDashboardPage() {
               totalRooms: locRooms.length,
               availableRooms: locRooms.filter((rm) => rm.status === 'Available').length,
             };
+            latestHostPropertyRef.current = res;
+            return res;
           }
-          return sanitizedHost;
+
+          // Protect active and newly added local room rates so background sync never wipes them out
+          const serverRates = Array.isArray(sanitizedHost.roomRates) ? sanitizedHost.roomRates : [];
+          const localRates = Array.isArray(latestHostPropertyRef.current?.roomRates)
+            ? latestHostPropertyRef.current.roomRates
+            : (Array.isArray(prev?.roomRates) ? prev.roomRates : []);
+
+          const serverIds = new Set(serverRates.map((r) => r.id));
+          const localOnlyRates = localRates.filter((r) => !serverIds.has(r.id));
+          const mergedRates = localOnlyRates.length > 0 ? [...serverRates, ...localOnlyRates] : serverRates;
+
+          const finalHost = {
+            ...sanitizedHost,
+            roomRates: mergedRates,
+          };
+          latestHostPropertyRef.current = finalHost;
+          return finalHost;
         });
+      } else {
+        prevStatusRef.current = null;
+        setHostProperty(null);
       }
 
       if (Array.isArray(guestsRes?.guests) && guestsRes.guests.length > 0) {
@@ -1142,6 +1285,74 @@ export function HostDashboardPage() {
     }
     fetchHostData();
   }, [location.key, user?.email, user?.id]);
+
+  // Real-time synchronization: detect approval and updates from Admin without manual page reload
+  useEffect(() => {
+    // 1. Storage sync across tabs
+    const handleStorage = (e) => {
+      if (e.key === 'stayhub_admin_sync_ts' || (e.key && e.key.startsWith('stayhub_'))) {
+        fetchHostData();
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    // 2. Window event for same-tab updates (ignore our own self-dispatched events)
+    const handleCustomSync = (e) => {
+      if (e?.detail?.sender === 'HostDashboard') return;
+      fetchHostData();
+    };
+    window.addEventListener('stayhub_admin_sync', handleCustomSync);
+    window.addEventListener('stayhub_slots_updated', handleCustomSync);
+    window.addEventListener('stayhub_rooms_updated', handleCustomSync);
+
+    // 3. Tab focus & visibility
+    const handleFocus = () => fetchHostData();
+    window.addEventListener('focus', handleFocus);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') fetchHostData();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    // 4. BroadcastChannel for instant cross-tab communication
+    let bc = null;
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        bc = new BroadcastChannel('stayhub_live_channel');
+        bc.onmessage = (event) => {
+          if (event.data?.sender === 'HostDashboard') return;
+          if (
+            event.data?.type === 'HOST_APPROVED' ||
+            event.data?.type === 'HOST_UPDATED' ||
+            event.data?.type === 'HOST_DELETED' ||
+            event.data?.type === 'ADMIN_SYNC'
+          ) {
+            fetchHostData();
+          }
+        };
+      } catch (err) {
+        console.warn('BroadcastChannel error:', err);
+      }
+    }
+
+    // 5. Polling fallback when property is waiting for approval
+    let pollTimer = null;
+    if (hostProperty && hostProperty.status !== 'Approved') {
+      pollTimer = setInterval(() => {
+        fetchHostData();
+      }, 10000);
+    }
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('stayhub_admin_sync', handleCustomSync);
+      window.removeEventListener('stayhub_slots_updated', handleCustomSync);
+      window.removeEventListener('stayhub_rooms_updated', handleCustomSync);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      if (bc) bc.close();
+      if (pollTimer) clearInterval(pollTimer);
+    };
+  }, [hostProperty?.status]);
 
   // Derived 2D Rooms array
   const currentRooms = useMemo(() => {
@@ -1294,18 +1505,18 @@ export function HostDashboardPage() {
   const occupancyPercent = totalRoomsCount > 0 ? Math.round((occupiedRoomsCount / totalRoomsCount) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans overflow-x-clip">
       {/* ========================================================================= */}
       {/* 🧭 PREMIUM NAVBAR */}
       {/* ========================================================================= */}
-      <header className="sticky top-0 z-30 backdrop-blur-md bg-white/90 dark:bg-slate-900/90 border-b border-slate-200/80 dark:border-slate-800 shadow-2xs">
-        <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-10 h-16 flex items-center justify-between gap-3">
-          {/* Left: Simple Back Button */}
-          <div className="flex items-center gap-2">
+      <header className="sticky top-0 z-40 backdrop-blur-md bg-white/95 dark:bg-slate-900/95 border-b border-slate-200/80 dark:border-slate-800 shadow-2xs">
+        <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 h-15 flex items-center justify-between gap-3 relative">
+          {/* Left: Simple Back Button + Room Actions & Metrics */}
+          <div className="flex items-center gap-2.5 z-10">
             <button
               type="button"
               onClick={() => navigate('/')}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100/80 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all cursor-pointer shadow-2xs active:scale-[0.98]"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100/80 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all cursor-pointer shadow-2xs active:scale-[0.98] shrink-0"
               title="Back to Home"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1314,10 +1525,39 @@ export function HostDashboardPage() {
               </svg>
               <span>Back</span>
             </button>
+
+            {/* Shifted to the right side of back button */}
+            {activeTab === 'room' && (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleAddNewRoomTypeRow}
+                  className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs shrink-0"
+                >
+                  <span className="text-sm font-bold leading-none">+</span>
+                  <span>Add Room Type</span>
+                </button>
+
+                <div className="hidden sm:flex items-center gap-1.5">
+                  <div className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 flex items-center gap-1.5 text-xs shadow-2xs">
+                    <span className="text-slate-400">Categories</span>
+                    <span className="font-bold text-slate-900 dark:text-white">
+                      {Array.isArray(hostProperty?.roomRates) ? hostProperty.roomRates.length : 0}
+                    </span>
+                  </div>
+                  <div className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 flex items-center gap-1.5 text-xs shadow-2xs">
+                    <span className="text-slate-400">Rooms</span>
+                    <span className="font-bold text-slate-900 dark:text-white">
+                      {configuredCategoryRooms.length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Center: Exact Tab Buttons: Property, Room, Users Visited */}
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-inner">
+          {/* Center: Exact Tab Buttons: Property, Room, Users Visited (Fixed to exact center) */}
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-inner z-10">
             <button
               type="button"
               onClick={() => setActiveTab('property')}
@@ -1359,7 +1599,7 @@ export function HostDashboardPage() {
           </div>
 
           {/* Right: Profile Menu */}
-          <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex items-center gap-2.5 shrink-0 ml-auto z-10">
             <Login />
           </div>
         </div>
@@ -1368,8 +1608,8 @@ export function HostDashboardPage() {
       {/* ========================================================================= */}
       {/* 📋 MAIN CONTENT */}
       {/* ========================================================================= */}
-      <main className="flex-1 w-full overflow-y-auto">
-        <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-10 py-6 space-y-6">
+      <main className="flex-1 w-full overflow-x-clip">
+        <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 py-5 space-y-5">
           {loading ? (
             <div className="p-12 text-center text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-sm">
               Loading host dashboard...
@@ -1441,17 +1681,11 @@ export function HostDashboardPage() {
                     </div>
 
                     {isPending && (
-                      <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-xs text-amber-800 dark:text-amber-300 flex items-center justify-between gap-3">
+                      <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
+                        <span className="font-semibold shrink-0">⏳ Status:</span>
                         <span>
-                          Property upload request is pending admin review. Once approved, it will be visible in search results.
+                          Property upload request is pending admin review. Once approved by the administrator, your room scheduling slots will unlock and your listing will be visible to guests.
                         </span>
-                        <button
-                          type="button"
-                          onClick={() => navigate('/admin')}
-                          className="font-bold underline shrink-0 cursor-pointer"
-                        >
-                          Review in Admin
-                        </button>
                       </div>
                     )}
                   </div>
@@ -1487,11 +1721,12 @@ export function HostDashboardPage() {
                     {/* Facilities */}
                     <div className="p-5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
                       <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                        Facilities ({hostProperty.amenities?.length || 0})
+                        Facilities ({hostProperty.facilities?.length || hostProperty.amenities?.length || 0})
                       </h2>
                       <div className="flex flex-wrap gap-1.5">
-                        {Array.isArray(hostProperty.amenities) && hostProperty.amenities.length > 0 ? (
-                          hostProperty.amenities.map((facility, fIdx) => (
+                        {((Array.isArray(hostProperty.facilities) && hostProperty.facilities.length > 0) ||
+                         (Array.isArray(hostProperty.amenities) && hostProperty.amenities.length > 0)) ? (
+                          (hostProperty.facilities || hostProperty.amenities).map((facility, fIdx) => (
                             <span
                               key={fIdx}
                               className="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium"
@@ -1554,86 +1789,58 @@ export function HostDashboardPage() {
               {/* 🛏️ TAB 2: ROOM (SPLIT VIEW: LEFT PANEL = TYPES, CENTER = ROOMS) */}
               {/* ================================================================= */}
               {activeTab === 'room' && (
-                <div className="space-y-5">
-                  {/* Top Action & Metrics Bar */}
-                  <div className="p-3.5 sm:p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={handleAddNewRoomTypeRow}
-                        className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer w-fit shadow-2xs"
-                      >
-                        <span className="text-sm font-bold leading-none">+</span>
-                        <span>Add Room Type</span>
-                      </button>
-                    </div>
-
-                    {/* Metrics Badges */}
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <div className="flex items-center gap-2 text-xs font-medium">
-                        <div className="px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 flex items-center gap-2 shadow-2xs">
-                          <span className="text-slate-400">Categories</span>
-                          <span className="font-bold text-slate-900 dark:text-white">
-                            {Array.isArray(hostProperty?.roomRates) ? hostProperty.roomRates.length : 0}
-                          </span>
-                        </div>
-                        <div className="px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 flex items-center gap-2 shadow-2xs">
-                          <span className="text-slate-400">Rooms</span>
-                          <span className="font-bold text-slate-900 dark:text-white">
-                            {configuredCategoryRooms.length}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
+                <div className="space-y-4">
                   {/* 🏢 3-TAB BALANCED DASHBOARD (EXACT SAME WIDTH FOR LEFT, MID & RIGHT TABS):
                       - TAB 1 (LEFT, 1/3 WIDTH): ROOM CATEGORIES & RESPECTIVE ROOMS PANEL AT BOTTOM
                       - TAB 2 (MID, 1/3 WIDTH): MONTH CARD SCHEDULE
                       - TAB 3 (RIGHT, 1/3 WIDTH): GUEST DETAILS & CONFIRMATION & OCCUPANTS
                   */}
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 xl:gap-5 items-start">
                     {/* ⬅️ TAB 1 (LEFT): ROOM CATEGORIES WITH ATTACHED ROOM CARDS AT BOTTOM */}
                     <div className="space-y-4">
-                      <HostRoomCategories
-                        roomRates={hostProperty?.roomRates || []}
-                        rooms={hostProperty?.rooms || []}
-                        guests={guests}
-                        todayISO={upcomingWeek[0]?.fullISO}
-                        selectedCategoryIndex={selectedCategoryIndex}
-                        onSelectCategoryIndex={setSelectedCategoryIndex}
-                        onAddCategory={handleAddNewRoomTypeRow}
-                        onRemoveCategory={handleRemoveRoomRate}
-                        onUpdateCategory={handleUpdateRoomRate}
-                        onSaveCategory={handleSaveRoomRateOnBlur}
-                        collapsedCategories={collapsedCategories}
-                        onToggleCollapseCategory={toggleCollapseCategory}
-                        selectedRoomCardId={selectedRoomCard?.id}
-                        onSelectRoomCardId={setSelectedRoomCardId}
-                        onAddRoomCard={handleAddRoomCard}
-                        onRemoveRoomCard={handleRemoveRoomCard}
-                        onUpdateRoomNumber={handleUpdateRoomNumber}
-                      />
+                      <ErrorBoundary>
+                        <HostRoomCategories
+                          roomRates={hostProperty?.roomRates || []}
+                          rooms={hostProperty?.rooms || []}
+                          guests={guests}
+                          todayISO={upcomingWeek[0]?.fullISO}
+                          selectedCategoryIndex={selectedCategoryIndex}
+                          onSelectCategoryIndex={setSelectedCategoryIndex}
+                          onAddCategory={handleAddNewRoomTypeRow}
+                          onRemoveCategory={handleRemoveRoomRate}
+                          onUpdateCategory={handleUpdateRoomRate}
+                          onSaveCategory={handleSaveRoomRateOnBlur}
+                          collapsedCategories={collapsedCategories}
+                          onToggleCollapseCategory={toggleCollapseCategory}
+                          selectedRoomCardId={selectedRoomCard?.id}
+                          onSelectRoomCardId={setSelectedRoomCardId}
+                          onAddRoomCard={handleAddRoomCard}
+                          onRemoveRoomCard={handleRemoveRoomCard}
+                          onUpdateRoomNumber={handleUpdateRoomNumber}
+                        />
+                      </ErrorBoundary>
                     </div>
 
                     {/* 📅 TAB 2 (MID) & 👥 TAB 3 (RIGHT): HOST WEEKLY SLOT SCHEDULE (EACH EXACT 1fr EQUAL WIDTH) */}
                     <div className="lg:col-span-2">
-                      {selectedRoomCard ? (
-                        <HostWeeklySlotSchedule
-                          selectedRoomCard={selectedRoomCard}
-                          activeCategory={activeCategory}
-                          upcomingWeek={upcomingWeek}
-                          guests={guests}
-                          hostProperty={hostProperty}
-                          onRefreshBookings={refreshGuests}
-                          onAutoSyncProperty={handleAutoSyncProperty}
-                          showToast={showToast}
-                        />
-                      ) : (
-                        <div className="p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-400 bg-slate-50/50 dark:bg-slate-800/30">
-                          Select a room card on the left to view schedule and occupants.
-                        </div>
-                      )}
+                      <ErrorBoundary>
+                        {selectedRoomCard ? (
+                          <HostWeeklySlotSchedule
+                            selectedRoomCard={selectedRoomCard}
+                            activeCategory={activeCategory}
+                            upcomingWeek={upcomingWeek}
+                            guests={guests}
+                            hostProperty={hostProperty}
+                            onRefreshBookings={refreshGuests}
+                            onAutoSyncProperty={handleAutoSyncProperty}
+                            showToast={showToast}
+                          />
+                        ) : (
+                          <div className="p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-400 bg-slate-50/50 dark:bg-slate-800/30">
+                            Select a room card on the left to view schedule and occupants.
+                          </div>
+                        )}
+                      </ErrorBoundary>
                     </div>
                   </div>
                 </div>

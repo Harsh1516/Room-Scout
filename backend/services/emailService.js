@@ -172,3 +172,71 @@ export async function sendPasswordResetEmail({ to, name, tempPassword, role = 'u
     };
   }
 }
+
+/**
+ * Diagnostic SMTP Tester: Verifies credentials & connection
+ * @param {string} testEmail - Optional target email address to test delivery
+ */
+export async function testEmailConnection(testEmail = 'test@roomscout.com') {
+  try {
+    const emailUser = process.env.EMAIL_USER;
+    const emailPass = process.env.EMAIL_PASS;
+    const emailHost = process.env.EMAIL_HOST || 'smtp.gmail.com';
+    const emailPort = Number(process.env.EMAIL_PORT) || 587;
+
+    const isCustomSmtpConfigured = Boolean(emailUser && emailPass);
+    const transporter = await getTransporter();
+
+    if (!transporter) {
+      return {
+        success: false,
+        configured: false,
+        message: 'No SMTP transporter could be initialized. Please check backend/.env EMAIL_USER and EMAIL_PASS.',
+      };
+    }
+
+    // Verify SMTP connection handshake
+    await transporter.verify();
+
+    // Send a real diagnostic test message
+    const info = await transporter.sendMail({
+      from: process.env.EMAIL_FROM || emailUser || '"Room-Scout Diagnostic" <noreply@roomscout.com>',
+      to: testEmail,
+      subject: '🧪 Room-Scout SMTP Connection Diagnostic Test',
+      text: `Your Room-Scout email delivery system is functioning properly!\n\nConfigured Host: ${emailHost}:${emailPort}\nMode: ${isCustomSmtpConfigured ? 'Custom SMTP / Gmail' : 'Ethereal Sandbox'}\nTimestamp: ${new Date().toISOString()}`,
+      html: `
+        <div style="font-family: sans-serif; padding: 20px; max-width: 500px; border: 1px solid #10b981; border-radius: 12px; background-color: #ffffff;">
+          <h2 style="color: #059669; margin: 0 0 10px 0;">✅ SMTP Diagnostic Success</h2>
+          <p style="color: #374151; font-size: 14px;">Your Room-Scout email delivery system is connected and working perfectly!</p>
+          <ul style="color: #4b5563; font-size: 13px; line-height: 1.6;">
+            <li><strong>Host:</strong> ${emailHost}:${emailPort}</li>
+            <li><strong>Auth User:</strong> ${emailUser || '(Ethereal Sandbox User)'}</li>
+            <li><strong>Mode:</strong> ${isCustomSmtpConfigured ? 'Custom / Gmail SMTP' : 'Ethereal Test Sandbox'}</li>
+            <li><strong>Timestamp:</strong> ${new Date().toISOString()}</li>
+          </ul>
+        </div>
+      `,
+    });
+
+    const previewUrl = nodemailer.getTestMessageUrl(info);
+
+    return {
+      success: true,
+      configured: isCustomSmtpConfigured,
+      transporterType: isCustomSmtpConfigured ? (emailHost.includes('gmail') ? 'Gmail SMTP' : 'Custom SMTP') : 'Ethereal Sandbox',
+      messageId: info.messageId,
+      previewUrl: previewUrl || null,
+      message: isCustomSmtpConfigured
+        ? `SMTP Connected successfully! Test email dispatched to ${testEmail}.`
+        : `Ethereal Sandbox active! View test email preview at: ${previewUrl || 'Ethereal log'}`,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      configured: Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS),
+      error: error.message,
+      message: `SMTP Connection failed: ${error.message}. Please verify your EMAIL_USER and EMAIL_PASS (use a 16-character Google App Password for Gmail).`,
+    };
+  }
+}
+

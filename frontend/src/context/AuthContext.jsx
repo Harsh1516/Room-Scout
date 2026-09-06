@@ -6,39 +6,36 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => {
     try {
-      return localStorage.getItem('stayhub_jwt_token') || null;
+      return localStorage.getItem('roomscout_token') || localStorage.getItem('stayhub_jwt_token') || null;
     } catch {
       return null;
     }
   });
 
-  const [user, setUser] = useState(() => {
-    try {
-      const savedUser = localStorage.getItem('mal_practice_user');
-      return savedUser ? JSON.parse(savedUser) : null;
-    } catch {
-      return null;
-    }
-  });
-
+  // User profile is kept strictly in React memory state (not exposed in plain localStorage)
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Sync token and user to localStorage and verify
+  // Sync token to localStorage and manage memory user state
   const syncAuthState = useCallback((userData, jwtToken) => {
     try {
+      // Auto-purge any legacy keys from storage
+      localStorage.removeItem('mal_practice_user');
+      localStorage.removeItem('stayhub_jwt_token');
+
       if (jwtToken) {
-        localStorage.setItem('stayhub_jwt_token', jwtToken);
+        localStorage.setItem('roomscout_token', jwtToken);
         setToken(jwtToken);
       } else {
-        localStorage.removeItem('stayhub_jwt_token');
+        localStorage.removeItem('roomscout_token');
         setToken(null);
       }
 
       if (userData) {
-        localStorage.setItem('mal_practice_user', JSON.stringify(userData));
-        setUser(userData);
+        // Strip duplicate token if present on user object to avoid redundant duplication
+        const { token: _token, ...cleanUserData } = userData;
+        setUser(cleanUserData);
       } else {
-        localStorage.removeItem('mal_practice_user');
         setUser(null);
       }
     } catch (e) {
@@ -49,7 +46,35 @@ export function AuthProvider({ children }) {
   // Verify JWT token on initial load, on focus, and listen to session invalidation
   useEffect(() => {
     async function verifyToken() {
-      const storedToken = localStorage.getItem('stayhub_jwt_token');
+      // Auto-purge all legacy mal_practice and stayhub keys from localStorage
+      try {
+        [
+          'mal_practice_user',
+          'stayhub_hosts_updated',
+          'stayhub_users_updated',
+          'stayhub_slots_updated_at',
+          'stayhub_rooms_updated',
+          'stayhub_last_stay_id',
+          'user_email',
+        ].forEach((k) => localStorage.removeItem(k));
+
+        // Purge any other remaining legacy stayhub_* keys (except stayhub_jwt_token before migration)
+        Object.keys(localStorage).forEach((key) => {
+          if (key.startsWith('stayhub_') && key !== 'stayhub_jwt_token') {
+            localStorage.removeItem(key);
+          }
+        });
+      } catch {}
+
+      // Smoothly migrate legacy stayhub_jwt_token to roomscout_token if needed
+      if (localStorage.getItem('stayhub_jwt_token')) {
+        if (!localStorage.getItem('roomscout_token')) {
+          localStorage.setItem('roomscout_token', localStorage.getItem('stayhub_jwt_token'));
+        }
+        localStorage.removeItem('stayhub_jwt_token');
+      }
+
+      const storedToken = localStorage.getItem('roomscout_token');
       if (!storedToken) {
         setUser(null);
         return;
@@ -58,7 +83,8 @@ export function AuthProvider({ children }) {
       try {
         const profile = await authAPI.getProfile();
         if (profile && (profile._id || profile.id || profile.email)) {
-          setUser((prev) => ({ ...prev, ...profile }));
+          const { token: _t, ...cleanProfile } = profile;
+          setUser((prev) => ({ ...(prev || {}), ...cleanProfile }));
         } else {
           syncAuthState(null, null);
           window.dispatchEvent(
@@ -85,7 +111,7 @@ export function AuthProvider({ children }) {
     };
 
     const handleFocus = () => {
-      if (localStorage.getItem('stayhub_jwt_token')) {
+      if (localStorage.getItem('roomscout_token') || localStorage.getItem('stayhub_jwt_token')) {
         verifyToken();
       }
     };

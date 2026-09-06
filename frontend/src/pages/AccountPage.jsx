@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { useBookings } from '../context/BookingsContext';
 import { authAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
 import { Left } from '../components/navbar/Left';
@@ -11,10 +10,9 @@ import { Left } from '../components/navbar/Left';
 export function AccountPage() {
   const navigate = useNavigate();
   const { user, isHost, updateUserSession, logout } = useAuth();
-  const { bookings = [], refreshBookings, loading: bookingsLoading } = useBookings();
   const { isDark } = useTheme();
 
-  // Top tabs: 'details' | 'bookings' | 'password' | 'delete'
+  // Top tabs: 'details' | 'password' | 'delete'
   const [activeTab, setActiveTab] = useState('details');
 
   // Personal details state
@@ -130,10 +128,10 @@ export function AccountPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 font-sans pb-8 sm:pb-12">
-      {/* Top Header - Responsive, Balanced, Non-wrapping */}
-      <header className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800 shadow-xs">
-        <div className="w-full px-2.5 sm:px-6 md:px-8 h-13 sm:h-16 flex items-center justify-between gap-1.5 sm:gap-4">
-          {/* Left-Most: Back Button */}
+      {/* Top Header - Floating Glass Aesthetics Matching Homepage Console */}
+      <header className="sticky top-0 z-40 bg-white/70 dark:bg-slate-950/70 backdrop-blur-2xl border-b border-slate-200/50 dark:border-white/10 shadow-xs transition-colors">
+        <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 md:px-8 h-15 sm:h-18 flex items-center justify-between gap-2 sm:gap-4">
+          {/* Left-Most: Back Button with Brand Accent */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             <button
               type="button"
@@ -144,48 +142,55 @@ export function AccountPage() {
                   navigate('/explore');
                 }
               }}
-              className="apple-liquid-nav flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full border border-slate-200/80 dark:border-white/15 hover:border-cyan-500/40 hover:bg-white/40 dark:hover:bg-white/10 text-slate-950 dark:text-white text-[11px] sm:text-xs md:text-sm font-bold transition-all cursor-pointer shadow-xs active:scale-95 shrink-0"
+              className="apple-liquid-nav flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-slate-200/80 dark:border-white/15 hover:border-cyan-500/40 hover:shadow-[0_0_16px_rgba(6,182,212,0.25)] text-slate-950 dark:text-white text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer shadow-xs active:scale-95 shrink-0 group"
               title="Go Back"
             >
-              <svg
-                className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-600 dark:text-cyan-400 shrink-0"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="19" y1="12" x2="5" y2="12" />
-                <polyline points="12 19 5 12 12 5" />
-              </svg>
+              <div className="w-5 h-5 rounded-full bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 flex items-center justify-center transition-transform duration-200 group-hover:-translate-x-0.5">
+                <svg
+                  className="w-3.5 h-3.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="19" y1="12" x2="5" y2="12" />
+                  <polyline points="12 19 5 12 12 5" />
+                </svg>
+              </div>
               <span>Back</span>
             </button>
           </div>
 
-          {/* Center: Page Title & Badge */}
-          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 justify-center">
-            <h1 className="text-xs sm:text-base md:text-lg font-black text-slate-900 dark:text-white tracking-tight whitespace-nowrap">
+          {/* Center: Elevated Console Capsule Matching Homepage Aesthetic */}
+          <div className="console-clear-capsule flex items-center gap-2 sm:gap-3 px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full border border-slate-200/80 dark:border-white/15 shadow-sm select-none">
+            <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-cyan-600 via-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-xs shrink-0">
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </div>
+            <h1 className="text-xs sm:text-sm md:text-base font-extrabold text-slate-950 dark:text-white tracking-tight whitespace-nowrap">
               Account Center
             </h1>
             <span
-              className={`px-1.5 sm:px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold sm:font-black border whitespace-nowrap shrink-0 ${
+              className={`px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold border whitespace-nowrap shrink-0 ${
                 isHost
-                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-                  : 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20'
+                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                  : 'bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border-cyan-500/30'
               }`}
             >
-              {isHost ? '🏡 Host' : '🎓 Guest'}
-              <span className="hidden min-[440px]:inline">{isHost ? ' Account' : ' Member'}</span>
+              {isHost ? '🏡 Host Account' : '🎓 Guest Member'}
             </span>
           </div>
 
           {/* Right-Most: Profile Identity Capsule */}
-          <div className="flex items-center gap-1.5 sm:gap-2.5 bg-white/8 dark:bg-slate-900/10 backdrop-blur-[2px] p-1 sm:px-3 sm:py-1.5 rounded-full border border-slate-200/80 dark:border-white/15 shadow-[0_2px_10px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.3)] transition-none select-none shrink-0">
+          <div className="apple-liquid-nav flex items-center gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-1.5 rounded-full border border-slate-200/80 dark:border-white/15 shadow-xs hover:border-emerald-500/40 transition-all select-none shrink-0">
             <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-black text-[9px] sm:text-[10px] flex items-center justify-center shadow-xs shrink-0">
               {user?.name?.slice(0, 2)?.toUpperCase() || 'U'}
             </div>
-            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 hidden md:inline truncate max-w-[120px]">
+            <span className="text-xs font-bold text-slate-900 dark:text-white hidden sm:inline truncate max-w-[130px]">
               {user?.name}
             </span>
           </div>
@@ -213,33 +218,7 @@ export function AccountPage() {
             <span className="truncate">Profile<span className="hidden min-[400px]:inline"> Details</span></span>
           </button>
 
-          {/* Tab 2: My Bookings */}
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('bookings');
-              if (typeof refreshBookings === 'function') refreshBookings();
-            }}
-            className={`flex-1 py-1 sm:py-2 px-1 sm:px-3.5 rounded-full text-[10px] sm:text-xs md:text-sm font-semibold sm:font-bold transition-none cursor-pointer flex items-center justify-center gap-1 sm:gap-2 select-none active:scale-95 focus:outline-none focus:ring-0 whitespace-nowrap min-w-0 ${
-              activeTab === 'bookings'
-                ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.45)]'
-                : 'text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
-            }`}
-          >
-            <svg className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
-              <path d="M13 5v2" />
-              <path d="M13 17v2" />
-            </svg>
-            <span className="truncate">My Bookings</span>
-            {bookings.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-300 shrink-0 shadow-2xs">
-                {bookings.length}
-              </span>
-            )}
-          </button>
-
-          {/* Tab 3: Password */}
+          {/* Tab 2: Password */}
           <button
             type="button"
             onClick={() => setActiveTab('password')}
@@ -375,172 +354,7 @@ export function AccountPage() {
           </motion.div>
         )}
 
-        {/* TAB 2: MY BOOKINGS & RESERVED SLOTS */}
-        {activeTab === 'bookings' && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white/10 dark:bg-slate-900/15 backdrop-blur-[2px] rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-white/15 p-4 sm:p-7 md:p-8 shadow-[0_10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] space-y-4 sm:space-y-6"
-          >
-            <div className="border-b border-slate-200/60 dark:border-white/10 pb-3 sm:pb-4 flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-base sm:text-lg md:text-xl font-bold sm:font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                  <span>🎟️</span>
-                  <span>My Bookings & Reserved Slots</span>
-                </h2>
-                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1 leading-relaxed">
-                  Real-time view of your confirmed room reservations and weekly slot bookings.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => refreshBookings && refreshBookings()}
-                disabled={bookingsLoading}
-                className="px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white/40 dark:bg-slate-800/40 hover:bg-white/80 dark:hover:bg-slate-700 text-[11px] font-bold text-slate-700 dark:text-slate-200 transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs shrink-0 active:scale-95 disabled:opacity-50"
-                title="Reload Bookings"
-              >
-                <span className={bookingsLoading ? 'animate-spin' : ''}>🔄</span>
-                <span>{bookingsLoading ? 'Syncing...' : 'Refresh'}</span>
-              </button>
-            </div>
-
-            {bookings.length > 0 ? (
-              <div className="space-y-3.5">
-                {bookings.map((booking, idx) => {
-                  const stayId = booking.stayId || booking.id;
-                  const formattedDates =
-                    Array.isArray(booking.bookedDates) && booking.bookedDates.length > 0
-                      ? booking.bookedDates
-                          .map((d) => {
-                            const dt = new Date(d + 'T00:00:00');
-                            return dt.toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                            });
-                          })
-                          .join(', ')
-                      : null;
-
-                  return (
-                    <div
-                      key={booking._id || booking.id || booking.bookingReferenceId || idx}
-                      className="p-4 sm:p-5 rounded-2xl bg-white/60 dark:bg-slate-800/50 border border-slate-200/90 dark:border-slate-700/80 transition-all shadow-xs space-y-3"
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-black text-sm sm:text-base text-slate-900 dark:text-white">
-                              {(booking.stayTitle && booking.stayTitle !== 'Host Room Stay' && booking.stayTitle !== 'Host Stay')
-                                ? booking.stayTitle
-                                : (booking.propertyName || booking.title || 'Host Labs')}
-                            </h3>
-                            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
-                              ✓ {booking.status || 'CONFIRMED'}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-2 mt-1 text-xs text-slate-600 dark:text-slate-300 font-semibold flex-wrap">
-                            {booking.roomNumber && (
-                              <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/70 border border-slate-200 dark:border-slate-600">
-                                🔑 Room {booking.roomNumber}
-                              </span>
-                            )}
-                            {booking.roomType && (
-                              <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/70 border border-slate-200 dark:border-slate-600">
-                                🛏️ {booking.roomType}
-                              </span>
-                            )}
-                            {booking.location && (
-                              <span className="text-slate-500 dark:text-slate-400">
-                                📍 {booking.location}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="text-right shrink-0">
-                          <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-700/80 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 block sm:inline-block">
-                            {booking.bookingReferenceId || 'REF-ACTIVE'}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Dates & Schedule */}
-                      <div className="p-3 rounded-xl bg-slate-50/90 dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800 text-xs space-y-1.5">
-                        <div className="flex items-center justify-between gap-2 flex-wrap">
-                          <span className="text-slate-500 dark:text-slate-400 font-medium">
-                            Check-In / Out:
-                          </span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200">
-                            {booking.checkIn || '12:00 PM'} → {booking.checkOut || '11:59 AM'}
-                          </span>
-                        </div>
-
-                        {formattedDates && (
-                          <div className="flex items-center justify-between gap-2 flex-wrap pt-1 border-t border-slate-200/50 dark:border-slate-800/80">
-                            <span className="text-slate-500 dark:text-slate-400 font-medium">
-                              Reserved Slot Dates:
-                            </span>
-                            <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                              🗓️ {formattedDates}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Action Links */}
-                      <div className="flex items-center justify-end gap-2 pt-1">
-                        {stayId && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => navigate(`/stay/${stayId}`)}
-                              className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all cursor-pointer"
-                            >
-                              Stay Details
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => navigate(`/stay/${stayId}/rooms`)}
-                              className="px-3 py-1.5 rounded-lg bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:opacity-90 text-xs font-semibold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
-                            >
-                              <span>View Room Schedule</span>
-                              <span>→</span>
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-12 px-4 rounded-2xl bg-white/40 dark:bg-slate-800/30 border border-dashed border-slate-200 dark:border-slate-700 space-y-3">
-                <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 text-xl flex items-center justify-center mx-auto">
-                  🎟️
-                </div>
-                <div className="space-y-1">
-                  <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm">
-                    No Reserved Slots or Bookings Found
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-                    Any rooms or slot dates booked by you or reserved for your email ({user?.email}) will appear here automatically.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => navigate('/explore')}
-                  className="mt-2 text-xs font-bold px-4 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:opacity-90 transition-all cursor-pointer shadow-xs"
-                >
-                  Explore Stays & Rooms
-                </button>
-              </div>
-            )}
-          </motion.div>
-        )}
-
-        {/* TAB 3: PASSWORD */}
+        {/* TAB 2: PASSWORD */}
         {activeTab === 'password' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}

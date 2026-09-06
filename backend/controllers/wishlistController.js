@@ -1,34 +1,6 @@
-﻿import mongoose from 'mongoose';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import mongoose from 'mongoose';
 import { Wishlist } from '../models/Wishlist.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const WISHLISTS_FILE = path.join(__dirname, '../data/wishlists_store.json');
-
-function readWishlistsFromFile() {
-  try {
-    if (!fs.existsSync(WISHLISTS_FILE)) {
-      fs.writeFileSync(WISHLISTS_FILE, JSON.stringify([]), 'utf-8');
-      return [];
-    }
-    const data = fs.readFileSync(WISHLISTS_FILE, 'utf-8');
-    return JSON.parse(data || '[]');
-  } catch (err) {
-    console.error('Error reading wishlists file:', err);
-    return [];
-  }
-}
-
-function writeWishlistsToFile(items) {
-  try {
-    fs.writeFileSync(WISHLISTS_FILE, JSON.stringify(items, null, 2), 'utf-8');
-  } catch (err) {
-    console.error('Error writing wishlists file:', err);
-  }
-}
+import { User } from '../models/User.js';
 
 // @desc    Get current user wishlist
 // @route   GET /api/wishlist
@@ -42,45 +14,38 @@ export const getWishlist = async (req, res, next) => {
       return res.json([]);
     }
 
-    let items = [];
+    const conditions = [];
+    if (currentUserEmail) conditions.push({ email: currentUserEmail });
+    if (currentUserId && mongoose.Types.ObjectId.isValid(currentUserId)) {
+      conditions.push({ _id: new mongoose.Types.ObjectId(currentUserId) });
+    }
 
-    // 1. Try MongoDB
-    if (mongoose.connection.readyState === 1) {
-      try {
-        const conditions = [];
-        if (currentUserEmail) conditions.push({ userEmail: currentUserEmail });
-        if (currentUserId) conditions.push({ userId: currentUserId });
-
-        const mongoWishlists = await Wishlist.find({ $or: conditions }).sort({ createdAt: -1 }).lean();
-        if (mongoWishlists && mongoWishlists.length > 0) {
-          items = mongoWishlists.map((w) => ({
-            ...w.stay,
-            _id: w.stayId || w.stay?._id || w.stay?.id,
-            id: w.stayId || w.stay?.id || w.stay?._id,
-            wishlistId: w._id?.toString(),
-          }));
-        }
-      } catch (err) {
-        console.warn('MongoDB Wishlist read warning:', err.message);
+    // 1. Try fetching directly from native embedded user.wishlist
+    if (conditions.length > 0) {
+      const user = await User.findOne({ $or: conditions }).lean();
+      if (user && Array.isArray(user.wishlist) && user.wishlist.length > 0) {
+        const items = user.wishlist.map((w) => ({
+          ...(w.stay || {}),
+          _id: w.stayId || w.stay?._id || w.stay?.id,
+          id: w.stayId || w.stay?.id || w.stay?._id,
+          wishlistId: w._id?.toString() || w.stayId,
+        }));
+        return res.json(items);
       }
     }
 
-    // 2. Fallback to file store if MongoDB returned 0 items
-    if (items.length === 0) {
-      const fileWishlists = readWishlistsFromFile();
-      const matched = fileWishlists.filter((w) => {
-        const emailMatch = currentUserEmail && w.userEmail && w.userEmail.toLowerCase() === currentUserEmail;
-        const idMatch = currentUserId && w.userId && String(w.userId) === currentUserId;
-        return emailMatch || idMatch;
-      });
+    // 2. Fallback to Wishlist collection
+    const wishlistConditions = [];
+    if (currentUserEmail) wishlistConditions.push({ userEmail: currentUserEmail });
+    if (currentUserId) wishlistConditions.push({ userId: currentUserId });
 
-      items = matched.map((w) => ({
-        ...w.stay,
-        _id: w.stayId || w.stay?._id || w.stay?.id,
-        id: w.stayId || w.stay?.id || w.stay?._id,
-        wishlistId: w.id || w._id,
-      }));
-    }
+    const mongoWishlists = await Wishlist.find({ $or: wishlistConditions }).sort({ createdAt: -1 }).lean();
+    const items = (mongoWishlists || []).map((w) => ({
+      ...w.stay,
+      _id: w.stayId || w.stay?._id || w.stay?.id,
+      id: w.stayId || w.stay?.id || w.stay?._id,
+      wishlistId: w._id?.toString(),
+    }));
 
     return res.json(items);
   } catch (error) {
@@ -113,59 +78,48 @@ export const toggleWishlist = async (req, res, next) => {
 
     let isWishlisted = false;
 
-    // 1. Handle in MongoDB
-    if (mongoose.connection.readyState === 1) {
-      try {
-        const query = {
-          stayId,
-          $or: [
-            ...(currentUserEmail ? [{ userEmail: currentUserEmail }] : []),
-            ...(currentUserId ? [{ userId: currentUserId }] : []),
-          ],
-        };
+    const query = {
+      stayId,
+      $or: [
+        ...(currentUserEmail ? [{ userEmail: currentUserEmail }] : []),
+        ...(currentUserId ? [{ userId: currentUserId }] : []),
+      ],
+    };
 
-        const existing = await Wishlist.findOne(query);
-        if (existing) {
-          await Wishlist.deleteOne({ _id: existing._id });
-          isWishlisted = false;
-        } else {
-          await Wishlist.create({
-            userEmail: currentUserEmail || '',
-            userId: currentUserId || '',
-            stayId,
-            stay,
-          });
-          isWishlisted = true;
-        }
-      } catch (err) {
-        console.warn('MongoDB Wishlist toggle warning:', err.message);
-      }
-    }
-
-    // 2. Sync in file storage
-    const fileWishlists = readWishlistsFromFile();
-    const existingIdx = fileWishlists.findIndex((w) => {
-      const stayMatch = String(w.stayId) === stayId;
-      const emailMatch = currentUserEmail && w.userEmail && w.userEmail.toLowerCase() === currentUserEmail;
-      const idMatch = currentUserId && w.userId && String(w.userId) === currentUserId;
-      return stayMatch && (emailMatch || idMatch);
-    });
-
-    if (existingIdx >= 0) {
-      fileWishlists.splice(existingIdx, 1);
+    const existing = await Wishlist.findOne(query);
+    if (existing) {
+      await Wishlist.deleteOne({ _id: existing._id });
       isWishlisted = false;
     } else {
-      fileWishlists.unshift({
-        id: 'wish_' + Date.now(),
-        userEmail: currentUserEmail,
-        userId: currentUserId,
+      await Wishlist.create({
+        userEmail: currentUserEmail || '',
+        userId: currentUserId || '',
         stayId,
         stay,
-        createdAt: new Date().toISOString(),
       });
       isWishlisted = true;
     }
-    writeWishlistsToFile(fileWishlists);
+
+    // 🏛️ Also update native default user.wishlist subdocument
+    const userQuery = [];
+    if (currentUserEmail) userQuery.push({ email: currentUserEmail });
+    if (currentUserId && mongoose.Types.ObjectId.isValid(currentUserId)) {
+      userQuery.push({ _id: new mongoose.Types.ObjectId(currentUserId) });
+    }
+
+    if (userQuery.length > 0) {
+      if (isWishlisted) {
+        await User.updateOne(
+          { $or: userQuery },
+          { $push: { wishlist: { stayId, stay, addedAt: new Date() } } }
+        ).catch(() => {});
+      } else {
+        await User.updateOne(
+          { $or: userQuery },
+          { $pull: { wishlist: { stayId } } }
+        ).catch(() => {});
+      }
+    }
 
     return res.json({
       success: true,
@@ -192,32 +146,27 @@ export const removeFromWishlist = async (req, res, next) => {
       return res.status(400).json({ message: 'Stay ID is required' });
     }
 
-    // 1. Delete from MongoDB
-    if (mongoose.connection.readyState === 1) {
-      try {
-        const query = {
-          stayId: String(stayId),
-          $or: [
-            ...(currentUserEmail ? [{ userEmail: currentUserEmail }] : []),
-            ...(currentUserId ? [{ userId: currentUserId }] : []),
-          ],
-        };
-        await Wishlist.deleteMany(query);
-      } catch (err) {
-        console.warn('MongoDB Wishlist delete warning:', err.message);
-      }
-    }
+    const query = {
+      stayId: String(stayId),
+      $or: [
+        ...(currentUserEmail ? [{ userEmail: currentUserEmail }] : []),
+        ...(currentUserId ? [{ userId: currentUserId }] : []),
+      ],
+    };
+    await Wishlist.deleteMany(query);
 
-    // 2. Delete from file store
-    const fileWishlists = readWishlistsFromFile();
-    const filtered = fileWishlists.filter((w) => {
-      const matchStay = String(w.stayId) === String(stayId);
-      const matchUser =
-        (currentUserEmail && w.userEmail && w.userEmail.toLowerCase() === currentUserEmail) ||
-        (currentUserId && w.userId && String(w.userId) === currentUserId);
-      return !(matchStay && matchUser);
-    });
-    writeWishlistsToFile(filtered);
+    // 🏛️ Also remove from native default user.wishlist
+    const userQuery = [];
+    if (currentUserEmail) userQuery.push({ email: currentUserEmail });
+    if (currentUserId && mongoose.Types.ObjectId.isValid(currentUserId)) {
+      userQuery.push({ _id: new mongoose.Types.ObjectId(currentUserId) });
+    }
+    if (userQuery.length > 0) {
+      await User.updateOne(
+        { $or: userQuery },
+        { $pull: { wishlist: { stayId: String(stayId) } } }
+      ).catch(() => {});
+    }
 
     return res.json({ success: true, message: 'Removed from wishlist' });
   } catch (error) {
