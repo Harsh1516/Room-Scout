@@ -10,6 +10,7 @@ import HostRoomCategories from '../components/host/HostRoomCategories';
 import HostWeeklySlotSchedule from '../components/host/HostWeeklySlotSchedule';
 import { HostUsersVisitedSection } from '../components/host/HostUsersVisitedSection';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
+import { PropertyDetailsSection } from '../components/host/PropertyDetailsSection';
 import { getUpcoming30Days } from '../utils/dateUtils';
 
 export function HostDashboardPage() {
@@ -754,23 +755,49 @@ export function HostDashboardPage() {
   const isPending = hostProperty?.status === 'Pending Approval' || hostProperty?.isApproved === false;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#5bb2f8] via-[#c6e6fc] via-35% to-[#f4f9fd] text-slate-900 flex flex-col font-sans overflow-x-clip relative">
-      {/* Soft Ambient Light Diffusers for Ethereal Sky Depth */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-24 left-1/4 w-[600px] h-[350px] bg-sky-300/30 rounded-full blur-[140px]" />
-        <div className="absolute -top-24 right-1/4 w-[600px] h-[350px] bg-blue-400/20 rounded-full blur-[140px]" />
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-white/40 rounded-full blur-[160px]" />
+    <div
+      className={`min-h-screen flex flex-col font-sans overflow-x-clip relative transition-colors duration-500 ${
+        activeTab === 'property'
+          ? 'bg-[#06080c] text-white'
+          : 'bg-gradient-to-b from-[#5bb2f8] via-[#c6e6fc] via-35% to-[#f4f9fd] text-slate-900'
+      }`}
+    >
+      {/* Soft Ambient Light Diffusers */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden transition-opacity duration-500">
+        {activeTab === 'property' ? (
+          <>
+            <div className="absolute -top-32 left-1/4 w-[750px] h-[450px] bg-emerald-500/[0.07] rounded-full blur-[160px]" />
+            <div className="absolute top-1/3 -right-24 w-[650px] h-[450px] bg-sky-500/[0.05] rounded-full blur-[180px]" />
+            <div className="absolute bottom-10 left-1/3 w-[850px] h-[500px] bg-indigo-500/[0.04] rounded-full blur-[200px]" />
+          </>
+        ) : (
+          <>
+            <div className="absolute -top-24 left-1/4 w-[600px] h-[350px] bg-sky-300/30 rounded-full blur-[140px]" />
+            <div className="absolute -top-24 right-1/4 w-[600px] h-[350px] bg-blue-400/20 rounded-full blur-[140px]" />
+            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-white/40 rounded-full blur-[160px]" />
+          </>
+        )}
       </div>
 
       {/* NAVBAR */}
-      <header className="sticky top-0 z-40 backdrop-blur-2xl bg-white/45 border-b border-white/60 shadow-[0_4px_24px_rgba(31,38,135,0.04)]">
+      <header
+        className={`sticky top-0 z-40 backdrop-blur-2xl transition-all duration-300 ${
+          activeTab === 'property'
+            ? 'bg-[#06080c]/85 border-b border-white/[0.08] shadow-[0_4px_30px_rgba(0,0,0,0.8)]'
+            : 'bg-white/45 border-b border-white/60 shadow-[0_4px_24px_rgba(31,38,135,0.04)]'
+        }`}
+      >
         <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 h-15 flex items-center justify-between gap-3 relative">
           <div className="flex items-center gap-2.5 z-10">
             {/* Back Button */}
             <button
               type="button"
               onClick={handleBack}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/80 bg-white/75 hover:bg-white/95 backdrop-blur-xl text-slate-700 hover:text-slate-900 text-xs font-semibold tracking-tight transition-all cursor-pointer shadow-xs active:scale-[0.98] shrink-0"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold tracking-tight transition-all cursor-pointer active:scale-[0.98] shrink-0 backdrop-blur-xl ${
+                activeTab === 'property'
+                  ? 'border-white/15 bg-white/[0.05] hover:bg-white/[0.1] text-zinc-200 hover:text-white shadow-none'
+                  : 'border-white/80 bg-white/75 hover:bg-white/95 text-slate-700 hover:text-slate-900 shadow-xs'
+              }`}
               title="Back"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -810,7 +837,13 @@ export function HostDashboardPage() {
           </div>
 
           {/* Center Tabs with Smooth Sliding Pill */}
-          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1 bg-white/50 backdrop-blur-2xl p-1 rounded-2xl border border-white/70 shadow-[inset_0_1px_2px_rgba(255,255,255,0.8),_0_4px_16px_rgba(31,38,135,0.05)] z-10">
+          <div
+            className={`absolute left-1/2 -translate-x-1/2 flex items-center gap-1 p-1 rounded-2xl border backdrop-blur-2xl transition-all duration-300 z-10 ${
+              activeTab === 'property'
+                ? 'bg-white/[0.12] border-white/40 dark:border-white/50 shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),_0_4px_20px_rgba(0,0,0,0.4)]'
+                : 'bg-white/50 border-white/70 shadow-[inset_0_1px_2px_rgba(255,255,255,0.8),_0_4px_16px_rgba(31,38,135,0.05)]'
+            }`}
+          >
             {[
               { id: 'property', label: 'Property' },
               { id: 'room', label: 'Room' },
@@ -825,13 +858,15 @@ export function HostDashboardPage() {
                   className={`relative px-4 py-1.5 rounded-xl text-xs font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1.5 select-none ${
                     isActive
                       ? 'text-white'
-                      : 'text-slate-600 hover:text-slate-900'
+                      : activeTab === 'property'
+                        ? 'text-zinc-300 hover:text-white'
+                        : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   {isActive && (
                     <motion.div
                       layoutId="hostDashboardActivePill"
-                      className="absolute inset-0 rounded-xl bg-emerald-600 shadow-xs"
+                      className="absolute inset-0 rounded-xl bg-emerald-600 border border-white/50 dark:border-white/60 shadow-xs"
                       transition={{
                         type: 'spring',
                         stiffness: 550,
@@ -845,8 +880,10 @@ export function HostDashboardPage() {
                     <span
                       className={`relative z-10 text-[10px] px-1.5 py-0.5 rounded-full font-semibold transition-colors duration-200 border ${
                         isActive
-                          ? 'bg-white/20 text-white border-white/20'
-                          : 'bg-white/80 text-emerald-700 border-white/80'
+                          ? 'bg-white/20 text-white border-white/40'
+                          : activeTab === 'property'
+                            ? 'bg-white/10 text-emerald-300 border-white/30'
+                            : 'bg-white/80 text-emerald-700 border-white/80'
                       }`}
                     >
                       {tab.badge}
@@ -916,144 +953,14 @@ export function HostDashboardPage() {
             <div>
               {/* Property Details Tab */}
               <div className={activeTab === 'property' ? 'space-y-5 block' : 'hidden'}>
-                  <div className="p-6 sm:p-7 rounded-3xl bg-white/70 backdrop-blur-xl border border-white/80 shadow-[0_12px_32px_rgba(31,38,135,0.06),_inset_0_1px_2px_rgba(255,255,255,0.95)] space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                          <span className="px-2.5 py-1 rounded-lg bg-white/80 border border-white/80 text-emerald-700 text-[11px] font-bold shadow-xs">
-                            {hostProperty.propertyType || 'PG'}
-                          </span>
-                          <span className="px-2.5 py-1 rounded-lg bg-white/80 border border-white/80 text-slate-700 text-[11px] font-semibold shadow-xs">
-                            For: {hostProperty.genderType || 'Both'}
-                          </span>
-                          <span className="px-2.5 py-1 rounded-lg bg-amber-50/80 border border-amber-200/60 text-amber-700 text-[11px] font-semibold shadow-xs">
-                            ★ {hostProperty.rating || 4.8}
-                          </span>
-                        </div>
-                        <h1 className="text-xl sm:text-2xl font-black text-slate-900">
-                          {hostProperty.propertyName}
-                        </h1>
-                        <p className="text-xs text-slate-600 mt-1 font-medium">
-                          {hostProperty.address || hostProperty.location || 'Location not specified'}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-2 shrink-0">
-                        {isPending ? (
-                          <span className="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold">
-                            Pending Admin Approval
-                          </span>
-                        ) : (
-                          <span className="px-3.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold shadow-xs">
-                            Approved & Live
-                          </span>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => navigate('/host/upload')}
-                          className="px-3.5 py-1.5 rounded-xl border border-white/80 bg-white/80 hover:bg-white text-slate-700 text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
-                        >
-                          Edit Details
-                        </button>
-                      </div>
-                    </div>
-
-                    {isPending && (
-                      <div className="p-3.5 rounded-xl bg-amber-50/90 border border-amber-200 text-xs text-amber-800 flex items-center gap-2">
-                        <span className="font-bold shrink-0">⏳ Status:</span>
-                        <span>
-                          Property upload request is pending admin review. Once approved by the administrator, your room scheduling slots will unlock and your listing will be visible to guests.
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="p-6 rounded-3xl bg-white/70 backdrop-blur-xl border border-white/80 shadow-[0_12px_32px_rgba(31,38,135,0.06),_inset_0_1px_2px_rgba(255,255,255,0.95)] space-y-2">
-                      <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">
-                        Property Description
-                      </h2>
-                      <p className="text-xs text-slate-700 leading-relaxed font-normal">
-                        {hostProperty.description || hostProperty.bio || 'No description provided.'}
-                      </p>
-                    </div>
-
-                    <div className="p-6 rounded-3xl bg-white/70 backdrop-blur-xl border border-white/80 shadow-[0_12px_32px_rgba(31,38,135,0.06),_inset_0_1px_2px_rgba(255,255,255,0.95)] space-y-2">
-                      <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">
-                        Address & Location
-                      </h2>
-                      <div className="text-xs text-slate-700 space-y-1.5">
-                        <p><span className="text-slate-400 font-medium">Full Address:</span> {hostProperty.address || '—'}</p>
-                        <p><span className="text-slate-400 font-medium">Area / Road:</span> {hostProperty.roadArea || '—'}</p>
-                        <p><span className="text-slate-400 font-medium">City / State:</span> {hostProperty.city || '—'}, {hostProperty.state || '—'} {hostProperty.pincode ? `(${hostProperty.pincode})` : ''}</p>
-                        <p><span className="text-slate-400 font-medium">Coordinates:</span> {Number(hostProperty.latitude || 29.3919).toFixed(5)}, {Number(hostProperty.longitude || 79.4542).toFixed(5)}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="p-6 rounded-3xl bg-white/70 backdrop-blur-xl border border-white/80 shadow-[0_12px_32px_rgba(31,38,135,0.06),_inset_0_1px_2px_rgba(255,255,255,0.95)] space-y-3">
-                      <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">
-                        Facilities ({hostProperty.facilities?.length || hostProperty.amenities?.length || 0})
-                      </h2>
-                      <div className="flex flex-wrap gap-2">
-                        {((Array.isArray(hostProperty.facilities) && hostProperty.facilities.length > 0) ||
-                         (Array.isArray(hostProperty.amenities) && hostProperty.amenities.length > 0)) ? (
-                          (hostProperty.facilities || hostProperty.amenities).map((facility, fIdx) => (
-                            <span
-                              key={fIdx}
-                              className="px-3 py-1.5 rounded-lg bg-white/80 border border-white/80 text-slate-700 text-xs font-medium shadow-xs"
-                            >
-                              {facility}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-xs text-slate-400">No facilities listed</span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="p-6 rounded-3xl bg-white/70 backdrop-blur-xl border border-white/80 shadow-[0_12px_32px_rgba(31,38,135,0.06),_inset_0_1px_2px_rgba(255,255,255,0.95)] space-y-3">
-                      <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">
-                        Rules & Policies ({hostProperty.rules?.length || hostProperty.houseRules?.length || 0})
-                      </h2>
-                      <div className="flex flex-wrap gap-2">
-                        {(Array.isArray(hostProperty.rules) && hostProperty.rules.length > 0) ||
-                        (Array.isArray(hostProperty.houseRules) && hostProperty.houseRules.length > 0) ? (
-                          (hostProperty.rules || hostProperty.houseRules).map((rule, rIdx) => (
-                            <span
-                              key={rIdx}
-                              className="px-3 py-1.5 rounded-lg bg-white/80 border border-white/80 text-slate-700 text-xs font-medium shadow-xs"
-                            >
-                              {rule}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-xs text-slate-400">No rules specified</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {Array.isArray(hostProperty.images) && hostProperty.images.length > 0 && (
-                    <div className="p-6 rounded-3xl bg-white/70 backdrop-blur-xl border border-white/80 shadow-[0_12px_32px_rgba(31,38,135,0.06),_inset_0_1px_2px_rgba(255,255,255,0.95)] space-y-3">
-                      <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">
-                        Property Photos ({hostProperty.images.length})
-                      </h2>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                        {hostProperty.images.map((imgUrl, iIdx) => (
-                          <div key={iIdx} className="h-28 rounded-2xl overflow-hidden bg-white/50 border border-white/80 shadow-xs">
-                            <img
-                              src={imgUrl}
-                              alt={`Property ${iIdx + 1}`}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <ErrorBoundary>
+                  <PropertyDetailsSection
+                    hostProperty={hostProperty}
+                    isPending={isPending}
+                    onEditDetails={() => navigate('/host/upload')}
+                  />
+                </ErrorBoundary>
+              </div>
 
               {/* Room Schedule & Bookings Tab */}
               <div className={activeTab === 'room' ? 'space-y-4 block' : 'hidden'}>
