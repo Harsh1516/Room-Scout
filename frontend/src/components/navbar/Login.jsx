@@ -91,7 +91,7 @@ export function Login({ onLoginClick }) {
       <button
         type="button"
         onClick={onLoginClick}
-        className="apple-liquid-nav border border-slate-200/80 dark:border-white/15 text-slate-900 dark:text-white font-extrabold text-xs px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-xs transition-none cursor-pointer flex items-center gap-2 select-none active:scale-95 focus:outline-none focus:ring-0"
+        className="apple-liquid-nav border border-slate-200/80 dark:border-white/15 text-slate-900 dark:text-white font-semibold text-xs tracking-wider px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-xs transition-none cursor-pointer flex items-center gap-2 select-none active:scale-95 focus:outline-none focus:ring-0"
       >
         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
         <span>LOGIN</span>
@@ -109,7 +109,7 @@ export function Login({ onLoginClick }) {
         <button
           type="button"
           onClick={() => setDropdownOpen((prev) => !prev)}
-          className={`relative w-9 h-9 sm:w-10 sm:h-10 rounded-full text-white font-black text-xs sm:text-sm shadow-xs border border-slate-200/80 dark:border-white/20 backdrop-blur-[2px] transition-none flex items-center justify-center cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 ${
+          className={`relative w-9 h-9 sm:w-10 sm:h-10 rounded-full text-white font-bold text-xs sm:text-sm shadow-xs border border-slate-200/80 dark:border-white/20 backdrop-blur-[2px] transition-none flex items-center justify-center cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 ${
             isHost
               ? 'bg-linear-to-tr from-emerald-600/90 via-teal-600/90 to-emerald-500/90'
               : 'bg-linear-to-tr from-indigo-600/90 via-blue-600/90 to-cyan-500/90'
@@ -121,7 +121,7 @@ export function Login({ onLoginClick }) {
           {/* Host Crown / Online Indicator Dot */}
           <span
             className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] border-2 border-white dark:border-slate-900 shadow-xs ${
-              isHost ? 'bg-amber-400 text-slate-950 font-black' : 'bg-emerald-400 text-white'
+              isHost ? 'bg-amber-400 text-slate-950 font-bold' : 'bg-emerald-400 text-white'
             }`}
           >
             {isHost ? '👑' : ''}
@@ -142,7 +142,7 @@ export function Login({ onLoginClick }) {
               {/* User Header Profile Card */}
               <div className="flex items-center gap-3 pb-2.5 border-b border-slate-200/60 dark:border-white/10">
                 <div
-                  className={`w-9 h-9 rounded-xl text-white font-black text-xs flex items-center justify-center shadow-md shrink-0 ${
+                  className={`w-9 h-9 rounded-xl text-white font-bold text-xs flex items-center justify-center shadow-md shrink-0 ${
                     isHost
                       ? 'bg-gradient-to-tr from-emerald-600 to-teal-500'
                       : 'bg-gradient-to-tr from-indigo-600 to-cyan-500'
@@ -151,14 +151,14 @@ export function Login({ onLoginClick }) {
                   {initials}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+                  <div className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white truncate">
                     {user.name}
                   </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate font-medium">
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate font-normal">
                     {user.email}
                   </div>
                   <div
-                    className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.2 mt-0.5 rounded-full border ${
+                    className={`inline-flex items-center gap-1 text-[9px] font-semibold px-2 py-0.5 mt-0.5 rounded-full border ${
                       isHost
                         ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
                         : 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20'

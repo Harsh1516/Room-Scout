@@ -35,10 +35,27 @@ export function WishlistProvider({ children }) {
 
     try {
       setLoading(true);
-      const data = await wishlistAPI.getWishlist();
-      if (Array.isArray(data)) {
-        setWishlist(data);
-      }
+      const res = await wishlistAPI.getWishlist();
+      const list = Array.isArray(res)
+        ? res
+        : (Array.isArray(res?.wishlist) ? res.wishlist : (Array.isArray(res?.data) ? res.data : []));
+
+      // Filter to ensure only approved and live properties are shown
+      const liveApprovedList = list.filter((item) => {
+        if (!item || !item._id) return false;
+        if (item.isPublished === false) return false;
+        if (
+          item.hostId &&
+          typeof item.hostId === 'object' &&
+          item.hostId.status &&
+          item.hostId.status !== 'Approved'
+        ) {
+          return false;
+        }
+        return true;
+      });
+
+      setWishlist(liveApprovedList);
     } catch (err) {
       console.warn('Failed to load wishlist from database:', err);
     } finally {
@@ -49,6 +66,53 @@ export function WishlistProvider({ children }) {
   useEffect(() => {
     fetchWishlist();
   }, [fetchWishlist]);
+
+  // Re-fetch whenever wishlist drawer is opened
+  useEffect(() => {
+    if (isWishlistOpen) {
+      fetchWishlist();
+    }
+  }, [isWishlistOpen, fetchWishlist]);
+
+  // Real-time synchronization across tabs and host/admin actions
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+
+    const handleSync = () => fetchWishlist();
+
+    window.addEventListener('stayhub_admin_sync', handleSync);
+    window.addEventListener('stayhub_rooms_updated', handleSync);
+    window.addEventListener('focus', handleSync);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') fetchWishlist();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    let bc = null;
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        bc = new BroadcastChannel('stayhub_live_channel');
+        bc.onmessage = (event) => {
+          if (
+            event.data?.type === 'HOST_APPROVED' ||
+            event.data?.type === 'STAY_UPDATED' ||
+            event.data?.type === 'ROOMS_UPDATED'
+          ) {
+            fetchWishlist();
+          }
+        };
+      }
+    } catch {}
+
+    return () => {
+      window.removeEventListener('stayhub_admin_sync', handleSync);
+      window.removeEventListener('stayhub_rooms_updated', handleSync);
+      window.removeEventListener('focus', handleSync);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      if (bc) bc.close();
+    };
+  }, [isAuthenticated, user, fetchWishlist]);
 
   const toggleWishlist = async (stay) => {
     if (!stay) return;
@@ -71,12 +135,12 @@ export function WishlistProvider({ children }) {
       setWishlist((prev) => [...prev, stay]);
     }
 
-    // Persist directly to MongoDB / Database
+    // Persist directly to database
     try {
       await wishlistAPI.toggleWishlist(stay);
     } catch (err) {
       console.error('Database wishlist sync error:', err);
-      // Revert if failed
+      toast.error(err.message || 'Failed to update wishlist.');
       fetchWishlist();
     }
   };

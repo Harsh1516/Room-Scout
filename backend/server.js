@@ -6,6 +6,7 @@ import { connectDB } from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import stayRoutes from './routes/stayRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
 import wishlistRoutes from './routes/wishlistRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import errorMiddleware from './middleware/errorMiddleware.js';
@@ -16,11 +17,11 @@ dotenv.config();
 
 const app = express();
 
-// Security Headers with Helmet (configured for cross-origin image/asset compatibility)
+// Security Headers with Helmet
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
-    contentSecurityPolicy: false, // Avoid breaking external CDNs/Leaflet in dev
+    contentSecurityPolicy: false,
   })
 );
 
@@ -31,10 +32,8 @@ const configuredOrigins = process.env.ALLOWED_ORIGINS
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
     if (!origin) return callback(null, true);
 
-    // Allow configured origins or local/network development IPs
     if (
       configuredOrigins.includes(origin) ||
       origin.startsWith('http://localhost:') ||
@@ -59,14 +58,13 @@ const corsOptions = {
     'Origin',
   ],
   exposedHeaders: ['Authorization'],
-  maxAge: 86400, // 24 hours preflight cache
+  maxAge: 86400,
 };
 
-// Apply CORS middleware & handle pre-flight OPTIONS requests
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
-// Body parsers with hardened payload limits (10mb for photo uploads, prevents RAM exhaustion)
+// Body parsers with payload limits
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
@@ -86,6 +84,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/stays', stayRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/payments', paymentRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/admin', adminRoutes);
 
@@ -94,15 +93,14 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
     serverTime: new Date(),
-    service: 'StayHub Node.js Express API',
+    service: 'RoomScout Node.js Express API',
     mongoStatus: 'Active',
-    cors: 'Configured and Active',
   });
 });
 
 // Root Route
 app.get('/', (req, res) => {
-  res.send('StayHub Backend API running with Express, MongoDB, Bcrypt, JWT Auth & CORS handling!');
+  res.send('RoomScout Backend API running with Express, MongoDB, and Decoupled Architecture.');
 });
 
 // 404 Handler
@@ -118,7 +116,6 @@ const PORT = process.env.PORT || 5000;
 // Connect to MongoDB Database
 connectDB().then(() => {
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Backend Server running on http://0.0.0.0:${PORT} (Accepting network requests from 192.168.1.37)`);
+    console.log(`Backend Server running on port ${PORT}`);
   });
 });
-

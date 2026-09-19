@@ -3,6 +3,32 @@ import { authAPI } from '../services/api';
 
 const AuthContext = createContext();
 
+// Helper to safely decode JWT payload in browser without external dependencies
+export function decodeJwt(jwtToken) {
+  try {
+    if (!jwtToken || typeof jwtToken !== 'string') return null;
+    const parts = jwtToken.split('.');
+    if (parts.length !== 3) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      window
+        .atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const parsed = JSON.parse(jsonPayload);
+    // Discard expired tokens
+    if (parsed.exp && parsed.exp * 1000 < Date.now()) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => {
     try {
@@ -12,11 +38,45 @@ export function AuthProvider({ children }) {
     }
   });
 
-  // User profile is kept strictly in React memory state (not exposed in plain localStorage)
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  // Synchronously initialize user from local storage or decode from valid JWT token for 0ms hydration
+  const [user, setUser] = useState(() => {
+    try {
+      const cached = localStorage.getItem('roomscout_user');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && (parsed.id || parsed._id || parsed.email)) {
+          return parsed;
+        }
+      }
+      const rawToken = localStorage.getItem('roomscout_token') || localStorage.getItem('stayhub_jwt_token');
+      const decoded = decodeJwt(rawToken);
+      if (decoded) {
+        return {
+          id: decoded.userId || decoded.id,
+          _id: decoded.userId || decoded.id,
+          name: decoded.name || '',
+          email: decoded.email || '',
+          role: decoded.role || 'user',
+          isAdmin: Boolean(decoded.isAdmin),
+        };
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  });
 
-  // Sync token to localStorage and manage memory user state
+  // Loading starts true only if a token is present and needs verification
+  const [loading, setLoading] = useState(() => {
+    try {
+      const storedToken = localStorage.getItem('roomscout_token') || localStorage.getItem('stayhub_jwt_token');
+      return Boolean(storedToken);
+    } catch {
+      return false;
+    }
+  });
+
+  // Sync token and user to localStorage and manage state
   const syncAuthState = useCallback((userData, jwtToken) => {
     try {
       // Auto-purge any legacy keys from storage
@@ -32,10 +92,20 @@ export function AuthProvider({ children }) {
       }
 
       if (userData) {
+        const resolvedData = userData.user || userData;
         // Strip duplicate token if present on user object to avoid redundant duplication
-        const { token: _token, ...cleanUserData } = userData;
-        setUser(cleanUserData);
+        const { token: _token, ...cleanUserData } = resolvedData;
+        const normalizedUser = {
+          ...cleanUserData,
+          id: cleanUserData.id || cleanUserData._id,
+          _id: cleanUserData._id || cleanUserData.id,
+        };
+        try {
+          localStorage.setItem('roomscout_user', JSON.stringify(normalizedUser));
+        } catch {}
+        setUser(normalizedUser);
       } else {
+        localStorage.removeItem('roomscout_user');
         setUser(null);
       }
     } catch (e) {
@@ -58,7 +128,6 @@ export function AuthProvider({ children }) {
           'user_email',
         ].forEach((k) => localStorage.removeItem(k));
 
-        // Purge any other remaining legacy stayhub_* keys (except stayhub_jwt_token before migration)
         Object.keys(localStorage).forEach((key) => {
           if (key.startsWith('stayhub_') && key !== 'stayhub_jwt_token') {
             localStorage.removeItem(key);
@@ -66,7 +135,6 @@ export function AuthProvider({ children }) {
         });
       } catch {}
 
-      // Smoothly migrate legacy stayhub_jwt_token to roomscout_token if needed
       if (localStorage.getItem('stayhub_jwt_token')) {
         if (!localStorage.getItem('roomscout_token')) {
           localStorage.setItem('roomscout_token', localStorage.getItem('stayhub_jwt_token'));
@@ -77,14 +145,28 @@ export function AuthProvider({ children }) {
       const storedToken = localStorage.getItem('roomscout_token');
       if (!storedToken) {
         setUser(null);
+        setLoading(false);
         return;
       }
 
       try {
         const profile = await authAPI.getProfile();
-        if (profile && (profile._id || profile.id || profile.email)) {
-          const { token: _t, ...cleanProfile } = profile;
-          setUser((prev) => ({ ...(prev || {}), ...cleanProfile }));
+        const resolvedProfile = profile?.user || profile;
+
+        if (resolvedProfile && (resolvedProfile._id || resolvedProfile.id || resolvedProfile.email)) {
+          const { token: _t, ...cleanProfile } = resolvedProfile;
+          const normalizedProfile = {
+            ...cleanProfile,
+            id: cleanProfile.id || cleanProfile._id,
+            _id: cleanProfile._id || cleanProfile.id,
+          };
+          setUser((prev) => {
+            const updated = { ...(prev || {}), ...normalizedProfile };
+            try {
+              localStorage.setItem('roomscout_user', JSON.stringify(updated));
+            } catch {}
+            return updated;
+          });
         } else {
           syncAuthState(null, null);
           window.dispatchEvent(
@@ -94,13 +176,18 @@ export function AuthProvider({ children }) {
           );
         }
       } catch (err) {
-        console.warn('Stored JWT token is invalid or account deleted. Resetting auth state:', err.message);
-        syncAuthState(null, null);
-        window.dispatchEvent(
-          new CustomEvent('auth:account_deleted', {
-            detail: { message: 'Account not found in database. Please log in.' },
-          })
-        );
+        console.warn('Stored JWT token verification notice:', err.message);
+        // Only wipe auth and show account deleted notice if server explicitly returned 401 or ACCOUNT_DELETED
+        if (err.status === 401 || err?.data?.status === 'ACCOUNT_DELETED') {
+          syncAuthState(null, null);
+          window.dispatchEvent(
+            new CustomEvent('auth:account_deleted', {
+              detail: { message: err?.data?.message || 'Session expired or account not found. Please log in.' },
+            })
+          );
+        }
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -130,8 +217,9 @@ export function AuthProvider({ children }) {
     try {
       const targetRole = requiredRole || role;
       const data = await authAPI.login({ email, password, requiredRole: targetRole });
-      if (data.token) {
-        syncAuthState(data, data.token);
+      const authToken = data.token || (data.user && data.user.token);
+      if (authToken) {
+        syncAuthState(data, authToken);
       }
       setLoading(false);
       return { success: true, data };
@@ -145,6 +233,10 @@ export function AuthProvider({ children }) {
     setLoading(true);
     try {
       const data = await authAPI.register({ name, email, password, phone, role });
+      const authToken = data.token || (data.user && data.user.token);
+      if (authToken) {
+        syncAuthState(data, authToken);
+      }
       setLoading(false);
       return { success: true, data };
     } catch (error) {

@@ -1,9 +1,6 @@
 import React from 'react';
 import { HostRoomsDropdown } from './HostRoomsDropdown';
 
-/**
- * Memoized single host row for component-level performance
- */
 export const AdminHostRow = React.memo(function AdminHostRow({
   host,
   index,
@@ -16,11 +13,14 @@ export const AdminHostRow = React.memo(function AdminHostRow({
   confirmDelete,
   setConfirmDeleteHostId,
 }) {
+  const hostId = host.id || host._id;
   const formattedDateTime = formatDateTime(host.createdAt || host.joinedDate);
   const isApproved = host.status === 'Approved';
   const hasRooms = Array.isArray(host.rooms) && host.rooms.length > 0;
   const hasCategories = Array.isArray(host.roomRates) && host.roomRates.length > 0;
   const canApprove = hasRooms && hasCategories;
+
+  const hasPropertyDetails = Boolean(host.propertyName && host.propertyName !== 'Host Property' && host.location);
 
   return (
     <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
@@ -29,7 +29,7 @@ export const AdminHostRow = React.memo(function AdminHostRow({
         {index + 1}
       </td>
 
-      {/* 2. Host & Contact (Reduced width) */}
+      {/* 2. Host & Contact */}
       <td className="py-3 px-3 border-r border-slate-100 dark:border-slate-800/80 align-middle">
         <div className="font-bold text-slate-900 dark:text-white text-xs truncate" title={host.name}>
           {host.name}
@@ -44,22 +44,30 @@ export const AdminHostRow = React.memo(function AdminHostRow({
         )}
       </td>
 
-      {/* 3. Property & Location (Reduced width) */}
+      {/* 3. Property & Location */}
       <td className="py-3 px-3 border-r border-slate-100 dark:border-slate-800/80 align-middle">
-        <div className="font-bold text-slate-900 dark:text-white text-xs truncate" title={host.propertyName || 'Property Stay'}>
-          {host.propertyName || 'Property Stay'}
-        </div>
-        <div className="flex items-center gap-1.5 mt-1 text-[10.5px] text-slate-500 dark:text-slate-400">
-          <span className="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] font-bold text-slate-700 dark:text-slate-300 shrink-0">
-            {host.propertyType || 'PG'} ({host.genderType || 'Both'})
+        {hasPropertyDetails ? (
+          <>
+            <div className="font-bold text-slate-900 dark:text-white text-xs truncate" title={host.propertyName}>
+              {host.propertyName}
+            </div>
+            <div className="flex items-center gap-1.5 mt-1 text-[10.5px] text-slate-500 dark:text-slate-400">
+              <span className="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] font-bold text-slate-700 dark:text-slate-300 shrink-0">
+                {host.propertyType || 'PG'} ({host.genderType || 'Both'})
+              </span>
+            </div>
+            <div className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate mt-1" title={host.location}>
+              📍 {host.location}
+            </div>
+          </>
+        ) : (
+          <span className="inline-block px-2.5 py-1 rounded-md text-[11px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+            No property details added yet
           </span>
-        </div>
-        <div className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate mt-1" title={host.location}>
-          📍 {host.location}
-        </div>
+        )}
       </td>
 
-      {/* 4. Rooms & Rates (Increased width: plenty of space, no overlap) */}
+      {/* 4. Rooms & Rates */}
       <td className="py-3 px-3 border-r border-slate-100 dark:border-slate-800/80 text-center align-middle">
         <HostRoomsDropdown host={host} />
       </td>
@@ -83,7 +91,6 @@ export const AdminHostRow = React.memo(function AdminHostRow({
       {/* 6. Actions */}
       <td className="py-3 px-3 text-center align-middle">
         <div className="inline-flex items-center gap-1.5 justify-center flex-wrap">
-          {/* Host Portal */}
           <button
             type="button"
             onClick={() => onOpenHostPortal(host)}
@@ -100,13 +107,12 @@ export const AdminHostRow = React.memo(function AdminHostRow({
             </svg>
           </button>
 
-          {/* Pending Approval Button */}
           {!isApproved && (
             <button
               type="button"
               onClick={() => {
                 if (!canApprove) return;
-                onApproveHost(host.id, host.name);
+                onApproveHost(hostId, host.name);
               }}
               disabled={isApproving || !canApprove}
               className={`px-2.5 py-1 text-xs rounded-md transition-all font-medium border ${
@@ -124,11 +130,10 @@ export const AdminHostRow = React.memo(function AdminHostRow({
             </button>
           )}
 
-          {/* Delete Button */}
           {!confirmDelete ? (
             <button
               type="button"
-              onClick={() => setConfirmDeleteHostId(host.id)}
+              onClick={() => setConfirmDeleteHostId(hostId)}
               disabled={isDeleting}
               className="px-2.5 py-1 text-xs text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800/80 rounded-md hover:bg-red-50 dark:hover:bg-red-950/30 transition-all cursor-pointer disabled:opacity-50"
             >
@@ -138,7 +143,7 @@ export const AdminHostRow = React.memo(function AdminHostRow({
             <div className="inline-flex items-center gap-1">
               <button
                 type="button"
-                onClick={() => onDeleteHost(host.id, host.name)}
+                onClick={() => onDeleteHost(hostId, host.name)}
                 disabled={isDeleting}
                 className="px-2 py-1 text-xs text-white bg-red-600 hover:bg-red-700 border border-red-600 rounded-md transition-all cursor-pointer font-normal"
               >
@@ -159,9 +164,6 @@ export const AdminHostRow = React.memo(function AdminHostRow({
   );
 });
 
-/**
- * Component-level Admin Hosts Table
- */
 export function AdminHostsTable({
   hosts = [],
   loading = false,
@@ -176,32 +178,25 @@ export function AdminHostsTable({
 }) {
   return (
     <>
-      {/* Desktop Table View - Arranged Columns: Reduced Contact & Property, Expanded Rooms & Rates */}
       <div className="hidden md:block w-full rounded-2xl bg-white dark:bg-black border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <table className="w-full text-left border-collapse table-fixed text-xs">
           <thead>
             <tr className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800 select-none">
-              {/* # (4%) */}
               <th className="py-3 px-3 w-[5%] text-center border-r border-slate-200 dark:border-slate-800 text-slate-400 font-bold">
                 #
               </th>
-              {/* Host & Contact (Reduced to 20%) */}
               <th className="py-3 px-3 w-[20%] border-r border-slate-200 dark:border-slate-800 font-bold">
                 Host & Contact
               </th>
-              {/* Property & Location (Reduced to 20%) */}
               <th className="py-3 px-3 w-[20%] border-r border-slate-200 dark:border-slate-800 font-bold">
                 Property & Location
               </th>
-              {/* Rooms & Rates (Expanded to 35% to prevent overlap) */}
               <th className="py-3 px-3 w-[35%] border-r border-slate-200 dark:border-slate-800 font-bold text-center">
                 Rooms & Rates
               </th>
-              {/* Status & Date (10%) */}
               <th className="py-3 px-3 w-[10%] border-r border-slate-200 dark:border-slate-800 font-bold text-center">
                 Status & Date
               </th>
-              {/* Actions (10%) */}
               <th className="py-3 px-3 w-[10%] text-center font-bold">
                 Actions
               </th>
@@ -225,21 +220,24 @@ export function AdminHostsTable({
                 </td>
               </tr>
             ) : (
-              hosts.map((host, idx) => (
-                <AdminHostRow
-                  key={host.id || host.email || idx}
-                  host={host}
-                  index={idx}
-                  formatDateTime={formatDateTime}
-                  onOpenHostPortal={onOpenHostPortal}
-                  onApproveHost={onApproveHost}
-                  onDeleteHost={onDeleteHost}
-                  isApproving={approvingHostId === host.id}
-                  isDeleting={deletingHostId === host.id}
-                  confirmDelete={confirmDeleteHostId === host.id}
-                  setConfirmDeleteHostId={setConfirmDeleteHostId}
-                />
-              ))
+              hosts.map((host, idx) => {
+                const hostId = host.id || host._id;
+                return (
+                  <AdminHostRow
+                    key={hostId || host.email || idx}
+                    host={host}
+                    index={idx}
+                    formatDateTime={formatDateTime}
+                    onOpenHostPortal={onOpenHostPortal}
+                    onApproveHost={onApproveHost}
+                    onDeleteHost={onDeleteHost}
+                    isApproving={approvingHostId === hostId}
+                    isDeleting={deletingHostId === hostId}
+                    confirmDelete={confirmDeleteHostId === hostId}
+                    setConfirmDeleteHostId={setConfirmDeleteHostId}
+                  />
+                );
+              })
             )}
           </tbody>
         </table>
@@ -253,10 +251,13 @@ export function AdminHostsTable({
           <div className="p-8 text-center text-slate-400 text-xs">No hosts found</div>
         ) : (
           hosts.map((host, idx) => {
+            const hostId = host.id || host._id;
             const isPending = host.status === 'Pending Approval';
+            const hasPropertyDetails = Boolean(host.propertyName && host.propertyName !== 'Host Property' && host.location);
+
             return (
               <div
-                key={host.id || host.email || idx}
+                key={hostId || host.email || idx}
                 className="p-4 rounded-xl bg-white dark:bg-black border border-slate-200 dark:border-slate-800 shadow-xs space-y-3"
               >
                 <div className="flex items-center justify-between">
@@ -275,17 +276,26 @@ export function AdminHostsTable({
                 </div>
 
                 <div className="text-xs text-slate-600 dark:text-slate-400">
-                  <div className="font-semibold text-slate-800 dark:text-slate-200">{host.propertyName}</div>
-                  <div className="text-[11px] text-slate-500 truncate">{host.email} • {host.phone}</div>
-                  <div className="text-[11px] text-slate-500 truncate mt-0.5">📍 {host.location}</div>
+                  {hasPropertyDetails ? (
+                    <>
+                      <div className="font-semibold text-slate-800 dark:text-slate-200">{host.propertyName}</div>
+                      <div className="text-[11px] text-slate-500 truncate">{host.email} • {host.phone}</div>
+                      <div className="text-[11px] text-slate-500 truncate mt-0.5">📍 {host.location}</div>
+                    </>
+                  ) : (
+                    <div className="py-1">
+                      <span className="inline-block px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                        No property details added yet
+                      </span>
+                      <div className="text-[11px] text-slate-500 truncate mt-1">{host.email} • {host.phone}</div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Rooms dropdown on mobile */}
                 <div className="py-2 border-t border-b border-slate-100 dark:border-slate-800">
                   <HostRoomsDropdown host={host} />
                 </div>
 
-                {/* Mobile Actions */}
                 <div className="flex items-center justify-end gap-2 pt-1">
                   <button
                     type="button"
@@ -299,7 +309,7 @@ export function AdminHostsTable({
                   </button>
                   <button
                     type="button"
-                    onClick={() => onDeleteHost(host.id, host.name)}
+                    onClick={() => onDeleteHost(hostId, host.name)}
                     className="px-3 py-1.5 text-xs text-red-600 border border-red-200 dark:border-red-800 rounded-md cursor-pointer"
                   >
                     Delete

@@ -11,7 +11,7 @@ import { Left } from '../components/navbar/Left';
 import { toast } from '../context/ToastContext';
 
 const MAX_PHOTOS = 5;
-const MAX_DESCRIPTION_WORDS = 300;
+const MAX_DESCRIPTION_CHARS = 100;
 
 const COMMON_RULE_PRESETS = [
   'Valid Govt ID Required at Check-in',
@@ -94,10 +94,7 @@ const hostPropertySchema = z.object({
   instagramVideoUrl: z.string().optional(),
   description: z.string().trim()
     .min(10, 'Property description must be at least 10 characters')
-    .refine(
-      (val) => val.trim().split(/\s+/).filter(Boolean).length <= MAX_DESCRIPTION_WORDS,
-      { message: `Property description cannot exceed ${MAX_DESCRIPTION_WORDS} words` }
-    ),
+    .max(MAX_DESCRIPTION_CHARS, `Property description cannot exceed ${MAX_DESCRIPTION_CHARS} characters`),
 }).passthrough();
 
 export function HostUploadPage() {
@@ -186,44 +183,45 @@ export function HostUploadPage() {
       hasLoadedExistingRef.current = true;
       try {
         const res = await adminAPI.getHostByEmail(user.email);
-        if (res?.hasProperty && res?.host) {
+        if (res?.hasProperty && (res?.host || res?.stay)) {
           setIsEditing(true);
-          const h = res.host;
-          const loadedRates = Array.isArray(h.roomRates) ? h.roomRates : [];
-          const loadedRooms = Array.isArray(h.rooms) ? h.rooms : [];
+          const h = res.host || {};
+          const s = res.stay || res.host?.property || {};
+          const prop = { ...s, ...h };
+
+          const loadedRates = Array.isArray(prop.roomRates) ? prop.roomRates : [];
+          const loadedRooms = Array.isArray(prop.rooms) ? prop.rooms : [];
 
           setFormData((prev) => ({
             ...prev,
-            name: h.name || prev.name,
-            email: h.email || prev.email,
-            phone: h.phone || prev.phone,
-            propertyName: h.propertyName || h.properties?.[0] || '',
-            propertyType: h.propertyType || '',
-            genderType: h.genderType || '',
-            price: h.price ? String(h.price) : (loadedRates[0]?.price ? String(loadedRates[0].price) : prev.price),
-            rateUnit: h.rateUnit || loadedRates[0]?.rateUnit || '/month',
-            roadArea: h.roadArea || h.address || prev.roadArea,
-            pincode: h.pincode || prev.pincode,
-            city: h.city || '',
-            state: h.state || '',
-            latitude: Number(h.latitude) || 29.39156,
-            longitude: Number(h.longitude) || 79.455882,
-            totalRooms: h.totalRooms || loadedRooms.length || 1,
-            availableRooms: h.availableRooms !== undefined ? h.availableRooms : (loadedRooms.filter((r) => r.status === 'Available').length || 1),
-            rating: Number(h.rating) || 5.0,
-            image: h.image || (Array.isArray(h.images) && h.images[0]) || '',
-            images: Array.isArray(h.images) ? h.images.slice(0, MAX_PHOTOS) : [],
-            instagramVideoUrl: h.instagramVideoUrl || prev.instagramVideoUrl,
-            description: h.description || '',
-            facilities: Array.isArray(h.facilities) && h.facilities.length > 0 ? h.facilities : (Array.isArray(h.amenities) ? h.amenities : []),
-            amenities: Array.isArray(h.facilities) && h.facilities.length > 0 ? h.facilities : (Array.isArray(h.amenities) ? h.amenities : []),
-            rules: Array.isArray(h.rules) && h.rules.length > 0 ? h.rules : [],
+            name: prop.name || user.name || prev.name,
+            email: prop.email || user.email || prev.email,
+            phone: prop.phone || user.phone || prev.phone,
+            propertyName: prop.propertyName || prop.title || prop.properties?.[0] || '',
+            propertyType: prop.propertyType || prop.type || 'PG',
+            genderType: prop.genderType || 'Both',
+            price: prop.price ? String(prop.price) : (loadedRates[0]?.price ? String(loadedRates[0].price) : prev.price),
+            rateUnit: prop.rateUnit || loadedRates[0]?.rateUnit || '/month',
+            roadArea: prop.roadArea || '',
+            pincode: prop.pincode || '',
+            city: prop.city || '',
+            state: prop.state || '',
+            latitude: Number(prop.latitude) || 29.3919,
+            longitude: Number(prop.longitude) || 79.4542,
+            totalRooms: prop.totalRooms || loadedRooms.length || 1,
+            availableRooms: prop.availableRooms !== undefined ? prop.availableRooms : (loadedRooms.filter((r) => r.status === 'Available').length || 1),
+            rating: Number(prop.rating) || 5.0,
+            image: prop.image || (Array.isArray(prop.images) && prop.images[0]) || '',
+            images: Array.isArray(prop.images) ? prop.images.slice(0, MAX_PHOTOS) : [],
+            instagramVideoUrl: prop.instagramVideoUrl || prev.instagramVideoUrl,
+            description: prop.description || '',
+            facilities: Array.isArray(prop.facilities) && prop.facilities.length > 0 ? prop.facilities : (Array.isArray(prop.amenities) ? prop.amenities : []),
+            amenities: Array.isArray(prop.facilities) && prop.facilities.length > 0 ? prop.facilities : (Array.isArray(prop.amenities) ? prop.amenities : []),
+            rules: Array.isArray(prop.rules) && prop.rules.length > 0 ? prop.rules : [],
             roomRates: loadedRates,
             rooms: loadedRooms,
           }));
-          if (h.roadArea || h.city || h.address) {
-            setIsAddressVisible(true);
-          }
+          setIsAddressVisible(true);
         }
       } catch (err) {
         console.warn('Could not prefill host:', err);
@@ -1707,22 +1705,19 @@ export function HostUploadPage() {
                 </div>
               </div>
 
-              {/* Live Word / Character Counter Badge */}
+              {/* Live Character Counter Badge */}
               <div className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0 ${
-                formData.description && formData.description.trim().split(/\s+/).filter(Boolean).length > MAX_DESCRIPTION_WORDS
+                formData.description && formData.description.length > MAX_DESCRIPTION_CHARS
                   ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'
-                  : formData.description && formData.description.trim().split(/\s+/).filter(Boolean).length >= 250
+                  : formData.description && formData.description.length >= 80
                   ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30'
                   : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
               }`}>
                 <span>
-                  {formData.description ? formData.description.trim().split(/\s+/).filter(Boolean).length : 0} / {MAX_DESCRIPTION_WORDS} words
+                  {formData.description ? formData.description.length : 0} / {MAX_DESCRIPTION_CHARS} characters
                 </span>
-                <span className="text-[10px] opacity-70">
-                  ({formData.description ? formData.description.length : 0} chars)
-                </span>
-                {formData.description && formData.description.trim().split(/\s+/).filter(Boolean).length > MAX_DESCRIPTION_WORDS && (
-                  <span className="text-[10px] font-bold text-rose-600">(Exceeds Cap)</span>
+                {formData.description && formData.description.length > MAX_DESCRIPTION_CHARS && (
+                  <span className="text-[10px] font-bold text-rose-600">(Exceeds Limit)</span>
                 )}
               </div>
             </div>
@@ -1730,24 +1725,26 @@ export function HostUploadPage() {
             <div className="space-y-2">
               <textarea
                 required
-                rows={5}
+                rows={4}
+                maxLength={MAX_DESCRIPTION_CHARS}
                 value={formData.description}
                 onChange={(e) => {
-                  setFormData((prev) => ({ ...prev, description: e.target.value }));
+                  const val = e.target.value.slice(0, MAX_DESCRIPTION_CHARS);
+                  setFormData((prev) => ({ ...prev, description: val }));
                   if (fieldErrors.description) {
                     setFieldErrors((prev) => ({ ...prev, description: undefined }));
                   }
                 }}
-                placeholder="Describe your property atmosphere, student-friendly living environment, nearby universities/coaching institutes, security arrangements, study rooms, food & dining quality, and neighborhood highlights..."
+                placeholder="Describe your property atmosphere, student environment, facilities, and locality (up to 100 characters)..."
                 className={`w-full p-4 rounded-2xl bg-white dark:bg-slate-900 border text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-emerald-500 font-normal leading-relaxed transition-colors resize-y ${
-                  fieldErrors.description || (formData.description && formData.description.trim().split(/\s+/).filter(Boolean).length > MAX_DESCRIPTION_WORDS)
+                  fieldErrors.description || (formData.description && formData.description.length > MAX_DESCRIPTION_CHARS)
                     ? 'border-rose-500 focus:border-rose-500'
                     : 'border-slate-200 dark:border-slate-700'
                 }`}
               />
 
               <div className="flex items-center justify-between text-[11px] text-slate-400">
-                <span>Minimum 10 characters • Maximum {MAX_DESCRIPTION_WORDS} words</span>
+                <span>Minimum 10 characters • Maximum {MAX_DESCRIPTION_CHARS} characters</span>
                 {fieldErrors.description && (
                   <span className="text-rose-500 font-semibold">{fieldErrors.description}</span>
                 )}

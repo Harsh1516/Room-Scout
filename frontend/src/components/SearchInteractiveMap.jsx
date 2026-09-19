@@ -51,6 +51,21 @@ const CITY_COORDINATES = {
 };
 
 function resolveCoordinates(stay) {
+  // 1. Primary: Standard GeoJSON point [lon, lat] from database
+  if (
+    stay?.locationGeo?.coordinates &&
+    Array.isArray(stay.locationGeo.coordinates) &&
+    stay.locationGeo.coordinates.length === 2
+  ) {
+    const [lon, lat] = stay.locationGeo.coordinates;
+    const numLat = parseFloat(lat);
+    const numLon = parseFloat(lon);
+    if (!isNaN(numLat) && !isNaN(numLon) && Math.abs(numLat) > 1 && Math.abs(numLon) > 1) {
+      return [numLat, numLon];
+    }
+  }
+
+  // 2. Direct latitude / longitude properties
   const rawLat = parseFloat(stay.latitude ?? stay.lat);
   const rawLon = parseFloat(stay.longitude ?? stay.lon ?? stay.lng);
 
@@ -58,6 +73,7 @@ function resolveCoordinates(stay) {
     return [rawLat, rawLon];
   }
 
+  // 3. Fallback to location dictionary
   const textToSearch = `${stay.location || ''} ${stay.city || ''} ${stay.address || ''} ${stay.title || ''}`.toLowerCase();
   for (const [key, coords] of Object.entries(CITY_COORDINATES)) {
     if (textToSearch.includes(key)) {
@@ -65,7 +81,7 @@ function resolveCoordinates(stay) {
     }
   }
 
-  // Stable deterministic fallback within North India / Uttarakhand
+  // Stable deterministic fallback
   const stayId = String(stay._id || stay.id || '0');
   const hash = stayId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
   return [29.35 + (hash % 15) * 0.015, 79.48 + (hash % 15) * 0.015];
@@ -89,14 +105,13 @@ export function SearchInteractiveMap({
 
     if (!mapInstanceRef.current) {
       const map = L.map(mapContainerRef.current, {
-        center: [29.37, 79.52], // Default North India / Uttarakhand center
+        center: [29.37, 79.52],
         zoom: 10,
         zoomControl: false,
       });
 
       L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-      // OpenStreetMap Standard Tiles (Crisp, 100% free, no API key or watermark)
       L.tileLayer(
         'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         {
@@ -122,7 +137,6 @@ export function SearchInteractiveMap({
     const map = mapInstanceRef.current;
     if (!map) return;
 
-    // 1. Resolve geographic coordinates for each stay
     const stayEntries = (stays || []).map((stay) => {
       const [lat, lon] = resolveCoordinates(stay);
       return {
@@ -133,11 +147,9 @@ export function SearchInteractiveMap({
       };
     });
 
-    // 2. Render and position all price markers with guaranteed zero overlapping
     const updateLayout = () => {
       if (!mapInstanceRef.current) return;
 
-      // Clear existing markers and graphics
       Object.values(markersRef.current).forEach((marker) => marker.remove());
       markersRef.current = {};
       graphicsRef.current.forEach((g) => g.remove());
@@ -145,7 +157,6 @@ export function SearchInteractiveMap({
 
       if (stayEntries.length === 0) return;
 
-      // Convert geographic coordinates to current screen pixel points
       const pixelNodes = stayEntries.map((entry) => {
         const pt = map.latLngToLayerPoint([entry.baseLat, entry.baseLon]);
         return {
@@ -158,7 +169,6 @@ export function SearchInteractiveMap({
         };
       });
 
-      // Spatial Clustering: Group items that share the same or very close coordinates (distance < 45px on screen)
       const clusters = [];
       pixelNodes.forEach((node) => {
         let targetCluster = null;
@@ -182,11 +192,9 @@ export function SearchInteractiveMap({
         }
       });
 
-      // Disperse multi-stay locations in an even radial circle (spiderfy pattern)
       clusters.forEach((cluster) => {
         const k = cluster.nodes.length;
         if (k > 1) {
-          // Central anchor hub dot
           const centerHub = L.circleMarker([cluster.baseLat, cluster.baseLon], {
             radius: 5,
             color: '#0284c7',
@@ -196,10 +204,9 @@ export function SearchInteractiveMap({
           }).addTo(map);
           graphicsRef.current.push(centerHub);
 
-          // Calculate radial offset based on count (approx 44px to 96px in screen pixels)
           const R = 38 + Math.min(k, 8) * 9;
           cluster.nodes.forEach((node, idx) => {
-            const angle = (2 * Math.PI * idx) / k - Math.PI / 2; // start from top
+            const angle = (2 * Math.PI * idx) / k - Math.PI / 2;
             node.x = cluster.centerX + R * Math.cos(angle);
             node.y = cluster.centerY + R * Math.sin(angle);
             node.hasConnector = true;
@@ -209,7 +216,6 @@ export function SearchInteractiveMap({
         }
       });
 
-      // Global Collision Relaxation Pass: Push apart ANY two price tags that overlap
       const MIN_WIDTH = 90;
       const MIN_HEIGHT = 34;
 
@@ -236,11 +242,9 @@ export function SearchInteractiveMap({
         }
       }
 
-      // Convert final collision-free screen pixel coordinates back to LatLng & render markers
       pixelNodes.forEach((node) => {
         const finalLatLng = map.layerPointToLatLng([node.x, node.y]);
 
-        // Draw guideline connecting dispersed price pill back to original location pin if displaced
         if (node.hasConnector || Math.hypot(node.x - node.baseX, node.y - node.baseY) > 20) {
           const originLat = node.centerLat || node.baseLat;
           const originLon = node.centerLon || node.baseLon;
@@ -287,21 +291,18 @@ export function SearchInteractiveMap({
       });
     };
 
-    // Initial Layout update
     updateLayout();
 
-    // Recompute collision-free positions on map zoom & pan
     map.on('zoomend', updateLayout);
     map.on('moveend', updateLayout);
 
-    // Initial bounds fit once
     if (!hasFitBoundsRef.current && stayEntries.length > 0) {
       try {
         const rawBounds = stayEntries.map((e) => [e.baseLat, e.baseLon]);
         map.fitBounds(rawBounds, { padding: [40, 40], maxZoom: 14 });
         hasFitBoundsRef.current = true;
       } catch {
-        // ignore bounds fit error
+        // ignore
       }
     }
 
@@ -311,7 +312,6 @@ export function SearchInteractiveMap({
     };
   }, [stays, hoveredStayId, onStayClick, onStayHover]);
 
-  // Invalidate Map Size on container resize
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !mapContainerRef.current) return;

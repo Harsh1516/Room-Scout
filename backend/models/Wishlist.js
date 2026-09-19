@@ -2,25 +2,17 @@
 
 const wishlistSchema = new mongoose.Schema(
   {
-    userEmail: {
-      type: String,
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
       required: true,
-      lowercase: true,
-      trim: true,
       index: true,
     },
-    userId: {
-      type: String,
-      trim: true,
-    },
     stayId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Stay',
       required: true,
-      trim: true,
-    },
-    stay: {
-      type: Object,
-      required: true,
+      index: true,
     },
   },
   {
@@ -28,6 +20,7 @@ const wishlistSchema = new mongoose.Schema(
   }
 );
 
-wishlistSchema.index({ userEmail: 1, stayId: 1 }, { unique: true });
+// Prevent duplicate entries of the same stay per user
+wishlistSchema.index({ userId: 1, stayId: 1 }, { unique: true });
 
 export const Wishlist = mongoose.model('Wishlist', wishlistSchema);

@@ -1,19 +1,10 @@
 import React, { useMemo } from 'react';
 import { isMonthlyRateUnit } from '../../utils/dateUtils';
 
-/**
- * Display for Room Categories in Admin Host Records
- * Displays: List of room categories with three details:
- * - Left: Category Name
- * - Mid: Price Details with billing cycle
- * - Right: Room Count inside category
- */
 export const HostRoomsDropdown = React.memo(function HostRoomsDropdown({ host }) {
-
   const categories = useMemo(() => {
     if (!host) return [];
 
-    // If host has no room rates created or all deleted, do not fabricate any category record
     if (!Array.isArray(host.roomRates) || host.roomRates.length === 0) {
       return [];
     }
@@ -45,7 +36,11 @@ export const HostRoomsDropdown = React.memo(function HostRoomsDropdown({ host })
       }
 
       // Strictly normalize rate unit to '/month' or '/night'
-      const rateUnitStr = isMonthlyRateUnit(rate.rateUnit) ? '/month' : '/night';
+      const isMonthly = typeof isMonthlyRateUnit === 'function'
+        ? isMonthlyRateUnit(rate.rateUnit)
+        : String(rate.rateUnit || '').toLowerCase().includes('month');
+
+      const rateUnitStr = isMonthly ? '/month' : '/night';
 
       return {
         id: rate.id || `rate_${rIdx}`,
@@ -58,7 +53,6 @@ export const HostRoomsDropdown = React.memo(function HostRoomsDropdown({ host })
     });
   }, [host]);
 
-  // If no room categories are created or all deleted, do not show any room category record
   if (!categories || categories.length === 0) {
     return (
       <div className="flex items-center justify-center py-2">

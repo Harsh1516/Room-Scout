@@ -19,23 +19,47 @@ async function request(endpoint, options = {}) {
 
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-    const data = await response.json();
+
+    let data = {};
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
+    } else {
+      const text = await response.text();
+      data = { message: text };
+    }
 
     if (!response.ok) {
-      if (data.status === 'ACCOUNT_DELETED') {
-        localStorage.removeItem('roomscout_token');
-        localStorage.removeItem('stayhub_jwt_token');
-        localStorage.removeItem('mal_practice_user');
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(
-            new CustomEvent('auth:account_deleted', {
-              detail: {
-                message: data.message || 'Account not found in database. Please log in.',
-              },
-            })
-          );
+      if (response.status === 429) {
+        const rateLimitMessage = data.message || 'Too many requests from this IP. Please slow down.';
+        const error = new Error(rateLimitMessage);
+        error.status = 429;
+        error.data = data;
+        throw error;
+      }
+
+      if (data.status === 'ACCOUNT_DELETED' || response.status === 401) {
+        if (data.status === 'ACCOUNT_DELETED' || (data.message && data.message.includes('Account not found'))) {
+          localStorage.removeItem('roomscout_token');
+          localStorage.removeItem('stayhub_jwt_token');
+          localStorage.removeItem('mal_practice_user');
+          localStorage.removeItem('roomscout_user');
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+              new CustomEvent('auth:account_deleted', {
+                detail: {
+                  message: data.message || 'Account not found in database. Please log in.',
+                },
+              })
+            );
+          }
         }
       }
+
       const errorMessage = data.extraDetails || data.message || 'API request failed';
       const error = new Error(errorMessage);
       error.status = response.status;
@@ -97,6 +121,11 @@ export const staysAPI = {
 
   getStayById: (id) => request(`/stays/${id}`),
 
+  checkAvailability: (stayId, checkIn, checkOut) =>
+    request(
+      `/stays/${encodeURIComponent(stayId)}/availability?checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}`
+    ),
+
   createStay: (stayData) =>
     request('/stays', {
       method: 'POST',
@@ -131,6 +160,9 @@ export const staysAPI = {
       method: 'POST',
       body: JSON.stringify({ url }),
     }),
+
+  // Add this new method:
+  getHostProperties: () => request('/stays/host/my-properties'),
 };
 
 export const bookingsAPI = {
@@ -140,16 +172,38 @@ export const bookingsAPI = {
       body: JSON.stringify(bookingData),
     }),
 
+  createOfflineBooking: (bookingData) =>
+    request('/bookings/offline', {
+      method: 'POST',
+      body: JSON.stringify(bookingData),
+    }),
+
+  checkAvailability: (stayId, checkIn, checkOut) =>
+    request(
+      `/bookings/check-availability?stayId=${encodeURIComponent(stayId)}&checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}`
+    ),
+
+  getBookingsByStay: (stayId) =>
+    request(`/bookings/stay/${encodeURIComponent(stayId)}`),
+
   getMyBookings: () => request('/bookings/my-bookings'),
 
-  getHostBookings: () => request('/bookings/host-bookings'),
-
-  getBookingsByStay: (stayId) => request(`/bookings/stay/${encodeURIComponent(stayId)}`),
+  getHostBookings: (email) => {
+    if (email) {
+      return request(`/bookings/host/${encodeURIComponent(email)}`);
+    }
+    return request('/bookings/host-bookings');
+  },
 
   updateBookingStatus: (id, statusData) =>
     request(`/bookings/${id}/status`, {
       method: 'PATCH',
       body: JSON.stringify(statusData),
+    }),
+
+  deleteBooking: (id) =>
+    request(`/bookings/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
     }),
 
   removeOccupantBooking: (payload) =>
@@ -158,9 +212,16 @@ export const bookingsAPI = {
       body: JSON.stringify(payload),
     }),
 
-  deleteBooking: (id) =>
-    request(`/bookings/${encodeURIComponent(id)}`, {
-      method: 'DELETE',
+  checkoutOccupant: (payload) =>
+    request('/bookings/occupant/checkout', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  cascadeDeleteRoomBookings: (payload) =>
+    request('/bookings/room/cascade-delete', {
+      method: 'POST',
+      body: JSON.stringify(payload),
     }),
 
   createPaymentOrder: (orderData) =>
@@ -176,13 +237,39 @@ export const bookingsAPI = {
     }),
 };
 
+export const paymentsAPI = {
+  createOrder: (orderData) =>
+    request('/payments/create-order', {
+      method: 'POST',
+      body: JSON.stringify(orderData),
+    }),
+
+  verifyPayment: (paymentData) =>
+    request('/payments/verify', {
+      method: 'POST',
+      body: JSON.stringify(paymentData),
+    }),
+
+  getHostPayments: (hostId) =>
+    request(`/payments/host/${encodeURIComponent(hostId)}`),
+
+  getMyPayments: () => request('/payments/my-payments'),
+};
+
 export const wishlistAPI = {
   getWishlist: () => request('/wishlist'),
-  toggleWishlist: (stay) =>
-    request('/wishlist/toggle', {
+
+  toggleWishlist: (stayOrId) => {
+    const targetStayId = typeof stayOrId === 'string' ? stayOrId : stayOrId?._id || stayOrId?.id;
+    return request('/wishlist/toggle', {
       method: 'POST',
-      body: JSON.stringify({ stay }),
-    }),
+      body: JSON.stringify({
+        stay: typeof stayOrId === 'object' ? stayOrId : undefined,
+        stayId: targetStayId,
+      }),
+    });
+  },
+
   removeFromWishlist: (stayId) =>
     request(`/wishlist/${encodeURIComponent(stayId)}`, {
       method: 'DELETE',
@@ -191,42 +278,54 @@ export const wishlistAPI = {
 
 export const adminAPI = {
   getUsers: () => request('/admin/users'),
+
   deleteUser: (id) =>
-    request(`/admin/users/${id}`, {
+    request(`/admin/users/${encodeURIComponent(id)}`, {
       method: 'DELETE',
     }),
+
   getHosts: () => request('/admin/hosts'),
+
   getHostByEmail: (email) => request(`/admin/hosts/by-email/${encodeURIComponent(email)}`),
+
   createHost: (hostData) =>
     request('/admin/hosts', {
       method: 'POST',
       body: JSON.stringify(hostData),
     }),
+
   approveHost: (id) =>
     request(`/admin/hosts/${id}/approve`, {
       method: 'PUT',
     }),
+
   rejectHost: (id) =>
     request(`/admin/hosts/${id}/reject`, {
       method: 'PUT',
     }),
+
   getHostGuests: (email) =>
     request(`/admin/hosts/my-guests/${encodeURIComponent(email)}`),
+
   deleteHost: (id) =>
     request(`/admin/hosts/${id}`, {
       method: 'DELETE',
     }),
+
   getStats: () => request('/admin/stats'),
+
   impersonate: ({ email, role, id }) =>
     request('/admin/impersonate', {
       method: 'POST',
       body: JSON.stringify({ email, role, id }),
     }),
+
   setAdminKey: (key) => {
     if (typeof sessionStorage !== 'undefined') {
       if (key) sessionStorage.setItem('roomscout_admin_key', key.trim());
       else sessionStorage.removeItem('roomscout_admin_key');
     }
   },
+
   getAdminKey: () => (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('roomscout_admin_key') : null),
 };

@@ -15,7 +15,7 @@ function getJwtSecret() {
   return secret;
 }
 
-// Standalone JWT Token Generator (7 days expiration for improved security)
+// Standalone JWT Token Generator (7 days expiration)
 export function generateToken(userOrId) {
   const secret = getJwtSecret();
 
@@ -26,9 +26,9 @@ export function generateToken(userOrId) {
         userId: id,
         id,
         name: userOrId.name,
-        email: userOrId.email ? userOrId.email.toLowerCase() : '',
+        email: userOrId.email ? userOrId.email.toLowerCase().trim() : '',
         role: userOrId.role || 'user',
-        isAdmin: userOrId.role === 'admin' || userOrId.isAdmin,
+        isAdmin: userOrId.role === 'admin' || Boolean(userOrId.isAdmin),
       },
       secret,
       { expiresIn: '7d' }
@@ -46,14 +46,11 @@ export function generateToken(userOrId) {
   );
 }
 
-// Route Protection Middleware (Checks Bearer Authorization header or httpOnly cookie)
+// Route Protection Middleware
 export async function protect(req, res, next) {
   let token;
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
   } else if (req.headers.cookie) {
     const match = req.headers.cookie.match(/(?:^|;\s*)roomscout_token=([^;]+)/);
@@ -62,73 +59,178 @@ export async function protect(req, res, next) {
     }
   }
 
-  if (token) {
-    try {
-      const secret = getJwtSecret();
-      const decoded = jwt.verify(token, secret);
-      const userId = decoded.userId || decoded.id;
-      const userEmail = (decoded.email || '').toLowerCase().trim();
-
-      req.user = null;
-
-      if (decoded.role === 'host') {
-        const query = {
-          $or: [
-            ...(mongoose.Types.ObjectId.isValid(userId) ? [{ _id: userId }] : []),
-            ...(userEmail ? [{ email: userEmail }] : []),
-          ],
-        };
-        req.user = await Host.findOne(query).select('-password');
-      } else {
-        const query = {
-          $or: [
-            ...(mongoose.Types.ObjectId.isValid(userId) ? [{ _id: userId }] : []),
-            ...(userEmail ? [{ email: userEmail }] : []),
-          ],
-        };
-        req.user = await User.findOne(query).select('-password');
-      }
-
-      // If account does not exist anywhere in database -> REJECT with 401
-      if (!req.user) {
-        return res.status(401).json({
-          status: 'ACCOUNT_DELETED',
-          message: 'Account not found or has been deleted from the database. Please sign in again.',
-        });
-      }
-
-      next();
-      return;
-    } catch (error) {
-      console.warn('JWT Token Verification Error:', error.message);
-      return res.status(401).json({
-        status: 'ACCOUNT_DELETED',
-        message: 'Session expired or account no longer valid. Please sign in again.',
-      });
-    }
+  if (!token) {
+    return res.status(401).json({ message: 'Not authorized: Missing authentication token' });
   }
 
-  return res.status(401).json({ message: 'Not authorized, missing Bearer token header or cookie' });
+  try {
+    const secret = getJwtSecret();
+    const decoded = jwt.verify(token, secret);
+    const rawId = decoded.userId || decoded.id;
+    const cleanEmail = (decoded.email || '').toLowerCase().trim();
+
+    req.user = null;
+
+    if (decoded.role === 'host') {
+      if (rawId && mongoose.Types.ObjectId.isValid(rawId)) {
+        req.user = await Host.findById(rawId).select('-password');
+      }
+      if (!req.user && cleanEmail) {
+        req.user = await Host.findOne({ email: cleanEmail }).select('-password');
+      }
+    } else {
+      if (rawId && mongoose.Types.ObjectId.isValid(rawId)) {
+        req.user = await User.findById(rawId).select('-password');
+      }
+      if (!req.user && cleanEmail) {
+        req.user = await User.findOne({ email: cleanEmail }).select('-password');
+      }
+    }
+
+    // Secondary fallback if token role was unspecified or mismatched
+    if (!req.user && rawId && mongoose.Types.ObjectId.isValid(rawId)) {
+      req.user =
+        (await Host.findById(rawId).select('-password')) ||
+        (await User.findById(rawId).select('-password'));
+    }
+
+    if (!req.user) {
+      return res.status(401).json({
+        status: 'ACCOUNT_DELETED',
+        message: 'Account not found or has been removed. Please sign in again.',
+      });
+    }
+
+    return next();
+  } catch (error) {
+    console.warn('JWT Token Verification Error:', error.message);
+    return res.status(401).json({
+      status: 'SESSION_EXPIRED',
+      message: 'Session expired or token invalid. Please sign in again.',
+    });
+  }
 }
 
-// Require Admin Privileges (Accepts admin role OR master x-admin-key header)
-export function requireAdmin(req, res, next) {
-  const adminKeyHeader = req.headers['x-admin-key'];
-  const validAdminKey = process.env.ADMIN_KEY;
+export function idsMatch(a, b) {
+  if (a == null || b == null) return false;
+  return String(a) === String(b);
+}
 
-  // 1. Direct pass via configured x-admin-key header
-  if (validAdminKey && adminKeyHeader && adminKeyHeader.trim() === validAdminKey.trim()) {
+export function isAdminUser(req) {
+  return Boolean(req.user && (req.user.role === 'admin' || req.user.isAdmin));
+}
+
+export function isHostUser(req) {
+  return Boolean(req.user && (req.user.role === 'host' || isAdminUser(req)));
+}
+
+export function actorId(req) {
+  return req.user?._id || req.user?.id;
+}
+
+// Require Host Privileges (admins allowed)
+export async function requireHost(req, res, next) {
+  if (isHostUser(req)) {
     return next();
   }
 
-  // 2. Authenticated user with admin role
-  if (req.user && (req.user.role === 'admin' || req.user.isAdmin)) {
+  if (req.user?.email) {
+    try {
+      const host = await Host.findOne({ email: req.user.email.toLowerCase().trim() }).lean();
+      if (host) {
+        req.hostAccount = host;
+        return next();
+      }
+    } catch (err) {
+      console.warn('requireHost lookup error:', err);
+    }
+  }
+
+  return res.status(403).json({
+    success: false,
+    message: 'Access denied: Property Host account required',
+  });
+}
+
+function adminKeyIsValid(req) {
+  const adminKeyHeader = req.headers['x-admin-key'];
+  const validAdminKey = process.env.ADMIN_KEY;
+  return Boolean(validAdminKey && adminKeyHeader && adminKeyHeader.trim() === validAdminKey.trim());
+}
+
+// Require Admin Privileges (JWT admin role or master key header)
+export function requireAdmin(req, res, next) {
+  if (adminKeyIsValid(req)) {
+    req.isAdminKey = true;
+    return next();
+  }
+
+  if (isAdminUser(req)) {
     return next();
   }
 
   return res.status(403).json({
     success: false,
-    message: 'Access denied: Master admin key or admin account required',
+    message: 'Access denied: Master admin privileges required',
   });
 }
 
+/** Host may only act on their own email/id unless admin. */
+export function assertSelfHostOrAdmin(req, { hostId, hostEmail } = {}) {
+  if (isAdminUser(req) || req.isAdminKey) return true;
+  if (hostId && idsMatch(actorId(req), hostId)) return true;
+  if (hostEmail && req.user?.email && hostEmail.toLowerCase().trim() === String(req.user.email).toLowerCase().trim()) {
+    return true;
+  }
+  if (req.user && (req.user.role === 'host' || req.user.role === 'admin')) {
+    return true;
+  }
+  if (req.hostAccount) {
+    return true;
+  }
+  return false;
+}
+
+// Optional Protection Middleware: Populates req.user if token present, but does not block guests
+export async function optionalProtect(req, res, next) {
+  let token;
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  } else if (req.headers.cookie) {
+    const match = req.headers.cookie.match(/(?:^|;\s*)roomscout_token=([^;]+)/);
+    if (match) {
+      token = decodeURIComponent(match[1]);
+    }
+  }
+
+  if (!token) {
+    req.user = null;
+    return next();
+  }
+
+  try {
+    const secret = getJwtSecret();
+    const decoded = jwt.verify(token, secret);
+    const rawId = decoded.userId || decoded.id;
+    const cleanEmail = (decoded.email || '').toLowerCase().trim();
+
+    if (decoded.role === 'host') {
+      if (rawId && mongoose.Types.ObjectId.isValid(rawId)) {
+        req.user = await Host.findById(rawId).select('-password');
+      }
+      if (!req.user && cleanEmail) {
+        req.user = await Host.findOne({ email: cleanEmail }).select('-password');
+      }
+    } else {
+      if (rawId && mongoose.Types.ObjectId.isValid(rawId)) {
+        req.user = await User.findById(rawId).select('-password');
+      }
+      if (!req.user && cleanEmail) {
+        req.user = await User.findOne({ email: cleanEmail }).select('-password');
+      }
+    }
+  } catch {
+    req.user = null;
+  }
+  return next();
+}

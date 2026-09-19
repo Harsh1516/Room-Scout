@@ -1,33 +1,42 @@
 import express from 'express';
 import {
   createBooking,
-  getMyBookings,
+  createOfflineBooking,
   getHostBookings,
+  getMyBookings,
+  checkStayAvailability,
+  getBookingsByStayId,
   updateBookingStatus,
-  getBookingsByStay,
   removeOccupantBooking,
+  checkoutOccupant,
+  cascadeDeleteRoomBookings,
   deleteBooking,
 } from '../controllers/bookingController.js';
-import { createPaymentOrder, verifyPayment } from '../controllers/paymentController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import {
+  createPaymentOrder,
+  verifyPayment,
+} from '../controllers/paymentController.js';
+import { protect, optionalProtect, requireHost } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Payment integration routes (Razorpay / UPI / Cards)
-router.route('/payment/create-order').post(protect, createPaymentOrder);
-router.route('/payment/verify').post(protect, verifyPayment);
+router.post('/', optionalProtect, createBooking);
+router.post('/offline', protect, requireHost, createOfflineBooking);
 
-// Occupant removal route
-router.route('/occupant/remove').post(removeOccupantBooking);
+router.get('/check-availability', checkStayAvailability);
+router.get('/stay/:stayId', getBookingsByStayId);
 
-// User & Host booking routes
-router.route('/').post(protect, createBooking);
-router.route('/my-bookings').get(protect, getMyBookings);
-router.route('/host-bookings').get(protect, getHostBookings);
-router.route('/stay/:stayId').get(getBookingsByStay);
+router.post('/payment/create-order', protect, createPaymentOrder);
+router.post('/payment/verify', protect, verifyPayment);
 
-// Dynamic ID routes (placed after specific paths to prevent route collisions)
-router.route('/:id/status').patch(protect, updateBookingStatus);
-router.route('/:id').delete(protect, deleteBooking);
+router.get('/host-bookings', protect, requireHost, getHostBookings);
+router.get('/host/:email', protect, requireHost, getHostBookings);
+router.get('/my-bookings', protect, getMyBookings);
+
+router.patch('/:id/status', protect, updateBookingStatus);
+router.delete('/:id', protect, deleteBooking);
+router.post('/occupant/remove', protect, requireHost, removeOccupantBooking);
+router.post('/occupant/checkout', protect, requireHost, checkoutOccupant);
+router.post('/room/cascade-delete', protect, requireHost, cascadeDeleteRoomBookings);
 
 export default router;

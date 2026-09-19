@@ -1,131 +1,118 @@
 import mongoose from 'mongoose';
 import { Wishlist } from '../models/Wishlist.js';
-import { User } from '../models/User.js';
+import { Stay } from '../models/Stay.js';
+import { Host } from '../models/Host.js';
 
-// @desc    Get current user wishlist
+// @desc    Get authenticated user's wishlist
 // @route   GET /api/wishlist
 // @access  Private
 export const getWishlist = async (req, res, next) => {
   try {
-    const currentUserId = (req.user?._id || req.user?.id || '')?.toString();
-    const currentUserEmail = (req.user?.email || '').toLowerCase().trim();
-
-    if (!currentUserId && !currentUserEmail) {
+    const userId = req.user?._id || req.user?.id;
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
       return res.json([]);
     }
 
-    const conditions = [];
-    if (currentUserEmail) conditions.push({ email: currentUserEmail });
-    if (currentUserId && mongoose.Types.ObjectId.isValid(currentUserId)) {
-      conditions.push({ _id: new mongoose.Types.ObjectId(currentUserId) });
+    const items = await Wishlist.find({ userId })
+      .populate({
+        path: 'stayId',
+        populate: { path: 'hostId', select: 'name email phone avatar status' },
+      })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Clean up orphaned wishlist documents (where stay was deleted)
+    const orphanedIds = items
+      .filter((item) => !item.stayId)
+      .map((item) => item._id);
+    if (orphanedIds.length > 0) {
+      Wishlist.deleteMany({ _id: { $in: orphanedIds } }).catch((err) =>
+        console.warn('Clean up orphaned wishlist error:', err)
+      );
     }
 
-    // 1. Try fetching directly from native embedded user.wishlist
-    if (conditions.length > 0) {
-      const user = await User.findOne({ $or: conditions }).lean();
-      if (user && Array.isArray(user.wishlist) && user.wishlist.length > 0) {
-        const items = user.wishlist.map((w) => ({
-          ...(w.stay || {}),
-          _id: w.stayId || w.stay?._id || w.stay?.id,
-          id: w.stayId || w.stay?.id || w.stay?._id,
-          wishlistId: w._id?.toString() || w.stayId,
-        }));
-        return res.json(items);
+    // Only return stays that exist, are published/live, and have an approved host
+    const liveItems = items.filter((item) => {
+      if (!item.stayId) return false;
+      const stay = item.stayId;
+      if (stay.isPublished !== true) return false;
+      if (
+        stay.hostId &&
+        typeof stay.hostId === 'object' &&
+        stay.hostId.status &&
+        stay.hostId.status !== 'Approved'
+      ) {
+        return false;
       }
-    }
+      return true;
+    });
 
-    // 2. Fallback to Wishlist collection
-    const wishlistConditions = [];
-    if (currentUserEmail) wishlistConditions.push({ userEmail: currentUserEmail });
-    if (currentUserId) wishlistConditions.push({ userId: currentUserId });
-
-    const mongoWishlists = await Wishlist.find({ $or: wishlistConditions }).sort({ createdAt: -1 }).lean();
-    const items = (mongoWishlists || []).map((w) => ({
-      ...w.stay,
-      _id: w.stayId || w.stay?._id || w.stay?.id,
-      id: w.stayId || w.stay?.id || w.stay?._id,
-      wishlistId: w._id?.toString(),
+    const formatted = liveItems.map((item) => ({
+      ...item.stayId,
+      _id: item.stayId._id.toString(),
+      id: item.stayId._id.toString(),
+      wishlistId: item._id.toString(),
     }));
 
-    return res.json(items);
+    return res.json(formatted);
   } catch (error) {
     console.error('getWishlist Error:', error);
     return next(error);
   }
 };
 
-// @desc    Toggle item in user wishlist (add if missing, remove if present)
+// @desc    Toggle stay in user wishlist
 // @route   POST /api/wishlist/toggle
 // @access  Private
 export const toggleWishlist = async (req, res, next) => {
   try {
-    const { stay } = req.body;
-    if (!stay) {
-      return res.status(400).json({ message: 'Stay data is required' });
+    const { stay, stayId: rawStayId } = req.body;
+    const targetStayId = rawStayId || stay?._id || stay?.id;
+
+    if (!targetStayId || !mongoose.Types.ObjectId.isValid(targetStayId)) {
+      return res.status(400).json({ message: 'Valid stayId is required.' });
     }
 
-    const stayId = String(stay._id || stay.id || '').trim();
-    if (!stayId) {
-      return res.status(400).json({ message: 'Valid stayId is required' });
+    const userId = req.user?._id || req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: 'Authentication required.' });
     }
 
-    const currentUserId = (req.user?._id || req.user?.id || '')?.toString();
-    const currentUserEmail = (req.user?.email || '').toLowerCase().trim();
+    const existing = await Wishlist.findOne({ userId, stayId: targetStayId });
 
-    if (!currentUserEmail && !currentUserId) {
-      return res.status(401).json({ message: 'Authentication required' });
-    }
-
-    let isWishlisted = false;
-
-    const query = {
-      stayId,
-      $or: [
-        ...(currentUserEmail ? [{ userEmail: currentUserEmail }] : []),
-        ...(currentUserId ? [{ userId: currentUserId }] : []),
-      ],
-    };
-
-    const existing = await Wishlist.findOne(query);
     if (existing) {
       await Wishlist.deleteOne({ _id: existing._id });
-      isWishlisted = false;
-    } else {
-      await Wishlist.create({
-        userEmail: currentUserEmail || '',
-        userId: currentUserId || '',
-        stayId,
-        stay,
+      return res.json({
+        success: true,
+        inWishlist: false,
+        stayId: targetStayId,
+        message: 'Removed from wishlist',
       });
-      isWishlisted = true;
     }
 
-    // 🏛️ Also update native default user.wishlist subdocument
-    const userQuery = [];
-    if (currentUserEmail) userQuery.push({ email: currentUserEmail });
-    if (currentUserId && mongoose.Types.ObjectId.isValid(currentUserId)) {
-      userQuery.push({ _id: new mongoose.Types.ObjectId(currentUserId) });
+    // Validate stay is live and approved before adding
+    const targetStay = await Stay.findById(targetStayId).populate('hostId', 'status').lean();
+    if (
+      !targetStay ||
+      targetStay.isPublished !== true ||
+      (targetStay.hostId && targetStay.hostId.status && targetStay.hostId.status !== 'Approved')
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'This property is not currently live or approved by admin.',
+      });
     }
 
-    if (userQuery.length > 0) {
-      if (isWishlisted) {
-        await User.updateOne(
-          { $or: userQuery },
-          { $push: { wishlist: { stayId, stay, addedAt: new Date() } } }
-        ).catch(() => {});
-      } else {
-        await User.updateOne(
-          { $or: userQuery },
-          { $pull: { wishlist: { stayId } } }
-        ).catch(() => {});
-      }
-    }
+    await Wishlist.create({
+      userId,
+      stayId: targetStayId,
+    });
 
     return res.json({
       success: true,
-      inWishlist: isWishlisted,
-      stayId,
-      message: isWishlisted ? 'Added to wishlist' : 'Removed from wishlist',
+      inWishlist: true,
+      stayId: targetStayId,
+      message: 'Added to wishlist',
     });
   } catch (error) {
     console.error('toggleWishlist Error:', error);
@@ -133,40 +120,19 @@ export const toggleWishlist = async (req, res, next) => {
   }
 };
 
-// @desc    Remove item from user wishlist
+// @desc    Remove stay from wishlist
 // @route   DELETE /api/wishlist/:stayId
 // @access  Private
 export const removeFromWishlist = async (req, res, next) => {
   try {
     const { stayId } = req.params;
-    const currentUserId = (req.user?._id || req.user?.id || '')?.toString();
-    const currentUserEmail = (req.user?.email || '').toLowerCase().trim();
+    const userId = req.user?._id || req.user?.id;
 
-    if (!stayId) {
-      return res.status(400).json({ message: 'Stay ID is required' });
+    if (!stayId || !mongoose.Types.ObjectId.isValid(stayId)) {
+      return res.status(400).json({ message: 'Valid stayId is required.' });
     }
 
-    const query = {
-      stayId: String(stayId),
-      $or: [
-        ...(currentUserEmail ? [{ userEmail: currentUserEmail }] : []),
-        ...(currentUserId ? [{ userId: currentUserId }] : []),
-      ],
-    };
-    await Wishlist.deleteMany(query);
-
-    // 🏛️ Also remove from native default user.wishlist
-    const userQuery = [];
-    if (currentUserEmail) userQuery.push({ email: currentUserEmail });
-    if (currentUserId && mongoose.Types.ObjectId.isValid(currentUserId)) {
-      userQuery.push({ _id: new mongoose.Types.ObjectId(currentUserId) });
-    }
-    if (userQuery.length > 0) {
-      await User.updateOne(
-        { $or: userQuery },
-        { $pull: { wishlist: { stayId: String(stayId) } } }
-      ).catch(() => {});
-    }
+    await Wishlist.deleteMany({ userId, stayId });
 
     return res.json({ success: true, message: 'Removed from wishlist' });
   } catch (error) {

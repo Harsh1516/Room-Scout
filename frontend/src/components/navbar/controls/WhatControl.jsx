@@ -17,33 +17,45 @@ export function WhatControl({
     { id: 'Resort', label: 'Nature Resort', matchTypes: ['resort'] },
   ];
 
-  const [activeTypes, setActiveTypes] = useState([]);
+  // Initialize with ALL_TYPES to prevent empty flash during initial API load
+  const [activeTypes, setActiveTypes] = useState(ALL_TYPES);
 
   useEffect(() => {
     let mounted = true;
     const fetchTypes = async () => {
       try {
         const stays = await staysAPI.getStays();
+        const staysList = Array.isArray(stays)
+          ? stays
+          : (Array.isArray(stays?.stays) ? stays.stays : (Array.isArray(stays?.data) ? stays.data : []));
+
         const availableTypes = new Set(
-          (Array.isArray(stays) ? stays : (stays.stays || [])).map(s => (s.type || '').toLowerCase())
+          staysList.map((s) => (s.type || s.propertyType || '').toLowerCase().trim())
         );
-        
+
         if (mounted) {
-          const filtered = ALL_TYPES.filter(t => 
-            t.matchTypes.some(m => availableTypes.has(m))
+          const filtered = ALL_TYPES.filter((t) =>
+            t.matchTypes.some((m) => availableTypes.has(m))
           );
-          setActiveTypes(filtered);
+          setActiveTypes(filtered.length > 0 ? filtered : ALL_TYPES);
         }
       } catch (err) {
         console.error('Error fetching what control types:', err);
-        if (mounted) setActiveTypes(ALL_TYPES); // Fallback
+        if (mounted) setActiveTypes(ALL_TYPES);
       }
     };
     fetchTypes();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  const isTypeActive = selectedType && selectedType.trim() !== '' && selectedType !== 'All' && selectedType !== 'All Types';
+  const isTypeActive =
+    selectedType &&
+    selectedType.trim() !== '' &&
+    selectedType !== 'All' &&
+    selectedType !== 'All Types';
+
   const displayLabel = isTypeActive ? selectedType : 'What';
 
   const handleSelect = (typeId) => {
@@ -78,7 +90,7 @@ export function WhatControl({
         <span className="max-w-16 sm:max-w-20 truncate">{displayLabel}</span>
       </button>
 
-      {/* Pop-up Tab (Deep Optical Diffusion & Glossy Luster) */}
+      {/* Pop-up Tab */}
       {isOpen && (
         <div
           onClick={(e) => e.stopPropagation()}
@@ -101,7 +113,7 @@ export function WhatControl({
 
           <div className="space-y-1.5">
             {activeTypes.length === 0 ? (
-               <div className="px-3 py-2 text-xs text-slate-500">No types available</div>
+              <div className="px-3 py-2 text-xs text-slate-500">No types available</div>
             ) : (
               activeTypes.map((t) => {
                 const isSelected = selectedType?.toLowerCase() === t.id.toLowerCase();
@@ -130,4 +142,3 @@ export function WhatControl({
 }
 
 export default WhatControl;
-

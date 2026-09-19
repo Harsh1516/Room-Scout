@@ -24,6 +24,10 @@ html, body {
   scrollbar-width: none;  /* Firefox */
 }
 
+.font-serif-luxury {
+  font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif;
+}
+
 /* Utility to completely hide scrollbars while preserving scrolling */
 .no-scrollbar::-webkit-scrollbar {
   display: none !important;
@@ -275,3 +279,140 @@ button:focus, button:focus-visible {
   pointer-events: none;
   border-radius: 50%;
 }
+
+/* ── Ultra-Slow Living Ambient Canvas Animations (Sweet Colors Transition) ── */
+@keyframes ambientFadeA {
+  0%, 100% { opacity: 1; }
+  33% { opacity: 0; }
+  66% { opacity: 0; }
+}
+
+@keyframes ambientFadeB {
+  0%, 100% { opacity: 0; }
+  33% { opacity: 1; }
+  66% { opacity: 0; }
+}
+
+@keyframes ambientFadeC {
+  0%, 100% { opacity: 0; }
+  33% { opacity: 0; }
+  66% { opacity: 1; }
+}
+
+@keyframes orbDrift1 {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(40px, 25px, 0) scale(1.06);
+  }
+  100% {
+    transform: translate3d(-30px, -18px, 0) scale(0.96);
+  }
+}
+
+@keyframes orbDrift2 {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-45px, 35px, 0) scale(1.08);
+  }
+  100% {
+    transform: translate3d(25px, -20px, 0) scale(0.94);
+  }
+}
+
+@keyframes darkNebulaShift {
+  0%, 100% {
+    opacity: 1;
+    filter: hue-rotate(0deg);
+  }
+  33% {
+    opacity: 0.9;
+    filter: hue-rotate(25deg);
+  }
+  66% {
+    opacity: 0.95;
+    filter: hue-rotate(-20deg);
+  }
+}
+
+.animate-ambient-a {
+  animation: ambientFadeA 24s ease-in-out infinite;
+  will-change: opacity;
+}
+
+.animate-ambient-b {
+  animation: ambientFadeB 24s ease-in-out infinite;
+  will-change: opacity;
+}
+
+.animate-ambient-c {
+  animation: ambientFadeC 24s ease-in-out infinite;
+  will-change: opacity;
+}
+
+.animate-orb-drift-1 {
+  animation: orbDrift1 22s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.animate-orb-drift-2 {
+  animation: orbDrift2 26s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.animate-dark-nebula {
+  animation: darkNebulaShift 24s ease-in-out infinite;
+}
+
+@keyframes slowPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.animate-pulse-slow {
+  animation: slowPulse 2.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* User Requested Slot Flashing Animation: Smoothly flashes between soft lavender and vibrant purple */
+@keyframes requestedSlotFlash {
+  0%, 100% {
+    background-color: #f3e8ff;
+    color: #6b21a8;
+    border-color: #d8b4fe;
+  }
+  42%, 58% {
+    background-color: #9333ea;
+    color: #ffffff;
+    border-color: #a855f7;
+    box-shadow: 0 4px 14px rgba(147, 51, 234, 0.35);
+  }
+}
+
+.animate-slot-flash {
+  animation: requestedSlotFlash 2.8s ease-in-out infinite;
+}
+
+@keyframes requestedBadgeFlash {
+  0%, 100% {
+    background-color: #9333ea;
+    color: #ffffff;
+    border-color: #c084fc;
+  }
+  42%, 58% {
+    background-color: #7e22ce;
+    color: #ffffff;
+    border-color: #a855f7;
+  }
+}
+
+.animate-badge-flash {
+  animation: requestedBadgeFlash 2.8s ease-in-out infinite;
+}
+

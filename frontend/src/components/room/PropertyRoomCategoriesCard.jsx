@@ -35,15 +35,14 @@ export function PropertyRoomCategoriesCard({
     ? (activeRateObj.rateUnit || '/month')
     : (stay?.rateUnit || '/month');
 
-  // Calculate live available room counts per category (grounded in stay.rooms and database bookings)
+  // Calculate live available room counts per category
   const categoryAvailableCounts = useMemo(() => {
     if (!stay) return {};
 
-    // 1. Build rooms list (consistent with RoomAvailabilityPage)
     let allRooms = [];
     if (Array.isArray(stay.rooms) && stay.rooms.length > 0) {
       allRooms = stay.rooms.map((rm, idx) => ({
-        id: rm.id || `room_${idx + 1}`,
+        id: rm.id || rm._id || `room_${idx + 1}`,
         roomNumber: rm.roomNumber || `Room ${101 + idx}`,
         type: rm.type || 'Standard Room',
         status: rm.status || 'Available',
@@ -68,23 +67,28 @@ export function PropertyRoomCategoriesCard({
       }
     }
 
-    // 2. Identify rooms booked for today from database
-    const todayISO = new Date().toISOString().split('T')[0];
-    const stayId = stay?._id || stay?.id;
+    const today = new Date();
+    const todayISO = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const todayTime = today.getTime();
+    const stayId = String(stay?._id || stay?.id || '');
     const stayTitle = stay?.propertyName || stay?.title;
     const bookedRoomIds = new Set();
 
     allRooms.forEach((rm) => {
-      if (rm.status === 'Booked' || rm.status === 'Occupied') {
+      const st = String(rm.status || '').toUpperCase();
+      if (st === 'BOOKED' || st === 'OCCUPIED') {
         bookedRoomIds.add(rm.id);
         return;
       }
 
       if (Array.isArray(bookings)) {
         const isBookedToday = bookings.some((b) => {
-          if (b.status === 'Rejected' || b.status === 'Cancelled') return false;
+          const bStatus = String(b.status || '').toUpperCase();
+          if (bStatus === 'REJECTED' || bStatus === 'CANCELLED' || bStatus === 'CHECKED_OUT') return false;
+
+          const bStayId = String(b.stayId?._id || b.stayId || '');
           const isSameStay =
-            String(b.stayId) === String(stayId) ||
+            (stayId && bStayId && bStayId === stayId) ||
             (stayTitle && b.stayTitle && String(b.stayTitle).toLowerCase() === String(stayTitle).toLowerCase());
           if (!isSameStay) return false;
 
@@ -95,11 +99,12 @@ export function PropertyRoomCategoriesCard({
             (numB && numRm && numB === numRm);
           if (!isSameRoom) return false;
 
-          if (Array.isArray(b.bookedDates) && b.bookedDates.length > 0) {
-            return b.bookedDates.includes(todayISO);
-          }
-          if (b.checkInISO && b.checkOutISO) {
-            return todayISO >= b.checkInISO && todayISO <= b.checkOutISO;
+          if (b.checkIn && b.checkOut) {
+            const inTime = new Date(b.checkIn).getTime();
+            const outTime = new Date(b.checkOut).getTime();
+            if (!isNaN(inTime) && !isNaN(outTime)) {
+              return inTime <= todayTime && outTime >= todayTime;
+            }
           }
           return false;
         });
@@ -110,7 +115,6 @@ export function PropertyRoomCategoriesCard({
       }
     });
 
-    // 3. Count total and available per category
     const counts = {};
     roomRates.forEach((rate) => {
       const normRateType = (rate.type || '').toLowerCase().trim();
@@ -200,13 +204,11 @@ export function PropertyRoomCategoriesCard({
 
                   {/* Card Bottom Row: Available Rooms Count Badge + Open Button */}
                   <div className="flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-slate-800/80">
-                    {/* Available room count badge */}
                     <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200/80 dark:border-emerald-800/60">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                       <span>{availableCount} {availableCount === 1 ? 'Room' : 'Rooms'} Available</span>
                     </span>
 
-                    {/* Open button */}
                     <button
                       type="button"
                       onClick={(e) => {

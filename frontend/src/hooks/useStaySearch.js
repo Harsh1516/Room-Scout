@@ -1,10 +1,16 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { staysAPI } from '../services/api';
 
-// In-memory module cache for instantaneous 0ms transitions (Stale-While-Revalidate)
+// In-memory module cache for instant transitions (Stale-While-Revalidate)
 let memoryCacheStays = null;
 let lastFetchTimestamp = 0;
-const CACHE_TTL_MS = 60 * 1000; // 1 minute fresh TTL, background revalidates thereafter
+const CACHE_TTL_MS = 60 * 1000; // 1 minute TTL
+
+// Helper: Safely convert mixed prices (e.g. 4000, "4000", "₹4,000") to numeric values
+const parseNumericPrice = (priceVal) => {
+  if (typeof priceVal === 'number' && !isNaN(priceVal)) return priceVal;
+  return parseInt(String(priceVal || 0).replace(/[^0-9]/g, ''), 10) || 0;
+};
 
 export function useStaySearch() {
   const [allStays, setAllStays] = useState(() => {
@@ -12,7 +18,9 @@ export function useStaySearch() {
       return memoryCacheStays;
     }
     try {
-      const cached = sessionStorage.getItem('stayhub_stays_cache');
+      const cached =
+        sessionStorage.getItem('roomscout_stays_cache') ||
+        sessionStorage.getItem('stayhub_stays_cache');
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -26,7 +34,9 @@ export function useStaySearch() {
     return [];
   });
 
-  const [isLoadingStays, setIsLoadingStays] = useState(() => !memoryCacheStays || memoryCacheStays.length === 0);
+  const [isLoadingStays, setIsLoadingStays] = useState(
+    () => !memoryCacheStays || memoryCacheStays.length === 0
+  );
   const [isBackgroundRefreshing, setIsBackgroundRefreshing] = useState(false);
 
   // Pagination state
@@ -36,23 +46,22 @@ export function useStaySearch() {
   const [filters, setFilters] = useState({
     query: '',
     location: '',
-    type: 'All', // All, PG, Hostel, Hotel, Villa, Resort, Flat
-    gender: 'All', // All, Boys, Girls, Unisex
+    type: 'All',
+    gender: 'All',
     when: '',
     who: '',
     minPrice: null,
     maxPrice: null,
     minRating: 0,
-    selectedAmenities: [], // e.g. ['Wifi', 'Food Included', 'AC', 'Power Backup']
-    sortOrder: 'price-desc', // price-desc, price-asc, rating-desc, title-asc, recent
+    selectedAmenities: [],
+    sortOrder: 'price-desc',
   });
 
-  // Fetch verified host stays from backend database API with SWR (Stale-While-Revalidate)
+  // Fetch verified host stays from backend database API with SWR
   const fetchStaysFromAPI = useCallback(async (isForced = false) => {
     const now = Date.now();
-    const isCacheFresh = memoryCacheStays && (now - lastFetchTimestamp < CACHE_TTL_MS);
+    const isCacheFresh = memoryCacheStays && now - lastFetchTimestamp < CACHE_TTL_MS;
 
-    // If cache is fresh and not forced, keep instant data
     if (isCacheFresh && !isForced) {
       setIsLoadingStays(false);
       return;
@@ -79,9 +88,10 @@ export function useStaySearch() {
       setAllStays(staysList);
 
       try {
-        sessionStorage.setItem('stayhub_stays_cache', JSON.stringify(staysList));
+        sessionStorage.setItem('roomscout_stays_cache', JSON.stringify(staysList));
+        sessionStorage.removeItem('stayhub_stays_cache');
       } catch {
-        // quota exceeded or private mode
+        // quota exceeded or private browsing
       }
     } catch (e) {
       console.warn('API stay fetch warning:', e.message);
@@ -96,13 +106,60 @@ export function useStaySearch() {
 
   useEffect(() => {
     fetchStaysFromAPI();
+
+    const handleSync = () => {
+      memoryCacheStays = null;
+      lastFetchTimestamp = 0;
+      fetchStaysFromAPI(true);
+    };
+
+    window.addEventListener('stayhub_rooms_updated', handleSync);
+    window.addEventListener('stayhub_admin_sync', handleSync);
+    window.addEventListener('focus', handleSync);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') handleSync();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    let bc = null;
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        bc = new BroadcastChannel('stayhub_live_channel');
+        bc.onmessage = (event) => {
+          if (
+            event.data?.type === 'HOST_APPROVED' ||
+            event.data?.type === 'STAY_UPDATED' ||
+            event.data?.type === 'ROOMS_UPDATED'
+          ) {
+            handleSync();
+          }
+        };
+      }
+    } catch {}
+
+    return () => {
+      window.removeEventListener('stayhub_rooms_updated', handleSync);
+      window.removeEventListener('stayhub_admin_sync', handleSync);
+      window.removeEventListener('focus', handleSync);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      if (bc) bc.close();
+    };
   }, [fetchStaysFromAPI]);
 
-  // Prepend newly uploaded stay directly to memory & state
+  // Insert or update newly published stay directly in state & memory cache
   const addNewStay = (newStay) => {
     if (!newStay) return;
+    const newId = String(newStay._id || newStay.id);
+
     setAllStays((prev) => {
-      const updated = [newStay, ...prev];
+      const exists = prev.some((s) => String(s._id || s.id) === newId);
+      let updated;
+      if (exists) {
+        updated = prev.map((s) => (String(s._id || s.id) === newId ? { ...s, ...newStay } : s));
+      } else {
+        updated = [newStay, ...prev];
+      }
       memoryCacheStays = updated;
       return updated;
     });
@@ -124,10 +181,16 @@ export function useStaySearch() {
       gender: searchData.gender || prev.gender || 'All',
       when: searchData.when || prev.when || '',
       who: searchData.who || prev.who || '',
-      minPrice: searchData.minPrice !== undefined && searchData.minPrice !== null ? Number(searchData.minPrice) : prev.minPrice,
-      maxPrice: searchData.maxPrice !== undefined && searchData.maxPrice !== null ? Number(searchData.maxPrice) : prev.maxPrice,
+      minPrice:
+        searchData.minPrice !== undefined && searchData.minPrice !== null
+          ? Number(searchData.minPrice)
+          : prev.minPrice,
+      maxPrice:
+        searchData.maxPrice !== undefined && searchData.maxPrice !== null
+          ? Number(searchData.maxPrice)
+          : prev.maxPrice,
     }));
-    setCurrentPage(1); // Reset to page 1 on new search
+    setCurrentPage(1);
   };
 
   const setCategoryFilter = (type) => {
@@ -184,7 +247,7 @@ export function useStaySearch() {
     setCurrentPage(1);
   };
 
-  // Compute filtered & sorted stays with high performance
+  // Compute filtered & sorted stays
   const filteredStays = useMemo(() => {
     let result = allStays.filter((stay) => {
       // 1. Location match
@@ -212,16 +275,21 @@ export function useStaySearch() {
       // 3. Gender / Occupancy match
       const stayGender = (stay.genderType || '').toLowerCase();
       const stayTitle = (stay.title || '').toLowerCase();
+      const allTags = [
+        ...(Array.isArray(stay.tags) ? stay.tags : []),
+        ...(Array.isArray(stay.facilities) ? stay.facilities : []),
+      ];
+
       const matchesGender =
         filters.gender === 'All' ||
         stayGender === filters.gender.toLowerCase() ||
         stayGender === 'both' ||
         stayGender === 'unisex' ||
         stayTitle.includes(filters.gender.toLowerCase()) ||
-        (stay.tags && stay.tags.some((t) => t.toLowerCase().includes(filters.gender.toLowerCase())));
+        allTags.some((t) => t.toLowerCase().includes(filters.gender.toLowerCase()));
 
-      // 4. Price match
-      const stayPrice = Number(stay.price || 0);
+      // 4. Price match (with safe string-to-number stripping)
+      const stayPrice = parseNumericPrice(stay.price);
       const matchesMinPrice = filters.minPrice === null || stayPrice >= filters.minPrice;
       const matchesMaxPrice = filters.maxPrice === null || stayPrice <= filters.maxPrice;
       const matchesPrice = matchesMinPrice && matchesMaxPrice;
@@ -229,11 +297,11 @@ export function useStaySearch() {
       // 5. Rating match
       const matchesRating = (stay.rating || 0) >= filters.minRating;
 
-      // 6. Amenities match
+      // 6. Amenities match (checks both facilities and tags)
       const matchesAmenities =
         filters.selectedAmenities.length === 0 ||
         filters.selectedAmenities.every((amenity) =>
-          stay.tags && stay.tags.some((t) => t.toLowerCase().includes(amenity.toLowerCase()))
+          allTags.some((t) => t.toLowerCase().includes(amenity.toLowerCase()))
         );
 
       // 7. Text Query match
@@ -242,6 +310,7 @@ export function useStaySearch() {
         stayTitle.includes(filters.query) ||
         stayLoc.includes(filters.query) ||
         stayCity.includes(filters.query) ||
+        stayAddress.includes(filters.query) ||
         stayType.includes(filters.query);
 
       return (
@@ -257,8 +326,11 @@ export function useStaySearch() {
 
     // Apply Sorting
     return result.sort((a, b) => {
+      const priceA = parseNumericPrice(a.price);
+      const priceB = parseNumericPrice(b.price);
+
       if (filters.sortOrder === 'price-asc') {
-        return Number(a.price || 0) - Number(b.price || 0);
+        return priceA - priceB;
       } else if (filters.sortOrder === 'rating-desc') {
         return Number(b.rating || 0) - Number(a.rating || 0);
       } else if (filters.sortOrder === 'title-asc') {
@@ -269,7 +341,7 @@ export function useStaySearch() {
         return timeB - timeA;
       } else {
         // Default: price-desc
-        return Number(b.price || 0) - Number(a.price || 0);
+        return priceB - priceA;
       }
     });
   }, [allStays, filters]);

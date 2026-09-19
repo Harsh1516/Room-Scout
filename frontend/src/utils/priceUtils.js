@@ -21,10 +21,13 @@ export function getStayPricing(stay) {
 
   const rates = Array.isArray(stay.roomRates) ? stay.roomRates : [];
   const monthRateObj = rates.find(
-    (r) => r && (r.rateUnit === '/month' || r.rateUnit === '/mo')
+    (r) => r && String(r.rateUnit || '').toLowerCase().includes('month')
   );
   const nightRateObj = rates.find(
-    (r) => r && (r.rateUnit === '/night' || r.rateUnit === '/day')
+    (r) =>
+      r &&
+      (String(r.rateUnit || '').toLowerCase().includes('night') ||
+        String(r.rateUnit || '').toLowerCase().includes('day'))
   );
 
   // Determine main rate unit from property or first rate tier
@@ -33,7 +36,9 @@ export function getStayPricing(stay) {
     (rates.length > 0 && rates[0].rateUnit ? rates[0].rateUnit : null) ||
     '/mo';
 
-  const isPerNight = mainUnit === '/night' || mainUnit === '/day';
+  const isPerNight =
+    String(mainUnit).toLowerCase().includes('night') ||
+    String(mainUnit).toLowerCase().includes('day');
 
   if (isPerNight) {
     const rawNight = parsePriceNumber(
@@ -99,4 +104,3 @@ export function getStayPricing(stay) {
     secondaryUnit: '',
   };
 }
-

@@ -62,6 +62,9 @@ export function WishlistDrawer({ onBookClick, onStayClick }) {
             {wishlist.length > 0 ? (
               wishlist.map((stay) => {
                 const stayId = stay._id || stay.id;
+                const priceNum = parseInt(String(stay.price || 3500).replace(/[^0-9]/g, ''), 10) || 3500;
+                const rateUnit = stay.rateUnit || '/month';
+
                 return (
                   <div
                     key={stayId}
@@ -110,7 +113,7 @@ export function WishlistDrawer({ onBookClick, onStayClick }) {
 
                       <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-slate-700/50 gap-2">
                         <span className="font-black text-rose-500 text-sm">
-                          ₹{Number(stay.price || 3500).toLocaleString('en-IN')}/mo
+                          ₹{priceNum.toLocaleString('en-IN')}{rateUnit}
                         </span>
                         <div className="flex items-center">
                           <button

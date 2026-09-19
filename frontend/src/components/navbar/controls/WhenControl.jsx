@@ -28,10 +28,15 @@ export function WhenControl({
   const handleCustomDateSubmit = (e) => {
     e.preventDefault();
     if (customDate) {
-      const formatted = new Date(customDate).toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'short',
-      });
+      const [y, m, d] = customDate.split('-').map(Number);
+      const dateObj = new Date(y, m - 1, d);
+      const formatted = !isNaN(dateObj.getTime())
+        ? dateObj.toLocaleDateString('en-IN', {
+            day: 'numeric',
+            month: 'short',
+          })
+        : customDate;
+
       setSelectedWhen(`From ${formatted}`);
       onClose();
     }
@@ -65,7 +70,7 @@ export function WhenControl({
         <span className="max-w-24 truncate">{displayLabel}</span>
       </button>
 
-      {/* Pop-up Tab (Matching Frosted Glass Effect) */}
+      {/* Pop-up Tab */}
       {isOpen && (
         <div
           onClick={(e) => e.stopPropagation()}

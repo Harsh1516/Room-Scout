@@ -20,7 +20,7 @@ export function SearchResultsPage({
   onStayClick,
   onBookClick,
 }) {
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'split'
+  const [viewMode, setViewMode] = useState('grid');
   const [hoveredStayId, setHoveredStayId] = useState(null);
   const [showMap, setShowMap] = useState(false);
 
@@ -61,7 +61,6 @@ export function SearchResultsPage({
       <div className="w-full space-y-6 max-w-[1720px] mx-auto">
         {/* TOP SECTION: Left (Search Header + Category/Filter Tab) | Right (Interactive Map) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-          {/* Left Column: Top 2 Tabs (Fixed at lg:col-span-6) */}
           <div className="lg:col-span-6 w-full flex flex-col justify-between space-y-4">
             {/* 1. Search Result Tab */}
             <div className="bg-white/80 dark:bg-slate-900/80 p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm backdrop-blur-xl flex flex-col justify-between space-y-3">
@@ -99,7 +98,6 @@ export function SearchResultsPage({
                     {showMap ? 'Hide Map' : 'See Map'}
                   </button>
 
-                  {/* Sort Dropdown */}
                   <select
                     value={filters.sortOrder || 'price-desc'}
                     onChange={(e) => setSortOrder && setSortOrder(e.target.value)}
@@ -131,29 +129,30 @@ export function SearchResultsPage({
 
             {/* 2. Advanced Filters & Categories Tab */}
             <div className="bg-white/80 dark:bg-slate-900/80 p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm backdrop-blur-xl flex flex-col space-y-4">
-              {/* Row 1: Type Selection */}
               <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 sm:mr-2">
                   Type:
                 </span>
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setCategoryFilter && setCategoryFilter(cat)}
-                    className={`px-3 py-1 sm:px-4 sm:py-1.5 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-bold transition-all cursor-pointer ${
-                      filters.category === cat
-                        ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 shadow-xs'
-                        : 'bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
+                {categories.map((cat) => {
+                  const isCurrentActive = filters.type === cat || filters.category === cat;
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => setCategoryFilter && setCategoryFilter(cat)}
+                      className={`px-3 py-1 sm:px-4 sm:py-1.5 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-bold transition-all cursor-pointer ${
+                        isCurrentActive
+                          ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 shadow-xs'
+                          : 'bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  );
+                })}
               </div>
 
               <div className="h-px bg-slate-100 dark:bg-slate-800" />
 
-              {/* Row 2: Budget & Rating */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                   <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">
@@ -201,7 +200,6 @@ export function SearchResultsPage({
 
               <div className="h-px bg-slate-100 dark:bg-slate-800" />
 
-              {/* Row 3: Amenities Chips */}
               <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 pt-0.5">
                 <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-0.5 sm:mr-1">
                   Amenities:
@@ -226,7 +224,6 @@ export function SearchResultsPage({
             </div>
           </div>
 
-          {/* Right Column: Interactive Map (Only shown when toggled) */}
           <AnimatePresence>
             {showMap && (
               <motion.div 
@@ -269,7 +266,7 @@ export function SearchResultsPage({
           </div>
         )}
 
-        {/* Main Content: Resulted Search Places (Max 4 containers in a row) */}
+        {/* Search Results */}
         {!isLoading && stays.length > 0 && (
           <div className="w-full pt-2">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 sm:gap-6 w-full">
@@ -318,7 +315,6 @@ export function SearchResultsPage({
             </p>
 
             <div className="flex items-center gap-1.5">
-              {/* Prev Button */}
               <button
                 type="button"
                 disabled={currentPage <= 1}
@@ -328,7 +324,6 @@ export function SearchResultsPage({
                 ← Prev
               </button>
 
-              {/* Page Number Buttons */}
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
                 <button
                   key={pageNum}
@@ -344,7 +339,6 @@ export function SearchResultsPage({
                 </button>
               ))}
 
-              {/* Next Button */}
               <button
                 type="button"
                 disabled={currentPage >= totalPages}

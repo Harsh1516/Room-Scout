@@ -7,6 +7,12 @@ import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
 import { Left } from '../components/navbar/Left';
 
+// Helper: Safely extract clean numeric price
+const parseNumericPrice = (val) => {
+  if (typeof val === 'number' && !isNaN(val)) return val;
+  return parseInt(String(val || 0).replace(/[^0-9]/g, ''), 10) || 0;
+};
+
 export function DataPage({ onStayClick, onBookClick }) {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
@@ -18,7 +24,7 @@ export function DataPage({ onStayClick, onBookClick }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedGender, setSelectedGender] = useState('All');
-  const [sortOrder, setSortOrder] = useState('recent-first'); // 'recent-first' | 'price-asc' | 'price-desc' | 'rating-desc' | 'title-asc'
+  const [sortOrder, setSortOrder] = useState('recent-first');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Fetch real host stays from database API
@@ -26,11 +32,12 @@ export function DataPage({ onStayClick, onBookClick }) {
     try {
       setLoading(true);
       const data = await staysAPI.getStays();
-      if (Array.isArray(data)) {
-        setStays(data);
-      } else {
-        setStays([]);
-      }
+      // Handle both direct array and enveloped { stays: [...] } or { data: [...] }
+      const list = Array.isArray(data)
+        ? data
+        : (Array.isArray(data?.stays) ? data.stays : (Array.isArray(data?.data) ? data.data : []));
+
+      setStays(list);
     } catch (err) {
       console.warn('API fetch error for stays data:', err);
       setStays([]);
@@ -43,16 +50,13 @@ export function DataPage({ onStayClick, onBookClick }) {
   useEffect(() => {
     fetchStays();
 
-    // Auto refresh whenever user returns/switches back to this tab
     const handleFocus = () => fetchStays();
     window.addEventListener('focus', handleFocus);
 
-    // Custom sync events dispatched when properties/rooms are updated
     const handleSync = () => fetchStays();
     window.addEventListener('stayhub_slots_updated', handleSync);
     window.addEventListener('stayhub_admin_sync', handleSync);
 
-    // Cross-tab broadcast channel & localStorage storage event
     let bc = null;
     try {
       if (typeof BroadcastChannel !== 'undefined') {
@@ -82,7 +86,6 @@ export function DataPage({ onStayClick, onBookClick }) {
     fetchStays();
   };
 
-  // Helper to format date or show "Recently Added"
   const formatStayDate = (stay, index) => {
     if (stay.createdAt) {
       const d = new Date(stay.createdAt);
@@ -104,8 +107,7 @@ export function DataPage({ onStayClick, onBookClick }) {
         });
       }
     }
-    // For sample stays, infer freshness based on index or ID
-    return `Verified Listing #${stay.id || index + 1}`;
+    return `Verified Listing #${stay._id || stay.id || index + 1}`;
   };
 
   // Filtered & Sorted Stays
@@ -120,7 +122,7 @@ export function DataPage({ onStayClick, onBookClick }) {
         const loc = (s.location || s.city || s.address || '').toLowerCase();
         const type = (s.type || s.propertyType || '').toLowerCase();
         const host = (s.hostName || s.name || s.hostEmail || '').toLowerCase();
-        const tags = (s.tags || s.amenities || []).join(' ').toLowerCase();
+        const tags = (s.tags || s.facilities || s.amenities || []).join(' ').toLowerCase();
         return title.includes(q) || loc.includes(q) || type.includes(q) || host.includes(q) || tags.includes(q);
       });
     }
@@ -143,7 +145,7 @@ export function DataPage({ onStayClick, onBookClick }) {
     // 3. Gender Filter
     if (selectedGender !== 'All') {
       list = list.filter((s) => {
-        const gender = (s.genderType || '').toLowerCase();
+        const gender = (s.genderType || s.gender || '').toLowerCase();
         const title = (s.title || '').toLowerCase();
         return (
           gender === selectedGender.toLowerCase() ||
@@ -157,16 +159,15 @@ export function DataPage({ onStayClick, onBookClick }) {
     // 4. Sorting
     return list.sort((a, b) => {
       if (sortOrder === 'recent-first') {
-        // Priority 1: Check ISO createdAt or timestamp
-        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : (typeof a.id === 'number' ? a.id * 1000 : 0);
-        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : (typeof b.id === 'number' ? b.id * 1000 : 0);
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return timeB - timeA;
       }
       if (sortOrder === 'price-asc') {
-        return Number(a.price || 0) - Number(b.price || 0);
+        return parseNumericPrice(a.price) - parseNumericPrice(b.price);
       }
       if (sortOrder === 'price-desc') {
-        return Number(b.price || 0) - Number(a.price || 0);
+        return parseNumericPrice(b.price) - parseNumericPrice(a.price);
       }
       if (sortOrder === 'rating-desc') {
         return Number(b.rating || 0) - Number(a.rating || 0);
@@ -230,7 +231,6 @@ export function DataPage({ onStayClick, onBookClick }) {
 
           {/* Right: Actions */}
           <div className="flex items-center gap-2 ml-auto">
-            {/* Refresh Button */}
             <button
               type="button"
               onClick={handleRefresh}
@@ -249,7 +249,6 @@ export function DataPage({ onStayClick, onBookClick }) {
               </svg>
             </button>
 
-            {/* Theme Toggle */}
             <button
               type="button"
               onClick={toggleTheme}
@@ -279,7 +278,6 @@ export function DataPage({ onStayClick, onBookClick }) {
 
         {/* Filter & Search Bar */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 border-t border-slate-100 dark:border-slate-800/80 flex flex-col md:flex-row items-center justify-between gap-3">
-          {/* Search Box */}
           <div className="relative w-full md:w-80">
             <svg
               className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
@@ -309,7 +307,6 @@ export function DataPage({ onStayClick, onBookClick }) {
             )}
           </div>
 
-          {/* Category Tabs */}
           <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-none">
             {categories.map((cat) => (
               <button
@@ -327,7 +324,6 @@ export function DataPage({ onStayClick, onBookClick }) {
             ))}
           </div>
 
-          {/* Sort Selector */}
           <div className="flex items-center gap-2 w-full md:w-auto justify-end">
             <span className="text-xs text-slate-400 font-medium whitespace-nowrap">Sort:</span>
             <select
@@ -347,7 +343,6 @@ export function DataPage({ onStayClick, onBookClick }) {
 
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Banner / Info Header */}
         <div className="mb-6 bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-teal-600/10 border border-blue-500/20 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -371,7 +366,6 @@ export function DataPage({ onStayClick, onBookClick }) {
           </div>
         </div>
 
-        {/* Loading State */}
         {loading && (
           <div className="py-20 flex flex-col items-center justify-center gap-3 text-slate-400">
             <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
@@ -379,7 +373,6 @@ export function DataPage({ onStayClick, onBookClick }) {
           </div>
         )}
 
-        {/* Empty State */}
         {!loading && filteredStays.length === 0 && (
           <div className="py-20 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8">
             <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-3 text-slate-400">
@@ -406,7 +399,6 @@ export function DataPage({ onStayClick, onBookClick }) {
           </div>
         )}
 
-        {/* 3-LINE LIST TABLE VIEW */}
         {!loading && filteredStays.length > 0 && (
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
@@ -426,13 +418,17 @@ export function DataPage({ onStayClick, onBookClick }) {
                   {filteredStays.map((stay, idx) => {
                     const stayId = stay._id || stay.id;
                     const dateLabel = formatStayDate(stay, idx);
+                    const cleanPrice = parseNumericPrice(stay.price);
+                    const roomsCount =
+                      Array.isArray(stay.rooms) && stay.rooms.length > 0
+                        ? stay.rooms.length
+                        : (stay.totalRooms || stay.availableRooms || 0);
 
                     return (
                       <tr
                         key={stayId || idx}
                         className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
                       >
-                        {/* Property Image & Title */}
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
                             <img
@@ -445,10 +441,10 @@ export function DataPage({ onStayClick, onBookClick }) {
                                 {stay.title || stay.propertyName || 'Property Stay'}
                               </div>
                               <div className="text-[11px] text-slate-400 flex items-center gap-2">
-                                <span>{stay.hostName ? `Host: ${stay.hostName}` : 'RoomScout Verified'}</span>
-                                {Array.isArray(stay.rooms) && stay.rooms.length > 0 && (
+                                <span>{stay.hostName || stay.host?.name ? `Host: ${stay.hostName || stay.host?.name}` : 'RoomScout Verified'}</span>
+                                {roomsCount > 0 && (
                                   <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold border border-slate-200 dark:border-slate-700">
-                                    {stay.rooms.length} {stay.rooms.length === 1 ? 'Room' : 'Rooms'}
+                                    {roomsCount} {roomsCount === 1 ? 'Room' : 'Rooms'}
                                   </span>
                                 )}
                               </div>
@@ -456,7 +452,6 @@ export function DataPage({ onStayClick, onBookClick }) {
                           </div>
                         </td>
 
-                        {/* Type & Gender */}
                         <td className="py-3 px-4">
                           <div className="flex flex-col gap-1 items-start">
                             <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-semibold text-[10px]">
@@ -470,17 +465,15 @@ export function DataPage({ onStayClick, onBookClick }) {
                           </div>
                         </td>
 
-                        {/* Location */}
                         <td className="py-3 px-4 text-slate-600 dark:text-slate-300">
                           {stay.location || (stay.city && stay.state ? `${stay.city}, ${stay.state}` : (stay.city || stay.address || '—'))}
                         </td>
 
-                        {/* Price & Rate Unit */}
                         <td className="py-3 px-4">
                           <div className="flex flex-col items-start">
                             <div className="flex items-baseline gap-1">
                               <span className="font-bold text-slate-900 dark:text-white">
-                                ₹{Number(stay.price || 0).toLocaleString('en-IN')}
+                                ₹{cleanPrice.toLocaleString('en-IN')}
                               </span>
                               <span className="text-[10px] text-slate-400 font-medium">
                                 {stay.rateUnit || stay.roomRates?.[0]?.rateUnit || '/month'}
@@ -494,17 +487,14 @@ export function DataPage({ onStayClick, onBookClick }) {
                           </div>
                         </td>
 
-                        {/* Rating */}
                         <td className="py-3 px-4">
                           <span className="font-bold text-amber-500">★ {stay.rating || 4.8}</span>
                         </td>
 
-                        {/* Date Added */}
                         <td className="py-3 px-4 text-slate-500 dark:text-slate-400">
                           {dateLabel}
                         </td>
 
-                        {/* Actions */}
                         <td className="py-3 px-4 text-right">
                           <div className="flex items-center justify-end">
                             <button

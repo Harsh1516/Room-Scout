@@ -9,20 +9,20 @@ import {
   getUserProfile,
   testEmailService,
 } from '../controllers/authController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, requireAdmin } from '../middleware/authMiddleware.js';
 import validate from '../middleware/validateMiddleware.js';
 import { signupSchema, loginSchema } from '../validators/authValidator.js';
 import { authLimiter } from '../middleware/rateLimitMiddleware.js';
 
 const router = express.Router();
 
-// Public Auth Routes (Hardened with rate limiting against brute force attacks)
+// Public Authentication Endpoints
 router.route('/register').post(authLimiter, validate(signupSchema), registerUser);
 router.route('/login').post(authLimiter, validate(loginSchema), loginUser);
 router.route('/forgot-password').post(authLimiter, forgotPassword);
-router.route('/test-email').post(testEmailService);
+router.route('/test-email').post(protect, requireAdmin, testEmailService);
 
-// Protected Profile & Account Management Routes
+// Protected Profile & Account Management Endpoints
 router.route('/me').get(protect, getUserProfile);
 router.route('/profile').put(protect, updateUserProfile);
 router.route('/change-password').put(protect, changePassword);

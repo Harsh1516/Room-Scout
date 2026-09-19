@@ -1,24 +1,56 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useWishlist } from '../context/WishlistContext';
+import { staysAPI } from '../services/api';
 
 export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
   const { isInWishlist, toggleWishlist } = useWishlist();
   const [selectedSharing, setSelectedSharing] = useState('double'); // single, double, triple
-  const [reviews, setReviews] = useState([
-    { id: 1, author: 'Rohan Sharma', rating: 5, date: '2 weeks ago', text: 'Great place with fast wifi and very hygienic homemade meals! Host is super friendly.' },
-    { id: 2, author: 'Ananya Verma', rating: 4, date: '1 month ago', text: 'Comfortable rooms with good ventilation. Laundry service is prompt.' }
-  ]);
+
+  const stayId = stay?._id || stay?.id;
+  const isSaved = isInWishlist(stayId);
+
+  // Initialize reviews from stay catalog if present, fallback to defaults
+  const [reviews, setReviews] = useState(() => {
+    if (stay && Array.isArray(stay.reviews) && stay.reviews.length > 0) {
+      return stay.reviews.map((r, i) => ({
+        id: r._id || r.id || i,
+        author: r.userName || r.author || 'Guest User',
+        rating: r.rating || 5,
+        date: r.createdAt ? new Date(r.createdAt).toLocaleDateString() : (r.date || 'Recent'),
+        text: r.comment || r.text || '',
+      }));
+    }
+    return [
+      { id: 1, author: 'Rohan Sharma', rating: 5, date: '2 weeks ago', text: 'Great place with fast wifi and very hygienic homemade meals! Host is super friendly.' },
+      { id: 2, author: 'Ananya Verma', rating: 4, date: '1 month ago', text: 'Comfortable rooms with good ventilation. Laundry service is prompt.' }
+    ];
+  });
+
   const [newReviewText, setNewReviewText] = useState('');
   const [newRating, setNewRating] = useState(5);
   const [activeTab, setActiveTab] = useState('overview'); // overview, amenities, reviews
 
+  useEffect(() => {
+    if (stay && Array.isArray(stay.reviews) && stay.reviews.length > 0) {
+      setReviews(
+        stay.reviews.map((r, i) => ({
+          id: r._id || r.id || i,
+          author: r.userName || r.author || 'Guest User',
+          rating: r.rating || 5,
+          date: r.createdAt ? new Date(r.createdAt).toLocaleDateString() : (r.date || 'Recent'),
+          text: r.comment || r.text || '',
+        }))
+      );
+    }
+  }, [stay]);
+
   if (!isOpen || !stay) return null;
 
-  const stayId = stay._id || stay.id;
-  const isSaved = isInWishlist(stayId);
+  // Dynamic price calculation based on sharing type with NaN protection
+  const rawPrice = parseInt(String(stay.price || 3000).replace(/[^0-9]/g, ''), 10) || 3000;
+  const basePrice = rawPrice;
+  const rateUnit = stay.rateUnit || '/month';
 
-  // Dynamic price calculation based on sharing type
-  const basePrice = stay.price || 3000;
   const currentPrice =
     selectedSharing === 'single'
       ? Math.round(basePrice * 1.35)
@@ -26,22 +58,35 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
       ? basePrice
       : Math.round(basePrice * 0.8);
 
-  const handleAddReview = (e) => {
+  const handleAddReview = async (e) => {
     e.preventDefault();
     if (!newReviewText.trim()) return;
 
-    setReviews([
-      {
-        id: Date.now(),
-        author: 'Guest User',
-        rating: newRating,
-        date: 'Just now',
-        text: newReviewText.trim(),
-      },
-      ...reviews,
-    ]);
+    const newRev = {
+      id: Date.now(),
+      author: 'Guest User',
+      rating: newRating,
+      date: 'Just now',
+      text: newReviewText.trim(),
+    };
+
+    setReviews([newRev, ...reviews]);
+    const commentText = newReviewText.trim();
+    const ratingVal = newRating;
+
     setNewReviewText('');
     setNewRating(5);
+
+    try {
+      if (stayId) {
+        await staysAPI.addReview(stayId, {
+          rating: ratingVal,
+          comment: commentText,
+        });
+      }
+    } catch (err) {
+      console.warn('Failed to persist review to database:', err.message);
+    }
   };
 
   const amenitiesList = [
@@ -115,7 +160,7 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
               <span className="text-2xl sm:text-3xl font-black text-cyan-600 dark:text-cyan-400">
                 ₹{currentPrice.toLocaleString('en-IN')}
               </span>
-              <span className="text-xs text-slate-500"> / month</span>
+              <span className="text-xs text-slate-500"> {rateUnit}</span>
             </div>
           </div>
 
@@ -147,7 +192,7 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
             </div>
           </div>
 
-          {/* Instagram Reel & Video Tour Direct Link (Directly Below Picture Gallery) */}
+          {/* Instagram Reel & Video Tour Direct Link */}
           <a
             href={stay.instagramVideoUrl || 'https://www.instagram.com'}
             target="_blank"
@@ -226,7 +271,7 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
                         <div className="font-bold text-sm">{opt.label}</div>
                         <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{opt.desc}</div>
                         <div className="font-black text-cyan-600 dark:text-cyan-400 text-base mt-2">
-                          ₹{price.toLocaleString('en-IN')}<span className="text-xs font-normal text-slate-400">/mo</span>
+                          ₹{price.toLocaleString('en-IN')}<span className="text-xs font-normal text-slate-400">{rateUnit}</span>
                         </div>
                       </button>
                     );
@@ -272,7 +317,7 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
                   Highlights
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {(stay.tags || ['Wifi', 'Food Included', 'Security']).map((tag, idx) => (
+                  {(stay.tags || stay.facilities || ['Wifi', 'Food Included', 'Security']).map((tag, idx) => (
                     <span
                       key={idx}
                       className="px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300"
@@ -374,14 +419,21 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
             <span className="text-xl font-black text-cyan-600 dark:text-cyan-400">
               ₹{currentPrice.toLocaleString('en-IN')}
             </span>
-            <span className="text-xs text-slate-500"> / month</span>
+            <span className="text-xs text-slate-500"> {rateUnit}</span>
           </div>
 
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
                 onClose();
-                if (onBookClick) onBookClick({ ...stay, calculatedPrice: currentPrice, sharingType: selectedSharing });
+                if (onBookClick) {
+                  onBookClick({
+                    ...stay,
+                    calculatedPrice: currentPrice,
+                    sharingType: selectedSharing,
+                    rateUnit,
+                  });
+                }
               }}
               className="px-6 py-3 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold text-sm transition-all shadow-lg shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
             >

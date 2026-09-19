@@ -13,7 +13,6 @@ export function AdminPage() {
   const { isDark, toggleTheme } = useTheme();
   const { user, updateUserSession } = useAuth();
 
-  // Admin Access Verification
   const [isAdminAuthorized, setIsAdminAuthorized] = useState(() => {
     return Boolean(adminAPI.getAdminKey() || (user && (user.role === 'admin' || user.isAdmin)));
   });
@@ -21,26 +20,22 @@ export function AdminPage() {
   const [passkeyError, setPasskeyError] = useState('');
   const [isVerifyingKey, setIsVerifyingKey] = useState(false);
 
-  // Active View Tab: 'hosts' | 'users'
-  const [activeTab, setActiveTab] = useState('hosts');
+  const [activeTab, setActiveTab] = useState('users');
+  const [userSubTab, setUserSubTab] = useState('online');
 
-  // Data States
   const [users, setUsers] = useState([]);
   const [hosts, setHosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // User Deletion States
   const [deletingUserId, setDeletingUserId] = useState(null);
   const [confirmDeleteUserId, setConfirmDeleteUserId] = useState(null);
 
-  // Host Action States
   const [deletingHostId, setDeletingHostId] = useState(null);
   const [confirmDeleteHostId, setConfirmDeleteHostId] = useState(null);
   const [approvingHostId, setApprovingHostId] = useState(null);
 
-  // Helper to format exact date and time strictly as "25 Aug 2026, 04:00 PM"
   const formatDateTime = useCallback((dateVal) => {
     if (!dateVal) return '—';
     const d = new Date(dateVal);
@@ -61,7 +56,6 @@ export function AdminPage() {
     return `${day} ${month} ${year}, ${strHours}:${minutes} ${ampm}`;
   }, []);
 
-  // Fetch admin dashboard data with background/silent support (No reload/flicker)
   const fetchData = useCallback(async (isBackground = false) => {
     try {
       if (!isBackground) setLoading(true);
@@ -80,38 +74,32 @@ export function AdminPage() {
       if (err.status === 403 || err.status === 401) {
         setIsAdminAuthorized(false);
       }
-      console.error('Error fetching admin data:', err);
+      if (!isBackground) {
+        console.error('Error fetching admin data:', err.message);
+      }
     } finally {
       if (!isBackground) setLoading(false);
       setIsRefreshing(false);
     }
   }, []);
 
-  // Real-Time Live-Sync System: Auto-fetch without manual page refresh
   useEffect(() => {
-    // Initial fetch
+    if (!isAdminAuthorized) return;
+
     fetchData();
 
-    // 1. Silent Background Polling every 3.5 seconds
     const pollInterval = setInterval(() => {
       fetchData(true);
     }, 3500);
 
-    // 2. Immediate fetch when window regains focus (e.g. switching back from host or user portal)
-    const handleFocus = () => {
-      fetchData(true);
-    };
+    const handleFocus = () => fetchData(true);
     window.addEventListener('focus', handleFocus);
 
-    // 3. Immediate fetch when tab becomes visible
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        fetchData(true);
-      }
+      if (document.visibilityState === 'visible') fetchData(true);
     };
     document.addEventListener('visibilitychange', handleVisibility);
 
-    // 4. Cross-tab storage synchronization
     const handleStorage = (e) => {
       if (e.key && (e.key.startsWith('stayhub_') || e.key === 'stayhub_auth_user')) {
         fetchData(true);
@@ -119,10 +107,7 @@ export function AdminPage() {
     };
     window.addEventListener('storage', handleStorage);
 
-    // 5. Custom event for immediate same-tab updates
-    const handleCustomSync = () => {
-      fetchData(true);
-    };
+    const handleCustomSync = () => fetchData(true);
     window.addEventListener('stayhub_admin_sync', handleCustomSync);
 
     return () => {
@@ -132,32 +117,35 @@ export function AdminPage() {
       window.removeEventListener('storage', handleStorage);
       window.removeEventListener('stayhub_admin_sync', handleCustomSync);
     };
-  }, [fetchData]);
+  }, [fetchData, isAdminAuthorized]);
 
   const handleRefresh = () => {
     setIsRefreshing(true);
     fetchData(false);
   };
 
-  // Broadcast data update across components
   const broadcastUpdate = () => {
     try {
       window.dispatchEvent(new CustomEvent('stayhub_admin_sync'));
+      window.dispatchEvent(new CustomEvent('stayhub_slots_updated'));
+      window.dispatchEvent(new CustomEvent('stayhub_rooms_updated'));
       localStorage.setItem('stayhub_admin_sync_ts', String(Date.now()));
       if (typeof BroadcastChannel !== 'undefined') {
-        try {
-          const bc = new BroadcastChannel('stayhub_live_channel');
-          bc.postMessage({ type: 'HOST_APPROVED' });
-          bc.close();
-        } catch (e) {}
+        const bc = new BroadcastChannel('stayhub_live_channel');
+        bc.postMessage({ type: 'HOST_APPROVED' });
+        bc.close();
       }
     } catch (e) {
       console.warn('Broadcast sync error:', e);
     }
   };
 
-  // Handle Instant Direct Login to User Portal (Admin Privilege)
   const handleOpenUserPortal = async (targetUser) => {
+    if (targetUser.isOffline) {
+      toast.error('Offline users cannot be logged into as they do not have login credentials.');
+      return;
+    }
+
     try {
       const res = await adminAPI.impersonate({
         email: targetUser.email,
@@ -171,8 +159,9 @@ export function AdminPage() {
         return;
       }
     } catch (err) {
-      console.warn('Impersonate API failed, fallback active:', err.message);
+      console.warn('Impersonate API error:', err.message);
     }
+
     const fallbackUser = {
       _id: targetUser._id || targetUser.id,
       name: targetUser.name,
@@ -186,7 +175,6 @@ export function AdminPage() {
     navigate('/explore');
   };
 
-  // Handle Instant Direct Login to Host Portal (Admin Privilege)
   const handleOpenHostPortal = async (targetHost) => {
     try {
       const res = await adminAPI.impersonate({
@@ -201,8 +189,9 @@ export function AdminPage() {
         return;
       }
     } catch (err) {
-      console.warn('Impersonate API failed, fallback active:', err.message);
+      console.warn('Impersonate API error:', err.message);
     }
+
     const fallbackHost = {
       _id: targetHost._id || targetHost.id,
       name: targetHost.name,
@@ -219,24 +208,18 @@ export function AdminPage() {
   const showToast = (msg, type = 'info') => {
     if (type === 'error' || msg.toLowerCase().includes('error') || msg.toLowerCase().includes('failed')) {
       toast.error(msg);
-    } else if (
-      type === 'success' ||
-      msg.toLowerCase().includes('approved') ||
-      msg.toLowerCase().includes('deleted') ||
-      msg.toLowerCase().includes('success')
-    ) {
+    } else if (type === 'success' || msg.toLowerCase().includes('approved') || msg.toLowerCase().includes('deleted')) {
       toast.success(msg);
     } else {
       toast.info(msg);
     }
   };
 
-  // Handle Delete User
   const handleDeleteUser = async (userId, userName) => {
     try {
       setDeletingUserId(userId);
       await adminAPI.deleteUser(userId);
-      setUsers((prev) => prev.filter((u) => String(u._id) !== String(userId) && String(u.id) !== String(userId)));
+      setUsers((prev) => prev.filter((u) => String(u._id || u.id) !== String(userId)));
       setConfirmDeleteUserId(null);
       broadcastUpdate();
       showToast(`User ${userName || ''} deleted`);
@@ -248,14 +231,13 @@ export function AdminPage() {
     }
   };
 
-  // Handle Approve Host Property Request
   const handleApproveHost = async (hostId, hostName) => {
     try {
       setApprovingHostId(hostId);
       await adminAPI.approveHost(hostId);
       setHosts((prev) =>
         prev.map((h) =>
-          String(h.id) === String(hostId) || String(h._id) === String(hostId)
+          String(h.id || h._id) === String(hostId)
             ? { ...h, status: 'Approved' }
             : h
         )
@@ -270,12 +252,11 @@ export function AdminPage() {
     }
   };
 
-  // Handle Delete Host
   const handleDeleteHost = async (hostId, hostName) => {
     try {
       setDeletingHostId(hostId);
       await adminAPI.deleteHost(hostId);
-      setHosts((prev) => prev.filter((h) => String(h.id) !== String(hostId) && String(h._id) !== String(hostId)));
+      setHosts((prev) => prev.filter((h) => String(h.id || h._id) !== String(hostId)));
       setConfirmDeleteHostId(null);
       broadcastUpdate();
       showToast(`Host ${hostName || ''} deleted`);
@@ -287,18 +268,24 @@ export function AdminPage() {
     }
   };
 
-  // Filtered Users
+  const onlineUsersList = useMemo(() => users.filter((u) => !u.isOffline), [users]);
+  const offlineUsersList = useMemo(() => users.filter((u) => Boolean(u.isOffline)), [users]);
+
   const filteredUsers = useMemo(() => {
     const q = searchQuery.toLowerCase();
-    return users.filter(
+    const sourceList = userSubTab === 'online' ? onlineUsersList : offlineUsersList;
+
+    return sourceList.filter(
       (u) =>
         u.name?.toLowerCase().includes(q) ||
         u.email?.toLowerCase().includes(q) ||
-        u.role?.toLowerCase().includes(q)
+        u.phone?.toLowerCase().includes(q) ||
+        u.stayTitle?.toLowerCase().includes(q) ||
+        u.propertyName?.toLowerCase().includes(q) ||
+        u.roomNumber?.toLowerCase().includes(q)
     );
-  }, [users, searchQuery]);
+  }, [onlineUsersList, offlineUsersList, userSubTab, searchQuery]);
 
-  // Filtered Hosts
   const filteredHosts = useMemo(() => {
     const q = searchQuery.toLowerCase();
     return hosts.filter(
@@ -331,7 +318,6 @@ export function AdminPage() {
     }
   };
 
-  // Render High-Security Admin Passkey Screen if unauthorized
   if (!isAdminAuthorized) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-black text-slate-800 dark:text-slate-200 flex flex-col items-center justify-center p-4">
@@ -356,19 +342,17 @@ export function AdminPage() {
           </p>
 
           <form onSubmit={handleVerifyPasskey} className="w-full flex flex-col gap-3">
-            <div className="relative w-full">
-              <input
-                type="password"
-                value={passkeyInput}
-                onChange={(e) => {
-                  setPasskeyInput(e.target.value);
-                  setPasskeyError('');
-                }}
-                placeholder="Enter Master Admin Passkey..."
-                className="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-black/60 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
-                autoFocus
-              />
-            </div>
+            <input
+              type="password"
+              value={passkeyInput}
+              onChange={(e) => {
+                setPasskeyInput(e.target.value);
+                setPasskeyError('');
+              }}
+              placeholder="Enter Master Admin Passkey..."
+              className="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-black/60 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+              autoFocus
+            />
 
             {passkeyError && (
               <p className="text-xs text-rose-500 font-semibold text-left px-1">
@@ -402,7 +386,6 @@ export function AdminPage() {
       {/* TOP ADMIN HEADER */}
       <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-white/90 dark:bg-black/90 border-b border-slate-200 dark:border-slate-800 shadow-xs transition-colors duration-300">
         <div className="w-full px-2.5 sm:px-8 h-13 sm:h-16 flex items-center justify-between gap-1.5 sm:gap-4">
-          {/* Left-Most: Back Button */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             <button
               type="button"
@@ -416,15 +399,7 @@ export function AdminPage() {
               className="apple-liquid-nav flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full border border-slate-200/80 dark:border-white/15 hover:border-purple-500/40 hover:bg-white/40 dark:hover:bg-white/10 text-slate-950 dark:text-white text-[11px] sm:text-sm font-extrabold transition-all cursor-pointer shadow-xs active:scale-95 shrink-0"
               title="Go Back"
             >
-              <svg
-                className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600 dark:text-purple-400 shrink-0"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
+              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600 dark:text-purple-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="19" y1="12" x2="5" y2="12" />
                 <polyline points="12 19 5 12 12 5" />
               </svg>
@@ -432,16 +407,14 @@ export function AdminPage() {
             </button>
           </div>
 
-          {/* Center: Users & Hosts Navigation Capsule with Ultra-Smooth Spring Sliding Pill */}
           <div className="relative apple-liquid-nav flex items-center p-0.5 sm:p-1 rounded-full border border-slate-200/80 dark:border-white/15 text-[10px] sm:text-xs shadow-xs select-none">
-            {/* Tab 1: Users */}
             <button
               type="button"
               onClick={() => {
                 setActiveTab('users');
                 setSearchQuery('');
               }}
-              className={`relative px-2 py-0.5 sm:px-5 sm:py-1.5 rounded-full transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 font-bold text-[10px] sm:text-xs z-10 select-none active:scale-95 focus:outline-none focus:ring-0 ${
+              className={`relative px-2 py-0.5 sm:px-5 sm:py-1.5 rounded-full transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 font-bold text-[10px] sm:text-xs z-10 select-none active:scale-95 focus:outline-none ${
                 activeTab === 'users'
                   ? 'text-cyan-900 dark:text-cyan-200 font-extrabold'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -455,19 +428,18 @@ export function AdminPage() {
                 />
               )}
               <span>Users</span>
-              <span className={`text-[8.5px] sm:text-[10px] transition-opacity duration-200 ${activeTab === 'users' ? 'opacity-90 font-bold' : 'opacity-60 font-normal'}`}>
+              <span className={`text-[8.5px] sm:text-[10px] ${activeTab === 'users' ? 'opacity-90 font-bold' : 'opacity-60'}`}>
                 ({users.length})
               </span>
             </button>
 
-            {/* Tab 2: Hosts */}
             <button
               type="button"
               onClick={() => {
                 setActiveTab('hosts');
                 setSearchQuery('');
               }}
-              className={`relative px-2 py-0.5 sm:px-5 sm:py-1.5 rounded-full transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 font-bold text-[10px] sm:text-xs z-10 select-none active:scale-95 focus:outline-none focus:ring-0 ${
+              className={`relative px-2 py-0.5 sm:px-5 sm:py-1.5 rounded-full transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 font-bold text-[10px] sm:text-xs z-10 select-none active:scale-95 focus:outline-none ${
                 activeTab === 'hosts'
                   ? 'text-cyan-900 dark:text-cyan-200 font-extrabold'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -481,19 +453,14 @@ export function AdminPage() {
                 />
               )}
               <span>Hosts</span>
-              <span className={`text-[8.5px] sm:text-[10px] transition-opacity duration-200 ${activeTab === 'hosts' ? 'opacity-90 font-bold' : 'opacity-60 font-normal'}`}>
+              <span className={`text-[8.5px] sm:text-[10px] ${activeTab === 'hosts' ? 'opacity-90 font-bold' : 'opacity-60'}`}>
                 ({hosts.length})
               </span>
             </button>
           </div>
 
-          {/* Right: Live Sync Badge, Refresh & Theme Toggle */}
           <div className="flex items-center gap-2">
-            {/* Live Sync Indicator */}
-            <div
-              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10.5px] font-bold shadow-2xs select-none"
-              title="Real-time live sync connected without requiring page refresh"
-            >
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10.5px] font-bold shadow-2xs select-none">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <span>Live Sync</span>
             </div>
@@ -527,23 +494,56 @@ export function AdminPage() {
 
       {/* MAIN CONTENT AREA */}
       <main className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6 flex-1 space-y-4">
-        {/* ========================================================================= */}
-        {/* TAB 1: USERS VIEW (GUEST & STUDENT ACCOUNTS) */}
-        {/* ========================================================================= */}
         {activeTab === 'users' && (
           <div className="space-y-3 w-full">
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
-              <div className="text-xs text-slate-500 dark:text-slate-400 font-normal">
-                Showing {filteredUsers.length} of {users.length} registered users
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white/70 dark:bg-zinc-900/70 p-2.5 rounded-2xl border border-slate-200/80 dark:border-white/10 backdrop-blur-md shadow-xs">
+              <div className="flex items-center gap-1.5 p-1 bg-slate-100/90 dark:bg-black/60 rounded-xl border border-slate-200/60 dark:border-white/10">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUserSubTab('online');
+                    setSearchQuery('');
+                  }}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                    userSubTab === 'online'
+                      ? 'bg-white dark:bg-zinc-800 text-purple-600 dark:text-purple-400 shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Online Users</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-200/80 dark:bg-zinc-700 text-slate-700 dark:text-zinc-300 font-semibold">
+                    {onlineUsersList.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUserSubTab('offline');
+                    setSearchQuery('');
+                  }}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                    userSubTab === 'offline'
+                      ? 'bg-white dark:bg-zinc-800 text-purple-600 dark:text-purple-400 shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                  <span>Offline Users</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-200/80 dark:bg-zinc-700 text-slate-700 dark:text-zinc-300 font-semibold">
+                    {offlineUsersList.length}
+                  </span>
+                </button>
               </div>
 
-              <div className="relative w-full sm:w-72">
+              <div className="relative w-full sm:w-80">
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search name or email..."
-                  className="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-black border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 font-normal transition-colors"
+                  placeholder={userSubTab === 'online' ? 'Search online name, email, or phone...' : 'Search offline guest, phone, stay...'}
+                  className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-black/60 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 font-normal transition-all"
                 />
                 {searchQuery && (
                   <button
@@ -557,12 +557,12 @@ export function AdminPage() {
               </div>
             </div>
 
-            {/* Component-Level Users Table */}
             <AdminUsersTable
               users={filteredUsers}
               loading={loading}
+              isOfflineView={userSubTab === 'offline'}
               formatDateTime={formatDateTime}
-              onOpenUserPortal={handleOpenUserPortal}
+              onOpenUserPortal={userSubTab === 'online' ? handleOpenUserPortal : null}
               onDeleteUser={handleDeleteUser}
               deletingUserId={deletingUserId}
               confirmDeleteUserId={confirmDeleteUserId}
@@ -571,9 +571,6 @@ export function AdminPage() {
           </div>
         )}
 
-        {/* ========================================================================= */}
-        {/* TAB 2: HOSTS VIEW (APPROVAL WORKFLOW & PROPERTY DETAILS) */}
-        {/* ========================================================================= */}
         {activeTab === 'hosts' && (
           <div className="space-y-3 w-full">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
@@ -601,7 +598,6 @@ export function AdminPage() {
               </div>
             </div>
 
-            {/* Component-Level Hosts Table with Arranged Columns */}
             <AdminHostsTable
               hosts={filteredHosts}
               loading={loading}
@@ -620,4 +616,5 @@ export function AdminPage() {
     </div>
   );
 }
+
 export default AdminPage;

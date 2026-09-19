@@ -11,13 +11,14 @@ import { WishlistProvider } from './context/WishlistContext';
 import { BookingsProvider, useBookings } from './context/BookingsContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
-import { bookingsAPI, adminAPI } from './services/api';
+import { adminAPI } from './services/api';
 import { ScrollToTop } from './components/ScrollToTop';
 import { ToastProvider, toast } from './context/ToastContext';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 
-// 🚀 Dynamic Lazy-Loaded Route Chunks (Optimizes initial bundle from 1.16MB to <200kB)
-const Homepage = lazy(() => import('./pages/Homepage').then((m) => ({ default: m.Homepage })));
+import { Homepage } from './pages/Homepage';
+
+// Dynamic Lazy-Loaded Route Chunks
 const SearchResultsPage = lazy(() => import('./pages/SearchResultsPage').then((m) => ({ default: m.SearchResultsPage })));
 const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage })));
 const DataPage = lazy(() => import('./pages/DataPage').then((m) => ({ default: m.DataPage })));
@@ -29,12 +30,12 @@ const PropertyDetailPage = lazy(() => import('./pages/PropertyDetailPage').then(
 const RoomAvailabilityPage = lazy(() => import('./pages/RoomAvailabilityPage').then((m) => ({ default: m.RoomAvailabilityPage })));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })));
 
-// Liquid-Glass Page Transition Fallback
+// Simple Page Fallback
 function PageFallback() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-black flex items-center justify-center p-4">
       <div className="flex flex-col items-center gap-3">
-        <div className="w-9 h-9 rounded-full border-3 border-purple-500/20 border-t-purple-600 animate-spin" />
+        <div className="w-8 h-8 rounded-full border-2 border-emerald-500/20 border-t-emerald-600 animate-spin" />
         <span className="text-[11px] font-bold tracking-wider uppercase text-slate-400 dark:text-zinc-500">
           Loading...
         </span>
@@ -43,13 +44,32 @@ function PageFallback() {
   );
 }
 
+// Route guard component that handles auth hydration and role checks seamlessly without bouncing on refresh
+function ProtectedRoute({ children, requiredRoles = null }) {
+  const { isAuthenticated, user, loading } = useAuth();
+
+  // 1. If auth is already confirmed and matches required roles, render immediately (0ms flash)
+  const hasRequiredRole = !requiredRoles || (user && requiredRoles.includes(user.role));
+  if (isAuthenticated && hasRequiredRole) {
+    return children;
+  }
+
+  // 2. If token exists and auth is still verifying with API, show loading fallback instead of bouncing
+  if (loading) {
+    return <PageFallback />;
+  }
+
+  // 3. User is unauthenticated or unauthorized
+  return <Navigate to="/" replace />;
+}
+
 function AppContent() {
   const { user, isAuthenticated } = useAuth();
   const { bookings, addBooking, setIsBookingsOpen } = useBookings();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [loginRole, setLoginRole] = useState('user'); // 'user' | 'host'
+  const [loginRole, setLoginRole] = useState('user');
   const [loginPromptMessage, setLoginPromptMessage] = useState('');
-  const [pendingAction, setPendingAction] = useState(null); // 'host-upload' | 'explore' | null
+  const [pendingAction, setPendingAction] = useState(null);
 
   const [selectedStayForDetail, setSelectedStayForDetail] = useState(null);
   const [selectedStayForBooking, setSelectedStayForBooking] = useState(null);
@@ -74,36 +94,30 @@ function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Handle post-authentication pending actions and landing page redirect
+  // Post-authentication redirect: ONLY triggers when a deliberate pendingAction was requested
   useEffect(() => {
     async function handleAuthRedirect() {
-      if (!isAuthenticated) return;
+      if (!isAuthenticated || !pendingAction) return;
 
-      if (location.pathname === '/') {
-        if (pendingAction === 'host-upload' || user?.role === 'host') {
-          // Check if host already has a property
-          try {
-            const check = await adminAPI.getHostByEmail(user.email);
-            if (check?.hasProperty) {
-              navigate('/host/dashboard');
-            } else {
-              navigate('/host/upload');
-            }
-          } catch {
+      if (pendingAction === 'host-upload') {
+        try {
+          const check = await adminAPI.getHostByEmail(user?.email);
+          if (check?.hasProperty) {
             navigate('/host/dashboard');
+          } else {
+            navigate('/host/upload');
           }
-        } else {
-          navigate('/explore');
+        } catch {
+          navigate('/host/dashboard');
         }
-        setPendingAction(null);
-      } else if (pendingAction === 'host-upload') {
-        navigate('/host/dashboard');
-        setPendingAction(null);
+      } else if (pendingAction === 'explore') {
+        navigate('/explore');
       }
+      setPendingAction(null);
     }
 
     handleAuthRedirect();
-  }, [isAuthenticated, pendingAction, location.pathname, navigate, user]);
+  }, [isAuthenticated, pendingAction, navigate, user]);
 
   // Listen for Account Deleted or Session Invalidation events
   useEffect(() => {
@@ -120,11 +134,11 @@ function AppContent() {
     return () => window.removeEventListener('auth:account_deleted', handleAccountDeletedEvent);
   }, [navigate]);
 
-  // Handler for Tab 1: Upload Your Property Online (Requires Host Account)
-  const handleSelectUpload = async () => {
+  // Handler for Tab 1: Upload Your Property Online
+  const handleSelectUpload = () => {
     if (!isAuthenticated) {
       setLoginRole('host');
-      setLoginPromptMessage('Host Authentication: Please login with your unique Host account or register as a Host.');
+      setLoginPromptMessage('Host Authentication: Please login or register your Host account.');
       setPendingAction('host-upload');
       setIsLoginOpen(true);
       return;
@@ -132,30 +146,28 @@ function AppContent() {
 
     if (user?.role !== 'host' && user?.role !== 'admin') {
       setLoginRole('host');
-      setLoginPromptMessage('Role Notice: You are currently logged in as a Student/Guest. Please login with a Host account to access the Host Portal.');
+      setLoginPromptMessage('Role Notice: Please login with a Host account to access the Host Portal.');
       setPendingAction('host-upload');
       setIsLoginOpen(true);
       return;
     }
 
-    // Check if host already has a property uploaded
-    try {
-      const check = await adminAPI.getHostByEmail(user.email);
-      if (check?.hasProperty) {
-        navigate('/host/dashboard');
-      } else {
-        navigate('/host/upload');
-      }
-    } catch {
-      navigate('/host/dashboard');
-    }
+    adminAPI.getHostByEmail(user.email)
+      .then((check) => {
+        if (check?.hasProperty) {
+          navigate('/host/dashboard');
+        } else {
+          navigate('/host/upload');
+        }
+      })
+      .catch(() => navigate('/host/dashboard'));
   };
 
-  // Handler for Tab 2: Search Rooms Near You (Requires Student/Guest Account)
+  // Handler for Tab 2: Search Rooms Near You
   const handleSelectSearch = () => {
     if (!isAuthenticated) {
       setLoginRole('user');
-      setLoginPromptMessage('Guest Authentication: Please login with your Guest account or register to search rooms.');
+      setLoginPromptMessage('Guest Authentication: Please login or register to search and book rooms.');
       setPendingAction('explore');
       setIsLoginOpen(true);
       return;
@@ -170,16 +182,38 @@ function AppContent() {
 
   const handleOpenDetail = (stay) => {
     if (!stay) return;
-    let stayId = stay.stayId || stay._id || stay.id || stay.hostId;
-    if (String(stayId).startsWith('book_') || String(stayId).startsWith('bk_') || String(stayId).startsWith('res_') || String(stayId).startsWith('REF-') || String(stayId).startsWith('STAY-')) {
-      stayId = stay.stayId || stay.hostId || stayId;
+
+    // Safely unwrap stay ID if populated as an object
+    let stayId =
+      (typeof stay.stayId === 'object' && stay.stayId !== null
+        ? stay.stayId._id || stay.stayId.id
+        : stay.stayId) ||
+      stay._id ||
+      stay.id ||
+      stay.hostId;
+
+    if (
+      String(stayId).startsWith('book_') ||
+      String(stayId).startsWith('bk_') ||
+      String(stayId).startsWith('res_') ||
+      String(stayId).startsWith('REF-') ||
+      String(stayId).startsWith('STAY-')
+    ) {
+      stayId =
+        (typeof stay.stayId === 'object' && stay.stayId !== null
+          ? stay.stayId._id || stay.stayId.id
+          : stay.stayId) ||
+        stay.hostId ||
+        stayId;
     }
+
     if (!stayId) return;
-    const isFullStay = Boolean(stay.roomRates || stay.images || (stay.title && stay.location && !stay.bookingReferenceId));
+    const isFullStay = Boolean(
+      stay.roomRates || stay.images || (stay.title && stay.location && !stay.bookingReferenceId)
+    );
     navigate(`/stay/${stayId}`, { state: isFullStay ? { stay } : undefined });
   };
 
-  // Protected Booking Flow - Enforce Authentication
   const handleOpenBooking = (stay) => {
     if (!isAuthenticated) {
       setLoginRole('user');
@@ -209,14 +243,13 @@ function AppContent() {
     location.pathname.startsWith('/host');
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
       <ScrollToTop />
-      {/* Floating search navbar is active on search & explore, hidden on landing, admin, data, and host onboarding */}
       {!isNavbarHidden && (
         <Navbar
           onSearchSubmit={onSearch}
           onLoginClick={() => handleOpenLoginModal('user', '')}
-          onOpenBookings={() => setIsBookingsDrawerOpen(true)}
+          onOpenBookings={() => setIsBookingsOpen(true)}
           bookingsCount={bookings.length}
         />
       )}
@@ -235,21 +268,19 @@ function AppContent() {
           <Route
             path="/explore"
             element={
-              isAuthenticated ? (
+              <ProtectedRoute>
                 <Homepage
                   setCategoryFilter={setCategoryFilter}
                   onStayClick={handleOpenDetail}
                   onBookClick={handleOpenBooking}
                 />
-              ) : (
-                <Navigate to="/" replace />
-              )
+              </ProtectedRoute>
             }
           />
           <Route
             path="/search"
             element={
-              isAuthenticated ? (
+              <ProtectedRoute>
                 <SearchResultsPage
                   stays={paginatedStays}
                   allFilteredStays={filteredStays}
@@ -267,12 +298,9 @@ function AppContent() {
                   onStayClick={handleOpenDetail}
                   onBookClick={handleOpenBooking}
                 />
-              ) : (
-                <Navigate to="/" replace />
-              )
+              </ProtectedRoute>
             }
           />
-          {/* Stays Data Explorer (Sorted as Recently Added First) */}
           <Route
             path="/data"
             element={
@@ -282,68 +310,52 @@ function AppContent() {
               />
             }
           />
-          {/* Dedicated Host Homepage / Dashboard (Strict Host Route) */}
           <Route
             path="/host/dashboard"
             element={
-              isAuthenticated && (user?.role === 'host' || user?.role === 'admin') ? (
+              <ProtectedRoute requiredRoles={['host', 'admin']}>
                 <HostDashboardPage />
-              ) : (
-                <Navigate to="/" replace />
-              )
+              </ProtectedRoute>
             }
           />
-          {/* Dedicated Host Room Cards Page (Strict Host Route) */}
           <Route
             path="/host/rooms"
             element={
-              isAuthenticated && (user?.role === 'host' || user?.role === 'admin') ? (
+              <ProtectedRoute requiredRoles={['host', 'admin']}>
                 <HostRoomsPage />
-              ) : (
-                <Navigate to="/" replace />
-              )
+              </ProtectedRoute>
             }
           />
-          {/* Dedicated Host Property Upload Form (Strict Host Route) */}
           <Route
             path="/host/upload"
             element={
-              isAuthenticated && (user?.role === 'host' || user?.role === 'admin') ? (
+              <ProtectedRoute requiredRoles={['host', 'admin']}>
                 <HostUploadPage />
-              ) : (
-                <Navigate to="/" replace />
-              )
+              </ProtectedRoute>
             }
           />
-          {/* Unified Account Center (My Details, Password, Delete Account) */}
           <Route
             path="/account"
             element={
-              isAuthenticated ? (
+              <ProtectedRoute>
                 <AccountPage />
-              ) : (
-                <Navigate to="/" replace />
-              )
+              </ProtectedRoute>
             }
           />
-          {/* Dedicated Full Property Detail Page */}
           <Route
             path="/stay/:id"
             element={<PropertyDetailPage onBookClick={handleOpenBooking} />}
           />
-          {/* Interactive 2D Room Grid & Slot Schedule Page */}
           <Route
             path="/stay/:id/rooms"
             element={<RoomAvailabilityPage onBookClick={handleOpenBooking} />}
           />
           <Route path="/host" element={<Navigate to="/host/dashboard" replace />} />
           <Route path="/admin" element={<AdminPage />} />
-          {/* 404 Not Found Page Catch-All Route */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
 
-      {/* Global Modals & Drawers */}
       <LoginModal
         isOpen={isLoginOpen}
         onClose={() => {

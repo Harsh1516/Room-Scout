@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { adminAPI } from '../services/api';
+import { adminAPI, staysAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
 import { Login } from '../components/navbar/Login';
 
@@ -44,13 +44,34 @@ export function HostRoomsPage() {
       try {
         setLoading(true);
         const hostEmail = user?.email || localStorage.getItem('user_email') || '';
-        const stays = await adminAPI.getStays();
-        if (Array.isArray(stays) && stays.length > 0) {
-          const match = stays.find(
+
+        // 1. Primary: Lookup host by verified email
+        if (hostEmail) {
+          const res = await adminAPI.getHostByEmail(hostEmail).catch(() => null);
+          if (res?.hasProperty && (res?.host || res?.stay)) {
+            const prop = { ...(res.stay || {}), ...(res.host?.property || {}), ...(res.host || {}) };
+            setHostProperty(prop);
+            if (Array.isArray(prop.rooms)) {
+              setRooms(prop.rooms);
+            }
+            if (!stateRoomType && prop.roomRates?.[0]?.type) {
+              setSelectedType(prop.roomRates[0].type);
+            }
+            setLoading(false);
+            return;
+          }
+        }
+
+        // 2. Fallback: Search stays database
+        const staysRes = await staysAPI.getStays().catch(() => []);
+        const staysList = Array.isArray(staysRes) ? staysRes : (staysRes?.stays || staysRes?.data || []);
+        if (Array.isArray(staysList) && staysList.length > 0) {
+          const match = staysList.find(
             (s) =>
               (s.email && s.email.toLowerCase() === hostEmail.toLowerCase()) ||
-              (s.ownerEmail && s.ownerEmail.toLowerCase() === hostEmail.toLowerCase())
-          ) || stays[0];
+              (s.ownerEmail && s.ownerEmail.toLowerCase() === hostEmail.toLowerCase()) ||
+              (s.hostEmail && s.hostEmail.toLowerCase() === hostEmail.toLowerCase())
+          ) || staysList[0];
 
           if (match) {
             setHostProperty(match);
@@ -90,7 +111,7 @@ export function HostRoomsPage() {
     };
   }, [selectedType, stateRoomType, hostProperty]);
 
-  // Filter cards for the currently selected room type (or show all)
+  // Filter cards for the currently selected room type
   const currentTypeRooms = useMemo(() => {
     return rooms.filter((r) => r.type === selectedType);
   }, [rooms, selectedType]);
@@ -134,7 +155,6 @@ export function HostRoomsPage() {
       })
     );
   };
-
 
   // Remove a room card
   const handleRemoveCard = (roomId) => {
@@ -210,7 +230,6 @@ export function HostRoomsPage() {
       {/* Top Header Navbar */}
       <header className="sticky top-0 z-40 backdrop-blur-md bg-white/95 dark:bg-slate-900/95 border-b border-slate-200/80 dark:border-slate-800 shadow-2xs">
         <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 h-15 flex items-center justify-between gap-3">
-          {/* Left: Back button */}
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -226,14 +245,12 @@ export function HostRoomsPage() {
             </button>
           </div>
 
-          {/* Center: Title Pill Badge */}
           <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-inner">
             <span className="px-4 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs">
               Room Cards Manager • {activeRate.type} ({activeRate.price}{activeRate.rateUnit})
             </span>
           </div>
 
-          {/* Right: Save Rooms & Profile */}
           <div className="flex items-center gap-2.5 shrink-0">
             <button
               type="button"
@@ -250,7 +267,6 @@ export function HostRoomsPage() {
 
       {/* Main Content Area */}
       <main className="flex-1 w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 py-6 space-y-6 overflow-x-clip">
-        {/* Top Control Bar */}
         <div className="p-5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
@@ -266,7 +282,6 @@ export function HostRoomsPage() {
             </p>
           </div>
 
-          {/* Action: + Add Room Card Button */}
           <button
             type="button"
             onClick={handleAddCard}
@@ -277,7 +292,6 @@ export function HostRoomsPage() {
           </button>
         </div>
 
-        {/* Room Cards Grid */}
         {currentTypeRooms.length === 0 ? (
           <div className="p-12 rounded-xl bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 text-center space-y-3">
             <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -298,7 +312,6 @@ export function HostRoomsPage() {
                 key={card.id}
                 className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col justify-center h-28 relative group shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
               >
-                {/* Cross Button to Remove Card */}
                 <button
                   type="button"
                   onClick={() => handleRemoveCard(card.id)}
@@ -308,7 +321,6 @@ export function HostRoomsPage() {
                   ✕
                 </button>
 
-                {/* Center: Editable Room Number Input */}
                 <div className="text-center px-1">
                   <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1 tracking-wider">
                     Room No.
@@ -329,5 +341,5 @@ export function HostRoomsPage() {
     </div>
   );
 }
-export default HostRoomsPage;
 
+export default HostRoomsPage;

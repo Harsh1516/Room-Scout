@@ -107,7 +107,7 @@ export function FeaturedDestinations() {
         </div>
 
         {/* Clean Filter Tabs - Horizontal Scroll on Mobile, Balanced & Ultra-Compact */}
-        <div className="flex items-center gap-1 sm:gap-1.5 p-0.5 sm:p-1.5 rounded-lg sm:rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-white/15 backdrop-blur-xl shadow-xs overflow-x-auto no-scrollbar max-w-full">
+        <div className="flex items-center gap-1 sm:gap-1.5 p-0.5 sm:p-1.5 rounded-lg sm:rounded-2xl bg-white/80 dark:bg-white/[0.08] border border-slate-200 dark:border-white/20 backdrop-blur-2xl shadow-xs overflow-x-auto no-scrollbar max-w-full">
           {DESTINATION_TABS.map((tab) => {
             const isSelected = activeFilter === tab.id;
 
@@ -118,7 +118,7 @@ export function FeaturedDestinations() {
                 className={`px-2 py-1 sm:px-4 sm:py-2 rounded-md sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all duration-200 cursor-pointer whitespace-nowrap shrink-0 select-none active:scale-95 ${
                   isSelected
                     ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/15 border border-transparent'
                 }`}
               >
                 {tab.label}
@@ -142,9 +142,9 @@ export function FeaturedDestinations() {
               onClick={() => navigate('/search')}
               className="w-[270px] sm:w-[310px] md:w-[330px] max-w-[340px] shrink-0 snap-start group relative cursor-pointer select-none p-1 sm:p-2 rounded-xl sm:rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
             >
-              {/* Refined YouTube-Style Warm Light Orange Cushion */}
+              {/* Warm Cushion on Hover (Warm cream in Light Mode, Frosted Glass in Dark Mode) */}
               <div
-                className="absolute rounded-xl sm:rounded-2xl bg-[#f8ebd8] dark:bg-[#2d2218] shadow-[0_10px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_15px_40px_rgba(0,0,0,0.4)] pointer-events-none inset-0 opacity-0 scale-95 group-hover:-inset-1 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                className="absolute rounded-xl sm:rounded-2xl bg-[#f8ebd8] dark:bg-white/[0.08] dark:border dark:border-white/20 dark:backdrop-blur-2xl shadow-[0_10px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.7),_0_0_24px_rgba(56,189,248,0.18),_inset_0_1px_2px_rgba(255,255,255,0.22)] pointer-events-none inset-0 opacity-0 scale-95 group-hover:-inset-1 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
               />
 
               {/* Foreground Content Stack */}
@@ -180,7 +180,7 @@ export function FeaturedDestinations() {
                   </span>
 
                   {/* Title */}
-                  <h3 className="text-[10px] sm:text-xs md:text-sm font-bold text-slate-950 dark:text-white line-clamp-1 group-hover:text-amber-950 dark:group-hover:text-amber-100 transition-colors leading-snug">
+                  <h3 className="text-[10px] sm:text-xs md:text-sm font-bold text-slate-950 dark:text-white line-clamp-1 group-hover:text-slate-900 dark:group-hover:text-sky-300 transition-colors leading-snug">
                     {hub.name}
                   </h3>
 
@@ -194,7 +194,7 @@ export function FeaturedDestinations() {
                       <span className="hidden sm:inline">Avg </span>
                       <strong className="text-slate-950 dark:text-white font-black">{hub.avgPrice}</strong>
                     </span>
-                    <span className="text-amber-700 dark:text-amber-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5 shrink-0">
+                    <span className="text-slate-900 dark:text-sky-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5 shrink-0">
                       <span className="hidden sm:inline">Explore</span>
                       <span>→</span>
                     </span>

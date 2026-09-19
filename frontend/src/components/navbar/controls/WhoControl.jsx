@@ -11,7 +11,12 @@ export function WhoControl({
   onToggle,
   onClose,
 }) {
-  const isWhoActive = selectedWho && selectedWho.trim() !== '' && selectedWho !== 'Any' && selectedWho !== 'Any Occupancy';
+  const isWhoActive =
+    selectedWho &&
+    selectedWho.trim() !== '' &&
+    selectedWho !== 'Any' &&
+    selectedWho !== 'Any Occupancy';
+
   const displayLabel = isWhoActive ? selectedWho : 'Who';
 
   const handleSelect = (optionLabel) => {
@@ -46,7 +51,7 @@ export function WhoControl({
         <span className="max-w-16 sm:max-w-20 truncate">{displayLabel}</span>
       </button>
 
-      {/* Pop-up Tab (Deep Optical Diffusion & Glossy Luster) */}
+      {/* Pop-up Tab */}
       {isOpen && (
         <div
           onClick={(e) => e.stopPropagation()}
@@ -70,7 +75,14 @@ export function WhoControl({
 
           <div className="space-y-1.5 max-h-56 overflow-y-auto pr-0.5">
             {OCCUPANCY_OPTIONS.map((o) => {
-              const isSelected = selectedWho?.toLowerCase() === o.label.toLowerCase();
+              const currentVal = (selectedWho || '').toLowerCase().trim();
+              const isSelected =
+                currentVal === o.label.toLowerCase() ||
+                currentVal === o.id.toLowerCase() ||
+                (currentVal.startsWith('boys') && o.id === 'Boys') ||
+                (currentVal.startsWith('girls') && o.id === 'Girls') ||
+                (currentVal.startsWith('both') && o.id === 'Both');
+
               return (
                 <button
                   key={o.id}
@@ -98,5 +110,3 @@ export function WhoControl({
 }
 
 export default WhoControl;
-
-

@@ -12,11 +12,10 @@ import {
   getStats,
   impersonateAccount,
 } from '../controllers/adminController.js';
-import { requireAdmin } from '../middleware/authMiddleware.js';
+import { protect, requireAdmin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Sensitive Admin Privileges (Strictly protected with requireAdmin)
 router.route('/impersonate').post(requireAdmin, impersonateAccount);
 router.route('/users').get(requireAdmin, getUsers);
 router.route('/users/:id').delete(requireAdmin, deleteUser);
@@ -25,9 +24,8 @@ router.route('/hosts/:id/approve').put(requireAdmin, approveHost);
 router.route('/hosts/:id/reject').put(requireAdmin, rejectHost);
 router.route('/hosts/:id').delete(requireAdmin, deleteHost);
 
-// Host Registration & Public Host Discovery
-router.route('/hosts').get(getHosts).post(createHost);
-router.route('/hosts/by-email/:email').get(getHostByEmail);
-router.route('/hosts/my-guests/:email').get(getHostGuests);
+router.route('/hosts').get(requireAdmin, getHosts).post(protect, createHost);
+router.route('/hosts/by-email/:email').get(protect, getHostByEmail);
+router.route('/hosts/my-guests/:email').get(protect, getHostGuests);
 
 export default router;

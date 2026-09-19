@@ -1,24 +1,18 @@
 import mongoose from 'mongoose';
 import { v2 as cloudinary } from 'cloudinary';
-import { Stay } from '../models/Stay.js';
+import { Stay, computeLowestStartingPrice } from '../models/Stay.js';
 import { Host } from '../models/Host.js';
+import { Booking } from '../models/Booking.js';
 
-// Initialize Cloudinary SDK
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-/**
- * Uploads Base64 image strings to Cloudinary and returns the secure URL.
- * Passes through existing HTTPS URLs untouched.
- */
 const processImageUrl = async (imgStr) => {
   if (!imgStr || typeof imgStr !== 'string') return '';
-  if (imgStr.startsWith('http://') || imgStr.startsWith('https://')) {
-    return imgStr;
-  }
+  if (imgStr.startsWith('http://') || imgStr.startsWith('https://')) return imgStr;
   if (imgStr.startsWith('data:image/')) {
     try {
       const uploadRes = await cloudinary.uploader.upload(imgStr, {
@@ -34,7 +28,7 @@ const processImageUrl = async (imgStr) => {
   return imgStr;
 };
 
-// @desc    Get all property stays created by hosts with optional filters, sorting & high-speed pagination
+// @desc    Get all published property stays with filters, sorting, and pagination
 // @route   GET /api/stays
 // @access  Public
 export const getAllStays = async (req, res, next) => {
@@ -55,207 +49,71 @@ export const getAllStays = async (req, res, next) => {
       paginate,
     } = req.query;
 
-    let dbStays = [];
-    const existingIds = new Set();
-    const existingHostEmails = new Set();
+    const mongoFilter = { isPublished: true };
 
-    try {
-      const approvedHosts = await Host.find({
-        $or: [{ status: 'Approved' }, { 'hostDetails.status': 'Approved' }],
-      }).lean();
-      
-      const approvedHostEmails = new Set(
-        approvedHosts.map((h) => (h.hostDetails?.email || h.email || '').toLowerCase()).filter(Boolean)
-      );
-
-      const mongoStays = await Stay.find({}).lean();
-      for (const s of mongoStays) {
-        const hostEmail = (s.hostEmail || '').toLowerCase();
-        if (hostEmail && !approvedHostEmails.has(hostEmail)) {
-          await Stay.deleteOne({ _id: s._id }).catch(() => {});
-          continue;
-        }
-        const sId = s._id?.toString() || s.id;
-        existingIds.add(sId);
-        if (hostEmail) existingHostEmails.add(hostEmail);
-        dbStays.push({
-          ...s,
-          _id: sId,
-          id: sId,
-        });
-      }
-
-      approvedHosts.forEach((h) => {
-        const p = h.property || {};
-        const d = h.hostDetails || {};
-        const propTitle = p.propertyName || h.propertyName;
-        const hostEmail = (d.email || h.email || '').toLowerCase();
-
-        if (propTitle && !existingHostEmails.has(hostEmail)) {
-          const hId = h._id?.toString() || h.id;
-          if (!existingIds.has(hId)) {
-            existingIds.add(hId);
-            existingHostEmails.add(hostEmail);
-
-            const firstRate = h.roomRates?.[0];
-            const basePrice = firstRate?.price
-              ? (parseInt(String(firstRate.price).replace(/[^0-9]/g, ''), 10) || 0)
-              : (parseInt(String(p.price || h.price || '3500').replace(/[^0-9]/g, ''), 10) || 3500);
-            const rateUnit = firstRate?.rateUnit || p.rateUnit || '/month';
-
-            const hostPrimaryImage =
-              (Array.isArray(p.images) && p.images.length > 0 && p.images[0]) ||
-              p.image ||
-              (Array.isArray(h.images) && h.images.length > 0 && h.images[0]) ||
-              h.image ||
-              'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80';
-
-            dbStays.push({
-              _id: hId,
-              id: hId,
-              title: propTitle,
-              type: p.propertyType || h.propertyType || 'PG',
-              genderType: p.genderType || h.genderType || 'Both',
-              location: p.location || h.location || (p.city && p.state ? `${p.city}, ${p.state}` : (p.city || '')),
-              address: p.address || h.address || p.location || h.location || '',
-              roadArea: p.roadArea || h.roadArea || '',
-              city: p.city || h.city || '',
-              state: p.state || h.state || '',
-              pincode: p.pincode || h.pincode || '',
-              price: basePrice,
-              rateUnit: rateUnit,
-              rating: (Array.isArray(h.reviews) && h.reviews.length > 0)
-                ? Number((h.reviews.reduce((acc, r) => acc + (Number(r.rating) || 5), 0) / h.reviews.length).toFixed(1))
-                : (p.rating && p.rating !== 4.8 ? Number(p.rating) : (h.rating && h.rating !== 4.8 ? Number(h.rating) : null)),
-              badge: '',
-              tags: p.facilities || h.facilities || h.amenities || ['WiFi', 'Attached Bath', 'Security'],
-              roomRates: h.roomRates || [],
-              availableRooms: Array.isArray(h.rooms)
-                ? h.rooms.filter((r) => r.status === 'Available').length
-                : (p.availableRooms !== undefined ? p.availableRooms : (h.availableRooms || 1)),
-              totalRooms: Array.isArray(h.rooms)
-                ? h.rooms.length
-                : (p.totalRooms !== undefined ? p.totalRooms : (h.totalRooms || 1)),
-              rooms: h.rooms || [],
-              image: hostPrimaryImage,
-              images: Array.isArray(p.images) && p.images.length > 0 ? p.images : (Array.isArray(h.images) && h.images.length > 0 ? h.images : [hostPrimaryImage]),
-              videos: h.videos || [],
-              instagramVideoUrl: p.instagramVideoUrl || h.instagramVideoUrl || '',
-              reviews: h.reviews || [],
-              description: p.description || h.description || h.bio || `${propTitle} located in ${p.location || h.location}.`,
-              hostId: hId,
-              hostName: d.name || h.name,
-              hostEmail: hostEmail,
-              hostPhone: d.phone || h.phone,
-              createdAt: h.createdAt || new Date().toISOString(),
-            });
-          }
-        }
-      });
-    } catch (err) {
-      console.warn('MongoDB read stays warning:', err.message);
+    if (city) {
+      mongoFilter.city = { $regex: new RegExp(city.trim(), 'i') };
     }
-
-    let parsedAmenities = [];
+    if (type && type !== 'All' && type !== 'All Types') {
+      const t = type.toLowerCase().trim();
+      if (t === 'flat') {
+        mongoFilter.type = { $in: ['PG', 'Flat', 'Apartment'] };
+      } else if (t === 'stays & villas') {
+        mongoFilter.type = { $in: ['Villa', 'Resort'] };
+      } else {
+        mongoFilter.type = { $regex: new RegExp(`^${t}$`, 'i') };
+      }
+    }
+    if (gender && gender !== 'All') {
+      mongoFilter.genderType = { $in: [gender, 'Both', 'Unisex'] };
+    }
+    if (minPrice || maxPrice) {
+      mongoFilter.price = {};
+      if (minPrice) mongoFilter.price.$gte = Number(minPrice);
+      if (maxPrice) mongoFilter.price.$lte = Number(maxPrice);
+    }
+    if (minRating) {
+      mongoFilter.rating = { $gte: Number(minRating) };
+    }
+    if (query) {
+      const qRegex = { $regex: new RegExp(query.trim(), 'i') };
+      mongoFilter.$or = [
+        { title: qRegex },
+        { location: qRegex },
+        { city: qRegex },
+        { address: qRegex },
+        { description: qRegex },
+        { tags: qRegex },
+      ];
+    }
     if (amenities) {
-      if (Array.isArray(amenities)) parsedAmenities = amenities.map((a) => a.toLowerCase().trim());
-      else if (typeof amenities === 'string') parsedAmenities = amenities.split(',').map((a) => a.toLowerCase().trim());
+      const amenityArr = Array.isArray(amenities)
+        ? amenities
+        : amenities.split(',').map((a) => a.trim());
+      if (amenityArr.length > 0) {
+        mongoFilter.facilities = { $all: amenityArr.map((a) => new RegExp(a, 'i')) };
+      }
     }
 
-    let filtered = dbStays.filter((stay) => {
-      const stayLoc = (stay.location || '').toLowerCase();
-      const stayCity = (stay.city || '').toLowerCase();
-      const stayAddress = (stay.address || '').toLowerCase();
-      const stayTitle = (stay.title || '').toLowerCase();
-      const stayType = (stay.type || '').toLowerCase();
-      const stayDesc = (stay.description || '').toLowerCase();
-      const stayGender = (stay.genderType || '').toLowerCase();
+    let sortOption = { createdAt: -1 };
+    if (sort === 'price-asc') sortOption = { price: 1 };
+    else if (sort === 'price-desc') sortOption = { price: -1 };
+    else if (sort === 'rating-desc') sortOption = { rating: -1 };
+    else if (sort === 'title-asc') sortOption = { title: 1 };
 
-      if (location && !stayLoc.includes(location.toLowerCase()) && !stayCity.includes(location.toLowerCase())) {
-        return false;
-      }
-      if (city && !stayCity.includes(city.toLowerCase()) && !stayLoc.includes(city.toLowerCase())) {
-        return false;
-      }
-      if (type && type !== 'All' && type !== 'All Types') {
-        const t = type.toLowerCase();
-        const matchesType =
-          stayType === t ||
-          (t === 'flat' && (stayType === 'flat' || stayType === 'apartment')) ||
-          (t === 'stays & villas' && (stayType === 'villa' || stayType === 'resort'));
-        if (!matchesType) return false;
-      }
-      if (gender && gender !== 'All') {
-        const g = gender.toLowerCase();
-        const matchesG =
-          stayGender.includes(g) ||
-          stayTitle.includes(g) ||
-          (stay.tags && stay.tags.some((t) => t.toLowerCase().includes(g)));
-        if (!matchesG) return false;
-      }
-      if (minPrice && stay.price < Number(minPrice)) {
-        return false;
-      }
-      if (maxPrice && stay.price > Number(maxPrice)) {
-        return false;
-      }
-      if (minRating && (stay.rating || 0) < Number(minRating)) {
-        return false;
-      }
-      if (parsedAmenities.length > 0) {
-        const stayTags = (stay.tags || []).map((t) => t.toLowerCase());
-        const hasAllAmenities = parsedAmenities.every((reqAmenity) =>
-          stayTags.some((tag) => tag.includes(reqAmenity))
-        );
-        if (!hasAllAmenities) return false;
-      }
-      if (query) {
-        const q = query.toLowerCase().trim();
-        const matchesQ =
-          stayTitle.includes(q) ||
-          stayLoc.includes(q) ||
-          stayCity.includes(q) ||
-          stayAddress.includes(q) ||
-          stayDesc.includes(q) ||
-          stayType.includes(q) ||
-          stayGender.includes(q) ||
-          (stay.tags && stay.tags.some((t) => t.toLowerCase().includes(q)));
+    const staysQuery = Stay.find(mongoFilter)
+      .populate('hostId', 'name email phone avatar status')
+      .sort(sortOption)
+      .lean();
 
-        if (!matchesQ) return false;
-      }
-      return true;
-    });
-
-    if (sort === 'price-asc') {
-      filtered.sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
-    } else if (sort === 'price-desc') {
-      filtered.sort((a, b) => Number(b.price || 0) - Number(a.price || 0));
-    } else if (sort === 'rating-desc') {
-      filtered.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
-    } else if (sort === 'title-asc') {
-      filtered.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-    } else {
-      filtered.sort((a, b) => {
-        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return timeB - timeA;
-      });
-    }
-
-    const formatted = filtered.map((s) => ({
-      ...s,
-      id: s._id?.toString() || s.id,
-      _id: s._id?.toString() || s.id,
-    }));
-
-    const isPaginatedRequest = paginate === 'true' || Boolean(page) || Boolean(limit);
-    if (isPaginatedRequest) {
+    const isPaginated = paginate === 'true' || Boolean(page) || Boolean(limit);
+    if (isPaginated) {
       const pageNum = Math.max(1, parseInt(page, 10) || 1);
       const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 12));
-      const total = formatted.length;
+      const total = await Stay.countDocuments(mongoFilter);
       const totalPages = Math.ceil(total / limitNum) || 1;
-      const startIndex = (pageNum - 1) * limitNum;
-      const paginatedStays = formatted.slice(startIndex, startIndex + limitNum);
+
+      const paginatedStays = await staysQuery.skip((pageNum - 1) * limitNum).limit(limitNum);
 
       return res.json({
         stays: paginatedStays,
@@ -269,112 +127,118 @@ export const getAllStays = async (req, res, next) => {
       });
     }
 
-    return res.json(formatted);
+    const stays = await staysQuery;
+    return res.json(stays);
   } catch (error) {
     return next(error);
   }
 };
 
+// @desc    Get single stay by ID
+// @route   GET /api/stays/:id
+// @access  Public
 export const getStayById = async (req, res, next) => {
   try {
-    let stay = null;
-    const stayId = req.params.id;
+    const { id } = req.params;
 
-    try {
-      if (mongoose.Types.ObjectId.isValid(stayId)) {
-        stay = await Stay.findById(stayId).lean();
-      }
-      if (!stay) {
-        stay = await Stay.findOne({ $or: [{ hostId: stayId }, { id: stayId }] }).lean();
-      }
-      if (!stay) {
-        const host = await Host.findById(stayId).lean();
-        const p = host?.property || {};
-        const d = host?.hostDetails || {};
-        const propTitle = p.propertyName || host?.propertyName;
-        if (host && propTitle) {
-          const firstRate = host.roomRates?.[0];
-          const basePrice = firstRate?.price
-            ? (parseInt(String(firstRate.price).replace(/[^0-9]/g, ''), 10) || 0)
-            : (parseInt(String(p.price || host.price || '3500').replace(/[^0-9]/g, ''), 10) || 3500);
-          const rateUnit = firstRate?.rateUnit || p.rateUnit || '/month';
-
-          stay = {
-            _id: host._id?.toString() || host.id,
-            id: host._id?.toString() || host.id,
-            title: propTitle,
-            type: p.propertyType || host.propertyType || 'PG',
-            genderType: p.genderType || host.genderType || 'Both',
-            location: p.location || host.location || (p.city && p.state ? `${p.city}, ${p.state}` : (p.city || '')),
-            address: p.address || host.address || p.location || host.location || '',
-            roadArea: p.roadArea || host.roadArea || '',
-            city: p.city || host.city || '',
-            state: p.state || host.state || '',
-            pincode: p.pincode || host.pincode || '',
-            price: basePrice,
-            rateUnit: rateUnit,
-            rating: (Array.isArray(host.reviews) && host.reviews.length > 0)
-              ? Number((host.reviews.reduce((acc, r) => acc + (Number(r.rating) || 5), 0) / host.reviews.length).toFixed(1))
-              : (p.rating && p.rating !== 4.8 ? Number(p.rating) : (host.rating && host.rating !== 4.8 ? Number(host.rating) : null)),
-            badge: '',
-            tags: p.facilities || host.facilities || host.amenities || ['WiFi', 'Attached Bath', 'Security'],
-            roomRates: host.roomRates || [],
-            availableRooms: Array.isArray(host.rooms) ? host.rooms.filter((r) => r.status === 'Available').length : (p.availableRooms !== undefined ? p.availableRooms : (host.availableRooms || 1)),
-            totalRooms: Array.isArray(host.rooms) ? host.rooms.length : (p.totalRooms !== undefined ? p.totalRooms : (host.totalRooms || 1)),
-            rooms: host.rooms || [],
-            image: (Array.isArray(p.images) && p.images[0]) || p.image || host.image || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80',
-            images: Array.isArray(p.images) && p.images.length > 0 ? p.images : (Array.isArray(host.images) && host.images.length > 0 ? host.images : [host.image]),
-            videos: host.videos || [],
-            instagramVideoUrl: p.instagramVideoUrl || host.instagramVideoUrl || '',
-            reviews: host.reviews || [],
-            description: p.description || host.description || host.bio || `${propTitle} located in ${p.location || host.location}.`,
-            hostId: host._id?.toString() || host.id,
-            hostName: d.name || host.name,
-            hostEmail: d.email || host.email,
-            hostPhone: d.phone || host.phone,
-            createdAt: host.createdAt || new Date().toISOString(),
-          };
-        }
-      }
-    } catch (err) {
-      console.warn('MongoDB read single stay error:', err.message);
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid stay ID format.' });
     }
+
+    const stay = await Stay.findById(id)
+      .populate('hostId', 'name email phone avatar status')
+      .lean();
 
     if (!stay) {
-      return res.status(404).json({ message: 'Stay property not found in database' });
+      return res.status(404).json({ message: 'Stay property not found in database.' });
     }
-
-    const finalStayName = stay.propertyName || stay.title || 'Stay Property';
-    const finalPropType = stay.propertyType || stay.type || 'PG';
-    const finalFacilities = Array.isArray(stay.facilities) && stay.facilities.length > 0
-      ? stay.facilities
-      : (Array.isArray(stay.amenities) && stay.amenities.length > 0 ? stay.amenities : (stay.tags || []));
-    const finalRules = Array.isArray(stay.rules) && stay.rules.length > 0 ? stay.rules : (stay.houseRules || []);
 
     return res.json({
       ...stay,
-      id: stay._id?.toString() || stay.id,
-      _id: stay._id?.toString() || stay.id,
-      propertyName: finalStayName,
-      title: finalStayName,
-      propertyType: finalPropType,
-      type: finalPropType,
-      facilities: finalFacilities,
-      amenities: finalFacilities,
-      tags: finalFacilities,
-      rules: finalRules,
-      description: stay.description || stay.bio || '',
+      id: stay._id.toString(),
+      _id: stay._id.toString(),
     });
   } catch (error) {
     return next(error);
   }
 };
 
-// @desc    Create a stay listing with automated Cloudinary image offloading
+// @desc    Check dynamic room availability for requested dates without storing booking IDs
+// @route   GET /api/stays/:id/availability
+// @access  Public
+export const getStayAvailability = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { checkIn, checkOut } = req.query;
+
+    if (!checkIn || !checkOut) {
+      return res.status(400).json({ success: false, message: 'checkIn and checkOut dates are required.' });
+    }
+
+    const inDate = new Date(checkIn);
+    const outDate = new Date(checkOut);
+
+    if (isNaN(inDate.getTime()) || isNaN(outDate.getTime()) || inDate >= outDate) {
+      return res.status(400).json({ success: false, message: 'Invalid date range provided.' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid stay ID format.' });
+    }
+
+    const stay = await Stay.findById(id).lean();
+    if (!stay) {
+      return res.status(404).json({ success: false, message: 'Stay not found.' });
+    }
+
+    const overlapping = await Booking.find({
+      stayId: stay._id,
+      status: { $nin: ['CANCELLED', 'REJECTED', 'CHECKED_OUT'] },
+      checkIn: { $lt: outDate },
+      checkOut: { $gt: inDate },
+    })
+      .select('roomNumber')
+      .lean();
+
+    const occupiedRoomNumbers = new Set(
+      overlapping.map((b) => String(b.roomNumber).trim())
+    );
+
+    const roomStatusList = (stay.rooms || []).map((rm) => {
+      const cleanNum = String(rm.roomNumber).trim();
+      const isBooked = occupiedRoomNumbers.has(cleanNum);
+      return {
+        ...rm,
+        isAvailable: !isBooked,
+        status: isBooked ? 'Occupied' : 'Available',
+      };
+    });
+
+    return res.json({
+      success: true,
+      stayId: stay._id,
+      checkIn: inDate.toISOString(),
+      checkOut: outDate.toISOString(),
+      totalRooms: roomStatusList.length,
+      availableRoomsCount: roomStatusList.filter((r) => r.isAvailable).length,
+      rooms: roomStatusList,
+    });
+  } catch (error) {
+    console.error('Get stay availability error:', error);
+    return next(error);
+  }
+};
+
+// @desc    Create a stay listing linked via hostId
 // @route   POST /api/stays
-// @access  Private
+// @access  Private (Host)
 export const createStay = async (req, res, next) => {
   try {
+    const hostId = req.user?._id || req.user?.id || req.body.hostId;
+    if (!hostId || !mongoose.Types.ObjectId.isValid(hostId)) {
+      return res.status(400).json({ message: 'Valid hostId is required.' });
+    }
+
     const {
       title,
       type,
@@ -382,59 +246,72 @@ export const createStay = async (req, res, next) => {
       price,
       description,
       tags,
+      facilities,
+      rules,
       image,
       images,
-      badge,
+      instagramVideoUrl,
       latitude,
       longitude,
       city,
       state,
       pincode,
+      roadArea,
       address,
+      roomRates,
+      rooms,
     } = req.body;
 
-    if (!title || !location || !price) {
-      return res.status(400).json({ message: 'Please provide title, location, and price.' });
+    if (!title || !location || price === undefined) {
+      return res.status(400).json({ message: 'Title, location, and price are required.' });
     }
 
-    // Clean numeric price
     const parsedPrice = parseInt(String(price).replace(/[^0-9]/g, ''), 10) || 0;
+    const cleanPrimaryImage = await processImageUrl(image);
 
-    // Process primary image: upload to Cloudinary if Base64
-    let primaryImage = await processImageUrl(image);
-    if (!primaryImage) {
-      primaryImage = 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80';
-    }
-
-    // Process secondary images array
-    let processedImages = [primaryImage];
+    let processedImages = [];
     if (Array.isArray(images) && images.length > 0) {
-      const uploadedList = await Promise.all(images.map((img) => processImageUrl(img)));
-      processedImages = uploadedList.filter(Boolean);
-      if (processedImages.length === 0) processedImages = [primaryImage];
+      processedImages = await Promise.all(images.map((img) => processImageUrl(img)));
+    } else if (cleanPrimaryImage) {
+      processedImages = [cleanPrimaryImage];
     }
 
     const latNum = latitude ? parseFloat(latitude) : undefined;
     const lngNum = longitude ? parseFloat(longitude) : undefined;
 
+    const startingPricing = computeLowestStartingPrice(
+      Array.isArray(roomRates) ? roomRates : [],
+      Array.isArray(rooms) ? rooms : [],
+      parsedPrice,
+      req.body.rateUnit || '/month'
+    );
+
     const stayPayload = {
-      title,
+      hostId,
+      title: title.trim(),
       type: type || 'PG',
-      location,
+      location: location.trim(),
       address: address || '',
-      city: city || '',
-      state: state || '',
-      pincode: pincode || '',
+      roadArea: roadArea || '',
+      city: city ? city.trim() : '',
+      state: state ? state.trim() : '',
+      pincode: pincode ? pincode.trim() : '',
       latitude: latNum,
       longitude: lngNum,
-      price: parsedPrice,
+      price: startingPricing.price,
+      rateUnit: startingPricing.rateUnit,
       rating: 5.0,
-      badge: badge || 'VERIFIED HOST',
-      tags: Array.isArray(tags) ? tags : ['Wifi', 'Attached Bath', 'Security'],
-      image: primaryImage,
+      facilities: Array.isArray(facilities) ? facilities : (Array.isArray(tags) ? tags : []),
+      tags: Array.isArray(tags) ? tags : [],
+      rules: Array.isArray(rules) ? rules : [],
+      image: cleanPrimaryImage,
       images: processedImages,
-      description: description || `${title} located in ${location}.`,
-      hostId: req.user?.id || req.user?._id || 'host_user',
+      instagramVideoUrl: instagramVideoUrl || '',
+      description: description || '',
+      roomRates: Array.isArray(roomRates) ? roomRates : [],
+      rooms: Array.isArray(rooms) ? rooms : [],
+      totalRooms: Array.isArray(rooms) ? rooms.length : 1,
+      availableRooms: Array.isArray(rooms) ? rooms.filter((r) => r.status === 'Available').length : 1,
     };
 
     if (latNum != null && lngNum != null) {
@@ -447,174 +324,134 @@ export const createStay = async (req, res, next) => {
     const newStay = await Stay.create(stayPayload);
     return res.status(201).json(newStay);
   } catch (error) {
-    console.error('Error creating property stay:', error);
+    console.error('Error creating stay:', error);
     return next(error);
   }
 };
 
+// @desc    Add review to stay
+// @route   POST /api/stays/:id/reviews
+// @access  Private
 export const addReviewToStay = async (req, res, next) => {
   try {
-    const stayId = req.params.id;
-    const { author, userEmail, userId, rating, text } = req.body;
+    const { id: stayId } = req.params;
+    const { rating, comment } = req.body;
+    const userId = req.user?._id || req.user?.id;
+    const userName = req.user?.name || req.body.userName || 'Guest User';
 
-    if (!text || !rating) {
-      return res.status(400).json({ message: 'Please provide rating and review text.' });
+    if (!rating || !comment) {
+      return res.status(400).json({ message: 'Rating and comment text are required.' });
+    }
+
+    const stay = await Stay.findById(stayId);
+    if (!stay) {
+      return res.status(404).json({ message: 'Stay not found.' });
     }
 
     const reviewObj = {
-      id: 'rev_' + Date.now(),
-      author: author || req.user?.name || 'Guest User',
-      userEmail: userEmail || req.user?.email || '',
-      userId: userId || req.user?._id || req.user?.id || '',
-      rating: Number(rating) || 5,
-      text: text.trim(),
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      createdAt: new Date().toISOString(),
+      userId,
+      userName,
+      userAvatar: req.user?.avatar || '',
+      rating: Math.min(5, Math.max(1, Number(rating))),
+      comment: comment.trim(),
     };
 
-    let updatedReviews = [];
-
-    try {
-      let dbStay = await Stay.findById(stayId) || await Stay.findOne({ $or: [{ hostId: stayId }, { id: stayId }] });
-      if (dbStay) {
-        if (!Array.isArray(dbStay.reviews)) dbStay.reviews = [];
-        dbStay.reviews.unshift(reviewObj);
-        await dbStay.save();
-        updatedReviews = dbStay.reviews;
-      }
-
-      let dbHost = await Host.findById(stayId) || await Host.findOne({ email: stayId });
-      if (dbHost) {
-        if (!Array.isArray(dbHost.reviews)) dbHost.reviews = [];
-        dbHost.reviews.unshift(reviewObj);
-        await dbHost.save();
-        if (updatedReviews.length === 0) updatedReviews = dbHost.reviews;
-      }
-    } catch (err) {
-      console.warn('MongoDB update review error:', err.message);
-      return res.status(500).json({ message: 'Database error while saving review' });
-    }
-
-    if (updatedReviews.length === 0) {
-      updatedReviews = [reviewObj];
-    }
-
-    const sum = updatedReviews.reduce((acc, r) => acc + (Number(r.rating) || 5), 0);
-    const avgRating = (sum / updatedReviews.length).toFixed(1);
+    stay.reviews.unshift(reviewObj);
+    stay.reviewsCount = stay.reviews.length;
+    const sum = stay.reviews.reduce((acc, r) => acc + r.rating, 0);
+    stay.rating = Number((sum / stay.reviews.length).toFixed(1));
+    await stay.save();
 
     return res.status(201).json({
-      message: 'Review saved to database successfully',
-      review: reviewObj,
-      reviews: updatedReviews,
-      rating: avgRating,
+      message: 'Review added successfully',
+      rating: stay.rating,
+      reviewsCount: stay.reviewsCount,
+      reviews: stay.reviews,
     });
   } catch (error) {
     return next(error);
   }
 };
 
+// @desc    Update review
+// @route   PUT /api/stays/:id/reviews/:reviewId
+// @access  Private
 export const updateReviewInStay = async (req, res, next) => {
   try {
     const { id: stayId, reviewId } = req.params;
-    const { rating, text } = req.body;
+    const { rating, comment } = req.body;
 
-    let updatedReviews = [];
+    const stay = await Stay.findById(stayId);
+    if (!stay) return res.status(404).json({ message: 'Stay not found.' });
 
-    try {
-      let dbStay = await Stay.findById(stayId) || await Stay.findOne({ $or: [{ hostId: stayId }, { id: stayId }] });
-      if (dbStay && Array.isArray(dbStay.reviews)) {
-        const rev = dbStay.reviews.find((r) => String(r.id || r._id) === String(reviewId));
-        if (rev) {
-          if (rating) rev.rating = Number(rating);
-          if (text) rev.text = text.trim();
-          await dbStay.save();
-          updatedReviews = dbStay.reviews;
-        }
-      }
-    } catch (err) {
-      console.warn('MongoDB update review error:', err.message);
-      return res.status(500).json({ message: 'Database error while updating review' });
-    }
+    const rev = stay.reviews.id(reviewId);
+    if (!rev) return res.status(404).json({ message: 'Review not found.' });
 
-    return res.status(200).json({
-      message: 'Review updated successfully',
-      reviews: updatedReviews,
-    });
+    if (rating) rev.rating = Math.min(5, Math.max(1, Number(rating)));
+    if (comment) rev.comment = comment.trim();
+
+    const sum = stay.reviews.reduce((acc, r) => acc + r.rating, 0);
+    stay.rating = Number((sum / stay.reviews.length).toFixed(1));
+    await stay.save();
+
+    return res.json({ message: 'Review updated successfully', reviews: stay.reviews });
   } catch (error) {
     return next(error);
   }
 };
 
+// @desc    Delete review
+// @route   DELETE /api/stays/:id/reviews/:reviewId
+// @access  Private
 export const deleteReviewFromStay = async (req, res, next) => {
   try {
     const { id: stayId, reviewId } = req.params;
 
-    let updatedReviews = [];
+    const stay = await Stay.findById(stayId);
+    if (!stay) return res.status(404).json({ message: 'Stay not found.' });
 
-    try {
-      let dbStay = await Stay.findById(stayId) || await Stay.findOne({ $or: [{ hostId: stayId }, { id: stayId }] });
-      if (dbStay && Array.isArray(dbStay.reviews)) {
-        dbStay.reviews = dbStay.reviews.filter((r) => String(r.id || r._id) !== String(reviewId));
-        await dbStay.save();
-        updatedReviews = dbStay.reviews;
-      }
-    } catch (err) {
-      console.warn('MongoDB delete review error:', err.message);
-      return res.status(500).json({ message: 'Database error while deleting review' });
-    }
+    stay.reviews.pull(reviewId);
+    stay.reviewsCount = stay.reviews.length;
+    const sum = stay.reviews.length > 0 ? stay.reviews.reduce((acc, r) => acc + r.rating, 0) : 5.0;
+    stay.rating = stay.reviews.length > 0 ? Number((sum / stay.reviews.length).toFixed(1)) : 5.0;
+    await stay.save();
 
-    return res.status(200).json({
-      message: 'Review deleted successfully',
-      reviews: updatedReviews,
-    });
+    return res.json({ message: 'Review deleted successfully', reviews: stay.reviews });
   } catch (error) {
     return next(error);
   }
 };
 
+// @desc    Update room physical availability in stay
+// @route   PUT /api/stays/:id/rooms
+// @access  Private (Host)
 export const updateStayRooms = async (req, res, next) => {
   try {
     const { id: stayId } = req.params;
     const { availableRooms, decrement } = req.body;
 
-    let newAvailableRooms = availableRooms;
+    const stay = await Stay.findById(stayId);
+    if (!stay) return res.status(404).json({ message: 'Stay not found.' });
 
-    try {
-      let dbStay = await Stay.findById(stayId) || await Stay.findOne({ $or: [{ hostId: stayId }, { id: stayId }] });
-      if (dbStay) {
-        if (decrement) {
-          dbStay.availableRooms = Math.max(0, (dbStay.availableRooms || 1) - 1);
-        } else if (availableRooms !== undefined) {
-          dbStay.availableRooms = Math.max(0, Number(availableRooms));
-        }
-        await dbStay.save();
-        newAvailableRooms = dbStay.availableRooms;
-      }
-
-      let dbHost = await Host.findById(stayId) || await Host.findOne({ $or: [{ hostId: stayId }, { id: stayId }, { email: stayId }] });
-      if (dbHost) {
-        if (decrement) {
-          dbHost.availableRooms = Math.max(0, (dbHost.availableRooms || 1) - 1);
-        } else if (availableRooms !== undefined) {
-          dbHost.availableRooms = Math.max(0, Number(availableRooms));
-        }
-        await dbHost.save();
-        newAvailableRooms = dbHost.availableRooms;
-      }
-    } catch (err) {
-      console.warn('MongoDB room update error:', err.message);
-      return res.status(500).json({ message: 'Database error while updating rooms' });
+    if (decrement) {
+      stay.availableRooms = Math.max(0, stay.availableRooms - 1);
+    } else if (availableRooms !== undefined) {
+      stay.availableRooms = Math.max(0, Number(availableRooms));
     }
 
-    return res.status(200).json({
-      message: 'Room availability updated in database successfully',
-      availableRooms: newAvailableRooms,
+    await stay.save();
+    return res.json({
+      message: 'Room counts updated successfully',
+      availableRooms: stay.availableRooms,
     });
   } catch (error) {
     return next(error);
   }
 };
 
+// @desc    Resolve Google Maps coordinates
+// @route   POST /api/stays/resolve-map
+// @access  Public
 export const resolveMapLink = async (req, res) => {
   try {
     const { url } = req.body;
@@ -630,13 +467,8 @@ export const resolveMapLink = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid URL format' });
     }
 
-    const allowedProtocols = ['http:', 'https:'];
-    if (!allowedProtocols.includes(parsedUrl.protocol)) {
-      return res.status(400).json({ success: false, message: 'Only HTTP and HTTPS URLs are allowed' });
-    }
-
     const hostname = parsedUrl.hostname.toLowerCase();
-    const isGoogleDomain =
+    const isGoogle =
       hostname === 'goo.gl' ||
       hostname.endsWith('.goo.gl') ||
       hostname === 'google.com' ||
@@ -644,15 +476,11 @@ export const resolveMapLink = async (req, res) => {
       hostname === 'google.co.in' ||
       hostname.endsWith('.google.co.in');
 
-    if (!isGoogleDomain) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid URL: Only verified Google Maps URLs are permitted',
-      });
+    if (!isGoogle) {
+      return res.status(400).json({ success: false, message: 'Only verified Google Maps URLs are permitted' });
     }
 
     let targetUrl = trimmed;
-
     if (hostname.includes('goo.gl')) {
       try {
         const redirectRes = await fetch(trimmed, {
@@ -687,36 +515,56 @@ export const resolveMapLink = async (req, res) => {
       lng = parseFloat(queryMatch[2]);
     }
 
-    let placeName = '';
-    const placeMatch = targetUrl.match(/\/maps\/place\/([^/@]+)/);
-    if (placeMatch && placeMatch[1]) {
-      try {
-        placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
-      } catch {
-        placeName = placeMatch[1].replace(/\+/g, ' ');
-      }
-    }
-
     if (lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng)) {
-      return res.status(200).json({
+      return res.json({
         success: true,
         latitude: parseFloat(lat.toFixed(6)),
         longitude: parseFloat(lng.toFixed(6)),
-        placeName,
-        resolvedUrl: targetUrl,
       });
     }
 
     return res.status(404).json({
       success: false,
-      message: 'Could not extract latitude and longitude coordinates from the provided Google Maps URL.',
+      message: 'Could not extract latitude and longitude coordinates.',
     });
   } catch (error) {
-    console.error('resolveMapLink error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to process Google Maps link',
-      error: error.message,
-    });
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getPropertiesByHost = async (req, res, next) => {
+  try {
+    const userId = req.user?._id || req.user?.id;
+    const userEmail = (req.user?.email || '').trim().toLowerCase();
+
+    let host = null;
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+      host = await Host.findById(userId).lean();
+    }
+    if (!host && userEmail) {
+      host = await Host.findOne({ email: userEmail }).lean();
+    }
+
+    const hostId = host?._id || (userId && mongoose.Types.ObjectId.isValid(userId) ? userId : null);
+
+    const stays = hostId ? await Stay.find({ hostId }).sort({ createdAt: -1 }).lean() : [];
+
+    const mappedStays = stays.map((s) => ({
+      ...s,
+      id: s._id.toString(),
+      _id: s._id.toString(),
+      propertyName: s.title,
+      propertyType: s.type,
+      hostName: host?.name || req.user?.name || '',
+      hostEmail: host?.email || req.user?.email || '',
+      email: host?.email || req.user?.email || '',
+      phone: host?.phone || req.user?.phone || '',
+      status: host?.status || (s.isPublished ? 'Approved' : 'Pending Approval'),
+      isApproved: host?.status === 'Approved' || Boolean(s.isPublished),
+    }));
+
+    return res.json(mappedStays);
+  } catch (error) {
+    return next(error);
   }
 };

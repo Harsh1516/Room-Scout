@@ -349,7 +349,7 @@ export function UserWeeklySlotSchedule({
             <span className="text-[10px] text-slate-400 font-normal">Required for booking</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-[10px] font-medium text-slate-500 uppercase mb-1">
                 Your Full Name (letters only) *
@@ -440,18 +440,6 @@ export function UserWeeklySlotSchedule({
               </div>
             </div>
 
-            <div>
-              <label className="block text-[10px] font-medium text-slate-500 uppercase mb-1">
-                Email Address
-              </label>
-              <input
-                type="email"
-                value={guestEmail}
-                onChange={(e) => setGuestEmail(e.target.value)}
-                placeholder="yourname@gmail.com"
-                className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-normal focus:outline-none focus:border-slate-900 dark:focus:border-white transition-colors"
-              />
-            </div>
           </div>
         </div>
 

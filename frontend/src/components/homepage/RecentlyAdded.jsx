@@ -10,25 +10,69 @@ export function RecentlyAdded({ onStayClick, onBookClick }) {
   const [recentStays, setRecentStays] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadStays() {
-      try {
-        setLoading(true);
-        const data = await staysAPI.getStays();
-        if (Array.isArray(data)) {
-          // Take the 6 most recent database stays
-          setRecentStays(data.slice(0, 6));
-        } else {
-          setRecentStays([]);
-        }
-      } catch (err) {
-        console.warn('Could not load recent stays from database:', err);
-        setRecentStays([]);
-      } finally {
-        setLoading(false);
-      }
+  const loadStays = async (isBackground = false) => {
+    try {
+      if (!isBackground && recentStays.length === 0) setLoading(true);
+      const data = await staysAPI.getStays();
+      // Support both direct array and paginated backend envelope { stays: [...] }
+      const list = Array.isArray(data)
+        ? data
+        : (Array.isArray(data?.stays) ? data.stays : (Array.isArray(data?.data) ? data.data : []));
+
+      setRecentStays(list.slice(0, 6));
+    } catch (err) {
+      console.warn('Could not load recent stays from database:', err);
+      if (!isBackground) setRecentStays([]);
+    } finally {
+      if (!isBackground) setLoading(false);
     }
+  };
+
+  useEffect(() => {
     loadStays();
+
+    const handleSync = () => loadStays(true);
+
+    window.addEventListener('stayhub_rooms_updated', handleSync);
+    window.addEventListener('stayhub_admin_sync', handleSync);
+    window.addEventListener('stayhub_slots_updated', handleSync);
+    window.addEventListener('focus', handleSync);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') loadStays(true);
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    let bc = null;
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        bc = new BroadcastChannel('stayhub_live_channel');
+        bc.onmessage = (event) => {
+          if (
+            event.data?.type === 'HOST_APPROVED' ||
+            event.data?.type === 'STAY_UPDATED' ||
+            event.data?.type === 'ROOMS_UPDATED'
+          ) {
+            loadStays(true);
+          }
+        };
+      }
+    } catch {}
+
+    // Polling interval (every 4 seconds) to guarantee real-time updates without page refresh
+    const pollInterval = setInterval(() => {
+      loadStays(true);
+    }, 4000);
+
+    return () => {
+      clearInterval(pollInterval);
+      window.removeEventListener('stayhub_rooms_updated', handleSync);
+      window.removeEventListener('stayhub_admin_sync', handleSync);
+      window.removeEventListener('stayhub_slots_updated', handleSync);
+      window.removeEventListener('focus', handleSync);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      if (bc) bc.close();
+    };
   }, []);
 
   return (
@@ -36,7 +80,7 @@ export function RecentlyAdded({ onStayClick, onBookClick }) {
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 sm:mb-8 gap-3 sm:gap-4 w-full">
         <div>
-          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 bg-slate-900/10 dark:bg-white/10 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full border border-slate-900/15 dark:border-white/20 backdrop-blur-xl">
+          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 bg-slate-900/10 dark:bg-white/12 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full border border-slate-900/15 dark:border-white/25 backdrop-blur-2xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.2)]">
             Fresh Stays
           </span>
           <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-slate-950 dark:text-white mt-1.5 sm:mt-2 tracking-tight drop-shadow-sm dark:drop-shadow-[0_8px_30px_rgba(0,0,0,0.9)]">
@@ -46,7 +90,7 @@ export function RecentlyAdded({ onStayClick, onBookClick }) {
 
         <button
           onClick={() => navigate('/search')}
-          className="self-start sm:self-auto text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white hover:text-slate-700 dark:hover:text-slate-200 flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-white/15 backdrop-blur-xl transition-colors cursor-pointer shadow-xs"
+          className="self-start sm:self-auto text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white hover:text-slate-700 dark:hover:text-white flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl bg-white/80 dark:bg-white/10 dark:hover:bg-white/20 border border-slate-200 dark:border-white/25 backdrop-blur-2xl transition-all cursor-pointer shadow-xs dark:shadow-[inset_0_1px_2px_rgba(255,255,255,0.2)] active:scale-95"
         >
           <span>Explore All Properties</span>
           <span>→</span>

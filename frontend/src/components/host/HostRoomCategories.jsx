@@ -2,93 +2,42 @@ import React, { useMemo, useRef, useState, useCallback, useEffect } from 'react'
 import { isMonthlyRateUnit } from '../../utils/dateUtils';
 
 /**
- * Checks if a specific room is booked/occupied specifically on today's date
+ * Checks if a specific room is booked/occupied on a target date (YYYY-MM-DD)
+ * using interval overlap matching:
+ * - Nightly check-in: 12:00 PM UTC
+ * - Nightly check-out: 11:59 AM UTC
  */
 export function isRoomOccupiedOnDate(room, targetDateISO, guests = []) {
   if (!room || !targetDateISO) return false;
   const rawRoomNum = String(room.roomNumber || '').replace(/[^0-9]/g, '');
 
-  // 1. Check direct bookedDates on room object
-  if (Array.isArray(room.bookedDates) && room.bookedDates.includes(targetDateISO)) {
-    return true;
-  }
-
-  // 2. Check slotBookings on room object
-  if (Array.isArray(room.slotBookings)) {
-    const hasSlot = room.slotBookings.some(
-      (sb) => Array.isArray(sb.bookedDates) && sb.bookedDates.includes(targetDateISO)
-    );
-    if (hasSlot) return true;
-  }
-
-  // 3. Check active bookings in guests array
+  // Check active master bookings from database (single source of truth)
   if (Array.isArray(guests) && rawRoomNum) {
-    const isBookedInGuests = guests.some((g) => {
-      if (!g) return false;
-      const status = String(g.status || '').toUpperCase();
-      if (status === 'CANCELLED' || status === 'REJECTED' || status === 'CHECKED_OUT') return false;
-      const gNum = String(g.roomNumber || '').replace(/[^0-9]/g, '');
-      if (!gNum || gNum !== rawRoomNum) return false;
+    const [tY, tM, tD] = targetDateISO.split('-').map(Number);
+    // Night slot window: 12:00 PM target date to 11:59 AM next day
+    const slotStart = new Date(Date.UTC(tY, tM - 1, tD, 12, 0, 0)).getTime();
+    const slotEnd = new Date(Date.UTC(tY, tM - 1, tD + 1, 11, 59, 0)).getTime();
 
-      // Check dates
-      if (Array.isArray(g.bookedDates) && g.bookedDates.length > 0) {
-        return g.bookedDates.includes(targetDateISO);
-      }
-      if (g.checkInISO && g.checkOutISO) {
-        return targetDateISO >= g.checkInISO && targetDateISO <= g.checkOutISO;
-      }
-      return false;
-    });
-
-    if (isBookedInGuests) return true;
-  }
-
-  return false;
-}
-
-/**
- * Checks if a specific room is booked/occupied specifically in a target month (YYYY-MM)
- */
-export function isRoomOccupiedInMonth(room, targetMonthKey, guests = []) {
-  if (!room || !targetMonthKey) return false;
-  const rawRoomNum = String(room.roomNumber || '').replace(/[^0-9]/g, '');
-
-  // 1. Check direct bookedMonths or bookedDates
-  if (Array.isArray(room.bookedMonths) && room.bookedMonths.includes(targetMonthKey)) {
-    return true;
-  }
-  if (Array.isArray(room.bookedDates) && room.bookedDates.some((d) => String(d).startsWith(targetMonthKey))) {
-    return true;
-  }
-
-  // 2. Check slotBookings
-  if (Array.isArray(room.slotBookings)) {
-    const hasSlot = room.slotBookings.some((sb) => {
-      if (Array.isArray(sb.bookedMonths) && sb.bookedMonths.includes(targetMonthKey)) return true;
-      if (Array.isArray(sb.bookedDates) && sb.bookedDates.some((d) => String(d).startsWith(targetMonthKey))) return true;
-      return false;
-    });
-    if (hasSlot) return true;
-  }
-
-  // 3. Check active bookings in guests array
-  if (Array.isArray(guests) && rawRoomNum) {
     const isBooked = guests.some((g) => {
       if (!g) return false;
       const status = String(g.status || '').toUpperCase();
       if (status === 'CANCELLED' || status === 'REJECTED' || status === 'CHECKED_OUT') return false;
+
       const gNum = String(g.roomNumber || '').replace(/[^0-9]/g, '');
       if (!gNum || gNum !== rawRoomNum) return false;
 
-      if (Array.isArray(g.bookedMonths) && g.bookedMonths.includes(targetMonthKey)) return true;
-      if (Array.isArray(g.bookedDates) && g.bookedDates.some((d) => String(d).startsWith(targetMonthKey))) return true;
-      if (g.checkInISO && g.checkOutISO) {
-        const startM = String(g.checkInISO).slice(0, 7);
-        const endM = String(g.checkOutISO).slice(0, 7);
-        return targetMonthKey >= startM && targetMonthKey <= endM;
+      if (g.checkIn && g.checkOut) {
+        const inTime = new Date(g.checkIn).getTime();
+        const outTime = new Date(g.checkOut).getTime();
+        if (!isNaN(inTime) && !isNaN(outTime)) {
+          // Standard interval overlap: checkIn < slotEnd && checkOut > slotStart
+          return inTime < slotEnd && outTime > slotStart;
+        }
       }
+
       return false;
     });
+
     if (isBooked) return true;
   }
 
@@ -96,14 +45,45 @@ export function isRoomOccupiedInMonth(room, targetMonthKey, guests = []) {
 }
 
 /**
- * CategoryRoomCarousel
- * Horizontal card carousel with:
- * - Mouse-wheel horizontal sliding
- * - Swipe left and right via touch / drag
- * - Navigation arrow buttons (< and >)
- * - Dot indicators showing exact card positions with active elongated pill
- * - Click-to-scroll dot navigation
+ * Checks if a specific room is booked/occupied in a target month (YYYY-MM)
+ * - Monthly check-in: 1st of month at 12:00 AM UTC
+ * - Monthly check-out: Last day of month at 11:59 PM UTC
  */
+export function isRoomOccupiedInMonth(room, targetMonthKey, guests = []) {
+  if (!room || !targetMonthKey) return false;
+  const rawRoomNum = String(room.roomNumber || '').replace(/[^0-9]/g, '');
+
+  // Check active master bookings from database (single source of truth)
+  if (Array.isArray(guests) && rawRoomNum) {
+    const [mY, mM] = targetMonthKey.split('-').map(Number);
+    const monthStart = new Date(Date.UTC(mY, mM - 1, 1, 0, 0, 0)).getTime();
+    const monthEnd = new Date(Date.UTC(mY, mM, 0, 23, 59, 59)).getTime();
+
+    const isBooked = guests.some((g) => {
+      if (!g) return false;
+      const status = String(g.status || '').toUpperCase();
+      if (status === 'CANCELLED' || status === 'REJECTED' || status === 'CHECKED_OUT') return false;
+
+      const gNum = String(g.roomNumber || '').replace(/[^0-9]/g, '');
+      if (!gNum || gNum !== rawRoomNum) return false;
+
+      if (g.checkIn && g.checkOut) {
+        const inTime = new Date(g.checkIn).getTime();
+        const outTime = new Date(g.checkOut).getTime();
+        if (!isNaN(inTime) && !isNaN(outTime)) {
+          return inTime < monthEnd && outTime > monthStart;
+        }
+      }
+
+      return false;
+    });
+
+    if (isBooked) return true;
+  }
+
+  return false;
+}
+
 function CategoryRoomCarousel({
   matchingRooms = [],
   rate,
@@ -124,7 +104,6 @@ function CategoryRoomCarousel({
   const [activeDotIndex, setActiveDotIndex] = useState(0);
   const prevCountRef = useRef(matchingRooms.length);
 
-  // Auto scroll to newly added room card
   useEffect(() => {
     if (matchingRooms.length > prevCountRef.current && scrollRef.current) {
       const timer = setTimeout(() => {
@@ -141,7 +120,6 @@ function CategoryRoomCarousel({
     prevCountRef.current = matchingRooms.length;
   }, [matchingRooms.length]);
 
-  // Wheel listener for horizontal scrolling
   const handleWheel = useCallback((e) => {
     const el = scrollRef.current;
     if (!el) return;
@@ -202,29 +180,43 @@ function CategoryRoomCarousel({
     }
   };
 
+  const hasName = Boolean(rate?.type && rate.type.trim().length > 0);
+  const rawPriceDigits = String(rate?.price || '').replace(/[^0-9]/g, '');
+  const hasPrice = Boolean(rawPriceDigits.length > 0 && parseInt(rawPriceDigits, 10) > 0);
+  const hasUnit = Boolean(
+    rate?.rateUnit &&
+    String(rate.rateUnit).trim().length > 0 &&
+    (rate.rateUnit === '/night' || rate.rateUnit === '/month' || isMonthlyRateUnit(rate.rateUnit))
+  );
+  const isCategoryComplete = hasName && hasPrice && hasUnit;
+
+  const missingFields = [];
+  if (!hasName) missingFields.push('Category Name');
+  if (!hasPrice) missingFields.push('Price');
+  if (!hasUnit) missingFields.push('Select Unit');
+  const disabledTooltip = `Please fill ${missingFields.join(', ')} before adding room cards`;
+
   return (
-    <div className="pt-2.5 border-t border-slate-200/80 dark:border-slate-800 space-y-2.5">
-      {/* Category Room Cards Header with Controls */}
+    <div className="pt-2.5 border-t border-slate-200 dark:border-zinc-800 space-y-2.5">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 min-w-0">
-          <span className="text-[10.5px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
+          <span className="text-xs font-semibold text-slate-700 dark:text-zinc-300 truncate">
             Rooms ({matchingRooms.length})
           </span>
-          {rate.price && (
-            <span className="text-[10px] text-slate-400 font-medium truncate">
-              • {rate.price}{rate.rateUnit || '/night'}
+          {rate.price && rate.rateUnit && (
+            <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium truncate">
+              • {rate.price}{rate.rateUnit}
             </span>
           )}
         </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
-          {/* Left & Right Swipe Buttons */}
           {matchingRooms.length > 1 && (
             <div className="flex items-center gap-1">
               <button
                 type="button"
                 onClick={handleScrollLeft}
-                className="w-5 h-5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 transition-colors cursor-pointer shadow-2xs active:scale-95"
+                className="w-5 h-5 rounded-md border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 flex items-center justify-center text-slate-600 dark:text-zinc-300 transition-colors cursor-pointer shadow-xs active:scale-95"
                 title="Swipe left"
               >
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -234,7 +226,7 @@ function CategoryRoomCarousel({
               <button
                 type="button"
                 onClick={handleScrollRight}
-                className="w-5 h-5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 transition-colors cursor-pointer shadow-2xs active:scale-95"
+                className="w-5 h-5 rounded-md border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 flex items-center justify-center text-slate-600 dark:text-zinc-300 transition-colors cursor-pointer shadow-xs active:scale-95"
                 title="Swipe right"
               >
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -246,15 +238,21 @@ function CategoryRoomCarousel({
 
           <button
             type="button"
+            disabled={!isCategoryComplete}
             onClick={(e) => {
               e.stopPropagation();
+              if (!isCategoryComplete) return;
               onSelectCategoryIndex(categoryIndex);
               if (typeof onAddRoomCard === 'function') {
                 onAddRoomCard(rate);
               }
             }}
-            className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-white dark:bg-slate-200 dark:text-slate-900 dark:hover:bg-white text-[10.5px] font-bold transition-colors cursor-pointer flex items-center gap-1 shrink-0 shadow-2xs active:scale-[0.98]"
-            title={`Add new room to ${rate.type || 'this category'}`}
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 shrink-0 ${
+              isCategoryComplete
+                ? 'bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-zinc-950 cursor-pointer shadow-xs active:scale-[0.98]'
+                : 'bg-slate-200 dark:bg-zinc-800 text-slate-400 dark:text-zinc-500 cursor-not-allowed border border-slate-300/60 dark:border-zinc-700/60 shadow-none opacity-80'
+            }`}
+            title={!isCategoryComplete ? disabledTooltip : `Add new room to ${rate.type || 'this category'}`}
           >
             <span className="text-xs leading-none">+</span>
             <span>Add Room</span>
@@ -263,67 +261,86 @@ function CategoryRoomCarousel({
       </div>
 
       {matchingRooms.length === 0 ? (
-        <div className="p-3 text-center border border-dashed border-slate-200 dark:border-slate-700/80 rounded-xl text-[11px] text-slate-400 bg-slate-50/50 dark:bg-slate-800/30">
-          0 room cards added for {rate.type || 'this category'} yet.{' '}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelectCategoryIndex(categoryIndex);
-              if (typeof onAddRoomCard === 'function') {
-                onAddRoomCard(rate);
+        <div className="p-3 text-center border border-dashed border-slate-300 dark:border-zinc-800 rounded-xl text-[11px] text-slate-400 dark:text-zinc-500 bg-slate-50 dark:bg-zinc-950/60 space-y-1">
+          <div>
+            0 room cards added for {rate.type || 'this category'} yet.{' '}
+            <button
+              type="button"
+              disabled={!isCategoryComplete}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!isCategoryComplete) return;
+                onSelectCategoryIndex(categoryIndex);
+                if (typeof onAddRoomCard === 'function') {
+                  onAddRoomCard(rate);
+                }
+              }}
+              className={
+                isCategoryComplete
+                  ? 'font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer'
+                  : 'font-medium text-slate-400 dark:text-zinc-500 cursor-not-allowed opacity-75'
               }
-            }}
-            className="font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
-          >
-            + Add First Room
-          </button>
+              title={!isCategoryComplete ? disabledTooltip : 'Add first room'}
+            >
+              + Add First Room
+            </button>
+          </div>
+          {!isCategoryComplete && (
+            <p className="text-[10.5px] text-amber-600 dark:text-amber-400 font-medium">
+              Please fill {missingFields.join(', ')} above to add room cards.
+            </p>
+          )}
         </div>
       ) : (
         <div className="space-y-2">
-          {/* Horizontal Scrollable Room Cards Track */}
           <div
             ref={setScrollRef}
             onScroll={handleScroll}
-            className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 pt-0.5 px-0.5 cursor-grab active:cursor-grabbing w-full"
+            className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 pt-0.5 px-0.5 w-full"
           >
             {matchingRooms.map((card, cIdx) => {
-              const isCardSelected = selectedRoomCardId === card.id;
+              const cardId = card.id || card._id || `room_${card.roomNumber || cIdx}`;
+              const isCardSelected = Boolean(
+                selectedRoomCardId &&
+                (selectedRoomCardId === cardId ||
+                 (card.id && selectedRoomCardId === card.id) ||
+                 (card._id && selectedRoomCardId === card._id) ||
+                 String(selectedRoomCardId) === String(card.roomNumber))
+              );
               const isCardOccupied = isMonthly
                 ? isRoomOccupiedInMonth(card, currentMonthKey, guests)
                 : isRoomOccupiedOnDate(card, todayISO, guests);
 
               return (
                 <div
-                  key={card.id}
+                  key={cardId}
                   onClick={(e) => {
                     e.stopPropagation();
                     onSelectCategoryIndex(categoryIndex);
                     if (typeof onSelectRoomCardId === 'function') {
-                      onSelectRoomCardId(card.id);
+                      onSelectRoomCardId(cardId);
                     }
                     setActiveDotIndex(cIdx);
                   }}
-                  className={`min-w-[110px] w-28 shrink-0 snap-start p-2 rounded-xl border transition-all flex flex-col justify-between h-[74px] relative cursor-pointer select-none outline-none ${
+                  className={`min-w-[114px] w-28 shrink-0 snap-start p-2.5 rounded-2xl border transition-colors duration-150 flex flex-col justify-between h-[80px] relative cursor-pointer select-none outline-none ${
                     isCardSelected
-                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-slate-900 dark:border-white shadow-xs ring-2 ring-slate-900/20 dark:ring-white/20'
+                      ? isCardOccupied
+                        ? 'bg-amber-500/25 dark:bg-amber-500/30 text-amber-950 dark:text-amber-50 border-amber-400 dark:border-amber-400/80 shadow-xs'
+                        : 'bg-emerald-500/25 dark:bg-emerald-500/30 text-emerald-950 dark:text-emerald-50 border-emerald-400 dark:border-emerald-400/80 shadow-xs'
                       : isCardOccupied
-                      ? 'bg-slate-100/90 dark:bg-slate-800/60 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 shadow-2xs'
-                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-900 dark:text-white shadow-2xs'
+                      ? 'bg-amber-500/10 dark:bg-amber-500/15 text-amber-900 dark:text-amber-100 border-transparent hover:bg-amber-500/15'
+                      : 'bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-900 dark:text-emerald-100 border-transparent hover:bg-emerald-500/15'
                   }`}
                 >
-                  {/* Top: Status Pill + Remove Cross */}
                   <div className="w-full flex items-center justify-between">
                     <span
-                      className={`text-[7.5px] font-bold px-1.5 py-0.2 rounded-md uppercase tracking-wider whitespace-nowrap ${
-                        isCardSelected
-                          ? 'bg-white/20 text-white dark:bg-slate-900/20 dark:text-slate-900'
-                          : isCardOccupied
-                          ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                      className={`text-[9.5px] font-semibold px-2 py-0.5 rounded-full tracking-wide whitespace-nowrap ${
+                        isCardOccupied
+                          ? 'bg-amber-500/20 text-amber-900 dark:text-amber-100'
+                          : 'bg-emerald-500/20 text-emerald-900 dark:text-emerald-100'
                       }`}
                     >
-                      {isCardOccupied ? (isMonthly ? 'Occupied' : 'Occupied') : 'Available'}
+                      {isCardOccupied ? 'Occupied' : 'Available'}
                     </span>
 
                     <button
@@ -331,21 +348,16 @@ function CategoryRoomCarousel({
                       onClick={(e) => {
                         e.stopPropagation();
                         if (typeof onRemoveRoomCard === 'function') {
-                          onRemoveRoomCard(card.id);
+                          onRemoveRoomCard(cardId);
                         }
                       }}
-                      className={`w-4 h-4 rounded-md text-[9px] flex items-center justify-center font-bold transition-colors cursor-pointer ${
-                        isCardSelected
-                          ? 'text-white/70 hover:text-white hover:bg-white/20'
-                          : 'text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40'
-                      }`}
-                      title="Remove this room"
+                      className="w-4 h-4 rounded-md text-[10px] flex items-center justify-center font-normal text-slate-400 hover:text-rose-500 hover:bg-rose-500/15 transition-colors cursor-pointer"
+                      title="Remove room"
                     >
                       ✕
                     </button>
                   </div>
 
-                  {/* Center: Room Number Input */}
                   <div className="my-0.5 text-center px-0.5">
                     <input
                       type="text"
@@ -354,13 +366,13 @@ function CategoryRoomCarousel({
                         e.stopPropagation();
                         onSelectCategoryIndex(categoryIndex);
                         if (typeof onSelectRoomCardId === 'function') {
-                          onSelectRoomCardId(card.id);
+                          onSelectRoomCardId(cardId);
                         }
                         setActiveDotIndex(cIdx);
                       }}
                       onChange={(e) => {
                         if (typeof onUpdateRoomNumber === 'function') {
-                          onUpdateRoomNumber(card.id, e.target.value);
+                          onUpdateRoomNumber(cardId, e.target.value);
                         }
                       }}
                       onBlur={() => {
@@ -370,23 +382,20 @@ function CategoryRoomCarousel({
                       }}
                       maxLength={8}
                       placeholder="101"
-                      className={`w-full px-1 py-0.5 rounded-md text-xs font-bold text-center transition-colors focus:outline-none ${
-                        isCardSelected
-                          ? 'bg-white/15 dark:bg-slate-900/20 text-white dark:text-slate-900 border border-white/25 dark:border-slate-900/30 focus:border-white'
-                          : 'bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:border-slate-400'
+                      className={`w-full px-1 py-0.5 rounded-md text-sm font-bold text-center tracking-tight transition-colors focus:outline-none ${
+                        isCardOccupied
+                          ? 'bg-transparent text-amber-950 dark:text-amber-100'
+                          : 'bg-transparent text-emerald-950 dark:text-emerald-50'
                       }`}
                     />
                   </div>
 
-                  {/* Bottom: Subtitle */}
                   <div className="w-full text-center">
                     <span
-                      className={`text-[8px] font-medium tracking-wide block truncate ${
-                        isCardSelected
-                          ? 'text-slate-200 dark:text-slate-700'
-                          : isCardOccupied
-                          ? 'text-slate-600 dark:text-slate-300 font-semibold'
-                          : 'text-slate-400 dark:text-slate-500'
+                      className={`text-[10px] font-medium tracking-wide block truncate ${
+                        isCardOccupied
+                          ? 'text-amber-900/80 dark:text-amber-200/90'
+                          : 'text-emerald-800/80 dark:text-emerald-300/85'
                       }`}
                     >
                       {isCardOccupied ? (isMonthly ? 'This Month' : 'Today') : 'Open'}
@@ -397,7 +406,6 @@ function CategoryRoomCarousel({
             })}
           </div>
 
-          {/* Dot Pagination indicators for swiping */}
           {matchingRooms.length > 1 && (
             <div className="flex items-center justify-center gap-1.5 pt-0.5">
               {matchingRooms.map((_, dIdx) => (
@@ -405,10 +413,10 @@ function CategoryRoomCarousel({
                   key={dIdx}
                   type="button"
                   onClick={(e) => scrollToItem(dIdx, e)}
-                  className={`transition-all duration-200 rounded-full cursor-pointer ${
+                  className={`transition-all duration-150 rounded-full cursor-pointer ${
                     activeDotIndex === dIdx
-                      ? 'w-4 h-1.5 bg-slate-800 dark:bg-slate-200'
-                      : 'w-1.5 h-1.5 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400'
+                      ? 'w-4 h-1.5 bg-emerald-600 dark:bg-emerald-400'
+                      : 'w-1.5 h-1.5 bg-slate-300 dark:bg-zinc-700 hover:bg-slate-400'
                   }`}
                   aria-label={`Scroll to room card ${dIdx + 1}`}
                 />
@@ -443,7 +451,6 @@ export default function HostRoomCategories({
   const [confirmDeleteCatIdx, setConfirmDeleteCatIdx] = useState(null);
   const currentMonthKey = useMemo(() => new Date().toISOString().slice(0, 7), []);
 
-  // Compute category statistics map (total rooms vs available rooms today)
   const categoryStatsMap = useMemo(() => {
     const map = {};
     const safeRooms = Array.isArray(rooms) ? rooms : [];
@@ -471,17 +478,6 @@ export default function HostRoomCategories({
 
   return (
     <div className="space-y-3">
-      {/* Category Header */}
-      <div className="flex items-center justify-between px-1">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
-          <span>Room Categories</span>
-          <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-bold">
-            {roomRates.length}
-          </span>
-        </h3>
-        <span className="text-[11px] text-slate-400">Click card to manage</span>
-      </div>
-
       {roomRates.length > 0 ? (
         <div className="space-y-3 max-h-[calc(100vh-170px)] overflow-y-auto pr-1.5 scrollbar-thin">
           {roomRates.map((rate, index) => {
@@ -503,10 +499,10 @@ export default function HostRoomCategories({
                   key={rowKey}
                   onClick={() => onSelectCategoryIndex(index)}
                   onFocusCapture={() => onSelectCategoryIndex(index)}
-                  className={`p-2.5 sm:p-3 rounded-xl cursor-pointer relative transition-colors ${
+                  className={`p-2.5 sm:p-3 rounded-2xl cursor-pointer relative transition-colors shadow-xs ${
                     isSelected
-                      ? 'bg-white dark:bg-slate-900 border-2 border-emerald-500 dark:border-emerald-400 shadow-xs ring-2 ring-emerald-500/15'
-                      : 'bg-white dark:bg-slate-900/70 border border-slate-200/90 dark:border-slate-800 shadow-2xs'
+                      ? 'bg-white/90 border border-white/80 shadow-[0_14px_34px_rgba(31,38,135,0.08),_inset_0_1px_2px_rgba(255,255,255,0.95)]'
+                      : 'bg-white/70 backdrop-blur-xl border border-white/80 shadow-[0_12px_32px_rgba(31,38,135,0.06),_inset_0_1px_2px_rgba(255,255,255,0.95)]'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
@@ -522,14 +518,13 @@ export default function HostRoomCategories({
                         onClick={() => onSelectCategoryIndex(index)}
                         onBlur={onSaveCategory}
                         placeholder="e.g. Deluxe Room"
-                        className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:border-emerald-500 placeholder:text-slate-400 transition-colors shadow-2xs"
+                        className="w-full px-2.5 py-1.5 rounded-xl bg-white/80 border border-white/80 text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:border-emerald-500 placeholder:text-slate-400 placeholder:font-normal transition-colors shadow-xs"
                       />
                     </div>
 
-                    <div className="flex items-center gap-1 shrink-0">
-                      {/* Live Today Availability Text */}
+                    <div className="flex items-center gap-1.5 shrink-0">
                       <span
-                        className="text-[11px] font-medium text-slate-900 dark:text-slate-100 select-none px-1"
+                        className="text-xs font-semibold text-slate-700 dark:text-zinc-300 select-none px-1"
                         title={`${stats.availableCount} of ${stats.totalCount} rooms are available today`}
                       >
                         {stats.availableCount}/{stats.totalCount} Avail
@@ -538,7 +533,7 @@ export default function HostRoomCategories({
                       <button
                         type="button"
                         onClick={(e) => onToggleCollapseCategory(index, e)}
-                        className="w-6 h-6 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
+                        className="w-6 h-6 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
                         title="Expand details"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -554,7 +549,7 @@ export default function HostRoomCategories({
                               e.stopPropagation();
                               setConfirmDeleteCatIdx(null);
                             }}
-                            className="px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 transition-colors cursor-pointer"
+                            className="px-2 py-0.5 text-[10px] font-semibold text-slate-500 hover:text-slate-700 dark:hover:text-zinc-200 rounded border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 transition-colors cursor-pointer"
                             title="Cancel delete"
                           >
                             Cancel
@@ -566,7 +561,7 @@ export default function HostRoomCategories({
                               setConfirmDeleteCatIdx(null);
                               onRemoveCategory(index);
                             }}
-                            className="px-1.5 py-0.5 text-[10px] font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded transition-colors cursor-pointer shadow-2xs"
+                            className="px-2 py-0.5 text-[10px] font-bold text-white bg-rose-600 hover:bg-rose-700 rounded transition-colors cursor-pointer shadow-xs"
                             title="Confirm delete category"
                           >
                             Delete
@@ -579,7 +574,7 @@ export default function HostRoomCategories({
                             e.stopPropagation();
                             setConfirmDeleteCatIdx(index);
                           }}
-                          className="w-6 h-6 rounded-md text-slate-400 hover:text-red-500 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
+                          className="w-6 h-6 rounded-md text-slate-400 hover:text-rose-600 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
                           title="Remove category"
                         >
                           ✕
@@ -599,39 +594,35 @@ export default function HostRoomCategories({
                   onSelectCategoryIndex(index);
                 }}
                 onFocusCapture={() => onSelectCategoryIndex(index)}
-                className={`p-3 sm:p-3.5 rounded-xl cursor-pointer space-y-2.5 relative transition-colors ${
+                className={`p-3.5 sm:p-4 rounded-3xl cursor-pointer space-y-3 relative transition-colors shadow-xs ${
                   isSelected
-                    ? 'bg-white dark:bg-slate-900 border-2 border-emerald-500 dark:border-emerald-400 shadow-xs ring-2 ring-emerald-500/15'
-                    : 'bg-white dark:bg-slate-900/70 border border-slate-200/90 dark:border-slate-800 shadow-2xs'
+                    ? 'bg-white/90 border border-white/80 shadow-[0_14px_34px_rgba(31,38,135,0.08),_inset_0_1px_2px_rgba(255,255,255,0.95)]'
+                    : 'bg-white/70 backdrop-blur-xl border border-white/80 shadow-[0_12px_32px_rgba(31,38,135,0.06),_inset_0_1px_2px_rgba(255,255,255,0.95)]'
                 }`}
               >
-                {/* Header: Category Title & Live Today Status */}
                 <div className="flex items-center justify-between gap-1">
-                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <span className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
                     Room Category Details
                   </span>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {/* Live Today Availability Text */}
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <span
-                      className="text-[11px] font-medium text-slate-900 dark:text-slate-100 select-none px-1"
+                      className="text-xs font-semibold text-slate-700 dark:text-zinc-300 select-none px-1"
                       title={`${stats.availableCount} of ${stats.totalCount} rooms are available today`}
                     >
                       {stats.availableCount}/{stats.totalCount} Avail
                     </span>
 
-                    {/* Shrink Button */}
                     <button
                       type="button"
                       onClick={(e) => onToggleCollapseCategory(index, e)}
-                      className="w-5 h-5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
-                      title="Shrink container"
+                      className="w-5 h-5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
+                      title="Collapse details"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
                       </svg>
                     </button>
 
-                    {/* Delete Button with 2-Step Confirmation */}
                     {confirmDeleteCatIdx === index ? (
                       <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                         <button
@@ -640,7 +631,7 @@ export default function HostRoomCategories({
                             e.stopPropagation();
                             setConfirmDeleteCatIdx(null);
                           }}
-                          className="px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 transition-colors cursor-pointer"
+                          className="px-2 py-0.5 text-[10px] font-semibold text-slate-500 hover:text-slate-700 dark:hover:text-zinc-200 rounded border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 transition-colors cursor-pointer"
                           title="Cancel delete"
                         >
                           Cancel
@@ -652,7 +643,7 @@ export default function HostRoomCategories({
                             setConfirmDeleteCatIdx(null);
                             onRemoveCategory(index);
                           }}
-                          className="px-1.5 py-0.5 text-[10px] font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded transition-colors cursor-pointer shadow-2xs"
+                          className="px-2 py-0.5 text-[10px] font-bold text-white bg-rose-600 hover:bg-rose-700 rounded transition-colors cursor-pointer shadow-xs"
                           title="Confirm delete category"
                         >
                           Delete
@@ -665,7 +656,7 @@ export default function HostRoomCategories({
                           e.stopPropagation();
                           setConfirmDeleteCatIdx(index);
                         }}
-                        className="w-5 h-5 rounded-md text-slate-400 hover:text-red-500 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
+                        className="w-5 h-5 rounded-md text-slate-400 hover:text-rose-600 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
                         title="Remove category"
                       >
                         ✕
@@ -674,11 +665,9 @@ export default function HostRoomCategories({
                   </div>
                 </div>
 
-                {/* 1-Line Format: Room Category Name, Price, and Cycle */}
-                <div className="flex items-start gap-1.5 sm:gap-2">
-                  {/* Field 1: Category Name */}
+                <div className="flex items-start gap-2">
                   <div className="flex-1 min-w-0 space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block truncate">
+                    <label className="text-[11.5px] font-medium text-slate-700 dark:text-zinc-300 block truncate">
                       Category Name
                     </label>
                     <input
@@ -693,13 +682,12 @@ export default function HostRoomCategories({
                       onBlur={onSaveCategory}
                       placeholder="e.g. Deluxe Room"
                       autoFocus={isSelected && !rate.type}
-                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:border-emerald-500 placeholder:text-slate-400 transition-colors shadow-2xs truncate"
+                      className="w-full px-2.5 py-1.5 rounded-xl bg-white/80 border border-white/80 text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:border-emerald-500 placeholder:text-slate-400 placeholder:font-normal transition-colors shadow-xs truncate"
                     />
                   </div>
 
-                  {/* Field 2: Price (₹) */}
                   <div className="w-20 sm:w-24 shrink-0 space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block truncate">
+                    <label className="text-[11.5px] font-medium text-slate-700 dark:text-zinc-300 block truncate">
                       Price (₹)
                     </label>
                     <input
@@ -713,24 +701,19 @@ export default function HostRoomCategories({
                       onClick={() => onSelectCategoryIndex(index)}
                       onBlur={onSaveCategory}
                       placeholder="5000"
-                      className="w-full px-2 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:border-emerald-500 placeholder:text-slate-400 transition-colors shadow-2xs"
+                      className="w-full px-2 py-1.5 rounded-xl bg-white/80 border border-white/80 text-xs font-semibold text-emerald-700 focus:bg-white focus:outline-none focus:border-emerald-500 placeholder:text-slate-400 placeholder:font-normal transition-colors shadow-xs"
                     />
                   </div>
 
-                  {/* Field 3: Billing Cycle */}
                   <div className="w-24 sm:w-28 shrink-0 space-y-1">
                     <div className="flex items-center justify-between">
-                      <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block truncate">
+                      <label className="text-[11.5px] font-medium text-slate-700 dark:text-zinc-300 block truncate">
                         Cycle
                       </label>
-                      {Boolean(
-                        rate.rateUnitLocked === true ||
-                        (rate.rateUnitLocked !== false && rate.rateUnit) ||
-                        stats.totalCount > 0
-                      ) && (
+                      {Boolean(stats.totalCount > 0 && rate.rateUnit) && (
                         <span
-                          className="text-[9px] font-bold text-slate-400 dark:text-slate-500 flex items-center gap-0.5 select-none"
-                          title="Billing cycle is locked once selected and cannot be updated"
+                          className="text-[9px] font-bold text-slate-400 dark:text-zinc-500 flex items-center gap-0.5 select-none"
+                          title="Billing cycle is locked once rooms are added and cannot be updated"
                         >
                           <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
@@ -742,11 +725,7 @@ export default function HostRoomCategories({
 
                     <div className="relative">
                       {(() => {
-                        const isLocked = Boolean(
-                          rate.rateUnitLocked === true ||
-                          (rate.rateUnitLocked !== false && rate.rateUnit) ||
-                          stats.totalCount > 0
-                        );
+                        const isLocked = Boolean(stats.totalCount > 0);
                         const currentUnit = rate.rateUnit
                           ? (isMonthlyRateUnit(rate.rateUnit) ? '/month' : '/night')
                           : '';
@@ -759,33 +738,33 @@ export default function HostRoomCategories({
                               onChange={(e) => {
                                 const val = e.target.value;
                                 if (!val) return;
-                                onUpdateCategory(index, { rateUnit: val, rateUnitLocked: true });
+                                onUpdateCategory(index, { rateUnit: val });
                                 onSaveCategory();
                               }}
                               onFocus={() => onSelectCategoryIndex(index)}
                               onClick={() => onSelectCategoryIndex(index)}
-                              className={`w-full px-2 py-1.5 rounded-lg border text-xs font-semibold shadow-2xs transition-colors appearance-none pr-5 truncate ${
+                              className={`w-full px-2 py-1.5 rounded-xl border text-xs font-semibold shadow-xs transition-colors appearance-none pr-5 truncate ${
                                 isLocked
-                                  ? 'bg-slate-100/90 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 text-slate-600 dark:text-slate-400 cursor-not-allowed opacity-90'
-                                  : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:border-emerald-500 cursor-pointer'
+                                  ? 'bg-white/50 border-white/60 text-slate-500 cursor-not-allowed opacity-90'
+                                  : !currentUnit
+                                  ? 'bg-white/80 border-white/80 text-slate-400 focus:bg-white focus:outline-none focus:border-emerald-500 cursor-pointer'
+                                  : 'bg-white/80 border-white/80 text-slate-900 focus:bg-white focus:outline-none focus:border-emerald-500 cursor-pointer'
                               }`}
                               title={
                                 isLocked
-                                  ? 'Billing cycle is locked once selected and cannot be updated'
-                                  : 'Select Per Night or Per Month (One-time selection)'
+                                  ? 'Billing cycle is locked once rooms are added and cannot be updated'
+                                  : 'Select Unit'
                               }
                             >
-                              {!currentUnit && (
-                                <option value="" disabled>
-                                  Cycle
-                                </option>
-                              )}
+                              <option value="" disabled>
+                                Select Unit
+                              </option>
                               <option value="/night">Per Night</option>
                               <option value="/month">Per Month</option>
                             </select>
                             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 text-slate-400">
                               {isLocked ? (
-                                <svg className="w-3 h-3 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <svg className="w-3 h-3 text-slate-400 dark:text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                                 </svg>
@@ -802,7 +781,6 @@ export default function HostRoomCategories({
                   </div>
                 </div>
 
-                {/* 🛏️ Attached Respective Room Cards Carousel Section */}
                 <CategoryRoomCarousel
                   matchingRooms={matchingRooms}
                   rate={rate}
@@ -824,14 +802,14 @@ export default function HostRoomCategories({
           })}
         </div>
       ) : (
-        <div className="p-8 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-3 bg-slate-50/50 dark:bg-slate-800/30">
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+        <div className="p-8 text-center border-2 border-dashed border-slate-300 dark:border-zinc-800 rounded-2xl space-y-3 bg-slate-50/50 dark:bg-zinc-950/40">
+          <p className="text-xs text-slate-500 dark:text-zinc-400">
             No room categories added yet. Click &quot;Add Room Type&quot; above to create one.
           </p>
           <button
             type="button"
             onClick={onAddCategory}
-            className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors cursor-pointer"
+            className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-zinc-950 text-xs font-semibold transition-colors cursor-pointer"
           >
             + Add Room Type
           </button>

@@ -24,19 +24,26 @@ export function PropertyCard({
   const stayId = stay._id || stay.id;
   const saved = isInWishlist(stayId);
   const pricing = getStayPricing(stay);
+
+  // Check tags, facilities, or amenities dynamically
   const tags = Array.isArray(stay.tags) && stay.tags.length > 0
     ? stay.tags
-    : (stay.amenities || ['Wifi', 'Attached Bath']);
+    : (Array.isArray(stay.facilities) && stay.facilities.length > 0
+        ? stay.facilities
+        : (stay.amenities || ['Wifi', 'Attached Bath']));
 
   const propertyType = stay.type || stay.propertyType || stay.category || 'PG';
 
   const hasUserReviews = Array.isArray(stay.reviews) && stay.reviews.length > 0;
   const computedRating = hasUserReviews
     ? (stay.reviews.reduce((acc, r) => acc + (Number(r.rating) || 5), 0) / stay.reviews.length).toFixed(1)
-    : (stay.rating && Number(stay.rating) !== 4.8 ? Number(stay.rating).toFixed(1) : null);
+    : (stay.rating && !isNaN(Number(stay.rating)) ? Number(stay.rating).toFixed(1) : null);
   const ratingText = computedRating ? `★ ${computedRating}` : 'NEW';
 
-  const displayImage = stay.image || (Array.isArray(stay.images) && stay.images[0]) || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80';
+  const displayImage =
+    stay.image ||
+    (Array.isArray(stay.images) && stay.images[0]) ||
+    'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80';
 
   return (
     <div
@@ -45,9 +52,9 @@ export function PropertyCard({
       onClick={() => onStayClick && onStayClick(stay)}
       className={`group relative cursor-pointer select-none p-1 sm:p-2 rounded-xl sm:rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${className}`}
     >
-      {/* Warm Light Orange Cushion on Hover */}
+      {/* Warm Cushion on Hover (Warm cream in Light Mode, Frosted Glass in Dark Mode) */}
       <div
-        className={`absolute rounded-xl sm:rounded-2xl bg-[#f8ebd8] dark:bg-[#2d2218] shadow-[0_10px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_15px_40px_rgba(0,0,0,0.4)] pointer-events-none transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`absolute rounded-xl sm:rounded-2xl bg-[#f8ebd8] dark:bg-white/[0.08] dark:border dark:border-white/20 dark:backdrop-blur-2xl shadow-[0_10px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.7),_0_0_24px_rgba(56,189,248,0.18),_inset_0_1px_2px_rgba(255,255,255,0.22)] pointer-events-none transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isHovered
             ? '-inset-1.5 opacity-100 scale-100'
             : 'inset-0 opacity-0 scale-95 group-hover:-inset-1 group-hover:opacity-100 group-hover:scale-100'
@@ -71,7 +78,7 @@ export function PropertyCard({
           {/* Top Badges: Property Type + Rating + Wishlist */}
           <div className="relative z-10 flex items-center justify-between gap-1">
             <div className="flex items-center gap-1 sm:gap-1.5 truncate">
-              {/* Property Type Badge (Added everywhere as requested) */}
+              {/* Property Type Badge */}
               <span className="text-[7.5px] sm:text-[9px] font-mono font-bold text-white bg-black/60 border border-white/20 px-2 py-0.5 rounded-full backdrop-blur-md shrink-0">
                 {propertyType}
               </span>
@@ -138,7 +145,7 @@ export function PropertyCard({
           </div>
 
           {/* Title */}
-          <h3 className="text-[10px] sm:text-xs md:text-sm font-bold text-slate-950 dark:text-white line-clamp-1 group-hover:text-amber-950 dark:group-hover:text-amber-100 transition-colors leading-snug">
+          <h3 className="text-[10px] sm:text-xs md:text-sm font-bold text-slate-950 dark:text-white line-clamp-1 group-hover:text-slate-900 dark:group-hover:text-sky-300 transition-colors leading-snug">
             {stay.title || stay.propertyName}
           </h3>
 

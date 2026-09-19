@@ -38,7 +38,7 @@ export function Left() {
             <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" />
           </svg>
         </div>
-        <span className="tracking-tight font-extrabold text-slate-950 dark:text-white text-xs sm:text-sm">
+        <span className="tracking-tight font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
           RoomScout
         </span>
       </button>

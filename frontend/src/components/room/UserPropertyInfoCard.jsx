@@ -15,37 +15,37 @@ export function UserPropertyInfoCard({
   if (!stay) return null;
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 space-y-3 shadow-2xs">
+    <div className="p-5 rounded-3xl bg-white/70 backdrop-blur-xl border border-white/80 shadow-[0_12px_32px_rgba(31,38,135,0.06),_inset_0_1px_2px_rgba(255,255,255,0.95)] space-y-3 text-slate-800 transition-all">
       <div className="space-y-1">
-        <span className="text-[10.5px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-          {stay.type || 'Property'} • {stay.city || stay.location || 'Uttarakhand'}
+        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+          {stay.type || 'Property'} • {stay.city || stay.location || 'Location'}
         </span>
-        <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+        <h1 className="text-xl font-black text-slate-900 tracking-tight">
           {stay.propertyName || stay.title}
         </h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">
+        <p className="text-xs text-slate-500 font-normal">
           {stay.address || stay.location}
         </p>
       </div>
 
       {/* Category Name, Price & Availability */}
-      <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+      <div className="pt-2.5 border-t border-white/60 flex items-center justify-between gap-2">
         <div>
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
             {displayCategoryName}
           </span>
           <div className="flex items-baseline gap-1 mt-0.5">
-            <span className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            <span className="text-xl font-black text-slate-900 tracking-tight">
               {displayCategoryPrice}
             </span>
-            <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
+            <span className="text-xs font-normal text-slate-500">
               {displayCategoryUnit}
             </span>
           </div>
         </div>
 
-        <div className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-medium flex items-center gap-1.5 shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-slate-900 dark:bg-slate-100" />
+        <div className="px-3 py-1 rounded-xl bg-white/80 border border-white/80 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shrink-0 shadow-xs">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
           <span>
             {availableCount} of {totalCount} Available
           </span>

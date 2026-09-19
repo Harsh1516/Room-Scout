@@ -3,12 +3,9 @@ import { bookingsAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 
-// Dynamic Razorpay SDK script loader
 function loadRazorpayScript() {
   return new Promise((resolve) => {
-    if (window.Razorpay) {
-      return resolve(true);
-    }
+    if (window.Razorpay) return resolve(true);
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
@@ -21,16 +18,18 @@ function loadRazorpayScript() {
 export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
   const { user } = useAuth();
 
+  const isMonthly = !String(stay?.rateUnit || '').toLowerCase().includes('night');
+
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
     email: '',
     moveInDate: new Date().toISOString().split('T')[0],
-    durationMonths: 3,
+    durationUnits: isMonthly ? 3 : 1,
     sharingType: stay?.sharingType || 'double',
   });
 
-  const [paymentMethod, setPaymentMethod] = useState('RAZORPAY'); // 'RAZORPAY' | 'PAY_ON_ARRIVAL'
+  const [paymentMethod, setPaymentMethod] = useState('RAZORPAY');
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [bookingId, setBookingId] = useState('');
   const [paymentId, setPaymentId] = useState('');
@@ -38,7 +37,6 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentStepNotice, setPaymentStepNotice] = useState('');
 
-  // Pre-fill authenticated user details
   useEffect(() => {
     if (user && isOpen) {
       setFormData((prev) => ({
@@ -46,30 +44,95 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
         fullName: prev.fullName || user.name || '',
         email: prev.email || user.email || '',
         phone: prev.phone || user.phone || '',
+        durationUnits: isMonthly ? 3 : 1,
       }));
     }
-  }, [user, isOpen]);
+  }, [user, isOpen, isMonthly]);
 
   if (!isOpen || !stay) return null;
 
-  const basePrice = stay.calculatedPrice || stay.price || 3000;
-  const deposit = basePrice;
-  const maintenance = 500;
-  const gst = Math.round(basePrice * 0.05);
-  const totalAmount = basePrice + deposit + maintenance + gst;
+  const rawBase = parseInt(String(stay.calculatedPrice || stay.price || 3000).replace(/[^0-9]/g, ''), 10) || 3000;
+  const unitCount = formData.durationUnits || 1;
 
-  // Complete reservation checkout submission
+  let basePrice = rawBase;
+  let deposit = 0;
+  let maintenance = 0;
+  let gst = 0;
+  let totalAmount = 0;
+
+  if (isMonthly) {
+    basePrice = rawBase;
+    deposit = rawBase; // 1 month refundable security deposit
+    maintenance = 500;
+    gst = Math.round(rawBase * 0.05);
+    totalAmount = basePrice + deposit + maintenance + gst;
+  } else {
+    basePrice = rawBase * unitCount;
+    deposit = 0;
+    maintenance = 200;
+    gst = Math.round(basePrice * 0.05);
+    totalAmount = basePrice + maintenance + gst;
+  }
+
+  // Exact UTC Boundary Scheduler
+  const computeExactSchedule = () => {
+    const [y, m, d] = (formData.moveInDate || new Date().toISOString().split('T')[0])
+      .split('-')
+      .map(Number);
+
+    let startDate, endDate, durationDisplay;
+
+    if (isMonthly) {
+      const count = formData.durationUnits || 1;
+      // 1st of month at 12:00 AM UTC
+      startDate = new Date(Date.UTC(y, m - 1, 1, 0, 0, 0));
+      // Last day of month at 11:59:59 PM UTC
+      endDate = new Date(Date.UTC(y, m - 1 + count, 0, 23, 59, 59));
+      durationDisplay = `${count} Month${count > 1 ? 's' : ''}`;
+    } else {
+      const count = formData.durationUnits || 1;
+      // Check-In at 12:00 PM UTC (noon)
+      startDate = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+      // Check-Out at 11:59 AM UTC on morning of departure
+      endDate = new Date(Date.UTC(y, m - 1, d + count, 11, 59, 0));
+      durationDisplay = `${count} Night${count > 1 ? 's' : ''}`;
+    }
+
+    return { startDate, endDate, durationDisplay };
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setPaymentStepNotice('');
 
     const generatedRefId = 'STAY-' + Math.floor(100000 + Math.random() * 900000);
+    const schedule = computeExactSchedule();
 
-    // Option 1: Pay Online via Razorpay / UPI
+    const bookingPayload = {
+      stayId: stay._id || stay.id,
+      stayTitle: stay.title || stay.propertyName || 'Property Stay',
+      location: stay.location || stay.city || '',
+      roomNumber: String(stay.roomNumber || '101').trim(),
+      roomType: stay.roomType || stay.type || 'Standard',
+      rateUnit: isMonthly ? '/month' : '/night',
+      fullName: formData.fullName,
+      phone: formData.phone,
+      email: formData.email,
+      checkIn: schedule.startDate.toISOString(),
+      checkOut: schedule.endDate.toISOString(),
+      durationMonths: isMonthly ? formData.durationUnits : 0,
+      durationDays: isMonthly ? 0 : formData.durationUnits,
+      durationDisplay: schedule.durationDisplay,
+      sharingType: formData.sharingType,
+      totalAmount,
+      bookingReferenceId: generatedRefId,
+    };
+
+    // Option 1: Razorpay / Online
     if (paymentMethod === 'RAZORPAY') {
       try {
-        setPaymentStepNotice('Connecting to Razorpay payment gateway...');
+        setPaymentStepNotice('Connecting to Razorpay gateway...');
         const orderRes = await bookingsAPI.createPaymentOrder({
           amount: totalAmount,
           currency: 'INR',
@@ -82,7 +145,6 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
 
         const isLoaded = await loadRazorpayScript();
 
-        // If Razorpay live gateway keys are present & script loaded
         if (isLoaded && !orderRes.isSandbox && window.Razorpay) {
           const options = {
             key: orderRes.keyId,
@@ -96,9 +158,7 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
               email: formData.email,
               contact: formData.phone,
             },
-            theme: {
-              color: '#059669', // Emerald accent
-            },
+            theme: { color: '#059669' },
             handler: async (response) => {
               try {
                 setPaymentStepNotice('Verifying payment signature...');
@@ -109,35 +169,18 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
                   bookingReferenceId: generatedRefId,
                 });
 
-                // Persist booking into MongoDB
                 const bookingDoc = await bookingsAPI.createBooking({
-                  stayId: stay.id || stay._id,
-                  stayTitle: stay.title,
-                  location: stay.location,
-                  fullName: formData.fullName,
-                  phone: formData.phone,
-                  email: formData.email,
-                  moveInDate: formData.moveInDate,
-                  durationMonths: formData.durationMonths,
-                  sharingType: formData.sharingType,
-                  totalAmount,
-                  bookingReferenceId: generatedRefId,
+                  ...bookingPayload,
                   paymentMethod: 'RAZORPAY',
                   paymentStatus: 'PAID',
                   status: 'CONFIRMED',
-                  paymentDetails: {
-                    gateway: 'Razorpay',
-                    paymentId: response.razorpay_payment_id,
-                    orderId: response.razorpay_order_id,
-                    signature: response.razorpay_signature,
-                  },
                 });
 
                 setBookingId(bookingDoc.bookingReferenceId || generatedRefId);
                 setPaymentId(response.razorpay_payment_id);
                 setConfirmedPaymentStatus('PAID');
                 setBookingConfirmed(true);
-                toast.success(`Payment verified! Reservation confirmed for ${stay.title}!`);
+                toast.success(`Reservation confirmed for ${stay.title}!`);
                 if (onBookingCreated) onBookingCreated(bookingDoc);
               } catch (verifyErr) {
                 toast.error(`Verification error: ${verifyErr.message}`);
@@ -150,7 +193,7 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
               ondismiss: () => {
                 setIsSubmitting(false);
                 setPaymentStepNotice('');
-                toast.info('Payment window closed. You can retry or switch to Pay on Arrival.');
+                toast.info('Payment cancelled.');
               },
             },
           };
@@ -160,8 +203,8 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
           return;
         }
 
-        // Safe Sandbox Mode (Instant verification simulator for local test flow)
-        setPaymentStepNotice('Simulating Sandbox UPI payment...');
+        // Sandbox / Fallback Mode
+        setPaymentStepNotice('Simulating payment verification...');
         const mockPayId = `pay_mock_${Date.now()}`;
         await bookingsAPI.verifyPayment({
           razorpay_order_id: orderRes.orderId,
@@ -171,33 +214,17 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
         });
 
         const bookingDoc = await bookingsAPI.createBooking({
-          stayId: stay.id || stay._id,
-          stayTitle: stay.title,
-          location: stay.location,
-          fullName: formData.fullName,
-          phone: formData.phone,
-          email: formData.email,
-          moveInDate: formData.moveInDate,
-          durationMonths: formData.durationMonths,
-          sharingType: formData.sharingType,
-          totalAmount,
-          bookingReferenceId: generatedRefId,
+          ...bookingPayload,
           paymentMethod: 'RAZORPAY',
           paymentStatus: 'PAID',
           status: 'CONFIRMED',
-          paymentDetails: {
-            gateway: 'Razorpay Sandbox (UPI/Card)',
-            paymentId: mockPayId,
-            orderId: orderRes.orderId,
-            signature: 'sandbox_verified_signature',
-          },
         });
 
         setBookingId(bookingDoc.bookingReferenceId || generatedRefId);
         setPaymentId(mockPayId);
         setConfirmedPaymentStatus('PAID');
         setBookingConfirmed(true);
-        toast.success(`Payment verified! Reservation confirmed for ${stay.title}!`);
+        toast.success(`Reservation confirmed for ${stay.title}!`);
         if (onBookingCreated) onBookingCreated(bookingDoc);
       } catch (err) {
         console.error('Online Payment Error:', err);
@@ -209,41 +236,24 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
       return;
     }
 
-    // Option 2: Pay on Arrival / Cash
+    // Option 2: Pay on Arrival
     try {
-      setPaymentStepNotice('Registering reservation with Pay on Arrival...');
+      setPaymentStepNotice('Registering reservation...');
       const bookingDoc = await bookingsAPI.createBooking({
-        stayId: stay.id || stay._id,
-        stayTitle: stay.title,
-        location: stay.location,
-        fullName: formData.fullName,
-        phone: formData.phone,
-        email: formData.email,
-        moveInDate: formData.moveInDate,
-        durationMonths: formData.durationMonths,
-        sharingType: formData.sharingType,
-        totalAmount,
-        bookingReferenceId: generatedRefId,
-        paymentMethod: 'PAY_ON_ARRIVAL',
+        ...bookingPayload,
+        paymentMethod: 'OFFLINE',
         paymentStatus: 'PENDING',
-        status: 'Pending Host Approval',
-        paymentDetails: {
-          gateway: 'Pay on Arrival / Cash',
-          paymentId: '',
-          orderId: '',
-          signature: '',
-        },
+        status: 'CONFIRMED',
       });
 
       setBookingId(bookingDoc.bookingReferenceId || generatedRefId);
       setPaymentId('Pay on Arrival');
       setConfirmedPaymentStatus('PENDING');
       setBookingConfirmed(true);
-      toast.success(`Reservation placed for ${stay.title}! Pay upon arrival.`);
+      toast.success(`Reservation placed for ${stay.title}!`);
       if (onBookingCreated) onBookingCreated(bookingDoc);
     } catch (err) {
-      console.error('Pay on Arrival Error:', err);
-      // Fallback
+      console.error('Reservation Error:', err);
       setBookingId(generatedRefId);
       setPaymentId('Pay on Arrival');
       setConfirmedPaymentStatus('PENDING');
@@ -341,15 +351,17 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
                   <span className="font-bold text-slate-900 dark:text-white">{formData.fullName || 'Guest User'}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px]">Move-In Date</span>
+                  <span className="text-slate-400 block text-[10px]">{isMonthly ? 'Start Month' : 'Check-In'}</span>
                   <span className="font-bold text-slate-900 dark:text-white">{formData.moveInDate}</span>
                 </div>
                 <div>
                   <span className="text-slate-400 block text-[10px]">Duration</span>
-                  <span className="font-bold text-slate-900 dark:text-white">{formData.durationMonths} Months</span>
+                  <span className="font-bold text-slate-900 dark:text-white">
+                    {isMonthly ? `${formData.durationUnits} Months` : `${formData.durationUnits} Night(s)`}
+                  </span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px]">Total Move-In Pay</span>
+                  <span className="text-slate-400 block text-[10px]">Total Amount</span>
                   <span className="font-bold text-emerald-600 dark:text-emerald-400">
                     ₹{totalAmount.toLocaleString('en-IN')}
                   </span>
@@ -422,7 +434,7 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">
-                  Move-In Date *
+                  {isMonthly ? 'Move-In Date *' : 'Check-In Date *'}
                 </label>
                 <input
                   type="date"
@@ -435,18 +447,34 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">
-                  Tenure Duration
+                  {isMonthly ? 'Tenure Duration' : 'Stay Duration'}
                 </label>
-                <select
-                  value={formData.durationMonths}
-                  onChange={(e) => setFormData({ ...formData, durationMonths: Number(e.target.value) })}
-                  className="w-full p-2.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                >
-                  <option value={1}>1 Month</option>
-                  <option value={3}>3 Months</option>
-                  <option value={6}>6 Months</option>
-                  <option value={12}>12 Months (1 Year)</option>
-                </select>
+                {isMonthly ? (
+                  <select
+                    value={formData.durationUnits}
+                    onChange={(e) => setFormData({ ...formData, durationUnits: Number(e.target.value) })}
+                    className="w-full p-2.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  >
+                    <option value={1}>1 Month</option>
+                    <option value={3}>3 Months</option>
+                    <option value={6}>6 Months</option>
+                    <option value={12}>12 Months (1 Year)</option>
+                  </select>
+                ) : (
+                  <select
+                    value={formData.durationUnits}
+                    onChange={(e) => setFormData({ ...formData, durationUnits: Number(e.target.value) })}
+                    className="w-full p-2.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  >
+                    <option value={1}>1 Night</option>
+                    <option value={2}>2 Nights</option>
+                    <option value={3}>3 Nights</option>
+                    <option value={4}>4 Nights</option>
+                    <option value={5}>5 Nights</option>
+                    <option value={7}>7 Nights (1 Week)</option>
+                    <option value={14}>14 Nights (2 Weeks)</option>
+                  </select>
+                )}
               </div>
             </div>
 
@@ -457,7 +485,6 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
               </label>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {/* Option 1: Razorpay Online */}
                 <div
                   role="button"
                   tabIndex={0}
@@ -491,7 +518,6 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
                   </div>
                 </div>
 
-                {/* Option 2: Pay on Arrival */}
                 <div
                   role="button"
                   tabIndex={0}
@@ -530,29 +556,31 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
             {/* Price Breakdown Card */}
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-200 dark:border-white/10 space-y-2 text-xs">
               <h4 className="font-bold text-slate-900 dark:text-white mb-2 flex items-center justify-between">
-                <span>Move-in Cost Calculation</span>
+                <span>Cost Calculation</span>
                 <span className="text-[10px] text-emerald-600 dark:text-emerald-400">Transparent Pricing</span>
               </h4>
 
               <div className="flex items-center justify-between text-slate-600 dark:text-zinc-300">
-                <span>Monthly Rent</span>
+                <span>{isMonthly ? 'Monthly Rent' : `Room Rate (${unitCount} Night${unitCount > 1 ? 's' : ''})`}</span>
                 <span>₹{basePrice.toLocaleString('en-IN')}</span>
               </div>
+              {isMonthly && (
+                <div className="flex items-center justify-between text-slate-600 dark:text-zinc-300">
+                  <span>Refundable Security Deposit</span>
+                  <span>₹{deposit.toLocaleString('en-IN')}</span>
+                </div>
+              )}
               <div className="flex items-center justify-between text-slate-600 dark:text-zinc-300">
-                <span>Refundable Security Deposit</span>
-                <span>₹{deposit.toLocaleString('en-IN')}</span>
-              </div>
-              <div className="flex items-center justify-between text-slate-600 dark:text-zinc-300">
-                <span>Setup & Onboarding</span>
+                <span>{isMonthly ? 'Setup & Onboarding' : 'Service Fee'}</span>
                 <span>₹{maintenance.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex items-center justify-between text-slate-600 dark:text-zinc-300">
-                <span>GST & Service Charge (5%)</span>
+                <span>GST & Platform Handling (5%)</span>
                 <span>₹{gst.toLocaleString('en-IN')}</span>
               </div>
 
               <div className="pt-2 border-t border-slate-200 dark:border-white/10 flex items-center justify-between font-black text-slate-900 dark:text-white text-sm">
-                <span>Total Move-in Amount</span>
+                <span>Total Amount</span>
                 <span className="text-emerald-600 dark:text-emerald-400">
                   ₹{totalAmount.toLocaleString('en-IN')}
                 </span>

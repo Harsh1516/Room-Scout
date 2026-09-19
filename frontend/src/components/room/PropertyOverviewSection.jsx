@@ -25,6 +25,21 @@ export function PropertyOverviewSection({
 }) {
   const propertyTitle = stay?.propertyName || stay?.title || 'Stay Property';
 
+  // Resolve host data whether hostId is populated as an object or flattened into stay
+  const hostData = useMemo(() => {
+    if (typeof stay?.hostId === 'object' && stay?.hostId !== null) {
+      return stay.hostId;
+    }
+    return stay?.host || stay || {};
+  }, [stay]);
+
+  const hostName = hostData.name || stay?.hostName || stay?.name || 'Host';
+  const hostEmail = hostData.email || stay?.hostEmail || stay?.email;
+  const hostPhone = hostData.phone || stay?.hostPhone || stay?.phone;
+  const hostAvatar = hostData.avatar || stay?.avatar;
+  const hostBio = hostData.bio || stay?.bio || stay?.description;
+  const hostJoined = hostData.joinedDate || hostData.createdAt || stay?.joinedDate;
+
   // Exact Host Facilities / Amenities
   const actualAmenities = (Array.isArray(stay?.facilities) && stay.facilities.length > 0)
     ? stay.facilities
@@ -49,8 +64,9 @@ export function PropertyOverviewSection({
     const uName = (user.name || '').toLowerCase().trim();
 
     return reviews.find((rev) => {
+      const revUserId = String(rev.userId?._id || rev.userId || rev.user?._id || rev.user || '');
+      if (uId && revUserId && revUserId === uId) return true;
       if (rev.userEmail && rev.userEmail.toLowerCase().trim() === uEmail) return true;
-      if (rev.userId && String(rev.userId) === uId) return true;
       if (rev.author && uName && rev.author.toLowerCase().trim() === uName) return true;
       return false;
     });
@@ -66,14 +82,17 @@ export function PropertyOverviewSection({
     const uName = (user.name || '').toLowerCase().trim();
 
     return [...reviews].sort((a, b) => {
+      const aUserId = String(a.userId?._id || a.userId || a.user?._id || a.user || '');
+      const bUserId = String(b.userId?._id || b.userId || b.user?._id || b.user || '');
+
       const aIsUser = Boolean(
+        (uId && aUserId && aUserId === uId) ||
         (a.userEmail && uEmail && a.userEmail.toLowerCase().trim() === uEmail) ||
-        (a.userId && String(a.userId) === uId) ||
         (a.author && uName && a.author.toLowerCase().trim() === uName)
       );
       const bIsUser = Boolean(
+        (uId && bUserId && bUserId === uId) ||
         (b.userEmail && uEmail && b.userEmail.toLowerCase().trim() === uEmail) ||
-        (b.userId && String(b.userId) === uId) ||
         (b.author && uName && b.author.toLowerCase().trim() === uName)
       );
 
@@ -243,56 +262,56 @@ export function PropertyOverviewSection({
                 <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-2xs space-y-5">
                   <div className="flex items-center gap-4">
                     <div className="w-14 h-14 rounded-full bg-emerald-600 text-white font-black text-lg flex items-center justify-center shadow-xs shrink-0">
-                      {stay?.avatar || stay?.name?.slice(0, 2)?.toUpperCase() || 'H'}
+                      {hostAvatar || (hostName ? hostName.slice(0, 2).toUpperCase() : 'H')}
                     </div>
                     <div>
                       <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <span>{stay?.name || stay?.hostName || 'Host'}</span>
+                        <span>{hostName}</span>
                         <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                           ✓ VERIFIED HOST
                         </span>
                       </h3>
-                      {stay?.joinedDate && (
+                      {hostJoined && (
                         <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                          Member since {new Date(stay.joinedDate).getFullYear()}
+                          Member since {new Date(hostJoined).getFullYear()}
                         </p>
                       )}
                     </div>
                   </div>
 
-                  {(stay?.bio || stay?.description) && (
+                  {hostBio && (
                     <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 space-y-1.5">
                       <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
                         Host Note
                       </h4>
                       <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-normal antialiased">
-                        {stay.bio || stay.description}
+                        {hostBio}
                       </p>
                     </div>
                   )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    {stay?.email && (
+                    {hostEmail && (
                       <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 text-xs">
                         <span className="text-slate-400 font-medium block text-xs">Host Email</span>
-                        <span className="font-bold text-slate-900 dark:text-white truncate block mt-0.5">{stay.email}</span>
+                        <span className="font-bold text-slate-900 dark:text-white truncate block mt-0.5">{hostEmail}</span>
                       </div>
                     )}
 
-                    {stay?.phone && (
+                    {hostPhone && (
                       <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 text-xs">
                         <span className="text-slate-400 font-medium block text-xs">Host Contact Phone</span>
-                        <span className="font-bold text-emerald-600 dark:text-emerald-400 truncate block mt-0.5">{stay.phone}</span>
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400 truncate block mt-0.5">{hostPhone}</span>
                       </div>
                     )}
                   </div>
 
-                  {stay?.phone && (
+                  {hostPhone && (
                     <a
-                      href={`tel:${stay.phone}`}
+                      href={`tel:${hostPhone}`}
                       className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                     >
-                      <span>📞 Call Host ({stay.name || 'Owner'})</span>
+                      <span>📞 Call Host ({hostName})</span>
                     </a>
                   )}
                 </div>
@@ -365,9 +384,12 @@ export function PropertyOverviewSection({
                   {sortedReviews.length > 0 ? (
                     <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1 scrollbar-thin">
                       {sortedReviews.map((rev) => {
+                        const revUserId = String(rev.userId?._id || rev.userId || rev.user?._id || rev.user || '');
                         const isMyRev = Boolean(
                           currentUserReview &&
-                            (rev.id === currentUserReview.id ||
+                            ((rev.id && rev.id === currentUserReview.id) ||
+                              (rev._id && rev._id === currentUserReview._id) ||
+                              (revUserId && user?._id && revUserId === String(user._id)) ||
                               (rev.userEmail && rev.userEmail === currentUserReview.userEmail))
                         );
 
@@ -383,7 +405,7 @@ export function PropertyOverviewSection({
                             <div className="flex items-center justify-between gap-2 mb-1.5">
                               <div className="flex items-center gap-2">
                                 <span className="font-bold text-xs text-slate-900 dark:text-white">
-                                  {rev.author || 'Guest'}
+                                  {rev.author || rev.userName || 'Guest'}
                                 </span>
                                 {isMyRev && (
                                   <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-600 text-white">
@@ -396,12 +418,12 @@ export function PropertyOverviewSection({
                                   {'★'.repeat(Math.max(1, Math.min(5, Math.round(Number(rev.rating) || 5))))}
                                 </div>
                                 <span className="text-[10px] text-slate-400 font-normal">
-                                  {rev.date || 'Recently'}
+                                  {rev.date || (rev.createdAt ? new Date(rev.createdAt).toLocaleDateString() : 'Recently')}
                                 </span>
                               </div>
                             </div>
                             <p className="text-xs text-slate-600 dark:text-slate-300 font-normal leading-relaxed">
-                              {rev.text}
+                              {rev.text || rev.comment}
                             </p>
                           </div>
                         );

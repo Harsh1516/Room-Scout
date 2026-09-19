@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWishlist } from '../context/WishlistContext';
@@ -22,13 +22,11 @@ export function PropertyDetailPage({ onBookClick }) {
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { bookings } = useBookings();
 
-  // Load stay from location state or API
   const [stay, setStay] = useState(() => location.state?.stay || null);
   const [loading, setLoading] = useState(() => !location.state?.stay);
   const [activePhotoIdx, setActivePhotoIdx] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
-  // 3-Tab Switch in Center Body: 'property' | 'host' | 'reviews'
   const [activeCenterTab, setActiveCenterTab] = useState('property');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -37,11 +35,14 @@ export function PropertyDetailPage({ onBookClick }) {
   // Check if current user has a paid/confirmed booking for this stay
   const hasPaidBookingForStay = useMemo(() => {
     if (!Array.isArray(bookings) || !targetStayId) return false;
-    return bookings.some(
-      (b) =>
-        String(b.stayId) === targetStayId &&
-        (b.status === 'Confirmed' || b.status === 'Paid' || b.status === 'Approved - Payment Completed')
-    );
+    return bookings.some((b) => {
+      const bStayId = String(b.stayId?._id || b.stayId || b.stay?._id || b.stay || '');
+      const st = String(b.status || '').toUpperCase();
+      return (
+        bStayId === targetStayId &&
+        (st === 'CONFIRMED' || st === 'PAID' || st.includes('APPROVED') || st.includes('PAYMENT COMPLETED'))
+      );
+    });
   }, [bookings, targetStayId]);
 
   const handleHostTabClick = () => {
@@ -52,23 +53,20 @@ export function PropertyDetailPage({ onBookClick }) {
     }
   };
 
-  // Active rate plan index from exact host uploaded roomRates
   const [selectedRateIdx, setSelectedRateIdx] = useState(0);
 
-  // Reviews state (loads strictly from stay or empty array)
   const [reviews, setReviews] = useState(() => (Array.isArray(location.state?.stay?.reviews) ? location.state.stay.reviews : []));
   const [newReviewText, setNewReviewText] = useState('');
   const [newRating, setNewRating] = useState(5);
   const [submittingReview, setSubmittingReview] = useState(false);
 
-  // Edit review state
   const [editingReviewId, setEditingReviewId] = useState(null);
   const [editReviewText, setEditReviewText] = useState('');
   const [editReviewRating, setEditReviewRating] = useState(5);
 
   const startEditingReview = (rev) => {
     setEditingReviewId(rev.id || rev._id);
-    setEditReviewText(rev.text);
+    setEditReviewText(rev.text || rev.comment || '');
     setEditReviewRating(rev.rating || 5);
   };
 
@@ -84,18 +82,19 @@ export function PropertyDetailPage({ onBookClick }) {
     setReviews((prev) =>
       prev.map((r) => {
         if (String(r.id || r._id) === String(reviewId)) {
-          return { ...r, text: editReviewText.trim(), rating: editReviewRating };
+          return { ...r, text: editReviewText.trim(), comment: editReviewText.trim(), rating: editReviewRating };
         }
         return r;
       })
     );
 
-    const targetStayId = id || stay?._id || stay?.id;
+    const targetId = id || stay?._id || stay?.id;
     cancelEditingReview();
 
     try {
-      await staysAPI.updateReview(targetStayId, reviewId, {
+      await staysAPI.updateReview(targetId, reviewId, {
         rating: editReviewRating,
+        comment: editReviewText.trim(),
         text: editReviewText.trim(),
       });
       toast.success('Your review has been updated!');
@@ -110,10 +109,10 @@ export function PropertyDetailPage({ onBookClick }) {
 
     setReviews((prev) => prev.filter((r) => String(r.id || r._id) !== String(reviewId)));
 
-    const targetStayId = id || stay?._id || stay?.id;
+    const targetId = id || stay?._id || stay?.id;
 
     try {
-      await staysAPI.deleteReview(targetStayId, reviewId);
+      await staysAPI.deleteReview(targetId, reviewId);
       toast.success('Review deleted successfully!');
     } catch (err) {
       console.warn('API error deleting review:', err);
@@ -121,7 +120,6 @@ export function PropertyDetailPage({ onBookClick }) {
     }
   };
 
-  // Keyboard navigation for Fullscreen Lightbox Modal (Esc, Left Arrow, Right Arrow)
   useEffect(() => {
     if (!isLightboxOpen) return;
 
@@ -139,7 +137,6 @@ export function PropertyDetailPage({ onBookClick }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isLightboxOpen, stay]);
 
-  // Silent background fetch helper that updates stay without flickering loading spinner
   const fetchStayData = useCallback(async (isInitial = false) => {
     if (!id) return;
     try {
@@ -147,18 +144,19 @@ export function PropertyDetailPage({ onBookClick }) {
         setLoading(true);
       }
       const data = await staysAPI.getStayById(id);
-      if (data) {
+      const stayPayload = data?.stay || data;
+      if (stayPayload && (stayPayload._id || stayPayload.id || stayPayload.title)) {
         setStay((prev) => {
-          if (!prev) return data;
-          if (JSON.stringify(prev) === JSON.stringify(data)) return prev;
-          return data;
+          if (!prev) return stayPayload;
+          if (JSON.stringify(prev) === JSON.stringify(stayPayload)) return prev;
+          return stayPayload;
         });
-        if (Array.isArray(data.reviews)) {
-          setReviews(data.reviews);
+        if (Array.isArray(stayPayload.reviews)) {
+          setReviews(stayPayload.reviews);
         }
       } else {
-        // Fallback: search stays list
-        const allStays = await staysAPI.getStays();
+        const res = await staysAPI.getStays();
+        const allStays = Array.isArray(res) ? res : (res?.stays || res?.data || []);
         const found = allStays.find(
           (s) =>
             String(s._id || s.id) === String(id) ||
@@ -182,19 +180,15 @@ export function PropertyDetailPage({ onBookClick }) {
     }
   }, [id, stay]);
 
-  // Initial fetch and continuous real-time auto sync
   useEffect(() => {
     if (!id) return;
 
-    // 1. Always execute initial fetch to ensure fresh rates even if passed via route state
     fetchStayData(true);
 
-    // 2. Continuous background polling (every 2.5s) for instant live updates without page reload
     const interval = setInterval(() => {
       fetchStayData(false);
-    }, 2500);
+    }, 3000);
 
-    // 3. Immediately refresh when user switches tabs or window gains focus
     const handleFocus = () => fetchStayData(false);
     window.addEventListener('focus', handleFocus);
 
@@ -205,7 +199,6 @@ export function PropertyDetailPage({ onBookClick }) {
     };
     document.addEventListener('visibilitychange', handleVisibility);
 
-    // 4. Instant cross-tab storage sync
     const handleStorage = (e) => {
       if (
         !e.key ||
@@ -220,13 +213,11 @@ export function PropertyDetailPage({ onBookClick }) {
     };
     window.addEventListener('storage', handleStorage);
 
-    // 5. Custom window events for same-window instant sync
     const handleCustomSync = () => fetchStayData(false);
     window.addEventListener('stayhub_rooms_updated', handleCustomSync);
     window.addEventListener('stayhub_slots_updated', handleCustomSync);
     window.addEventListener('stayhub_admin_sync', handleCustomSync);
 
-    // 6. Modern BroadcastChannel for cross-tab communication (< 5ms latency)
     let bc = null;
     try {
       if (typeof BroadcastChannel !== 'undefined') {
@@ -255,7 +246,6 @@ export function PropertyDetailPage({ onBookClick }) {
     };
   }, [id, fetchStayData]);
 
-  // Keep selectedRateIdx safely clamped within roomRates
   useEffect(() => {
     if (Array.isArray(stay?.roomRates) && stay.roomRates.length > 0) {
       if (selectedRateIdx >= stay.roomRates.length) {
@@ -264,7 +254,6 @@ export function PropertyDetailPage({ onBookClick }) {
     }
   }, [stay?.roomRates, selectedRateIdx]);
 
-  // Calculate dynamic overall rating from submitted reviews (returns null if no reviews)
   const currentRating = useMemo(() => {
     if (Array.isArray(reviews) && reviews.length > 0) {
       const sum = reviews.reduce((acc, r) => acc + (Number(r.rating) || 5), 0);
@@ -273,7 +262,6 @@ export function PropertyDetailPage({ onBookClick }) {
     return null;
   }, [reviews]);
 
-  // Check if logged in user has already submitted feedback for this property
   const currentUserReview = useMemo(() => {
     if (!user || !Array.isArray(reviews)) return null;
     const uEmail = (user.email || '').toLowerCase().trim();
@@ -281,14 +269,13 @@ export function PropertyDetailPage({ onBookClick }) {
     const uName = (user.name || '').toLowerCase().trim();
 
     return reviews.find((rev) => {
+      const revUserId = String(rev.userId?._id || rev.userId || rev.user?._id || rev.user || '');
+      if (uId && revUserId && revUserId === uId) return true;
       if (rev.userEmail && rev.userEmail.toLowerCase().trim() === uEmail) return true;
-      if (rev.userId && String(rev.userId) === uId) return true;
       if (rev.author && uName && rev.author.toLowerCase().trim() === uName) return true;
       return false;
     });
   }, [user, reviews]);
-
-
 
   if (loading) {
     return (
@@ -318,7 +305,6 @@ export function PropertyDetailPage({ onBookClick }) {
   const isSaved = isInWishlist(stayId);
   const pricing = getStayPricing(stay);
 
-  // Exact host uploaded images
   const allImages = Array.isArray(stay.images) && stay.images.length > 0
     ? stay.images
     : stay.image
@@ -327,12 +313,11 @@ export function PropertyDetailPage({ onBookClick }) {
 
   const mainImage = allImages[activePhotoIdx] || allImages[0] || '';
 
-  // Exact Host Room Rates & Pricing Calculation
   const hasRoomRates = Array.isArray(stay.roomRates) && stay.roomRates.length > 0;
   const activeRateObj = hasRoomRates ? (stay.roomRates[selectedRateIdx] || stay.roomRates[0]) : null;
 
   const displayExactPrice = activeRateObj
-    ? activeRateObj.price
+    ? (String(activeRateObj.price).startsWith('₹') ? activeRateObj.price : `₹${Number(activeRateObj.price).toLocaleString('en-IN')}`)
     : (stay.price ? (String(stay.price).startsWith('₹') ? stay.price : `₹${Number(stay.price).toLocaleString('en-IN')}`) : `₹${pricing.primaryPrice}`);
 
   const displayExactUnit = activeRateObj
@@ -343,17 +328,16 @@ export function PropertyDetailPage({ onBookClick }) {
     ? (activeRateObj.type || 'Standard Rate')
     : 'Host Listed Rate';
 
-  // Navigate to Room Availability Page filtered specifically to selected room category
   const handleNavigateToRooms = (customCategory) => {
     const rateToUse = customCategory
       ? (stay?.roomRates || []).find((r) => r.type === customCategory) || activeRateObj
       : activeRateObj;
 
     const categoryType = customCategory || rateToUse?.type || '';
-    const stayId = id || stay?._id || stay?.id;
+    const currentStayId = id || stay?._id || stay?.id;
     const url = categoryType
-      ? `/stay/${stayId}/rooms?type=${encodeURIComponent(categoryType)}`
-      : `/stay/${stayId}/rooms`;
+      ? `/stay/${currentStayId}/rooms?type=${encodeURIComponent(categoryType)}`
+      : `/stay/${currentStayId}/rooms`;
 
     navigate(url, {
       state: {
@@ -364,19 +348,17 @@ export function PropertyDetailPage({ onBookClick }) {
     });
   };
 
-
-
-  // Construct exact Google Maps URL for property location
   const mapQuery = encodeURIComponent(
     stay.address
       ? `${stay.propertyName || stay.title || ''}, ${stay.address}`
       : `${stay.propertyName || stay.title || ''}, ${stay.roadArea || ''}, ${stay.city || stay.location || ''}, ${stay.state || ''}`
   );
 
-  const googleMapsUrl = stay.coordinates?.lat && stay.coordinates?.lng
-    ? `https://www.google.com/maps/search/?api=1&query=${stay.coordinates.lat},${stay.coordinates.lng}`
-    : `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
-
+  const googleMapsUrl = stay.latitude && stay.longitude
+    ? `https://www.google.com/maps/search/?api=1&query=${stay.latitude},${stay.longitude}`
+    : (stay.coordinates?.lat && stay.coordinates?.lng
+      ? `https://www.google.com/maps/search/?api=1&query=${stay.coordinates.lat},${stay.coordinates.lng}`
+      : `https://www.google.com/maps/search/?api=1&query=${mapQuery}`);
 
   const handleAddReview = async (e) => {
     e.preventDefault();
@@ -391,14 +373,15 @@ export function PropertyDetailPage({ onBookClick }) {
     const newRevObj = {
       id: 'rev_' + Date.now(),
       author: user?.name || 'Guest User',
+      userName: user?.name || 'Guest User',
       userEmail: user?.email || '',
       userId: user?._id || user?.id || '',
       rating: newRating,
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      comment: newReviewText.trim(),
       text: newReviewText.trim(),
     };
 
-    // Optimistic UI update
     setReviews((prev) => [newRevObj, ...prev]);
     setNewReviewText('');
     setNewRating(5);
@@ -419,11 +402,9 @@ export function PropertyDetailPage({ onBookClick }) {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 font-sans pb-28">
-      {/* 🚀 TOP NAVIGATION NAVBAR HEADER WITH RESPONSIVE HAMBURGER MENU */}
+      {/* TOP NAVIGATION NAVBAR HEADER */}
       <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-white/90 dark:bg-slate-900/90 border-b border-slate-200/80 dark:border-slate-800 shadow-2xs">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
-          
-          {/* Left: Back Button & Category Pill (Hidden Category Pill on Mobile) */}
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               type="button"
@@ -451,7 +432,6 @@ export function PropertyDetailPage({ onBookClick }) {
               <span>Back</span>
             </button>
 
-            {/* Category Pill - Hidden on Mobile (< md), Shown on Desktop (md+) */}
             <span className="hidden md:inline-flex text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-amber-500/10 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 items-center gap-1.5 shadow-2xs">
               <svg className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20 stroke-[2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z" />
@@ -460,11 +440,8 @@ export function PropertyDetailPage({ onBookClick }) {
             </span>
           </div>
 
-          {/* Center: Desktop Capsule Switcher (Property | Host | Reviews) - Shown on Desktop (lg+) */}
           <div className="hidden lg:flex items-center justify-center">
             <div className="relative flex items-center p-1 rounded-full bg-slate-100 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs select-none">
-              
-              {/* Tab 1: Property */}
               <button
                 type="button"
                 onClick={() => setActiveCenterTab('property')}
@@ -488,7 +465,6 @@ export function PropertyDetailPage({ onBookClick }) {
                 )}
               </button>
 
-              {/* Tab 2: Host */}
               <button
                 type="button"
                 onClick={handleHostTabClick}
@@ -512,7 +488,6 @@ export function PropertyDetailPage({ onBookClick }) {
                 )}
               </button>
 
-              {/* Tab 3: Reviews */}
               <button
                 type="button"
                 onClick={() => setActiveCenterTab('reviews')}
@@ -534,11 +509,9 @@ export function PropertyDetailPage({ onBookClick }) {
                   />
                 )}
               </button>
-
             </div>
           </div>
 
-          {/* Right: Desktop Actions (Save & Theme) - Shown on md+ */}
           <div className="hidden md:flex items-center gap-2 sm:gap-3">
             <button
               type="button"
@@ -568,7 +541,6 @@ export function PropertyDetailPage({ onBookClick }) {
             </button>
           </div>
 
-          {/* Mobile Actions: Wishlist & 3-Lines Hamburger Menu Button - Shown on Mobile (< lg) */}
           <div className="flex lg:hidden items-center gap-2">
             <button
               type="button"
@@ -588,7 +560,6 @@ export function PropertyDetailPage({ onBookClick }) {
               </svg>
             </button>
 
-            {/* 3-Lines Hamburger Menu Button */}
             <button
               type="button"
               onClick={() => setMobileMenuOpen((prev) => !prev)}
@@ -611,7 +582,6 @@ export function PropertyDetailPage({ onBookClick }) {
           </div>
         </div>
 
-        {/* Mobile Dropdown Drawer (Slide-down menu when mobileMenuOpen is true) */}
         <AnimatePresence>
           {mobileMenuOpen && (
             <motion.div
@@ -621,7 +591,6 @@ export function PropertyDetailPage({ onBookClick }) {
               transition={{ duration: 0.2, ease: 'easeInOut' }}
               className="lg:hidden border-t border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl overflow-hidden px-4 py-3 space-y-3"
             >
-              {/* Capsule Tab Switcher on Mobile */}
               <div className="flex items-center justify-center p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80">
                 <button
                   type="button"
@@ -677,7 +646,6 @@ export function PropertyDetailPage({ onBookClick }) {
                 </button>
               </div>
 
-              {/* Quick Info & Theme Toggle Row */}
               <div className="flex items-center justify-between pt-1">
                 <span className="text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30 flex items-center gap-1.5">
                   <svg className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20 stroke-[2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -699,14 +667,9 @@ export function PropertyDetailPage({ onBookClick }) {
         </AnimatePresence>
       </header>
 
-      {/* ========================================================================= */}
-      {/* 🏛️ 3-PANEL ARCHITECTURE (LEFT: IMAGES | CENTER: DETAILS | RIGHT: PRICING) */}
-      {/* ========================================================================= */}
+      {/* 3-PANEL ARCHITECTURE */}
       <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-5 lg:h-[calc(100vh-4.5rem)] lg:overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start lg:h-full">
-          
-          {/* ===================================================================== */}
-          {/* 🖼️ LEFT PANEL (4 COLS): COMPONENT-LEVEL LIVE PHOTO GALLERY & VIDEO TOUR */}
           <ErrorBoundary>
             <PropertyMediaSection
               stay={stay}
@@ -718,8 +681,6 @@ export function PropertyDetailPage({ onBookClick }) {
             />
           </ErrorBoundary>
 
-          {/* ===================================================================== */}
-          {/* 📝 CENTER PANEL (5 COLS): COMPONENT-LEVEL LIVE PROPERTY DETAILS & TABS */}
           <ErrorBoundary>
             <PropertyOverviewSection
               stay={stay}
@@ -739,7 +700,6 @@ export function PropertyDetailPage({ onBookClick }) {
             />
           </ErrorBoundary>
 
-          {/* 💳 RIGHT PANEL (3 COLS): COMPONENT-LEVEL LIVE PRICING & ROOM CATEGORIES CARD */}
           <ErrorBoundary>
             <div className="lg:col-span-3 space-y-4">
               <PropertyRoomCategoriesCard
@@ -751,11 +711,10 @@ export function PropertyDetailPage({ onBookClick }) {
               />
             </div>
           </ErrorBoundary>
-
         </div>
       </main>
 
-      {/* 📱 FIXED BOTTOM MOBILE BOOKING BAR */}
+      {/* FIXED BOTTOM MOBILE BOOKING BAR */}
       <div className="fixed bottom-0 left-0 right-0 z-30 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-3 sm:hidden flex items-center justify-between">
         <div>
           <span className="text-[9px] text-slate-400 uppercase font-medium">{displayRateName}</span>
@@ -772,7 +731,7 @@ export function PropertyDetailPage({ onBookClick }) {
         </button>
       </div>
 
-      {/* 🔍 FULLSCREEN LIGHTBOX PHOTO VIEWER MODAL */}
+      {/* FULLSCREEN LIGHTBOX PHOTO VIEWER MODAL */}
       <AnimatePresence>
         {isLightboxOpen && (
           <motion.div
@@ -783,7 +742,6 @@ export function PropertyDetailPage({ onBookClick }) {
             className="fixed inset-0 z-[99999] bg-black/94 backdrop-blur-2xl flex flex-col justify-between p-3 sm:p-6 select-none overflow-hidden cursor-pointer"
             onClick={() => setIsLightboxOpen(false)}
           >
-            {/* Lightbox Header Bar */}
             <div className="flex items-center justify-between z-20 w-full max-w-7xl mx-auto pt-1 sm:pt-2 pointer-events-auto">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-9 h-9 rounded-xl bg-white/10 text-white flex items-center justify-center font-bold text-sm shrink-0 border border-white/15">
@@ -800,9 +758,7 @@ export function PropertyDetailPage({ onBookClick }) {
               </div>
             </div>
 
-            {/* Lightbox Center Image Stage with Floating Prev/Next Buttons */}
             <div className="relative flex-1 flex items-center justify-center my-2 max-w-7xl mx-auto w-full min-h-0">
-              {/* Left Arrow Switch (◀) */}
               {allImages.length > 1 && (
                 <button
                   type="button"
@@ -811,7 +767,7 @@ export function PropertyDetailPage({ onBookClick }) {
                     setActivePhotoIdx((prev) => (prev === 0 ? allImages.length - 1 : prev - 1));
                   }}
                   className="absolute left-2 sm:left-6 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/95 hover:bg-white text-slate-800 shadow-xl border border-slate-200/80 flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95 backdrop-blur-md"
-                  title="Previous Photo (Left Arrow)"
+                  title="Previous Photo"
                 >
                   <svg className="w-5 h-5 sm:w-6 sm:h-6 text-slate-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="15 18 9 12 15 6" />
@@ -819,7 +775,6 @@ export function PropertyDetailPage({ onBookClick }) {
                 </button>
               )}
 
-              {/* Active Full-Screen Image (Only clicking directly on the image prevents modal close) */}
               <AnimatePresence mode="wait">
                 <motion.img
                   key={activePhotoIdx}
@@ -834,7 +789,6 @@ export function PropertyDetailPage({ onBookClick }) {
                 />
               </AnimatePresence>
 
-              {/* Right Arrow Switch (▶) */}
               {allImages.length > 1 && (
                 <button
                   type="button"
@@ -843,7 +797,7 @@ export function PropertyDetailPage({ onBookClick }) {
                     setActivePhotoIdx((prev) => (prev === allImages.length - 1 ? 0 : prev + 1));
                   }}
                   className="absolute right-2 sm:right-6 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/95 hover:bg-white text-slate-800 shadow-xl border border-slate-200/80 flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95 backdrop-blur-md"
-                  title="Next Photo (Right Arrow)"
+                  title="Next Photo"
                 >
                   <svg className="w-5 h-5 sm:w-6 sm:h-6 text-slate-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="9 18 15 12 9 6" />
@@ -852,7 +806,6 @@ export function PropertyDetailPage({ onBookClick }) {
               )}
             </div>
 
-            {/* Lightbox Bottom Thumbnail Carousel Strip */}
             {allImages.length > 1 && (
               <div className="w-full max-w-4xl mx-auto flex items-center justify-center gap-2 overflow-x-auto py-2 px-2 select-none z-20 scrollbar-none">
                 {allImages.map((imgUrl, idx) => (

@@ -2,56 +2,51 @@ import mongoose from 'mongoose';
 
 const bookingSchema = new mongoose.Schema(
   {
-    // Relational References
-    user: {
+    // Relational Entity References
+    stayId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      index: true,
-    },
-    userId: {
-      type: String,
+      ref: 'Stay',
+      required: true,
       index: true,
     },
     hostId: {
-      type: String,
-      index: true,
-    },
-    hostEmail: {
-      type: String,
-      lowercase: true,
-      trim: true,
-      index: true,
-    },
-    stay: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Stay',
+      ref: 'Host',
+      required: true,
+      index: true,
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
       index: true,
     },
     stayTitle: {
       type: String,
-      required: true,
       trim: true,
+      default: 'Room Reservation',
     },
     location: {
       type: String,
       trim: true,
+      default: '',
     },
 
-    // Guest Profile (Canonical Single Source of Truth)
+    // Guest Profile
     fullName: {
       type: String,
-      required: true,
+      required: [true, 'Guest full name is required'],
       trim: true,
     },
     email: {
       type: String,
-      required: true,
       lowercase: true,
       trim: true,
+      default: '',
     },
     phone: {
       type: String,
-      required: true,
+      required: [true, 'Guest phone number is required'],
       trim: true,
     },
     gender: {
@@ -65,51 +60,38 @@ const bookingSchema = new mongoose.Schema(
       default: '',
     },
 
-    // Reservation & Room Schedule
+    // Reservation & Room Schedule (Strict Range Model)
     roomNumber: {
       type: String,
+      required: true,
       trim: true,
     },
     roomType: {
       type: String,
       trim: true,
+      default: 'Standard',
     },
     rateUnit: {
       type: String,
+      enum: ['/night', '/month'],
       default: '/month',
-    },
-    moveInDate: {
-      type: String,
-      default: '',
     },
     checkIn: {
       type: Date,
+      required: [true, 'Check-in date timestamp is required'],
+      index: true,
     },
     checkOut: {
       type: Date,
-    },
-    durationMonths: {
-      type: Number,
-      default: 1,
-      min: 0,
-    },
-    durationDays: {
-      type: Number,
-      default: 0,
-      min: 0,
+      required: [true, 'Check-out date timestamp is required'],
+      index: true,
     },
     durationDisplay: {
       type: String,
-      default: '1 Month',
+      default: '',
     },
-    bookedDates: [{
-      type: String,
-    }],
-    bookedMonths: [{
-      type: String,
-    }],
 
-    // Occupancy & Billing Breakdown
+    // Occupancy & Billing
     adults: {
       type: Number,
       default: 1,
@@ -134,7 +116,7 @@ const bookingSchema = new mongoose.Schema(
       totalAmount: { type: Number, default: 0 },
     },
 
-    // Booking Status & Source Tracking
+    // Identifiers & Status
     bookingReferenceId: {
       type: String,
       required: true,
@@ -147,16 +129,18 @@ const bookingSchema = new mongoose.Schema(
     },
     bookingSource: {
       type: String,
-      enum: ['ONLINE', 'OFFLINE_HOST', 'WALK_IN', 'ADMIN'],
+      enum: ['ONLINE', 'ONLINE_USER', 'OFFLINE_HOST', 'WALK_IN', 'ADMIN'],
       default: 'ONLINE',
+      index: true,
     },
     status: {
       type: String,
-      enum: ['PENDING', 'CONFIRMED', 'CANCELLED', 'EXPIRED'],
+      enum: ['PENDING', 'CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED', 'REJECTED', 'EXPIRED'],
       default: 'CONFIRMED',
+      index: true,
     },
 
-    // Payment Processing
+    // Payment Tracking
     paymentStatus: {
       type: String,
       enum: ['UNPAID', 'PENDING', 'PAID', 'FAILED', 'REFUNDED', 'COMPLETED'],
@@ -164,7 +148,7 @@ const bookingSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ['ONLINE', 'RAZORPAY', 'PAY_ON_ARRIVAL', 'CASH', 'OFFLINE', 'Offline Pay at Property'],
+      enum: ['ONLINE', 'RAZORPAY', 'PAY_ON_ARRIVAL', 'CASH', 'OFFLINE'],
       default: 'OFFLINE',
     },
     paymentDetails: {
@@ -172,9 +156,6 @@ const bookingSchema = new mongoose.Schema(
       paymentId: { type: String, default: '' },
       orderId: { type: String, default: '' },
       signature: { type: String, default: '' },
-    },
-    holdExpiresAt: {
-      type: Date,
     },
   },
   {
@@ -184,33 +165,8 @@ const bookingSchema = new mongoose.Schema(
   }
 );
 
-// Pre-save normalization: Flattens any incoming legacy duplicate fields into single attributes
+// Normalize check-in/check-out formats
 bookingSchema.pre('validate', function (next) {
-  // Collapse duplicate names
-  if (!this.fullName) {
-    this.fullName = this.get('userName') || this.get('guestName') || '';
-  }
-  // Collapse duplicate emails
-  if (!this.email) {
-    this.email = this.get('userEmail') || this.get('guestEmail') || '';
-  }
-  // Collapse duplicate phones
-  if (!this.phone) {
-    this.phone = this.get('userPhone') || this.get('guestPhone') || '';
-  }
-  // Collapse duplicate Aadhaar fields
-  if (!this.aadharNumber) {
-    this.aadharNumber =
-      this.get('guestAadhar') ||
-      this.get('aadhar') ||
-      this.get('aadharId') ||
-      '';
-  }
-  // Collapse duplicate room / sharing labels
-  if (!this.roomType && this.get('sharingType')) {
-    this.roomType = this.get('sharingType');
-  }
-  // Sync ISO date objects if incoming data has string checkIn/checkOut
   if (this.checkIn && typeof this.checkIn === 'string') {
     this.checkIn = new Date(this.checkIn);
   }
@@ -220,24 +176,18 @@ bookingSchema.pre('validate', function (next) {
   next();
 });
 
-// Backward-compatible Virtual Getters for legacy React components
+// Backward-compatible Virtual Getters[cite: 4]
 bookingSchema.virtual('userName').get(function () { return this.fullName; });
 bookingSchema.virtual('guestName').get(function () { return this.fullName; });
 bookingSchema.virtual('userEmail').get(function () { return this.email; });
 bookingSchema.virtual('guestEmail').get(function () { return this.email; });
 bookingSchema.virtual('userPhone').get(function () { return this.phone; });
 bookingSchema.virtual('guestPhone').get(function () { return this.phone; });
-bookingSchema.virtual('guestGender').get(function () { return this.gender; });
-bookingSchema.virtual('sharingType').get(function () { return this.roomType; });
 bookingSchema.virtual('guestAadhar').get(function () { return this.aadharNumber; });
-bookingSchema.virtual('aadharId').get(function () { return this.aadharNumber; });
-bookingSchema.virtual('aadhar').get(function () { return this.aadharNumber; });
 
-// Compound & Query Indexes
-bookingSchema.index({ user: 1, createdAt: -1 });
-bookingSchema.index({ hostId: 1, createdAt: -1 });
-bookingSchema.index({ stay: 1, status: 1 });
-bookingSchema.index({ checkIn: 1, checkOut: 1 });
-bookingSchema.index({ status: 1, paymentStatus: 1 });
+// Compound Indexes for fast conflict resolution & schedule checking
+bookingSchema.index({ stayId: 1, roomNumber: 1, checkIn: 1, checkOut: 1 });
+bookingSchema.index({ hostId: 1, status: 1, createdAt: -1 });
+bookingSchema.index({ userId: 1, createdAt: -1 });
 
 export const Booking = mongoose.model('Booking', bookingSchema);
