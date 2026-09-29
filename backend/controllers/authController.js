@@ -9,6 +9,7 @@ import { Payment } from '../models/Payment.js';
 import { Wishlist } from '../models/Wishlist.js';
 import { generateToken } from '../middleware/authMiddleware.js';
 import { sendPasswordResetEmail, testEmailConnection } from '../services/emailService.js';
+import { uploadSecureImage } from '../utils/imageSecurity.js';
 
 // Helper to create Nodemailer Gmail Transporter
 function getMailTransporter() {
@@ -160,7 +161,13 @@ export const loginUser = async (req, res, next) => {
     if (targetRole === 'host') {
       const host = await Host.findOne({ email: cleanEmail }).select('+password');
       if (!host) {
-        return res.status(404).json({ message: 'Host account not found. Please register first.' });
+        const isUserAccount = await User.findOne({ email: cleanEmail });
+        if (isUserAccount) {
+          return res.status(403).json({
+            message: 'This email belongs to a Student/Guest account. Guests must log in through the Search tab only.',
+          });
+        }
+        return res.status(404).json({ message: 'Host account not found. Please register as a Host through the Upload tab.' });
       }
 
       const isMatch = await host.matchPassword(password);
@@ -182,7 +189,13 @@ export const loginUser = async (req, res, next) => {
     } else if (targetRole === 'user') {
       const user = await User.findOne({ email: cleanEmail }).select('+password');
       if (!user) {
-        return res.status(404).json({ message: 'User account not found. Please register first.' });
+        const isHostAccount = await Host.findOne({ email: cleanEmail });
+        if (isHostAccount) {
+          return res.status(403).json({
+            message: 'This email belongs to a Property Host account. Hosts must log in through the Upload tab only.',
+          });
+        }
+        return res.status(404).json({ message: 'User account not found. Please register as a Guest through the Search tab.' });
       }
 
       const isMatch = await user.matchPassword(password);
@@ -358,7 +371,16 @@ export const updateUserProfile = async (req, res, next) => {
 
     const cleanName = name.trim();
     const cleanPhone = phone ? phone.trim() : '';
-    const cleanAvatar = avatar ? avatar.trim().slice(0, 2).toUpperCase() : cleanName.slice(0, 2).toUpperCase();
+
+    let cleanAvatar = cleanName.slice(0, 2).toUpperCase();
+    if (avatar && typeof avatar === 'string' && avatar.trim()) {
+      const trimmedAv = avatar.trim();
+      if (trimmedAv.startsWith('data:image/') || trimmedAv.startsWith('http://') || trimmedAv.startsWith('https://')) {
+        cleanAvatar = await uploadSecureImage(trimmedAv, 'roomscout/avatars');
+      } else if (trimmedAv.length <= 4) {
+        cleanAvatar = trimmedAv.toUpperCase();
+      }
+    }
     const isHostRole = req.user.role === 'host';
 
     let updatedAccount = null;

@@ -93,6 +93,8 @@ export function SearchInteractiveMap({
   onStayClick,
   onStayHover,
 }) {
+  if (typeof window === 'undefined') return null;
+
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef({});

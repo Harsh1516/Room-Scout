@@ -236,6 +236,7 @@ export function RoomAvailabilityPage() {
         price: rm.price || '₹4,000',
         rateUnit: rm.rateUnit || '/month',
         floor: rm.floor || `Floor ${Math.ceil((idx + 1) / 4)}`,
+        capacity: Math.max(1, Math.min(10, Number(rm.capacity) || 1)),
       }));
     }
 
@@ -262,6 +263,7 @@ export function RoomAvailabilityPage() {
         price: rateObj.price,
         rateUnit: rateObj.rateUnit || '/month',
         floor: `Floor ${Math.ceil(i / 4)}`,
+        capacity: Math.max(1, Math.min(10, Number(rateObj.capacity || stay.capacity) || 1)),
       });
     }
 
@@ -338,13 +340,18 @@ export function RoomAvailabilityPage() {
     : (activeRateObj?.type || selectedRoom?.type || stay?.type || 'Standard Room');
 
 
+  // Combined bookings from global context and direct stay fetch
+  const allKnownBookings = useMemo(
+    () => [...(Array.isArray(bookings) ? bookings : []), ...(Array.isArray(stayBookings) ? stayBookings : [])],
+    [bookings, stayBookings]
+  );
+
   // Derive booked and requested slots strictly from database bookings
   const { allRoomsBookedSlots, allRoomsRequestedSlots } = useMemo(() => {
     const bookedMap = {};
     const requestedMap = {};
     const stayId = String(id || stay?._id || stay?.id || '');
     const stayTitle = stay?.propertyName || stay?.title;
-    const allKnownBookings = [...(Array.isArray(bookings) ? bookings : []), ...(Array.isArray(stayBookings) ? stayBookings : [])];
 
     roomGrid.forEach((rm) => {
       const bookedSet = new Set();
@@ -422,7 +429,6 @@ export function RoomAvailabilityPage() {
     const requestedMap = {};
     const stayId = String(id || stay?._id || stay?.id || '');
     const stayTitle = stay?.propertyName || stay?.title;
-    const allKnownBookings = [...(Array.isArray(bookings) ? bookings : []), ...(Array.isArray(stayBookings) ? stayBookings : [])];
 
     roomGrid.forEach((rm) => {
       const bookedMonthSet = new Set();
@@ -1081,6 +1087,7 @@ export function RoomAvailabilityPage() {
                 upcomingMonths={upcomingMonths}
                 allRoomsBookedMonths={allRoomsBookedMonths}
                 allRoomsRequestedMonths={allRoomsRequestedMonths}
+                allKnownBookings={allKnownBookings}
               />
             </div>
 

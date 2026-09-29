@@ -41,9 +41,9 @@ export function VisitedCategoriesPanel({
       </div>
 
       {categoriesWithRooms.length === 0 ? (
-        <div className="p-6 rounded-3xl bg-white/90 backdrop-blur-xl border border-slate-200/90 text-center space-y-1.5 shadow-xs">
+        <div className="p-6 rounded-3xl bg-white/90 dark:bg-[#111622]/90 backdrop-blur-xl border border-slate-200/90 dark:border-zinc-800 text-center space-y-1.5 shadow-xs">
           <span className="text-xl">📭</span>
-          <p className="text-xs font-semibold text-slate-600">
+          <p className="text-xs font-semibold text-slate-600 dark:text-zinc-400">
             {subTab === 'requests'
               ? 'No categories with pending requests'
               : subTab === 'checkin'
@@ -63,16 +63,16 @@ export function VisitedCategoriesPanel({
                 onClick={() => onSelectCategory(catGroup.type)}
                 className={`rounded-3xl border p-4 space-y-3 transition-all duration-200 cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.03)] backdrop-blur-xl ${
                   isSelectedCat
-                    ? 'bg-purple-50/80 border-purple-400 ring-2 ring-purple-400/20 shadow-sm'
-                    : 'bg-white border-slate-200/90 hover:bg-purple-50/70 hover:border-purple-300 hover:shadow-md'
+                    ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-400 dark:border-emerald-600 ring-2 ring-emerald-400/20 shadow-sm'
+                    : 'bg-white dark:bg-[#111622]/90 border-slate-200/90 dark:border-zinc-800 hover:bg-emerald-50/50 dark:hover:bg-zinc-800/60 hover:border-emerald-300 dark:hover:border-zinc-700 hover:shadow-md'
                 }`}
               >
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-2">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-black text-slate-900">
+                    <span className="text-xs font-black text-slate-900 dark:text-white">
                       {catGroup.type}
                     </span>
-                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-purple-100 text-purple-800 border border-purple-200">
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                       {catGroup.rooms.length} Room{catGroup.rooms.length > 1 ? 's' : ''}
                     </span>
                   </div>

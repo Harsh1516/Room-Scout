@@ -68,8 +68,11 @@ export const computeBookingTimings = ({
   checkIn,
   checkOut,
 }) => {
-  const isMonthly = String(rateUnit || '').toLowerCase().includes('month');
   const cleanDates = Array.isArray(bookedDates) ? [...bookedDates].filter(Boolean).sort() : [];
+  const firstVal = cleanDates[0] || '';
+  const isExplicitMonthly = firstVal.length === 7;
+  const isExplicitDaily = firstVal.length === 10;
+  const isMonthly = isExplicitMonthly || (!isExplicitDaily && String(rateUnit || '').toLowerCase().includes('month'));
 
   let startDate;
   let endDate;
@@ -258,6 +261,7 @@ export const createOfflineBooking = async (req, res, next) => {
       stayId,
       roomNumber,
       roomType,
+      rateUnit: passedRateUnit,
       guestName,
       fullName,
       phone,
@@ -342,44 +346,34 @@ export const createOfflineBooking = async (req, res, next) => {
     const targetRoom = (stay.rooms || []).find(
       (r) => String(r.roomNumber).trim() === String(roomNumber).trim()
     );
-    const rateUnitStr = String(targetRoom?.rateUnit || stay.rateUnit || '/month').toLowerCase();
-    const isMonthlyRoom = rateUnitStr.includes('month');
+    const matchingRate = (stay.roomRates || []).find(
+      (rr) => (targetRoom?.rateId && (rr.id === targetRoom.rateId || String(rr._id) === String(targetRoom.rateId))) ||
+              (roomType && rr.type && rr.type.trim().toLowerCase() === String(roomType).trim().toLowerCase())
+    );
 
-    // Strict UTC Boundary Calculations
-    const firstVal = cleanDates[0];
-    const lastVal = cleanDates[cleanDates.length - 1];
+    const firstVal = cleanDates[0] || '';
+    const isExplicitMonthly = firstVal.length === 7;
+    const isExplicitDaily = firstVal.length === 10;
 
-    let startDate;
-    let endDate;
-    let durationMonths = 0;
-    let durationDays = 0;
-    let durationDisplay = '';
+    const resolvedRateUnit = String(
+      passedRateUnit ||
+      targetRoom?.rateUnit ||
+      matchingRate?.rateUnit ||
+      (isExplicitDaily ? '/night' : stay.rateUnit || '/month')
+    ).toLowerCase();
 
-    if (isMonthlyRoom || firstVal.length === 7) {
-      const [startY, startM] = firstVal.split('-').map(Number);
-      startDate = new Date(Date.UTC(startY, startM - 1, 1, 0, 0, 0));
+    const isMonthlyRoom = isExplicitMonthly || (!isExplicitDaily && resolvedRateUnit.includes('month'));
 
-      const [endY, endM] = lastVal.split('-').map(Number);
-      endDate = new Date(Date.UTC(endY, endM, 0, 23, 59, 59));
+    const timings = computeBookingTimings({
+      rateUnit: isMonthlyRoom ? '/month' : '/night',
+      bookedDates: cleanDates,
+      checkIn: req.body.checkIn,
+      checkOut: req.body.checkOut,
+    });
 
-      durationMonths = Math.max(
-        1,
-        (endDate.getUTCFullYear() - startDate.getUTCFullYear()) * 12 +
-        (endDate.getUTCMonth() - startDate.getUTCMonth()) + 1
-      );
-      durationDays = 0;
-      durationDisplay = `${durationMonths} Month${durationMonths > 1 ? 's' : ''}`;
-    } else {
-      const [startY, startM, startD] = firstVal.split('-').map(Number);
-      startDate = new Date(Date.UTC(startY, startM - 1, startD, 12, 0, 0));
-
-      const [endY, endM, endD] = lastVal.split('-').map(Number);
-      endDate = new Date(Date.UTC(endY, endM - 1, endD + 1, 11, 59, 0));
-
-      durationMonths = 0;
-      durationDays = Math.max(1, Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
-      durationDisplay = `${durationDays} Night${durationDays > 1 ? 's' : ''}`;
-    }
+    const startDate = timings.startDate;
+    const endDate = timings.endDate;
+    const durationDisplay = timings.durationDisplay;
 
     const refId = `OFF-${roomNumber}-${Date.now().toString().slice(-5)}`;
 
@@ -504,14 +498,48 @@ export const checkStayAvailability = async (req, res, next) => {
 // @access  Private / Host
 export const getHostBookings = async (req, res, next) => {
   try {
-    const hostIdentifier = req.query.hostId || req.user?.id || req.user?._id;
-    const hostEmail = (req.query.email || req.user?.email || '').toLowerCase().trim();
-
+    const isCallerAdmin = isAdminUser(req) || req.isAdminKey;
     let hostId = null;
-    if (hostIdentifier && mongoose.Types.ObjectId.isValid(hostIdentifier)) {
-      hostId = hostIdentifier;
-    } else if (hostEmail) {
-      const host = await Host.findOne({ email: hostEmail }).select('_id').lean();
+
+    if (isCallerAdmin) {
+      const hostIdentifier = req.query.hostId || req.user?.id || req.user?._id;
+      const hostEmail = (req.query.email || req.params.email || req.user?.email || '').toLowerCase().trim();
+      if (hostIdentifier && mongoose.Types.ObjectId.isValid(hostIdentifier)) {
+        hostId = hostIdentifier;
+      } else if (hostEmail) {
+        const host = await Host.findOne({ email: hostEmail }).select('_id').lean();
+        if (host) hostId = host._id;
+      }
+    } else {
+      // IDOR Guard: Caller can ONLY access their own host bookings
+      const callerEmail = (req.user?.email || '').toLowerCase().trim();
+      const callerId = req.user?._id || req.user?.id;
+
+      // If client sent an explicit email/hostId param, verify it matches caller
+      if (req.params.email || req.query.email) {
+        const targetEmail = (req.params.email || req.query.email).toLowerCase().trim();
+        if (targetEmail !== callerEmail) {
+          return res.status(403).json({
+            success: false,
+            message: 'Access denied: You are not authorized to view bookings of another host.',
+          });
+        }
+      }
+
+      const host = await Host.findOne({
+        $or: [
+          ...(callerId && mongoose.Types.ObjectId.isValid(callerId) ? [{ _id: callerId }] : []),
+          ...(callerEmail ? [{ email: callerEmail }] : []),
+        ],
+      }).select('_id').lean();
+
+      if (req.query.hostId && host && !idsMatch(req.query.hostId, host._id)) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: You are not authorized to view bookings of another host.',
+        });
+      }
+
       if (host) hostId = host._id;
     }
 
@@ -583,40 +611,99 @@ export const getMyBookings = async (req, res, next) => {
 export const updateBookingStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const updateFields = {};
-
-    const allowedFields = [
-      'status',
-      'totalAmount',
-      'fullName',
-      'phone',
-      'email',
-      'aadharNumber',
-      'adults',
-      'children',
-      'gender',
-    ];
-
-    allowedFields.forEach((field) => {
-      if (req.body[field] !== undefined) updateFields[field] = req.body[field];
-    });
-
-    if (req.body.guestName) updateFields.fullName = req.body.guestName;
-    if (req.body.guestPhone) updateFields.phone = req.body.guestPhone;
-    if (req.body.guestEmail) updateFields.email = req.body.guestEmail;
-    if (req.body.guestAadhar || req.body.aadhar) {
-      updateFields.aadharNumber = req.body.guestAadhar || req.body.aadhar;
-    }
 
     const query = mongoose.Types.ObjectId.isValid(id)
       ? { $or: [{ _id: id }, { bookingReferenceId: id }, { slotBookingId: id }] }
       : { $or: [{ bookingReferenceId: id }, { slotBookingId: id }] };
 
-    const updatedBooking = await Booking.findOneAndUpdate(query, { $set: updateFields }, { new: true });
-
-    if (!updatedBooking) {
+    const booking = await Booking.findOne(query);
+    if (!booking) {
       return res.status(404).json({ success: false, message: 'Booking record not found' });
     }
+
+    const userId = (req.user?._id || req.user?.id)?.toString();
+    const userEmail = (req.user?.email || '').toLowerCase().trim();
+    const isAdmin = isAdminUser(req) || req.isAdminKey;
+    const isOwner =
+      Boolean(userId && booking.userId && idsMatch(booking.userId, userId)) ||
+      Boolean(userEmail && booking.email && booking.email.toLowerCase().trim() === userEmail);
+
+    let isPropertyHost = false;
+    if (req.user?.role === 'host' || Boolean(req.user?.isHost) || req.hostAccount) {
+      const callerHost = await Host.findOne({
+        $or: [
+          ...(userId && mongoose.Types.ObjectId.isValid(userId) ? [{ _id: userId }] : []),
+          ...(userEmail ? [{ email: userEmail }] : []),
+        ],
+      }).select('_id').lean();
+      const callerHostId = callerHost?._id?.toString() || userId;
+      if (callerHostId && booking.hostId && idsMatch(booking.hostId, callerHostId)) {
+        isPropertyHost = true;
+      } else if (callerHostId && booking.stayId) {
+        const stay = await Stay.findById(booking.stayId).select('hostId').lean();
+        if (stay && idsMatch(stay.hostId, callerHostId)) {
+          isPropertyHost = true;
+        }
+      }
+    }
+
+    if (!isAdmin && !isPropertyHost && !isOwner) {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized: You do not have permission to modify this reservation.',
+      });
+    }
+
+    // Role-based privilege separation:
+    // If the caller is only a guest owner (not host or admin), they may ONLY cancel their booking
+    if (isOwner && !isPropertyHost && !isAdmin) {
+      const requestedStatus = (req.body.status || '').toUpperCase();
+      if (requestedStatus && requestedStatus !== 'CANCELLED') {
+        return res.status(403).json({
+          success: false,
+          message: 'Guests are only permitted to cancel their own reservations. Status changes to active/paid/confirmed must be done by the host or admin.',
+        });
+      }
+
+      // Cancellation State Lock: Guests can only cancel if current booking status is PENDING or CONFIRMED
+      const nonCancellableStatuses = ['CHECKED_IN', 'CHECKED_OUT', 'COMPLETED', 'CANCELLED', 'REJECTED', 'EXPIRED'];
+      if (nonCancellableStatuses.includes(booking.status)) {
+        return res.status(400).json({
+          success: false,
+          message: `This booking cannot be cancelled because its current status is '${booking.status}'. Guests may only cancel pending or confirmed reservations.`,
+        });
+      }
+    }
+
+    const updateFields = {};
+    const allowedFields = isOwner && !isPropertyHost && !isAdmin
+      ? ['status']
+      : [
+          'status',
+          'totalAmount',
+          'fullName',
+          'phone',
+          'email',
+          'aadharNumber',
+          'adults',
+          'children',
+          'gender',
+        ];
+
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) updateFields[field] = req.body[field];
+    });
+
+    if (isPropertyHost || isAdmin) {
+      if (req.body.guestName) updateFields.fullName = req.body.guestName;
+      if (req.body.guestPhone) updateFields.phone = req.body.guestPhone;
+      if (req.body.guestEmail) updateFields.email = req.body.guestEmail;
+      if (req.body.guestAadhar || req.body.aadhar) {
+        updateFields.aadharNumber = req.body.guestAadhar || req.body.aadhar;
+      }
+    }
+
+    const updatedBooking = await Booking.findByIdAndUpdate(booking._id, { $set: updateFields }, { new: true });
 
     return res.json({
       success: true,
@@ -684,6 +771,30 @@ export const removeOccupantBooking = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Booking not found.' });
     }
 
+    // IDOR Guard: Verify host owns the property of the target bookings
+    if (!isAdminUser(req) && !req.isAdminKey) {
+      const callerId = (req.user?._id || req.user?.id)?.toString();
+      const callerEmail = (req.user?.email || '').toLowerCase().trim();
+      const callerHost = await Host.findOne({
+        $or: [
+          ...(callerId && mongoose.Types.ObjectId.isValid(callerId) ? [{ _id: callerId }] : []),
+          ...(callerEmail ? [{ email: callerEmail }] : []),
+        ],
+      }).select('_id').lean();
+
+      const callerHostId = callerHost?._id?.toString() || callerId;
+      const unauthorized = matchingBookings.some((b) => {
+        return !idsMatch(b.hostId, callerHostId);
+      });
+
+      if (unauthorized) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: You are not authorized to remove occupants from listings you do not own.',
+        });
+      }
+    }
+
     const bookingIds = matchingBookings.map((b) => b._id);
     await Booking.deleteMany({ _id: { $in: bookingIds } });
     await Payment.deleteMany({ bookingId: { $in: bookingIds } });
@@ -699,37 +810,93 @@ export const removeOccupantBooking = async (req, res, next) => {
   }
 };
 
-// @desc    Mark occupant as checked out
+// @desc    Mark occupant as checked out & delete booking with all details from database
 // @route   POST /api/bookings/occupant/checkout
 // @access  Private / Host
 export const checkoutOccupant = async (req, res, next) => {
   try {
-    const { occupantId, slotBookingId, bookingReferenceId } = req.body;
+    const {
+      occupantId,
+      slotBookingId,
+      bookingReferenceId,
+      bookingId,
+      id,
+      _id,
+      phone,
+      guestPhone,
+      userPhone,
+      roomNumber,
+      stayId,
+      hostId,
+    } = req.body;
 
     const queryOr = [];
-    if (occupantId && mongoose.Types.ObjectId.isValid(occupantId)) queryOr.push({ _id: occupantId });
-    if (occupantId) queryOr.push({ bookingReferenceId: occupantId }, { slotBookingId: occupantId });
-    if (slotBookingId) queryOr.push({ slotBookingId });
-    if (bookingReferenceId) queryOr.push({ bookingReferenceId });
 
-    if (queryOr.length === 0) {
-      return res.status(400).json({ success: false, message: 'No identifier provided for checkout.' });
+    // Check all possible ID values
+    const candidateIds = [occupantId, slotBookingId, bookingReferenceId, bookingId, id, _id].filter(Boolean);
+    candidateIds.forEach((cId) => {
+      if (mongoose.Types.ObjectId.isValid(cId)) {
+        queryOr.push({ _id: cId });
+      }
+      queryOr.push({ bookingReferenceId: cId });
+      queryOr.push({ slotBookingId: cId });
+    });
+
+    // Fallback: match by roomNumber and phone if provided
+    const cleanPhone = String(phone || guestPhone || userPhone || '').replace(/\D/g, '').slice(-10);
+    const rawRoom = String(roomNumber || '').replace(/[^0-9]/g, '');
+    if (cleanPhone && rawRoom) {
+      const phoneFilter = {
+        roomNumber: { $regex: `${rawRoom}$`, $options: 'i' },
+        phone: { $regex: `${cleanPhone}$` },
+      };
+      if (stayId && mongoose.Types.ObjectId.isValid(stayId)) {
+        phoneFilter.stayId = stayId;
+      }
+      queryOr.push(phoneFilter);
     }
 
-    const updated = await Booking.findOneAndUpdate(
-      { $or: queryOr },
-      { $set: { status: 'CHECKED_OUT' } },
-      { new: true }
-    );
+    if (queryOr.length === 0) {
+      return res.status(400).json({ success: false, message: 'No valid booking identifier provided for checkout.' });
+    }
 
-    if (!updated) {
+    const matchingBookings = await Booking.find({ $or: queryOr });
+    if (!matchingBookings || matchingBookings.length === 0) {
       return res.status(404).json({ success: false, message: 'Booking not found.' });
     }
 
+    // IDOR Guard: Verify host owns the property of the target bookings
+    if (!isAdminUser(req) && !req.isAdminKey) {
+      const callerId = (req.user?._id || req.user?.id)?.toString();
+      const callerEmail = (req.user?.email || '').toLowerCase().trim();
+      const callerHost = await Host.findOne({
+        $or: [
+          ...(callerId && mongoose.Types.ObjectId.isValid(callerId) ? [{ _id: callerId }] : []),
+          ...(callerEmail ? [{ email: callerEmail }] : []),
+        ],
+      }).select('_id').lean();
+
+      const callerHostId = callerHost?._id?.toString() || callerId;
+      const unauthorized = matchingBookings.some((b) => {
+        return !idsMatch(b.hostId, callerHostId);
+      });
+
+      if (unauthorized) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: You are not authorized to check out occupants from listings you do not own.',
+        });
+      }
+    }
+
+    const bookingIds = matchingBookings.map((b) => b._id);
+    await Booking.deleteMany({ _id: { $in: bookingIds } });
+    await Payment.deleteMany({ bookingId: { $in: bookingIds } });
+
     return res.json({
       success: true,
-      message: 'Occupant status marked as CHECKED_OUT.',
-      booking: updated,
+      message: 'Occupant checked out and booking with all details deleted from database.',
+      deletedCount: bookingIds.length,
     });
   } catch (error) {
     console.error('Checkout occupant error:', error);
@@ -742,21 +909,78 @@ export const checkoutOccupant = async (req, res, next) => {
 // @access  Private / Host
 export const cascadeDeleteRoomBookings = async (req, res, next) => {
   try {
-    const { stayId, roomNumber } = req.body;
+    const { stayId, roomNumber, roomNumbers, categoryType, hostEmail, roomId } = req.body;
 
-    if (!stayId || !roomNumber) {
-      return res.status(400).json({ success: false, message: 'stayId and roomNumber are required.' });
+    const targetRoomNumbers = Array.isArray(roomNumbers) && roomNumbers.length > 0
+      ? roomNumbers
+      : (roomNumber ? [roomNumber] : []);
+
+    if (targetRoomNumbers.length === 0 && !roomId && !categoryType) {
+      return res.status(400).json({ success: false, message: 'roomNumber, roomNumbers, roomId, or categoryType is required.' });
     }
 
-    const result = await Booking.deleteMany({
-      stayId,
-      roomNumber: String(roomNumber).trim(),
-    });
+    // Resolve stayId if missing
+    let targetStayId = stayId;
+    if (!targetStayId || !mongoose.Types.ObjectId.isValid(targetStayId)) {
+      const email = hostEmail || req.user?.email;
+      if (email) {
+        const HostModel = mongoose.model('Host');
+        const host = await HostModel.findOne({ email }).lean();
+        if (host?._id) {
+          const StayModel = mongoose.model('Stay');
+          const stay = await StayModel.findOne({ hostId: host._id }).lean();
+          if (stay?._id) targetStayId = stay._id;
+        }
+      }
+    }
+
+    const queryOr = [];
+
+    // Match individual or batch room numbers
+    for (const num of targetRoomNumbers) {
+      const rawNum = String(num || '').replace(/[^0-9]/g, '');
+      if (rawNum) {
+        queryOr.push({ roomNumber: { $regex: `${rawNum}$`, $options: 'i' } });
+      }
+      if (num) {
+        queryOr.push({ roomNumber: String(num).trim() });
+      }
+    }
+
+    if (roomId && mongoose.Types.ObjectId.isValid(roomId)) {
+      queryOr.push({ roomId });
+    }
+
+    if (categoryType && typeof categoryType === 'string' && categoryType.trim()) {
+      const cleanCat = categoryType.trim();
+      queryOr.push({ roomType: { $regex: `^${cleanCat}$`, $options: 'i' } });
+      queryOr.push({ category: { $regex: `^${cleanCat}$`, $options: 'i' } });
+    }
+
+    if (queryOr.length === 0) {
+      return res.json({ success: true, message: 'No target rooms specified for cascade deletion.', deletedCount: 0 });
+    }
+
+    const matchQuery = { $or: queryOr };
+    if (targetStayId && mongoose.Types.ObjectId.isValid(targetStayId)) {
+      matchQuery.stayId = targetStayId;
+    }
+
+    // Find matching bookings to clean up both bookings and payments
+    const matchingBookings = await Booking.find(matchQuery).select('_id');
+    const bookingIds = matchingBookings.map((b) => b._id);
+
+    let deletedCount = 0;
+    if (bookingIds.length > 0) {
+      const result = await Booking.deleteMany({ _id: { $in: bookingIds } });
+      deletedCount = result.deletedCount;
+      await Payment.deleteMany({ bookingId: { $in: bookingIds } });
+    }
 
     return res.json({
       success: true,
-      message: `Cascade deleted ${result.deletedCount} booking(s) for Room ${roomNumber}.`,
-      deletedCount: result.deletedCount,
+      message: `Cascade deleted ${deletedCount} booking(s) across deleted room(s)/category.`,
+      deletedCount,
     });
   } catch (error) {
     console.error('Cascade delete error:', error);
@@ -794,18 +1018,42 @@ export const deleteBooking = async (req, res, next) => {
 
     const bookingUserEmail = (booking.email || '').toLowerCase().trim();
     const isOwner =
-      Boolean(userId && booking.userId && String(booking.userId) === String(userId)) ||
+      Boolean(userId && booking.userId && idsMatch(booking.userId, userId)) ||
       Boolean(userEmail && bookingUserEmail && bookingUserEmail === userEmail);
 
-    let isPropertyHost =
-      Boolean(isHost && userId && booking.hostId && String(booking.hostId) === String(userId));
+    let isPropertyHost = false;
+    if (isHost && (userId || userEmail)) {
+      const callerHost = await Host.findOne({
+        $or: [
+          ...(userId && mongoose.Types.ObjectId.isValid(userId) ? [{ _id: userId }] : []),
+          ...(userEmail ? [{ email: userEmail }] : []),
+        ],
+      }).select('_id').lean();
 
-    if (!isPropertyHost && (isHost || isAdmin || userEmail)) {
-      isPropertyHost = true;
+      const callerHostId = callerHost?._id?.toString() || userId;
+      if (callerHostId && booking.hostId && idsMatch(booking.hostId, callerHostId)) {
+        isPropertyHost = true;
+      } else if (callerHostId && booking.stayId) {
+        const stay = await Stay.findById(booking.stayId).select('hostId').lean();
+        if (stay && idsMatch(stay.hostId, callerHostId)) {
+          isPropertyHost = true;
+        }
+      }
     }
 
     if (!isAdmin && !isOwner && !isPropertyHost) {
       return res.status(403).json({ success: false, message: 'Unauthorized to delete this booking.' });
+    }
+
+    // Role-based deletion guard: Guests cannot delete bookings that have already checked in, checked out, or completed
+    if (isOwner && !isPropertyHost && !isAdmin) {
+      const nonDeletableStatuses = ['CHECKED_IN', 'CHECKED_OUT', 'COMPLETED'];
+      if (nonDeletableStatuses.includes(booking.status)) {
+        return res.status(400).json({
+          success: false,
+          message: `This booking cannot be deleted because its current status is '${booking.status}'. Only pending or confirmed reservations can be removed by guests.`,
+        });
+      }
     }
 
     await Booking.findByIdAndDelete(booking._id);

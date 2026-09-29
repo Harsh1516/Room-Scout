@@ -2,15 +2,13 @@ import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import { User } from '../models/User.js';
 import { Host } from '../models/Host.js';
+import { env } from '../config/env.js';
 
 // Retrieve secure JWT Secret
 function getJwtSecret() {
-  const secret = process.env.JWT_SECRET;
+  const secret = env.JWT_SECRET || process.env.JWT_SECRET;
   if (!secret) {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('FATAL SECURITY ERROR: JWT_SECRET environment variable is required in production.');
-    }
-    return 'dev_temporary_fallback_secret_key_roomscout_2026';
+    throw new Error('FATAL SECURITY ERROR: JWT_SECRET environment variable is missing.');
   }
   return secret;
 }
@@ -113,7 +111,9 @@ export async function protect(req, res, next) {
 
 export function idsMatch(a, b) {
   if (a == null || b == null) return false;
-  return String(a) === String(b);
+  const strA = (a._id || a.id || a)?.toString();
+  const strB = (b._id || b.id || b)?.toString();
+  return Boolean(strA && strB && strA === strB);
 }
 
 export function isAdminUser(req) {
@@ -125,7 +125,8 @@ export function isHostUser(req) {
 }
 
 export function actorId(req) {
-  return req.user?._id || req.user?.id;
+  const raw = req.user?._id || req.user?.id;
+  return raw ? raw.toString() : null;
 }
 
 // Require Host Privileges (admins allowed)
@@ -178,17 +179,43 @@ export function requireAdmin(req, res, next) {
 /** Host may only act on their own email/id unless admin. */
 export function assertSelfHostOrAdmin(req, { hostId, hostEmail } = {}) {
   if (isAdminUser(req) || req.isAdminKey) return true;
-  if (hostId && idsMatch(actorId(req), hostId)) return true;
-  if (hostEmail && req.user?.email && hostEmail.toLowerCase().trim() === String(req.user.email).toLowerCase().trim()) {
+  const callerId = actorId(req)?.toString();
+  const callerEmail = (req.user?.email || '').toLowerCase().trim();
+  const hostAccId = req.hostAccount?._id?.toString();
+
+  if (hostId && (idsMatch(callerId, hostId) || idsMatch(hostAccId, hostId))) {
     return true;
   }
-  if (req.user && (req.user.role === 'host' || req.user.role === 'admin')) {
-    return true;
-  }
-  if (req.hostAccount) {
+  if (hostEmail && callerEmail && hostEmail.toLowerCase().trim() === callerEmail) {
     return true;
   }
   return false;
+}
+
+/** Express middleware: enforce caller is either the host identified by :email/:id or an admin */
+export function requireSelfHostOrAdmin(req, res, next) {
+  if (isAdminUser(req) || req.isAdminKey) {
+    return next();
+  }
+
+  const emailParam = req.params.email || req.query.email;
+  const idParam = req.params.id || req.params.hostId || req.query.hostId;
+  const callerId = actorId(req)?.toString();
+  const callerEmail = (req.user?.email || '').toLowerCase().trim();
+  const hostAccId = req.hostAccount?._id?.toString();
+
+  if (emailParam && emailParam.toLowerCase().trim() === callerEmail) {
+    return next();
+  }
+
+  if (idParam && (idsMatch(callerId, idParam) || idsMatch(hostAccId, idParam))) {
+    return next();
+  }
+
+  return res.status(403).json({
+    success: false,
+    message: 'Access denied: You are not authorized to view or modify this host account.',
+  });
 }
 
 // Optional Protection Middleware: Populates req.user if token present, but does not block guests

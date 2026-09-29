@@ -1,8 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Console } from './Console';
-import { MapPickerModal } from '../MapPickerModal';
+
+const MapPickerModal = lazy(() =>
+  import('../MapPickerModal').then((m) => ({ default: m.MapPickerModal || m.default }))
+);
 
 // Procedural 2D Convex Lens Map (Navbar Signature Filter)
 const SVG_RAW = `<svg xmlns='http://www.w3.org/2000/svg' width='500' height='100'><defs><linearGradient id='gx' x1='0%' y1='0%' x2='100%' y2='0%'><stop offset='0%' stop-color='#000000'/><stop offset='12%' stop-color='#500000'/><stop offset='50%' stop-color='#800000'/><stop offset='88%' stop-color='#b00000'/><stop offset='100%' stop-color='#ff0000'/></linearGradient><linearGradient id='gy' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='#000000'/><stop offset='20%' stop-color='#005000'/><stop offset='50%' stop-color='#008000'/><stop offset='80%' stop-color='#00b000'/><stop offset='100%' stop-color='#00ff00'/></linearGradient></defs><rect width='100%' height='100%' fill='url(#gx)'/><rect width='100%' height='100%' fill='url(#gy)' style='mix-blend-mode:screen;'/></svg>`;
@@ -155,14 +158,18 @@ export function Center({ onSearchSubmit }) {
         />
       </div>
 
-      {/* Interactive Map Picker Modal */}
-      <MapPickerModal
-        isOpen={isMapModalOpen}
-        onClose={() => {
-          setIsMapModalOpen(false);
-        }}
-        onSelectLocation={handleMapLocationSelect}
-      />
+      {/* Interactive Map Picker Modal (Loaded on-demand when clicked) */}
+      {isMapModalOpen && (
+        <Suspense fallback={null}>
+          <MapPickerModal
+            isOpen={isMapModalOpen}
+            onClose={() => {
+              setIsMapModalOpen(false);
+            }}
+            onSelectLocation={handleMapLocationSelect}
+          />
+        </Suspense>
+      )}
     </>
   );
 }

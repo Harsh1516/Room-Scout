@@ -1,10 +1,11 @@
 import mongoose from 'mongoose';
+import { env } from './env.js';
 
 // Disable command buffering so queries fail immediately if MongoDB is not connected
 mongoose.set('bufferCommands', false);
 
 export async function connectDB(retries = 3, delay = 2000) {
-  const uri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/mal_practice';
+  const uri = env.MONGO_URI || process.env.MONGO_URI;
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {

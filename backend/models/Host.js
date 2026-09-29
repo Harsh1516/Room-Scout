@@ -79,7 +79,10 @@ hostSchema.methods.matchPassword = async function (enteredPassword) {
 
 // Generate JWT token method
 hostSchema.methods.generateToken = async function () {
-  const secret = process.env.JWT_SECRET || 'dev_temporary_fallback_secret_key_roomscout_2026';
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('FATAL SECURITY ERROR: JWT_SECRET environment variable is missing.');
+  }
   return jwt.sign(
     {
       userId: this._id.toString(),

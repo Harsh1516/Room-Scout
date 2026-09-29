@@ -1,17 +1,158 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
+import { Camera, ImagePlus, Video } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
 import { adminAPI, staysAPI } from '../services/api';
-import { MapLocationPicker } from '../components/MapLocationPicker';
 import { Login } from '../components/navbar/Login';
-import { Left } from '../components/navbar/Left';
 import { toast } from '../context/ToastContext';
+import { HostUploadTabs } from '../components/host/HostUploadTabs';
+import { ThemeTogglePill } from '../components/common/ThemeTogglePill';
+import { UploadBasicsTab } from '../components/host/upload/UploadBasicsTab';
+
+const UploadLocationTab = lazy(() =>
+  import('../components/host/upload/UploadLocationTab').then((m) => ({ default: m.UploadLocationTab || m.default }))
+);
+const UploadPerksRulesTab = lazy(() =>
+  import('../components/host/upload/UploadPerksRulesTab').then((m) => ({ default: m.UploadPerksRulesTab || m.default }))
+);
+const UploadPhotosTab = lazy(() =>
+  import('../components/host/upload/UploadPhotosTab').then((m) => ({ default: m.UploadPhotosTab || m.default }))
+);
+const UploadRoomsPricingTab = lazy(() =>
+  import('../components/host/upload/UploadRoomsPricingTab').then((m) => ({ default: m.UploadRoomsPricingTab || m.default }))
+);
+
+function TabFallback() {
+  return (
+    <div className="w-full min-h-[400px] rounded-3xl bg-slate-100/60 dark:bg-zinc-900/60 animate-pulse border border-slate-200 dark:border-zinc-800 flex flex-col items-center justify-center gap-3">
+      <div className="w-8 h-8 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin" />
+      <span className="text-xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+        Loading Step Content...
+      </span>
+    </div>
+  );
+}
 
 const MAX_PHOTOS = 5;
 const MAX_DESCRIPTION_CHARS = 100;
+
+// ── Interactive Particle Constellation Canvas matching First Page (LandingPage.jsx) ──
+function ConstellationCanvas() {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+
+    const handleResize = () => {
+      if (!canvas) return;
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', handleResize);
+
+    const mouse = { x: -1000, y: -1000, radius: 140 };
+    const handleMouseMove = (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+
+    const particleCount = Math.min(50, Math.floor((width * height) / 22000));
+    const particles = [];
+
+    for (let i = 0; i < particleCount; i++) {
+      const isEmerald = Math.random() > 0.45;
+      particles.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5,
+        radius: Math.random() * 1.6 + 1.1,
+        color: isEmerald ? 'rgba(16, 185, 129, ' : 'rgba(99, 102, 241, ',
+        baseAlpha: Math.random() * 0.35 + 0.25,
+      });
+    }
+
+    const render = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (p.x < 0 || p.x > width) p.vx *= -1;
+        if (p.y < 0 || p.y > height) p.vy *= -1;
+
+        const dx = mouse.x - p.x;
+        const dy = mouse.y - p.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < mouse.radius && dist > 0) {
+          const force = (mouse.radius - dist) / mouse.radius;
+          const forceX = (dx / dist) * force * 2;
+          const forceY = (dy / dist) * force * 2;
+          p.x -= forceX;
+          p.y -= forceY;
+
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(mouse.x, mouse.y);
+          ctx.strokeStyle = `rgba(16, 185, 129, ${0.35 * (1 - dist / mouse.radius)})`;
+          ctx.lineWidth = 0.9;
+          ctx.stroke();
+        }
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color + p.baseAlpha + ')';
+        ctx.fill();
+
+        for (let j = i + 1; j < particles.length; j++) {
+          const p2 = particles[j];
+          const distNodes = Math.hypot(p.x - p2.x, p.y - p2.y);
+          const maxDist = 110;
+
+          if (distNodes < maxDist) {
+            const alpha = (1 - distNodes / maxDist) * 0.22;
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = `rgba(16, 185, 129, ${alpha})`;
+            ctx.lineWidth = 0.75;
+            ctx.stroke();
+          }
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('mousemove', handleMouseMove);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      aria-hidden="true"
+      className="fixed inset-0 pointer-events-none z-0 opacity-60 dark:opacity-45 select-none"
+    />
+  );
+}
 
 const COMMON_RULE_PRESETS = [
   'Valid Govt ID Required at Check-in',
@@ -22,57 +163,51 @@ const COMMON_RULE_PRESETS = [
   'Keep Common Areas & Washrooms Clean',
 ];
 
-const PRESET_IMAGES = [
-  { label: 'Mountain Chalet', url: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80', slot: '1. Cover / Exterior' },
-  { label: 'Lakeside Villa', url: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80', slot: '2. Bedroom Setup' },
-  { label: 'Modern PG Room', url: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80', slot: '3. Washroom & Hygiene' },
-  { label: 'Hostel Dining', url: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=800&q=80', slot: '4. Common / Mess Area' },
-  { label: 'Balcony View', url: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80', slot: '5. Balcony / Campus View' },
+
+
+const WIZARD_STEPS = [
+  {
+    id: 1,
+    key: 'basics',
+    title: 'Basics & Identity',
+    shortTitle: 'Basics',
+    sub: 'Tell us about your property',
+    desc: 'Start with the core identity, property type, and guest categorization.',
+  },
+  {
+    id: 2,
+    key: 'location',
+    title: 'Location & Address',
+    shortTitle: 'Location',
+    sub: 'Where is your property located?',
+    desc: 'Pin your stay on the map or paste a Google Maps link to auto-fill details.',
+  },
+  {
+    id: 3,
+    key: 'amenities',
+    title: 'Facilities & Rules',
+    shortTitle: 'Perks & Rules',
+    sub: 'What does your place offer?',
+    desc: 'Select facilities available for residents and establish clear house guidelines.',
+  },
+  {
+    id: 4,
+    key: 'photos',
+    title: 'Photos & Video Tour',
+    shortTitle: 'Photos',
+    sub: 'Showcase your property',
+    desc: 'Upload up to 5 photos and add an Instagram Reel or YouTube walkthrough tour link.',
+  },
+  {
+    id: 5,
+    key: 'rooms',
+    title: 'Rooms, Pricing & Review',
+    shortTitle: 'Rooms & Pricing',
+    sub: 'Room categories & pricing',
+    desc: 'Configure your room rates and room cards, then review before publishing live.',
+  },
 ];
 
-const PROPERTY_TYPES = ['PG', 'Hostel', 'Hotel', 'Villa', 'Resort', 'Flat'];
-
-const GENDER_OPTIONS = [
-  { label: 'Boys Only', value: 'Boys' },
-  { label: 'Girls Only', value: 'Girls' },
-  { label: 'Both / Unisex', value: 'Both' },
-  { label: 'Family', value: 'Family' },
-];
-
-const DEFAULT_FACILITIES = [
-  'Attached Bathroom',
-];
-
-// Helper to generate default room layout
-function generateDefaultRooms(total = 6, availableCount = 6, ratesList = []) {
-  const rooms = [];
-  const rates = Array.isArray(ratesList) && ratesList.length > 0
-    ? ratesList
-    : [
-        { type: 'Double Sharing Room', price: '₹4,000', rateUnit: '/month' },
-        { type: 'Deluxe AC Room', price: '₹5,500', rateUnit: '/month' },
-        { type: 'Full AC Room', price: '₹6,500', rateUnit: '/month' },
-      ];
-
-  for (let i = 1; i <= total; i++) {
-    const floorNum = Math.ceil(i / 4);
-    const roomNum = 100 * floorNum + ((i - 1) % 4 + 1);
-    const rate = rates[(i - 1) % rates.length];
-    rooms.push({
-      id: `room_${Date.now()}_${i}_${Math.random().toString(36).substr(2, 4)}`,
-      roomNumber: `Room ${roomNum}`,
-      roomNumInt: roomNum,
-      floor: `Floor ${floorNum}`,
-      type: rate.type || 'Double Sharing Room',
-      price: rate.price || '₹4,000',
-      rateUnit: rate.rateUnit || '/month',
-      status: i <= availableCount ? 'Available' : 'Booked',
-    });
-  }
-  return rooms;
-}
-
-// Zod Validation Schema
 const hostPropertySchema = z.object({
   name: z.string().trim().min(2, 'Host name must be at least 2 characters'),
   email: z.string().trim().email('Please enter a valid email address'),
@@ -100,63 +235,58 @@ const hostPropertySchema = z.object({
 export function HostUploadPage() {
   const navigate = useNavigate();
   const { user, updateUserSession } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
 
   const fileInputRef = useRef(null);
 
+  // Stepper state (1 to 5)
+  const [activeStep, setActiveStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
 
-  // Custom Facility Input
-  const [newFacilityInput, setNewFacilityInput] = useState('');
+  // Room Categories & Inventory states for Step 5
+  const [selectedCategoryIndex, setSelectedCategoryIndex] = useState(0);
+  const [collapsedCategories, setCollapsedCategories] = useState({});
+  const [selectedRoomCardId, setSelectedRoomCardId] = useState(null);
+  const [selectedRoomNumber, setSelectedRoomNumber] = useState(null);
 
-  // Custom Rules Input
+  // Custom Facility & Rule Inputs
+  const [newFacilityInput, setNewFacilityInput] = useState('');
   const [newRuleInput, setNewRuleInput] = useState('');
 
-  // Media URL Input State
-  const [newMediaUrl, setNewMediaUrl] = useState('');
+  // Drag and Drop State for Photos
+  const [draggedPhotoIndex, setDraggedPhotoIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
 
   // Google Maps Import Link State
   const [googleMapsUrl, setGoogleMapsUrl] = useState('');
   const [isImportingGMap, setIsImportingGMap] = useState(false);
 
-  // Controls visibility of right-side address fields until URL uploaded or map pinned
-  const [isAddressVisible, setIsAddressVisible] = useState(false);
-
-  // Quick 2D Floor Generator State
-  const [generatorFloors, setGeneratorFloors] = useState(2);
-  const [generatorRoomsPerFloor, setGeneratorRoomsPerFloor] = useState(3);
-  const [generatorStartNum, setGeneratorStartNum] = useState(101);
-
-  // Form State with Structured Address and Geolocation
+  // Form State
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     propertyName: '',
-    propertyType: '',
-    genderType: '',
+    propertyType: 'PG',
+    genderType: 'Both',
     price: '',
     rateUnit: '/month',
-    // Detailed Address in Parts
     roadArea: '',
     pincode: '',
     city: '',
     state: '',
-    // Geolocation Coordinates
     latitude: 29.3919,
     longitude: 79.4542,
-    totalRooms: 1,
-    availableRooms: 1,
-    rating: '',
+    totalRooms: 0,
+    availableRooms: 0,
+    rating: 5.0,
     image: '',
     images: [],
     instagramVideoUrl: '',
     description: '',
-    facilities: [],
-    amenities: [],
+    facilities: ['Attached Bathroom', 'High-Speed Wi-Fi', 'Power Backup'],
+    amenities: ['Attached Bathroom', 'High-Speed Wi-Fi', 'Power Backup'],
     rules: [],
     roomRates: [],
     rooms: [],
@@ -182,13 +312,20 @@ export function HostUploadPage() {
       if (!user?.email || hasLoadedExistingRef.current) return;
       hasLoadedExistingRef.current = true;
       try {
-        const res = await adminAPI.getHostByEmail(user.email);
-        if (res?.hasProperty && (res?.host || res?.stay)) {
-          setIsEditing(true);
-          const h = res.host || {};
-          const s = res.stay || res.host?.property || {};
-          const prop = { ...s, ...h };
+        const [hostRes, staysRes] = await Promise.all([
+          adminAPI.getHostByEmail(user.email).catch(() => null),
+          staysAPI.getHostProperties().catch(() => []),
+        ]);
 
+        let prop = null;
+        if (hostRes?.hasProperty && (hostRes.host || hostRes.stay)) {
+          prop = { ...(hostRes.stay || {}), ...(hostRes.host || {}) };
+        } else if (Array.isArray(staysRes) && staysRes.length > 0) {
+          prop = staysRes[0];
+        }
+
+        if (prop) {
+          setIsEditing(true);
           const loadedRates = Array.isArray(prop.roomRates) ? prop.roomRates : [];
           const loadedRooms = Array.isArray(prop.rooms) ? prop.rooms : [];
 
@@ -200,7 +337,7 @@ export function HostUploadPage() {
             propertyName: prop.propertyName || prop.title || prop.properties?.[0] || '',
             propertyType: prop.propertyType || prop.type || 'PG',
             genderType: prop.genderType || 'Both',
-            price: prop.price ? String(prop.price) : (loadedRates[0]?.price ? String(loadedRates[0].price) : prev.price),
+            price: prop.price ? String(prop.price).replace(/[^0-9]/g, '') : (loadedRates[0]?.price ? String(loadedRates[0].price).replace(/[^0-9]/g, '') : prev.price),
             rateUnit: prop.rateUnit || loadedRates[0]?.rateUnit || '/month',
             roadArea: prop.roadArea || '',
             pincode: prop.pincode || '',
@@ -208,20 +345,19 @@ export function HostUploadPage() {
             state: prop.state || '',
             latitude: Number(prop.latitude) || 29.3919,
             longitude: Number(prop.longitude) || 79.4542,
-            totalRooms: prop.totalRooms || loadedRooms.length || 1,
-            availableRooms: prop.availableRooms !== undefined ? prop.availableRooms : (loadedRooms.filter((r) => r.status === 'Available').length || 1),
+            totalRooms: prop.totalRooms || loadedRooms.length || 0,
+            availableRooms: prop.availableRooms !== undefined ? prop.availableRooms : (loadedRooms.filter((r) => r.status === 'Available').length || 0),
             rating: Number(prop.rating) || 5.0,
             image: prop.image || (Array.isArray(prop.images) && prop.images[0]) || '',
-            images: Array.isArray(prop.images) ? prop.images.slice(0, MAX_PHOTOS) : [],
-            instagramVideoUrl: prop.instagramVideoUrl || prev.instagramVideoUrl,
-            description: prop.description || '',
-            facilities: Array.isArray(prop.facilities) && prop.facilities.length > 0 ? prop.facilities : (Array.isArray(prop.amenities) ? prop.amenities : []),
-            amenities: Array.isArray(prop.facilities) && prop.facilities.length > 0 ? prop.facilities : (Array.isArray(prop.amenities) ? prop.amenities : []),
+            images: Array.isArray(prop.images) && prop.images.length > 0 ? prop.images.slice(0, MAX_PHOTOS) : (prop.image ? [prop.image] : []),
+            instagramVideoUrl: prop.instagramVideoUrl || '',
+            description: prop.description || prop.bio || '',
+            facilities: Array.isArray(prop.facilities) && prop.facilities.length > 0 ? prop.facilities : (Array.isArray(prop.amenities) ? prop.amenities : prev.facilities),
+            amenities: Array.isArray(prop.facilities) && prop.facilities.length > 0 ? prop.facilities : (Array.isArray(prop.amenities) ? prop.amenities : prev.amenities),
             rules: Array.isArray(prop.rules) && prop.rules.length > 0 ? prop.rules : [],
             roomRates: loadedRates,
             rooms: loadedRooms,
           }));
-          setIsAddressVisible(true);
         }
       } catch (err) {
         console.warn('Could not prefill host:', err);
@@ -240,7 +376,6 @@ export function HostUploadPage() {
     }
   };
 
-  // Handle map geolocation change
   const handleMapLocationChange = (lat, lng) => {
     setFormData((prev) => ({
       ...prev,
@@ -249,10 +384,8 @@ export function HostUploadPage() {
     }));
   };
 
-  // Handle auto reverse-geocoded address parts
   const handleAddressDetected = (detected) => {
     if (!detected) return;
-    setIsAddressVisible(true);
     setFormData((prev) => ({
       ...prev,
       roadArea: detected.roadArea ? detected.roadArea.trim() : prev.roadArea,
@@ -260,10 +393,9 @@ export function HostUploadPage() {
       state: detected.state ? detected.state.trim() : prev.state,
       pincode: detected.pincode ? detected.pincode.trim() : prev.pincode,
     }));
-    showToast('Address details & road/area updated from map!');
+    showToast('Address details updated from map location!', 'success');
   };
 
-  // Handle Google Maps Link Import
   const handleImportGoogleMaps = async () => {
     const rawUrl = googleMapsUrl.trim();
     if (!rawUrl) {
@@ -278,7 +410,6 @@ export function HostUploadPage() {
       let lng = null;
       let detectedPlace = '';
 
-      // 1. First try instant client-side regex parsing
       const atMatch = rawUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
       const dataMatch = rawUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
       const queryMatch = rawUrl.match(/[?&](?:q|query|ll)=(-?\d+\.\d+),(-?\d+\.\d+)/);
@@ -303,7 +434,6 @@ export function HostUploadPage() {
         }
       }
 
-      // 2. If client-side couldn't find coords (e.g. short share link like maps.app.goo.gl)
       if (lat === null || lng === null || isNaN(lat) || isNaN(lng)) {
         try {
           const res = await staysAPI.resolveMapLink(rawUrl);
@@ -318,26 +448,23 @@ export function HostUploadPage() {
       }
 
       if (lat === null || lng === null || isNaN(lat) || isNaN(lng)) {
-        showToast('Could not extract coordinates from this Google Maps link. Please make sure it is a valid Google Maps link.', 'error');
+        showToast('Could not extract coordinates from this Google Maps link.', 'error');
         return;
       }
 
       const fixedLat = parseFloat(Number(lat).toFixed(6));
       const fixedLng = parseFloat(Number(lng).toFixed(6));
 
-      // Update form coordinates
       setFormData((prev) => ({
         ...prev,
         latitude: fixedLat,
         longitude: fixedLng,
       }));
-      setIsAddressVisible(true);
 
-      // Reverse geocode to auto-populate address parts
       try {
         const geoRes = await fetch(
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${fixedLat}&lon=${fixedLng}&zoom=18&addressdetails=1`,
-          { headers: { 'User-Agent': 'StayHub-Property-Locator/1.0' } }
+          { headers: { 'User-Agent': 'RoomScout-Property-Locator/1.0' } }
         );
         if (geoRes.ok) {
           const geoData = await geoRes.json();
@@ -376,7 +503,6 @@ export function HostUploadPage() {
     }
   };
 
-  // Client-side image optimizer to keep uploads fast and lightweight
   const compressImage = (file) => {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -408,7 +534,6 @@ export function HostUploadPage() {
     });
   };
 
-  // Handle file uploads for multiple photos (Strictly Max 5 Photos)
   const handleFileUpload = async (e) => {
     e?.preventDefault?.();
     e?.stopPropagation?.();
@@ -450,40 +575,37 @@ export function HostUploadPage() {
     }
   };
 
-  // Add photo by URL (Max 5 Photos)
-  const handleAddMediaUrl = (e) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-    const cleanUrl = newMediaUrl.trim();
-    if (!cleanUrl) return;
-
-    if (formData.images.length >= MAX_PHOTOS) {
-      showToast(`Maximum limit of ${MAX_PHOTOS} photos reached. Remove a photo to add a new link.`);
-      return;
-    }
-
-    if (formData.images.includes(cleanUrl)) {
-      showToast('This photo is already in your gallery.');
-      return;
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      images: [...prev.images, cleanUrl],
-      image: prev.image || cleanUrl,
-    }));
-    showToast('Photo added to showcase!');
-    setNewMediaUrl('');
+  const handleSetCoverPhoto = (imgUrl, e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    setFormData((prev) => {
+      const remaining = prev.images.filter((img) => img !== imgUrl);
+      return {
+        ...prev,
+        images: [imgUrl, ...remaining],
+        image: imgUrl,
+      };
+    });
+    showToast('Cover photo updated! ⭐', 'success');
   };
 
-  // Drag and drop state for photo reordering
-  const [draggedPhotoIndex, setDraggedPhotoIndex] = useState(null);
-  const [dragOverIndex, setDragOverIndex] = useState(null);
+  const handleRemovePhoto = (imgUrl, e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    setFormData((prev) => {
+      const remaining = prev.images.filter((img) => img !== imgUrl);
+      return {
+        ...prev,
+        images: remaining,
+        image: remaining[0] || '',
+      };
+    });
+    showToast('Photo removed.');
+  };
 
   const handlePhotoDragStart = (e, index) => {
     setDraggedPhotoIndex(index);
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', String(index));
   };
 
   const handlePhotoDragOver = (e, index) => {
@@ -495,6 +617,7 @@ export function HostUploadPage() {
   };
 
   const handlePhotoDragLeave = (e, index) => {
+    e.preventDefault();
     if (dragOverIndex === index) {
       setDragOverIndex(null);
     }
@@ -502,266 +625,37 @@ export function HostUploadPage() {
 
   const handlePhotoDrop = (e, targetIndex) => {
     e.preventDefault();
-    e.stopPropagation();
     if (draggedPhotoIndex === null || draggedPhotoIndex === targetIndex) {
       setDraggedPhotoIndex(null);
       setDragOverIndex(null);
       return;
     }
 
-    const updatedImages = [...formData.images];
-    const [draggedItem] = updatedImages.splice(draggedPhotoIndex, 1);
-    updatedImages.splice(targetIndex, 0, draggedItem);
-
-    setFormData((prev) => ({
-      ...prev,
-      images: updatedImages,
-      image: updatedImages[0], // Slot 1 is always the primary Cover Photo!
-    }));
-
-    if (targetIndex === 0) {
-      showToast('⭐ Photo moved to 1st position: Set as Main Cover Photo!');
-    } else {
-      showToast(`Photos reordered (Slot ${draggedPhotoIndex + 1} ➔ Slot ${targetIndex + 1})!`);
-    }
+    setFormData((prev) => {
+      const updated = [...prev.images];
+      const [draggedItem] = updated.splice(draggedPhotoIndex, 1);
+      updated.splice(targetIndex, 0, draggedItem);
+      return {
+        ...prev,
+        images: updated,
+        image: updated[0] || '',
+      };
+    });
 
     setDraggedPhotoIndex(null);
     setDragOverIndex(null);
+    showToast('Photos reordered!');
   };
 
-  // Remove photo
-  const handleRemovePhoto = (imgUrl, e) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-    setFormData((prev) => {
-      const filtered = prev.images.filter((img) => img !== imgUrl);
-      return {
-        ...prev,
-        images: filtered,
-        image: filtered[0] || PRESET_IMAGES[0].url,
-      };
-    });
-  };
-
-  // Promote any photo directly to 1st Cover slot
-  const handleSetCoverPhoto = (imgUrl, e) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-    const currentIndex = formData.images.indexOf(imgUrl);
-    if (currentIndex <= 0) {
-      setFormData((prev) => ({ ...prev, image: imgUrl }));
-      showToast('Already the primary cover photo!');
-      return;
-    }
-    const updated = [...formData.images];
-    const [item] = updated.splice(currentIndex, 1);
-    updated.unshift(item);
-    setFormData((prev) => ({
-      ...prev,
-      images: updated,
-      image: updated[0],
-    }));
-    showToast('⭐ Photo promoted to 1st position as Main Cover Photo!');
-  };
-
-  // Add / Remove dynamic room rate tiers
-  // Add / Remove dynamic room rate tiers
-  const handleAddRateTier = (e) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-    setFormData((prev) => ({
-      ...prev,
-      roomRates: [...(prev.roomRates || []), { type: '', price: '', rateUnit: '/month' }],
-    }));
-  };
-
-  const handleRemoveRateTier = (index, e) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-    setFormData((prev) => ({
-      ...prev,
-      roomRates: (prev.roomRates || []).filter((_, i) => i !== index),
-    }));
-  };
-
-  const handleRateChange = (index, field, value) => {
-    const updatedRates = [...formData.roomRates];
-    const prevType = updatedRates[index].type;
-    updatedRates[index][field] = value;
-
-    // Sync rooms that use this rate tier
-    const updatedRooms = (formData.rooms || []).map((rm) => {
-      if (field === 'type' && rm.type === prevType) {
-        return { ...rm, type: value };
-      }
-      if (field === 'price' && rm.type === updatedRates[index].type) {
-        return { ...rm, price: value };
-      }
-      if (field === 'rateUnit' && rm.type === updatedRates[index].type) {
-        return { ...rm, rateUnit: value };
-      }
-      return rm;
-    });
-
-    setFormData((prev) => ({
-      ...prev,
-      roomRates: updatedRates,
-      rooms: updatedRooms,
-    }));
-  };
-
-  // 🏢 2D ROOM LAYOUT HANDLERS
-  // 1. Bulk Floor & Rooms Generator
-  const handleGenerateRoomLayout = (e) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-
-    const floors = Math.max(1, Math.min(10, Number(generatorFloors) || 1));
-    const perFloor = Math.max(1, Math.min(20, Number(generatorRoomsPerFloor) || 1));
-    const startNum = Math.max(1, Number(generatorStartNum) || 101);
-    const rates = formData.roomRates && formData.roomRates.length > 0 ? formData.roomRates : [
-      { type: 'Room', price: '', rateUnit: '/month' },
-    ];
-
-    const newRooms = [];
-    let count = 0;
-    for (let f = 1; f <= floors; f++) {
-      for (let r = 1; r <= perFloor; r++) {
-        count++;
-        const roomNum = startNum + (f - 1) * 100 + (r - 1);
-        const rate = rates[(count - 1) % rates.length];
-        newRooms.push({
-          id: `room_${Date.now()}_${count}_${Math.random().toString(36).substr(2, 4)}`,
-          roomNumber: `Room ${roomNum}`,
-          roomNumInt: roomNum,
-          floor: `Floor ${f}`,
-          type: rate.type || 'Standard Room',
-          price: rate.price || '₹4,000',
-          rateUnit: rate.rateUnit || '/month',
-          status: 'Available',
-        });
-      }
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      rooms: newRooms,
-      totalRooms: newRooms.length,
-      availableRooms: newRooms.length,
-    }));
-    showToast(`Generated ${newRooms.length} layout rooms across ${floors} floors!`, 'success');
-  };
-
-  // 2. Add individual custom room
-  const handleAddCustomRoom = (e) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-
-    const currentRooms = Array.isArray(formData.rooms) ? formData.rooms : [];
-    const nextIdx = currentRooms.length + 1;
-    const floorNum = Math.ceil(nextIdx / 4);
-    const defaultRate = formData.roomRates?.[0] || { type: '', price: '', rateUnit: '/month' };
-
-    const newRoom = {
-      id: `room_${Date.now()}_${nextIdx}_${Math.random().toString(36).substr(2, 4)}`,
-      roomNumber: '',
-      roomNumInt: nextIdx,
-      floor: `Floor ${floorNum}`,
-      type: defaultRate.type || '',
-      price: defaultRate.price || '',
-      rateUnit: defaultRate.rateUnit || '/month',
-      status: 'Available',
-    };
-
-    const updatedRooms = [...currentRooms, newRoom];
-    setFormData((prev) => ({
-      ...prev,
-      rooms: updatedRooms,
-      totalRooms: updatedRooms.length,
-      availableRooms: updatedRooms.filter((r) => r.status === 'Available').length,
-    }));
-    showToast('Added room row! Please enter the room number.');
-  };
-
-  // 3. Click to toggle room status between Available and Booked
-  const handleToggleRoomStatus = (roomId, e) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-
-    setFormData((prev) => {
-      const currentRooms = Array.isArray(prev.rooms) ? prev.rooms : [];
-      const updatedRooms = currentRooms.map((rm) => {
-        if (rm.id === roomId) {
-          const nextStatus = rm.status === 'Available' ? 'Booked' : 'Available';
-          return { ...rm, status: nextStatus };
-        }
-        return rm;
-      });
-
-      return {
-        ...prev,
-        rooms: updatedRooms,
-        totalRooms: updatedRooms.length,
-        availableRooms: updatedRooms.filter((r) => r.status === 'Available').length,
-      };
-    });
-  };
-
-  // 4. Remove single room from layout
-  const handleRemoveRoom = (roomId, e) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-
-    setFormData((prev) => {
-      const currentRooms = Array.isArray(prev.rooms) ? prev.rooms : [];
-      const updatedRooms = currentRooms.filter((r) => r.id !== roomId);
-      return {
-        ...prev,
-        rooms: updatedRooms,
-        totalRooms: updatedRooms.length,
-        availableRooms: updatedRooms.filter((r) => r.status === 'Available').length,
-      };
-    });
-  };
-
-  // 5. Update room property (roomNumber, floor, type)
-  const handleUpdateRoom = (roomId, field, value) => {
-    setFormData((prev) => {
-      const currentRooms = Array.isArray(prev.rooms) ? prev.rooms : [];
-      const updatedRooms = currentRooms.map((rm) => {
-        if (rm.id === roomId) {
-          const updated = { ...rm, [field]: value };
-          if (field === 'type') {
-            const matchingRate = prev.roomRates.find((r) => r.type === value);
-            if (matchingRate) {
-              updated.price = matchingRate.price;
-              updated.rateUnit = matchingRate.rateUnit || '/month';
-            }
-          }
-          return updated;
-        }
-        return rm;
-      });
-
-      return {
-        ...prev,
-        rooms: updatedRooms,
-      };
-    });
-  };
-
-  // Add Facility via + icon
   const handleAddFacility = (e) => {
-    e?.preventDefault();
-    e?.stopPropagation();
+    e?.preventDefault?.();
     const clean = newFacilityInput.trim();
     if (!clean) return;
-    const current = formData.facilities?.length > 0 ? formData.facilities : (formData.amenities || []);
-    if (current.includes(clean)) {
-      showToast('This facility is already in the list.');
+    if ((formData.facilities || []).some((f) => f.toLowerCase() === clean.toLowerCase())) {
+      showToast('This facility is already added.');
       return;
     }
-    const updated = [...current, clean];
+    const updated = [...(formData.facilities || []), clean];
     setFormData((prev) => ({
       ...prev,
       facilities: updated,
@@ -770,11 +664,9 @@ export function HostUploadPage() {
     setNewFacilityInput('');
   };
 
-  const handleRemoveFacility = (facility, e) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-    const current = formData.facilities?.length > 0 ? formData.facilities : (formData.amenities || []);
-    const updated = current.filter((f) => f !== facility);
+  const handleRemoveFacility = (facilityName, e) => {
+    e?.preventDefault?.();
+    const updated = (formData.facilities || []).filter((f) => f !== facilityName);
     setFormData((prev) => ({
       ...prev,
       facilities: updated,
@@ -782,13 +674,11 @@ export function HostUploadPage() {
     }));
   };
 
-  // Add / Remove Manual Rules & Restrictions
   const handleAddRule = (e) => {
-    e?.preventDefault();
-    e?.stopPropagation();
+    e?.preventDefault?.();
     const clean = newRuleInput.trim();
     if (!clean) return;
-    if ((formData.rules || []).includes(clean)) {
+    if ((formData.rules || []).some((r) => r.toLowerCase() === clean.toLowerCase())) {
       showToast('This rule is already added.');
       return;
     }
@@ -800,8 +690,7 @@ export function HostUploadPage() {
   };
 
   const handleRemoveRule = (ruleIndex, e) => {
-    e?.preventDefault();
-    e?.stopPropagation();
+    e?.preventDefault?.();
     setFormData((prev) => ({
       ...prev,
       rules: (prev.rules || []).filter((_, i) => i !== ruleIndex),
@@ -822,21 +711,355 @@ export function HostUploadPage() {
     showToast(`Added rule: "${clean}"`);
   };
 
+  // Room Categories & Inventory Handlers (Parity with HostRoomsPage / HostDashboard)
+  const handleAddNewCategory = () => {
+    const newId = `rate_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+    const currentRates = Array.isArray(formData.roomRates) ? [...formData.roomRates] : [];
+    const newRate = {
+      id: newId,
+      _id: newId,
+      type: '',
+      price: '',
+      rateUnit: '/month',
+      capacity: 1,
+    };
+    const updatedRates = [...currentRates, newRate];
+    const newIdx = updatedRates.length - 1;
+    setFormData((prev) => ({ ...prev, roomRates: updatedRates }));
+    setSelectedCategoryIndex(newIdx);
+    setCollapsedCategories((prev) => ({ ...prev, [newIdx]: false }));
+    showToast('New room type created! Fill in the category name and price.', 'success');
+  };
+
+  const handleRemoveCategory = (index) => {
+    const currentRates = Array.isArray(formData.roomRates) ? [...formData.roomRates] : [];
+    const removed = currentRates[index];
+    if (!removed) return;
+    currentRates.splice(index, 1);
+
+    const removedRateId = removed.id || removed._id;
+    const removedType = (removed.type || '').trim().toLowerCase();
+
+    const updatedRooms = (Array.isArray(formData.rooms) ? formData.rooms : []).filter((r) => {
+      if (removedRateId && r.rateId && (r.rateId === removedRateId || (removed._id && String(r.rateId) === String(removed._id)))) return false;
+      if (removedType && r.type && String(r.type).trim().toLowerCase() === removedType) return false;
+      if (typeof r.categoryIndex === 'number' && r.categoryIndex === index) return false;
+      return true;
+    });
+
+    setFormData((prev) => ({
+      ...prev,
+      roomRates: currentRates,
+      rooms: updatedRooms,
+      totalRooms: updatedRooms.length,
+      availableRooms: updatedRooms.filter((r) => r.status === 'Available').length,
+    }));
+    setSelectedCategoryIndex((prev) => Math.max(0, Math.min(prev, currentRates.length - 1)));
+    showToast(`Category removed.`);
+  };
+
+  const handleUpdateCategory = (index, field, value) => {
+    setFormData((prev) => {
+      const currentRates = Array.isArray(prev.roomRates) ? [...prev.roomRates] : [];
+      if (!currentRates[index]) return prev;
+
+      const targetRate = currentRates[index];
+      const targetRateId = targetRate.id || targetRate._id || `rate_${index}`;
+      const oldType = targetRate.type;
+
+      if (typeof field === 'object' && field !== null) {
+        currentRates[index] = { ...targetRate, id: targetRateId, ...field };
+      } else {
+        currentRates[index] = { ...targetRate, id: targetRateId, [field]: value };
+      }
+
+      const newType = typeof field === 'object' ? field.type : (field === 'type' ? value : undefined);
+      const newPrice = typeof field === 'object' ? field.price : (field === 'price' ? value : undefined);
+      const newRateUnit = typeof field === 'object' ? field.rateUnit : (field === 'rateUnit' ? value : undefined);
+      const newCapacity = typeof field === 'object' ? field.capacity : (field === 'capacity' ? value : undefined);
+
+      let updatedRooms = Array.isArray(prev.rooms) ? [...prev.rooms] : [];
+      updatedRooms = updatedRooms.map((r) => {
+        const isMatch =
+          (r.rateId && (r.rateId === targetRateId || (targetRate._id && String(r.rateId) === String(targetRate._id)))) ||
+          (oldType && r.type && String(r.type).trim().toLowerCase() === String(oldType).trim().toLowerCase()) ||
+          (typeof r.categoryIndex === 'number' && r.categoryIndex === index);
+
+        if (!isMatch) return r;
+
+        const updated = {
+          ...r,
+          rateId: targetRateId,
+          categoryIndex: index,
+        };
+        if (newType !== undefined) updated.type = newType;
+        if (newPrice !== undefined) updated.price = newPrice;
+        if (newRateUnit !== undefined) updated.rateUnit = newRateUnit;
+        if (newCapacity !== undefined) updated.capacity = Number(newCapacity) || 1;
+        return updated;
+      });
+
+      const primaryRate = currentRates[0];
+      const primaryPrice = primaryRate?.price ? String(primaryRate.price).replace(/[^0-9]/g, '') : prev.price;
+      const primaryUnit = primaryRate?.rateUnit || prev.rateUnit;
+
+      return {
+        ...prev,
+        roomRates: currentRates,
+        rooms: updatedRooms,
+        price: primaryPrice || prev.price,
+        rateUnit: primaryUnit || prev.rateUnit,
+      };
+    });
+  };
+
+  const handleAddRoomCard = (targetCategory) => {
+    const cat = targetCategory || formData.roomRates?.[selectedCategoryIndex];
+    if (!cat || !cat.type || !cat.type.trim()) {
+      showToast('Please enter a room category name first.', 'error');
+      return;
+    }
+    const rawPrice = String(cat.price || '').replace(/[^0-9]/g, '');
+    if (!rawPrice || parseInt(rawPrice, 10) <= 0) {
+      showToast('Please enter a valid room price first.', 'error');
+      return;
+    }
+    if (!cat.rateUnit || !String(cat.rateUnit).trim()) {
+      showToast('Please select a room billing cycle/unit first.', 'error');
+      return;
+    }
+
+    const cleanCatType = cat.type.trim();
+    const currentRooms = Array.isArray(formData.rooms) ? formData.rooms : [];
+    const allExistingNumbers = new Set(
+      currentRooms
+        .map((r) => parseInt(String(r.roomNumber || '').replace(/[^0-9]/g, ''), 10))
+        .filter((n) => !isNaN(n))
+    );
+
+    let nextNumInt = 101;
+    if (allExistingNumbers.size > 0) {
+      const maxNum = Math.max(...Array.from(allExistingNumbers));
+      nextNumInt = maxNum + 1;
+    }
+    while (allExistingNumbers.has(nextNumInt)) {
+      nextNumInt++;
+    }
+    const nextNum = String(nextNumInt);
+    const formattedPrice = `₹${parseInt(rawPrice, 10).toLocaleString('en-IN')}`;
+    const rateUnit = cat.rateUnit || '/month';
+
+    const targetIdx = Array.isArray(formData.roomRates)
+      ? formData.roomRates.findIndex((r) => (r.id && r.id === cat.id) || (cat.type && r.type === cat.type))
+      : selectedCategoryIndex;
+    const resolvedCatIndex = targetIdx !== -1 ? targetIdx : selectedCategoryIndex;
+    const rateId = cat.id || cat._id || `rate_${resolvedCatIndex}`;
+
+    const newCard = {
+      id: `room_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      rateId: rateId,
+      categoryIndex: resolvedCatIndex,
+      roomNumber: nextNum,
+      roomNumInt: nextNumInt,
+      type: cleanCatType,
+      price: formattedPrice,
+      rateUnit: rateUnit,
+      capacity: Number(cat.capacity) || 1,
+      status: 'Available',
+      floor: nextNumInt < 100 ? 'Floor 1' : `Floor ${Math.floor(nextNumInt / 100)}`,
+    };
+
+    const updatedRooms = [...currentRooms, newCard];
+    setFormData((prev) => ({
+      ...prev,
+      rooms: updatedRooms,
+      totalRooms: updatedRooms.length,
+      availableRooms: updatedRooms.filter((r) => r.status === 'Available').length,
+    }));
+    setSelectedRoomCardId(newCard.id);
+    setSelectedRoomNumber(newCard.roomNumber);
+    showToast(`Added Room ${nextNum} to ${cleanCatType}!`, 'success');
+  };
+
+  const handleRemoveRoomCard = (roomId, e) => {
+    e?.stopPropagation?.();
+    const currentRooms = Array.isArray(formData.rooms) ? formData.rooms : [];
+    const updatedRooms = currentRooms.filter((r) => r.id !== roomId && r._id !== roomId);
+    setFormData((prev) => ({
+      ...prev,
+      rooms: updatedRooms,
+      totalRooms: updatedRooms.length,
+      availableRooms: updatedRooms.filter((r) => r.status === 'Available').length,
+    }));
+    if (selectedRoomCardId === roomId) {
+      setSelectedRoomCardId(null);
+      setSelectedRoomNumber(null);
+    }
+  };
+
+  const handleUpdateRoomNumber = (roomId, newNumber) => {
+    setFormData((prev) => {
+      const currentRooms = Array.isArray(prev.rooms) ? [...prev.rooms] : [];
+      const updatedRooms = currentRooms.map((r) => {
+        if (r.id === roomId || r._id === roomId) {
+          const numInt = parseInt(String(newNumber).replace(/[^0-9]/g, ''), 10);
+          return {
+            ...r,
+            roomNumber: String(newNumber),
+            roomNumInt: isNaN(numInt) ? r.roomNumInt : numInt,
+            floor: !isNaN(numInt) ? (numInt < 100 ? 'Floor 1' : `Floor ${Math.floor(numInt / 100)}`) : r.floor,
+          };
+        }
+        return r;
+      });
+      return { ...prev, rooms: updatedRooms };
+    });
+  };
+
+  const handleUpdateRoomCapacity = (roomId, newCapacity) => {
+    const cap = Math.max(1, Math.min(10, Number(newCapacity) || 1));
+    setFormData((prev) => {
+      const currentRooms = Array.isArray(prev.rooms) ? [...prev.rooms] : [];
+      const updatedRooms = currentRooms.map((r) => {
+        if (r.id === roomId || r._id === roomId) {
+          return { ...r, capacity: cap };
+        }
+        return r;
+      });
+      return { ...prev, rooms: updatedRooms };
+    });
+  };
+
+  const toggleCollapseCategory = (index, e) => {
+    if (e) e.stopPropagation();
+    setCollapsedCategories((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
+
+  // Step Validation & Forward Progression
+  const validateStep = (stepNumber, showToasts = true) => {
+    if (stepNumber === 1) {
+      if (!formData.propertyName || formData.propertyName.trim().length < 3) {
+        if (showToasts) {
+          setFieldErrors((prev) => ({ ...prev, propertyName: 'Property name must be at least 3 characters long.' }));
+          showToast('Please provide a valid property name (min 3 chars).', 'error');
+        }
+        return false;
+      }
+      if (!formData.propertyType) {
+        if (showToasts) showToast('Please select a property type (e.g. PG, Hostel, Hotel, etc.).', 'error');
+        return false;
+      }
+      if (!formData.genderType) {
+        if (showToasts) showToast('Please select who this stay is available for.', 'error');
+        return false;
+      }
+      return true;
+    }
+
+    if (stepNumber === 2) {
+      const errors = {};
+      if (!formData.roadArea || formData.roadArea.trim().length < 2) errors.roadArea = 'Street / Road name is required.';
+      if (!formData.city || formData.city.trim().length < 2) errors.city = 'City is required.';
+      if (!formData.state || formData.state.trim().length < 2) errors.state = 'State is required.';
+      if (!formData.pincode || formData.pincode.trim().length < 4) errors.pincode = 'Valid PIN code is required.';
+
+      if (Object.keys(errors).length > 0) {
+        if (showToasts) {
+          setFieldErrors((prev) => ({ ...prev, ...errors }));
+          showToast('Please fill in the required address fields (Street, City, State, PIN code).', 'error');
+        }
+        return false;
+      }
+      return true;
+    }
+
+    if (stepNumber === 3) {
+      const facilities = (formData.facilities && formData.facilities.length > 0) ? formData.facilities : formData.amenities;
+      if (!facilities || facilities.length === 0) {
+        if (showToasts) showToast('Please add at least 1 facility/amenity before continuing.', 'error');
+        return false;
+      }
+      if (!formData.rules || formData.rules.length === 0) {
+        if (showToasts) showToast('Please add at least 1 house rule before continuing.', 'error');
+        return false;
+      }
+      return true;
+    }
+
+    if (stepNumber === 4) {
+      if (!formData.images || formData.images.length === 0) {
+        if (showToasts) showToast('Please upload at least 1 showcase photo of your property.', 'error');
+        return false;
+      }
+      return true;
+    }
+
+    if (stepNumber === 5) {
+      if (!formData.description || formData.description.trim().length < 10) {
+        if (showToasts) {
+          setFieldErrors((prev) => ({ ...prev, description: 'Description must be at least 10 characters long.' }));
+          showToast('Please enter a property description (min 10 characters).', 'error');
+        }
+        return false;
+      }
+      return true;
+    }
+
+    return true;
+  };
+
+  const handleNextStep = () => {
+    setFieldErrors({});
+    const isValid = validateStep(activeStep, true);
+    if (!isValid) return;
+
+    if (activeStep < 5) {
+      setActiveStep((prev) => prev + 1);
+    }
+  };
+
+  const handleSelectStep = (targetStepId) => {
+    if (targetStepId === activeStep) return;
+    // Going backwards is always allowed
+    if (targetStepId < activeStep) {
+      setActiveStep(targetStepId);
+      return;
+    }
+    // Going forward requires all prior steps (including activeStep) to be complete
+    for (let s = 1; s < targetStepId; s++) {
+      if (!validateStep(s, s === activeStep)) {
+        if (s !== activeStep) {
+          showToast(`Please complete Step ${s} (${WIZARD_STEPS[s - 1]?.shortTitle}) first.`, 'error');
+        }
+        return;
+      }
+    }
+    setActiveStep(targetStepId);
+  };
+
+  const handlePrevStep = () => {
+    if (activeStep > 1) {
+      setActiveStep((prev) => prev - 1);
+    }
+  };
+
   // Submit Host Property Upload Request
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setFieldErrors({});
 
     const formattedLocation = `${formData.city.trim()}, ${formData.state.trim()}`;
     const fullAddress = `${formData.roadArea.trim()}, ${formData.city.trim()}, ${formData.state.trim()} - ${formData.pincode.trim()}`;
 
-    // Zod validation
     const parsedTotalRooms = Array.isArray(formData.rooms) && formData.rooms.length > 0
       ? formData.rooms.length
-      : (Number(formData.totalRooms) || Number(formData.availableRooms) || 1);
+      : (Number(formData.totalRooms) || 0);
     const parsedAvailableRooms = Array.isArray(formData.rooms) && formData.rooms.length > 0
       ? formData.rooms.filter((r) => r.status === 'Available').length
-      : (Number(formData.availableRooms) !== undefined && !isNaN(Number(formData.availableRooms)) ? Number(formData.availableRooms) : 0);
+      : (Number(formData.availableRooms) || 0);
 
     const result = hostPropertySchema.safeParse({
       ...formData,
@@ -858,17 +1081,13 @@ export function HostUploadPage() {
       return;
     }
 
-    if (parsedAvailableRooms > parsedTotalRooms) {
-      showToast('Available rooms cannot be greater than Total rooms.');
-      return;
-    }
-
     const validRates = (formData.roomRates || [])
       .map((r, i) => ({
         id: r.id || `rate_${Date.now()}_${i}`,
         type: (r.type || '').trim(),
         price: (r.price || '').trim(),
         rateUnit: r.rateUnit || '/month',
+        capacity: Number(r.capacity) || 1,
       }))
       .filter((r) => r.type !== '');
 
@@ -884,6 +1103,9 @@ export function HostUploadPage() {
       ? validRooms.filter((r) => r.status === 'Available').length
       : (Number(formData.availableRooms) || 0);
 
+    const primaryPrice = validRates[0]?.price ? String(validRates[0].price).replace(/[^0-9]/g, '') : formData.price;
+    const primaryUnit = validRates[0]?.rateUnit || formData.rateUnit || '/month';
+
     try {
       setIsSubmitting(true);
       const res = await adminAPI.createHost({
@@ -892,8 +1114,8 @@ export function HostUploadPage() {
         amenities: (formData.facilities?.length > 0 ? formData.facilities : formData.amenities) || [],
         rules: formData.rules || [],
         description: formData.description?.trim() || '',
-        price: String(formData.price || '').trim(),
-        rateUnit: formData.rateUnit || '/month',
+        price: String(primaryPrice || '').trim(),
+        rateUnit: primaryUnit,
         roomRates: validRates,
         rooms: validRooms,
         location: formattedLocation,
@@ -920,7 +1142,7 @@ export function HostUploadPage() {
         showToast(
           isEditing
             ? '✅ Property and host details updated and saved to database successfully!'
-            : '✅ Property upload request submitted successfully! Navigating to your Host Homepage...'
+            : '✅ Property upload request submitted successfully! Navigating to your Host Dashboard...'
         );
         setTimeout(() => {
           navigate('/host/dashboard', { state: { updatedHost: res.host || formData } });
@@ -936,24 +1158,24 @@ export function HostUploadPage() {
     }
   };
 
-  // 🔒 Strict Role Guard: Block Guest accounts from viewing or submitting the Host Upload form
+  // Role Guard
   if (user && user.role === 'user') {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-black flex items-center justify-center p-4">
-        <div className="max-w-md w-full p-6 sm:p-8 rounded-3xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 text-center shadow-2xl">
+      <div className="h-screen max-h-screen bg-[#fafbfc] dark:bg-[#090b10] flex items-center justify-center p-4">
+        <div className="max-w-md w-full p-6 sm:p-8 rounded-3xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-emerald-200/80 dark:border-emerald-800/60 text-center shadow-2xl">
           <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto mb-4 border border-amber-500/20">
-            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
           <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-2">Host Account Required</h2>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 mb-6 font-medium">
-            You are currently signed in as a Guest ({user.email}). Guest accounts cannot list or upload properties. Please sign in with a Property Host account.
+            You are currently signed in as a Guest ({user.email}). Guest accounts cannot list properties.
           </p>
           <button
             type="button"
             onClick={() => navigate('/explore')}
-            className="w-full py-3 px-4 rounded-full bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-md shadow-purple-600/20"
+            className="w-full py-3 px-4 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-md"
           >
             Return to Explore
           </button>
@@ -962,826 +1184,291 @@ export function HostUploadPage() {
     );
   }
 
+  const currentStepConfig = WIZARD_STEPS.find((s) => s.id === activeStep) || WIZARD_STEPS[0];
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 transition-colors duration-300 flex flex-col font-sans font-normal w-full overflow-x-clip">
-      {/* Host Portal Dedicated Header */}
-      <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-white/95 dark:bg-slate-900/95 border-b border-slate-200/80 dark:border-slate-800 shadow-2xs transition-colors duration-300">
-        <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 h-15 flex items-center justify-between gap-3">
-          {/* Left: Simple Back Button */}
-          <div className="flex items-center gap-2">
+    <div className="bg-[#fafbfc] dark:bg-[#090b10] text-slate-900 dark:text-white host-page-scope font-body-md antialiased h-screen max-h-screen flex flex-col justify-between overflow-hidden relative select-none selection:bg-custom-btn-primary selection:text-white transition-colors duration-500">
+      {/* ── Interactive Particle Constellation Canvas matching First Page ── */}
+      <ConstellationCanvas />
+
+      {/* ── Top Ambient Radial Glow underglow matching LandingPage ── */}
+      <div aria-hidden="true" className="fixed inset-0 pointer-events-none overflow-hidden z-0 select-none">
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[850px] h-[500px] bg-gradient-to-b from-emerald-100/40 via-teal-50/20 to-transparent dark:from-emerald-950/20 dark:via-teal-950/10 blur-3xl pointer-events-none" />
+      </div>
+
+      {/* ── Top Header Navigation Bar (Fixed, Non-Scrollable) ── */}
+      <header className="sticky top-0 z-50 w-full bg-white/90 dark:bg-[#090b10]/90 backdrop-blur-xl border-b border-slate-200/70 dark:border-zinc-800 shrink-0 h-14 sm:h-16 flex items-center">
+        <div className="relative w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+          {/* Left Action: Return to Host Dashboard */}
+          <div className="flex items-center z-10">
             <button
               type="button"
-              onClick={() => {
-                if (window.history.length > 1) {
-                  navigate(-1);
-                } else {
-                  navigate('/host/dashboard');
-                }
-              }}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100/80 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all cursor-pointer shadow-2xs active:scale-[0.98]"
-              title="Back"
+              onClick={() => navigate('/host/dashboard')}
+              className="h-9 px-3.5 sm:px-4 rounded-full border border-slate-300 dark:border-zinc-700 bg-white/80 dark:bg-zinc-900/80 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 font-label-sm text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs active:scale-95 shrink-0"
+              title="Return to Host Dashboard"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="19" y1="12" x2="5" y2="12" />
-                <polyline points="12 19 5 12 12 5" />
-              </svg>
+              <span className="material-symbols-outlined text-[17px] leading-none">arrow_back</span>
               <span>Back</span>
             </button>
           </div>
 
-          {/* Center: Pill container matching Pic 1 style */}
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-inner">
-            <span className="px-4 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs">
-              {isEditing ? 'Edit Property Details' : 'Property Registration'}
-            </span>
+          {/* Stepper Navigation Tabs (Absolute Centered like Pic 1) */}
+          <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-auto">
+            <HostUploadTabs
+              steps={WIZARD_STEPS}
+              activeStep={activeStep}
+              onSelectStep={handleSelectStep}
+              isStepCompleted={(stepId) => validateStep(stepId, false)}
+            />
           </div>
 
-          {/* Right: Host Profile Dropdown Menu */}
-          <div className="flex items-center gap-2.5 shrink-0">
+          {/* Right Action: Theme Toggle + Profile Avatar */}
+          <div className="flex items-center gap-2.5 sm:gap-3 z-10">
+            <ThemeTogglePill />
             <Login />
           </div>
         </div>
       </header>
 
-      {/* Main Form Content */}
-      <main className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 py-6 flex-1 space-y-6">
-        <form
-          onSubmit={handleSubmit}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
-              e.preventDefault();
-            }
-          }}
-          noValidate
-          className="space-y-6"
-        >
-          <div className="space-y-1.5">
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-              Property Upload
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-              Set exact geolocation on the satellite map, upload 5 photos, and provide your Instagram Video Tour link.
-            </p>
-          </div>
-
-          {/* SECTION 1: PROPERTY DETAILS & CATEGORIZATION */}
-          <div className="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-            <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-3">
-              <div className="w-7 h-7 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                  <polyline points="9 22 9 12 15 12 15 22" />
-                </svg>
-              </div>
-              <span>Property Details</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="text-xs text-slate-600 dark:text-slate-400 font-medium">Property Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.propertyName}
-                  onChange={(e) => setFormData({ ...formData, propertyName: e.target.value })}
-                  placeholder="e.g. Royal PG & Homestay"
-                  className={`w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border text-xs text-slate-900 dark:text-slate-100 focus:outline-none font-normal transition-colors ${
-                    fieldErrors.propertyName ? 'border-rose-500 focus:border-rose-500' : 'border-slate-200 dark:border-slate-700 focus:border-emerald-500'
-                  }`}
-                />
-                {fieldErrors.propertyName && <p className="text-[10px] text-rose-500 font-medium">{fieldErrors.propertyName}</p>}
-              </div>
-
-              {/* Property Type */}
-              <div className="space-y-1">
-                <label className="text-xs text-slate-600 dark:text-slate-400 font-medium">
-                  Property Type *
-                </label>
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
-                  {PROPERTY_TYPES.map((type) => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setFormData({ ...formData, propertyType: type });
-                      }}
-                      className={`py-2 px-1 rounded-xl text-xs font-medium transition-all cursor-pointer border text-center ${
-                        formData.propertyType === type
-                          ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-transparent shadow-xs'
-                          : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-400'
-                      }`}
-                    >
-                      {type}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Gender Preference */}
-              <div className="space-y-1">
-                <label className="text-xs text-slate-600 dark:text-slate-400 font-medium">
-                  Available For *
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  {GENDER_OPTIONS.map((g) => (
-                    <button
-                      key={g.value}
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setFormData({ ...formData, genderType: g.value });
-                      }}
-                      className={`py-2.5 px-3 rounded-xl text-xs font-medium transition-all cursor-pointer border text-center ${
-                        formData.genderType === g.value
-                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                          : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-400'
-                      }`}
-                    >
-                      {g.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* SECTION 2: UNIFIED LOCATION & PROPERTY ADDRESS */}
-          <div className="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-xs space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-900 dark:text-white">
-                <div className="w-7 h-7 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                    <circle cx="12" cy="10" r="3" />
-                  </svg>
-                </div>
-                <span>Property Location & Address</span>
-              </div>
-            </div>
-
-            <div className={`grid grid-cols-1 ${isAddressVisible ? 'lg:grid-cols-12' : 'max-w-3xl mx-auto'} gap-6 items-start transition-all duration-300`}>
-              {/* LEFT SIDE: GOOGLE MAPS LINK IMPORTER + MAP PICKER */}
-              <div className={`${isAddressVisible ? 'lg:col-span-6' : 'w-full'} space-y-4`}>
-                {/* Google Maps Link Importer */}
-                <div className="p-3.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2.5">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                    {/* Google Map button on the LEFT SIDE */}
-                    <div className="google-circulating-border-wrapper shrink-0">
-                      <div className="google-circulating-border-spinner" />
-                      <a
-                        href="https://www.google.com/maps"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="relative z-10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] bg-white dark:bg-slate-900 text-xs font-normal text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                      >
-                        <span>Search on Google Maps</span>
-                        <svg className="w-3 h-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                          <polyline points="15 3 21 3 21 9" />
-                          <line x1="10" y1="14" x2="21" y2="3" />
-                        </svg>
-                      </a>
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs text-slate-600 dark:text-slate-300 font-normal">
-                        Paste the URL below and hit upload button
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                    <div className="relative flex-1">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                        </svg>
-                      </div>
-                      <input
-                        type="url"
-                        value={googleMapsUrl}
-                        onChange={(e) => setGoogleMapsUrl(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleImportGoogleMaps();
-                          }
-                        }}
-                        placeholder="Paste Google Maps URL here (e.g. https://www.google.com/maps/...)"
-                        className="w-full pl-8 pr-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-slate-400 font-normal transition-colors"
-                      />
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={handleImportGoogleMaps}
-                      disabled={isImportingGMap}
-                      className="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 text-white text-xs font-medium transition-colors cursor-pointer disabled:opacity-50 shrink-0"
-                    >
-                      {isImportingGMap ? 'Uploading...' : 'Upload URL'}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Interactive Leaflet Map Picker Component */}
-                <MapLocationPicker
-                  latitude={formData.latitude}
-                  longitude={formData.longitude}
-                  onLocationChange={handleMapLocationChange}
-                  onAddressDetected={handleAddressDetected}
-                  defaultCity={formData.city}
-                  defaultState={formData.state}
-                />
-              </div>
-
-              {/* RIGHT SIDE (6 COLS): ADDRESS FIELDS (REVEALED WHEN URL UPLOADED OR PINNED) */}
-              {isAddressVisible && (
-                <motion.div
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.35, ease: 'easeOut' }}
-                  className="lg:col-span-6 space-y-4"
-                >
-                  <div className="space-y-1">
-                    <label className="text-xs text-slate-600 dark:text-slate-400 font-medium">
-                      Road Name / Area / Colony *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.roadArea}
-                      onChange={(e) => setFormData({ ...formData, roadArea: e.target.value })}
-                      placeholder="e.g. Mall Road, Near Ayarpatta"
-                      className={`w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border text-xs text-slate-900 dark:text-slate-100 focus:outline-none font-normal transition-colors ${
-                        fieldErrors.roadArea ? 'border-rose-500 focus:border-rose-500' : 'border-slate-200 dark:border-slate-700 focus:border-emerald-500'
-                      }`}
-                    />
-                    {fieldErrors.roadArea && <p className="text-[10px] text-rose-500 font-medium">{fieldErrors.roadArea}</p>}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* City */}
-                    <div className="space-y-1">
-                      <label className="text-xs text-slate-600 dark:text-slate-400 font-medium">City *</label>
-                      <input
-                        type="text"
-                        required
-                        value={formData.city}
-                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                        placeholder="e.g. Nainital"
-                        className={`w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border text-xs text-slate-900 dark:text-slate-100 focus:outline-none font-normal transition-colors ${
-                          fieldErrors.city ? 'border-rose-500 focus:border-rose-500' : 'border-slate-200 dark:border-slate-700 focus:border-emerald-500'
-                        }`}
-                      />
-                      {fieldErrors.city && <p className="text-[10px] text-rose-500 font-medium">{fieldErrors.city}</p>}
-                    </div>
-
-                    {/* State */}
-                    <div className="space-y-1">
-                      <label className="text-xs text-slate-600 dark:text-slate-400 font-medium">State *</label>
-                      <input
-                        type="text"
-                        required
-                        value={formData.state}
-                        onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                        placeholder="e.g. Uttarakhand"
-                        className={`w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border text-xs text-slate-900 dark:text-slate-100 focus:outline-none font-normal transition-colors ${
-                          fieldErrors.state ? 'border-rose-500 focus:border-rose-500' : 'border-slate-200 dark:border-slate-700 focus:border-emerald-500'
-                        }`}
-                      />
-                      {fieldErrors.state && <p className="text-[10px] text-rose-500 font-medium">{fieldErrors.state}</p>}
-                    </div>
-                  </div>
-
-                  {/* Pincode */}
-                  <div className="space-y-1">
-                    <label className="text-xs text-slate-600 dark:text-slate-400 font-medium">Pincode *</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.pincode}
-                      onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
-                      placeholder="e.g. 263001"
-                      className={`w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border text-xs text-slate-900 dark:text-slate-100 focus:outline-none font-normal transition-colors ${
-                        fieldErrors.pincode ? 'border-rose-500 focus:border-rose-500' : 'border-slate-200 dark:border-slate-700 focus:border-emerald-500'
-                      }`}
-                    />
-                    {fieldErrors.pincode && <p className="text-[10px] text-rose-500 font-medium">{fieldErrors.pincode}</p>}
-                  </div>
-
-                  {/* Full Address Preview */}
-                  <div className="space-y-1">
-                    <label className="text-xs text-slate-400 font-medium">Full Address Preview</label>
-                    <div className="p-3.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300 font-normal leading-relaxed">
-                      {formData.roadArea || formData.city || formData.state || formData.pincode ? (
-                        <span>
-                          {[formData.roadArea, formData.city, formData.state].filter(Boolean).join(', ')}
-                          {formData.pincode ? ` - ${formData.pincode}` : ''}
-                        </span>
-                      ) : (
-                        <span className="text-slate-400 italic">Address will preview here as you pin on the map or type...</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Geocoded Coordinates Card */}
-                  <div className="p-3.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs space-y-2">
-                    <div className="flex items-center justify-between text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                      <span>Geolocation Pin Coordinates</span>
-                      <span className="text-emerald-600 dark:text-emerald-400 font-mono text-[10px]">● Synced</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-slate-700 dark:text-slate-300">
-                      <div className="px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 truncate">
-                        <span className="text-slate-400 mr-1">Lat:</span>{formData.latitude?.toFixed(6) || '29.391900'}
-                      </div>
-                      <div className="px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 truncate">
-                        <span className="text-slate-400 mr-1">Lng:</span>{formData.longitude?.toFixed(6) || '79.454200'}
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </div>
-          </div>
-
-          {/* SECTIONS 3 & 4: AMENITIES & RULES (SIDE BY SIDE) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-            {/* SECTION 3: AMENITIES & FACILITIES */}
-            <div className="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-              <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-3">
-                <div className="w-7 h-7 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center shrink-0">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                  </svg>
-                </div>
-                <span className="truncate">Facilities</span>
-              </div>
-
-              {/* Custom Facility Adder Bar */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={newFacilityInput}
-                  onChange={(e) => setNewFacilityInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleAddFacility(e);
-                    }
-                  }}
-                  placeholder="Type feature (e.g. Gym, Mess Food, Geyser)..."
-                  className="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 font-normal transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddFacility}
-                  className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs shrink-0"
-                >
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                  <span>Add</span>
-                </button>
-              </div>
-
-              {/* Chips List */}
-              <div className="flex flex-wrap gap-2 pt-1">
-                {(formData.facilities?.length > 0 ? formData.facilities : (formData.amenities || [])).map((facility, i) => (
-                  <span
-                    key={i}
-                    className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300 font-medium flex items-center gap-2 shadow-2xs"
+      {/* ── Fixed Step Editorial Header (Strictly Centered & Locked Directly Below Navbar) ── */}
+      <section className="w-full shrink-0 pt-3 sm:pt-4 pb-1 sm:pb-2 px-4 flex flex-col items-center justify-center text-center select-none z-20">
+        <div className="flex flex-col items-center max-w-3xl mx-auto w-full">
+          {/* Animated Step Badge */}
+          <div className="flex items-center justify-center mb-1">
+            <span className="text-[10px] font-mono-data font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300 bg-emerald-100/80 dark:bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/60 inline-flex items-center gap-1.5 shadow-2xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Host Onboarding · Step</span>
+              <span className="relative inline-block overflow-hidden h-[15px] w-3 font-extrabold text-center">
+                <AnimatePresence mode="popLayout" initial={false}>
+                  <motion.span
+                    key={activeStep}
+                    initial={{ y: 14, opacity: 0, filter: 'blur(2px)' }}
+                    animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
+                    exit={{ y: -14, opacity: 0, filter: 'blur(2px)' }}
+                    transition={{ type: 'spring', stiffness: 450, damping: 26 }}
+                    className="absolute inset-0 flex items-center justify-center"
                   >
-                    <svg className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                    <span>{facility}</span>
-                    <button
-                      type="button"
-                      onClick={(e) => handleRemoveFacility(facility, e)}
-                      className="text-slate-400 hover:text-red-500 text-xs cursor-pointer p-0.5"
-                    >
-                      ✕
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* SECTION 4: RULES & RESTRICTIONS */}
-            <div className="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-                <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-900 dark:text-white">
-                  <div className="w-7 h-7 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center shrink-0">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <polyline points="14 2 14 8 20 8" />
-                      <line x1="16" y1="13" x2="8" y2="13" />
-                      <line x1="16" y1="17" x2="8" y2="17" />
-                      <polyline points="10 9 9 9 8 9" />
-                    </svg>
-                  </div>
-                  <span className="truncate">Rules & Restrictions</span>
-                </div>
-                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                  {formData.rules?.length || 0} active rule(s)
-                </span>
-              </div>
-
-              {/* Custom Rule Adder Bar */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={newRuleInput}
-                  onChange={(e) => setNewRuleInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleAddRule(e);
-                    }
-                  }}
-                  placeholder="Type a rule (e.g. Valid Govt ID required at check-in)..."
-                  className="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 font-normal transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddRule}
-                  className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs shrink-0"
-                >
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                  <span>Add</span>
-                </button>
-              </div>
-
-              {/* Quick Suggestions */}
-              <div className="space-y-1.5 pt-0.5">
-                <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Quick Suggestions:</span>
-                <div className="flex flex-wrap gap-1.5">
-                  {COMMON_RULE_PRESETS.map((preset, idx) => {
-                    const isAdded = (formData.rules || []).includes(preset);
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => handleAddPresetRule(preset)}
-                        disabled={isAdded}
-                        className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer flex items-center gap-1 ${
-                          isAdded
-                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 opacity-60 cursor-default'
-                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400 shadow-2xs'
-                        }`}
-                      >
-                        <span>{isAdded ? '✓' : '+'}</span>
-                        <span>{preset}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Rules Chips List */}
-              <div className="flex flex-wrap gap-2 pt-1 border-t border-slate-200/80 dark:border-slate-800/80">
-                {formData.rules && formData.rules.length > 0 ? (
-                  formData.rules.map((rule, idx) => (
-                    <span
-                      key={idx}
-                      className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300 font-medium flex items-center gap-2 shadow-2xs"
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                      <span>{rule}</span>
-                      <button
-                        type="button"
-                        onClick={(e) => handleRemoveRule(idx, e)}
-                        className="text-slate-400 hover:text-red-500 text-xs cursor-pointer p-0.5"
-                      >
-                        ✕
-                      </button>
-                    </span>
-                  ))
-                ) : (
-                  <p className="text-xs text-slate-400 italic">No custom rules added yet. Type a rule above or click any quick suggestion.</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* SECTION 5: PROPERTY PHOTOS & VIDEO TOUR */}
-          <div className="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-900 dark:text-white">
-                <div className="w-7 h-7 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center shrink-0">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                    <circle cx="12" cy="13" r="4" />
-                  </svg>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs sm:text-sm font-semibold">Property Photos (Max 5 Photos) & Video Tour</span>
-                  <span className="text-[11px] text-slate-400 font-normal hidden sm:inline">First photo is your main cover photo. Drag photos to change order.</span>
-                </div>
-              </div>
-              
-              {/* Photo Count Tracker Badge */}
-              <div className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 shrink-0 ${
-                formData.images.length >= MAX_PHOTOS
-                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-                  : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-              }`}>
-                <span>{formData.images.length} / {MAX_PHOTOS} Photos</span>
-                {formData.images.length >= MAX_PHOTOS && <span className="text-[10px]">(Max Limit)</span>}
-              </div>
-            </div>
-
-            {/* Hidden File Input */}
-            <input
-              type="file"
-              ref={fileInputRef}
-              multiple
-              accept="image/*"
-              onChange={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleFileUpload(e);
-              }}
-              className="hidden"
-            />
-
-            {/* FULL WIDTH 5-PHOTO GALLERY */}
-            <div className="space-y-2">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold block">
-                  Showcase Gallery Slots ({formData.images.length}/5):
-                </label>
-                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                  ✦ Tip: Drag any photo to reorder or click "Set as Cover"
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                {formData.images.map((imgUrl, i) => {
-                  const isCover = i === 0;
-                  const isBeingDragged = draggedPhotoIndex === i;
-                  const isDragTarget = dragOverIndex === i;
-
-                  return (
-                    <div
-                      key={`img-${imgUrl}-${i}`}
-                      draggable={true}
-                      onDragStart={(e) => handlePhotoDragStart(e, i)}
-                      onDragOver={(e) => handlePhotoDragOver(e, i)}
-                      onDragLeave={(e) => handlePhotoDragLeave(e, i)}
-                      onDrop={(e) => handlePhotoDrop(e, i)}
-                      className={`relative rounded-2xl overflow-hidden border-2 h-32 sm:h-36 group bg-slate-100 dark:bg-slate-800 shadow-xs cursor-grab active:cursor-grabbing transition-all select-none ${
-                        isCover
-                          ? 'border-emerald-500 ring-2 ring-emerald-500/20'
-                          : isDragTarget
-                          ? 'border-emerald-400 scale-[1.02] shadow-md ring-2 ring-emerald-400/40'
-                          : 'border-slate-200 dark:border-slate-700 hover:border-slate-400'
-                      } ${isBeingDragged ? 'opacity-40 scale-95' : 'opacity-100'}`}
-                    >
-                      <img
-                        src={imgUrl}
-                        alt={`Property Photo ${i + 1}`}
-                        className="w-full h-full object-cover pointer-events-none"
-                      />
-                      
-                      {/* Top Slot Label */}
-                      <div className="absolute top-1.5 left-1.5 pointer-events-none">
-                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold shadow-xs ${
-                          isCover
-                            ? 'bg-emerald-600 text-white'
-                            : 'bg-slate-900/80 backdrop-blur-md text-white'
-                        }`}>
-                          {isCover ? '⭐ Cover' : `Slot ${i + 1}`}
-                        </span>
-                      </div>
-
-                      {/* Top Right: Drag Grip & Remove Button */}
-                      <div className="absolute top-1.5 right-1.5 flex items-center gap-1 z-30">
-                        <span className="w-5 h-5 rounded bg-slate-900/70 backdrop-blur-xs text-white/90 flex items-center justify-center text-[10px] pointer-events-none" title="Drag to reorder">
-                          ⋮⋮
-                        </span>
-
-                        <button
-                          type="button"
-                          onClick={(e) => handleRemovePhoto(imgUrl, e)}
-                          className="w-5 h-5 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center text-[10px] font-black leading-none cursor-pointer shadow-xs transition-transform hover:scale-110 active:scale-90 select-none"
-                          title="Remove photo"
-                        >
-                          ✕
-                        </button>
-                      </div>
-
-                      {/* Cover Photo Badge / Make Cover Action */}
-                      {isCover ? (
-                        <span className="absolute bottom-1.5 left-1.5 right-1.5 px-2 py-0.5 rounded-md bg-emerald-600/95 text-white text-[10px] font-bold text-center shadow-xs">
-                          Primary Cover
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={(e) => handleSetCoverPhoto(imgUrl, e)}
-                          className="absolute bottom-1.5 left-1.5 right-1.5 px-2 py-1 rounded-md bg-slate-900/80 hover:bg-emerald-600 text-white text-[10px] font-semibold text-center transition-colors shadow-xs cursor-pointer opacity-0 group-hover:opacity-100"
-                        >
-                          Set as Cover
-                        </button>
-                      )}
-
-                      {/* Drag Hover Target Overlay */}
-                      {isDragTarget && (
-                        <div className="absolute inset-0 bg-emerald-500/20 backdrop-blur-[1px] flex items-center justify-center text-center p-1 z-20 pointer-events-none">
-                          <span className="px-2 py-1 rounded-md bg-emerald-600 text-white text-[10px] font-bold shadow-md">
-                            Drop Here
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-
-                {/* Empty Photo Slots placeholders up to 5 */}
-                {Array.from({ length: Math.max(0, MAX_PHOTOS - formData.images.length) }).map((_, idx) => (
-                  <div
-                    key={`empty-${idx}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      fileInputRef.current?.click();
-                    }}
-                    className="rounded-2xl border-2 border-dashed border-indigo-200 dark:border-indigo-800/60 h-32 sm:h-36 flex flex-col items-center justify-center p-2 text-center text-slate-400 bg-white/70 dark:bg-slate-900/60 hover:border-indigo-500 hover:text-indigo-600 hover:bg-indigo-50/50 cursor-pointer transition-colors group"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-indigo-600 group-hover:scale-110 transition-transform mb-1">
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <line x1="12" y1="5" x2="12" y2="19" />
-                        <line x1="5" y1="12" x2="19" y2="12" />
-                      </svg>
-                    </div>
-                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Upload Photo</span>
-                    <span className="text-[10px] text-slate-400">Slot {formData.images.length + idx + 1}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* FULL WIDTH VIDEO TOUR LINK (YOUTUBE / INSTAGRAM) */}
-            <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-amber-500 via-pink-600 to-purple-600 text-white flex items-center justify-center shadow-xs shrink-0">
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-semibold text-slate-900 dark:text-white">
-                      Video Tour Link (YouTube / Instagram Reel)
-                    </h4>
-                    <p className="text-[10px] text-slate-400">Add a walkthrough video tour link to give students a live preview</p>
-                  </div>
-                </div>
-
-                {formData.instagramVideoUrl && formData.instagramVideoUrl.trim() && (
-                  <a
-                    href={formData.instagramVideoUrl.startsWith('http') ? formData.instagramVideoUrl : `https://${formData.instagramVideoUrl}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (!formData.instagramVideoUrl || !formData.instagramVideoUrl.trim()) {
-                        e.preventDefault();
-                      }
-                    }}
-                    className="px-2.5 py-1 rounded-lg bg-pink-600 hover:bg-pink-700 text-white text-xs font-semibold transition-colors flex items-center gap-1 shadow-xs shrink-0 cursor-pointer"
-                  >
-                    <span>Preview Tour ↗</span>
-                  </a>
-                )}
-              </div>
-
-              <input
-                type="url"
-                value={formData.instagramVideoUrl}
-                onChange={(e) => setFormData({ ...formData, instagramVideoUrl: e.target.value })}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }
-                }}
-                placeholder="https://www.instagram.com/reel/... or https://www.youtube.com/watch?v=..."
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-pink-500 font-normal transition-colors"
-              />
-            </div>
-          </div>
-
-          {/* SECTION 6: PROPERTY DESCRIPTION */}
-          <div className="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-900 dark:text-white">
-                <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                    <line x1="16" y1="13" x2="8" y2="13" />
-                    <line x1="16" y1="17" x2="8" y2="17" />
-                    <polyline points="10 9 9 9 8 9" />
-                  </svg>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs sm:text-sm font-semibold">Property Description *</span>
-                  <span className="text-[11px] text-slate-400 font-normal hidden sm:inline">Describe your living atmosphere, student environment, facilities, and locality</span>
-                </div>
-              </div>
-
-              {/* Live Character Counter Badge */}
-              <div className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0 ${
-                formData.description && formData.description.length > MAX_DESCRIPTION_CHARS
-                  ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'
-                  : formData.description && formData.description.length >= 80
-                  ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30'
-                  : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-              }`}>
-                <span>
-                  {formData.description ? formData.description.length : 0} / {MAX_DESCRIPTION_CHARS} characters
-                </span>
-                {formData.description && formData.description.length > MAX_DESCRIPTION_CHARS && (
-                  <span className="text-[10px] font-bold text-rose-600">(Exceeds Limit)</span>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <textarea
-                required
-                rows={4}
-                maxLength={MAX_DESCRIPTION_CHARS}
-                value={formData.description}
-                onChange={(e) => {
-                  const val = e.target.value.slice(0, MAX_DESCRIPTION_CHARS);
-                  setFormData((prev) => ({ ...prev, description: val }));
-                  if (fieldErrors.description) {
-                    setFieldErrors((prev) => ({ ...prev, description: undefined }));
-                  }
-                }}
-                placeholder="Describe your property atmosphere, student environment, facilities, and locality (up to 100 characters)..."
-                className={`w-full p-4 rounded-2xl bg-white dark:bg-slate-900 border text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-emerald-500 font-normal leading-relaxed transition-colors resize-y ${
-                  fieldErrors.description || (formData.description && formData.description.length > MAX_DESCRIPTION_CHARS)
-                    ? 'border-rose-500 focus:border-rose-500'
-                    : 'border-slate-200 dark:border-slate-700'
-                }`}
-              />
-
-              <div className="flex items-center justify-between text-[11px] text-slate-400">
-                <span>Minimum 10 characters • Maximum {MAX_DESCRIPTION_CHARS} characters</span>
-                {fieldErrors.description && (
-                  <span className="text-rose-500 font-semibold">{fieldErrors.description}</span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* SUBMIT "REQUEST UPLOAD" BUTTON */}
-          <div className="pt-3 pb-8 flex items-center justify-between gap-4">
-            <button
-              type="button"
-              onClick={() => navigate('/host/dashboard')}
-              className="px-5 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
-            >
-              Cancel
-            </button>
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2 active:scale-[0.98]"
-            >
-              <span>
-                {isSubmitting
-                  ? 'Saving to Database...'
-                  : isEditing
-                  ? 'Update Property Details'
-                  : 'Request Upload'}
+                    {activeStep}
+                  </motion.span>
+                </AnimatePresence>
               </span>
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <line x1="5" y1="12" x2="19" y2="12" />
-                <polyline points="12 5 19 12 12 19" />
-              </svg>
-            </button>
+            </span>
           </div>
-        </form>
+
+          {/* Morphing Staggered Words Title */}
+          <div className="min-h-[38px] flex items-center justify-center">
+            <AnimatePresence mode="wait">
+              <motion.h1
+                key={`sub-title-${activeStep}`}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                variants={{
+                  hidden: { opacity: 0 },
+                  visible: {
+                    opacity: 1,
+                    transition: {
+                      staggerChildren: 0.035,
+                      delayChildren: 0.02,
+                    },
+                  },
+                  exit: {
+                    opacity: 0,
+                    transition: {
+                      staggerChildren: 0.02,
+                      staggerDirection: -1,
+                    },
+                  },
+                }}
+                className="font-h2 text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center justify-center flex-wrap gap-x-2 gap-y-0.5"
+              >
+                {currentStepConfig.sub.split(' ').map((word, idx) => (
+                  <motion.span
+                    key={`${activeStep}-${idx}-${word}`}
+                    variants={{
+                      hidden: { opacity: 0, y: 12, filter: 'blur(6px)', scale: 0.94 },
+                      visible: {
+                        opacity: 1,
+                        y: 0,
+                        filter: 'blur(0px)',
+                        scale: 1,
+                        transition: {
+                          type: 'spring',
+                          stiffness: 400,
+                          damping: 25,
+                        },
+                      },
+                      exit: {
+                        opacity: 0,
+                        y: -10,
+                        filter: 'blur(4px)',
+                        scale: 0.96,
+                        transition: { duration: 0.14, ease: 'easeIn' },
+                      },
+                    }}
+                    className="inline-block"
+                  >
+                    {word}
+                  </motion.span>
+                ))}
+              </motion.h1>
+            </AnimatePresence>
+          </div>
+
+          {/* Smooth Subheading Description */}
+          <div className="h-5 sm:h-6 flex items-center justify-center mt-0.5">
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={`desc-${activeStep}`}
+                initial={{ opacity: 0, y: 6, filter: 'blur(4px)' }}
+                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, y: -6, filter: 'blur(4px)' }}
+                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                className="font-body-md text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-normal px-4"
+              >
+                {currentStepConfig.desc}
+              </motion.p>
+            </AnimatePresence>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Main Viewport-Fitted Canvas (Non-Scrollable Single-Screen) ── */}
+      <main className="flex-1 min-h-0 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-1 sm:py-2 flex flex-col justify-start relative z-10 overflow-y-auto lg:overflow-hidden">
+        {/* Step Content Container with Viewport Elevation (Component Level Architecture) */}
+        <AnimatePresence mode="wait">
+          {activeStep === 1 && (
+            <UploadBasicsTab
+              formData={formData}
+              setFormData={setFormData}
+              fieldErrors={fieldErrors}
+            />
+          )}
+
+          {activeStep === 2 && (
+            <Suspense fallback={<TabFallback />}>
+              <UploadLocationTab
+                formData={formData}
+                setFormData={setFormData}
+                fieldErrors={fieldErrors}
+                onMapLocationChange={handleMapLocationChange}
+                onAddressDetected={handleAddressDetected}
+                googleMapsUrl={googleMapsUrl}
+                setGoogleMapsUrl={setGoogleMapsUrl}
+                handleImportGoogleMaps={handleImportGoogleMaps}
+                isImportingGMap={isImportingGMap}
+              />
+            </Suspense>
+          )}
+
+          {activeStep === 3 && (
+            <Suspense fallback={<TabFallback />}>
+              <UploadPerksRulesTab
+                formData={formData}
+                newFacilityInput={newFacilityInput}
+                setNewFacilityInput={setNewFacilityInput}
+                onAddFacility={handleAddFacility}
+                onRemoveFacility={handleRemoveFacility}
+                newRuleInput={newRuleInput}
+                setNewRuleInput={setNewRuleInput}
+                onAddRule={handleAddRule}
+                onRemoveRule={handleRemoveRule}
+              />
+            </Suspense>
+          )}
+
+          {activeStep === 4 && (
+            <Suspense fallback={<TabFallback />}>
+              <UploadPhotosTab
+                formData={formData}
+                setFormData={setFormData}
+                fileInputRef={fileInputRef}
+                onFileUpload={handleFileUpload}
+                onRemovePhoto={handleRemovePhoto}
+                onSetCoverPhoto={handleSetCoverPhoto}
+                draggedPhotoIndex={draggedPhotoIndex}
+                dragOverIndex={dragOverIndex}
+                onPhotoDragStart={handlePhotoDragStart}
+                onPhotoDragOver={handlePhotoDragOver}
+                onPhotoDragLeave={handlePhotoDragLeave}
+                onPhotoDrop={handlePhotoDrop}
+                maxPhotos={MAX_PHOTOS}
+              />
+            </Suspense>
+          )}
+
+          {activeStep === 5 && (
+            <Suspense fallback={<TabFallback />}>
+              <UploadRoomsPricingTab
+                formData={formData}
+                setFormData={setFormData}
+                fieldErrors={fieldErrors}
+                maxDescriptionChars={MAX_DESCRIPTION_CHARS}
+                selectedCategoryIndex={selectedCategoryIndex}
+                onSelectCategoryIndex={setSelectedCategoryIndex}
+                onAddCategory={handleAddNewCategory}
+                onRemoveCategory={handleRemoveCategory}
+                onUpdateCategory={handleUpdateCategory}
+                collapsedCategories={collapsedCategories}
+                onToggleCollapseCategory={toggleCollapseCategory}
+                selectedRoomCardId={selectedRoomCardId}
+                selectedRoomNumber={selectedRoomNumber}
+                onSelectRoomCardId={setSelectedRoomCardId}
+                onAddRoomCard={handleAddRoomCard}
+                onRemoveRoomCard={handleRemoveRoomCard}
+                onUpdateRoomNumber={handleUpdateRoomNumber}
+                onUpdateRoomCapacity={handleUpdateRoomCapacity}
+              />
+            </Suspense>
+          )}
+        </AnimatePresence>
       </main>
+
+      {/* ── Fixed Bottom Progression Bar (Non-Scrollable, Sticky at Bottom) ── */}
+      <footer className="sticky bottom-0 z-50 w-full bg-white/90 dark:bg-[#090b10]/90 backdrop-blur-xl border-t border-slate-200/70 dark:border-zinc-800 shrink-0 h-14 sm:h-16 flex items-center">
+        <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={handlePrevStep}
+            disabled={activeStep === 1}
+            className={`px-4 sm:px-5 py-2 rounded-full border text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
+              activeStep === 1
+                ? 'border-slate-200 dark:border-zinc-800 text-slate-400 opacity-40 cursor-not-allowed'
+                : 'border-slate-300 dark:border-zinc-700 hover:border-slate-900 dark:hover:border-white text-slate-800 dark:text-zinc-200'
+            }`}
+          >
+            <span>← Back</span>
+          </button>
+
+          <div className="flex items-center">
+            {activeStep < 5 ? (
+              <button
+                type="button"
+                onClick={handleNextStep}
+                className="px-6 sm:px-7 py-2 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-zinc-100 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <span>Continue</span>
+                <span>→</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={handleSubmit}
+                className="px-6 sm:px-8 py-2 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-600/25 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2 hover:scale-[1.02]"
+              >
+                <span>
+                  {isSubmitting
+                    ? 'Saving to Database...'
+                    : isEditing
+                    ? 'Update Property Details'
+                    : 'Request Upload ✓'}
+                </span>
+              </button>
+            )}
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

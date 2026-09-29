@@ -3,30 +3,8 @@ import { v2 as cloudinary } from 'cloudinary';
 import { Stay, computeLowestStartingPrice } from '../models/Stay.js';
 import { Host } from '../models/Host.js';
 import { Booking } from '../models/Booking.js';
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-const processImageUrl = async (imgStr) => {
-  if (!imgStr || typeof imgStr !== 'string') return '';
-  if (imgStr.startsWith('http://') || imgStr.startsWith('https://')) return imgStr;
-  if (imgStr.startsWith('data:image/')) {
-    try {
-      const uploadRes = await cloudinary.uploader.upload(imgStr, {
-        folder: 'room-scout/stays',
-        resource_type: 'image',
-      });
-      return uploadRes.secure_url;
-    } catch (err) {
-      console.error('Cloudinary upload error:', err.message);
-      return '';
-    }
-  }
-  return imgStr;
-};
+import { isAdminUser, idsMatch } from '../middleware/authMiddleware.js';
+import { uploadSecureImage } from '../utils/imageSecurity.js';
 
 // @desc    Get all published property stays with filters, sorting, and pagination
 // @route   GET /api/stays
@@ -51,10 +29,10 @@ export const getAllStays = async (req, res, next) => {
 
     const mongoFilter = { isPublished: true };
 
-    if (city) {
+    if (city && typeof city === 'string') {
       mongoFilter.city = { $regex: new RegExp(city.trim(), 'i') };
     }
-    if (type && type !== 'All' && type !== 'All Types') {
+    if (type && typeof type === 'string' && type !== 'All' && type !== 'All Types') {
       const t = type.toLowerCase().trim();
       if (t === 'flat') {
         mongoFilter.type = { $in: ['PG', 'Flat', 'Apartment'] };
@@ -64,18 +42,18 @@ export const getAllStays = async (req, res, next) => {
         mongoFilter.type = { $regex: new RegExp(`^${t}$`, 'i') };
       }
     }
-    if (gender && gender !== 'All') {
+    if (gender && typeof gender === 'string' && gender !== 'All') {
       mongoFilter.genderType = { $in: [gender, 'Both', 'Unisex'] };
     }
     if (minPrice || maxPrice) {
       mongoFilter.price = {};
-      if (minPrice) mongoFilter.price.$gte = Number(minPrice);
-      if (maxPrice) mongoFilter.price.$lte = Number(maxPrice);
+      if (minPrice && !isNaN(minPrice)) mongoFilter.price.$gte = Number(minPrice);
+      if (maxPrice && !isNaN(maxPrice)) mongoFilter.price.$lte = Number(maxPrice);
     }
-    if (minRating) {
+    if (minRating && !isNaN(minRating)) {
       mongoFilter.rating = { $gte: Number(minRating) };
     }
-    if (query) {
+    if (query && typeof query === 'string') {
       const qRegex = { $regex: new RegExp(query.trim(), 'i') };
       mongoFilter.$or = [
         { title: qRegex },
@@ -234,9 +212,14 @@ export const getStayAvailability = async (req, res, next) => {
 // @access  Private (Host)
 export const createStay = async (req, res, next) => {
   try {
-    const hostId = req.user?._id || req.user?.id || req.body.hostId;
+    const isCallerAdmin = isAdminUser(req) || req.isAdminKey;
+    let hostId = req.user?._id || req.user?.id;
+    if (isCallerAdmin && req.body.hostId && mongoose.Types.ObjectId.isValid(req.body.hostId)) {
+      hostId = req.body.hostId;
+    }
+
     if (!hostId || !mongoose.Types.ObjectId.isValid(hostId)) {
-      return res.status(400).json({ message: 'Valid hostId is required.' });
+      return res.status(400).json({ success: false, message: 'Valid hostId is required.' });
     }
 
     const {
@@ -267,11 +250,11 @@ export const createStay = async (req, res, next) => {
     }
 
     const parsedPrice = parseInt(String(price).replace(/[^0-9]/g, ''), 10) || 0;
-    const cleanPrimaryImage = await processImageUrl(image);
+    const cleanPrimaryImage = await uploadSecureImage(image, 'roomscout/stays');
 
     let processedImages = [];
     if (Array.isArray(images) && images.length > 0) {
-      processedImages = await Promise.all(images.map((img) => processImageUrl(img)));
+      processedImages = await Promise.all(images.map((img) => uploadSecureImage(img, 'roomscout/stays')));
     } else if (cleanPrimaryImage) {
       processedImages = [cleanPrimaryImage];
     }
@@ -382,10 +365,27 @@ export const updateReviewInStay = async (req, res, next) => {
     const { rating, comment } = req.body;
 
     const stay = await Stay.findById(stayId);
-    if (!stay) return res.status(404).json({ message: 'Stay not found.' });
+    if (!stay) return res.status(404).json({ success: false, message: 'Stay not found.' });
 
     const rev = stay.reviews.id(reviewId);
-    if (!rev) return res.status(404).json({ message: 'Review not found.' });
+    if (!rev) return res.status(404).json({ success: false, message: 'Review not found.' });
+
+    // IDOR Guard: Only author or admin can update review
+    const isCallerAdmin = isAdminUser(req) || req.isAdminKey;
+    const callerId = (req.user?._id || req.user?.id)?.toString();
+    const callerName = (req.user?.name || '').toLowerCase().trim();
+    const revUserId = (rev.userId?._id || rev.userId || rev.user)?.toString();
+    const isAuthor =
+      (revUserId && callerId && revUserId === callerId) ||
+      idsMatch(revUserId, callerId) ||
+      (rev.userName && rev.userName.toLowerCase().trim() === callerName);
+
+    if (!isCallerAdmin && !isAuthor) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: You are not authorized to edit another user\'s review.',
+      });
+    }
 
     if (rating) rev.rating = Math.min(5, Math.max(1, Number(rating)));
     if (comment) rev.comment = comment.trim();
@@ -394,7 +394,7 @@ export const updateReviewInStay = async (req, res, next) => {
     stay.rating = Number((sum / stay.reviews.length).toFixed(1));
     await stay.save();
 
-    return res.json({ message: 'Review updated successfully', reviews: stay.reviews });
+    return res.json({ success: true, message: 'Review updated successfully', reviews: stay.reviews });
   } catch (error) {
     return next(error);
   }
@@ -408,7 +408,27 @@ export const deleteReviewFromStay = async (req, res, next) => {
     const { id: stayId, reviewId } = req.params;
 
     const stay = await Stay.findById(stayId);
-    if (!stay) return res.status(404).json({ message: 'Stay not found.' });
+    if (!stay) return res.status(404).json({ success: false, message: 'Stay not found.' });
+
+    const rev = stay.reviews.id(reviewId);
+    if (!rev) return res.status(404).json({ success: false, message: 'Review not found.' });
+
+    // IDOR Guard: Only author or admin can delete review
+    const isCallerAdmin = isAdminUser(req) || req.isAdminKey;
+    const callerId = (req.user?._id || req.user?.id)?.toString();
+    const callerName = (req.user?.name || '').toLowerCase().trim();
+    const revUserId = (rev.userId?._id || rev.userId || rev.user)?.toString();
+    const isAuthor =
+      (revUserId && callerId && revUserId === callerId) ||
+      idsMatch(revUserId, callerId) ||
+      (rev.userName && rev.userName.toLowerCase().trim() === callerName);
+
+    if (!isCallerAdmin && !isAuthor) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: You are not authorized to delete another user\'s review.',
+      });
+    }
 
     stay.reviews.pull(reviewId);
     stay.reviewsCount = stay.reviews.length;
@@ -416,7 +436,7 @@ export const deleteReviewFromStay = async (req, res, next) => {
     stay.rating = stay.reviews.length > 0 ? Number((sum / stay.reviews.length).toFixed(1)) : 5.0;
     await stay.save();
 
-    return res.json({ message: 'Review deleted successfully', reviews: stay.reviews });
+    return res.json({ success: true, message: 'Review deleted successfully', reviews: stay.reviews });
   } catch (error) {
     return next(error);
   }
@@ -431,7 +451,32 @@ export const updateStayRooms = async (req, res, next) => {
     const { availableRooms, decrement } = req.body;
 
     const stay = await Stay.findById(stayId);
-    if (!stay) return res.status(404).json({ message: 'Stay not found.' });
+    if (!stay) return res.status(404).json({ success: false, message: 'Stay not found.' });
+
+    // IDOR Guard: Verify caller is admin or the host of this stay
+    const isCallerAdmin = isAdminUser(req) || req.isAdminKey;
+    const callerId = (req.user?._id || req.user?.id)?.toString();
+    const callerEmail = (req.user?.email || '').toLowerCase().trim();
+
+    let isOwner = isCallerAdmin;
+    if (!isOwner && stay.hostId) {
+      const stayHostId = (stay.hostId?._id || stay.hostId)?.toString();
+      if (idsMatch(stayHostId, callerId)) {
+        isOwner = true;
+      } else if (callerEmail) {
+        const host = await Host.findOne({ email: callerEmail }).select('_id').lean();
+        if (host && idsMatch(stayHostId, host._id)) {
+          isOwner = true;
+        }
+      }
+    }
+
+    if (!isOwner) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: You are not authorized to update room inventory for a listing you do not own.',
+      });
+    }
 
     if (decrement) {
       stay.availableRooms = Math.max(0, stay.availableRooms - 1);
@@ -441,6 +486,7 @@ export const updateStayRooms = async (req, res, next) => {
 
     await stay.save();
     return res.json({
+      success: true,
       message: 'Room counts updated successfully',
       availableRooms: stay.availableRooms,
     });

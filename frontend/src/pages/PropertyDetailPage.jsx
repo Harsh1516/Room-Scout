@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWishlist } from '../context/WishlistContext';
-import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useBookings } from '../context/BookingsContext';
 import { staysAPI } from '../services/api';
@@ -17,7 +16,6 @@ export function PropertyDetailPage({ onBookClick }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isDark, toggleTheme } = useTheme();
   const { user } = useAuth();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { bookings } = useBookings();
@@ -530,15 +528,6 @@ export function PropertyDetailPage({ onBookClick }) {
               </svg>
               <span>{isSaved ? 'Saved' : 'Save'}</span>
             </button>
-
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center text-sm transition-all cursor-pointer shadow-2xs active:scale-95"
-              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            >
-              {isDark ? '☀️' : '🌙'}
-            </button>
           </div>
 
           <div className="flex lg:hidden items-center gap-2">
@@ -653,14 +642,6 @@ export function PropertyDetailPage({ onBookClick }) {
                   </svg>
                   <span>{stay.propertyType || stay.type || 'PG'}</span>
                 </span>
-
-                <button
-                  type="button"
-                  onClick={toggleTheme}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700"
-                >
-                  <span>{isDark ? '☀️ Light Mode' : '🌙 Dark Mode'}</span>
-                </button>
               </div>
             </motion.div>
           )}

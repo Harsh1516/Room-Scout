@@ -1,12 +1,10 @@
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
 
 export function NotFoundPage() {
   const navigate = useNavigate();
   const { isAuthenticated, isHost } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden transition-colors duration-300">
@@ -22,17 +20,6 @@ export function NotFoundPage() {
             ROOM-SCOUT
           </span>
         </Link>
-
-        {/* Theme Toggle Button */}
-        <button
-          type="button"
-          onClick={toggleTheme}
-          className="p-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white shadow-sm transition-all cursor-pointer flex items-center gap-2 text-xs font-bold"
-          title="Toggle Light / Dark Mode"
-        >
-          <span>{isDark ? '🌙' : '☀️'}</span>
-          <span className="hidden sm:inline">{isDark ? 'Dark Mode' : 'Light Mode'}</span>
-        </button>
       </header>
 
       {/* Main 404 Card */}

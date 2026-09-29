@@ -3,6 +3,8 @@ import crypto from 'crypto';
 import mongoose from 'mongoose';
 import { Booking } from '../models/Booking.js';
 import { Payment } from '../models/Payment.js';
+import { Host } from '../models/Host.js';
+import { idsMatch, isAdminUser } from '../middleware/authMiddleware.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -168,12 +170,35 @@ export const verifyPayment = async (req, res, next) => {
 // @access  Private / Host
 export const getHostPayments = async (req, res, next) => {
   try {
-    const hostId = req.params.hostId || req.user?._id || req.user?.id;
-    if (!hostId || !mongoose.Types.ObjectId.isValid(hostId)) {
+    const callerId = (req.user?._id || req.user?.id)?.toString();
+    const isCallerAdmin = req.user?.role === 'admin' || req.user?.isAdmin || req.isAdminKey;
+    const requestedHostId = req.params.hostId;
+
+    if (!requestedHostId || !mongoose.Types.ObjectId.isValid(requestedHostId)) {
       return res.status(400).json({ success: false, message: 'Valid hostId is required.' });
     }
 
-    const payments = await Payment.find({ hostId })
+    // IDOR Protection: Enforce that hosts can only inspect their own payment revenue
+    let isAuthorized =
+      isCallerAdmin ||
+      idsMatch(callerId, requestedHostId) ||
+      idsMatch(req.hostAccount?._id, requestedHostId);
+
+    if (!isAuthorized && req.user?.email) {
+      const host = await Host.findById(requestedHostId).select('email').lean();
+      if (host && host.email?.toLowerCase().trim() === req.user.email.toLowerCase().trim()) {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: You are not authorized to view another host’s payments.',
+      });
+    }
+
+    const payments = await Payment.find({ hostId: requestedHostId })
       .populate('bookingId', 'fullName roomNumber stayTitle checkIn checkOut')
       .sort({ createdAt: -1 })
       .lean();
@@ -217,5 +242,86 @@ export const getMyPayments = async (req, res, next) => {
   } catch (error) {
     console.error('Get my payments error:', error);
     return next(error);
+  }
+};
+
+// @desc    Handle Razorpay Server Webhooks (e.g. payment.captured, order.paid)
+// @route   POST /api/payments/webhook
+// @access  Public (Exempt from client rate limiting, secured cryptographically via HMAC SHA256)
+export const handleRazorpayWebhook = async (req, res, next) => {
+  try {
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || process.env.RAZORPAY_KEY_SECRET;
+    const webhookSignature = req.headers['x-razorpay-signature'];
+
+    // Verify cryptographic signature if secret is configured
+    if (webhookSecret && webhookSignature) {
+      const bodyPayload = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+      const expectedSignature = crypto
+        .createHmac('sha256', webhookSecret.trim())
+        .update(bodyPayload)
+        .digest('hex');
+
+      if (expectedSignature !== webhookSignature) {
+        console.warn('[Webhook] Razorpay webhook cryptographic signature mismatch.');
+        return res.status(400).json({ success: false, message: 'Invalid webhook signature.' });
+      }
+    }
+
+    const event = req.body?.event;
+    const payload = req.body?.payload;
+
+    console.log(`[Webhook] Processing verified Razorpay event: ${event}`);
+
+    if (event === 'payment.captured' || event === 'order.paid') {
+      const paymentEntity = payload?.payment?.entity || payload?.order?.entity;
+      const orderId = paymentEntity?.order_id || paymentEntity?.id;
+      const paymentId = paymentEntity?.id;
+      const bookingRef = paymentEntity?.notes?.bookingReferenceId;
+
+      if (orderId || bookingRef) {
+        const query = [];
+        if (orderId) query.push({ 'paymentDetails.orderId': orderId });
+        if (bookingRef) query.push({ bookingReferenceId: bookingRef });
+
+        const booking = await Booking.findOne({ $or: query });
+
+        if (booking && booking.paymentStatus !== 'PAID') {
+          booking.paymentStatus = 'PAID';
+          booking.paymentMethod = 'RAZORPAY';
+          booking.status = 'CONFIRMED';
+          booking.paymentDetails = {
+            gateway: 'Razorpay Live Webhook',
+            paymentId: paymentId || `pay_wh_${Date.now()}`,
+            orderId: orderId,
+            signature: webhookSignature || 'verified_by_webhook',
+          };
+          await booking.save();
+
+          // Idempotent Payment transaction record
+          const existing = await Payment.findOne({ transactionId: paymentId });
+          if (!existing) {
+            await Payment.create({
+              bookingId: booking._id,
+              bookingReferenceId: booking.bookingReferenceId,
+              stayId: booking.stayId,
+              hostId: booking.hostId,
+              userId: booking.userId || null,
+              amount: booking.totalAmount,
+              currency: 'INR',
+              paymentMethod: 'RAZORPAY',
+              paymentStatus: 'COMPLETED',
+              transactionId: paymentId || `pay_wh_${Date.now()}`,
+              gatewayResponse: req.body,
+            });
+          }
+        }
+      }
+    }
+
+    // Acknowledge receipt immediately with 200 OK so Razorpay stops retrying
+    return res.status(200).json({ status: 'ok' });
+  } catch (error) {
+    console.error('[Webhook] Unhandled error during webhook processing:', error);
+    return res.status(200).json({ status: 'error_logged' });
   }
 };

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { groupDaysByMonth } from '../../utils/dateUtils';
+import { PersonOccupancyGrid } from '../common/PersonOccupancyGrid';
 
 /**
  * UserMonthlySlotCard (Mid Tab)
@@ -243,61 +244,77 @@ export function UserMonthlySlotCard({
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2">
-              {upcomingMonths.map((m) => {
-                const isBooked = bookedMonthsForRoom.has(m.monthKey);
-                const isRequested = requestedMonthsForRoom.has(m.monthKey);
-                const isSelected = selectedMonthIndices.includes(m.index);
-                const isCurrentMonth = m.isCurrentMonth;
+              {(() => {
+                const roomCapacity = Math.max(1, Math.min(10, Number(selectedRoom?.capacity) || 1));
+                return upcomingMonths.map((m) => {
+                  const isBooked = bookedMonthsForRoom.has(m.monthKey);
+                  const isRequested = requestedMonthsForRoom.has(m.monthKey);
+                  const isSelected = selectedMonthIndices.includes(m.index);
+                  const isCurrentMonth = m.isCurrentMonth;
+                  const occupiedCount = isBooked ? roomCapacity : 0;
 
-                return (
-                  <button
-                    type="button"
-                    key={m.monthKey}
-                    disabled={isBooked || isRequested}
-                    onClick={() => onToggleSlotMonth && onToggleSlotMonth(m.index)}
-                    title={
-                      isBooked
-                        ? 'Booked'
-                        : isRequested
-                        ? 'Requested (Pending Host Approval)'
-                        : isSelected
-                        ? 'Selected'
-                        : 'Available'
-                    }
-                    className={`relative p-2.5 sm:p-3 rounded-xl border select-none transition-all flex flex-col justify-between items-center text-center outline-none ${
-                      isBooked
-                        ? 'bg-sky-100 border-sky-300 text-sky-900 cursor-not-allowed opacity-90'
-                        : isRequested
-                        ? 'bg-amber-100/90 border-amber-400 text-amber-950 cursor-not-allowed shadow-xs'
-                        : isSelected
-                        ? 'bg-emerald-600 border-emerald-600 text-white font-bold shadow-md cursor-pointer'
-                        : isCurrentMonth
-                        ? 'bg-white border-2 border-emerald-600 text-slate-900 font-bold hover:bg-slate-50 cursor-pointer'
-                        : 'bg-white/80 border border-white/80 hover:bg-white text-slate-800 shadow-xs cursor-pointer'
-                    }`}
-                  >
-                    <span className={`text-[9.5px] font-semibold px-2 py-0.5 rounded-full tracking-wide ${
-                      isBooked
-                        ? 'bg-sky-200 text-sky-900'
-                        : isRequested
-                        ? 'bg-amber-200 text-amber-900 font-bold border border-amber-300'
-                        : isSelected
-                        ? 'bg-white/20 text-white'
-                        : isCurrentMonth
-                        ? 'bg-emerald-50 text-emerald-700'
-                        : 'bg-slate-100 text-slate-600'
-                    }`}>
-                      {isBooked ? 'Booked' : isRequested ? 'Requested' : isSelected ? 'Stay' : isCurrentMonth ? 'This Month' : 'Available'}
-                    </span>
-                    <div className="my-1">
-                      <span className="text-sm sm:text-base font-semibold block leading-tight">{m.monthShort}</span>
-                      <span className={`text-xs font-normal mt-0.5 block ${
-                        isSelected ? 'text-white/90' : isRequested ? 'text-amber-800' : 'text-slate-500'
-                      }`}>{m.year}</span>
-                    </div>
-                  </button>
-                );
-              })}
+                  return (
+                    <button
+                      type="button"
+                      key={m.monthKey}
+                      disabled={isBooked || isRequested}
+                      onClick={() => onToggleSlotMonth && onToggleSlotMonth(m.index)}
+                      title={
+                        isBooked
+                          ? 'Booked'
+                          : isRequested
+                          ? 'Requested (Pending Host Approval)'
+                          : isSelected
+                          ? 'Selected'
+                          : 'Available'
+                      }
+                      className={`relative p-2.5 sm:p-3 rounded-xl border select-none transition-all flex flex-col justify-between items-center text-center outline-none ${
+                        isBooked
+                          ? 'bg-sky-100 border-sky-300 text-sky-900 cursor-not-allowed opacity-90'
+                          : isRequested
+                          ? 'bg-amber-100/90 border-amber-400 text-amber-950 cursor-not-allowed shadow-xs'
+                          : isSelected
+                          ? 'bg-emerald-600 border-emerald-600 text-white font-bold shadow-md cursor-pointer'
+                          : isCurrentMonth
+                          ? 'bg-white border-2 border-emerald-600 text-slate-900 font-bold hover:bg-slate-50 cursor-pointer'
+                          : 'bg-white/80 border border-white/80 hover:bg-white text-slate-800 shadow-xs cursor-pointer'
+                      }`}
+                    >
+                      <span className={`text-[9.5px] font-semibold px-2 py-0.5 rounded-full tracking-wide ${
+                        isBooked
+                          ? 'bg-sky-200 text-sky-900'
+                          : isRequested
+                          ? 'bg-amber-200 text-amber-900 font-bold border border-amber-300'
+                          : isSelected
+                          ? 'bg-white/20 text-white'
+                          : isCurrentMonth
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {isBooked ? 'Booked' : isRequested ? 'Requested' : isSelected ? 'Stay' : isCurrentMonth ? 'This Month' : 'Available'}
+                      </span>
+                      <div className="my-1 flex items-baseline justify-center gap-1.5 whitespace-nowrap">
+                        <span className="text-xs sm:text-[13.5px] font-bold leading-tight tracking-tight">{m.monthShort}</span>
+                        <span className={`text-[11px] sm:text-xs font-medium leading-tight ${
+                          isSelected ? 'text-white/90' : isRequested ? 'text-amber-800' : 'text-slate-500 dark:text-zinc-400'
+                        }`}>{m.year}</span>
+                      </div>
+
+                      {/* Person Occupancy Icons */}
+                      {roomCapacity > 1 && (
+                        <PersonOccupancyGrid
+                          capacity={roomCapacity}
+                          occupiedCount={occupiedCount}
+                          className="py-0.5"
+                          occupiedColor={isSelected ? 'text-white' : 'text-slate-900 dark:text-white'}
+                          vacantColor={isSelected ? 'text-white/70' : 'text-slate-400 dark:text-zinc-500'}
+                          customTitle={`${occupiedCount} of ${roomCapacity} slot${roomCapacity > 1 ? 's' : ''} occupied in ${m.monthShort} ${m.year}`}
+                        />
+                      )}
+                    </button>
+                  );
+                });
+              })()}
             </div>
           </div>
         </div>

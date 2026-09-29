@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useWishlist } from '../../context/WishlistContext';
 import { useBookings } from '../../context/BookingsContext';
-import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { Login } from './Login';
 
 export function Right({ onLoginClick }) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { wishlist, setIsWishlistOpen } = useWishlist();
   const { bookings, setIsBookingsOpen } = useBookings();
-  const { isDark, toggleTheme } = useTheme();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isHost } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -76,50 +77,20 @@ export function Right({ onLoginClick }) {
           )}
         </button>
 
-        {/* 3. Smooth Theme Toggle Button */}
-        <button
-          type="button"
-          onClick={toggleTheme}
-          className="apple-liquid-nav relative w-9 h-9 sm:w-10 sm:h-10 rounded-full text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/15 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0"
-          title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-          aria-label="Toggle Theme Mode"
-        >
-          {isDark ? (
-            <svg
-              className="w-4 h-4 text-amber-400"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="12" r="4" />
-              <path d="M12 2v2" />
-              <path d="M12 20v2" />
-              <path d="m4.93 4.93 1.41 1.41" />
-              <path d="m17.66 17.66 1.41 1.41" />
-              <path d="M2 12h2" />
-              <path d="M20 12h2" />
-              <path d="m6.34 17.66-1.41 1.41" />
-              <path d="m19.07 4.93-1.41 1.41" />
-            </svg>
-          ) : (
-            <svg
-              className="w-4 h-4 text-slate-700"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-            </svg>
-          )}
-        </button>
+        {/* 4. Host Portal Switcher Button (visible on user/explore views) */}
+        {isHost && !location.pathname.startsWith('/host') && (
+          <button
+            type="button"
+            onClick={() => navigate('/host/dashboard')}
+            className="apple-liquid-nav hidden lg:inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 text-xs font-bold transition-all shadow-xs cursor-pointer select-none active:scale-95"
+            title="Switch back to Host Dashboard"
+          >
+            <span>🏡</span>
+            <span>Host Dashboard</span>
+          </button>
+        )}
 
-        {/* 4. Profile / Login Button */}
+        {/* 5. Profile / Login Button */}
         <Login onLoginClick={onLoginClick} />
       </div>
 
@@ -228,51 +199,6 @@ export function Right({ onLoginClick }) {
               )}
             </button>
 
-            {/* 3. Smooth Theme Toggle Button */}
-            <button
-              type="button"
-              onClick={() => {
-                toggleTheme();
-                setMobileMenuOpen(false);
-              }}
-              className="apple-liquid-nav relative w-9 h-9 sm:w-10 sm:h-10 rounded-full text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/15 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0"
-              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              aria-label="Toggle Theme Mode"
-            >
-              {isDark ? (
-                <svg
-                  className="w-4 h-4 text-amber-400"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="12" cy="12" r="4" />
-                  <path d="M12 2v2" />
-                  <path d="M12 20v2" />
-                  <path d="m4.93 4.93 1.41 1.41" />
-                  <path d="m17.66 17.66 1.41 1.41" />
-                  <path d="M2 12h2" />
-                  <path d="M20 12h2" />
-                  <path d="m6.34 17.66-1.41 1.41" />
-                  <path d="m19.07 4.93-1.41 1.41" />
-                </svg>
-              ) : (
-                <svg
-                  className="w-4 h-4 text-slate-700"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-                </svg>
-              )}
-            </button>
 
             {/* 4. Profile / Login Button */}
             <Login onLoginClick={() => {

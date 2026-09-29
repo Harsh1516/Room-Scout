@@ -1,24 +1,19 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useStaySearch } from './hooks/useStaySearch';
 import { Navbar } from './components/Navbar';
-import { LoginModal } from './components/LoginModal';
-import { PropertyModal } from './components/PropertyModal';
-import { BookingModal } from './components/BookingModal';
-import { WishlistDrawer } from './components/WishlistDrawer';
-import { BookedPlacesDrawer } from './components/BookedPlacesDrawer';
-import { LandingPage } from './components/LandingPage';
-import { WishlistProvider } from './context/WishlistContext';
+import { WishlistProvider, useWishlist } from './context/WishlistContext';
 import { BookingsProvider, useBookings } from './context/BookingsContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { adminAPI } from './services/api';
 import { ScrollToTop } from './components/ScrollToTop';
 import { ToastProvider, toast } from './context/ToastContext';
+import { FloatingThemeToggle } from './components/common/FloatingThemeToggle';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 
-import { Homepage } from './pages/Homepage';
-
-// Dynamic Lazy-Loaded Route Chunks
+// Dynamic Lazy-Loaded Page Chunks
+const LandingPage = lazy(() => import('./components/LandingPage').then((m) => ({ default: m.LandingPage })));
+const Homepage = lazy(() => import('./pages/Homepage').then((m) => ({ default: m.Homepage || m.default })));
 const SearchResultsPage = lazy(() => import('./pages/SearchResultsPage').then((m) => ({ default: m.SearchResultsPage })));
 const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage })));
 const DataPage = lazy(() => import('./pages/DataPage').then((m) => ({ default: m.DataPage })));
@@ -29,6 +24,13 @@ const AccountPage = lazy(() => import('./pages/AccountPage').then((m) => ({ defa
 const PropertyDetailPage = lazy(() => import('./pages/PropertyDetailPage').then((m) => ({ default: m.PropertyDetailPage })));
 const RoomAvailabilityPage = lazy(() => import('./pages/RoomAvailabilityPage').then((m) => ({ default: m.RoomAvailabilityPage })));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })));
+
+// Dynamic Lazy-Loaded Interaction Modals & Drawers (Downloaded strictly on first user interaction)
+const LoginModal = lazy(() => import('./components/LoginModal').then((m) => ({ default: m.LoginModal })));
+const PropertyModal = lazy(() => import('./components/PropertyModal').then((m) => ({ default: m.PropertyModal })));
+const BookingModal = lazy(() => import('./components/BookingModal').then((m) => ({ default: m.BookingModal })));
+const WishlistDrawer = lazy(() => import('./components/WishlistDrawer').then((m) => ({ default: m.WishlistDrawer })));
+const BookedPlacesDrawer = lazy(() => import('./components/BookedPlacesDrawer').then((m) => ({ default: m.BookedPlacesDrawer })));
 
 // Simple Page Fallback
 function PageFallback() {
@@ -65,7 +67,8 @@ function ProtectedRoute({ children, requiredRoles = null }) {
 
 function AppContent() {
   const { user, isAuthenticated } = useAuth();
-  const { bookings, addBooking, setIsBookingsOpen } = useBookings();
+  const { bookings, addBooking, setIsBookingsOpen, isBookingsOpen } = useBookings();
+  const { isWishlistOpen } = useWishlist();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [loginRole, setLoginRole] = useState('user');
   const [loginPromptMessage, setLoginPromptMessage] = useState('');
@@ -73,6 +76,33 @@ function AppContent() {
 
   const [selectedStayForDetail, setSelectedStayForDetail] = useState(null);
   const [selectedStayForBooking, setSelectedStayForBooking] = useState(null);
+
+  // On-demand chunk triggers: chunks are ONLY downloaded when the user first triggers the respective modal/drawer
+  const [hasLoadedLogin, setHasLoadedLogin] = useState(false);
+  const [hasLoadedPropertyModal, setHasLoadedPropertyModal] = useState(false);
+  const [hasLoadedBookingModal, setHasLoadedBookingModal] = useState(false);
+  const [hasLoadedWishlist, setHasLoadedWishlist] = useState(false);
+  const [hasLoadedBookedPlaces, setHasLoadedBookedPlaces] = useState(false);
+
+  useEffect(() => {
+    if (isLoginOpen) setHasLoadedLogin(true);
+  }, [isLoginOpen]);
+
+  useEffect(() => {
+    if (selectedStayForDetail) setHasLoadedPropertyModal(true);
+  }, [selectedStayForDetail]);
+
+  useEffect(() => {
+    if (selectedStayForBooking) setHasLoadedBookingModal(true);
+  }, [selectedStayForBooking]);
+
+  useEffect(() => {
+    if (isWishlistOpen) setHasLoadedWishlist(true);
+  }, [isWishlistOpen]);
+
+  useEffect(() => {
+    if (isBookingsOpen) setHasLoadedBookedPlaces(true);
+  }, [isBookingsOpen]);
 
   const {
     filters,
@@ -93,6 +123,7 @@ function AppContent() {
 
   const navigate = useNavigate();
   const location = useLocation();
+
 
   // Post-authentication redirect: ONLY triggers when a deliberate pendingAction was requested
   useEffect(() => {
@@ -134,11 +165,11 @@ function AppContent() {
     return () => window.removeEventListener('auth:account_deleted', handleAccountDeletedEvent);
   }, [navigate]);
 
-  // Handler for Tab 1: Upload Your Property Online
+  // Handler for Tab 1: Upload Your Property Online (HOST ONLY)
   const handleSelectUpload = () => {
     if (!isAuthenticated) {
       setLoginRole('host');
-      setLoginPromptMessage('Host Authentication: Please login or register your Host account.');
+      setLoginPromptMessage('');
       setPendingAction('host-upload');
       setIsLoginOpen(true);
       return;
@@ -146,7 +177,7 @@ function AppContent() {
 
     if (user?.role !== 'host' && user?.role !== 'admin') {
       setLoginRole('host');
-      setLoginPromptMessage('Role Notice: Please login with a Host account to access the Host Portal.');
+      setLoginPromptMessage('You are currently signed in as a Guest. Please log in with your Host account to list properties.');
       setPendingAction('host-upload');
       setIsLoginOpen(true);
       return;
@@ -163,15 +194,24 @@ function AppContent() {
       .catch(() => navigate('/host/dashboard'));
   };
 
-  // Handler for Tab 2: Search Rooms Near You
+  // Handler for Tab 2: Search Rooms Near You (USER / GUEST ONLY)
   const handleSelectSearch = () => {
     if (!isAuthenticated) {
       setLoginRole('user');
-      setLoginPromptMessage('Guest Authentication: Please login or register to search and book rooms.');
+      setLoginPromptMessage('');
       setPendingAction('explore');
       setIsLoginOpen(true);
       return;
     }
+
+    if (user?.role === 'host') {
+      setLoginRole('user');
+      setLoginPromptMessage('You are currently signed in as a Host. Please log in with your Guest account to explore rooms.');
+      setPendingAction('explore');
+      setIsLoginOpen(true);
+      return;
+    }
+
     navigate('/explore');
   };
 
@@ -236,14 +276,16 @@ function AppContent() {
 
   const isNavbarHidden =
     location.pathname === '/' ||
-    location.pathname === '/admin' ||
+    location.pathname === '/enter' ||
     location.pathname === '/data' ||
     location.pathname === '/account' ||
     location.pathname.startsWith('/stay') ||
     location.pathname.startsWith('/host');
 
+  const isHostPage = location.pathname.startsWith('/host');
+
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+    <div className={`min-h-screen ${isHostPage ? 'host-page-scope font-body-md selection:bg-custom-btn-primary selection:text-white' : ''} bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100`}>
       <ScrollToTop />
       {!isNavbarHidden && (
         <Navbar
@@ -312,11 +354,7 @@ function AppContent() {
           />
           <Route
             path="/host/dashboard"
-            element={
-              <ProtectedRoute requiredRoles={['host', 'admin']}>
-                <HostDashboardPage />
-              </ProtectedRoute>
-            }
+            element={<HostDashboardPage />}
           />
           <Route
             path="/host/rooms"
@@ -351,47 +389,70 @@ function AppContent() {
             element={<RoomAvailabilityPage onBookClick={handleOpenBooking} />}
           />
           <Route path="/host" element={<Navigate to="/host/dashboard" replace />} />
-          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/enter" element={<AdminPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
 
-      <LoginModal
-        isOpen={isLoginOpen}
-        onClose={() => {
-          setIsLoginOpen(false);
-          setLoginPromptMessage('');
-        }}
-        initialRole={loginRole}
-        promptMessage={loginPromptMessage}
-      />
+      {hasLoadedLogin && (
+        <Suspense fallback={null}>
+          <LoginModal
+            isOpen={isLoginOpen}
+            onClose={() => {
+              setIsLoginOpen(false);
+              setLoginPromptMessage('');
+            }}
+            initialRole={loginRole}
+            promptMessage={loginPromptMessage}
+          />
+        </Suspense>
+      )}
 
-      <PropertyModal
-        stay={selectedStayForDetail}
-        isOpen={Boolean(selectedStayForDetail)}
-        onClose={() => setSelectedStayForDetail(null)}
-        onBookClick={(stay) => {
-          setSelectedStayForDetail(null);
-          handleOpenBooking(stay);
-        }}
-      />
+      {hasLoadedPropertyModal && (
+        <Suspense fallback={null}>
+          <PropertyModal
+            stay={selectedStayForDetail}
+            isOpen={Boolean(selectedStayForDetail)}
+            onClose={() => setSelectedStayForDetail(null)}
+            onBookClick={(stay) => {
+              setSelectedStayForDetail(null);
+              handleOpenBooking(stay);
+            }}
+          />
+        </Suspense>
+      )}
 
-      <BookingModal
-        stay={selectedStayForBooking}
-        isOpen={Boolean(selectedStayForBooking)}
-        onClose={() => setSelectedStayForBooking(null)}
-        onBookingCreated={handleBookingSuccess}
-      />
+      {hasLoadedBookingModal && (
+        <Suspense fallback={null}>
+          <BookingModal
+            stay={selectedStayForBooking}
+            isOpen={Boolean(selectedStayForBooking)}
+            onClose={() => setSelectedStayForBooking(null)}
+            onBookingCreated={handleBookingSuccess}
+          />
+        </Suspense>
+      )}
 
-      <WishlistDrawer
-        onBookClick={(stay) => handleOpenBooking(stay)}
-        onStayClick={handleOpenDetail}
-      />
+      {hasLoadedWishlist && (
+        <Suspense fallback={null}>
+          <WishlistDrawer
+            onBookClick={(stay) => handleOpenBooking(stay)}
+            onStayClick={handleOpenDetail}
+          />
+        </Suspense>
+      )}
 
-      <BookedPlacesDrawer
-        onLoginClick={() => handleOpenLoginModal('user', 'Sign in to access your booked places')}
-        onStayClick={handleOpenDetail}
-      />
+      {hasLoadedBookedPlaces && (
+        <Suspense fallback={null}>
+          <BookedPlacesDrawer
+            onLoginClick={() => handleOpenLoginModal('user', 'Sign in to access your booked places')}
+            onStayClick={handleOpenDetail}
+          />
+        </Suspense>
+      )}
+
+      {/* Global Floating Theme Toggle (Single source of truth across complete website) */}
+      <FloatingThemeToggle />
     </div>
   );
 }

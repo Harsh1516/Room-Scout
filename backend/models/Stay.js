@@ -15,10 +15,13 @@ const roomSchema = new mongoose.Schema(
   {
     roomNumber: { type: String, required: true, trim: true },
     roomNumInt: { type: Number },
+    rateId: { type: String, default: '', trim: true },
+    categoryIndex: { type: Number },
     type: { type: String, required: true, default: 'Standard' },
     price: { type: mongoose.Schema.Types.Mixed, required: true, default: 0 },
     rateUnit: { type: String, default: '/month' },
     floor: { type: String, default: 'Floor 1' },
+    capacity: { type: Number, default: 1, min: 1, max: 10 },
     status: {
       type: String,
       enum: ['Available', 'Occupied', 'Maintenance', 'Booked'],
@@ -121,11 +124,16 @@ const staySchema = new mongoose.Schema(
     availableRooms: { type: Number, default: 1, min: 0 },
     totalRooms: { type: Number, default: 1, min: 0 },
     roomRates: [
-      {
-        type: { type: String },
-        price: { type: mongoose.Schema.Types.Mixed, default: 0 },
-        rateUnit: { type: String, default: '' },
-      },
+      new mongoose.Schema(
+        {
+          id: { type: String },
+          type: { type: String },
+          price: { type: mongoose.Schema.Types.Mixed, default: 0 },
+          rateUnit: { type: String, default: '' },
+          capacity: { type: Number, default: 1, min: 1, max: 10 },
+        },
+        { _id: false }
+      ),
     ],
     rooms: [roomSchema],
 

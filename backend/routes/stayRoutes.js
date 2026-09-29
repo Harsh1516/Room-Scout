@@ -9,37 +9,53 @@ import {
   deleteReviewFromStay,
   updateStayRooms,
   resolveMapLink,
-  getPropertiesByHost, // <-- 1. Import your new controller
+  getPropertiesByHost,
 } from '../controllers/stayController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, requireHost } from '../middleware/authMiddleware.js';
+import { propertyUploadLimiter, reviewLimiter } from '../middleware/rateLimitMiddleware.js';
+import validate from '../middleware/validateMiddleware.js';
+import { idParamSchema } from '../validators/commonValidator.js';
+import {
+  createStaySchema,
+  resolveMapSchema,
+  reviewSchema,
+  updateReviewSchema,
+  updateStayRoomsSchema,
+  reviewParamsSchema,
+} from '../validators/stayValidator.js';
 
 const router = express.Router();
 
-// Map & Location Resolution
-router.post(['/resolve-map-link', '/resolve-map'], resolveMapLink);
+// Map & Location Resolution (Protected by propertyUploadLimiter against scraping)
+router.post(
+  ['/resolve-map-link', '/resolve-map'],
+  propertyUploadLimiter,
+  validate(resolveMapSchema),
+  resolveMapLink
+);
 
 // Dynamic Room Availability Check
-router.get('/:id/availability', getStayAvailability);
+router.get('/:id/availability', validate({ params: idParamSchema }), getStayAvailability);
 
 // Stay Catalog & Inventory Routes
 router.route('/')
   .get(getAllStays)
-  .post(protect, createStay);
+  .post(propertyUploadLimiter, protect, requireHost, validate(createStaySchema), createStay);
 
 // 🔴 CRITICAL: Place this BEFORE router.route('/:id') so Express doesn't treat 'host' as an ID parameter
-router.get('/host/my-properties', protect, getPropertiesByHost);
+router.get('/host/my-properties', protect, requireHost, getPropertiesByHost);
 
 router.route('/:id')
-  .get(getStayById);
+  .get(validate({ params: idParamSchema }), getStayById);
 
 router.route('/:id/rooms')
-  .put(protect, updateStayRooms);
+  .put(protect, requireHost, validate({ params: idParamSchema, body: updateStayRoomsSchema }), updateStayRooms);
 
 router.route('/:id/reviews')
-  .post(protect, addReviewToStay);
+  .post(reviewLimiter, validate({ params: idParamSchema, body: reviewSchema }), protect, addReviewToStay);
 
 router.route('/:id/reviews/:reviewId')
-  .put(protect, updateReviewInStay)
-  .delete(protect, deleteReviewFromStay);
+  .put(protect, validate({ params: reviewParamsSchema, body: updateReviewSchema }), updateReviewInStay)
+  .delete(protect, validate({ params: reviewParamsSchema }), deleteReviewFromStay);
 
 export default router;

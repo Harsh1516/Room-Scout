@@ -7,31 +7,8 @@ import { Host } from '../models/Host.js';
 import { Booking } from '../models/Booking.js';
 import { Wishlist } from '../models/Wishlist.js';
 import { Payment } from '../models/Payment.js';
-import { generateToken } from '../middleware/authMiddleware.js';
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-const uploadToCloudinary = async (imageString, folder = 'roomscout/properties') => {
-  if (!imageString || typeof imageString !== 'string') return '';
-  if (imageString.startsWith('http://') || imageString.startsWith('https://')) return imageString;
-  if (imageString.startsWith('data:image')) {
-    try {
-      const uploadRes = await cloudinary.uploader.upload(imageString, {
-        folder,
-        resource_type: 'image',
-      });
-      return uploadRes.secure_url;
-    } catch (err) {
-      console.error('Cloudinary upload error:', err.message);
-      return imageString;
-    }
-  }
-  return imageString;
-};
+import { generateToken, isAdminUser } from '../middleware/authMiddleware.js';
+import { uploadSecureImage } from '../utils/imageSecurity.js';
 
 // @desc    Get all users list (Online Accounts + Offline Booking Occupants)
 // @route   GET /api/admin/users
@@ -231,6 +208,21 @@ export const getHosts = async (req, res, next) => {
 export const getHostByEmail = async (req, res, next) => {
   try {
     const cleanEmail = req.params.email.trim().toLowerCase();
+
+    // IDOR Guard: Caller must be admin or accessing their own host account
+    const isAdmin =
+      (req.headers['x-admin-key'] && process.env.ADMIN_KEY && req.headers['x-admin-key'].trim() === process.env.ADMIN_KEY.trim()) ||
+      isAdminUser(req) ||
+      req.isAdminKey;
+
+    const callerEmail = (req.user?.email || req.hostAccount?.email || '').toLowerCase().trim();
+    if (!isAdmin && cleanEmail !== callerEmail) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: You are not authorized to view another host account profile.',
+      });
+    }
+
     const host = await Host.findOne({ email: cleanEmail }).lean();
 
     if (!host) {
@@ -327,9 +319,23 @@ export const createHost = async (req, res, next) => {
       status,
     } = req.body;
 
-    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanEmail = (email || req.user?.email || '').trim().toLowerCase();
     if (!cleanEmail) {
       return res.status(400).json({ success: false, message: 'Host email is required.' });
+    }
+
+    // IDOR Guard: Non-admins cannot create or overwrite properties under another host's email
+    const isAdmin =
+      (req.headers['x-admin-key'] && process.env.ADMIN_KEY && req.headers['x-admin-key'].trim() === process.env.ADMIN_KEY.trim()) ||
+      isAdminUser(req) ||
+      req.isAdminKey;
+
+    const callerEmail = (req.user?.email || req.hostAccount?.email || '').toLowerCase().trim();
+    if (!isAdmin && cleanEmail !== callerEmail) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: You can only publish or update listings for your own host account.',
+      });
     }
 
     let host = await Host.findOne({ email: cleanEmail });
@@ -355,10 +361,10 @@ export const createHost = async (req, res, next) => {
 
     const existingStay = await Stay.findOne({ hostId: host._id });
 
-    const cleanPrimaryImage = await uploadToCloudinary(image);
+    const cleanPrimaryImage = await uploadSecureImage(image, 'roomscout/properties');
     let processedImages = [];
     if (Array.isArray(images) && images.length > 0) {
-      processedImages = await Promise.all(images.map((img) => uploadToCloudinary(img)));
+      processedImages = await Promise.all(images.map((img) => uploadSecureImage(img, 'roomscout/properties')));
     } else if (cleanPrimaryImage) {
       processedImages = [cleanPrimaryImage];
     } else if (existingStay?.images?.length > 0) {
@@ -416,7 +422,13 @@ export const createHost = async (req, res, next) => {
     const resolvedRoomRates =
       roomRates !== undefined
         ? Array.isArray(roomRates)
-          ? roomRates
+          ? roomRates.map((rr, idx) => ({
+              id: rr.id || rr._id?.toString() || `rate_${idx}`,
+              type: rr.type,
+              price: rr.price,
+              rateUnit: rr.rateUnit,
+              capacity: Number(rr.capacity) || 1,
+            }))
           : []
         : (existingStay?.roomRates || []);
 
@@ -428,11 +440,19 @@ export const createHost = async (req, res, next) => {
         : (existingStay?.rooms || []);
 
     const cleanedRooms = (Array.isArray(resolvedRooms) ? resolvedRooms : []).map((rm) => ({
+      ...(rm._id && mongoose.Types.ObjectId.isValid(rm._id)
+        ? { _id: rm._id }
+        : rm.id && mongoose.Types.ObjectId.isValid(rm.id)
+        ? { _id: rm.id }
+        : {}),
       roomNumber: rm.roomNumber,
       roomNumInt: rm.roomNumInt || parseInt(String(rm.roomNumber).replace(/\D/g, ''), 10) || 0,
+      rateId: rm.rateId || '',
+      categoryIndex: typeof rm.categoryIndex === 'number' ? rm.categoryIndex : undefined,
       type: rm.type || 'Standard',
       price: rm.price || 0,
       rateUnit: rm.rateUnit || '/month',
+      capacity: Number(rm.capacity) || 1,
       floor: rm.floor || 'Floor 1',
       status: rm.status || 'Available',
     }));
@@ -590,6 +610,21 @@ export const rejectHost = async (req, res, next) => {
 export const getHostGuests = async (req, res, next) => {
   try {
     const cleanEmail = req.params.email.trim().toLowerCase();
+
+    // IDOR Guard: Verify caller is admin or querying their own guest roster
+    const isAdmin =
+      (req.headers['x-admin-key'] && process.env.ADMIN_KEY && req.headers['x-admin-key'].trim() === process.env.ADMIN_KEY.trim()) ||
+      isAdminUser(req) ||
+      req.isAdminKey;
+
+    const callerEmail = (req.user?.email || req.hostAccount?.email || '').toLowerCase().trim();
+    if (!isAdmin && cleanEmail !== callerEmail) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: You are not authorized to view guest records for another host.',
+      });
+    }
+
     const host = await Host.findOne({ email: cleanEmail }).lean();
 
     if (!host) {

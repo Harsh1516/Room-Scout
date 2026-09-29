@@ -277,45 +277,45 @@ export const wishlistAPI = {
 };
 
 export const adminAPI = {
-  getUsers: () => request('/admin/users'),
+  getUsers: () => request('/enter/users'),
 
   deleteUser: (id) =>
-    request(`/admin/users/${encodeURIComponent(id)}`, {
+    request(`/enter/users/${encodeURIComponent(id)}`, {
       method: 'DELETE',
     }),
 
-  getHosts: () => request('/admin/hosts'),
+  getHosts: () => request('/enter/hosts'),
 
-  getHostByEmail: (email) => request(`/admin/hosts/by-email/${encodeURIComponent(email)}`),
+  getHostByEmail: (email) => request(`/enter/hosts/by-email/${encodeURIComponent(email)}`),
 
   createHost: (hostData) =>
-    request('/admin/hosts', {
+    request('/enter/hosts', {
       method: 'POST',
       body: JSON.stringify(hostData),
     }),
 
   approveHost: (id) =>
-    request(`/admin/hosts/${id}/approve`, {
+    request(`/enter/hosts/${id}/approve`, {
       method: 'PUT',
     }),
 
   rejectHost: (id) =>
-    request(`/admin/hosts/${id}/reject`, {
+    request(`/enter/hosts/${id}/reject`, {
       method: 'PUT',
     }),
 
   getHostGuests: (email) =>
-    request(`/admin/hosts/my-guests/${encodeURIComponent(email)}`),
+    request(`/enter/hosts/my-guests/${encodeURIComponent(email)}`),
 
   deleteHost: (id) =>
-    request(`/admin/hosts/${id}`, {
+    request(`/enter/hosts/${id}`, {
       method: 'DELETE',
     }),
 
-  getStats: () => request('/admin/stats'),
+  getStats: () => request('/enter/stats'),
 
   impersonate: ({ email, role, id }) =>
-    request('/admin/impersonate', {
+    request('/enter/impersonate', {
       method: 'POST',
       body: JSON.stringify({ email, role, id }),
     }),

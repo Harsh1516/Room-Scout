@@ -135,3 +135,100 @@ export function getDatesForMonthKeys(monthKeys = []) {
   return dates;
 }
 
+/**
+ * Retrieves all valid occupants/guests assigned to a specific room for a target month (YYYY-MM).
+ */
+export function getOccupantsForRoomInMonth(room, targetMonthKey, guests = []) {
+  if (!room || !targetMonthKey || !Array.isArray(guests)) return [];
+  const rawRoomNum = String(room.roomNumber || '').replace(/[^0-9]/g, '');
+  if (!rawRoomNum) return [];
+
+  const [mY, mM] = targetMonthKey.split('-').map(Number);
+  if (!mY || !mM) return [];
+  const monthStart = new Date(Date.UTC(mY, mM - 1, 1, 0, 0, 0)).getTime();
+  const monthEnd = new Date(Date.UTC(mY, mM, 0, 23, 59, 59)).getTime();
+
+  return guests.filter((g) => {
+    if (!g) return false;
+    const status = String(g.status || '').toUpperCase();
+    if (status === 'CANCELLED' || status === 'REJECTED' || status === 'CHECKED_OUT' || status.includes('PENDING')) return false;
+
+    const gNum = String(g.roomNumber || '').replace(/[^0-9]/g, '');
+    if (!gNum || gNum !== rawRoomNum) return false;
+
+    // Check direct bookedMonths array
+    if (Array.isArray(g.bookedMonths) && g.bookedMonths.includes(targetMonthKey)) {
+      return true;
+    }
+
+    // Check checkIn / checkOut range
+    if (g.checkIn && g.checkOut) {
+      const inTime = new Date(g.checkIn).getTime();
+      const outTime = new Date(g.checkOut).getTime();
+      if (!isNaN(inTime) && !isNaN(outTime)) {
+        return inTime < monthEnd && outTime > monthStart;
+      }
+    }
+
+    // Check bookedDates
+    if (Array.isArray(g.bookedDates) && g.bookedDates.some((d) => String(d).startsWith(targetMonthKey))) {
+      return true;
+    }
+
+    return false;
+  });
+}
+
+/**
+ * Counts total persons occupying a room in a target month (summing adults/persons, minimum 1 per booking).
+ */
+export function getRoomOccupiedCountInMonth(room, targetMonthKey, guests = []) {
+  const occupants = getOccupantsForRoomInMonth(room, targetMonthKey, guests);
+  return occupants.reduce((sum, g) => sum + (Number(g.adults) || 1), 0);
+}
+
+/**
+ * Checks if a room is fully occupied in a target month against its capacity.
+ */
+export function isRoomOccupiedInMonth(room, targetMonthKey, guests = []) {
+  const capacity = Math.max(1, Number(room?.capacity) || 1);
+  const occupiedCount = getRoomOccupiedCountInMonth(room, targetMonthKey, guests);
+  return occupiedCount >= capacity;
+}
+
+/**
+ * Checks if a room is partially occupied (some slots booked, but room not full).
+ */
+export function isRoomPartiallyOccupiedInMonth(room, targetMonthKey, guests = []) {
+  const capacity = Math.max(1, Number(room?.capacity) || 1);
+  const occupiedCount = getRoomOccupiedCountInMonth(room, targetMonthKey, guests);
+  return occupiedCount > 0 && occupiedCount < capacity;
+}
+
+/**
+ * Robustly matches whether a room object matches a given identifier.
+ * Matches on room.id, room._id, room.roomNumber, room_ prefix, and raw digits.
+ */
+export function isSameRoom(room, identifier) {
+  if (!room || identifier === undefined || identifier === null) return false;
+  const idStr = String(identifier).trim();
+  if (!idStr) return false;
+
+  // Direct match on id or _id
+  if (room.id && String(room.id).trim() === idStr) return true;
+  if (room._id && String(room._id).trim() === idStr) return true;
+
+  // Direct match on roomNumber
+  const rNum = String(room.roomNumber || '').trim();
+  if (rNum && rNum === idStr) return true;
+  if (rNum && `room_${rNum}` === idStr) return true;
+  if (room.id && `room_${String(room.id).trim()}` === idStr) return true;
+
+  // Numeric digit extraction match (e.g. "room_106" vs "106" or "Room 106")
+  const rDigits = rNum.replace(/[^0-9]/g, '');
+  const idDigits = idStr.replace(/[^0-9]/g, '');
+  if (rDigits && idDigits && rDigits === idDigits) return true;
+
+  return false;
+}
+

@@ -9,20 +9,20 @@ export function VisitedSubNavbar({
   onResetFilter,
 }) {
   return (
-    <div className="rounded-3xl bg-white/90 backdrop-blur-xl border border-slate-200/90 p-4 sm:p-5 shadow-xs space-y-4 transition-all">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/80 pb-3.5">
+    <div className="rounded-2xl sm:rounded-3xl bg-white/95 dark:bg-zinc-900/90 border border-emerald-200/80 dark:border-zinc-800 p-4 sm:p-5 shadow-md shadow-emerald-950/[0.03] space-y-4 transition-all">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-zinc-800 pb-3.5">
         <div>
-          <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+          <h2 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">
             Guest Management &amp; Reservations
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
             Review guest booking requests, manage daily check-ins, and monitor check-outs.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-medium text-slate-500">
-            Today: <strong className="text-slate-800">
+          <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
+            Today: <strong className="text-slate-800 dark:text-zinc-200">
               {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
             </strong>
           </span>

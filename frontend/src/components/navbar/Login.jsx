@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
 import { toast } from '../../context/ToastContext';
 
 function getInitials(name) {
@@ -19,7 +18,6 @@ export function Login({ onLoginClick }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isAuthenticated, isHost, logout } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
 
   // Dropdown menu state
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -72,6 +70,7 @@ export function Login({ onLoginClick }) {
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [dropdownOpen]);
+
 
   const handleLogout = () => {
     setActiveModal(null);
@@ -128,7 +127,7 @@ export function Login({ onLoginClick }) {
           </span>
         </button>
 
-        {/* Small Sleek Dropdown Menu Tab (Same Liquid Glass Effect as Console) */}
+        {/* Small Sleek Dropdown Menu Tab (Pure White Background with No Transparency) */}
         <AnimatePresence>
           {dropdownOpen && (
             <motion.div
@@ -136,11 +135,11 @@ export function Login({ onLoginClick }) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -4 }}
               transition={{ duration: 0.12 }}
-              style={{ transformOrigin: 'top right' }}
-              className="apple-profile-dropdown absolute right-0 top-11 sm:top-14 w-56 sm:w-72 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3.5 z-50 space-y-1.5 sm:space-y-2 select-none origin-top-right will-change-transform"
+              style={{ transformOrigin: 'top right', backgroundColor: '#ffffff', opacity: 1 }}
+              className="apple-profile-dropdown absolute right-0 top-11 sm:top-14 w-56 sm:w-72 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3.5 z-50 space-y-1.5 sm:space-y-2 select-none origin-top-right will-change-transform bg-white border border-slate-200/90 shadow-2xl"
             >
               {/* User Header Profile Card */}
-              <div className="flex items-center gap-3 pb-2.5 border-b border-slate-200/60 dark:border-white/10">
+              <div className="flex items-center gap-3 pb-2.5 border-b border-slate-200">
                 <div
                   className={`w-9 h-9 rounded-xl text-white font-bold text-xs flex items-center justify-center shadow-md shrink-0 ${
                     isHost
@@ -151,17 +150,17 @@ export function Login({ onLoginClick }) {
                   {initials}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+                  <div className="font-semibold text-xs sm:text-sm text-slate-900 truncate">
                     {user.name}
                   </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate font-normal">
+                  <div className="text-[11px] text-slate-500 truncate font-normal">
                     {user.email}
                   </div>
                   <div
                     className={`inline-flex items-center gap-1 text-[9px] font-semibold px-2 py-0.5 mt-0.5 rounded-full border ${
                       isHost
-                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-                        : 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-cyan-50 text-cyan-700 border-cyan-200'
                     }`}
                   >
                     <span>{isHost ? '🏡 Host' : '🎓 Guest'}</span>
@@ -169,8 +168,56 @@ export function Login({ onLoginClick }) {
                 </div>
               </div>
 
-              {/* 5 Core Feature Buttons with Matching Transparent Crystal Glass Styling & Smooth Hover Effects */}
+              {/* Core Feature Buttons with Solid Opaque Styling & Smooth Hover Effects */}
               <div className="space-y-1.5">
+                {/* Host Dual-Mode Portal Switcher */}
+                {isHost && (
+                  location.pathname.startsWith('/host') ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDropdownOpen(false);
+                        navigate('/explore');
+                      }}
+                      className="group w-full text-left p-2.5 rounded-2xl text-xs font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-800 hover:border-sky-400 hover:shadow-xs"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-xl bg-sky-500/10 text-sky-600 flex items-center justify-center border border-sky-500/20 group-hover:scale-110 group-hover:bg-sky-500/20 transition-all duration-150">
+                          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                          </svg>
+                        </div>
+                        <span>Explore Stays</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 group-hover:text-sky-600 font-semibold group-hover:translate-x-0.5 transition-all duration-150">
+                        Browse →
+                      </span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDropdownOpen(false);
+                        navigate('/host/dashboard');
+                      }}
+                      className="group w-full text-left p-2.5 rounded-2xl text-xs font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-800 hover:border-emerald-400 hover:shadow-xs"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center border border-emerald-500/20 group-hover:scale-110 group-hover:bg-emerald-500/20 transition-all duration-150">
+                          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                            <polyline points="9 22 9 12 15 12 15 22" />
+                          </svg>
+                        </div>
+                        <span>Host Dashboard</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 group-hover:text-emerald-600 font-semibold group-hover:translate-x-0.5 transition-all duration-150">
+                        Manage →
+                      </span>
+                    </button>
+                  )
+                )}
                 {/* 1. Account Button */}
                 <button
                   type="button"
@@ -180,12 +227,12 @@ export function Login({ onLoginClick }) {
                   }}
                   className={`group w-full text-left p-2.5 rounded-2xl text-xs font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 ${
                     location.pathname === '/account'
-                      ? 'bg-cyan-500/15 border border-cyan-500/40 text-cyan-900 dark:text-cyan-100 shadow-xs'
-                      : 'bg-white/8 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-slate-800 dark:text-slate-200 hover:bg-white/40 dark:hover:bg-white/10 hover:border-cyan-500/40 hover:shadow-xs'
+                      ? 'bg-cyan-50 border border-cyan-300 text-cyan-950 shadow-xs'
+                      : 'bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-800 hover:border-cyan-400 hover:shadow-xs'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center border border-cyan-500/20 group-hover:scale-110 group-hover:bg-cyan-500/20 transition-all duration-150">
+                    <div className="w-7 h-7 rounded-xl bg-cyan-500/10 text-cyan-600 flex items-center justify-center border border-cyan-500/20 group-hover:scale-110 group-hover:bg-cyan-500/20 transition-all duration-150">
                       <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
                         <circle cx="12" cy="7" r="4" />
@@ -193,7 +240,7 @@ export function Login({ onLoginClick }) {
                     </div>
                     <span>Account</span>
                   </div>
-                  <span className="text-[10px] text-slate-400 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 font-semibold group-hover:translate-x-0.5 transition-all duration-150">
+                  <span className="text-[10px] text-slate-400 group-hover:text-cyan-600 font-semibold group-hover:translate-x-0.5 transition-all duration-150">
                     Manage →
                   </span>
                 </button>
@@ -207,12 +254,12 @@ export function Login({ onLoginClick }) {
                   }}
                   className={`group w-full text-left p-2.5 rounded-2xl text-xs font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 ${
                     activeModal === 'settings'
-                      ? 'bg-slate-500/15 border border-slate-400/40 text-slate-900 dark:text-slate-100 shadow-xs'
-                      : 'bg-white/8 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-slate-800 dark:text-slate-200 hover:bg-white/40 dark:hover:bg-white/10 hover:border-slate-300/80 dark:hover:border-white/20 hover:shadow-xs'
+                      ? 'bg-slate-100 border border-slate-300 text-slate-900 shadow-xs'
+                      : 'bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-800 hover:border-slate-300 hover:shadow-xs'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-xl bg-slate-500/10 text-slate-600 dark:text-slate-300 flex items-center justify-center border border-slate-400/20 group-hover:rotate-45 group-hover:scale-110 transition-all duration-200">
+                    <div className="w-7 h-7 rounded-xl bg-slate-500/10 text-slate-600 flex items-center justify-center border border-slate-400/20 group-hover:rotate-45 group-hover:scale-110 transition-all duration-200">
                       <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="3" />
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
@@ -220,7 +267,7 @@ export function Login({ onLoginClick }) {
                     </div>
                     <span>Settings</span>
                   </div>
-                  <span className="text-[10px] text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 font-semibold transition-colors">Options</span>
+                  <span className="text-[10px] text-slate-400 group-hover:text-slate-600 font-semibold transition-colors">Options</span>
                 </button>
 
                 {/* 3. Updates Button */}
@@ -232,12 +279,12 @@ export function Login({ onLoginClick }) {
                   }}
                   className={`group w-full text-left p-2.5 rounded-2xl text-xs font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 ${
                     activeModal === 'updates'
-                      ? 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-900 dark:text-emerald-100 shadow-xs'
-                      : 'bg-white/8 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-slate-800 dark:text-slate-200 hover:bg-white/40 dark:hover:bg-white/10 hover:border-emerald-500/40 hover:shadow-xs'
+                      ? 'bg-emerald-50 border border-emerald-300 text-emerald-950 shadow-xs'
+                      : 'bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-800 hover:border-emerald-400 hover:shadow-xs'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20 group-hover:scale-110 group-hover:bg-emerald-500/20 transition-all duration-150">
+                    <div className="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center border border-emerald-500/20 group-hover:scale-110 group-hover:bg-emerald-500/20 transition-all duration-150">
                       <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
                         <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
@@ -245,7 +292,7 @@ export function Login({ onLoginClick }) {
                     </div>
                     <span>Updates</span>
                   </div>
-                  <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px] font-black border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-colors">
+                  <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/10 text-emerald-600 text-[9px] font-black border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-colors">
                     v2.4
                   </span>
                 </button>
@@ -259,12 +306,12 @@ export function Login({ onLoginClick }) {
                   }}
                   className={`group w-full text-left p-2.5 rounded-2xl text-xs font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 ${
                     activeModal === 'notifications'
-                      ? 'bg-amber-500/15 border border-amber-500/40 text-amber-900 dark:text-amber-100 shadow-xs'
-                      : 'bg-white/8 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-slate-800 dark:text-slate-200 hover:bg-white/40 dark:hover:bg-white/10 hover:border-amber-500/40 hover:shadow-xs'
+                      ? 'bg-amber-50 border border-amber-300 text-amber-950 shadow-xs'
+                      : 'bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-800 hover:border-amber-400 hover:shadow-xs'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20 group-hover:scale-110 group-hover:bg-amber-500/20 transition-all duration-150">
+                    <div className="w-7 h-7 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center border border-amber-500/20 group-hover:scale-110 group-hover:bg-amber-500/20 transition-all duration-150">
                       <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
                         <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
@@ -277,24 +324,25 @@ export function Login({ onLoginClick }) {
                       {unreadCount}
                     </span>
                   ) : (
-                    <span className="text-[10px] text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors">All read</span>
+                    <span className="text-[10px] text-slate-400 group-hover:text-slate-600 font-semibold transition-colors">All read</span>
                   )}
                 </button>
               </div>
 
-              {/* 5. Logout Button */}
-              <div className="pt-1 border-t border-slate-200/60 dark:border-white/10">
+              {/* 5. Switch Account & Logout */}
+              {/* Logout Button */}
+              <div className="pt-1 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => {
                     setDropdownOpen(false);
                     setActiveModal('logout');
                   }}
-                  className="group w-full p-2.5 rounded-2xl text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 flex items-center justify-between cursor-pointer active:scale-98 hover:bg-rose-500/20 hover:border-rose-500/40 hover:shadow-xs transition-all duration-150 focus:outline-none focus:ring-0"
+                  className="group w-full p-2.5 rounded-2xl text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 flex items-center justify-between cursor-pointer active:scale-98 hover:bg-rose-100 hover:border-rose-300 hover:shadow-xs transition-all duration-150 focus:outline-none focus:ring-0"
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-xl bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-500/25 group-hover:scale-110 group-hover:bg-rose-500/25 transition-all duration-150">
-                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <div className="w-7 h-7 rounded-xl bg-rose-500/15 text-rose-600 flex items-center justify-center border border-rose-500/25 group-hover:scale-110 group-hover:bg-rose-500/25 transition-all duration-150">
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                         <polyline points="16 17 21 12 16 7" />
                         <line x1="21" y1="12" x2="9" y2="12" />
@@ -412,33 +460,6 @@ export function Login({ onLoginClick }) {
                   </div>
 
                   <div className="space-y-3">
-                    {/* Dark / Light Mode Switch */}
-                    <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg">{isDark ? '🌙' : '☀️'}</span>
-                        <div>
-                          <div className="text-xs font-bold text-slate-900 dark:text-white">Theme Appearance</div>
-                          <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                            {isDark ? 'Currently in Dark Mode' : 'Currently in Light Mode'}
-                          </div>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={toggleTheme}
-                        className={`w-12 h-6 flex items-center rounded-full p-0.5 transition-colors cursor-pointer ${
-                          isDark ? 'bg-emerald-600' : 'bg-slate-300'
-                        }`}
-                      >
-                        <motion.div
-                          layout
-                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                          className={`bg-white w-5 h-5 rounded-full shadow-md ${
-                            isDark ? 'translate-x-6' : 'translate-x-0'
-                          }`}
-                        />
-                      </button>
-                    </div>
 
                     {/* Booking Notifications Toggle */}
                     <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">

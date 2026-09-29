@@ -1,14 +1,37 @@
+import { lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { HeroSection } from '../components/homepage/HeroSection';
-import { LeftPropertiesPanel } from '../components/homepage/LeftPropertiesPanel';
 import { RecentlyAdded } from '../components/homepage/RecentlyAdded';
 import { VerificationPipeline } from '../components/homepage/VerificationPipeline';
-import { GuestReviews } from '../components/homepage/GuestReviews';
-import { HostRevenueCalculator } from '../components/homepage/HostRevenueCalculator';
-import { Features } from '../components/homepage/Features';
-import { FAQSection } from '../components/homepage/FAQSection';
-import { HomepageFooter } from '../components/homepage/HomepageFooter';
 import { useNavigate } from 'react-router-dom';
+
+// Dynamic On-Demand Imports for Off-Screen & Heavy Homepage Modules
+const LeftPropertiesPanel = lazy(() =>
+  import('../components/homepage/LeftPropertiesPanel').then((m) => ({ default: m.LeftPropertiesPanel }))
+);
+const GuestReviews = lazy(() =>
+  import('../components/homepage/GuestReviews').then((m) => ({ default: m.GuestReviews }))
+);
+const HostRevenueCalculator = lazy(() =>
+  import('../components/homepage/HostRevenueCalculator').then((m) => ({ default: m.HostRevenueCalculator }))
+);
+const Features = lazy(() =>
+  import('../components/homepage/Features').then((m) => ({ default: m.Features }))
+);
+const FAQSection = lazy(() =>
+  import('../components/homepage/FAQSection').then((m) => ({ default: m.FAQSection }))
+);
+const HomepageFooter = lazy(() =>
+  import('../components/homepage/HomepageFooter').then((m) => ({ default: m.HomepageFooter }))
+);
+
+function SectionSkeleton({ height = 'h-48' }) {
+  return (
+    <div className={`w-full max-w-7xl mx-auto ${height} my-6 rounded-3xl bg-slate-200/40 dark:bg-slate-900/40 animate-pulse border border-slate-200/50 dark:border-slate-800/50 flex items-center justify-center`}>
+      <div className="w-6 h-6 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin" />
+    </div>
+  );
+}
 
 export function Homepage({ setCategoryFilter, onStayClick, onBookClick }) {
   const navigate = useNavigate();
@@ -71,7 +94,9 @@ export function Homepage({ setCategoryFilter, onStayClick, onBookClick }) {
       </div>
 
       {/* ── Dedicated Left Properties Panel (With Left Side Non-Border) ── */}
-      <LeftPropertiesPanel onSelectCategory={handleSelectCategory} />
+      <Suspense fallback={null}>
+        <LeftPropertiesPanel onSelectCategory={handleSelectCategory} />
+      </Suspense>
 
       {/* ── Page Content Layer (Elevated above the screen-height background) ── */}
       <motion.div
@@ -80,29 +105,39 @@ export function Homepage({ setCategoryFilter, onStayClick, onBookClick }) {
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
         className="relative z-10"
       >
-        {/* 1. Clean Modern Hero Section */}
+        {/* 1. Clean Modern Hero Section (Above the fold) */}
         <HeroSection />
 
-        {/* 4. Recently Added Verified Listings */}
+        {/* 2. Recently Added Verified Listings (Above the fold) */}
         <RecentlyAdded onStayClick={onStayClick} onBookClick={onBookClick} />
 
-        {/* 5. 3-Step Trust Protocol & Verification Pipeline */}
+        {/* 3. 3-Step Trust Protocol & Verification Pipeline */}
         <VerificationPipeline />
 
-        {/* 6. Verified Guest & Student Reviews */}
-        <GuestReviews />
+        {/* 4. Verified Guest & Student Reviews (Below-the-fold dynamic chunk) */}
+        <Suspense fallback={<SectionSkeleton height="h-72" />}>
+          <GuestReviews />
+        </Suspense>
 
-        {/* 7. Interactive Host Revenue & Zero-Brokerage Savings Calculator */}
-        <HostRevenueCalculator />
+        {/* 5. Interactive Host Revenue & Zero-Brokerage Savings Calculator */}
+        <Suspense fallback={<SectionSkeleton height="h-80" />}>
+          <HostRevenueCalculator />
+        </Suspense>
 
-        {/* 8. Platform Core Pillars & Features */}
-        <Features />
+        {/* 6. Platform Core Pillars & Features */}
+        <Suspense fallback={<SectionSkeleton height="h-64" />}>
+          <Features />
+        </Suspense>
 
-        {/* 9. Frequently Asked Questions */}
-        <FAQSection />
+        {/* 7. Frequently Asked Questions */}
+        <Suspense fallback={<SectionSkeleton height="h-64" />}>
+          <FAQSection />
+        </Suspense>
 
-        {/* 10. Minimalist Footer */}
-        <HomepageFooter />
+        {/* 8. Minimalist Footer */}
+        <Suspense fallback={<div className="h-16 bg-slate-900/50" />}>
+          <HomepageFooter />
+        </Suspense>
       </motion.div>
     </main>
   );

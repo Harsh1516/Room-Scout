@@ -32,29 +32,29 @@ export function HostBookingForm({
   onClearRequestedBooking = null,
 }) {
   return (
-    <div className="rounded-3xl bg-white/70 backdrop-blur-xl border border-white/80 p-4 sm:p-5 space-y-3 shadow-[0_12px_32px_rgba(31,38,135,0.06),_inset_0_1px_2px_rgba(255,255,255,0.95)] text-slate-800 transition-all">
+    <div className="rounded-2xl sm:rounded-3xl bg-white/95 dark:bg-zinc-900/90 border border-emerald-200/80 dark:border-zinc-800 p-4 sm:p-5 space-y-3 shadow-md shadow-emerald-950/[0.03] text-slate-800 dark:text-zinc-200 transition-all">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-white/60 pb-2.5">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border ${
+      <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-zinc-800 pb-2.5">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-md ${
             isUserRequestSelection
-              ? 'bg-purple-600 text-white border-purple-500'
-              : 'bg-emerald-50 text-emerald-600 border-emerald-200'
+              ? 'bg-purple-600 text-white shadow-purple-600/20'
+              : 'bg-gradient-to-br from-emerald-600 to-teal-600 text-white shadow-emerald-600/20'
           }`}>
-            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
           </div>
           <div className="min-w-0">
-            <h3 className="text-xs sm:text-[13px] font-semibold text-slate-900 truncate">
+            <h3 className="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white truncate">
               {isUserRequestSelection ? 'Review & Approve Request' : 'Guest Details & Booking'}
             </h3>
           </div>
         </div>
-        <span className={`text-[10.5px] font-semibold px-2 py-0.5 rounded-md border shadow-xs ${
+        <span className={`text-[10.5px] font-semibold px-2 py-0.5 rounded-md border shadow-2xs ${
           isUserRequestSelection
-            ? 'bg-purple-100 text-purple-700 border-purple-200'
-            : 'bg-white/80 border-white/80 text-slate-700'
+            ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800'
+            : 'bg-slate-100 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300'
         }`}>
           {isUserRequestSelection ? 'Online Request' : 'Step 3'}
         </span>
@@ -105,10 +105,10 @@ export function HostBookingForm({
               value={hostUserName}
               onChange={handleHostNameChange}
               placeholder="Guest full name"
-              className={`w-full px-3 py-1.5 rounded-xl text-xs font-medium placeholder:text-slate-400 placeholder:font-normal shadow-xs transition-all ${
+              className={`w-full px-3 py-1.5 rounded-xl text-xs font-medium placeholder:text-slate-400 placeholder:font-normal shadow-2xs transition-all ${
                 isUserRequestSelection
-                  ? 'bg-purple-50/70 border border-purple-200/80 text-slate-800 cursor-not-allowed select-none font-semibold'
-                  : 'bg-white/80 border border-white/80 text-slate-900 focus:outline-none focus:bg-white focus:border-emerald-500'
+                  ? 'bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-800 text-slate-800 dark:text-zinc-200 cursor-not-allowed select-none font-semibold'
+                  : 'bg-slate-50/90 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/80 text-slate-900 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-zinc-800 focus:border-emerald-500'
               }`}
             />
           </div>
@@ -120,15 +120,15 @@ export function HostBookingForm({
                 <span className="text-[10px] font-semibold text-purple-700 uppercase">Read-Only</span>
               )}
             </label>
-            <div className={`flex items-center rounded-xl border overflow-hidden shadow-xs transition-all ${
+            <div className={`flex items-center rounded-xl border overflow-hidden shadow-2xs transition-all ${
               isUserRequestSelection
-                ? 'bg-purple-50/70 border-purple-200/80 cursor-not-allowed'
-                : 'bg-white/80 border-white/80 focus-within:border-emerald-500 focus-within:bg-white'
+                ? 'bg-purple-50/70 dark:bg-purple-950/30 border-purple-200/80 dark:border-purple-800 cursor-not-allowed'
+                : 'bg-slate-50/90 dark:bg-zinc-800/80 border-slate-200/80 dark:border-zinc-700/80 focus-within:border-emerald-500 focus-within:bg-white dark:focus-within:bg-zinc-800'
             }`}>
               <div className={`px-3 py-1.5 border-r text-xs font-semibold select-none shrink-0 ${
                 isUserRequestSelection
-                  ? 'bg-purple-100/80 border-purple-200 text-purple-700'
-                  : 'bg-white/90 border-white/80 text-slate-700'
+                  ? 'bg-purple-100/80 dark:bg-purple-900/40 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300'
+                  : 'bg-slate-100 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300'
               }`}>
                 +91
               </div>
@@ -142,7 +142,7 @@ export function HostBookingForm({
                 onChange={handleHostPhoneChange}
                 placeholder="10-digit mobile number"
                 className={`w-full px-2.5 py-1.5 bg-transparent text-xs font-medium focus:outline-none placeholder:text-slate-400 placeholder:font-normal ${
-                  isUserRequestSelection ? 'text-slate-800 cursor-not-allowed font-semibold' : 'text-slate-900'
+                  isUserRequestSelection ? 'text-slate-800 dark:text-zinc-200 cursor-not-allowed font-semibold' : 'text-slate-900 dark:text-white'
                 }`}
               />
             </div>
@@ -160,14 +160,14 @@ export function HostBookingForm({
                       type="button"
                       disabled={!isPropertyApproved || isUserRequestSelection}
                       onClick={() => setHostGender(g)}
-                      className={`h-[32px] rounded-xl text-xs font-semibold flex items-center justify-center transition-all border shadow-xs ${
+                      className={`h-[32px] rounded-xl text-xs font-semibold flex items-center justify-center transition-all border shadow-2xs ${
                         isUserRequestSelection
                           ? isSelected
                             ? 'bg-purple-600 text-white border-purple-600 cursor-not-allowed'
                             : 'bg-white/40 text-slate-400 border-slate-200 cursor-not-allowed opacity-50'
                           : isSelected
-                          ? 'bg-emerald-600 text-white border-emerald-600 cursor-pointer'
-                          : 'bg-white/70 text-slate-700 border-white/80 hover:bg-white cursor-pointer'
+                          ? 'bg-emerald-600 dark:bg-emerald-500 text-white dark:text-zinc-950 border-emerald-600 cursor-pointer'
+                          : 'bg-slate-50 dark:bg-zinc-800/80 text-slate-700 dark:text-zinc-300 border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-700 cursor-pointer'
                       }`}
                     >
                       {g}
@@ -184,50 +184,50 @@ export function HostBookingForm({
                   <span className="text-[10px] font-semibold text-purple-700 uppercase">Read-Only</span>
                 )}
               </label>
-              <div className={`flex items-center justify-between h-[34px] px-3 rounded-xl border text-xs shadow-xs ${
+              <div className={`flex items-center justify-between h-[34px] px-3 rounded-xl border text-xs shadow-2xs ${
                 isUserRequestSelection
-                  ? 'bg-purple-50/70 border-purple-200/80 cursor-not-allowed'
-                  : 'bg-white/80 border-white/80'
+                  ? 'bg-purple-50/70 dark:bg-purple-950/30 border-purple-200/80 dark:border-purple-800 cursor-not-allowed'
+                  : 'bg-slate-50/90 dark:bg-zinc-800/80 border-slate-200/80 dark:border-zinc-700/80'
               }`}>
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] text-slate-600 font-medium">Adult</span>
+                  <span className="text-[11px] text-slate-600 dark:text-zinc-400 font-medium">Adult</span>
                   <button
                     type="button"
                     onClick={() => setHostAdults((prev) => Math.max(1, prev - 1))}
                     disabled={hostAdults <= 1 || isUserRequestSelection || !isPropertyApproved}
-                    className="w-5 h-5 rounded-md flex items-center justify-center text-xs bg-white/90 border border-white/80 text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                    className="w-5 h-5 rounded-md flex items-center justify-center text-xs bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                   >
                     −
                   </button>
-                  <span className="text-xs font-semibold text-slate-900 w-5 text-center">{hostAdults}</span>
+                  <span className="text-xs font-semibold text-slate-900 dark:text-white w-5 text-center">{hostAdults}</span>
                   <button
                     type="button"
                     onClick={() => setHostAdults((prev) => Math.min(10, prev + 1))}
                     disabled={isUserRequestSelection || !isPropertyApproved}
-                    className="w-5 h-5 rounded-md flex items-center justify-center text-xs bg-white/90 border border-white/80 text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                    className="w-5 h-5 rounded-md flex items-center justify-center text-xs bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                   >
                     +
                   </button>
                 </div>
 
-                <div className="h-4 w-px bg-slate-200 mx-2" />
+                <div className="h-4 w-px bg-slate-200 dark:bg-zinc-700 mx-2" />
 
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] text-slate-600 font-medium">Child</span>
+                  <span className="text-[11px] text-slate-600 dark:text-zinc-400 font-medium">Child</span>
                   <button
                     type="button"
                     onClick={() => setHostChildren((prev) => Math.max(0, prev - 1))}
                     disabled={hostChildren <= 0 || isUserRequestSelection || !isPropertyApproved}
-                    className="w-5 h-5 rounded-md flex items-center justify-center text-xs bg-white/90 border border-white/80 text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                    className="w-5 h-5 rounded-md flex items-center justify-center text-xs bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                   >
                     −
                   </button>
-                  <span className="text-xs font-semibold text-slate-900 w-5 text-center">{hostChildren}</span>
+                  <span className="text-xs font-semibold text-slate-900 dark:text-white w-5 text-center">{hostChildren}</span>
                   <button
                     type="button"
                     onClick={() => setHostChildren((prev) => Math.min(10, prev + 1))}
                     disabled={isUserRequestSelection || !isPropertyApproved}
-                    className="w-5 h-5 rounded-md flex items-center justify-center text-xs bg-white/90 border border-white/80 text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                    className="w-5 h-5 rounded-md flex items-center justify-center text-xs bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                   >
                     +
                   </button>
@@ -252,10 +252,10 @@ export function HostBookingForm({
               value={hostUserAadhar}
               onChange={(e) => setHostUserAadhar(formatAadharNumber(e.target.value))}
               placeholder="12-digit number"
-              className={`w-full px-3 py-1.5 rounded-xl text-xs font-medium placeholder:text-slate-400 placeholder:font-normal shadow-xs transition-all tracking-wide ${
+              className={`w-full px-3 py-1.5 rounded-xl text-xs font-medium placeholder:text-slate-400 placeholder:font-normal shadow-2xs transition-all tracking-wide ${
                 isUserRequestSelection
-                  ? 'bg-purple-50/70 border border-purple-200/80 text-slate-800 cursor-not-allowed select-none font-semibold'
-                  : 'bg-white/80 border border-white/80 text-slate-900 focus:outline-none focus:bg-white focus:border-emerald-500'
+                  ? 'bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-800 text-slate-800 dark:text-zinc-200 cursor-not-allowed select-none font-semibold'
+                  : 'bg-slate-50/90 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/80 text-slate-900 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-zinc-800 focus:border-emerald-500'
               }`}
             />
           </div>
@@ -271,13 +271,13 @@ export function HostBookingForm({
                 {isUserRequestSelection ? '🔒 Locked (Online User)' : 'editable'}
               </span>
             </label>
-            <div className={`relative flex items-center rounded-xl border shadow-xs transition-all ${
+            <div className={`relative flex items-center rounded-xl border shadow-2xs transition-all ${
               isUserRequestSelection
-                ? 'bg-purple-50/70 border-purple-200/80 cursor-not-allowed'
-                : 'bg-white/80 border-white/80 focus-within:border-emerald-500 focus-within:bg-white'
+                ? 'bg-purple-50/70 dark:bg-purple-950/30 border-purple-200/80 dark:border-purple-800 cursor-not-allowed'
+                : 'bg-slate-50/90 dark:bg-zinc-800/80 border-slate-200/80 dark:border-zinc-700/80 focus-within:border-emerald-500 focus-within:bg-white dark:focus-within:bg-zinc-800'
             }`}>
               <span className={`pl-3 text-xs font-semibold select-none ${
-                isUserRequestSelection ? 'text-purple-600' : 'text-slate-400'
+                isUserRequestSelection ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400 dark:text-zinc-500'
               }`}>₹</span>
               <input
                 type="text"
@@ -288,7 +288,7 @@ export function HostBookingForm({
                 onChange={(e) => setHostPaidAmount(e.target.value.replace(/\D/g, ''))}
                 placeholder="0"
                 className={`w-full px-2 py-1.5 bg-transparent text-xs font-semibold focus:outline-none ${
-                  isUserRequestSelection ? 'text-purple-700 cursor-not-allowed font-bold' : 'text-emerald-700'
+                  isUserRequestSelection ? 'text-purple-700 dark:text-purple-300 cursor-not-allowed font-bold' : 'text-emerald-700 dark:text-emerald-400'
                 }`}
               />
             </div>
@@ -318,7 +318,7 @@ export function HostBookingForm({
             <button
               type="button"
               onClick={clearForm}
-              className="px-3.5 py-2 rounded-xl border border-white/80 bg-white/70 text-xs font-semibold text-slate-700 hover:bg-white hover:text-slate-900 shadow-xs transition-all cursor-pointer"
+              className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-100 dark:bg-zinc-800 text-xs font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-zinc-700 hover:text-slate-900 dark:hover:text-white shadow-2xs transition-all cursor-pointer"
             >
               Clear
             </button>
@@ -326,21 +326,29 @@ export function HostBookingForm({
           <button
             type="submit"
             disabled={!isPropertyApproved || isUpdatingSlot || sortedSelected.length === 0}
-            className={`flex-1 py-2 px-4 rounded-xl font-semibold text-xs transition-all cursor-pointer shadow-xs disabled:opacity-40 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed ${
+            className={`flex-1 py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wide transition-all cursor-pointer shadow-md flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed ${
               isUserRequestSelection
-                ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-md flex items-center justify-center gap-1.5'
-                : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-md'
+                : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98] text-white shadow-emerald-600/25'
             }`}
           >
-            {!isPropertyApproved
-              ? 'Slots Locked'
-              : isUpdatingSlot
-              ? (isUserRequestSelection ? 'Approving...' : 'Booking...')
-              : isUserRequestSelection
-              ? '✓ Approve & Confirm Slot'
-              : isMonthly
-              ? 'Confirm & Book Month(s)'
-              : 'Confirm & Book Slot'}
+            {isUpdatingSlot && (
+              <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+            )}
+            <span>
+              {!isPropertyApproved
+                ? 'Slots Locked'
+                : isUpdatingSlot
+                ? (isUserRequestSelection ? 'Approving...' : 'Booking...')
+                : isUserRequestSelection
+                ? '✓ Approve & Confirm Slot'
+                : isMonthly
+                ? 'Confirm & Book Month(s)'
+                : 'Confirm & Book Slot'}
+            </span>
           </button>
         </div>
       </form>

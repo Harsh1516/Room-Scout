@@ -1,6 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, lazy, Suspense } from 'react';
 import { bookingsAPI } from '../../services/api';
-import { ResidentIdPassModal } from './schedule/ResidentIdPassModal';
+
+const ResidentIdPassModal = lazy(() =>
+  import('./schedule/ResidentIdPassModal').then((m) => ({ default: m.ResidentIdPassModal }))
+);
 
 import { VisitedSubNavbar } from './visited/VisitedSubNavbar';
 import { VisitedCategoriesPanel } from './visited/VisitedCategoriesPanel';
@@ -34,6 +37,7 @@ export function HostUsersVisitedSection({
   const [modalGender, setModalGender] = useState('Male');
   const [isSavingModalOccupant, setIsSavingModalOccupant] = useState(false);
   const [confirmModalDelete, setConfirmModalDelete] = useState(false);
+  const [isRemovingModalOccupant, setIsRemovingModalOccupant] = useState(false);
 
   // Current Local Date ISO
   const todayISO = useMemo(() => {
@@ -309,6 +313,7 @@ export function HostUsersVisitedSection({
 
   const handleRemoveOccupant = async (occupant) => {
     if (!occupant) return;
+    setIsRemovingModalOccupant(true);
     const targetId = occupant.bookingId || occupant._id || occupant.id || occupant.bookingReferenceId;
     const phone = occupant.phone || occupant.userPhone || occupant.guestPhone || '';
     const cleanPhone = String(phone).replace(/\D/g, '').slice(-10);
@@ -327,7 +332,6 @@ export function HostUsersVisitedSection({
         return true;
       })
     );
-    handleCloseOccupantModal();
 
     try {
       await bookingsAPI.removeOccupantBooking({
@@ -348,6 +352,7 @@ export function HostUsersVisitedSection({
       }
 
       showToast('Occupant removed and slots released.', 'success');
+      handleCloseOccupantModal();
       refreshGuests();
       const propId = hostProperty?._id || hostProperty?.id;
       if (propId) broadcastStayUpdate(propId);
@@ -358,6 +363,9 @@ export function HostUsersVisitedSection({
     } catch (err) {
       console.error('Error removing occupant:', err);
       showToast('Failed to remove occupant.', 'error');
+    } finally {
+      setIsRemovingModalOccupant(false);
+      setConfirmModalDelete(false);
     }
   };
 
@@ -610,14 +618,14 @@ export function HostUsersVisitedSection({
           </div>
 
           {displayedGuests.length === 0 ? (
-            <div className="p-10 rounded-3xl bg-white/70 backdrop-blur-xl border border-white/80 shadow-[0_12px_32px_rgba(31,38,135,0.06),_inset_0_1px_2px_rgba(255,255,255,0.95)] text-center space-y-2">
-              <div className="w-12 h-12 rounded-full bg-white/80 border border-white/80 flex items-center justify-center text-xl mx-auto text-slate-500 shadow-xs">
+            <div className="p-8 rounded-2xl bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-white/10 shadow-sm text-center space-y-2">
+              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 flex items-center justify-center text-lg mx-auto text-slate-500 dark:text-zinc-400 shadow-2xs">
                 🏨
               </div>
-              <h4 className="text-sm font-bold text-slate-900">
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white">
                 No matching guests found
               </h4>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+              <p className="text-[11px] text-slate-500 dark:text-zinc-400 max-w-sm mx-auto">
                 No guests in this category or room card match the selected filter.
               </p>
             </div>
@@ -644,40 +652,44 @@ export function HostUsersVisitedSection({
         </div>
       </div>
 
-      <ResidentIdPassModal
-        selectedOccupantForModal={selectedOccupantForModal}
-        handleCloseOccupantModal={handleCloseOccupantModal}
-        isModalEditing={isModalEditing}
-        handleSaveModalEdit={handleSaveModalEdit}
-        modalName={modalName}
-        handleModalNameChange={(e) => setModalName(e.target.value.replace(/[^a-zA-Z\s]/g, ''))}
-        modalPhone={modalPhone}
-        handleModalPhoneChange={(e) => setModalPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-        modalPaidAmount={modalPaidAmount}
-        setModalPaidAmount={setModalPaidAmount}
-        modalEmail={modalEmail}
-        setModalEmail={setModalEmail}
-        modalAadhar={modalAadhar}
-        handleModalAadharChange={(e) => setModalAadhar(formatIdNumber(e.target.value))}
-        isMonthly={false}
-        modalGender={modalGender}
-        setModalGender={setModalGender}
-        modalAdults={modalAdults}
-        setModalAdults={setModalAdults}
-        modalChildren={modalChildren}
-        setModalChildren={setModalChildren}
-        handleCancelEditFromModal={() => setIsModalEditing(false)}
-        isSavingModalOccupant={isSavingModalOccupant}
-        roomDisplay={selectedOccupantForModal ? `Room-${selectedOccupantForModal.roomNumber || ''}` : ''}
-        roomTypeDisplay={selectedOccupantForModal?.roomType || 'Room'}
-        formatAadharNumber={formatIdNumber}
-        modalStayInfo={modalStayInfo}
-        confirmModalDelete={confirmModalDelete}
-        setConfirmModalDelete={setConfirmModalDelete}
-        isUpdatingSlot={false}
-        handleRemoveOccupant={handleRemoveOccupant}
-        handleStartEditFromModal={() => setIsModalEditing(true)}
-      />
+      {selectedOccupantForModal && (
+        <Suspense fallback={null}>
+          <ResidentIdPassModal
+            selectedOccupantForModal={selectedOccupantForModal}
+            handleCloseOccupantModal={handleCloseOccupantModal}
+            isModalEditing={isModalEditing}
+            handleSaveModalEdit={handleSaveModalEdit}
+            modalName={modalName}
+            handleModalNameChange={(e) => setModalName(e.target.value.replace(/[^a-zA-Z\s]/g, ''))}
+            modalPhone={modalPhone}
+            handleModalPhoneChange={(e) => setModalPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+            modalPaidAmount={modalPaidAmount}
+            setModalPaidAmount={setModalPaidAmount}
+            modalEmail={modalEmail}
+            setModalEmail={setModalEmail}
+            modalAadhar={modalAadhar}
+            handleModalAadharChange={(e) => setModalAadhar(formatIdNumber(e.target.value))}
+            isMonthly={false}
+            modalGender={modalGender}
+            setModalGender={setModalGender}
+            modalAdults={modalAdults}
+            setModalAdults={setModalAdults}
+            modalChildren={modalChildren}
+            setModalChildren={setModalChildren}
+            handleCancelEditFromModal={() => setIsModalEditing(false)}
+            isSavingModalOccupant={isSavingModalOccupant}
+            roomDisplay={selectedOccupantForModal ? `Room-${selectedOccupantForModal.roomNumber || ''}` : ''}
+            roomTypeDisplay={selectedOccupantForModal?.roomType || 'Room'}
+            formatAadharNumber={formatIdNumber}
+            modalStayInfo={modalStayInfo}
+            confirmModalDelete={confirmModalDelete}
+            setConfirmModalDelete={setConfirmModalDelete}
+            isUpdatingSlot={isRemovingModalOccupant}
+            handleRemoveOccupant={handleRemoveOccupant}
+            handleStartEditFromModal={() => setIsModalEditing(true)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

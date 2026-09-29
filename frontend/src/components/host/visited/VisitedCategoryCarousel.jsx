@@ -44,7 +44,7 @@ export function VisitedCategoryCarousel({
             <button
               type="button"
               onClick={handleScrollLeft}
-              className="w-4 h-4 rounded border border-slate-200 bg-white hover:bg-purple-50 flex items-center justify-center text-slate-700 transition-colors cursor-pointer shadow-xs"
+              className="w-4 h-4 rounded border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-emerald-50 dark:hover:bg-zinc-700 flex items-center justify-center text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer shadow-xs"
               title="Scroll left"
             >
               <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -54,7 +54,7 @@ export function VisitedCategoryCarousel({
             <button
               type="button"
               onClick={handleScrollRight}
-              className="w-4 h-4 rounded border border-slate-200 bg-white hover:bg-purple-50 flex items-center justify-center text-slate-700 transition-colors cursor-pointer shadow-xs"
+              className="w-4 h-4 rounded border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-emerald-50 dark:hover:bg-zinc-700 flex items-center justify-center text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer shadow-xs"
               title="Scroll right"
             >
               <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -82,8 +82,8 @@ export function VisitedCategoryCarousel({
               }}
               className={`min-w-[105px] w-28 shrink-0 snap-start p-2.5 rounded-xl border transition-all duration-200 flex flex-col justify-between h-[72px] relative cursor-pointer select-none outline-none ${
                 isSelected
-                  ? 'bg-slate-900 text-white border-slate-900 shadow-sm ring-2 ring-slate-900/20'
-                  : 'bg-white hover:bg-purple-50/80 border-slate-200 hover:border-purple-300 text-slate-900 shadow-2xs'
+                  ? 'bg-slate-900 dark:bg-emerald-950 text-white border-slate-900 dark:border-emerald-600 shadow-sm ring-2 ring-emerald-500/20'
+                  : 'bg-white dark:bg-zinc-900 hover:bg-emerald-50/70 dark:hover:bg-zinc-800 border-slate-200 dark:border-zinc-800 hover:border-emerald-300 dark:hover:border-emerald-700 text-slate-900 dark:text-white shadow-2xs'
               }`}
             >
               <div className="w-full flex items-center justify-between">

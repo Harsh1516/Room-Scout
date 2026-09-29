@@ -56,13 +56,13 @@ export function VisitedGuestCard({
   return (
     <div
       onClick={handleCardClick}
-      className="group relative p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/90 dark:border-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:border-purple-300 hover:bg-purple-50/50 dark:hover:border-slate-700 hover:shadow-[0_8px_25px_rgba(0,0,0,0.06)] transition-all duration-200 cursor-pointer flex flex-col justify-between gap-3.5 select-none"
+      className="group relative p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#111622]/90 backdrop-blur-md border border-slate-200/90 dark:border-zinc-800 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:border-emerald-300 hover:bg-emerald-50/30 dark:hover:border-emerald-800/60 dark:hover:bg-zinc-800/40 hover:shadow-[0_8px_25px_rgba(0,0,0,0.06)] transition-all duration-200 cursor-pointer flex flex-col justify-between gap-3.5 select-none"
     >
       {/* Top Row: User Identity, Heading Name, Badges, and Top-Right Cross Icon */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           {/* Avatar with initials */}
-          <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-extrabold text-xs flex items-center justify-center shrink-0 border border-purple-200/70 dark:border-purple-800/60 shadow-2xs">
+          <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-extrabold text-xs flex items-center justify-center shrink-0 border border-emerald-200/70 dark:border-emerald-800/60 shadow-2xs">
             {initials}
           </div>
 
@@ -164,7 +164,7 @@ export function VisitedGuestCard({
           )}
         </div>
 
-        <div className="flex items-center gap-1 text-[11px] font-medium text-purple-600 dark:text-purple-400 group-hover:underline">
+        <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 group-hover:underline">
           <span>Open Room Slot</span>
           <span className="transition-transform group-hover:translate-x-0.5">→</span>
         </div>
@@ -172,7 +172,7 @@ export function VisitedGuestCard({
 
       {/* Bottom Actions Row: Left = View Pass / Details; Right = Check sign to approve */}
       <div
-        className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 gap-2 flex-wrap"
+        className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-zinc-800 gap-2 flex-wrap"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Bottom Left Corner: View Pass / Details button */}
@@ -183,7 +183,7 @@ export function VisitedGuestCard({
               e.stopPropagation();
               onOpenModal(guest);
             }}
-            className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 shadow-2xs hover:shadow-xs transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+            className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-zinc-800 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300 text-slate-700 dark:text-zinc-200 text-xs font-semibold border border-slate-200 dark:border-zinc-700 shadow-2xs hover:shadow-xs transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
             title="View User Pass & Full Details"
           >
             <svg className="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -197,7 +197,7 @@ export function VisitedGuestCard({
             <a
               href={`tel:+91${cleanPhone}`}
               onClick={(e) => e.stopPropagation()}
-              className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 shadow-2xs transition-all flex items-center gap-1 cursor-pointer"
+              className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 text-xs font-semibold border border-slate-200 dark:border-zinc-700 shadow-2xs transition-all flex items-center gap-1 cursor-pointer"
               title={`Call +91 ${cleanPhone}`}
             >
               <svg className="w-3 h-3 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
@@ -218,7 +218,7 @@ export function VisitedGuestCard({
                 e.stopPropagation();
                 if (onApproveRequest) onApproveRequest(guest);
               }}
-              className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50 active:scale-95"
+              className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50 active:scale-95"
               title="Approve User Request"
             >
               <svg className="w-4 h-4 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -236,7 +236,7 @@ export function VisitedGuestCard({
                     e.stopPropagation();
                     if (onMarkCheckIn) onMarkCheckIn(guest);
                   }}
-                  className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50 active:scale-95"
+                  className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50 active:scale-95"
                   title="Mark Checked In"
                 >
                   <svg className="w-4 h-4 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">

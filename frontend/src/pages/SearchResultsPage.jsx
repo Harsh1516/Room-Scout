@@ -1,7 +1,21 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SearchInteractiveMap } from '../components/SearchInteractiveMap';
 import { PropertyCard } from '../components/common/PropertyCard';
+
+const SearchInteractiveMap = lazy(() =>
+  import('../components/SearchInteractiveMap').then((m) => ({ default: m.SearchInteractiveMap }))
+);
+
+function MapSkeletonLoader() {
+  return (
+    <div className="w-full h-full min-h-[360px] sm:min-h-[380px] rounded-3xl bg-slate-200/70 dark:bg-slate-800/70 animate-pulse border border-slate-300/40 dark:border-slate-700/40 flex flex-col items-center justify-center gap-3">
+      <div className="w-9 h-9 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin" />
+      <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        Loading Interactive Map...
+      </span>
+    </div>
+  );
+}
 
 export function SearchResultsPage({
   stays = [],
@@ -233,12 +247,14 @@ export function SearchResultsPage({
                 transition={{ duration: 0.25 }}
                 className="lg:col-span-6 h-full min-h-[360px] sm:min-h-[380px]"
               >
-                <SearchInteractiveMap
-                  stays={allFilteredStays.length > 0 ? allFilteredStays : stays}
-                  hoveredStayId={hoveredStayId}
-                  onStayClick={onStayClick}
-                  onStayHover={setHoveredStayId}
-                />
+                <Suspense fallback={<MapSkeletonLoader />}>
+                  <SearchInteractiveMap
+                    stays={allFilteredStays.length > 0 ? allFilteredStays : stays}
+                    hoveredStayId={hoveredStayId}
+                    onStayClick={onStayClick}
+                    onStayHover={setHoveredStayId}
+                  />
+                </Suspense>
               </motion.div>
             )}
           </AnimatePresence>

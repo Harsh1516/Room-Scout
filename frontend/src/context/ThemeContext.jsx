@@ -21,13 +21,12 @@ export function ThemeProvider({ children }) {
     }
   }, [theme]);
 
-  // ⚡ Instantaneous zero-latency toggle (synchronous execution on the same user click tick)
+  // ⚡ Lightning-Fast Theme Toggle (Instantaneous DOM mutation & State sync)
   const toggleTheme = () => {
     const root = document.documentElement;
     const isDarkNow = root.classList.contains('dark');
     const nextTheme = isDarkNow ? 'light' : 'dark';
 
-    // 1. Instant synchronous DOM mutation (0ms latency, zero delay)
     if (nextTheme === 'dark') {
       root.classList.add('dark');
       root.classList.remove('light');
@@ -36,13 +35,10 @@ export function ThemeProvider({ children }) {
       root.classList.add('light');
     }
 
-    // 2. Instant persistence & event broadcast
     try {
       localStorage.setItem('room_scout_theme', nextTheme);
     } catch {}
     window.dispatchEvent(new CustomEvent('room-scout-theme-change', { detail: { theme: nextTheme } }));
-
-    // 3. Update React context state
     setTheme(nextTheme);
   };
 
