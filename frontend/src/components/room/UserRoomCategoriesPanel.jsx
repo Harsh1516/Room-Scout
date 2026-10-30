@@ -534,7 +534,7 @@ export function UserRoomCategoriesPanel({
                   {/* Center: Category Free Percentage (n% Free) */}
                   <div className="flex items-center justify-center px-1.5 sm:px-2 shrink-0">
                     <span
-                      className={`h-6 px-2.5 sm:px-3 text-[11px] sm:text-xs rounded-full font-black tracking-wide shadow-2xs select-none flex items-center justify-center gap-1.5 leading-normal backdrop-blur-xs transition-colors ${
+                      className={`h-6 px-2.5 sm:px-3 text-[11px] sm:text-xs rounded-full font-black tracking-wide shadow-2xs select-none flex items-center justify-center leading-normal backdrop-blur-xs transition-colors ${
                         stats.percentFree >= 50
                           ? 'bg-emerald-400/25 border border-emerald-300/40 text-emerald-100'
                           : stats.percentFree > 0
@@ -543,16 +543,7 @@ export function UserRoomCategoriesPanel({
                       }`}
                       title={`${stats.percentFree}% Free (${stats.totalUnbooked} of ${stats.totalPossible} ${isMonthly ? 'months' : 'days'} unbooked across all rooms in this category)`}
                     >
-                      <span
-                        className={`w-1.5 h-1.5 rounded-full ${
-                          stats.percentFree >= 50
-                            ? 'bg-emerald-300 animate-pulse'
-                            : stats.percentFree > 0
-                            ? 'bg-amber-300'
-                            : 'bg-rose-300'
-                        }`}
-                      />
-                      <span>{stats.percentFree}% Free</span>
+                      {stats.percentFree}% Free
                     </span>
                   </div>
 

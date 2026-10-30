@@ -193,7 +193,7 @@ export function UserMonthlySlotCard({
                 </span>
                 {selectedRoomFreeStat && (
                   <span
-                    className={`px-2.5 py-0.5 rounded-lg border text-[11px] font-black flex items-center gap-1 shadow-2xs backdrop-blur-xs ${
+                    className={`px-2.5 py-0.5 rounded-lg border text-[11px] font-black flex items-center shadow-2xs backdrop-blur-xs ${
                       selectedRoomFreeStat.percentFree >= 50
                         ? 'bg-emerald-400/25 text-emerald-100 border-emerald-300/40'
                         : selectedRoomFreeStat.percentFree > 0
@@ -202,15 +202,6 @@ export function UserMonthlySlotCard({
                     }`}
                     title={`${selectedRoomFreeStat.percentFree}% Free (${selectedRoomFreeStat.unbookedCount} of ${selectedRoomFreeStat.totalCount} ${selectedRoomFreeStat.isMonthly ? 'months' : 'days'} unbooked)`}
                   >
-                    <span
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        selectedRoomFreeStat.percentFree >= 50
-                          ? 'bg-emerald-300 animate-pulse'
-                          : selectedRoomFreeStat.percentFree > 0
-                          ? 'bg-amber-300'
-                          : 'bg-rose-300'
-                      }`}
-                    />
                     {selectedRoomFreeStat.percentFree}% Free
                   </span>
                 )}
