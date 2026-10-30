@@ -5,6 +5,11 @@ import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
 import { GoogleLogin } from '@react-oauth/google';
+import { ErrorBoundary } from './common/ErrorBoundary';
+
+const GOOGLE_CLIENT_ID =
+  import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+  '206140766993-caova3o2u7mf54osrklq1d31p3ktq9v2.apps.googleusercontent.com';
 
 // Zod Validation Schemas with 8-character password enforcement
 const loginSchema = z.object({
@@ -921,25 +926,29 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                   </div>
 
                   {/* Google OAuth Option */}
-                  <div className="pt-2">
-                    <div className="relative my-2 flex items-center justify-center">
-                      <div className="w-full border-t border-slate-200 dark:border-zinc-800" />
-                      <span className="absolute bg-white dark:bg-zinc-900 px-2 text-[10px] font-medium text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
-                        or continue with
-                      </span>
+                  {GOOGLE_CLIENT_ID && (
+                    <div className="pt-2">
+                      <div className="relative my-2 flex items-center justify-center">
+                        <div className="w-full border-t border-slate-200 dark:border-zinc-800" />
+                        <span className="absolute bg-white dark:bg-zinc-900 px-2 text-[10px] font-medium text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
+                          or continue with
+                        </span>
+                      </div>
+                      <div className="flex justify-center w-full pt-1">
+                        <ErrorBoundary fallback={null}>
+                          <GoogleLogin
+                            onSuccess={handleGoogleSuccess}
+                            onError={handleGoogleError}
+                            theme="outline"
+                            size="medium"
+                            width="100%"
+                            text={isRegisterMode ? 'signup_with' : 'signin_with'}
+                            shape="pill"
+                          />
+                        </ErrorBoundary>
+                      </div>
                     </div>
-                    <div className="flex justify-center w-full pt-1">
-                      <GoogleLogin
-                        onSuccess={handleGoogleSuccess}
-                        onError={handleGoogleError}
-                        theme="outline"
-                        size="medium"
-                        width="100%"
-                        text={isRegisterMode ? 'signup_with' : 'signin_with'}
-                        shape="pill"
-                      />
-                    </div>
-                  </div>
+                  )}
                 </form>
               )}
 

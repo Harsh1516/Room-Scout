@@ -15,7 +15,9 @@ import AOS from 'aos';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+const GOOGLE_CLIENT_ID =
+  import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+  '206140766993-caova3o2u7mf54osrklq1d31p3ktq9v2.apps.googleusercontent.com';
 
 // Dynamic Lazy-Loaded Page Chunks
 const LandingPage = lazy(() => import('./components/LandingPage').then((m) => ({ default: m.LandingPage })));
@@ -421,15 +423,17 @@ function AppContent() {
 
       {hasLoadedLogin && (
         <Suspense fallback={null}>
-          <LoginModal
-            isOpen={isLoginOpen}
-            onClose={() => {
-              setIsLoginOpen(false);
-              setLoginPromptMessage('');
-            }}
-            initialRole={loginRole}
-            promptMessage={loginPromptMessage}
-          />
+          <ErrorBoundary fallback={null}>
+            <LoginModal
+              isOpen={isLoginOpen}
+              onClose={() => {
+                setIsLoginOpen(false);
+                setLoginPromptMessage('');
+              }}
+              initialRole={loginRole}
+              promptMessage={loginPromptMessage}
+            />
+          </ErrorBoundary>
         </Suspense>
       )}
 
@@ -484,17 +488,19 @@ function AppContent() {
 
 export default function App() {
   const content = (
-    <ThemeProvider>
-      <AuthProvider>
-        <ToastProvider>
-          <BookingsProvider>
-            <WishlistProvider>
-              <AppContent />
-            </WishlistProvider>
-          </BookingsProvider>
-        </ToastProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <BookingsProvider>
+              <WishlistProvider>
+                <AppContent />
+              </WishlistProvider>
+            </BookingsProvider>
+          </ToastProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 
   if (GOOGLE_CLIENT_ID) {
