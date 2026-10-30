@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { z } from 'zod';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { authAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
 import { GoogleLogin } from '@react-oauth/google';
@@ -64,6 +65,7 @@ const registerSchema = z
 
 export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessage = '' }) {
   const { user, isAuthenticated, login, register, loginWithGoogle } = useAuth();
+  const { isDark } = useTheme();
 
   const [accountType, setAccountType] = useState(initialRole);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
@@ -935,17 +937,19 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                         </span>
                       </div>
                       <div className="flex justify-center w-full pt-1">
-                        <ErrorBoundary fallback={null}>
-                          <GoogleLogin
-                            onSuccess={handleGoogleSuccess}
-                            onError={handleGoogleError}
-                            theme="outline"
-                            size="medium"
-                            width="100%"
-                            text={isRegisterMode ? 'signup_with' : 'signin_with'}
-                            shape="pill"
-                          />
-                        </ErrorBoundary>
+                        <div className="overflow-hidden rounded-full max-w-[280px] w-full flex justify-center">
+                          <ErrorBoundary fallback={null}>
+                            <GoogleLogin
+                              onSuccess={handleGoogleSuccess}
+                              onError={handleGoogleError}
+                              theme={isDark ? 'filled_black' : 'outline'}
+                              size="large"
+                              width="280"
+                              text={isRegisterMode ? 'signup_with' : 'signin_with'}
+                              shape="pill"
+                            />
+                          </ErrorBoundary>
+                        </div>
                       </div>
                     </div>
                   )}
