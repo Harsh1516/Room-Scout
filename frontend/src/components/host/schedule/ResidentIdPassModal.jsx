@@ -32,6 +32,119 @@ export function ResidentIdPassModal({
 }) {
   if (!selectedOccupantForModal) return null;
 
+  const rawStatus = String(selectedOccupantForModal.status || '').toUpperCase();
+  const rawPaymentStatus = String(selectedOccupantForModal.paymentStatus || '').toUpperCase();
+  const isOnline =
+    selectedOccupantForModal.bookingSource === 'ONLINE' ||
+    selectedOccupantForModal.isOnline === true ||
+    Boolean(selectedOccupantForModal.bookingReferenceId);
+
+  const isCheckedOut = rawStatus === 'CHECKED_OUT' || rawStatus === 'COMPLETED';
+  const isCheckedIn = !isCheckedOut && (rawStatus === 'CHECKED_IN' || (!isOnline && rawStatus === 'CONFIRMED'));
+
+  const isPendingApproval =
+    (rawStatus.includes('PENDING') ||
+      rawStatus.includes('APPROVAL') ||
+      rawStatus === 'REQUESTED' ||
+      rawStatus === 'DRAFT') &&
+    !isCheckedIn &&
+    !isCheckedOut &&
+    rawStatus !== 'AWAITING_PAYMENT' &&
+    rawStatus !== 'PAYMENT_PENDING';
+
+  const isAwaitingPayment =
+    rawStatus === 'AWAITING_PAYMENT' ||
+    rawStatus === 'PAYMENT_PENDING' ||
+    rawStatus === 'APPROVED - PAYMENT PENDING';
+
+  const isUpiVerificationPending =
+    selectedOccupantForModal.upiPayment?.verificationStatus === 'PENDING_VERIFICATION' ||
+    rawPaymentStatus === 'PENDING_VERIFICATION';
+
+  const isRejected = rawStatus === 'REJECTED' || rawStatus === 'CANCELLED';
+
+  const isPaid =
+    rawPaymentStatus === 'PAID' ||
+    rawPaymentStatus === 'VERIFIED' ||
+    rawPaymentStatus === 'COMPLETED' ||
+    selectedOccupantForModal.isPaid === true ||
+    isCheckedIn ||
+    (!isOnline && !isPendingApproval && !isAwaitingPayment && !isRejected);
+
+  // Status badge styling
+  let statusBadgeLabel = selectedOccupantForModal.status || 'CONFIRMED';
+  let statusBadgeStyle =
+    'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60';
+
+  if (isPendingApproval) {
+    statusBadgeLabel = 'PENDING APPROVAL';
+    statusBadgeStyle =
+      'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800/60';
+  } else if (isUpiVerificationPending) {
+    statusBadgeLabel = 'UPI VERIFY PENDING';
+    statusBadgeStyle =
+      'bg-violet-100 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300 border-violet-300 dark:border-violet-800/60';
+  } else if (isAwaitingPayment) {
+    statusBadgeLabel = 'AWAITING PAYMENT';
+    statusBadgeStyle =
+      'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800/60';
+  } else if (isCheckedIn) {
+    statusBadgeLabel = 'CHECKED IN';
+    statusBadgeStyle =
+      'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60';
+  } else if (isCheckedOut) {
+    statusBadgeLabel = 'CHECKED OUT';
+    statusBadgeStyle =
+      'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-300 dark:border-zinc-700';
+  } else if (isRejected) {
+    statusBadgeLabel = 'REJECTED';
+    statusBadgeStyle =
+      'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-800/60';
+  }
+
+  // Amount field label & badge
+  let amountFieldLabel = 'PAID AMOUNT';
+  let amountTextColor = 'text-emerald-600 dark:text-emerald-400';
+  let amountStatusPill = (
+    <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-700/60">
+      PAID
+    </span>
+  );
+
+  if (isPendingApproval) {
+    amountFieldLabel = 'TOTAL PAYABLE (PENDING APPROVAL)';
+    amountTextColor = 'text-amber-600 dark:text-amber-400';
+    amountStatusPill = (
+      <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300/80 dark:border-amber-700/60">
+        UNPAID • NOT APPROVED
+      </span>
+    );
+  } else if (isAwaitingPayment) {
+    amountFieldLabel = 'AMOUNT DUE (UNPAID)';
+    amountTextColor = 'text-amber-600 dark:text-amber-400';
+    amountStatusPill = (
+      <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300/80 dark:border-amber-700/60">
+        AWAITING PAYMENT
+      </span>
+    );
+  } else if (isUpiVerificationPending) {
+    amountFieldLabel = 'UPI PAYMENT SUBMITTED';
+    amountTextColor = 'text-violet-600 dark:text-violet-400';
+    amountStatusPill = (
+      <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-violet-100 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300 border border-violet-300/80 dark:border-violet-700/60">
+        VERIFY UPI
+      </span>
+    );
+  } else if (isRejected) {
+    amountFieldLabel = 'BOOKING TARIFF';
+    amountTextColor = 'text-slate-400 line-through';
+    amountStatusPill = (
+      <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-300/80 dark:border-rose-700/60">
+        REJECTED
+      </span>
+    );
+  }
+
   return (
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 bg-slate-950/60 backdrop-blur-md transition-all overflow-y-auto"
@@ -46,21 +159,43 @@ export function ResidentIdPassModal({
         {/* Modal Header */}
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200/80 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-900/80">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-emerald-600 text-white flex items-center justify-center text-[11px] font-bold shadow-xs">
+            <div
+              className={`w-6 h-6 rounded-md ${
+                isPendingApproval
+                  ? 'bg-amber-500'
+                  : isUpiVerificationPending
+                  ? 'bg-violet-600'
+                  : 'bg-emerald-600'
+              } text-white flex items-center justify-center text-[11px] font-bold shadow-xs`}
+            >
               RS
             </div>
             <div>
               <div className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white leading-tight">
-                Resident ID Pass
+                {isPendingApproval ? 'Booking Request Pass' : 'Resident ID Pass'}
               </div>
               <div className="text-[10.5px] text-slate-500 dark:text-zinc-400 mt-0.5">
-                RoomScout Verified Occupant
+                {isPendingApproval
+                  ? 'Online Booking Request • Pending Host Approval'
+                  : isAwaitingPayment
+                  ? 'Approved • Awaiting Payment'
+                  : isUpiVerificationPending
+                  ? 'UPI Verification Required'
+                  : 'RoomScout Verified Occupant'}
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[10.5px] font-semibold px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 uppercase shadow-xs">
+            <span
+              className={`text-[10.5px] font-semibold px-2 py-0.5 rounded-md ${
+                isPendingApproval
+                  ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60'
+                  : isUpiVerificationPending
+                  ? 'bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800/60'
+                  : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60'
+              } uppercase shadow-xs`}
+            >
               {roomDisplay}
             </span>
             <button
@@ -110,12 +245,14 @@ export function ResidentIdPassModal({
             </div>
 
             <div>
-              <label className="block text-[11px] font-medium text-slate-700 dark:text-zinc-300 mb-1">Paid Amount (₹)</label>
+              <label className="block text-[11px] font-medium text-slate-700 dark:text-zinc-300 mb-1">
+                {isPaid ? 'Paid Amount (₹)' : 'Booking / Payable Amount (₹)'}
+              </label>
               <input
                 type="text"
                 value={modalPaidAmount}
                 onChange={(e) => setModalPaidAmount(e.target.value.replace(/\D/g, ''))}
-                className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 text-xs font-semibold text-emerald-600 dark:text-emerald-400 focus:outline-none focus:bg-white dark:focus:bg-zinc-800 focus:border-emerald-500 shadow-xs"
+                className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-zinc-800 focus:border-emerald-500 shadow-xs"
               />
             </div>
 
@@ -152,7 +289,15 @@ export function ResidentIdPassModal({
           <div className="p-4 space-y-3.5">
             {/* Occupant Header Card */}
             <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50/90 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/80 shadow-xs">
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-xs font-bold shrink-0">
+              <div
+                className={`w-10 h-10 rounded-lg ${
+                  isPendingApproval
+                    ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30'
+                    : isUpiVerificationPending
+                    ? 'bg-violet-500/15 text-violet-700 dark:text-violet-400 border-violet-500/30'
+                    : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30'
+                } border flex items-center justify-center text-xs font-bold shrink-0`}
+              >
                 {selectedOccupantForModal.name ? selectedOccupantForModal.name.slice(0, 2).toUpperCase() : 'RS'}
               </div>
 
@@ -161,8 +306,10 @@ export function ResidentIdPassModal({
                   <h4 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white truncate">
                     {selectedOccupantForModal.name}
                   </h4>
-                  <span className="text-[9.5px] font-medium px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 uppercase shadow-xs">
-                    {selectedOccupantForModal.status || 'CONFIRMED'}
+                  <span
+                    className={`text-[9.5px] font-semibold px-2 py-0.5 rounded-full uppercase shadow-xs border ${statusBadgeStyle}`}
+                  >
+                    {statusBadgeLabel}
                   </span>
                 </div>
                 <div className="text-[10.5px] text-slate-500 dark:text-zinc-400 mt-0.5 truncate">
@@ -174,31 +321,42 @@ export function ResidentIdPassModal({
             {/* Details Grid */}
             <div className="grid grid-cols-2 gap-2.5 p-3 rounded-xl bg-slate-50/90 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/80 text-xs shadow-xs">
               <div>
-                <span className="text-[10px] font-medium uppercase tracking-wider text-slate-500 dark:text-zinc-400 block">Mobile Number</span>
+                <span className="text-[10px] font-medium uppercase tracking-wider text-slate-500 dark:text-zinc-400 block">
+                  Mobile Number
+                </span>
                 <span className="font-semibold text-slate-800 dark:text-zinc-200 mt-0.5 block text-xs">
                   {selectedOccupantForModal.phone ? `+91 ${selectedOccupantForModal.phone.replace(/\D/g, '').slice(-10)}` : 'N/A'}
                 </span>
               </div>
 
               <div>
-                <span className="text-[10px] font-medium uppercase tracking-wider text-slate-500 dark:text-zinc-400 block">Aadhar ID</span>
+                <span className="text-[10px] font-medium uppercase tracking-wider text-slate-500 dark:text-zinc-400 block">
+                  Aadhar ID
+                </span>
                 <span className="font-semibold text-slate-800 dark:text-zinc-200 mt-0.5 block text-xs tracking-wide">
                   {formatAadharNumber(selectedOccupantForModal.aadhar) || 'N/A'}
                 </span>
               </div>
 
               <div>
-                <span className="text-[10px] font-medium uppercase tracking-wider text-slate-500 dark:text-zinc-400 block">Person Count</span>
+                <span className="text-[10px] font-medium uppercase tracking-wider text-slate-500 dark:text-zinc-400 block">
+                  Person Count
+                </span>
                 <span className="font-semibold text-slate-800 dark:text-zinc-200 mt-0.5 block text-xs">
                   {selectedOccupantForModal.personCount || 1} Person{(Number(selectedOccupantForModal.personCount) || 1) > 1 ? 's' : ''}
                 </span>
               </div>
 
               <div>
-                <span className="text-[10px] font-medium uppercase tracking-wider text-slate-500 dark:text-zinc-400 block">Paid Amount</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5 block text-xs">
-                  ₹{Number(selectedOccupantForModal.totalAmount || 0).toLocaleString('en-IN')}
+                <span className="text-[10px] font-medium uppercase tracking-wider text-slate-500 dark:text-zinc-400 block">
+                  {amountFieldLabel}
                 </span>
+                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                  <span className={`font-semibold block text-xs ${amountTextColor}`}>
+                    ₹{Number(selectedOccupantForModal.totalAmount || selectedOccupantForModal.paidAmount || 0).toLocaleString('en-IN')}
+                  </span>
+                  {amountStatusPill}
+                </div>
               </div>
             </div>
 
@@ -250,7 +408,15 @@ export function ResidentIdPassModal({
                     </div>
 
                     <div className="text-center px-1 shrink-0">
-                      <span className="text-[10.5px] font-semibold text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40">
+                      <span
+                        className={`text-[10.5px] font-semibold px-2 py-0.5 rounded-full border ${
+                          isPendingApproval
+                            ? 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border-amber-200/60 dark:border-amber-800/40'
+                            : isUpiVerificationPending
+                            ? 'text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/40 border-violet-200/60 dark:border-violet-800/40'
+                            : 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/60 dark:border-emerald-800/40'
+                        }`}
+                      >
                         {modalStayInfo.durationLabel}
                       </span>
                     </div>

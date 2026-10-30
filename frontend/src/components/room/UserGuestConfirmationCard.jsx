@@ -474,10 +474,10 @@ export function UserGuestConfirmationCard({
               />
             </div>
 
-            {/* Paid Amount (₹) / Total Amount */}
+            {/* Total Payable / Booking Amount (₹) */}
             <div>
               <label className="block text-[11.5px] font-medium text-slate-700 dark:text-slate-300 mb-1">
-                {isPendingBooking ? 'Total Amount (₹)' : 'Paid Amount (₹) *'}
+                {isPendingBooking ? 'Total Amount (₹)' : 'Total Payable (₹)'}
               </label>
               <div className="flex items-center px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#06121e]/80 border border-slate-200 dark:border-white/15 text-xs font-bold text-slate-900 dark:text-white shadow-2xs">
                 <span className="text-slate-400 dark:text-slate-500 mr-2 font-bold">₹</span>

@@ -257,7 +257,7 @@ export function HostBookingForm({
 
           <div>
             <label className="block text-[11.5px] font-medium text-slate-700 dark:text-zinc-300 mb-1 flex items-center justify-between">
-              <span>Paid Amount (₹) *</span>
+              <span>{isUserRequestSelection ? 'Booking Amount (₹)' : 'Paid Amount (₹) *'}</span>
               <span className={`text-[10px] font-semibold uppercase ${
                 isUserRequestSelection
                   ? 'text-purple-800 bg-purple-100 px-1.5 py-0.5 rounded border border-purple-200'
