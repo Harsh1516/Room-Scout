@@ -25,7 +25,7 @@ export function Right({ onLoginClick }) {
         <button
           type="button"
           onClick={() => setIsWishlistOpen(true)}
-          className="apple-liquid-nav relative w-9 h-9 sm:w-10 sm:h-10 rounded-full text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/15 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0"
+          className="apple-liquid-nav relative w-8 h-8 sm:w-9 sm:h-9 rounded-full text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/15 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0"
           title="Saved Wishlist"
           aria-label="Open Wishlist"
         >
@@ -52,7 +52,7 @@ export function Right({ onLoginClick }) {
         <button
           type="button"
           onClick={() => setIsBookingsOpen(true)}
-          className="apple-liquid-nav relative w-9 h-9 sm:w-10 sm:h-10 rounded-full text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/15 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0"
+          className="apple-liquid-nav relative w-8 h-8 sm:w-9 sm:h-9 rounded-full text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/15 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0"
           title="Booked Places"
           aria-label="Open Booked Places"
         >
@@ -86,7 +86,7 @@ export function Right({ onLoginClick }) {
           <button
             type="button"
             onClick={() => navigate('/host/dashboard')}
-            className="apple-liquid-nav hidden lg:inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 text-xs font-bold transition-all shadow-xs cursor-pointer select-none active:scale-95"
+            className="apple-liquid-nav hidden lg:inline-flex items-center h-8 sm:h-9 gap-1.5 px-3.5 py-1 sm:py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 text-xs font-bold transition-all shadow-xs cursor-pointer select-none active:scale-95 shrink-0"
             title="Switch back to Host Dashboard"
           >
             <span>🏡</span>
@@ -106,7 +106,7 @@ export function Right({ onLoginClick }) {
         <button
           type="button"
           onClick={() => setMobileMenuOpen((prev) => !prev)}
-          className="apple-liquid-nav relative w-10 h-10 rounded-full bg-white/95 dark:bg-slate-900/95 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-center text-sm font-bold transition-all cursor-pointer active:scale-95"
+          className="apple-liquid-nav relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/95 dark:bg-slate-900/95 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-center text-sm font-bold transition-all cursor-pointer active:scale-95 shrink-0"
           title="Toggle Navigation Menu"
         >
           {wishlist.length > 0 && !mobileMenuOpen && (

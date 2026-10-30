@@ -405,29 +405,29 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 font-body-md host-font-scope antialiased">
       {/* ── TOP FLOATING NAVIGATION CAPSULES (MATCHING SEARCH / EXPLORE NAVBAR STYLE) ── */}
       <header className="relative w-full pointer-events-none select-none z-50">
-        {/* 1. Left Island: Back button + Property Type Badge */}
-        <Left propertyType={stay?.propertyType || stay?.type || 'PG'} fallbackUrl="/explore" />
+        {/* 1. Left Island: Back button (Property type badge shifted to media section image) */}
+        <Left showBadge={false} fallbackUrl="/explore" />
 
-        {/* 2. Center Island: Segmented Tabs (Property | Host | Reviews) */}
-        <div className="hidden md:flex fixed top-3.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 items-center pointer-events-auto">
-          <nav className="apple-liquid-nav relative flex items-center p-1 sm:p-1.5 rounded-full border border-slate-200/80 dark:border-white/15 shadow-sm">
+        {/* 2. Center Island: Segmented Tabs (Property | Host | Reviews) - Aligned to same row on all devices */}
+        <div className="fixed top-3.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center pointer-events-auto max-w-[calc(100vw-110px)] sm:max-w-none">
+          <nav className="apple-liquid-nav relative flex items-center h-8 sm:h-9 p-0.5 sm:p-1 rounded-full border border-slate-200/80 dark:border-white/15 shadow-sm">
             <button
               type="button"
               onClick={() => setActiveCenterTab('property')}
-              className={`relative z-10 py-2 px-3.5 sm:px-4.5 rounded-full text-xs sm:text-sm font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-2 select-none ${
+              className={`relative z-10 h-full py-0 px-2 sm:px-3 md:px-4 rounded-full text-[11px] sm:text-xs md:text-sm font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 md:gap-2 select-none shrink-0 ${
                 activeCenterTab === 'property'
                   ? 'text-white dark:text-slate-950 font-semibold'
                   : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium'
               }`}
             >
-              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                 <polyline points="9 22 9 12 15 12 15 22" />
               </svg>
               <span>Property</span>
               {activeCenterTab === 'property' && (
                 <motion.div
-                  layoutId="capsuleTabPillDesktop"
+                  layoutId="capsuleTabPillUnified"
                   className="absolute inset-0 bg-slate-950 dark:bg-white rounded-full -z-10 shadow-sm"
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
@@ -437,20 +437,20 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
             <button
               type="button"
               onClick={handleHostTabClick}
-              className={`relative z-10 py-2 px-3.5 sm:px-4.5 rounded-full text-xs sm:text-sm font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-2 select-none ${
+              className={`relative z-10 h-full py-0 px-2 sm:px-3 md:px-4 rounded-full text-[11px] sm:text-xs md:text-sm font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 md:gap-2 select-none shrink-0 ${
                 activeCenterTab === 'host'
                   ? 'text-white dark:text-slate-950 font-semibold'
                   : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium'
               }`}
             >
-              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
               <span>Host</span>
               {activeCenterTab === 'host' && (
                 <motion.div
-                  layoutId="capsuleTabPillDesktop"
+                  layoutId="capsuleTabPillUnified"
                   className="absolute inset-0 bg-slate-950 dark:bg-white rounded-full -z-10 shadow-sm"
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
@@ -460,19 +460,19 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
             <button
               type="button"
               onClick={() => setActiveCenterTab('reviews')}
-              className={`relative z-10 py-2 px-3.5 sm:px-4.5 rounded-full text-xs sm:text-sm font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-2 select-none ${
+              className={`relative z-10 h-full py-0 px-2 sm:px-3 md:px-4 rounded-full text-[11px] sm:text-xs md:text-sm font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 md:gap-2 select-none shrink-0 ${
                 activeCenterTab === 'reviews'
                   ? 'text-white dark:text-slate-950 font-semibold'
                   : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium'
               }`}
             >
-              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
               </svg>
               <span>Reviews ({reviews.length})</span>
               {activeCenterTab === 'reviews' && (
                 <motion.div
-                  layoutId="capsuleTabPillDesktop"
+                  layoutId="capsuleTabPillUnified"
                   className="absolute inset-0 bg-slate-950 dark:bg-white rounded-full -z-10 shadow-sm"
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
@@ -485,47 +485,8 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
         <Right onLoginClick={onLoginClick} />
       </header>
 
-      {/* ── Mobile-Only Center Tabs Pill (Shown on small screens below top capsules) ── */}
-      <div className="md:hidden flex items-center justify-center pt-17 pb-2 px-4 relative z-30">
-        <nav className="apple-liquid-nav relative flex items-center p-1 rounded-full border border-slate-200/80 dark:border-white/15 shadow-sm max-w-full">
-          <button
-            type="button"
-            onClick={() => setActiveCenterTab('property')}
-            className={`py-1.5 px-3.5 rounded-full text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 select-none ${
-              activeCenterTab === 'property'
-                ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 shadow-xs'
-                : 'text-slate-600 dark:text-slate-300'
-            }`}
-          >
-            <span>Property</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleHostTabClick}
-            className={`py-1.5 px-3.5 rounded-full text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 select-none ${
-              activeCenterTab === 'host'
-                ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 shadow-xs'
-                : 'text-slate-600 dark:text-slate-300'
-            }`}
-          >
-            <span>Host</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveCenterTab('reviews')}
-            className={`py-1.5 px-3.5 rounded-full text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 select-none ${
-              activeCenterTab === 'reviews'
-                ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 shadow-xs'
-                : 'text-slate-600 dark:text-slate-300'
-            }`}
-          >
-            <span>Reviews ({reviews.length})</span>
-          </button>
-        </nav>
-      </div>
-
       {/* MAIN CONTENT DISPLAY */}
-      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-6 lg:pt-26 pb-24 min-h-[calc(100vh-4.5rem)]">
+      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 lg:pt-26 pb-24 min-h-[calc(100vh-4.5rem)]">
         {activeCenterTab === 'property' ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
             <ErrorBoundary>

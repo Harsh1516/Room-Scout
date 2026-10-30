@@ -25,6 +25,7 @@ export function PropertyMediaSection({
 
   const mainImage = allImages[activePhotoIdx] || allImages[0] || '';
   const propertyTitle = stay?.propertyName || stay?.title || 'Stay Property';
+  const propertyType = stay?.propertyType || stay?.type || 'PG';
 
   return (
     <div className="lg:col-span-4 space-y-4 p-1 sm:p-1.5">
@@ -47,14 +48,23 @@ export function PropertyMediaSection({
             </div>
           )}
 
-          {/* Top Badges Overlay */}
+          {/* Top Badges Overlay (Hostel/Property Type Tag shifted from navbar + Rating) */}
           <div className="absolute top-2.5 left-2.5 flex flex-wrap items-center gap-1.5 z-10 pointer-events-none">
+            {/* Property Type Badge (e.g., HOSTEL, PG) */}
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-amber-300 bg-slate-950/85 border border-amber-500/40 px-2 py-0.5 rounded-md backdrop-blur-md flex items-center gap-1.5 shadow-md">
+              <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400 fill-amber-400/20 stroke-[2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z" />
+              </svg>
+              <span>{propertyType}</span>
+            </span>
+
+            {/* Rating / New Badge */}
             {currentRating ? (
-              <span className="text-[11px] font-medium text-white bg-slate-900/80 px-2 py-0.5 rounded-md backdrop-blur-xs">
-                ★ {currentRating} ({reviewsCount})
+              <span className="text-[10px] sm:text-[11px] font-semibold text-white bg-slate-950/85 border border-white/15 px-2 py-0.5 rounded-md backdrop-blur-md flex items-center gap-1 shadow-md">
+                <span className="text-amber-400">★</span> {currentRating} ({reviewsCount})
               </span>
             ) : (
-              <span className="text-[11px] font-medium text-white bg-slate-900/80 px-2 py-0.5 rounded-md backdrop-blur-xs">
+              <span className="text-[10px] sm:text-[11px] font-semibold text-white bg-slate-950/85 border border-white/15 px-2 py-0.5 rounded-md backdrop-blur-md shadow-md">
                 NEW
               </span>
             )}
