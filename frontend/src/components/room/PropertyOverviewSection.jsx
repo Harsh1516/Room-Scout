@@ -135,7 +135,7 @@ export function PropertyOverviewSection({
           transition={{ duration: 0.22, ease: 'easeOut' }}
         >
           {/* Main Unified Container */}
-          <div className="w-full p-5 sm:p-8 lg:p-10 rounded-2xl sm:rounded-3xl bg-[#FAF2DB] dark:bg-[#18120D] border border-[#E8DABB] dark:border-[#332419] shadow-xl dark:shadow-[0_30px_90px_rgba(0,0,0,0.8)] backdrop-blur-2xl">
+          <div className="w-full p-5 sm:p-8 lg:p-10 rounded-2xl sm:rounded-3xl bg-[#FAF2DB] dark:bg-[#18120D] border border-[#E8DABB] dark:border-[#332419] shadow-xl dark:shadow-[0_30px_90px_rgba(0,0,0,0.8)] backdrop-blur-2xl relative overflow-hidden">
             {/* TAB 1: PROPERTY DETAILS VIEW */}
             {activeCenterTab === 'property' && (
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start w-full">
@@ -251,28 +251,45 @@ export function PropertyOverviewSection({
 
             {/* TAB 2: HOST DETAILS VIEW (Directly visible without any requirement) */}
             {activeCenterTab === 'host' && (
-              <div className="w-full">
-                <div className="space-y-6 max-w-2xl mx-auto p-4 sm:p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-full bg-emerald-600 text-white font-black text-xl flex items-center justify-center shadow-md shadow-emerald-600/20 shrink-0 overflow-hidden">
-                      {hostAvatar && (typeof hostAvatar === 'string' && (hostAvatar.startsWith('http') || hostAvatar.startsWith('data:') || hostAvatar.startsWith('/'))) ? (
-                        <img src={hostAvatar} alt={hostName} className="w-full h-full object-cover" />
-                      ) : (
-                        hostAvatar || (hostName ? hostName.slice(0, 2).toUpperCase() : 'H')
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="text-lg sm:text-xl font-black text-slate-950 dark:text-white flex items-center gap-2">
-                        <span>{hostName}</span>
-                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                          ✓ VERIFIED HOST
-                        </span>
-                      </h3>
-                      {hostJoined && (
-                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                          Member since {new Date(hostJoined).getFullYear()}
-                        </p>
-                      )}
+              <div className="w-full relative">
+                {/* Luminous Inner Profile Ambient Background Glows */}
+                <div className="absolute -top-16 -left-12 w-80 h-80 bg-emerald-500/20 dark:bg-emerald-400/25 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute top-12 -right-12 w-72 h-72 bg-amber-500/12 dark:bg-amber-400/18 rounded-full blur-3xl pointer-events-none" />
+
+                <div className="space-y-6 max-w-2xl mx-auto p-4 sm:p-6 relative z-10">
+                  {/* Host Profile Header Card with Ambient Glow */}
+                  <div className="relative overflow-hidden p-4 sm:p-5 rounded-2xl bg-white/70 dark:bg-black/40 border border-slate-200/80 dark:border-white/10 shadow-sm backdrop-blur-md">
+                    {/* Soft Internal Radial Sheen */}
+                    <div className="absolute -top-10 -left-10 w-44 h-44 bg-emerald-500/20 dark:bg-emerald-400/25 rounded-full blur-2xl pointer-events-none" />
+
+                    <div className="relative z-10 flex items-center gap-4">
+                      {/* Host Avatar with Multi-layer Glow Aura */}
+                      <div className="relative shrink-0">
+                        {/* Ambient Aura Halo behind Avatar */}
+                        <div className="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-emerald-500 via-teal-400 to-amber-400 opacity-75 dark:opacity-90 blur-md pointer-events-none" />
+
+                        <div className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-full ring-2 ring-emerald-500/40 dark:ring-emerald-400/50 bg-emerald-600 text-white font-black text-xl flex items-center justify-center shadow-lg shadow-emerald-600/30 shrink-0 overflow-hidden">
+                          {hostAvatar && (typeof hostAvatar === 'string' && (hostAvatar.startsWith('http') || hostAvatar.startsWith('data:') || hostAvatar.startsWith('/'))) ? (
+                            <img src={hostAvatar} alt={hostName} className="w-full h-full object-cover" />
+                          ) : (
+                            hostAvatar || (hostName ? hostName.slice(0, 2).toUpperCase() : 'H')
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="min-w-0">
+                        <h3 className="text-lg sm:text-xl font-black text-slate-950 dark:text-white flex items-center gap-2 flex-wrap">
+                          <span className="truncate">{hostName}</span>
+                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-xs">
+                            ✓ VERIFIED HOST
+                          </span>
+                        </h3>
+                        {hostJoined && (
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                            Member since {new Date(hostJoined).getFullYear()}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
 
