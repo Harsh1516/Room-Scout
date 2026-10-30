@@ -23,6 +23,9 @@ import {
   getDatesForMonthKeys,
   getOccupantsForRoomInMonth,
   isBookingRequestExpired,
+  getRoomBookedSlotsSet,
+  getRoomBookedMonthsSet,
+  calculateRoomFreePercentage,
 } from '../utils/dateUtils';
 
 function formatRoomNo(rawNum) {
@@ -583,21 +586,23 @@ export function RoomAvailabilityPage({ onBookClick, onLoginClick }) {
         }
       });
 
-      bookedMap[rm._id] = bookedSet;
-      if (rm._id) bookedMap[rm._id] = bookedSet;
-      if (rm.roomNumber) bookedMap[String(rm.roomNumber).trim()] = bookedSet;
+      const cleanNum = String(rm.roomNumber || '').replace(/[^0-9]/g, '');
+      const keysToRegister = [
+        rm._id,
+        rm.id,
+        rm.roomNumber ? String(rm.roomNumber).trim() : null,
+        cleanNum,
+        cleanNum ? `room_${cleanNum}` : null,
+        cleanNum ? `Room-${cleanNum}` : null,
+        cleanNum ? `Room ${cleanNum}` : null,
+      ].filter(Boolean);
 
-      requestedMap[rm._id] = requestedSet;
-      if (rm._id) requestedMap[rm._id] = requestedSet;
-      if (rm.roomNumber) requestedMap[String(rm.roomNumber).trim()] = requestedSet;
-
-      userBookedMap[rm._id] = userBookedSet;
-      if (rm._id) userBookedMap[rm._id] = userBookedSet;
-      if (rm.roomNumber) userBookedMap[String(rm.roomNumber).trim()] = userBookedSet;
-
-      userRequestedMap[rm._id] = userRequestedSet;
-      if (rm._id) userRequestedMap[rm._id] = userRequestedSet;
-      if (rm.roomNumber) userRequestedMap[String(rm.roomNumber).trim()] = userRequestedSet;
+      keysToRegister.forEach((k) => {
+        bookedMap[k] = bookedSet;
+        requestedMap[k] = requestedSet;
+        userBookedMap[k] = userBookedSet;
+        userRequestedMap[k] = userRequestedSet;
+      });
     });
 
     return {
@@ -691,21 +696,23 @@ export function RoomAvailabilityPage({ onBookClick, onLoginClick }) {
         }
       });
 
-      bookedMap[rm._id] = bookedMonthSet;
-      if (rm._id) bookedMap[rm._id] = bookedMonthSet;
-      if (rm.roomNumber) bookedMap[String(rm.roomNumber).trim()] = bookedMonthSet;
+      const cleanNum = String(rm.roomNumber || '').replace(/[^0-9]/g, '');
+      const keysToRegister = [
+        rm._id,
+        rm.id,
+        rm.roomNumber ? String(rm.roomNumber).trim() : null,
+        cleanNum,
+        cleanNum ? `room_${cleanNum}` : null,
+        cleanNum ? `Room-${cleanNum}` : null,
+        cleanNum ? `Room ${cleanNum}` : null,
+      ].filter(Boolean);
 
-      requestedMap[rm._id] = requestedMonthSet;
-      if (rm._id) requestedMap[rm._id] = requestedMonthSet;
-      if (rm.roomNumber) requestedMap[String(rm.roomNumber).trim()] = requestedMonthSet;
-
-      userBookedMap[rm._id] = userBookedMonthSet;
-      if (rm._id) userBookedMap[rm._id] = userBookedMonthSet;
-      if (rm.roomNumber) userBookedMap[String(rm.roomNumber).trim()] = userBookedMonthSet;
-
-      userRequestedMap[rm._id] = userRequestedMonthSet;
-      if (rm._id) userRequestedMap[rm._id] = userRequestedMonthSet;
-      if (rm.roomNumber) userRequestedMap[String(rm.roomNumber).trim()] = userRequestedMonthSet;
+      keysToRegister.forEach((k) => {
+        bookedMap[k] = bookedMonthSet;
+        requestedMap[k] = requestedMonthSet;
+        userBookedMap[k] = userBookedMonthSet;
+        userRequestedMap[k] = userRequestedMonthSet;
+      });
     });
 
     return {
@@ -722,21 +729,26 @@ export function RoomAvailabilityPage({ onBookClick, onLoginClick }) {
     const currentMonthKey = upcomingMonths[0]?.monthKey;
 
     roomGrid.forEach((rm) => {
-      if (isMonthly) {
-        const roomBookedMonths = allRoomsBookedMonths[rm._id];
+      const rmIsMonthly = isMonthlyRateUnit(rm.rateUnit || activeRateObj?.rateUnit || stay?.rateUnit);
+      if (rmIsMonthly) {
+        const roomBookedMonths = getRoomBookedMonthsSet(rm, allRoomsBookedMonths);
         if (roomBookedMonths && roomBookedMonths.has(currentMonthKey)) {
-          bookedIds.add(rm._id);
+          if (rm._id) bookedIds.add(rm._id);
+          if (rm.id) bookedIds.add(rm.id);
+          if (rm.roomNumber) bookedIds.add(String(rm.roomNumber).trim());
         }
       } else {
-        const roomBookedDates = allRoomsBookedSlots[rm._id];
+        const roomBookedDates = getRoomBookedSlotsSet(rm, allRoomsBookedSlots);
         if (roomBookedDates && roomBookedDates.has(todayISO)) {
-          bookedIds.add(rm._id);
+          if (rm._id) bookedIds.add(rm._id);
+          if (rm.id) bookedIds.add(rm.id);
+          if (rm.roomNumber) bookedIds.add(String(rm.roomNumber).trim());
         }
       }
     });
 
     return bookedIds;
-  }, [roomGrid, allRoomsBookedSlots, allRoomsBookedMonths, upcomingWeek, upcomingMonths, isMonthly]);
+  }, [roomGrid, allRoomsBookedSlots, allRoomsBookedMonths, upcomingWeek, upcomingMonths, activeRateObj, stay]);
 
   // Pre-select a specific room card when navigating from Booked Places drawer (confirmed booking "View →")
   // Fires once when roomGrid is first populated and location.state?.roomNumber is set
@@ -931,6 +943,19 @@ export function RoomAvailabilityPage({ onBookClick, onLoginClick }) {
 
     return false;
   }, [selectedRoom, isMonthly, userBookedMonthsForRoom, userBookedSlotsForRoom, userConfirmedBooking]);
+
+  // Exact free percentage calculation for currently selected room
+  const selectedRoomFreeStat = useMemo(() => {
+    if (!selectedRoom) return null;
+    return calculateRoomFreePercentage({
+      room: selectedRoom,
+      rate: activeRateObj,
+      allRoomsBookedSlots,
+      allRoomsBookedMonths,
+      upcomingWeek,
+      upcomingMonths,
+    });
+  }, [selectedRoom, activeRateObj, allRoomsBookedSlots, allRoomsBookedMonths, upcomingWeek, upcomingMonths]);
 
   // When room slot is booked and confirmed for the user, hide the Guest details tab on the right side
   const showGuestDetailsTab = !hasUserConfirmedSlotForRoom && !userConfirmedBooking;
@@ -1547,6 +1572,10 @@ export function RoomAvailabilityPage({ onBookClick, onLoginClick }) {
                 todayBookedRoomIds={todayBookedRoomIds}
                 selectedCategoryFilter={selectedCategoryFilter}
                 onSelectCategoryFilter={handleSelectCategoryFilter}
+                allRoomsBookedSlots={allRoomsBookedSlots}
+                allRoomsBookedMonths={allRoomsBookedMonths}
+                upcomingWeek={upcomingWeek}
+                upcomingMonths={upcomingMonths}
               />
             </div>
 
@@ -1576,6 +1605,7 @@ export function RoomAvailabilityPage({ onBookClick, onLoginClick }) {
                   selectedMonthIndices={selectedMonthIndices}
                   onToggleSlotMonth={handleToggleSlotMonth}
                   stay={stay}
+                  selectedRoomFreeStat={selectedRoomFreeStat}
                 />
               </AnimatePresence>
             </div>

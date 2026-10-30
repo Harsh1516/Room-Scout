@@ -248,6 +248,17 @@ export function BookedPlacesDrawer({ onLoginClick, onStayClick }) {
                   ? item.stayTitle : typeof item.stayId === 'object' && item.stayId?.title ? item.stayId.title
                   : item.propertyName || item.title || 'Stay';
 
+                const roomCategory =
+                  item.roomType ||
+                  item.category ||
+                  item.roomCategory ||
+                  (typeof item.stayId === 'object' && Array.isArray(item.stayId?.rooms)
+                    ? item.stayId.rooms.find((r) => String(r.roomNumber || '').trim() === String(item.roomNumber || '').trim())?.type
+                    : null) ||
+                  item.type ||
+                  item.selectedCategory ||
+                  '';
+
                 return (
                   <div key={item._id || item.bookingReferenceId || idx}
                     className="rounded-xl border border-slate-200 dark:border-white/[0.07] bg-white dark:bg-white/[0.02] hover:border-slate-300 dark:hover:border-white/[0.12] transition-colors duration-150 overflow-hidden">
@@ -297,7 +308,12 @@ export function BookedPlacesDrawer({ onLoginClick, onStayClick }) {
 
                         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                           {item.roomNumber && (
-                            <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Room {item.roomNumber}</span>
+                            <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Room {item.roomNumber}</span>
+                          )}
+                          {roomCategory && (
+                            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-500/10 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300 border border-amber-500/25 whitespace-nowrap">
+                              {roomCategory}
+                            </span>
                           )}
                           {dur && <span className="text-slate-300 dark:text-slate-700 text-[11px]">·</span>}
                           {dur && <span className="text-[11px] text-slate-400 dark:text-slate-500">{dur}</span>}
@@ -458,7 +474,11 @@ export function BookedPlacesDrawer({ onLoginClick, onStayClick }) {
                 {[
                   { label: 'Guest', value: selectedPass.fullName || selectedPass.guestName || 'Guest' },
                   { label: 'Phone', value: selectedPass.phone || '—' },
-                  selectedPass.roomNumber ? { label: 'Room', value: `${selectedPass.roomNumber}${selectedPass.roomType ? ` · ${selectedPass.roomType}` : ''}` } : null,
+                  selectedPass.roomNumber ? { label: 'Room', value: `Room ${selectedPass.roomNumber}` } : null,
+                  (selectedPass.roomType || selectedPass.category || selectedPass.roomCategory || (typeof selectedPass.stayId === 'object' && Array.isArray(selectedPass.stayId?.rooms) ? selectedPass.stayId.rooms.find((r) => String(r.roomNumber || '').trim() === String(selectedPass.roomNumber || '').trim())?.type : null)) ? {
+                    label: 'Room Category',
+                    value: selectedPass.roomType || selectedPass.category || selectedPass.roomCategory || (typeof selectedPass.stayId === 'object' && Array.isArray(selectedPass.stayId?.rooms) ? selectedPass.stayId.rooms.find((r) => String(r.roomNumber || '').trim() === String(selectedPass.roomNumber || '').trim())?.type : ''),
+                  } : null,
                   { label: 'Check-in', value: formatShortDate(selectedPass.checkIn) || '—' },
                   { label: 'Check-out', value: formatShortDate(selectedPass.checkOut) || '—' },
                   { label: 'Duration', value: computeDuration(selectedPass) || '—' },

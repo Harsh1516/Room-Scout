@@ -1,6 +1,11 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { isMonthlyRateUnit, isRoomMatchingCategory } from '../../utils/dateUtils';
+import {
+  isMonthlyRateUnit,
+  isRoomMatchingCategory,
+  calculateRoomFreePercentage,
+  calculateCategoryFreePercentage,
+} from '../../utils/dateUtils';
 
 /**
  * UserCategoryRoomCarousel
@@ -17,6 +22,10 @@ function UserCategoryRoomCarousel({
   onSelectRoom,
   onSelectCategoryFilter,
   todayBookedRoomIds = new Set(),
+  allRoomsBookedSlots = {},
+  allRoomsBookedMonths = {},
+  upcomingWeek = [],
+  upcomingMonths = [],
 }) {
   const scrollRef = useRef(null);
   const [activeDotIndex, setActiveDotIndex] = useState(0);
@@ -166,7 +175,12 @@ function UserCategoryRoomCarousel({
           >
             {matchingRooms.map((rm, cIdx) => {
               const cardId = rm._id || rm.id || `room_${rm.roomNumber || cIdx}`;
-              const isBookedToday = Boolean(todayBookedRoomIds && (todayBookedRoomIds.has(rm._id) || todayBookedRoomIds.has(rm.id)));
+              const isBookedToday = Boolean(
+                todayBookedRoomIds &&
+                (todayBookedRoomIds.has(rm._id) ||
+                 todayBookedRoomIds.has(rm.id) ||
+                 todayBookedRoomIds.has(String(rm.roomNumber).trim()))
+              );
               const isCardSelected = Boolean(
                 (selectedRoom?._id && rm._id && String(selectedRoom._id) === String(rm._id)) ||
                 (selectedRoom?.id && rm.id && String(selectedRoom.id) === String(rm.id)) ||
@@ -174,6 +188,15 @@ function UserCategoryRoomCarousel({
               );
               const roomCapacity = Number(rm.capacity) || rate.capacity || 1;
               const cleanRoomNum = String(rm.roomNumber || rm.roomNumInt || cIdx + 101).replace(/[^0-9]/g, '') || rm.roomNumber;
+
+              const roomStat = calculateRoomFreePercentage({
+                room: rm,
+                rate,
+                allRoomsBookedSlots,
+                allRoomsBookedMonths,
+                upcomingWeek,
+                upcomingMonths,
+              });
 
               return (
                 <div
@@ -193,17 +216,32 @@ function UserCategoryRoomCarousel({
                       : 'bg-slate-50/70 dark:bg-[#0c1825] border border-slate-200/80 dark:border-[#1f3045] hover:border-slate-300 dark:hover:border-[#2f4663]'
                   }`}
                 >
-                  {/* Card Header Status (Centered at Top) */}
-                  <div className="flex items-center justify-center w-full h-5">
+                  {/* Card Header Status & Room Free % */}
+                  <div className="flex items-center justify-between w-full h-5 px-0.5">
                     {isBookedToday ? (
-                      <span className="text-[9.5px] font-black uppercase tracking-wider text-amber-200 dark:text-amber-200 leading-none">
+                      <span className="text-[9px] sm:text-[9.5px] font-black uppercase tracking-wider text-amber-200 dark:text-amber-200 leading-none">
                         BOOKED
                       </span>
                     ) : (
-                      <span className="text-[9.5px] font-black text-[#5254cf] dark:text-[#c0c1ff] uppercase tracking-wider leading-none">
+                      <span className="text-[9px] sm:text-[9.5px] font-black text-[#5254cf] dark:text-[#c0c1ff] uppercase tracking-wider leading-none">
                         OPEN
                       </span>
                     )}
+
+                    <span
+                      className={`text-[8.5px] sm:text-[9.5px] font-black tracking-tight leading-none px-1.5 py-0.5 rounded-md shadow-2xs select-none ${
+                        isBookedToday
+                          ? 'bg-black/40 text-amber-200 border border-amber-300/20'
+                          : roomStat.percentFree >= 50
+                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-500/25'
+                          : roomStat.percentFree > 0
+                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/25'
+                          : 'bg-rose-500/15 text-rose-600 dark:text-rose-300 border border-rose-500/25'
+                      }`}
+                      title={`Room ${cleanRoomNum}: ${roomStat.percentFree}% Free (${roomStat.unbookedCount} of ${roomStat.totalCount} ${roomStat.isMonthly ? 'months' : 'days'} unbooked)`}
+                    >
+                      {roomStat.percentFree}% Free
+                    </span>
                   </div>
 
                   {/* Room Number */}
@@ -303,6 +341,10 @@ export function UserRoomCategoriesPanel({
   todayBookedRoomIds = new Set(),
   selectedCategoryFilter,
   onSelectCategoryFilter,
+  allRoomsBookedSlots = {},
+  allRoomsBookedMonths = {},
+  upcomingWeek = [],
+  upcomingMonths = [],
 }) {
   // Normalize room categories from stay.roomRates or fallback from roomGrid
   const categories = useMemo(() => {
@@ -336,15 +378,36 @@ export function UserRoomCategoriesPanel({
         isRoomMatchingCategory(r, rate, idx, safeRates)
       );
       const totalCount = matchingRooms.length;
-      const availableCount = matchingRooms.filter((rm) => !todayBookedRoomIds?.has?.(rm._id)).length;
+      const availableCount = matchingRooms.filter((rm) => {
+        const isBookedToday = Boolean(
+          todayBookedRoomIds &&
+          (todayBookedRoomIds.has(rm._id) ||
+           todayBookedRoomIds.has(rm.id) ||
+           todayBookedRoomIds.has(String(rm.roomNumber).trim()))
+        );
+        return !isBookedToday;
+      }).length;
+
+      const freeStats = calculateCategoryFreePercentage({
+        rooms: matchingRooms,
+        rate,
+        allRoomsBookedSlots,
+        allRoomsBookedMonths,
+        upcomingWeek,
+        upcomingMonths,
+      });
+
       map[idx] = {
         totalCount,
         availableCount,
         rooms: matchingRooms,
+        percentFree: freeStats.percentFree,
+        totalUnbooked: freeStats.totalUnbooked,
+        totalPossible: freeStats.totalPossible,
       };
     });
     return map;
-  }, [categories, roomGrid, todayBookedRoomIds]);
+  }, [categories, roomGrid, todayBookedRoomIds, allRoomsBookedSlots, allRoomsBookedMonths, upcomingWeek, upcomingMonths]);
 
   // Initial state: -1 (all collapsed) unless a room or filter was explicitly passed
   const initialOpenIdx = useMemo(() => {
@@ -457,15 +520,40 @@ export function UserRoomCategoriesPanel({
                   } flex items-center justify-between select-none cursor-pointer transition-colors`}
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <h2 className="text-[15px] sm:text-[16px] text-white truncate font-extrabold tracking-tight leading-normal pb-0.5">
+                    <h2 className="text-[14px] sm:text-[16px] text-white truncate font-extrabold tracking-tight leading-normal pb-0.5">
                       {rate.type || 'Unnamed Category'}
                     </h2>
 
                     {rate.price && (
-                      <span className="text-xs font-bold text-purple-100 shrink-0 leading-normal pb-0.5">
+                      <span className="text-[11px] sm:text-xs font-bold text-purple-100 shrink-0 leading-normal pb-0.5">
                         • ₹{rawPrice}{rate.rateUnit || '/night'}
                       </span>
                     )}
+                  </div>
+
+                  {/* Center: Category Free Percentage (n% Free) */}
+                  <div className="flex items-center justify-center px-1.5 sm:px-2 shrink-0">
+                    <span
+                      className={`h-6 px-2.5 sm:px-3 text-[11px] sm:text-xs rounded-full font-black tracking-wide shadow-2xs select-none flex items-center justify-center gap-1.5 leading-normal backdrop-blur-xs transition-colors ${
+                        stats.percentFree >= 50
+                          ? 'bg-emerald-400/25 border border-emerald-300/40 text-emerald-100'
+                          : stats.percentFree > 0
+                          ? 'bg-amber-400/25 border border-amber-300/40 text-amber-100'
+                          : 'bg-rose-500/30 border border-rose-300/40 text-rose-100'
+                      }`}
+                      title={`${stats.percentFree}% Free (${stats.totalUnbooked} of ${stats.totalPossible} ${isMonthly ? 'months' : 'days'} unbooked across all rooms in this category)`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          stats.percentFree >= 50
+                            ? 'bg-emerald-300 animate-pulse'
+                            : stats.percentFree > 0
+                            ? 'bg-amber-300'
+                            : 'bg-rose-300'
+                        }`}
+                      />
+                      <span>{stats.percentFree}% Free</span>
+                    </span>
                   </div>
 
                   <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -518,6 +606,10 @@ export function UserRoomCategoriesPanel({
                           onSelectCategoryFilter={onSelectCategoryFilter}
                           todayBookedRoomIds={todayBookedRoomIds}
                           isMonthly={isMonthly}
+                          allRoomsBookedSlots={allRoomsBookedSlots}
+                          allRoomsBookedMonths={allRoomsBookedMonths}
+                          upcomingWeek={upcomingWeek}
+                          upcomingMonths={upcomingMonths}
                         />
                       </div>
                     </motion.div>

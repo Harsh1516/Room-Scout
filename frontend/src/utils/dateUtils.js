@@ -420,4 +420,154 @@ export function isRoomMatchingCategory(rm, targetRate, targetIdx, allRates = [])
   return false;
 }
 
+/**
+ * Safely extracts the Set of booked slot ISO strings ("YYYY-MM-DD") for a given room.
+ * Resolves room by _id, id, roomNumber, raw numeric digits, and standardized keys.
+ */
+export function getRoomBookedSlotsSet(room, allRoomsBookedSlots = {}) {
+  if (!room || !allRoomsBookedSlots) return new Set();
+  const rawNum = String(room.roomNumber || '').trim();
+  const digits = rawNum.replace(/[^0-9]/g, '');
+  const candidateKeys = [
+    room._id,
+    room.id,
+    rawNum,
+    digits,
+    digits ? `room_${digits}` : null,
+    digits ? `Room-${digits}` : null,
+    digits ? `Room ${digits}` : null,
+  ].filter(Boolean);
+
+  for (const k of candidateKeys) {
+    if (allRoomsBookedSlots[k] && allRoomsBookedSlots[k].size > 0) {
+      return allRoomsBookedSlots[k];
+    }
+  }
+  for (const k of candidateKeys) {
+    if (allRoomsBookedSlots[k]) {
+      return allRoomsBookedSlots[k];
+    }
+  }
+  return new Set();
+}
+
+/**
+ * Safely extracts the Set of booked month keys ("YYYY-MM") for a given room.
+ * Resolves room by _id, id, roomNumber, raw numeric digits, and standardized keys.
+ */
+export function getRoomBookedMonthsSet(room, allRoomsBookedMonths = {}) {
+  if (!room || !allRoomsBookedMonths) return new Set();
+  const rawNum = String(room.roomNumber || '').trim();
+  const digits = rawNum.replace(/[^0-9]/g, '');
+  const candidateKeys = [
+    room._id,
+    room.id,
+    rawNum,
+    digits,
+    digits ? `room_${digits}` : null,
+    digits ? `Room-${digits}` : null,
+    digits ? `Room ${digits}` : null,
+  ].filter(Boolean);
+
+  for (const k of candidateKeys) {
+    if (allRoomsBookedMonths[k] && allRoomsBookedMonths[k].size > 0) {
+      return allRoomsBookedMonths[k];
+    }
+  }
+  for (const k of candidateKeys) {
+    if (allRoomsBookedMonths[k]) {
+      return allRoomsBookedMonths[k];
+    }
+  }
+  return new Set();
+}
+
+/**
+ * Calculates the exact free percentage and unbooked/total statistics for a specific room.
+ * Supports both monthly (/month) and nightly (/night) rental models without bugs.
+ * Strictly calculates against the active calendar window (30 days or 12 months).
+ */
+export function calculateRoomFreePercentage({
+  room,
+  rate,
+  allRoomsBookedSlots = {},
+  allRoomsBookedMonths = {},
+  upcomingWeek = [],
+  upcomingMonths = [],
+}) {
+  if (!room) {
+    return { percentFree: 100, unbookedCount: 0, bookedCount: 0, totalCount: 0, isMonthly: false };
+  }
+
+  const isMonthly = isMonthlyRateUnit(room.rateUnit || rate?.rateUnit);
+
+  if (isMonthly) {
+    const months = Array.isArray(upcomingMonths) && upcomingMonths.length > 0 ? upcomingMonths : getUpcoming12Months();
+    const bookedSet = getRoomBookedMonthsSet(room, allRoomsBookedMonths);
+    const totalCount = months.length;
+    let bookedCount = 0;
+    months.forEach((m) => {
+      if (bookedSet.has(m.monthKey)) {
+        bookedCount++;
+      }
+    });
+    const unbookedCount = Math.max(0, totalCount - bookedCount);
+    const percentFree = totalCount > 0 ? Math.max(0, Math.min(100, Math.round((unbookedCount / totalCount) * 100))) : 100;
+    return { percentFree, unbookedCount, bookedCount, totalCount, isMonthly: true };
+  } else {
+    const days = Array.isArray(upcomingWeek) && upcomingWeek.length > 0 ? upcomingWeek : getUpcoming30Days();
+    const bookedSet = getRoomBookedSlotsSet(room, allRoomsBookedSlots);
+    const totalCount = days.length;
+    let bookedCount = 0;
+    days.forEach((d) => {
+      if (bookedSet.has(d.fullISO)) {
+        bookedCount++;
+      }
+    });
+    const unbookedCount = Math.max(0, totalCount - bookedCount);
+    const percentFree = totalCount > 0 ? Math.max(0, Math.min(100, Math.round((unbookedCount / totalCount) * 100))) : 100;
+    return { percentFree, unbookedCount, bookedCount, totalCount, isMonthly: false };
+  }
+}
+
+/**
+ * Calculates category-wide free percentage across all rooms matching this category.
+ * Sums unbooked days or months among total for that specific category.
+ */
+export function calculateCategoryFreePercentage({
+  rooms = [],
+  rate,
+  allRoomsBookedSlots = {},
+  allRoomsBookedMonths = {},
+  upcomingWeek = [],
+  upcomingMonths = [],
+}) {
+  const safeRooms = Array.isArray(rooms) ? rooms : [];
+  if (safeRooms.length === 0) {
+    return { percentFree: 100, totalUnbooked: 0, totalPossible: 0, roomStats: [] };
+  }
+
+  let totalUnbooked = 0;
+  let totalPossible = 0;
+  const roomStats = [];
+
+  safeRooms.forEach((rm) => {
+    const stat = calculateRoomFreePercentage({
+      room: rm,
+      rate,
+      allRoomsBookedSlots,
+      allRoomsBookedMonths,
+      upcomingWeek,
+      upcomingMonths,
+    });
+    roomStats.push({ room: rm, ...stat });
+    totalUnbooked += stat.unbookedCount;
+    totalPossible += stat.totalCount;
+  });
+
+  const percentFree = totalPossible > 0 ? Math.max(0, Math.min(100, Math.round((totalUnbooked / totalPossible) * 100))) : 100;
+  return { percentFree, totalUnbooked, totalPossible, roomStats };
+}
+
+
 
