@@ -23,6 +23,8 @@ export function PaymentCountdownBanner({
 
   const isPendingVerification =
     booking?.upiPayment?.verificationStatus === 'PENDING_VERIFICATION';
+  const isUpiRejected =
+    booking?.upiPayment?.verificationStatus === 'REJECTED';
 
   useEffect(() => {
     // If guest submitted payment reference, do not count down to auto-expiration
@@ -85,7 +87,9 @@ export function PaymentCountdownBanner({
     <>
       <div
         className={`w-full rounded-2xl p-4 transition-all duration-300 border shadow-lg ${
-          isPendingVerification
+          isUpiRejected
+            ? 'bg-gradient-to-r from-rose-500/15 via-red-500/10 to-rose-500/15 border-rose-500 dark:border-rose-500/80 text-rose-950 dark:text-rose-100 ring-2 ring-rose-500/30'
+            : isPendingVerification
             ? 'bg-gradient-to-r from-teal-500/15 via-emerald-500/10 to-teal-500/15 border-teal-400 dark:border-teal-500/70 text-teal-950 dark:text-teal-100 ring-2 ring-teal-400/30'
             : isLowTime
             ? 'bg-gradient-to-r from-rose-500/15 via-amber-500/15 to-rose-500/15 border-rose-400 dark:border-rose-500/70 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/30'
@@ -97,23 +101,32 @@ export function PaymentCountdownBanner({
           <div className="flex items-center gap-3 min-w-0">
             <div
               className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-lg shadow-inner ${
-                isPendingVerification
+                isUpiRejected
+                  ? 'bg-rose-600 text-white shadow-rose-600/40'
+                  : isPendingVerification
                   ? 'bg-teal-600 text-white'
                   : isLowTime
                   ? 'bg-rose-500 text-white animate-pulse'
                   : 'bg-amber-500 text-white'
               }`}
             >
-              {isPendingVerification ? '⏳' : '⚡'}
+              {isUpiRejected ? '⚠️' : isPendingVerification ? '⏳' : '⚡'}
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
-                  {isPendingVerification
+                  {isUpiRejected
+                    ? 'UPI Reference Rejected by Host'
+                    : isPendingVerification
                     ? 'Payment Submitted • Awaiting Host Verification'
                     : 'Host Approved Your Request!'}
                 </span>
-                {!isPendingVerification && (
+                {isUpiRejected && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-600 text-white">
+                    Action Required
+                  </span>
+                )}
+                {!isPendingVerification && !isUpiRejected && (
                   <span
                     className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-mono font-black ${
                       isLowTime ? 'bg-rose-600 text-white animate-ping-short' : 'bg-amber-600 text-white'
@@ -124,9 +137,16 @@ export function PaymentCountdownBanner({
                 )}
               </div>
               <p className="text-[11.5px] text-slate-700 dark:text-zinc-300 mt-0.5">
-                {isPendingVerification
-                  ? `Your UPI reference (${booking.upiPayment?.transactionRef || 'submitted'}) is waiting for host bank verification.`
-                  : `Room ${booking.roomNumber} is reserved. Pay directly to the host via UPI to confirm your stay.`}
+                {isUpiRejected ? (
+                  <span>
+                    <strong className="text-rose-600 dark:text-rose-400">Host Reason: </strong>
+                    "{booking.upiPayment?.rejectionReason || 'UPI reference did not match host bank records'}". Please update your reference ID or payment receipt.
+                  </span>
+                ) : isPendingVerification ? (
+                  `Your UPI reference (${booking.upiPayment?.transactionRef || 'submitted'}) is waiting for host bank verification.`
+                ) : (
+                  `Room ${booking.roomNumber} is reserved. Pay directly to the host via UPI to confirm your stay.`
+                )}
               </p>
             </div>
           </div>
@@ -168,9 +188,18 @@ export function PaymentCountdownBanner({
               type="button"
               disabled={isProcessing}
               onClick={() => setShowUpiModal(true)}
-              className="px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wide bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-600 active:scale-95 text-white shadow-md shadow-emerald-600/30 border border-emerald-400/50 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+              className={`px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wide active:scale-95 text-white shadow-md flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 ${
+                isUpiRejected
+                  ? 'bg-gradient-to-r from-rose-600 via-rose-700 to-red-700 hover:from-rose-500 hover:to-rose-600 shadow-rose-600/30 border border-rose-400/50'
+                  : 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-600 shadow-emerald-600/30 border border-emerald-400/50'
+              }`}
             >
-              {isPendingVerification ? (
+              {isUpiRejected ? (
+                <>
+                  <span>Update & Re-verify UPI</span>
+                  <span className="text-rose-200">→</span>
+                </>
+              ) : isPendingVerification ? (
                 <>
                   <span>View UPI Payment Status</span>
                   <span>→</span>

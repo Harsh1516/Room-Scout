@@ -108,9 +108,9 @@ function getStatusMeta(rawStatus, booking = null) {
   if (upiVerification === 'REJECTED') {
     return {
       label: 'UPI Ref Rejected',
-      dot: 'bg-rose-500',
+      dot: 'bg-rose-500 animate-pulse',
       text: 'text-rose-500 dark:text-rose-400',
-      type: 'rejected',
+      type: 'upi_rejected',
       subNotice: booking?.upiPayment?.rejectionReason || 'Host could not verify transaction',
     };
   }
@@ -336,6 +336,26 @@ export function BookedPlacesDrawer({ onLoginClick, onStayClick }) {
                             <span>Host did not approve before check-in date</span>
                           </div>
                         )}
+
+                        {status.type === 'upi_rejected' && (
+                          <div className="mt-2 p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-[11px] text-rose-800 dark:text-rose-200 space-y-1">
+                            <div className="flex items-center gap-1.5 font-bold text-rose-700 dark:text-rose-300">
+                              <svg className="w-3.5 h-3.5 shrink-0 text-rose-600 dark:text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="12" />
+                                <line x1="12" y1="16" x2="12.01" y2="16" />
+                              </svg>
+                              <span>UPI Reference Rejected by Host</span>
+                            </div>
+                            <p className="text-[11px] text-rose-700/95 dark:text-rose-300/95 leading-snug">
+                              <span className="font-semibold text-rose-800 dark:text-rose-200">Host Reason: </span>
+                              "{item.upiPayment?.rejectionReason || status.subNotice || 'UPI reference did not match host bank records'}"
+                            </p>
+                            <p className="text-[10px] text-rose-600/80 dark:text-rose-400/80">
+                              Check your UPI app (UTR/RRN) and re-request verification below.
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -345,6 +365,31 @@ export function BookedPlacesDrawer({ onLoginClick, onStayClick }) {
                         className="text-[11px] font-medium px-2.5 py-1.5 min-h-[34px] sm:min-h-[28px] rounded-lg border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/[0.05] active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center">
                         View →
                       </button>
+
+                      {status.type === 'upi_rejected' && (
+                        <>
+                          <button type="button" onClick={() => setSelectedPass(item)}
+                            className="text-[11px] font-medium px-2.5 py-1.5 min-h-[34px] sm:min-h-[28px] rounded-lg border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/[0.05] active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center">
+                            Details
+                          </button>
+                          <button type="button"
+                            onClick={async () => {
+                              await cancelUserBooking({ booking: item, onCancelled: () => { if (deleteBooking) deleteBooking(item._id || item.bookingReferenceId).catch(() => {}); } });
+                            }}
+                            className="text-[11px] font-medium px-2.5 py-1.5 min-h-[34px] sm:min-h-[28px] rounded-lg border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center">
+                            Cancel
+                          </button>
+                          <button type="button"
+                            onClick={() => {
+                              setActiveUpiBooking(item);
+                              setShowUpiModal(true);
+                            }}
+                            className="ml-auto text-[11px] font-bold px-3 py-1.5 min-h-[34px] sm:min-h-[28px] rounded-lg bg-rose-600 hover:bg-rose-700 active:scale-95 text-white transition-all cursor-pointer inline-flex items-center gap-1 shadow-xs shadow-rose-600/30">
+                            <span>Update & Re-verify UPI</span>
+                            <span>→</span>
+                          </button>
+                        </>
+                      )}
 
                       {(status.type === 'approved' || status.type === 'verifying') && (
                         <>
@@ -439,7 +484,7 @@ export function BookedPlacesDrawer({ onLoginClick, onStayClick }) {
 
       {/* Pass Detail Modal */}
       {selectedPass && (() => {
-        const st = getStatusMeta(selectedPass.status);
+        const st = getStatusMeta(selectedPass.status, selectedPass);
         const amt = Number(selectedPass.totalAmount || 0);
         const passTitle = selectedPass.stayTitle && selectedPass.stayTitle !== 'Host Room Stay'
           ? selectedPass.stayTitle : typeof selectedPass.stayId === 'object' && selectedPass.stayId?.title
@@ -461,6 +506,26 @@ export function BookedPlacesDrawer({ onLoginClick, onStayClick }) {
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
+
+              {st.type === 'upi_rejected' && (
+                <div className="mx-5 mt-4 p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 rounded-xl space-y-1">
+                  <div className="flex items-center gap-1.5 text-[11.5px] font-bold text-rose-700 dark:text-rose-400">
+                    <svg className="w-3.5 h-3.5 shrink-0 text-rose-600 dark:text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    <span>UPI Reference Rejected by Host</span>
+                  </div>
+                  <p className="text-[11px] text-rose-600 dark:text-rose-300/90 leading-snug">
+                    <span className="font-semibold text-rose-700 dark:text-rose-300">Host Reason: </span>
+                    "{selectedPass.upiPayment?.rejectionReason || 'Reference ID did not match received payment amount.'}"
+                  </p>
+                  <p className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1">
+                    Please update your 12-digit UTR/RRN reference number or upload a screenshot receipt to re-request verification.
+                  </p>
+                </div>
+              )}
 
               {st.type === 'rejected' && (
                 <div className="mx-5 mt-4 p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 rounded-xl">
@@ -533,6 +598,28 @@ export function BookedPlacesDrawer({ onLoginClick, onStayClick }) {
                     <button type="button" onClick={() => setSelectedPass(null)}
                       className="flex-1 py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[12px] font-semibold cursor-pointer">
                       Done
+                    </button>
+                  </>
+                )}
+                {st.type === 'upi_rejected' && (
+                  <>
+                    <button type="button"
+                      onClick={async () => {
+                        const p = selectedPass; setSelectedPass(null);
+                        await cancelUserBooking({ booking: p, onCancelled: () => { if (deleteBooking) deleteBooking(p._id || p.bookingReferenceId).catch(() => {}); } });
+                      }}
+                      className="py-2.5 px-3 rounded-xl border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 text-[12px] font-semibold hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer">
+                      Cancel
+                    </button>
+                    <button type="button"
+                      onClick={() => {
+                        const p = selectedPass;
+                        setSelectedPass(null);
+                        setActiveUpiBooking(p);
+                        setShowUpiModal(true);
+                      }}
+                      className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-[12px] font-semibold transition-colors cursor-pointer shadow-xs shadow-rose-600/30">
+                      Update & Re-verify UPI
                     </button>
                   </>
                 )}
