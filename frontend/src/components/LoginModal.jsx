@@ -930,25 +930,33 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                   {/* Google OAuth Option */}
                   {GOOGLE_CLIENT_ID && (
                     <div className="pt-2">
-                      <div className="relative my-2 flex items-center justify-center">
-                        <div className="w-full border-t border-slate-200 dark:border-zinc-800" />
-                        <span className="absolute bg-white dark:bg-zinc-900 px-2 text-[10px] font-medium text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
+                      {/* Refined Upper Border / Divider with feathered gradient & matching micro-pill */}
+                      <div className="relative my-3 flex items-center justify-center">
+                        <div className="w-full h-px bg-gradient-to-r from-transparent via-slate-300 dark:via-white/15 to-transparent" />
+                        <span className="absolute px-3 py-0.5 rounded-full text-[9.5px] font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-widest bg-white dark:bg-[#0c0e14] border border-slate-200/80 dark:border-white/10 shadow-2xs backdrop-blur-md select-none">
                           or continue with
                         </span>
                       </div>
-                      <div className="flex justify-center w-full pt-1">
-                        <div className="overflow-hidden rounded-full max-w-[280px] w-full flex justify-center">
-                          <ErrorBoundary fallback={null}>
-                            <GoogleLogin
-                              onSuccess={handleGoogleSuccess}
-                              onError={handleGoogleError}
-                              theme={isDark ? 'filled_black' : 'outline'}
-                              size="large"
-                              width="280"
-                              text={isRegisterMode ? 'signup_with' : 'signin_with'}
-                              shape="pill"
-                            />
-                          </ErrorBoundary>
+                      {/* Upgraded Luxury Google Capsule Border with metallic sheen & ambient aura */}
+                      <div className="flex justify-center w-full pt-1 pb-0.5">
+                        <div className="relative group p-[1px] rounded-full max-w-[282px] w-full transition-all duration-300 bg-gradient-to-b from-slate-200 via-slate-100 to-slate-200 dark:from-white/25 dark:via-white/10 dark:to-white/5 hover:dark:from-emerald-400/40 hover:dark:via-white/20 hover:dark:to-white/10 shadow-sm dark:shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+                          {/* Ambient aura glow behind capsule on hover */}
+                          <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 dark:from-emerald-400/20 dark:via-teal-400/20 dark:to-indigo-400/20 blur-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                          {/* Inner Capsule Border & Container */}
+                          <div className="relative overflow-hidden rounded-full w-full flex justify-center bg-white dark:bg-[#131314] ring-1 ring-black/[0.04] dark:ring-white/[0.08]">
+                            <ErrorBoundary fallback={null}>
+                              <GoogleLogin
+                                onSuccess={handleGoogleSuccess}
+                                onError={handleGoogleError}
+                                theme={isDark ? 'filled_black' : 'outline'}
+                                size="large"
+                                width="280"
+                                text={isRegisterMode ? 'signup_with' : 'signin_with'}
+                                shape="pill"
+                              />
+                            </ErrorBoundary>
+                          </div>
                         </div>
                       </div>
                     </div>
