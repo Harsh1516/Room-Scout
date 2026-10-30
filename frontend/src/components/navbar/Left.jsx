@@ -23,7 +23,7 @@ export function Left({
 
   if (showBrand) {
     return (
-      <div className="fixed top-3.5 left-3 sm:top-5 sm:left-6 z-50 flex items-center select-none">
+      <div className="fixed top-3.5 left-3 sm:top-5 sm:left-6 z-50 flex items-center select-none pointer-events-auto">
         {/* Brand Pill */}
         <button
           type="button"

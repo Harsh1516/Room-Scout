@@ -16,7 +16,7 @@ export function Right({ onLoginClick }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="fixed top-3.5 right-3 sm:top-5 sm:right-6 z-50 flex items-center gap-2 sm:gap-2.5">
+    <div className="fixed top-3.5 right-3 sm:top-5 sm:right-6 z-50 flex items-center gap-2 sm:gap-2.5 pointer-events-auto">
       {/* ===================================================================== */}
       {/* 💻 DESKTOP ACTIONS ROW (SHOWN ON md+ SCREENS)                          */}
       {/* ===================================================================== */}
