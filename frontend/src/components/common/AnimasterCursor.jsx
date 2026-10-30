@@ -110,7 +110,7 @@ export function AnimasterCursor() {
 
       // Check if hovering an interactive button/link
       const interactiveEl = e.target.closest(INTERACTIVE_SELECTOR);
-      if (interactiveEl) {
+      if (interactiveEl && !interactiveEl.closest('[data-no-hover="true"], [data-no-animaster="true"]')) {
         const rect = interactiveEl.getBoundingClientRect();
         // Only snap to discrete buttons/chips (avoid expanding across massive containers)
         if (rect.width > 0 && rect.height > 0 && rect.width <= 360 && rect.height <= 100) {

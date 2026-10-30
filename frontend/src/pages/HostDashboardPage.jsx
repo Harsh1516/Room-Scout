@@ -4,20 +4,29 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { adminAPI, staysAPI, bookingsAPI } from '../services/api';
-import { Login } from '../components/navbar/Login';
 import { toast } from '../context/ToastContext';
 import HostRoomCategories from '../components/host/HostRoomCategories';
 import HostDashboardNavbar from '../components/host/HostDashboardNavbar';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
-import { getUpcoming30Days, isSameRoom } from '../utils/dateUtils';
+import { getUpcoming30Days, isSameRoom, isRoomMatchingCategory } from '../utils/dateUtils';
+import { PropertyTelemetryModal } from '../components/host/property/PropertyTelemetryModal';
 
 // Dynamic On-Demand Sub-Modules for Host Dashboard
 const HostWeeklySlotSchedule = lazy(() => import('../components/host/HostWeeklySlotSchedule'));
 const HostUsersVisitedSection = lazy(() =>
   import('../components/host/HostUsersVisitedSection').then((m) => ({ default: m.HostUsersVisitedSection }))
 );
+const PaidUsersList = lazy(() =>
+  import('../components/host/paid/PaidUsersList').then((m) => ({ default: m.PaidUsersList }))
+);
 const PropertyDetailsSection = lazy(() =>
   import('../components/host/PropertyDetailsSection').then((m) => ({ default: m.PropertyDetailsSection }))
+);
+const PropertyArchitecturalBackground = lazy(() =>
+  import('../components/common/PropertyArchitecturalBackground').then((m) => ({ default: m.PropertyArchitecturalBackground }))
+);
+const HostPaymentSettingsSection = lazy(() =>
+  import('../components/host/HostPaymentSettingsSection').then((m) => ({ default: m.HostPaymentSettingsSection }))
 );
 
 function DashboardSkeletonLoader() {
@@ -34,10 +43,10 @@ function DashboardSkeletonLoader() {
 const DEFAULT_HOST_PROPERTY = {
   propertyName: '',
   title: '',
-  propertyType: 'PG',
-  category: 'PG',
-  genderType: 'Both',
-  rating: 5.0,
+  propertyType: '',
+  category: '',
+  genderType: '',
+  rating: null,
   status: 'Pending Approval',
   isApproved: false,
   reraNumber: '',
@@ -48,20 +57,97 @@ const DEFAULT_HOST_PROPERTY = {
   rules: [],
   roomRates: [],
   rooms: [],
+  latitude: null,
+  longitude: null,
+  address: '',
+  location: '',
+  roadArea: '',
+  city: '',
+  state: '',
+  pincode: '',
 };
 
 export function HostDashboardPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, updateUserSession } = useAuth();
   const { isDark } = useTheme();
 
   const [activeTab, setActiveTab] = useState(() => location.state?.tab || 'property');
+  const TAB_ORDER = useMemo(() => ({ property: 0, room: 1, users: 2, paid: 3, payment: 4 }), []);
+  const prevTabRef = useRef(activeTab);
+  const [tabDirection, setTabDirection] = useState(1);
+
+  useEffect(() => {
+    const prevIdx = TAB_ORDER[prevTabRef.current] ?? 0;
+    const nextIdx = TAB_ORDER[activeTab] ?? 0;
+    if (nextIdx !== prevIdx) {
+      setTabDirection(nextIdx > prevIdx ? 1 : -1);
+      prevTabRef.current = activeTab;
+    }
+  }, [activeTab, TAB_ORDER]);
+
+  const pageConsoleVariants = useMemo(
+    () => ({
+      enter: (dir) => ({
+        x: dir > 0 ? 40 : -40,
+        opacity: 0,
+        scale: 0.995,
+      }),
+      center: {
+        x: 0,
+        opacity: 1,
+        scale: 1,
+        transition: {
+          duration: 0.28,
+          ease: [0.16, 1, 0.3, 1],
+        },
+      },
+      exit: (dir) => ({
+        x: dir > 0 ? -40 : 40,
+        opacity: 0,
+        scale: 0.995,
+        transition: {
+          duration: 0.18,
+          ease: [0.16, 1, 0.3, 1],
+        },
+      }),
+    }),
+    []
+  );
+
+  const handleTabSwitch = useCallback((nextTab) => {
+    setActiveTab(nextTab);
+  }, []);
+
   const [hostProperty, setHostProperty] = useState(() => location.state?.updatedHost || DEFAULT_HOST_PROPERTY);
   const [guests, setGuests] = useState([]);
+  const [visitedSubTab, setVisitedSubTab] = useState('requests');
+  const [showPropertyTelemetry, setShowPropertyTelemetry] = useState(false);
+  const [propertySubTabIndex, setPropertySubTabIndex] = useState(0);
+
+  const propertyOccupancyRate = useMemo(() => {
+    let totalBeds = 0;
+    if (Array.isArray(hostProperty?.rooms) && hostProperty.rooms.length > 0) {
+      totalBeds = hostProperty.rooms.reduce((acc, r) => acc + (Number(r.capacity) || 2), 0);
+    } else if (Array.isArray(hostProperty?.roomRates) && hostProperty.roomRates.length > 0) {
+      totalBeds = hostProperty.roomRates.reduce((acc, r) => acc + (Number(r.capacity) || 2) * (Number(r.roomCount) || 2), 0);
+    }
+    if (totalBeds <= 0) return '0.0';
+    let active = 0;
+    if (Array.isArray(guests) && guests.length > 0) {
+      const activeList = guests.filter((g) => g.status !== 'cancelled' && g.status !== 'checked_out');
+      active = Math.min(totalBeds, activeList.length);
+    }
+    return ((active / totalBeds) * 100).toFixed(1);
+  }, [hostProperty, guests]);
   const [loading, setLoading] = useState(false);
   const [selectedCategoryIndex, setSelectedCategoryIndex] = useState(0);
-  const [collapsedCategories, setCollapsedCategories] = useState({});
+  const [collapsedCategories, setCollapsedCategories] = useState(() => {
+    const initial = {};
+    for (let i = 0; i < 20; i++) initial[i] = true;
+    return initial;
+  });
   const [selectedRoomCardId, setSelectedRoomCardId] = useState(null);
   const [selectedRoomNumber, setSelectedRoomNumber] = useState(null);
   const selectedRoomIndexRef = useRef(null);
@@ -77,16 +163,27 @@ export function HostDashboardPage() {
       selectedRoomNumberRef.current = rNum;
       setSelectedRoomNumber(rNum);
     }
-    const targetId = card?.id || card?._id || rNum || cardId;
+    const targetId = card?._id || rNum || cardId;
     selectedRoomCardIdRef.current = targetId;
     setSelectedRoomCardId(targetId);
   }, []);
 
   const [activeRightPanelTab, setActiveRightPanelTab] = useState('guest');
   const [requestedUserBooking, setRequestedUserBooking] = useState(null);
+  const [selectedBookedGuest, setSelectedBookedGuest] = useState(null);
+  const [hasVisitedMounted, setHasVisitedMounted] = useState(() => activeTab === 'users');
+  const [hasPaidMounted, setHasPaidMounted] = useState(() => activeTab === 'paid');
+
+  if (activeTab === 'users' && !hasVisitedMounted) {
+    setHasVisitedMounted(true);
+  }
+  if (activeTab === 'paid' && !hasPaidMounted) {
+    setHasPaidMounted(true);
+  }
+
   const upcomingWeek = useMemo(() => getUpcoming30Days(), []);
-  const roomCardsScrollRef = useRef(null);
-  const prevStatusRef = useRef(hostProperty?.status);
+  const prevStatusRef = useRef(null);
+  const hasInitialFetchedRef = useRef(false);
 
   const showToast = useCallback((msg, type = 'info') => {
     if (type === 'error' || msg.toLowerCase().includes('error') || msg.toLowerCase().includes('failed')) {
@@ -100,7 +197,7 @@ export function HostDashboardPage() {
 
   const handleBack = useCallback(() => {
     if (activeTab !== 'property') {
-      setActiveTab('property');
+      handleTabSwitch('property');
       return;
     }
     if (window.history.state && window.history.state.idx > 0) {
@@ -108,19 +205,46 @@ export function HostDashboardPage() {
     } else {
       navigate('/');
     }
-  }, [activeTab, navigate]);
+  }, [activeTab, handleTabSwitch, navigate]);
 
   const handleSelectUserRequest = useCallback((request) => {
     if (!request) return;
-    setRequestedUserBooking(request);
+
+    // Check if this booking is an actual unapproved online request awaiting approval
+    const rawSt = String(request.status || '').toUpperCase();
+    const isDone =
+      rawSt === 'CONFIRMED' ||
+      rawSt === 'CHECKED_IN' ||
+      rawSt === 'CHECKED_OUT' ||
+      rawSt === 'REJECTED' ||
+      rawSt === 'CANCELLED';
+    const isPending =
+      (rawSt.includes('PENDING') || rawSt === 'DRAFT' || String(request.status || '').toLowerCase().includes('pending')) &&
+      !isDone;
+    const isOnline =
+      request.bookingSource === 'ONLINE' ||
+      request.bookingSource === 'ONLINE_USER' ||
+      request.isOnline === true;
+
+    if (isPending && isOnline) {
+      // Unapproved online booking request: open for approval
+      setRequestedUserBooking(request);
+      setSelectedBookedGuest(null);
+      setActiveRightPanelTab('guest');
+    } else {
+      // Confirmed booking, offline guest, or check-in/out: show the booked slot in occupants tab
+      setRequestedUserBooking(null);
+      setSelectedBookedGuest(request);
+      setActiveRightPanelTab('occupants');
+    }
 
     const rawReqRoomNum = String(request.roomNumber || '').replace(/[^0-9]/g, '');
     const foundRoom = (Array.isArray(hostProperty?.rooms) ? hostProperty.rooms : []).find(
       (r) =>
         (rawReqRoomNum && String(r.roomNumber || '').replace(/[^0-9]/g, '') === rawReqRoomNum) ||
         (String(r.roomNumber || '').trim().toLowerCase() === String(request.roomNumber || '').trim().toLowerCase()) ||
-        (request.roomId && (r.id === request.roomId || r._id === request.roomId)) ||
-        (request.roomCardId && (r.id === request.roomCardId || r._id === request.roomCardId))
+        (request.roomId && r._id === request.roomId) ||
+        (request.roomCardId && r._id === request.roomCardId)
     );
 
     let catIndex = 0;
@@ -138,7 +262,7 @@ export function HostDashboardPage() {
 
     setSelectedCategoryIndex(catIndex);
     if (foundRoom) {
-      const rId = foundRoom.id || foundRoom._id || foundRoom.roomNumber;
+      const rId = foundRoom._id || foundRoom.roomNumber;
       const rNum = foundRoom.roomNumber ? String(foundRoom.roomNumber).trim() : null;
       selectedRoomCardIdRef.current = rId;
       selectedRoomNumberRef.current = rNum;
@@ -147,14 +271,13 @@ export function HostDashboardPage() {
     }
 
     setActiveTab('room');
-    setActiveRightPanelTab('guest');
   }, [hostProperty]);
 
   const activeCategory = hostProperty?.roomRates?.[selectedCategoryIndex] || hostProperty?.roomRates?.[0] || null;
 
   const activeCategoryRooms = useMemo(() => {
     if (!activeCategory) return [];
-    const rateId = activeCategory.id || activeCategory._id;
+    const rateId = activeCategory._id;
     const catType = String(activeCategory.type || '').toLowerCase().trim();
 
     return (Array.isArray(hostProperty?.rooms) ? hostProperty.rooms : [])
@@ -172,48 +295,24 @@ export function HostDashboardPage() {
       })
       .map((r, idx) => ({
         ...r,
-        id: r.id || r._id || `room_${r.roomNumber || idx + 1}`,
-        _id: r._id || r.id || `room_${r.roomNumber || idx + 1}`,
+        
+        _id: r._id || `room_${r.roomNumber || idx + 1}`,
       }));
-  }, [hostProperty?.rooms, activeCategory, selectedCategoryIndex]);
-
-  const handleRoomCardsWheel = useCallback((e) => {
-    const el = roomCardsScrollRef.current;
-    if (!el) return;
-    if (el.scrollWidth > el.clientWidth && e.deltaY !== 0) {
-      e.preventDefault();
-      el.scrollLeft += e.deltaY;
-    }
-  }, []);
-
-  const setRoomCardsScrollRef = useCallback((node) => {
-    if (roomCardsScrollRef.current) {
-      roomCardsScrollRef.current.removeEventListener('wheel', handleRoomCardsWheel);
-    }
-    roomCardsScrollRef.current = node;
-    if (node) {
-      node.addEventListener('wheel', handleRoomCardsWheel, { passive: false });
-    }
-  }, [handleRoomCardsWheel]);
-
-  useEffect(() => {
-    const el = roomCardsScrollRef.current;
-    if (!el) return;
-    el.addEventListener('wheel', handleRoomCardsWheel, { passive: false });
-    return () => {
-      el.removeEventListener('wheel', handleRoomCardsWheel);
-    };
-  }, [activeTab, selectedCategoryIndex, activeCategoryRooms.length, handleRoomCardsWheel]);
+  }, [hostProperty, activeCategory, selectedCategoryIndex]);
 
   const toggleCollapseCategory = (index, e) => {
     if (e) e.stopPropagation();
-    setCollapsedCategories((prev) => ({
-      ...prev,
-      [index]: !prev[index],
-    }));
+    setCollapsedCategories((prev) => {
+      const isCurrentlyOpen = prev[index] === false;
+      const next = {};
+      (hostProperty?.roomRates || []).forEach((_, i) => {
+        next[i] = isCurrentlyOpen ? true : i !== index;
+      });
+      return next;
+    });
   };
 
-  const broadcastStayUpdate = (stayId) => {
+  const broadcastStayUpdate = useCallback((stayId) => {
     try {
       window.dispatchEvent(new CustomEvent('stayhub_rooms_updated', { detail: { stayId, sender: 'HostDashboard' } }));
       if (typeof BroadcastChannel !== 'undefined') {
@@ -221,13 +320,18 @@ export function HostDashboardPage() {
         bc.postMessage({ type: 'ROOMS_UPDATED', stayId, sender: 'HostDashboard' });
         bc.close();
       }
-    } catch {}
-  };
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const updateRoomRateDebounceRef = useRef(null);
   const updateRoomNumberDebounceRef = useRef(null);
   const updateRoomCapacityDebounceRef = useRef(null);
   const latestHostPropertyRef = useRef(hostProperty);
+  const hasUnsavedChangesRef = useRef(false);
+  const [savedRoomNumbers, setSavedRoomNumbers] = useState(() => new Set());
+  const savedRoomNumbersRef = useRef(new Set());
   useEffect(() => {
     latestHostPropertyRef.current = hostProperty;
   }, [hostProperty]);
@@ -237,11 +341,10 @@ export function HostDashboardPage() {
     const currentRates = Array.isArray(hostProperty?.roomRates) ? [...hostProperty.roomRates] : [];
 
     const newRate = {
-      id: newId,
       _id: newId,
       type: '',
       price: '',
-      rateUnit: '',
+      rateUnit: '/night',
     };
     const updatedRates = [...currentRates, newRate];
     const newIdx = updatedRates.length - 1;
@@ -249,17 +352,17 @@ export function HostDashboardPage() {
       ...(hostProperty || {}),
       roomRates: updatedRates,
     };
+    hasUnsavedChangesRef.current = true;
     latestHostPropertyRef.current = updatedHost;
     setHostProperty(updatedHost);
     setSelectedCategoryIndex(newIdx);
-    setCollapsedCategories((prev) => ({
-      ...prev,
-      [newIdx]: false,
-    }));
+    setCollapsedCategories(() => {
+      const next = {};
+      updatedRates.forEach((_, i) => { next[i] = i !== newIdx; });
+      return next;
+    });
 
-    adminAPI.createHost(updatedHost)
-      .then(() => broadcastStayUpdate(updatedHost.id || updatedHost._id))
-      .catch((err) => console.warn('Add room rate immediate save error:', err));
+    // Category newly added in local state - host can fill details and click "Update"
   };
 
   const handleUpdateRoomRate = (index, field, value) => {
@@ -270,13 +373,12 @@ export function HostDashboardPage() {
       if (!currentRates[index]) return prev;
 
       const targetRate = currentRates[index];
-      const targetRateId = targetRate.id || targetRate._id || `rate_${index}`;
-      const oldType = targetRate.type;
+      const targetRateId = targetRate._id || `rate_${index}`;
 
       if (typeof field === 'object' && field !== null) {
-        currentRates[index] = { ...targetRate, id: targetRateId, ...field };
+        currentRates[index] = { ...targetRate, _id: targetRateId, ...field };
       } else {
-        currentRates[index] = { ...targetRate, id: targetRateId, [field]: value };
+        currentRates[index] = { ...targetRate, _id: targetRateId, [field]: value };
       }
 
       const newType = typeof field === 'object' ? field.type : (field === 'type' ? value : undefined);
@@ -284,19 +386,17 @@ export function HostDashboardPage() {
       const newRateUnit = typeof field === 'object' ? field.rateUnit : (field === 'rateUnit' ? value : undefined);
       const newCapacity = typeof field === 'object' ? field.capacity : (field === 'capacity' ? value : undefined);
 
+      const updatedRate = currentRates[index];
       let updatedRooms = Array.isArray(prev.rooms) ? [...prev.rooms] : [];
 
       updatedRooms = updatedRooms.map((r) => {
-        const isMatch =
-          (r.rateId && (r.rateId === targetRateId || (targetRate._id && String(r.rateId) === String(targetRate._id)))) ||
-          (oldType && r.type && String(r.type).trim().toLowerCase() === String(oldType).trim().toLowerCase()) ||
-          (typeof r.categoryIndex === 'number' && r.categoryIndex === index);
+        const isMatch = isRoomMatchingCategory(r, targetRate, index, currentRates);
 
         if (!isMatch) return r;
 
         const updated = {
           ...r,
-          rateId: targetRateId,
+          rateId: updatedRate._id || targetRateId,
           categoryIndex: index,
         };
 
@@ -317,25 +417,13 @@ export function HostDashboardPage() {
       });
 
       nextUpdatedHost = { ...prev, roomRates: currentRates, rooms: updatedRooms };
+      hasUnsavedChangesRef.current = true;
       latestHostPropertyRef.current = nextUpdatedHost;
       return nextUpdatedHost;
     });
-
-    if (updateRoomRateDebounceRef.current) {
-      clearTimeout(updateRoomRateDebounceRef.current);
-    }
-    updateRoomRateDebounceRef.current = setTimeout(() => {
-      updateRoomRateDebounceRef.current = null;
-      const hostToSave = latestHostPropertyRef.current || nextUpdatedHost;
-      if (hostToSave) {
-        adminAPI.createHost(hostToSave)
-          .then(() => broadcastStayUpdate(hostToSave.id || hostToSave._id))
-          .catch((err) => console.warn('Debounced category rate save error:', err));
-      }
-    }, 600);
   };
 
-  const handleSaveRoomRateOnBlur = async () => {
+  const handleSaveCategory = async (catIndex) => {
     if (updateRoomRateDebounceRef.current) {
       clearTimeout(updateRoomRateDebounceRef.current);
       updateRoomRateDebounceRef.current = null;
@@ -348,13 +436,27 @@ export function HostDashboardPage() {
       clearTimeout(updateRoomCapacityDebounceRef.current);
       updateRoomCapacityDebounceRef.current = null;
     }
+
     const targetHost = latestHostPropertyRef.current || hostProperty;
     if (!targetHost) return;
+    const catName = targetHost.roomRates?.[catIndex]?.type || 'Room Category';
+
     try {
-      await adminAPI.createHost(targetHost);
-      broadcastStayUpdate(targetHost.id || targetHost._id);
+      const saved = await handleAutoSyncProperty(targetHost);
+      broadcastStayUpdate(targetHost._id);
+      hasUnsavedChangesRef.current = false;
+      if (saved && Array.isArray(saved.rooms)) {
+        const updatedNumbers = new Set(
+          saved.rooms.map((r) => String(r.roomNumber || '').trim()).filter(Boolean)
+        );
+        setSavedRoomNumbers(updatedNumbers);
+        savedRoomNumbersRef.current = updatedNumbers;
+      }
+      toast.success(`Category "${catName}" & rooms saved to database!`);
+      return saved;
     } catch (err) {
-      console.warn('Auto save blur error:', err);
+      console.warn('Category update save error:', err);
+      throw err;
     }
   };
 
@@ -365,37 +467,35 @@ export function HostDashboardPage() {
     if (!removed) return;
     currentRates.splice(index, 1);
 
-    const removedRateId = removed.id || removed._id;
     const removedType = (removed.type || '').trim().toLowerCase();
 
-    // 1. Identify all room cards belonging to this deleted category
-    const roomsToRemove = (Array.isArray(hostProperty.rooms) ? hostProperty.rooms : []).filter((r) => {
-      if (removedRateId && r.rateId && (r.rateId === removedRateId || (removed._id && String(r.rateId) === String(removed._id)))) return true;
-      if (removedType && r.type && String(r.type).trim().toLowerCase() === removedType) return true;
-      if (typeof r.categoryIndex === 'number' && r.categoryIndex === index) return true;
-      return false;
-    });
+    // 1. Identify all room cards strictly belonging to this deleted category
+    const roomsToRemove = (Array.isArray(hostProperty.rooms) ? hostProperty.rooms : []).filter((r) =>
+      isRoomMatchingCategory(r, removed, index, hostProperty.roomRates)
+    );
     const removedRoomNumbers = roomsToRemove.map((r) => r.roomNumber).filter(Boolean);
     const removedRawNumbers = new Set(
       removedRoomNumbers.map((num) => String(num).replace(/[^0-9]/g, ''))
     );
 
-    // 2. Filter out these room cards from the property (and purge any orphaned rooms)
-    const validRateIds = new Set(currentRates.map((r) => r.id || r._id).filter(Boolean));
-    const validTypes = new Set(currentRates.map((r) => (r.type || '').trim().toLowerCase()).filter(Boolean));
-
+    // 2. Filter out these room cards from the property and re-index higher categories
     const updatedRooms = currentRates.length === 0
       ? []
-      : (Array.isArray(hostProperty.rooms) ? hostProperty.rooms : []).filter((r) => {
-          if (roomsToRemove.includes(r)) return false;
-          const rRateId = r.rateId;
-          const rType = (r.type || '').trim().toLowerCase();
-          return (rRateId && validRateIds.has(rRateId)) || (rType && validTypes.has(rType));
-        });
+      : (Array.isArray(hostProperty.rooms) ? hostProperty.rooms : [])
+          .filter((r) => !roomsToRemove.includes(r))
+          .map((r) => {
+            if (typeof r.categoryIndex === 'number' && r.categoryIndex > index) {
+              return { ...r, categoryIndex: r.categoryIndex - 1 };
+            }
+            return r;
+          });
 
     const totalCount = updatedRooms.length;
     const availCount = updatedRooms.filter((r) => r.status === 'Available').length;
-    const nextStatus = (updatedRooms.length === 0 || currentRates.length === 0)
+    const isApprovedHost = hostProperty.status === 'Approved' || hostProperty.isApproved;
+    const nextStatus = isApprovedHost
+      ? 'Approved'
+      : (updatedRooms.length === 0 || currentRates.length === 0)
       ? 'Pending Approval'
       : (hostProperty.status || 'Pending Approval');
 
@@ -407,10 +507,10 @@ export function HostDashboardPage() {
       availableRooms: availCount,
       availableRoomsCount: availCount,
       status: nextStatus,
-      hostDetails: { ...(hostProperty.hostDetails || {}), status: nextStatus },
     };
 
     // 3. Immediately update local property state (0ms UI reactivity)
+    hasUnsavedChangesRef.current = true;
     latestHostPropertyRef.current = updatedHost;
     setHostProperty(updatedHost);
 
@@ -441,7 +541,7 @@ export function HostDashboardPage() {
     try {
       await bookingsAPI.cascadeDeleteRoomBookings({
         hostEmail: hostProperty.email,
-        stayId: hostProperty.stayId || hostProperty._id || hostProperty.id,
+        stayId: hostProperty.stayId || hostProperty._id,
         roomNumbers: removedRoomNumbers,
         categoryType: removed.type,
       });
@@ -452,7 +552,7 @@ export function HostDashboardPage() {
     // 7. Persist updated host property to database and broadcast update
     try {
       await handleAutoSyncProperty(updatedHost);
-      broadcastStayUpdate(updatedHost.id || updatedHost._id);
+      broadcastStayUpdate(updatedHost._id);
     } catch (err) {
       console.warn('Delete room rate error:', err);
     }
@@ -462,36 +562,40 @@ export function HostDashboardPage() {
     if (!activeCategoryRooms.length) return null;
 
     // 1. Prioritize persistent roomNumber matching
-    const activeNum = selectedRoomNumber || selectedRoomNumberRef.current;
-    if (activeNum) {
+    if (selectedRoomNumber) {
       const foundByNum = activeCategoryRooms.find(
-        (r) => String(r.roomNumber || '').trim() === String(activeNum).trim()
+        (r) => String(r.roomNumber || '').trim() === String(selectedRoomNumber).trim()
       );
       if (foundByNum) return foundByNum;
     }
 
     // 2. Prioritize card id / isSameRoom matching
-    const activeId = selectedRoomCardId || selectedRoomCardIdRef.current;
-    if (activeId) {
-      const found = activeCategoryRooms.find((r) => isSameRoom(r, activeId));
+    if (selectedRoomCardId) {
+      const found = activeCategoryRooms.find((r) => isSameRoom(r, selectedRoomCardId));
       if (found) return found;
     }
 
-    // 3. Prioritize category index
-    if (
-      selectedRoomIndexRef.current !== null &&
-      selectedRoomIndexRef.current >= 0 &&
-      selectedRoomIndexRef.current < activeCategoryRooms.length
-    ) {
-      return activeCategoryRooms[selectedRoomIndexRef.current];
-    }
-
-    // 4. Default to first room
+    // 3. Default to first room
     return activeCategoryRooms[0];
   }, [activeCategoryRooms, selectedRoomCardId, selectedRoomNumber]);
 
+  const isCurrentRoomSaved = useMemo(() => {
+    if (!selectedRoomCard) return true;
+    const rNum = String(selectedRoomCard.roomNumber || '').trim();
+    if (!rNum) return false;
+    if (savedRoomNumbers && savedRoomNumbers.size > 0) {
+      return savedRoomNumbers.has(rNum);
+    }
+    const rId = selectedRoomCard._id;
+    if (rId && typeof rId === 'string' && rId.length === 24 && !rId.startsWith('room_')) {
+      return true;
+    }
+    return false;
+  }, [selectedRoomCard, savedRoomNumbers]);
+
   useEffect(() => {
     if (!activeCategoryRooms.length) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (selectedRoomCardId !== null) setSelectedRoomCardId(null);
       if (selectedRoomNumber !== null) setSelectedRoomNumber(null);
       selectedRoomIndexRef.current = null;
@@ -509,7 +613,7 @@ export function HostDashboardPage() {
       if (foundIdx !== -1) {
         selectedRoomIndexRef.current = foundIdx;
         const matched = activeCategoryRooms[foundIdx];
-        const matchedId = matched.id || matched._id || matched.roomNumber;
+        const matchedId = matched._id || matched.roomNumber;
         selectedRoomCardIdRef.current = matchedId;
         selectedRoomNumberRef.current = String(matched.roomNumber).trim();
         if (selectedRoomCardId !== matchedId) {
@@ -526,7 +630,7 @@ export function HostDashboardPage() {
       if (foundIdx !== -1) {
         selectedRoomIndexRef.current = foundIdx;
         const matched = activeCategoryRooms[foundIdx];
-        const matchedId = matched.id || matched._id || matched.roomNumber;
+        const matchedId = matched._id || matched.roomNumber;
         const matchedNum = matched.roomNumber ? String(matched.roomNumber).trim() : null;
         selectedRoomCardIdRef.current = matchedId;
         selectedRoomNumberRef.current = matchedNum;
@@ -545,7 +649,7 @@ export function HostDashboardPage() {
     ) {
       const roomAtIndex = activeCategoryRooms[selectedRoomIndexRef.current];
       if (roomAtIndex) {
-        const rId = roomAtIndex.id || roomAtIndex._id || roomAtIndex.roomNumber;
+        const rId = roomAtIndex._id || roomAtIndex.roomNumber;
         const rNum = roomAtIndex.roomNumber ? String(roomAtIndex.roomNumber).trim() : null;
         selectedRoomCardIdRef.current = rId;
         selectedRoomNumberRef.current = rNum;
@@ -557,7 +661,7 @@ export function HostDashboardPage() {
 
     // 4. Default to first room
     const firstRoom = activeCategoryRooms[0];
-    const fId = firstRoom?.id || firstRoom?._id || null;
+    const fId = firstRoom?._id || null;
     const fNum = firstRoom?.roomNumber ? String(firstRoom.roomNumber).trim() : null;
     selectedRoomCardIdRef.current = fId;
     selectedRoomNumberRef.current = fNum;
@@ -571,7 +675,7 @@ export function HostDashboardPage() {
       return [];
     }
     const rateIds = new Set(
-      hostProperty.roomRates.map((r) => r.id || r._id).filter(Boolean)
+      hostProperty.roomRates.map((r) => r._id).filter(Boolean)
     );
     const currentTypes = new Set(
       hostProperty.roomRates
@@ -585,7 +689,7 @@ export function HostDashboardPage() {
       if (typeof room.categoryIndex === 'number' && room.categoryIndex < hostProperty.roomRates.length) return true;
       return false;
     });
-  }, [hostProperty?.roomRates, hostProperty?.rooms]);
+  }, [hostProperty]);
 
   const handleAddRoomCard = (targetCategory) => {
     const cat = targetCategory || activeCategory;
@@ -598,14 +702,14 @@ export function HostDashboardPage() {
       showToast('Please enter a valid room price first.', 'error');
       return;
     }
-    if (!cat.rateUnit || !String(cat.rateUnit).trim()) {
-      showToast('Please select a room billing cycle/unit first.', 'error');
-      return;
-    }
+    const effectiveRateUnit = (cat.rateUnit && String(cat.rateUnit).trim()) || '/night';
 
     const cleanCatType = cat.type.trim();
+    const baseHost = latestHostPropertyRef.current || hostProperty;
+    const currentRooms = Array.isArray(baseHost?.rooms) ? [...baseHost.rooms] : [];
+
     const allExistingNumbers = new Set(
-      configuredCategoryRooms
+      currentRooms
         .map((r) => parseInt(String(r.roomNumber || '').replace(/[^0-9]/g, ''), 10))
         .filter((n) => !isNaN(n))
     );
@@ -620,16 +724,20 @@ export function HostDashboardPage() {
     }
     const nextNum = String(nextNumInt);
     const formattedPrice = `₹${parseInt(rawPrice, 10).toLocaleString('en-IN')}`;
-    const rateUnit = cat.rateUnit || '/month';
+    const rateUnit = effectiveRateUnit;
 
-    const targetIdx = Array.isArray(hostProperty?.roomRates)
-      ? hostProperty.roomRates.findIndex((r) => (r.id && r.id === cat.id) || (cat.type && r.type === cat.type))
-      : selectedCategoryIndex;
+    const currentRates = Array.isArray(baseHost?.roomRates) ? [...baseHost.roomRates] : [];
+    const targetIdx = currentRates.findIndex((r) => (r._id && r._id === cat._id) || (cat.type && r.type === cat.type));
     const resolvedCatIndex = targetIdx !== -1 ? targetIdx : selectedCategoryIndex;
-    const rateId = cat.id || cat._id || `rate_${resolvedCatIndex}`;
+    if (resolvedCatIndex !== -1 && currentRates[resolvedCatIndex] && !currentRates[resolvedCatIndex].rateUnit) {
+      currentRates[resolvedCatIndex] = { ...currentRates[resolvedCatIndex], rateUnit: effectiveRateUnit };
+    }
+    const rateId = cat._id || `rate_${resolvedCatIndex}`;
 
+    const newRoomId = `room_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
     const newCard = {
-      id: `room_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      _id: newRoomId,
+      id: newRoomId,
       rateId: rateId,
       categoryIndex: resolvedCatIndex,
       roomNumber: nextNum,
@@ -642,22 +750,14 @@ export function HostDashboardPage() {
       floor: nextNumInt < 100 ? 'Floor 1' : `Floor ${Math.floor(nextNumInt / 100)}`,
     };
 
-    const activeRateIds = new Set((hostProperty?.roomRates || []).map((r) => r.id || r._id).filter(Boolean));
-    const activeTypes = new Set((hostProperty?.roomRates || []).map((r) => (r.type || '').trim().toLowerCase()).filter(Boolean));
-    const currentRooms = (Array.isArray(hostProperty?.rooms) ? hostProperty.rooms : []).filter((r) => {
-      const rRateId = r.rateId;
-      const rType = (r.type || '').trim().toLowerCase();
-      return (rRateId && activeRateIds.has(rRateId)) || (rType && activeTypes.has(rType));
-    });
     const updatedRooms = [...currentRooms, newCard];
     const totalCount = updatedRooms.length;
     const availCount = updatedRooms.filter((r) => r.status === 'Available').length;
-    const isAlreadyApproved = hostProperty?.status === 'Approved';
+    const isAlreadyApproved = baseHost?.status === 'Approved';
     const nextStatus = isAlreadyApproved ? 'Approved' : 'Pending Approval';
-    const isFirstRoom = currentRooms.length === 0;
 
     const updatedHost = {
-      ...(hostProperty || {}),
+      ...(baseHost || {}),
       rooms: updatedRooms,
       totalRooms: totalCount,
       availableRooms: availCount,
@@ -665,17 +765,14 @@ export function HostDashboardPage() {
       status: nextStatus,
     };
 
+    hasUnsavedChangesRef.current = true;
     latestHostPropertyRef.current = updatedHost;
     setHostProperty(updatedHost);
-    handleAutoSyncProperty(updatedHost);
-    setSelectedRoomCardId(newCard.id);
+    setSelectedRoomCardId(newCard._id);
     setSelectedRoomNumber(newCard.roomNumber);
     selectedRoomNumberRef.current = newCard.roomNumber;
-    selectedRoomCardIdRef.current = newCard.id;
-    toast.success(`Added Room ${nextNum} to ${cleanCatType}`);
-    if (isFirstRoom && !isAlreadyApproved) {
-      toast.info('🚀 Property sent to Admin for approval.');
-    }
+    selectedRoomCardIdRef.current = newCard._id;
+    toast.info(`Room ${nextNum} added to preview. Click "Update" on the category tab to save changes.`);
   };
 
   const handleUpdateRoomCapacity = (roomId, newCapacity, cIdx, card) => {
@@ -689,7 +786,7 @@ export function HostDashboardPage() {
       selectedRoomNumberRef.current = targetRoomNum;
       setSelectedRoomNumber(targetRoomNum);
     }
-    const pinnedId = card?.id || card?._id || roomId;
+    const pinnedId = card?._id || roomId;
     if (pinnedId) {
       selectedRoomCardIdRef.current = pinnedId;
       setSelectedRoomCardId(pinnedId);
@@ -703,7 +800,7 @@ export function HostDashboardPage() {
       const isMatch = Boolean(
         (targetRoomNum && String(r.roomNumber || '').trim() === targetRoomNum) ||
         (roomId && isSameRoom(r, roomId)) ||
-        (card && isSameRoom(r, card.id || card._id || card.roomNumber))
+        (card && isSameRoom(r, card._id || card.roomNumber))
       );
       if (isMatch) {
         return {
@@ -715,21 +812,9 @@ export function HostDashboardPage() {
     });
 
     const nextUpdatedHost = { ...baseHost, rooms: updatedRooms };
+    hasUnsavedChangesRef.current = true;
     latestHostPropertyRef.current = nextUpdatedHost;
     setHostProperty(nextUpdatedHost);
-
-    if (updateRoomCapacityDebounceRef.current) {
-      clearTimeout(updateRoomCapacityDebounceRef.current);
-    }
-    updateRoomCapacityDebounceRef.current = setTimeout(() => {
-      updateRoomCapacityDebounceRef.current = null;
-      const targetHost = latestHostPropertyRef.current || nextUpdatedHost;
-      if (targetHost) {
-        adminAPI.createHost(targetHost)
-          .then(() => broadcastStayUpdate(targetHost.id || targetHost._id))
-          .catch((err) => console.warn('Debounced room capacity save error:', err));
-      }
-    }, 500);
   };
 
   const handleUpdateRoomNumber = (roomId, newNumber, cIdx, card) => {
@@ -741,7 +826,7 @@ export function HostDashboardPage() {
       selectedRoomNumberRef.current = trimmedNewNum;
       setSelectedRoomNumber(trimmedNewNum);
     }
-    const pinnedId = card?.id || card?._id || roomId || trimmedNewNum;
+    const pinnedId = card?._id || roomId || trimmedNewNum;
     selectedRoomCardIdRef.current = pinnedId;
     setSelectedRoomCardId(pinnedId);
 
@@ -751,7 +836,7 @@ export function HostDashboardPage() {
     const currentRooms = Array.isArray(baseHost.rooms) ? [...baseHost.rooms] : [];
     const updatedRooms = currentRooms.map((r) => {
       const isMatch = Boolean(
-        (card && (r.id === card.id || r._id === card._id)) ||
+        (card && r._id === card._id) ||
         (card?.roomNumber && String(r.roomNumber || '').trim() === String(card.roomNumber).trim()) ||
         (roomId && isSameRoom(r, roomId))
       );
@@ -767,29 +852,20 @@ export function HostDashboardPage() {
     });
 
     const nextUpdatedHost = { ...baseHost, rooms: updatedRooms };
+    hasUnsavedChangesRef.current = true;
     latestHostPropertyRef.current = nextUpdatedHost;
     setHostProperty(nextUpdatedHost);
-
-    if (updateRoomNumberDebounceRef.current) {
-      clearTimeout(updateRoomNumberDebounceRef.current);
-    }
-    updateRoomNumberDebounceRef.current = setTimeout(() => {
-      updateRoomNumberDebounceRef.current = null;
-      const targetHost = latestHostPropertyRef.current || nextUpdatedHost;
-      if (targetHost) {
-        adminAPI.createHost(targetHost).catch((err) => console.warn('Debounced room save error:', err));
-      }
-    }, 600);
   };
 
   const handleRemoveRoomCard = async (roomId, roomObj) => {
-    if (!hostProperty) return;
-    const currentRooms = Array.isArray(hostProperty.rooms) ? [...hostProperty.rooms] : [];
+    const baseHost = latestHostPropertyRef.current || hostProperty;
+    if (!baseHost) return;
+    const currentRooms = Array.isArray(baseHost.rooms) ? [...baseHost.rooms] : [];
     
     const isTargetRoom = (r) => {
       if (!r) return false;
       if (isSameRoom(r, roomId)) return true;
-      if (roomObj && isSameRoom(r, roomObj.id || roomObj._id || roomObj.roomNumber)) return true;
+      if (roomObj && isSameRoom(r, roomObj._id || roomObj.roomNumber)) return true;
       return false;
     };
 
@@ -797,30 +873,31 @@ export function HostDashboardPage() {
     const updatedRooms = currentRooms.filter((r) => !isTargetRoom(r));
     const totalCount = updatedRooms.length;
     const availCount = updatedRooms.filter((r) => r.status === 'Available').length;
-    const nextStatus = updatedRooms.length === 0 ? 'Pending Approval' : (hostProperty.status || 'Pending Approval');
+    const isApprovedHost = baseHost.status === 'Approved' || Boolean(baseHost.isApproved);
+    const nextStatus = isApprovedHost ? 'Approved' : (updatedRooms.length === 0 ? 'Pending Approval' : (baseHost.status || 'Pending Approval'));
 
     const updatedHost = {
-      ...hostProperty,
+      ...baseHost,
       rooms: updatedRooms,
       totalRooms: totalCount,
       availableRooms: availCount,
       availableRoomsCount: availCount,
       status: nextStatus,
-      hostDetails: { ...(hostProperty.hostDetails || {}), status: nextStatus },
     };
 
     // 1. Immediately update local state optimistically so room card disappears instantly
+    hasUnsavedChangesRef.current = true;
     latestHostPropertyRef.current = updatedHost;
     setHostProperty(updatedHost);
 
-    // 2. Cascade delete orphaned bookings from database
-    if (targetRoom?.roomNumber) {
+    // 2. Cascade delete orphaned bookings from database if this was an existing saved room
+    if (targetRoom?.roomNumber && (Boolean(targetRoom._id))) {
       const rawNum = String(targetRoom.roomNumber).replace(/[^0-9]/g, '');
       try {
         await bookingsAPI.cascadeDeleteRoomBookings({
-          hostEmail: hostProperty.email,
-          stayId: hostProperty.stayId || hostProperty._id || hostProperty.id,
-          roomId: targetRoom?.id || targetRoom?._id,
+          hostEmail: baseHost.email,
+          stayId: baseHost.stayId || baseHost._id,
+          roomId: targetRoom?._id,
           roomNumber: targetRoom.roomNumber,
         });
 
@@ -844,7 +921,7 @@ export function HostDashboardPage() {
         (r) => r.type && activeCategory?.type && r.type.trim().toLowerCase() === activeCategory.type.trim().toLowerCase()
       );
       const nextCard = remainingForActiveCat[0] || updatedRooms[0] || null;
-      const nextId = nextCard?.id || nextCard?._id || nextCard?.roomNumber || null;
+      const nextId = nextCard?._id || nextCard?.roomNumber || null;
       const nextNum = nextCard?.roomNumber ? String(nextCard.roomNumber).trim() : null;
       selectedRoomCardIdRef.current = nextId;
       selectedRoomNumberRef.current = nextNum;
@@ -853,9 +930,7 @@ export function HostDashboardPage() {
       selectedRoomIndexRef.current = 0;
     }
 
-    // 4. Save updated host property to backend database
-    await handleAutoSyncProperty(updatedHost);
-    toast.info('Room and associated bookings removed');
+    toast.info('Room removed from preview. Click "Update" on the category tab to apply changes.');
   };
 
   const handleAutoSyncProperty = async (updatedHost) => {
@@ -885,9 +960,6 @@ export function HostDashboardPage() {
       }));
 
       const finalTotalRooms = validRooms.length > 0 ? validRooms.length : (hostProperty?.totalRooms || 1);
-      const finalAvailableRooms = validRooms.length > 0
-        ? validRooms.filter((r) => r.status === 'Available').length
-        : (hostProperty?.availableRooms || 1);
 
       const facilitiesList = (
         updatedHost.facilities?.length > 0
@@ -920,11 +992,11 @@ export function HostDashboardPage() {
         email: targetEmail,
         name: (updatedHost.name || updatedHost.hostName || hostProperty?.name || hostProperty?.hostName || user?.name || '').trim(),
         phone: (updatedHost.phone || hostProperty?.phone || user?.phone || '').trim(),
-        propertyName: (updatedHost.propertyName || updatedHost.title || hostProperty?.propertyName || hostProperty?.title || 'My Property').trim(),
-        title: (updatedHost.propertyName || updatedHost.title || hostProperty?.propertyName || hostProperty?.title || 'My Property').trim(),
-        propertyType: updatedHost.propertyType || updatedHost.type || hostProperty?.propertyType || hostProperty?.type || 'PG',
-        type: updatedHost.propertyType || updatedHost.type || hostProperty?.propertyType || hostProperty?.type || 'PG',
-        genderType: updatedHost.genderType || hostProperty?.genderType || 'Both',
+        propertyName: (updatedHost.propertyName || updatedHost.title || hostProperty?.propertyName || hostProperty?.title || '').trim(),
+        title: (updatedHost.propertyName || updatedHost.title || hostProperty?.propertyName || hostProperty?.title || '').trim(),
+        propertyType: updatedHost.propertyType || updatedHost.type || hostProperty?.propertyType || hostProperty?.type || '',
+        type: updatedHost.propertyType || updatedHost.type || hostProperty?.propertyType || hostProperty?.type || '',
+        genderType: updatedHost.genderType || hostProperty?.genderType || '',
         description: (updatedHost.description !== undefined ? updatedHost.description : (hostProperty?.description || '')).trim(),
         address: (updatedHost.address !== undefined ? updatedHost.address : (hostProperty?.address || hostProperty?.location || '')).trim(),
         location: (updatedHost.location !== undefined ? updatedHost.location : (hostProperty?.location || hostProperty?.address || '')).trim(),
@@ -932,8 +1004,8 @@ export function HostDashboardPage() {
         city: (updatedHost.city !== undefined ? updatedHost.city : (hostProperty?.city || '')).trim(),
         state: (updatedHost.state !== undefined ? updatedHost.state : (hostProperty?.state || '')).trim(),
         pincode: (updatedHost.pincode !== undefined ? updatedHost.pincode : (hostProperty?.pincode || '')).trim(),
-        latitude: updatedHost.latitude !== undefined ? Number(updatedHost.latitude) : (Number(hostProperty?.latitude) || 29.3919),
-        longitude: updatedHost.longitude !== undefined ? Number(updatedHost.longitude) : (Number(hostProperty?.longitude) || 79.4542),
+        latitude: updatedHost.latitude !== undefined && updatedHost.latitude !== null && updatedHost.latitude !== '' ? Number(updatedHost.latitude) : (hostProperty?.latitude ? Number(hostProperty.latitude) : null),
+        longitude: updatedHost.longitude !== undefined && updatedHost.longitude !== null && updatedHost.longitude !== '' ? Number(updatedHost.longitude) : (hostProperty?.longitude ? Number(hostProperty.longitude) : null),
         facilities: facilitiesList,
         amenities: facilitiesList,
         rules: rulesList,
@@ -947,8 +1019,8 @@ export function HostDashboardPage() {
         roomRates: Array.isArray(updatedHost.roomRates) ? updatedHost.roomRates : (hostProperty?.roomRates || []),
         rooms: validRooms,
         totalRooms: finalTotalRooms,
-        availableRooms: finalAvailableRooms,
-        status: hostProperty?.status || 'Pending Approval',
+        status: (hostProperty?.status === 'Approved' || hostProperty?.isApproved || updatedHost?.status === 'Approved') ? 'Approved' : (hostProperty?.status || 'Pending Approval'),
+        isApproved: Boolean(hostProperty?.status === 'Approved' || hostProperty?.isApproved || updatedHost?.status === 'Approved'),
       };
 
       // Optimistically update local dashboard state
@@ -967,16 +1039,26 @@ export function HostDashboardPage() {
         latestHostPropertyRef.current = merged;
         setHostProperty(merged);
 
+        if (Array.isArray(merged.rooms)) {
+          const updatedNumbers = new Set(
+            merged.rooms.map((r) => String(r.roomNumber || '').trim()).filter(Boolean)
+          );
+          setSavedRoomNumbers(updatedNumbers);
+          savedRoomNumbersRef.current = updatedNumbers;
+        }
+
         try {
           window.dispatchEvent(new CustomEvent('stayhub_slots_updated', { detail: { sender: 'HostDashboard' } }));
           window.dispatchEvent(new CustomEvent('stayhub_admin_sync', { detail: { sender: 'HostDashboard' } }));
           localStorage.setItem('stayhub_admin_sync_ts', String(Date.now()));
           if (typeof BroadcastChannel !== 'undefined') {
             const bc = new BroadcastChannel('stayhub_live_channel');
-            bc.postMessage({ type: 'HOST_UPDATED', hostId: merged.id || merged._id, sender: 'HostDashboard' });
+            bc.postMessage({ type: 'HOST_UPDATED', hostId: merged._id, sender: 'HostDashboard' });
             bc.close();
           }
-        } catch (e) {}
+        } catch {
+          /* ignore */
+        }
 
         return merged;
       } else {
@@ -988,7 +1070,6 @@ export function HostDashboardPage() {
       throw err;
     }
   };
-
 
   const refreshGuests = useCallback(async () => {
     try {
@@ -1002,10 +1083,89 @@ export function HostDashboardPage() {
     } catch (err) {
       console.warn('refreshGuests error:', err);
     }
-  }, [user?.email, hostProperty?.email]);
+  }, [user, hostProperty]);
 
-  const fetchHostData = async () => {
+  const handleDismissOrRejectBooking = useCallback(async (bookingOrRequest) => {
+    if (!bookingOrRequest) {
+      setRequestedUserBooking(null);
+      setSelectedBookedGuest(null);
+      return;
+    }
+
+    const b = bookingOrRequest;
+    const targetBookingId = (b._id && /^[0-9a-fA-F]{24}$/.test(b._id))
+      ? b._id
+      : (b.bookingId || b.bookingReferenceId || b._id);
+
+    const refId = b.bookingReferenceId || b.bookingId;
+    const bId = b._id;
+    const phone = b.phone || b.userPhone || b.guestPhone || '';
+    const cleanPhone = String(phone).replace(/\D/g, '').slice(-10);
+    const roomNum = b.roomNumber || '';
+    const rawRoom = String(roomNum).replace(/[^0-9]/g, '');
+
+    // 1. Immediately wipe from all local state across the dashboard (0ms)
+    setRequestedUserBooking(null);
+    setSelectedBookedGuest(null);
+    setGuests((prev) =>
+      prev.filter((g) => {
+        const gId = g._id || g.bookingId || g.bookingReferenceId;
+        if (targetBookingId && gId && (gId === targetBookingId || String(gId) === String(targetBookingId))) return false;
+        if (refId && (g.bookingReferenceId === refId || g.bookingId === refId)) return false;
+        if (bId && g._id === bId) return false;
+        const gPhone = String(g.userPhone || g.phone || g.guestPhone || '').replace(/\D/g, '').slice(-10);
+        const gRoom = String(g.roomNumber || '').replace(/[^0-9]/g, '');
+        if (cleanPhone && rawRoom && gPhone === cleanPhone && gRoom === rawRoom) return false;
+        return true;
+      })
+    );
+
+    // 2. Perform database rejection & cascade slot release
+    try {
+      if (targetBookingId && !String(targetBookingId).startsWith('res_')) {
+        await bookingsAPI.updateBookingStatus(targetBookingId, { status: 'REJECTED' }).catch(() => {});
+        await bookingsAPI.deleteBooking(targetBookingId).catch(() => {});
+      }
+
+      await bookingsAPI
+        .removeOccupantBooking({
+          hostEmail: hostProperty?.email || hostProperty?.hostEmail,
+          roomNumber: roomNum,
+          occupantId: targetBookingId,
+          bookingId: targetBookingId,
+          bookingReferenceId: refId,
+          slotBookingId: b.slotBookingId || refId,
+          phone: cleanPhone || phone,
+          name: b.userName || b.fullName || b.name || b.guestName,
+          stayId: hostProperty?._id,
+          hostId: hostProperty?.hostId?._id || hostProperty?.hostId || hostProperty?._id,
+        })
+        .catch(() => {});
+
+      const propId = hostProperty?._id;
+      if (propId) broadcastStayUpdate(propId);
+
+      window.dispatchEvent(new CustomEvent('stayhub_slots_updated', { detail: { sender: 'HostDashboard' } }));
+      window.dispatchEvent(new CustomEvent('stayhub_rooms_updated', { detail: { sender: 'HostDashboard' } }));
+      window.dispatchEvent(new CustomEvent('stayhub_admin_sync', { detail: { sender: 'HostDashboard' } }));
+      localStorage.setItem('stayhub_admin_sync_ts', String(Date.now()));
+      if (typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('stayhub_live_channel');
+        bc.postMessage({ type: 'HOST_UPDATED', hostId: propId, sender: 'HostDashboard' });
+        bc.close();
+      }
+
+      showToast('Booking request dismissed and removed from all views.', 'info');
+      refreshGuests();
+    } catch (err) {
+      console.warn('handleDismissOrRejectBooking error:', err);
+      refreshGuests();
+    }
+  }, [hostProperty, broadcastStayUpdate, refreshGuests, showToast]);
+
+  const fetchHostData = useCallback(async () => {
     if (
+      hasUnsavedChangesRef.current ||
       updateRoomRateDebounceRef.current ||
       updateRoomNumberDebounceRef.current ||
       updateRoomCapacityDebounceRef.current
@@ -1035,15 +1195,71 @@ export function HostDashboardPage() {
       }
 
       if (foundHost) {
-        if (prevStatusRef.current && prevStatusRef.current !== 'Approved' && foundHost.status === 'Approved') {
-          toast.success('🎉 Property approved by Admin! Room scheduling is now unlocked.');
+        const propId = foundHost._id || foundHost.email || 'default';
+        const notifiedKey = `roomscout_approved_notified_${propId}`;
+        const legacyNotifiedKey = `stayhub_approved_notified_${propId}`;
+        const isApproved = foundHost.status === 'Approved';
+        const alreadyNotified =
+          typeof window !== 'undefined' &&
+          (localStorage.getItem(notifiedKey) === 'true' || localStorage.getItem(legacyNotifiedKey) === 'true');
+
+        // Only fire if there is a LIVE transition from a non-approved status to 'Approved'
+        // during an active session (never on initial page mount or routine tab switching)
+        if (isApproved) {
+          if (!alreadyNotified) {
+            if (hasInitialFetchedRef.current && prevStatusRef.current && prevStatusRef.current !== 'Approved') {
+              toast.success('🎉 Property approved by Admin! Room scheduling is now unlocked.');
+            }
+            try {
+              localStorage.setItem(notifiedKey, 'true');
+              localStorage.removeItem(legacyNotifiedKey);
+            } catch {
+              /* ignore */
+            }
+          }
+          if (
+            typeof updateUserSession === 'function' &&
+            (!user?.isApproved || user?.status !== 'Approved')
+          ) {
+            updateUserSession((prev) => ({
+              ...(prev || {}),
+              status: 'Approved',
+              isApproved: true,
+            }));
+          }
+        } else {
+          // If property reverts to pending or unapproved, clear the flag so future approval can notify once
+          try {
+            localStorage.removeItem(notifiedKey);
+            localStorage.removeItem(legacyNotifiedKey);
+          } catch {
+            /* ignore */
+          }
         }
+
         prevStatusRef.current = foundHost.status;
+        hasInitialFetchedRef.current = true;
 
         const serverRates = Array.isArray(foundHost.roomRates) ? foundHost.roomRates : [];
         const serverRooms = Array.isArray(foundHost.rooms) ? foundHost.rooms : [];
 
-        setHostProperty((prev) => {
+        const initialSavedNumbers = new Set(
+          serverRooms.map((r) => String(r.roomNumber || '').trim()).filter(Boolean)
+        );
+        setSavedRoomNumbers(initialSavedNumbers);
+        savedRoomNumbersRef.current = initialSavedNumbers;
+
+        setHostProperty(() => {
+          if (hasUnsavedChangesRef.current && latestHostPropertyRef.current) {
+            const merged = {
+              ...latestHostPropertyRef.current,
+              status: isApproved ? 'Approved' : (latestHostPropertyRef.current.status || 'Pending Approval'),
+              isApproved: isApproved || Boolean(latestHostPropertyRef.current.isApproved),
+            };
+            latestHostPropertyRef.current = merged;
+            return merged;
+          }
+
           const isDebouncing = Boolean(
             updateRoomRateDebounceRef.current ||
             updateRoomNumberDebounceRef.current ||
@@ -1056,23 +1272,28 @@ export function HostDashboardPage() {
 
           const normalizedRates = finalRates.map((rr, idx) => ({
             ...rr,
-            id: rr.id || rr._id || `rate_${idx}`,
-            _id: rr._id || rr.id || `rate_${idx}`,
+            rateUnit: rr.rateUnit || '/night',
+            _id: rr._id || `rate_${idx}`,
           }));
 
           const finalRooms = rawRooms.map((rm, idx) => {
-            const rId = rm.id || rm._id || `room_${rm.roomNumber || idx + 1}`;
+            const rId = rm._id || `room_${rm.roomNumber || idx + 1}`;
             let rRateId = rm.rateId;
             let rCatIndex = rm.categoryIndex;
             let rType = rm.type;
 
-            // Self-heal / associate legacy room with its category if missing
-            if (!rRateId) {
+            // Self-heal / associate legacy room with its category if missing or if rateId does not match current rate IDs
+            const hasValidRateId = normalizedRates.some((rate) => String(rate._id) === String(rRateId));
+            if (!rRateId || !hasValidRateId) {
               // 1. Match by type name
               let matchedIdx = normalizedRates.findIndex(
                 (rate) => rate.type && rm.type && rate.type.trim().toLowerCase() === rm.type.trim().toLowerCase()
               );
-              // 2. If type was 'Standard' or unassigned, match by price
+              // 2. Fallback: match by categoryIndex
+              if (matchedIdx === -1 && typeof rm.categoryIndex === 'number' && normalizedRates[rm.categoryIndex]) {
+                matchedIdx = rm.categoryIndex;
+              }
+              // 3. Fallback: match by price
               if (matchedIdx === -1) {
                 const rmPriceNum = parseInt(String(rm.price || '').replace(/[^0-9]/g, ''), 10);
                 if (rmPriceNum > 0) {
@@ -1085,7 +1306,7 @@ export function HostDashboardPage() {
 
               if (matchedIdx !== -1) {
                 const matchedRate = normalizedRates[matchedIdx];
-                rRateId = matchedRate.id || matchedRate._id;
+                rRateId = matchedRate._id;
                 rCatIndex = matchedIdx;
                 if (matchedRate.type && (!rType || rType === 'Standard')) {
                   rType = matchedRate.type;
@@ -1095,8 +1316,7 @@ export function HostDashboardPage() {
 
             return {
               ...rm,
-              id: rId,
-              _id: rm._id || rm.id || rId,
+              _id: rm._id || rId,
               rateId: rRateId || '',
               categoryIndex: typeof rCatIndex === 'number' ? rCatIndex : undefined,
               type: rType || 'Standard',
@@ -1105,17 +1325,16 @@ export function HostDashboardPage() {
 
           const res = {
             ...foundHost,
-            id: foundHost.id || foundHost._id,
-            _id: foundHost._id || foundHost.id,
-            stayId: foundHost.id || foundHost._id,
+            _id: foundHost._id,
+            stayId: foundHost.stayId || foundHost._id,
             hostId: foundHost.hostId?._id || foundHost.hostId || foundHost.host?._id || hostByEmailRes?.host?._id || null,
             name: foundHost.name || foundHost.hostName || user?.name || '',
             email: foundHost.email || foundHost.hostEmail || user?.email || '',
             phone: foundHost.phone || user?.phone || '',
             propertyName: foundHost.propertyName || foundHost.title || '',
             title: foundHost.title || foundHost.propertyName || '',
-            propertyType: foundHost.propertyType || foundHost.type || 'PG',
-            genderType: foundHost.genderType || 'Both',
+            propertyType: foundHost.propertyType || foundHost.type || '',
+            genderType: foundHost.genderType || '',
             description: foundHost.description || '',
             address: foundHost.address || foundHost.location || '',
             location: foundHost.location || foundHost.address || '',
@@ -1123,13 +1342,20 @@ export function HostDashboardPage() {
             city: foundHost.city || '',
             state: foundHost.state || '',
             pincode: foundHost.pincode || '',
-            latitude: Number(foundHost.latitude) || 29.3919,
-            longitude: Number(foundHost.longitude) || 79.4542,
+            latitude: foundHost.latitude !== undefined && foundHost.latitude !== null && foundHost.latitude !== '' ? Number(foundHost.latitude) : null,
+            longitude: foundHost.longitude !== undefined && foundHost.longitude !== null && foundHost.longitude !== '' ? Number(foundHost.longitude) : null,
+            image: foundHost.image || (Array.isArray(foundHost.images) && foundHost.images[0]) || foundHost.property?.image || '',
+            images: Array.isArray(foundHost.images) && foundHost.images.length > 0
+              ? foundHost.images
+              : (Array.isArray(foundHost.property?.images) && foundHost.property.images.length > 0
+                ? foundHost.property.images
+                : (foundHost.image ? [foundHost.image] : [])),
+            instagramVideoUrl: foundHost.instagramVideoUrl || foundHost.property?.instagramVideoUrl || '',
             facilities: Array.isArray(foundHost.facilities) ? foundHost.facilities : (Array.isArray(foundHost.amenities) ? foundHost.amenities : []),
             amenities: Array.isArray(foundHost.facilities) ? foundHost.facilities : (Array.isArray(foundHost.amenities) ? foundHost.amenities : []),
             rules: Array.isArray(foundHost.rules) ? foundHost.rules : [],
             status: foundHost.status || 'Pending Approval',
-            rating: Number(foundHost.rating) || 4.8,
+            rating: foundHost.rating ? Number(foundHost.rating) : null,
             roomRates: normalizedRates,
             rooms: finalRooms,
             totalRooms: finalRooms.length,
@@ -1144,44 +1370,77 @@ export function HostDashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, updateUserSession, hostProperty]);
 
   useEffect(() => {
-    if (location.state?.tab) setActiveTab(location.state.tab);
+    if (location.state?.tab) {
+      const isApprovedHost = hostProperty?.status === 'Approved' || hostProperty?.isApproved === true || location.state?.updatedHost?.status === 'Approved';
+      if (isApprovedHost || location.state.tab === 'property') {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setActiveTab(location.state.tab);
+      } else {
+        setActiveTab('property');
+      }
+    }
     if (location.state?.updatedHost) {
       setHostProperty(location.state.updatedHost);
       setLoading(false);
     }
     fetchHostData();
-  }, [location.key, user?.email, user?.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key, user?.email, user?._id]);
+
+  // Tab Guard: If property is awaiting initial admin approval, lock navigation strictly to 'property' tab
+  useEffect(() => {
+    if (!loading && hostProperty) {
+      const isApprovedHost = hostProperty?.status === 'Approved' || hostProperty?.isApproved === true;
+      if (!isApprovedHost && activeTab !== 'property') {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setActiveTab('property');
+      }
+    }
+  }, [hostProperty, activeTab, loading]);
 
   useEffect(() => {
     if (activeTab === 'users') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       refreshGuests();
     }
   }, [activeTab, refreshGuests]);
 
   useEffect(() => {
     const handleStorage = (e) => {
-      if (e.key === 'stayhub_admin_sync_ts' || (e.key && e.key.startsWith('stayhub_'))) {
-        if (activeTab !== 'property') fetchHostData();
+      if (
+        e.key === 'stayhub_admin_sync_ts' ||
+        e.key === 'stayhub_host_approved_ts' ||
+        (e.key && e.key.startsWith('stayhub_')) ||
+        (e.key && e.key.startsWith('roomscout_'))
+      ) {
+        fetchHostData();
       }
     };
     window.addEventListener('storage', handleStorage);
+
     const handleCustomSync = (e) => {
       if (e?.detail?.sender === 'HostDashboard') return;
-      if (activeTab === 'property') return;
       fetchHostData();
     };
     window.addEventListener('stayhub_admin_sync', handleCustomSync);
     window.addEventListener('stayhub_slots_updated', handleCustomSync);
     window.addEventListener('stayhub_rooms_updated', handleCustomSync);
+    window.addEventListener('stayhub_host_approved', handleCustomSync);
 
     const handleFocus = () => {
-      if (activeTab === 'property') return;
       fetchHostData();
     };
     window.addEventListener('focus', handleFocus);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchHostData();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     let bc = null;
     if (typeof BroadcastChannel !== 'undefined') {
@@ -1189,7 +1448,6 @@ export function HostDashboardPage() {
         bc = new BroadcastChannel('stayhub_live_channel');
         bc.onmessage = (event) => {
           if (event.data?.sender === 'HostDashboard') return;
-          if (activeTab === 'property') return;
           if (['HOST_APPROVED', 'HOST_UPDATED', 'HOST_DELETED', 'ADMIN_SYNC'].includes(event.data?.type)) {
             fetchHostData();
           }
@@ -1200,11 +1458,12 @@ export function HostDashboardPage() {
     }
 
     let pollTimer = null;
-    if (hostProperty && hostProperty.status !== 'Approved') {
+    const isApprovedHost = hostProperty?.status === 'Approved' || hostProperty?.isApproved === true;
+    if (!isApprovedHost) {
+      // While awaiting approval, auto-check every 3s so approval appears live without page refresh!
       pollTimer = setInterval(() => {
-        if (activeTab === 'property') return;
         fetchHostData();
-      }, 10000);
+      }, 3000);
     }
 
     return () => {
@@ -1212,11 +1471,13 @@ export function HostDashboardPage() {
       window.removeEventListener('stayhub_admin_sync', handleCustomSync);
       window.removeEventListener('stayhub_slots_updated', handleCustomSync);
       window.removeEventListener('stayhub_rooms_updated', handleCustomSync);
+      window.removeEventListener('stayhub_host_approved', handleCustomSync);
       window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (bc) bc.close();
       if (pollTimer) clearInterval(pollTimer);
     };
-  }, [hostProperty?.status, activeTab]);
+  }, [hostProperty?.status, hostProperty?.isApproved, fetchHostData]);
 
   // Active check-in count for the current day
   const todayCheckInsCount = useMemo(() => {
@@ -1245,7 +1506,7 @@ export function HostDashboardPage() {
       }
       const match = str.match(/(\d{4})-(\d{2})-(\d{2})/);
       if (match) {
-        let [_, y, m, dy] = match;
+        let [, y, m, dy] = match;
         if (parseInt(y, 10) < 2025) y = '2026';
         return `${y}-${m}-${dy}`;
       }
@@ -1293,168 +1554,426 @@ export function HostDashboardPage() {
     return checkInsToday.length;
   }, [guests, hostProperty?.rooms]);
 
-  const isPending = hostProperty?.status === 'Pending Approval' || hostProperty?.isApproved === false;
+
+  // Active Confirmed Paid Guests (Auto-excluding checked-out or past-due completed stays)
+  const activePaidUsers = useMemo(() => {
+    const activeRooms = new Set(
+      Array.isArray(hostProperty?.rooms)
+        ? hostProperty.rooms.map((rm) => String(rm.roomNumber || '').replace(/[^0-9]/g, '')).filter(Boolean)
+        : []
+    );
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return (Array.isArray(guests) ? guests : []).filter((g) => {
+      const gRoom = String(g.roomNumber || '').replace(/[^0-9]/g, '');
+      if (activeRooms.size > 0 && (!gRoom || !activeRooms.has(gRoom))) return false;
+
+      const st = String(g.status || '').toUpperCase();
+      const ps = String(g.paymentStatus || '').toUpperCase();
+
+      // Exclude hard-cancelled, rejected, or expired bookings (from ✕ delete/cancel)
+      if (st === 'REJECTED' || st === 'CANCELLED' || st === 'EXPIRED') {
+        return false;
+      }
+
+      // Must be paid (Online or Offline guest with confirmed/paid booking)
+      const hasAmount = Number(g.totalAmount || g.paidAmount) > 0;
+      const isPaidStatus = ps === 'PAID' || ps === 'VERIFIED' || ps === 'COMPLETED' || g.isPaid === true;
+      const isOfflineBooking = g.bookingSource === 'OFFLINE_HOST' || g.source === 'offline' || g.paymentMethod === 'OFFLINE';
+
+      const isPaid = isPaidStatus || hasAmount || isOfflineBooking;
+
+      if (!isPaid) return false;
+
+      return st === 'CONFIRMED' || st === 'CHECKED_IN' || st === 'CHECKED_OUT' || st === 'COMPLETED' || st === 'PAID' || !st.includes('PENDING');
+    });
+  }, [guests, hostProperty]);
+
+  const activePaidCount = activePaidUsers.length;
+
+  // Calculate counts for User Visited console (Requests, Check-ins, Check-outs)
+  const activeRoomNumbersSet = useMemo(() => {
+    if (!Array.isArray(hostProperty?.rooms)) return new Set();
+    return new Set(
+      hostProperty.rooms
+        .map((rm) => String(rm.roomNumber || '').replace(/[^0-9]/g, ''))
+        .filter(Boolean)
+    );
+  }, [hostProperty]);
+
+  const pendingRequestsCount = useMemo(() => {
+    return (Array.isArray(guests) ? guests : []).filter((g) => {
+      const gRoomNum = String(g.roomNumber || '').replace(/[^0-9]/g, '');
+      if (activeRoomNumbersSet.size > 0 && (!gRoomNum || !activeRoomNumbersSet.has(gRoomNum))) return false;
+      const st = String(g.status || '').toUpperCase();
+      if (st === 'REJECTED' || st === 'CANCELLED' || st === 'EXPIRED') return false;
+      return (
+        st === 'PENDING HOST APPROVAL' ||
+        st === 'PENDING' ||
+        st === 'DRAFT' ||
+        st === 'PAYMENT_PENDING' ||
+        st === 'AWAITING_PAYMENT' ||
+        st.includes('PENDING')
+      );
+    }).length;
+  }, [guests, activeRoomNumbersSet]);
+
+  const checkInsCount = useMemo(() => {
+    return (Array.isArray(guests) ? guests : []).filter((g) => {
+      const st = String(g.status || '').toUpperCase();
+      if (st === 'REJECTED' || st === 'CANCELLED' || st.includes('PENDING') || st === 'CHECKED_OUT' || st === 'EXPIRED') return false;
+      const gRoomNum = String(g.roomNumber || '').replace(/[^0-9]/g, '');
+      if (activeRoomNumbersSet.size > 0 && (!gRoomNum || !activeRoomNumbersSet.has(gRoomNum))) return false;
+      return Boolean(g.checkIn || g.checkInISO || g.date || g.bookingId || g._id);
+    }).length;
+  }, [guests, activeRoomNumbersSet]);
+
+  const checkOutsCount = useMemo(() => {
+    return (Array.isArray(guests) ? guests : []).filter((g) => {
+      const st = String(g.status || '').toUpperCase();
+      if (st === 'REJECTED' || st === 'CANCELLED' || st.includes('PENDING') || st === 'EXPIRED') return false;
+      const gRoomNum = String(g.roomNumber || '').replace(/[^0-9]/g, '');
+      if (activeRoomNumbersSet.size > 0 && (!gRoomNum || !activeRoomNumbersSet.has(gRoomNum))) return false;
+      return Boolean(g.checkOut || g.checkOutISO);
+    }).length;
+  }, [guests, activeRoomNumbersSet]);
+
+  const isApproved = hostProperty?.status === 'Approved' || hostProperty?.isApproved === true;
+  const isPending = !isApproved;
 
   return (
     <div
-      className="min-h-screen flex flex-col host-page-scope font-body-md antialiased bg-[#fafbfc] dark:bg-[#090b10] text-slate-900 dark:text-zinc-100 overflow-x-clip relative selection:bg-custom-btn-primary selection:text-white transition-colors duration-300"
+      className={`min-h-screen flex flex-col host-page-scope font-body-md antialiased text-slate-800 dark:text-on-surface bg-[#F8FAFC] dark:bg-[#070D18] selection:bg-custom-btn-primary selection:text-white relative transition-colors duration-300 ${
+        activeTab === 'users' || activeTab === 'room' ? 'lg:h-screen lg:max-h-screen lg:overflow-hidden' : ''
+      }`}
     >
-      {/* Ambient Minimal Light Glow (Matching Landing Page) */}
-      <div aria-hidden="true" className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[450px] bg-gradient-to-b from-emerald-100/50 via-teal-50/20 to-transparent blur-3xl opacity-60 dark:opacity-20" />
-      </div>
+      {/* ── Precision Architectural Dot Grid Background ── */}
+      <Suspense fallback={null}>
+        <PropertyArchitecturalBackground />
+      </Suspense>
 
       {/* NAVBAR */}
       <HostDashboardNavbar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleTabSwitch}
+        isApproved={isApproved}
         onBack={handleBack}
-        onEditDetails={() => navigate('/host/upload')}
+        propertyType={hostProperty?.propertyType || hostProperty?.category || 'PG'}
+        onEditDetails={() =>
+          navigate('/host/upload', {
+            state: {
+              hostProperty: latestHostPropertyRef.current || hostProperty,
+              fromDashboard: true,
+            },
+          })
+        }
         onAddRoomType={handleAddNewRoomTypeRow}
         categoryCount={Array.isArray(hostProperty?.roomRates) ? hostProperty.roomRates.length : 0}
         roomCount={configuredCategoryRooms.length}
         todayCheckInsCount={todayCheckInsCount}
+        activePaidCount={activePaidCount}
         activeRightPanelTab={activeRightPanelTab}
         setActiveRightPanelTab={setActiveRightPanelTab}
+        visitedSubTab={visitedSubTab}
+        onVisitedSubTabChange={setVisitedSubTab}
+        pendingRequestsCount={pendingRequestsCount}
+        checkInsCount={checkInsCount}
+        checkOutsCount={checkOutsCount}
+        onOpenPropertyTelemetry={() => setShowPropertyTelemetry(true)}
+        propertyOccupancyRate={propertyOccupancyRate}
       />
 
       {/* MAIN CONTENT */}
-      <main className="w-full pt-14 sm:pt-16 bg-transparent relative z-10 flex-1 min-h-[calc(100vh-3.5rem)]">
-        <div className="w-full px-3 sm:px-6 py-3 sm:py-4 max-w-[1600px] mx-auto">
-          <div>
+      <main
+        className={`w-full flex-1 relative bg-transparent text-slate-800 dark:text-on-surface font-body-md antialiased flex flex-col selection:bg-[#5E6BFF] selection:text-white ${
+          activeTab === 'users' || activeTab === 'room' || activeTab === 'property'
+            ? 'lg:h-[calc(100vh-4.75rem)] lg:overflow-hidden lg:min-h-0'
+            : 'min-h-[calc(100vh-4rem)] overflow-x-hidden'
+        }`}
+      >
+        <div className="w-full flex-1 flex flex-col min-h-0">
+          <AnimatePresence mode="wait" custom={tabDirection} initial={false}>
             {/* Property Details Tab */}
-            <div className={activeTab === 'property' ? 'space-y-4 block' : 'hidden'}>
-              <ErrorBoundary>
-                <Suspense fallback={<DashboardSkeletonLoader />}>
-                  <PropertyDetailsSection
-                    hostProperty={hostProperty || DEFAULT_HOST_PROPERTY}
-                    isPending={isPending}
-                    onEditDetails={() => navigate('/host/upload')}
-                    onSaveProperty={handleAutoSyncProperty}
-                    guests={guests}
-                    onSwitchTab={setActiveTab}
-                  />
-                </Suspense>
-              </ErrorBoundary>
-            </div>
-
-              {/* Room Schedule & Bookings Tab */}
-              <div className={activeTab === 'room' ? 'space-y-4 block' : 'hidden'}>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 xl:gap-5 items-start">
-                  <div className="space-y-4">
-                    <ErrorBoundary>
-                      <HostRoomCategories
-                        roomRates={hostProperty?.roomRates || []}
-                        rooms={
-                          (Array.isArray(hostProperty?.rooms) ? hostProperty.rooms : []).map((rm, idx) => ({
-                            ...rm,
-                            id: rm.id || rm._id || `room_${rm.roomNumber || idx + 1}`,
-                            _id: rm._id || rm.id || `room_${rm.roomNumber || idx + 1}`,
-                          }))
-                        }
-                        guests={guests}
-                        todayISO={upcomingWeek[0]?.fullISO}
-                        selectedCategoryIndex={selectedCategoryIndex}
-                        onSelectCategoryIndex={setSelectedCategoryIndex}
-                        onAddCategory={handleAddNewRoomTypeRow}
-                        onRemoveCategory={handleRemoveRoomRate}
-                        onUpdateCategory={handleUpdateRoomRate}
-                        onSaveCategory={handleSaveRoomRateOnBlur}
-                        collapsedCategories={collapsedCategories}
-                        onToggleCollapseCategory={toggleCollapseCategory}
-                        selectedRoomCardId={selectedRoomCard?.id || selectedRoomCard?._id || selectedRoomCardId}
-                        selectedRoomNumber={selectedRoomCard?.roomNumber || selectedRoomNumber || selectedRoomNumberRef.current}
-                        onSelectRoomCardId={handleSelectRoomCard}
-                        onAddRoomCard={handleAddRoomCard}
-                        onRemoveRoomCard={handleRemoveRoomCard}
-                        onUpdateRoomNumber={handleUpdateRoomNumber}
-                        onUpdateRoomCapacity={handleUpdateRoomCapacity}
-                      />
-                    </ErrorBoundary>
-                  </div>
-
-                  <div className="lg:col-span-2">
-                    <ErrorBoundary>
-                      {selectedRoomCard ? (
-                        <Suspense fallback={<DashboardSkeletonLoader />}>
-                          <HostWeeklySlotSchedule
-                            selectedRoomCard={selectedRoomCard}
-                            activeCategory={activeCategory}
-                            upcomingWeek={upcomingWeek}
-                            guests={guests}
-                            setGuests={setGuests}
-                            hostProperty={hostProperty}
-                            onRefreshBookings={refreshGuests}
-                            onAutoSyncProperty={handleAutoSyncProperty}
-                            showToast={showToast}
-                            activeRightPanelTab={activeRightPanelTab}
-                            setActiveRightPanelTab={setActiveRightPanelTab}
-                            requestedUserBooking={requestedUserBooking}
-                            onClearRequestedBooking={() => setRequestedUserBooking(null)}
-                          />
-                        </Suspense>
-                      ) : (
-                        <div className="p-12 text-center border border-dashed border-slate-300 dark:border-zinc-800 rounded-2xl text-xs text-slate-400 dark:text-zinc-500 bg-white dark:bg-zinc-950">
-                          Select a room card on the left to view schedule and occupants.
-                        </div>
-                      )}
-                    </ErrorBoundary>
-                  </div>
-                </div>
-              </div>
-
-              {/* Users Visited Tab (Loaded only when user navigates to tab) */}
-              <div className={activeTab === 'users' ? 'block' : 'hidden'}>
-                {activeTab === 'users' && (
+            {activeTab === 'property' && (
+              <motion.div
+                key="console-tab-property"
+                custom={tabDirection}
+                variants={pageConsoleVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                className="w-full flex-1 h-full min-h-0 flex flex-col px-3 sm:px-6 pt-2 sm:pt-2.5 pb-24 sm:pb-28 lg:pb-2.5 max-w-[1600px] mx-auto overflow-hidden relative"
+              >
+                <ErrorBoundary>
                   <Suspense fallback={<DashboardSkeletonLoader />}>
-                    <HostUsersVisitedSection
+                    <PropertyDetailsSection
+                      hostProperty={hostProperty || DEFAULT_HOST_PROPERTY}
+                      isPending={isPending}
+                      onEditDetails={() =>
+                        navigate('/host/upload', {
+                          state: {
+                            hostProperty: latestHostPropertyRef.current || hostProperty,
+                            fromDashboard: true,
+                          },
+                        })
+                      }
+                      onSaveProperty={handleAutoSyncProperty}
                       guests={guests}
-                      setGuests={setGuests}
-                      hostProperty={hostProperty}
-                      setHostProperty={setHostProperty}
-                      showToast={showToast}
-                      refreshGuests={refreshGuests}
-                      broadcastStayUpdate={broadcastStayUpdate}
-                      roomRates={hostProperty?.roomRates || []}
-                      rooms={hostProperty?.rooms || []}
-                      onSelectUserRequest={handleSelectUserRequest}
+                      onSwitchTab={handleTabSwitch}
+                      activeSubTabIndex={propertySubTabIndex}
+                      onSubTabChange={setPropertySubTabIndex}
                     />
                   </Suspense>
-                )}
-              </div>
-            </div>
+                </ErrorBoundary>
+              </motion.div>
+            )}
+
+            {/* Room Schedule & Bookings Tab */}
+            {activeTab === 'room' && (
+              <motion.div
+                key="console-tab-room"
+                custom={tabDirection}
+                variants={pageConsoleVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                className="w-full flex-1 flex flex-col min-h-0"
+              >
+                <div className="flex flex-col w-full flex-1 h-full min-h-0 relative overflow-hidden">
+                  <div className="relative w-full max-w-[1720px] mx-auto px-4 sm:px-6 pt-1 sm:pt-2 pb-28 sm:pb-32 lg:pb-3 flex flex-col gap-3 z-10 flex-1 min-h-0">
+                    {/* Top Action Bar */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={handleAddNewRoomTypeRow}
+                          className="group flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white border border-purple-500/80 dark:border-purple-400/50 text-xs font-bold transition-all shadow-sm shadow-purple-600/20 cursor-pointer active:scale-95 shrink-0"
+                        >
+                          <span className="material-symbols-outlined text-[18px] text-white group-hover:rotate-90 transition-transform">add</span>
+                          <span>Add Room Type</span>
+                        </button>
+                      </div>
+                      {/* Shifted Occupants / Add Guest console switch completely to this position */}
+                      <div className="flex items-center gap-1 p-1 rounded-full bg-slate-100/90 dark:bg-surface-container-high border border-slate-200/80 dark:border-outline-variant/30 shadow-inner relative self-start sm:self-auto shrink-0 max-w-full overflow-x-auto no-scrollbar">
+                        <button
+                          type="button"
+                          onClick={() => setActiveRightPanelTab('occupants')}
+                          className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-colors cursor-pointer z-10 ${
+                            activeRightPanelTab !== 'guest'
+                              ? 'text-slate-900 dark:text-white'
+                              : 'text-slate-600 dark:text-on-surface-variant hover:text-slate-900 dark:hover:text-on-surface'
+                          }`}
+                          title="View active room occupants"
+                        >
+                          {activeRightPanelTab !== 'guest' && (
+                            <motion.div
+                              layoutId="occupantSwitchIndicator"
+                              className="absolute inset-0 rounded-full bg-white dark:bg-surface-container-highest shadow-xs border border-slate-200/70 dark:border-transparent -z-10 pointer-events-none"
+                              transition={{ type: 'spring', stiffness: 450, damping: 32, mass: 0.8 }}
+                            />
+                          )}
+                          <span className="material-symbols-outlined text-[15px]">group</span>
+                          <span>Occupants</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setActiveRightPanelTab('guest')}
+                          className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-colors cursor-pointer z-10 ${
+                            activeRightPanelTab === 'guest'
+                              ? 'text-[#071320] font-black'
+                              : 'text-slate-600 dark:text-slate-300 hover:text-[#00c984]'
+                          }`}
+                          title="Add new guest"
+                        >
+                          {activeRightPanelTab === 'guest' && (
+                            <motion.div
+                              layoutId="occupantSwitchIndicator"
+                              className="absolute inset-0 rounded-full bg-[#00e599] shadow-xs shadow-[#00e599]/25 -z-10 pointer-events-none"
+                              transition={{ type: 'spring', stiffness: 450, damping: 32, mass: 0.8 }}
+                            />
+                          )}
+                          <span className="material-symbols-outlined text-[15px]">person_add</span>
+                          <span>+ Add Guest</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 3-Column Operational Dashboard Layout */}
+                    <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 sm:gap-6 items-start xl:items-center flex-1 min-h-0 my-auto">
+                      {/* COLUMN 1: Room Category Configuration Card */}
+                      <div className="xl:col-span-4 flex flex-col justify-center items-center my-auto min-h-0 w-full transition-all duration-300">
+                        <ErrorBoundary>
+                          <HostRoomCategories
+                            roomRates={hostProperty?.roomRates || []}
+                            rooms={
+                              (Array.isArray(hostProperty?.rooms) ? hostProperty.rooms : []).map((rm, idx) => ({
+                                ...rm,
+                                _id: rm._id || `room_${rm.roomNumber || idx + 1}`,
+                              }))
+                            }
+                            guests={guests}
+                            todayISO={upcomingWeek[0]?.fullISO}
+                            selectedCategoryIndex={selectedCategoryIndex}
+                            onSelectCategoryIndex={setSelectedCategoryIndex}
+                            onAddCategory={handleAddNewRoomTypeRow}
+                            onRemoveCategory={handleRemoveRoomRate}
+                            onUpdateCategory={handleUpdateRoomRate}
+                            onSaveCategory={handleSaveCategory}
+                            collapsedCategories={collapsedCategories}
+                            onToggleCollapseCategory={toggleCollapseCategory}
+                            selectedRoomCardId={selectedRoomCard?._id || selectedRoomCardId}
+                            selectedRoomNumber={selectedRoomCard?.roomNumber || selectedRoomNumber}
+                            onSelectRoomCardId={handleSelectRoomCard}
+                            onAddRoomCard={handleAddRoomCard}
+                            onRemoveRoomCard={handleRemoveRoomCard}
+                            onUpdateRoomNumber={handleUpdateRoomNumber}
+                            onUpdateRoomCapacity={handleUpdateRoomCapacity}
+                          />
+                        </ErrorBoundary>
+                      </div>
+
+                      {/* COLUMN 2+3 (xl:col-span-8): Calendar & Occupants via HostWeeklySlotSchedule */}
+                      <div className="xl:col-span-8 flex flex-col min-h-0">
+                        <ErrorBoundary>
+                          {selectedRoomCard ? (
+                            <Suspense fallback={<DashboardSkeletonLoader />}>
+                              <HostWeeklySlotSchedule
+                                selectedRoomCard={selectedRoomCard}
+                                activeCategory={activeCategory}
+                                upcomingWeek={upcomingWeek}
+                                guests={guests}
+                                setGuests={setGuests}
+                                hostProperty={hostProperty}
+                                isRoomSavedToDb={isCurrentRoomSaved}
+                                onRefreshBookings={refreshGuests}
+                                onAutoSyncProperty={handleAutoSyncProperty}
+                                showToast={showToast}
+                                activeRightPanelTab={activeRightPanelTab}
+                                setActiveRightPanelTab={setActiveRightPanelTab}
+                                requestedUserBooking={requestedUserBooking}
+                                onClearRequestedBooking={handleDismissOrRejectBooking}
+                                selectedBookedGuest={selectedBookedGuest}
+                                onClearBookedGuest={() => setSelectedBookedGuest(null)}
+                                onGoBackToVisited={() => {
+                                  setVisitedSubTab('requests');
+                                  setActiveTab('users');
+                                }}
+                              />
+                            </Suspense>
+                          ) : (
+                            <div className="hidden xl:flex flex-col items-center justify-center min-h-[320px] rounded-3xl border border-dashed border-slate-300 dark:border-outline-variant/60 bg-white/70 dark:bg-surface-container-low/60 backdrop-blur-sm text-center p-8 space-y-3 shadow-xs">
+                              <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-surface-container-high border border-slate-200 dark:border-outline-variant/40 flex items-center justify-center mx-auto text-slate-400 dark:text-primary">
+                                <span className="material-symbols-outlined text-[24px]">meeting_room</span>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-sm font-semibold text-slate-800 dark:text-on-surface">Select a room to view its schedule</p>
+                                <p className="text-xs text-slate-500 dark:text-on-surface-variant max-w-sm mx-auto">Pick any room card from the left panel to open the booking calendar and occupants roster.</p>
+                              </div>
+                            </div>
+                          )}
+                        </ErrorBoundary>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Users Visited Tab */}
+            {activeTab === 'users' && (
+              <motion.div
+                key="console-tab-users"
+                custom={tabDirection}
+                variants={pageConsoleVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                className="w-full flex-1 min-h-0 flex flex-col px-3 sm:px-6 pt-1.5 pb-28 sm:pb-32 lg:pt-2 lg:pb-4 max-w-[1600px] mx-auto overflow-y-auto lg:overflow-hidden"
+              >
+                <Suspense fallback={<DashboardSkeletonLoader />}>
+                  <HostUsersVisitedSection
+                    guests={guests}
+                    setGuests={setGuests}
+                    hostProperty={hostProperty}
+                    setHostProperty={setHostProperty}
+                    showToast={showToast}
+                    refreshGuests={refreshGuests}
+                    broadcastStayUpdate={broadcastStayUpdate}
+                    roomRates={hostProperty?.roomRates || []}
+                    rooms={hostProperty?.rooms || []}
+                    onSelectUserRequest={handleSelectUserRequest}
+                    subTab={visitedSubTab}
+                    setSubTab={setVisitedSubTab}
+                  />
+                </Suspense>
+              </motion.div>
+            )}
+
+            {/* Dedicated Paid Users Tab */}
+            {activeTab === 'paid' && (
+              <motion.div
+                key="console-tab-paid"
+                custom={tabDirection}
+                variants={pageConsoleVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                className="w-full flex-1 flex flex-col px-3 sm:px-6 pt-3 sm:pt-4 pb-28 sm:pb-32 lg:pb-4 max-w-[1600px] mx-auto overflow-y-auto lg:overflow-hidden"
+              >
+                <Suspense fallback={<DashboardSkeletonLoader />}>
+                  <PaidUsersList
+                    guests={activePaidUsers}
+                    allGuests={guests}
+                    setGuests={setGuests}
+                    hostProperty={hostProperty}
+                    showToast={showToast}
+                    refreshGuests={refreshGuests}
+                    broadcastStayUpdate={broadcastStayUpdate}
+                    onBack={() => {
+                      setVisitedSubTab('requests');
+                      setActiveTab('users');
+                    }}
+                    onSelectUserRequest={handleSelectUserRequest}
+                  />
+                </Suspense>
+              </motion.div>
+            )}
+
+            {/* UPI & Payment Settings Tab */}
+            {activeTab === 'payment' && (
+              <motion.div
+                key="console-tab-payment"
+                custom={tabDirection}
+                variants={pageConsoleVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                className="w-full flex-1 flex flex-col px-3 sm:px-6 pt-3 sm:pt-4 pb-28 sm:pb-32 lg:pb-8 max-w-[1200px] mx-auto overflow-y-auto"
+              >
+                <Suspense fallback={<DashboardSkeletonLoader />}>
+                  <HostPaymentSettingsSection hostProperty={hostProperty} />
+                </Suspense>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </main>
 
-      {/* Operations Footer (Matching Landing Page Style) */}
-      <footer className="relative z-10 border-t border-slate-200/70 dark:border-zinc-800 bg-white/70 dark:bg-[#090b10]/80 backdrop-blur-sm py-2.5 sm:py-3 shrink-0 mt-auto">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400">
-          <p>© 2025 RoomScout. Direct stays, zero brokerage.</p>
-          <div className="flex items-center gap-5 text-[11px]">
-            <button
-              type="button"
-              onClick={() => showToast('Telemetry Engine: Direct Host Synchronization active.', 'info')}
-              className="hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
-            >
-              Telemetry Engine
-            </button>
-            <button
-              type="button"
-              onClick={() => showToast('Compliance Registry: Telemetry Verified.', 'info')}
-              className="hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
-            >
-              Compliance
-            </button>
-            <button
-              type="button"
-              onClick={() => showToast('API Connectivity: WebSocket & REST Operational.', 'info')}
-              className="hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
-            >
-              API Status
-            </button>
-          </div>
-        </div>
-      </footer>
+      {/* Property Telemetry & Quick Actions Modal */}
+      <PropertyTelemetryModal
+        isOpen={showPropertyTelemetry}
+        onClose={() => setShowPropertyTelemetry(false)}
+        hostProperty={hostProperty || DEFAULT_HOST_PROPERTY}
+        guests={guests}
+        onSwitchTab={handleTabSwitch}
+        onSelectSubTab={(subIdx) => {
+          setPropertySubTabIndex(subIdx);
+          handleTabSwitch('property');
+        }}
+      />
     </div>
   );
 }

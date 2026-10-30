@@ -1,37 +1,10 @@
-import { lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { HeroSection } from '../components/homepage/HeroSection';
 import { RecentlyAdded } from '../components/homepage/RecentlyAdded';
-import { VerificationPipeline } from '../components/homepage/VerificationPipeline';
-import { useNavigate } from 'react-router-dom';
-
-// Dynamic On-Demand Imports for Off-Screen & Heavy Homepage Modules
-const LeftPropertiesPanel = lazy(() =>
-  import('../components/homepage/LeftPropertiesPanel').then((m) => ({ default: m.LeftPropertiesPanel }))
-);
-const GuestReviews = lazy(() =>
-  import('../components/homepage/GuestReviews').then((m) => ({ default: m.GuestReviews }))
-);
-const HostRevenueCalculator = lazy(() =>
-  import('../components/homepage/HostRevenueCalculator').then((m) => ({ default: m.HostRevenueCalculator }))
-);
-const Features = lazy(() =>
-  import('../components/homepage/Features').then((m) => ({ default: m.Features }))
-);
-const FAQSection = lazy(() =>
-  import('../components/homepage/FAQSection').then((m) => ({ default: m.FAQSection }))
-);
-const HomepageFooter = lazy(() =>
-  import('../components/homepage/HomepageFooter').then((m) => ({ default: m.HomepageFooter }))
-);
-
-function SectionSkeleton({ height = 'h-48' }) {
-  return (
-    <div className={`w-full max-w-7xl mx-auto ${height} my-6 rounded-3xl bg-slate-200/40 dark:bg-slate-900/40 animate-pulse border border-slate-200/50 dark:border-slate-800/50 flex items-center justify-center`}>
-      <div className="w-6 h-6 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin" />
-    </div>
-  );
-}
+import { LeftPropertiesPanel } from '../components/homepage/LeftPropertiesPanel';
+import { HostRevenueCalculator } from '../components/homepage/HostRevenueCalculator';
+import { HomepageFooter } from '../components/homepage/HomepageFooter';
 
 export function Homepage({ setCategoryFilter, onStayClick, onBookClick }) {
   const navigate = useNavigate();
@@ -48,7 +21,7 @@ export function Homepage({ setCategoryFilter, onStayClick, onBookClick }) {
   };
 
   return (
-    <main className="relative min-h-screen text-slate-900 dark:text-white overflow-x-hidden">
+    <main className="relative min-h-screen bg-white dark:bg-black text-slate-900 dark:text-white overflow-x-hidden">
       {/* ── Fixed Screen Ambient Canvas (Locks to viewport: content scrolls THROUGH without moving) ── */}
       {/* ── Fixed Screen Ambient Canvas (Slowly shifts through sweet harmonious colors) ── */}
       <div 
@@ -78,25 +51,14 @@ export function Homepage({ setCategoryFilter, onStayClick, onBookClick }) {
           className="dark:hidden absolute top-20 left-1/2 -translate-x-1/2 w-[850px] h-[550px] bg-white/70 rounded-full blur-[130px] pointer-events-none" 
         />
 
-        {/* ── Dark Mode: Pitch-Black Cosmic Obsidian Canvas with Nebula Glow ── */}
+        {/* ── Dark Mode: Pure Black Canvas ── */}
         <div 
-          className="hidden dark:block absolute inset-0 bg-gradient-to-b from-[#030712] via-[#050b18] to-[#01040a]" 
-        />
-        <div 
-          className="hidden dark:block absolute top-[16%] left-1/2 -translate-x-1/2 w-[700px] sm:w-[950px] h-[520px] bg-[radial-gradient(ellipse_at_center,_rgba(56,189,248,0.20),_rgba(99,102,241,0.12)_42%,_transparent_75%)] blur-2xl animate-dark-nebula" 
-        />
-        <div 
-          className="hidden dark:block absolute -top-16 left-1/3 w-[550px] h-[420px] bg-sky-500/16 rounded-full blur-[140px] animate-orb-drift-1" 
-        />
-        <div 
-          className="hidden dark:block absolute top-20 right-1/3 w-[500px] h-[400px] bg-indigo-500/14 rounded-full blur-[140px] animate-orb-drift-2" 
+          className="hidden dark:block absolute inset-0 bg-black" 
         />
       </div>
 
       {/* ── Dedicated Left Properties Panel (With Left Side Non-Border) ── */}
-      <Suspense fallback={null}>
-        <LeftPropertiesPanel onSelectCategory={handleSelectCategory} />
-      </Suspense>
+      <LeftPropertiesPanel onSelectCategory={handleSelectCategory} />
 
       {/* ── Page Content Layer (Elevated above the screen-height background) ── */}
       <motion.div
@@ -111,33 +73,11 @@ export function Homepage({ setCategoryFilter, onStayClick, onBookClick }) {
         {/* 2. Recently Added Verified Listings (Above the fold) */}
         <RecentlyAdded onStayClick={onStayClick} onBookClick={onBookClick} />
 
-        {/* 3. 3-Step Trust Protocol & Verification Pipeline */}
-        <VerificationPipeline />
+        {/* 3. Interactive Host Revenue & Zero-Brokerage Savings Calculator */}
+        <HostRevenueCalculator />
 
-        {/* 4. Verified Guest & Student Reviews (Below-the-fold dynamic chunk) */}
-        <Suspense fallback={<SectionSkeleton height="h-72" />}>
-          <GuestReviews />
-        </Suspense>
-
-        {/* 5. Interactive Host Revenue & Zero-Brokerage Savings Calculator */}
-        <Suspense fallback={<SectionSkeleton height="h-80" />}>
-          <HostRevenueCalculator />
-        </Suspense>
-
-        {/* 6. Platform Core Pillars & Features */}
-        <Suspense fallback={<SectionSkeleton height="h-64" />}>
-          <Features />
-        </Suspense>
-
-        {/* 7. Frequently Asked Questions */}
-        <Suspense fallback={<SectionSkeleton height="h-64" />}>
-          <FAQSection />
-        </Suspense>
-
-        {/* 8. Minimalist Footer */}
-        <Suspense fallback={<div className="h-16 bg-slate-900/50" />}>
-          <HomepageFooter />
-        </Suspense>
+        {/* 4. Minimalist Footer */}
+        <HomepageFooter />
       </motion.div>
     </main>
   );

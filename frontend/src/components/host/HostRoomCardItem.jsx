@@ -1,238 +1,68 @@
-import React, { useState } from 'react';
-import { PersonOccupancyGrid } from '../common/PersonOccupancyGrid';
+import { useState, memo } from 'react';
 
 /**
  * HostRoomCardItem
- * Component-level card representing an individual room in the Host dashboard & onboarding.
- * Features:
- * - Square aspect ratio with light purple border
- * - Full compatibility with Light & Dark themes
- * - Inline room number editing, status indicators, and delete confirmation
+ * Exact match to user HTML specification:
+ * - Open Room: bg-surface-container, text-primary "OPEN", ROOM label, font-code-sm [18px] text-primary, CAP stepper.
+ * - Booked Today: bg-gradient-to-b from-tertiary-container to-tertiary/20 with pulsating tertiary indicator, drop-shadow-sm white room number.
+ * - Selected State: High-contrast glowing highlight.
  */
-export function HostRoomCardItem({
+export const HostRoomCardItem = memo(function HostRoomCardItem({
   card,
   cIdx,
   categoryIndex,
   cardId,
   isCardSelected,
   isCardOccupied,
-  isCardPartiallyOccupied,
   capacity,
-  occupiedCount,
-  isMonthly,
   compact = false,
   onSelectCategoryIndex,
   onSelectRoomCardId,
   setActiveDotIndex,
   onRemoveRoomCard,
   onUpdateRoomNumber,
-  onSaveCategory,
   onStepCapacity,
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // COMPACT SQUARE ROOM CARD (Default for Onboarding Step 5 & Compact view)
-  if (compact) {
-    return (
-      <div
-        onClick={(e) => {
-          if (confirmDelete) return;
-          e.stopPropagation();
-          onSelectCategoryIndex?.(categoryIndex);
-          if (typeof onSelectRoomCardId === 'function') {
-            onSelectRoomCardId(cardId, cIdx, card);
-          }
-          setActiveDotIndex?.(cIdx);
-        }}
-        className={`relative w-28 h-28 sm:w-32 sm:h-32 shrink-0 aspect-square rounded-2xl border flex flex-col justify-between items-center p-2 sm:p-2.5 select-none transition-all duration-200 cursor-pointer snap-start snap-always ${
-          confirmDelete
-            ? 'bg-rose-50 dark:bg-rose-950/60 border-2 border-rose-500 ring-2 ring-rose-400/20'
-            : isCardSelected
-            ? 'bg-emerald-50/50 dark:bg-emerald-950/25 border-2 border-emerald-500 dark:border-emerald-400 ring-2 ring-emerald-500/20 shadow-md shadow-emerald-500/10'
-            : 'bg-white dark:bg-zinc-850/90 border border-slate-200/90 dark:border-zinc-700 hover:border-emerald-400 dark:hover:border-emerald-500/60 shadow-xs hover:shadow-sm'
-        }`}
-      >
-        {confirmDelete ? (
-          <div
-            className="absolute inset-0 z-30 rounded-2xl bg-rose-50/95 dark:bg-zinc-900/95 p-2 flex flex-col items-center justify-between text-center select-none border border-rose-300 dark:border-rose-800"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="pt-1">
-              <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400 block leading-tight">
-                Delete Room?
-              </span>
-              <span className="text-[10px] font-medium text-slate-500 dark:text-zinc-400 leading-snug">
-                Room {card.roomNumber || ''}
-              </span>
-            </div>
+  const isBookedToday = Boolean(isCardOccupied);
 
-            <div className="flex items-center gap-1.5 w-full pb-0.5">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setConfirmDelete(false);
-                }}
-                className="flex-1 py-1 rounded-lg text-[10px] font-bold bg-slate-200 hover:bg-slate-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 transition-colors cursor-pointer"
-              >
-                No
-              </button>
-              <button
-                type="button"
-                disabled={isDeleting}
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  setIsDeleting(true);
-                  try {
-                    if (typeof onRemoveRoomCard === 'function') {
-                      await onRemoveRoomCard(cardId, card);
-                    }
-                  } finally {
-                    setIsDeleting(false);
-                    setConfirmDelete(false);
-                  }
-                }}
-                className="flex-1 py-1 rounded-lg text-[10px] font-bold bg-rose-600 hover:bg-rose-700 text-white transition-colors cursor-pointer disabled:opacity-75"
-              >
-                {isDeleting ? '...' : 'Yes'}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Top Row: Status Indicator & Delete Button */}
-            <div className="w-full flex items-center justify-between gap-1">
-              <div
-                className="flex items-center gap-1 min-w-0"
-                title={isCardOccupied ? 'Occupied' : isCardPartiallyOccupied ? 'Partially Booked' : 'Available'}
-              >
-                <span
-                  className={`w-1.5 h-1.5 rounded-full shrink-0 shadow-xs ${
-                    isCardOccupied
-                      ? 'bg-rose-500'
-                      : isCardPartiallyOccupied
-                      ? 'bg-amber-500'
-                      : 'bg-emerald-500'
-                  }`}
-                />
-                <span
-                  className={`text-[9px] font-bold uppercase tracking-tight truncate ${
-                    isCardOccupied
-                      ? 'text-rose-600 dark:text-rose-400'
-                      : isCardPartiallyOccupied
-                      ? 'text-amber-600 dark:text-amber-400'
-                      : 'text-emerald-600 dark:text-emerald-400'
-                  }`}
-                >
-                  {isCardOccupied ? 'Booked' : isCardPartiallyOccupied ? 'Partial' : 'Avail'}
-                </span>
-              </div>
-
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setConfirmDelete(true);
-                }}
-                className="w-4 h-4 rounded text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-[11px] flex items-center justify-center transition-colors cursor-pointer shrink-0"
-                title="Remove room"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Center: "Room" text & Editable Room Number */}
-            <div className="flex flex-col items-center justify-center my-auto w-full">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 select-none mb-0.5">
-                Room
-              </span>
-              <input
-                type="text"
-                value={card.roomNumber || ''}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSelectCategoryIndex?.(categoryIndex);
-                  if (typeof onSelectRoomCardId === 'function') {
-                    onSelectRoomCardId(cardId, cIdx, card);
-                  }
-                  setActiveDotIndex?.(cIdx);
-                }}
-                onFocus={() => {
-                  onSelectCategoryIndex?.(categoryIndex);
-                  if (typeof onSelectRoomCardId === 'function') {
-                    onSelectRoomCardId(cardId, cIdx, card);
-                  }
-                  setActiveDotIndex?.(cIdx);
-                }}
-                onChange={(e) => {
-                  if (typeof onUpdateRoomNumber === 'function') {
-                    onUpdateRoomNumber(cardId, e.target.value, cIdx, card);
-                  }
-                }}
-                onBlur={() => {
-                  if (typeof onSaveCategory === 'function') {
-                    onSaveCategory();
-                  }
-                }}
-                maxLength={8}
-                placeholder="101"
-                className="w-16 sm:w-18 py-0.5 rounded-lg bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white text-center focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-1 focus:ring-emerald-500/30 transition-all placeholder:text-slate-400 shadow-2xs"
-              />
-            </div>
-
-            {/* Bottom Row: Subtitle / Status */}
-            <div className="w-full text-center">
-              <span
-                className={`text-[9.5px] font-medium block truncate ${
-                  isCardOccupied
-                    ? 'text-rose-600 dark:text-rose-400 font-semibold'
-                    : isCardPartiallyOccupied
-                    ? 'text-amber-600 dark:text-amber-400 font-semibold'
-                    : 'text-emerald-700 dark:text-emerald-400 font-medium'
-                }`}
-              >
-                {isMonthly
-                  ? (capacity > 1 ? `${capacity} Beds` : '1 Bed')
-                  : (isCardOccupied ? 'Occupied' : 'Ready')}
-              </span>
-            </div>
-          </>
-        )}
-      </div>
-    );
-  }
-
-  // STANDARD SQUARE ROOM CARD (For Dashboard & Detailed views)
   return (
     <div
-      onClick={(e) => {
-        if (confirmDelete) return;
-        e.stopPropagation();
+      onClick={() => {
         onSelectCategoryIndex?.(categoryIndex);
         if (typeof onSelectRoomCardId === 'function') {
           onSelectRoomCardId(cardId, cIdx, card);
         }
         setActiveDotIndex?.(cIdx);
       }}
-      className={`relative w-32 h-32 sm:w-36 sm:h-36 shrink-0 aspect-square p-2.5 rounded-2xl border transition-all duration-200 flex flex-col justify-between cursor-pointer select-none outline-none snap-start snap-always ${
+      className={`group relative flex flex-col justify-between ${compact ? 'p-1.5 sm:p-2' : 'p-2 sm:p-2.5'} rounded-2xl overflow-hidden w-[calc((100%-20px)/3)] min-w-[calc((100%-20px)/3)] max-w-[calc((100%-20px)/3)] ${
+        compact ? 'h-[114px] sm:h-[118px]' : 'h-[154px] sm:h-[158px]'
+      } shrink-0 snap-start transition-[border-color,box-shadow,background-color,opacity] duration-150 cursor-pointer select-none outline-none transform-gpu ${
         confirmDelete
-          ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-950 dark:text-rose-100 border-2 border-rose-500 dark:border-rose-400 shadow-md ring-2 ring-rose-400/20'
+          ? 'bg-rose-50 dark:bg-error-container/20 border-2 border-rose-500 dark:border-error text-rose-600 dark:text-error'
+          : isBookedToday
+          ? isCardSelected
+            ? 'bg-gradient-to-b from-[#ca8100] via-[#854f00] to-[#261400] text-white border-2 border-amber-400 dark:border-amber-400 shadow-room-booked-selected z-10'
+            : 'bg-gradient-to-b from-[#a36800]/80 via-[#633c00]/80 to-[#1f1100]/90 text-white/95 border border-amber-700/40 dark:border-amber-600/30 shadow-xs opacity-90 hover:opacity-100'
           : isCardSelected
-          ? 'bg-emerald-50/50 dark:bg-emerald-950/25 text-slate-900 dark:text-white border-2 border-emerald-500 dark:border-emerald-400 ring-2 ring-emerald-500/20 shadow-md shadow-emerald-500/10'
-          : 'bg-white dark:bg-zinc-850/90 text-slate-900 dark:text-white border border-slate-200/90 dark:border-zinc-700 hover:border-emerald-400 dark:hover:border-emerald-500/60 shadow-xs hover:shadow-sm'
+          ? 'bg-slate-50 dark:bg-[#122438] border-2 border-[#c0c1ff] shadow-room-open-selected z-10'
+          : 'bg-slate-50/70 dark:bg-[#0c1825] border border-slate-200/80 dark:border-[#1f3045] hover:border-slate-300 dark:hover:border-[#2f4663]'
       }`}
     >
+      {/* Delete Confirmation Overlay */}
       {confirmDelete ? (
         <div
-          className="absolute inset-0 z-30 rounded-2xl bg-rose-50/95 dark:bg-zinc-900/95 p-2 flex flex-col items-center justify-between text-center select-none border border-rose-300 dark:border-rose-800"
+          className="absolute inset-0 z-30 rounded-2xl bg-white/95 dark:bg-[#0c1825]/95 p-2 flex flex-col items-center justify-between text-center select-none border border-rose-300 dark:border-rose-500/50 backdrop-blur-sm"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="pt-1">
+          <div className="pt-1.5 flex flex-col items-center">
+            <span className="material-symbols-outlined text-rose-500 text-[18px] mb-0.5 leading-none">delete</span>
             <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400 block leading-tight">
               Delete Room?
             </span>
-            <span className="text-[10px] font-medium text-slate-500 dark:text-zinc-400 leading-snug">
+            <span className="text-[9.5px] font-medium text-slate-600 dark:text-slate-300 leading-snug mt-0.5">
               Room {card.roomNumber || ''}
             </span>
           </div>
@@ -245,7 +75,7 @@ export function HostRoomCardItem({
                 e.stopPropagation();
                 setConfirmDelete(false);
               }}
-              className="flex-1 py-1 px-1 rounded-lg bg-slate-200/80 hover:bg-slate-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 text-[10px] font-semibold transition-colors cursor-pointer text-center truncate disabled:opacity-50"
+              className="flex-1 py-1.5 px-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-semibold transition-all cursor-pointer text-center truncate disabled:opacity-50 leading-none border border-slate-200 dark:border-slate-700 active:scale-95"
             >
               Cancel
             </button>
@@ -264,38 +94,25 @@ export function HostRoomCardItem({
                   setConfirmDelete(false);
                 }
               }}
-              className="flex-1 py-1 px-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-bold transition-colors cursor-pointer shadow-xs flex items-center justify-center gap-1 disabled:opacity-80 truncate"
+              className="flex-1 py-1.5 px-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-bold transition-all cursor-pointer shadow-xs flex items-center justify-center gap-0.5 disabled:opacity-80 truncate leading-none active:scale-95"
             >
-              {isDeleting ? '...' : 'Confirm'}
+              {isDeleting ? 'Deleting...' : 'Delete'}
             </button>
           </div>
         </div>
       ) : null}
 
-      {/* Top Header Row: Status Badge & Remove Button */}
-      <div className="w-full flex items-start justify-between gap-1 min-h-[22px]">
-        <span
-          className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full tracking-tight leading-snug whitespace-nowrap truncate max-w-[85px] border shadow-2xs ${
-            isCardOccupied
-              ? 'bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200 border-rose-200 dark:border-rose-800'
-              : isCardPartiallyOccupied
-              ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200 border-amber-200/80 dark:border-amber-800'
-              : 'bg-emerald-100/90 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200 border-emerald-200/80 dark:border-emerald-800'
-          }`}
-          title={
-            isMonthly
-              ? `${occupiedCount} of ${capacity} slot${capacity > 1 ? 's' : ''} occupied this month`
-              : (isCardOccupied ? 'Occupied today' : 'Available today')
-          }
-        >
-          {isMonthly
-            ? isCardOccupied
-              ? (capacity > 1 ? `${occupiedCount}/${capacity} Booked` : 'Booked')
-              : isCardPartiallyOccupied
-              ? `${occupiedCount}/${capacity} Booked`
-              : 'Available'
-            : (isCardOccupied ? 'Occupied' : 'Available')}
-        </span>
+      {/* Card Header Status & Remove Button */}
+      <div className="flex items-center justify-between w-full h-5">
+        {isBookedToday ? (
+          <span className="text-[9.5px] font-black uppercase tracking-wider text-amber-200 dark:text-amber-200 leading-none">
+            BOOKED
+          </span>
+        ) : (
+          <span className="text-[9.5px] font-black text-[#5254cf] dark:text-[#c0c1ff] uppercase tracking-wider leading-none">
+            OPEN
+          </span>
+        )}
 
         <button
           type="button"
@@ -303,18 +120,29 @@ export function HostRoomCardItem({
             e.stopPropagation();
             setConfirmDelete(true);
           }}
-          className="w-4 h-4 rounded-md text-[11px] flex items-center justify-center font-normal text-slate-400 hover:text-rose-500 hover:bg-rose-500/15 transition-colors cursor-pointer shrink-0 mt-0.5"
+          className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors cursor-pointer ${
+            isBookedToday
+              ? 'text-amber-200/80 hover:text-white hover:bg-white/10'
+              : 'text-slate-400 hover:text-rose-500 dark:text-slate-400 dark:hover:text-rose-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/60'
+          }`}
           title="Remove room"
         >
-          ✕
+          <span className="material-symbols-outlined text-[14px] leading-none flex items-center justify-center">close</span>
         </button>
       </div>
 
-      {/* Editable Room Number */}
-      <div className="my-auto text-center px-0.5 w-full flex flex-col items-center">
-        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 select-none mb-0.5">
-          Room
+      {/* Room Number */}
+      <div className={`flex-1 flex flex-col items-center justify-center ${compact ? 'my-0' : 'my-1'} text-center`}>
+        <span
+          className={`block ${compact ? 'text-[8px] mb-0.5' : 'text-[9.5px] mb-1'} uppercase tracking-widest font-extrabold leading-none ${
+            isBookedToday
+              ? 'text-amber-200/80 dark:text-amber-200/80'
+              : 'text-slate-400 dark:text-slate-400'
+          }`}
+        >
+          ROOM
         </span>
+
         <input
           type="text"
           value={card.roomNumber || ''}
@@ -326,98 +154,80 @@ export function HostRoomCardItem({
             }
             setActiveDotIndex?.(cIdx);
           }}
-          onFocus={(e) => {
-            onSelectCategoryIndex?.(categoryIndex);
-            if (typeof onSelectRoomCardId === 'function') {
-              onSelectRoomCardId(cardId, cIdx, card);
-            }
-            setActiveDotIndex?.(cIdx);
-          }}
           onChange={(e) => {
             if (typeof onUpdateRoomNumber === 'function') {
               onUpdateRoomNumber(cardId, e.target.value, cIdx, card);
             }
           }}
-          onBlur={() => {
-            if (typeof onSaveCategory === 'function') {
-              onSaveCategory();
-            }
-          }}
           maxLength={8}
           placeholder="101"
-          className="w-16 sm:w-20 py-0.5 rounded-lg bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white text-center tracking-tight transition-all focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-1 focus:ring-emerald-500/30 shadow-2xs"
+          className={`block w-full text-center bg-transparent border-none outline-none focus:ring-0 p-0 leading-none ${
+            isBookedToday
+              ? compact ? 'text-[17px] sm:text-[18px] text-white font-extrabold drop-shadow-xs tracking-tight' : 'text-[20px] sm:text-[22px] text-white font-extrabold drop-shadow-xs tracking-tight'
+              : compact
+              ? 'text-[17px] sm:text-[18px] text-[#5254cf] dark:text-[#c0c1ff] font-black tracking-tight'
+              : 'text-[22px] sm:text-[24px] text-[#5254cf] dark:text-[#c0c1ff] font-black tracking-tight'
+          }`}
         />
       </div>
 
-      {/* Monthly Capacity Selector & Person Occupancy Icons */}
-      {isMonthly && (
-        <div className="space-y-0.5 my-0.5">
-          <div
-            className="flex items-center justify-center gap-1 my-0.5"
-            onClick={(e) => e.stopPropagation()}
-            title="Room capacity"
-          >
-            <div className="h-[20px] px-0.5 bg-white/85 dark:bg-zinc-800/85 border border-slate-200 dark:border-zinc-700 rounded-md shadow-2xs flex items-center justify-between gap-0.5 transition-colors">
-              <button
-                type="button"
-                disabled={capacity <= 1}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onStepCapacity?.(cardId, cIdx, card, -1);
-                }}
-                className="w-3.5 h-3.5 rounded flex items-center justify-center text-xs font-bold text-slate-600 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-zinc-700 active:scale-95 disabled:opacity-25 disabled:cursor-not-allowed transition-all select-none cursor-pointer"
-                title="Decrease capacity"
-              >
-                −
-              </button>
-
-              <span className="text-[10px] font-bold text-slate-900 dark:text-zinc-100 select-none tabular-nums px-0.5 min-w-[10px] text-center">
-                {capacity}
-              </span>
-
-              <button
-                type="button"
-                disabled={capacity >= 10}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onStepCapacity?.(cardId, cIdx, card, 1);
-                }}
-                className="w-3.5 h-3.5 rounded flex items-center justify-center text-xs font-bold text-slate-600 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-zinc-700 active:scale-95 disabled:opacity-25 disabled:cursor-not-allowed transition-all select-none cursor-pointer"
-                title="Increase capacity"
-              >
-                +
-              </button>
-            </div>
-          </div>
-
-          <PersonOccupancyGrid
-            capacity={capacity}
-            occupiedCount={occupiedCount}
-            className="py-0.5 scale-90"
-          />
-        </div>
-      )}
-
-      {/* Subtitle bottom label */}
-      <div className="w-full text-center">
+      {/* Bottom Capacity Pill */}
+      <div
+        className={`${compact ? 'h-5.5 px-1.5 rounded-lg' : 'h-7 px-2 rounded-xl'} w-full flex items-center justify-between text-xs ${
+          isBookedToday
+            ? 'bg-black/35 border border-white/15 dark:border-white/10 backdrop-blur-xs'
+            : 'bg-white dark:bg-[#071320] border border-slate-200/70 dark:border-[#1a2d42] shadow-2xs'
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
         <span
-          className={`text-[9px] font-medium tracking-wide block truncate ${
-            isCardOccupied
-              ? 'text-rose-600 dark:text-rose-300 font-semibold'
-              : isCardPartiallyOccupied
-              ? 'text-amber-600 dark:text-amber-300 font-semibold'
-              : 'text-emerald-700 dark:text-emerald-400 font-medium'
+          className={`text-[9px] font-extrabold uppercase tracking-wider leading-none ${
+            isBookedToday ? 'text-amber-200' : 'text-slate-400 dark:text-slate-400'
           }`}
         >
-          {isCardOccupied
-            ? (isMonthly ? 'Booked' : 'Occupied')
-            : isCardPartiallyOccupied
-            ? `${capacity - occupiedCount} Bed${capacity - occupiedCount > 1 ? 's' : ''} Open`
-            : (isMonthly ? 'Available' : 'Open')}
+          CAP
         </span>
+
+        <div className="flex items-center gap-1 font-bold">
+          <button
+            type="button"
+            disabled={capacity <= 1}
+            onClick={(e) => {
+              e.stopPropagation();
+              onStepCapacity?.(cardId, cIdx, card, -1);
+            }}
+            className={`w-4.5 h-4.5 flex items-center justify-center rounded cursor-pointer select-none transition-colors leading-none ${
+              isBookedToday ? 'text-amber-200 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-slate-700 dark:hover:text-[#c0c1ff] hover:bg-slate-100 dark:hover:bg-slate-800'
+            } disabled:opacity-30 disabled:cursor-not-allowed`}
+            title="Decrease capacity"
+          >
+            <span className="text-[13px] leading-none select-none font-bold">−</span>
+          </button>
+
+          <span className={`min-w-[14px] text-[11.5px] font-black text-center select-none leading-none ${
+            isBookedToday ? 'text-white' : 'text-[#5254cf] dark:text-[#c0c1ff]'
+          }`}>
+            {capacity}
+          </span>
+
+          <button
+            type="button"
+            disabled={capacity >= 10}
+            onClick={(e) => {
+              e.stopPropagation();
+              onStepCapacity?.(cardId, cIdx, card, 1);
+            }}
+            className={`w-4.5 h-4.5 flex items-center justify-center rounded cursor-pointer select-none transition-colors leading-none ${
+              isBookedToday ? 'text-amber-200 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-slate-700 dark:hover:text-[#c0c1ff] hover:bg-slate-100 dark:hover:bg-slate-800'
+            } disabled:opacity-30 disabled:cursor-not-allowed`}
+            title="Increase capacity"
+          >
+            <span className="text-[13px] leading-none select-none font-bold">+</span>
+          </button>
+        </div>
       </div>
     </div>
   );
-}
+});
 
 export default HostRoomCardItem;

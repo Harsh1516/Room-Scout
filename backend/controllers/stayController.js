@@ -171,7 +171,7 @@ export const getStayAvailability = async (req, res, next) => {
 
     const overlapping = await Booking.find({
       stayId: stay._id,
-      status: { $nin: ['CANCELLED', 'REJECTED', 'CHECKED_OUT'] },
+      status: { $in: ['CONFIRMED', 'CHECKED_IN', 'AWAITING_PAYMENT'] },
       checkIn: { $lt: outDate },
       checkOut: { $gt: inDate },
     })
@@ -213,7 +213,7 @@ export const getStayAvailability = async (req, res, next) => {
 export const createStay = async (req, res, next) => {
   try {
     const isCallerAdmin = isAdminUser(req) || req.isAdminKey;
-    let hostId = req.user?._id || req.user?.id;
+    let hostId = req.user?._id;
     if (isCallerAdmin && req.body.hostId && mongoose.Types.ObjectId.isValid(req.body.hostId)) {
       hostId = req.body.hostId;
     }
@@ -283,15 +283,25 @@ export const createStay = async (req, res, next) => {
       longitude: lngNum,
       price: startingPricing.price,
       rateUnit: startingPricing.rateUnit,
-      rating: 5.0,
+      rating: 0,
+      reviewsCount: 0,
       facilities: Array.isArray(facilities) ? facilities : (Array.isArray(tags) ? tags : []),
       tags: Array.isArray(tags) ? tags : [],
       rules: Array.isArray(rules) ? rules : [],
-      image: cleanPrimaryImage,
+      image: cleanPrimaryImage || processedImages[0] || '',
       images: processedImages,
       instagramVideoUrl: instagramVideoUrl || '',
       description: description || '',
-      roomRates: Array.isArray(roomRates) ? roomRates : [],
+      roomRates: Array.isArray(roomRates)
+        ? roomRates.map((rr) => ({
+            ...(rr && rr._id && mongoose.Types.ObjectId.isValid(rr._id) ? { _id: rr._id } : {}),
+            id: rr?.id || (rr?._id ? String(rr._id) : undefined),
+            type: rr?.type,
+            price: rr?.price,
+            rateUnit: rr?.rateUnit,
+            capacity: Number(rr?.capacity) || 1,
+          }))
+        : [],
       rooms: Array.isArray(rooms) ? rooms : [],
       totalRooms: Array.isArray(rooms) ? rooms.length : 1,
       availableRooms: Array.isArray(rooms) ? rooms.filter((r) => r.status === 'Available').length : 1,
@@ -319,7 +329,7 @@ export const addReviewToStay = async (req, res, next) => {
   try {
     const { id: stayId } = req.params;
     const { rating, comment } = req.body;
-    const userId = req.user?._id || req.user?.id;
+    const userId = req.user?._id;
     const userName = req.user?.name || req.body.userName || 'Guest User';
 
     if (!rating || !comment) {
@@ -372,7 +382,7 @@ export const updateReviewInStay = async (req, res, next) => {
 
     // IDOR Guard: Only author or admin can update review
     const isCallerAdmin = isAdminUser(req) || req.isAdminKey;
-    const callerId = (req.user?._id || req.user?.id)?.toString();
+    const callerId = req.user?._id?.toString();
     const callerName = (req.user?.name || '').toLowerCase().trim();
     const revUserId = (rev.userId?._id || rev.userId || rev.user)?.toString();
     const isAuthor =
@@ -415,7 +425,7 @@ export const deleteReviewFromStay = async (req, res, next) => {
 
     // IDOR Guard: Only author or admin can delete review
     const isCallerAdmin = isAdminUser(req) || req.isAdminKey;
-    const callerId = (req.user?._id || req.user?.id)?.toString();
+    const callerId = req.user?._id?.toString();
     const callerName = (req.user?.name || '').toLowerCase().trim();
     const revUserId = (rev.userId?._id || rev.userId || rev.user)?.toString();
     const isAuthor =
@@ -432,8 +442,8 @@ export const deleteReviewFromStay = async (req, res, next) => {
 
     stay.reviews.pull(reviewId);
     stay.reviewsCount = stay.reviews.length;
-    const sum = stay.reviews.length > 0 ? stay.reviews.reduce((acc, r) => acc + r.rating, 0) : 5.0;
-    stay.rating = stay.reviews.length > 0 ? Number((sum / stay.reviews.length).toFixed(1)) : 5.0;
+    const sum = stay.reviews.length > 0 ? stay.reviews.reduce((acc, r) => acc + r.rating, 0) : 0;
+    stay.rating = stay.reviews.length > 0 ? Number((sum / stay.reviews.length).toFixed(1)) : 0;
     await stay.save();
 
     return res.json({ success: true, message: 'Review deleted successfully', reviews: stay.reviews });
@@ -455,7 +465,7 @@ export const updateStayRooms = async (req, res, next) => {
 
     // IDOR Guard: Verify caller is admin or the host of this stay
     const isCallerAdmin = isAdminUser(req) || req.isAdminKey;
-    const callerId = (req.user?._id || req.user?.id)?.toString();
+    const callerId = req.user?._id?.toString();
     const callerEmail = (req.user?.email || '').toLowerCase().trim();
 
     let isOwner = isCallerAdmin;
@@ -543,22 +553,97 @@ export const resolveMapLink = async (req, res) => {
       }
     }
 
-    const atMatch = targetUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-    const dataMatch = targetUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
-    const queryMatch = targetUrl.match(/[?&](?:q|query|ll)=(-?\d+\.\d+),(-?\d+\.\d+)/);
-
     let lat = null;
     let lng = null;
+    let placeName = '';
 
-    if (atMatch) {
-      lat = parseFloat(atMatch[1]);
-      lng = parseFloat(atMatch[2]);
-    } else if (dataMatch) {
-      lat = parseFloat(dataMatch[1]);
-      lng = parseFloat(dataMatch[2]);
-    } else if (queryMatch) {
-      lat = parseFloat(queryMatch[1]);
-      lng = parseFloat(queryMatch[2]);
+    // 1. Exact POI / Marker coordinates in protobuf data (!3d<lat> and !4d<lng>)
+    const lat3d = targetUrl.match(/!3d(-?\d+\.\d+)/);
+    const lng4d = targetUrl.match(/!4d(-?\d+\.\d+)/);
+    if (lat3d && lng4d) {
+      lat = parseFloat(lat3d[1]);
+      lng = parseFloat(lng4d[1]);
+    }
+
+    // 2. Query search / pin marker (?q=lat,lng or ?query=lat,lng or ?ll=lat,lng)
+    if (lat === null || lng === null) {
+      const queryMatch = targetUrl.match(/[?&](?:q|query|ll)=(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (queryMatch) {
+        lat = parseFloat(queryMatch[1]);
+        lng = parseFloat(queryMatch[2]);
+      }
+    }
+
+    // 3. Direct coordinates in place path: /maps/place/lat,lng
+    if (lat === null || lng === null) {
+      const directPlaceMatch = targetUrl.match(/\/maps\/place\/(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (directPlaceMatch) {
+        lat = parseFloat(directPlaceMatch[1]);
+        lng = parseFloat(directPlaceMatch[2]);
+      }
+    }
+
+    // Viewport camera match (@lat,lng)
+    const atMatch = targetUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    const atLat = atMatch ? parseFloat(atMatch[1]) : null;
+    const atLng = atMatch ? parseFloat(atMatch[2]) : null;
+
+    // 4. Place name extraction and Plus Code / Open Location Code decoding
+    const placeMatch = targetUrl.match(/\/maps\/place\/([^/@]+)/);
+    if (placeMatch && placeMatch[1]) {
+      try {
+        placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
+      } catch {
+        placeName = placeMatch[1].replace(/\+/g, ' ');
+      }
+
+      const CODE_ALPHABET = '23456789CFGHJMPQRVWX';
+      const ENCODING_BASE = 20;
+      const plusMatch = placeName.match(/\b([23456789CFGHJMPQRVWX]{4,8}\+[23456789CFGHJMPQRVWX]{2,3})\b/i);
+      if (plusMatch && (lat === null || lng === null)) {
+        const code = plusMatch[1];
+        const refLat = atLat !== null ? atLat : 0;
+        const refLng = atLng !== null ? atLng : 0;
+        if (refLat !== 0 || refLng !== 0) {
+          const parts = code.split('+');
+          let fullCode = code;
+          if (parts[0].length < 8) {
+            let adjLat = Math.min(90, Math.max(-90, refLat)) + 90;
+            let adjLng = Math.min(180, Math.max(-180, refLng)) + 180;
+            let pfx = '';
+            let lRes = 20, gRes = 20;
+            for (let i = 0; i < 2; i++) {
+              pfx += CODE_ALPHABET[Math.floor(adjLat / lRes)] + CODE_ALPHABET[Math.floor(adjLng / gRes)];
+              adjLat -= Math.floor(adjLat / lRes) * lRes;
+              adjLng -= Math.floor(adjLng / gRes) * gRes;
+              lRes /= ENCODING_BASE;
+              gRes /= ENCODING_BASE;
+            }
+            fullCode = pfx + code;
+          }
+          let dLat = -90, dLng = -180, latRes = 20, lngRes = 20;
+          const clean = fullCode.replace('+', '').toUpperCase();
+          for (let i = 0; i < Math.min(clean.length, 10); i += 2) {
+            const ld = CODE_ALPHABET.indexOf(clean[i]);
+            const gd = CODE_ALPHABET.indexOf(clean[i + 1]);
+            if (ld === -1 || gd === -1) break;
+            dLat += ld * latRes;
+            dLng += gd * lngRes;
+            latRes /= ENCODING_BASE;
+            lngRes /= ENCODING_BASE;
+          }
+          lat = dLat + (latRes * ENCODING_BASE) / 2;
+          lng = dLng + (lngRes * ENCODING_BASE) / 2;
+        }
+      }
+    }
+
+    // 5. Fallback to viewport center (@lat,lng) ONLY if no specific pin, POI, or Plus Code exists
+    if (lat === null || lng === null) {
+      if (atLat !== null && atLng !== null) {
+        lat = atLat;
+        lng = atLng;
+      }
     }
 
     if (lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng)) {
@@ -566,6 +651,7 @@ export const resolveMapLink = async (req, res) => {
         success: true,
         latitude: parseFloat(lat.toFixed(6)),
         longitude: parseFloat(lng.toFixed(6)),
+        placeName: placeName ? placeName.trim() : undefined,
       });
     }
 
@@ -580,7 +666,7 @@ export const resolveMapLink = async (req, res) => {
 
 export const getPropertiesByHost = async (req, res, next) => {
   try {
-    const userId = req.user?._id || req.user?.id;
+    const userId = req.user?._id;
     const userEmail = (req.user?.email || '').trim().toLowerCase();
 
     let host = null;
@@ -611,6 +697,88 @@ export const getPropertiesByHost = async (req, res, next) => {
 
     return res.json(mappedStays);
   } catch (error) {
+    return next(error);
+  }
+};
+
+// @desc    Get public platform statistics (actual stay count, online booked users count)
+// @route   GET /api/stays/public-stats
+// @access  Public
+export const getPublicStats = async (req, res, next) => {
+  try {
+    const totalStays = await Stay.countDocuments({ isPublished: true });
+
+    // Query online bookings created via website
+    const onlineBookings = await Booking.find({
+      bookingSource: { $in: ['ONLINE', 'ONLINE_USER'] },
+    })
+      .select('userId email phone')
+      .lean();
+
+    // Calculate unique online users who booked through the website
+    const uniqueUsersSet = new Set();
+    onlineBookings.forEach((b) => {
+      const identifier =
+        (b.userId && b.userId.toString()) ||
+        (b.email && b.email.toLowerCase().trim()) ||
+        (b.phone && b.phone.trim()) ||
+        b._id.toString();
+      if (identifier) uniqueUsersSet.add(identifier);
+    });
+
+    const onlineUsersBooked = uniqueUsersSet.size;
+    const totalOnlineBookings = onlineBookings.length;
+
+    return res.json({
+      success: true,
+      totalStays,
+      onlineUsersBooked,
+      totalOnlineBookings,
+    });
+  } catch (error) {
+    console.error('Error fetching public stats:', error);
+    return next(error);
+  }
+};
+
+// @desc    Reset or restore revenue counter for a stay / property
+// @route   POST /api/stays/:id/reset-revenue
+// @access  Private (Host)
+export const resetStayRevenue = async (req, res, next) => {
+  try {
+    const { id: stayId } = req.params;
+    const { baselineTotal = 0, baselineOnline = 0, baselineOffline = 0, restoreAllTime = false } = req.body;
+
+    const stay = await Stay.findById(stayId);
+    if (!stay) {
+      return res.status(404).json({ success: false, message: 'Stay not found.' });
+    }
+
+    if (restoreAllTime) {
+      stay.revenueResetSettings = {
+        resetAt: null,
+        baselineTotal: 0,
+        baselineOnline: 0,
+        baselineOffline: 0,
+      };
+    } else {
+      stay.revenueResetSettings = {
+        resetAt: new Date(),
+        baselineTotal: Number(baselineTotal) || 0,
+        baselineOnline: Number(baselineOnline) || 0,
+        baselineOffline: Number(baselineOffline) || 0,
+      };
+    }
+
+    await stay.save();
+
+    return res.json({
+      success: true,
+      message: restoreAllTime ? 'All-time revenue counter restored.' : 'Revenue counter set to ₹0 successfully.',
+      revenueResetSettings: stay.revenueResetSettings,
+    });
+  } catch (error) {
+    console.error('Error resetting stay revenue:', error);
     return next(error);
   }
 };

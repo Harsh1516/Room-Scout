@@ -176,7 +176,7 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
             exit={{ opacity: 0, x: -30 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             onClick={() => setIsOpen(true)}
-            className="fixed left-0 top-1/2 -translate-y-1/2 z-40 rounded-r-2xl border-l-0 border-r border-y border-white/80 dark:border-white/15 bg-white/85 dark:bg-slate-950/85 backdrop-blur-2xl shadow-xl px-2.5 py-4 flex flex-col items-center gap-2 cursor-pointer hover:bg-white dark:hover:bg-slate-900 transition-colors duration-150 select-none"
+            className="fixed left-0 top-1/2 -translate-y-1/2 z-40 rounded-r-2xl border-l-0 border-r border-y border-white/80 dark:border-white/15 bg-white/85 dark:bg-black/90 backdrop-blur-2xl shadow-xl px-2.5 py-4 flex flex-col items-center gap-2 cursor-pointer hover:bg-white dark:hover:bg-zinc-900 transition-colors duration-150 select-none"
             title="Open Properties Panel"
           >
             <svg className="w-4 h-4 text-sky-600 dark:text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
@@ -197,15 +197,26 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
       {/* ── Left Side Properties Panel (Strictly No Left Border) ── */}
       <AnimatePresence>
         {isOpen && (
-          <motion.aside
-            key="properties-left-panel"
-            initial={{ opacity: 0, x: -340 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -340 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed inset-y-0 left-0 z-40 w-80 sm:w-88 max-w-[85vw] flex flex-col bg-white/85 dark:bg-slate-950/85 backdrop-blur-2xl border-l-0 border-r border-t-0 border-b-0 border-white/80 dark:border-white/15 shadow-[12px_0_36px_rgba(31,38,135,0.08)] select-none"
-            style={{ borderLeft: 'none' }}
-          >
+          <>
+            {/* Backdrop on mobile/tablet to close on tap outside */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setIsOpen(false)}
+              className="fixed inset-0 bg-black/40 backdrop-blur-[1px] z-39"
+            />
+
+            <motion.aside
+              key="properties-left-panel"
+              initial={{ opacity: 0, x: -340 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -340 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="fixed inset-y-0 left-0 z-40 w-80 sm:w-88 max-w-[85vw] flex flex-col bg-white/85 dark:bg-black/95 backdrop-blur-2xl border-l-0 border-r border-t-0 border-b-0 border-white/80 dark:border-white/15 shadow-[12px_0_36px_rgba(31,38,135,0.08)] select-none"
+              style={{ borderLeft: 'none' }}
+            >
             {/* Header Area */}
             <div className="pt-20 sm:pt-24 px-4 pb-3 border-b border-slate-200/70 dark:border-white/10 flex items-center justify-between gap-2 shrink-0">
               <div>
@@ -303,10 +314,11 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
               </span>
             </div>
           </motion.aside>
-        )}
-      </AnimatePresence>
-    </>
-  );
+        </>
+      )}
+    </AnimatePresence>
+  </>
+);
 }
 
 export default LeftPropertiesPanel;

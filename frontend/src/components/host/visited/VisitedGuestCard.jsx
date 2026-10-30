@@ -1,35 +1,178 @@
-import React from 'react';
+import { useState, useMemo, memo } from 'react';
+import { 
+  Phone, 
+  Eye, 
+  LogOut, 
+  Key, 
+  Check, 
+  X, 
+  ArrowRight,
+  ShieldCheck 
+} from 'lucide-react';
 
-export function VisitedGuestCard({
+const SOFT_PALETTES = [
+  {
+    name: 'orange',
+    cardBg: 'bg-[#FCA058] dark:bg-[#381602]',
+    border: 'border-orange-500/80 hover:border-orange-600 dark:border-orange-500/80 dark:hover:border-orange-400',
+    shadow: 'shadow-[0_8px_24px_-4px_rgba(234,88,12,0.25),0_2px_6px_rgba(0,0,0,0.06)]',
+    avatarBg: 'bg-gradient-to-tr from-[#EA580C] to-[#C2410C] text-white',
+    roomBoxBg: 'bg-white/95 dark:bg-[#251204] border border-orange-300/80 dark:border-orange-700/80 shadow-xs',
+    accentText: 'text-orange-900 dark:text-orange-300',
+    badgeWalkin: 'bg-white/60 dark:bg-orange-950/60 text-orange-950 dark:text-orange-200 border-orange-600/30 font-bold',
+    badgeStatus: 'bg-white/70 dark:bg-orange-950/70 text-orange-950 dark:text-orange-100 border-orange-600/40 font-bold',
+    primaryBtn: 'bg-gradient-to-r from-orange-500 via-orange-600 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white shadow-md shadow-orange-800/25 border border-orange-500/60',
+    secondaryBtn: 'bg-white hover:bg-orange-50/90 dark:bg-[#2C1405] dark:hover:bg-[#3D1D09] text-orange-800 dark:text-orange-300 border-2 border-orange-500/60 dark:border-orange-500/50 shadow-xs hover:shadow-sm font-bold',
+    slotBtn: 'bg-orange-600/15 hover:bg-orange-600/25 text-orange-950 dark:text-orange-200 border-orange-500/40 dark:border-orange-500/40 hover:border-orange-600/60',
+  },
+  {
+    name: 'mint',
+    cardBg: 'bg-[#6FE0A3] dark:bg-[#052e20]',
+    border: 'border-emerald-500/80 hover:border-emerald-600 dark:border-emerald-500/80 dark:hover:border-emerald-400',
+    shadow: 'shadow-[0_8px_24px_-4px_rgba(0,108,74,0.25),0_2px_6px_rgba(0,0,0,0.06)]',
+    avatarBg: 'bg-gradient-to-tr from-[#006C4A] to-[#009A6A] text-white',
+    roomBoxBg: 'bg-white/95 dark:bg-[#041d16] border border-emerald-300/80 dark:border-emerald-700/80 shadow-xs',
+    accentText: 'text-emerald-900 dark:text-emerald-300',
+    badgeWalkin: 'bg-white/60 dark:bg-emerald-950/60 text-emerald-950 dark:text-emerald-200 border-emerald-600/30 font-bold',
+    badgeStatus: 'bg-white/70 dark:bg-emerald-950/70 text-emerald-950 dark:text-emerald-100 border-emerald-600/40 font-bold',
+    primaryBtn: 'bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white shadow-md shadow-emerald-800/25 border border-emerald-500/60',
+    secondaryBtn: 'bg-white hover:bg-emerald-50/90 dark:bg-[#07241D] dark:hover:bg-[#0A3329] text-emerald-800 dark:text-emerald-300 border-2 border-emerald-500/60 dark:border-emerald-500/50 shadow-xs hover:shadow-sm font-bold',
+    slotBtn: 'bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-950 dark:text-emerald-200 border-emerald-500/40 dark:border-emerald-500/40 hover:border-emerald-600/60',
+  },
+  {
+    name: 'sky',
+    cardBg: 'bg-[#60C3FA] dark:bg-[#08294a]',
+    border: 'border-sky-500/80 hover:border-sky-600 dark:border-sky-500/80 dark:hover:border-sky-400',
+    shadow: 'shadow-[0_8px_24px_-4px_rgba(2,132,199,0.25),0_2px_6px_rgba(0,0,0,0.06)]',
+    avatarBg: 'bg-gradient-to-tr from-[#0284C7] to-[#2563EB] text-white',
+    roomBoxBg: 'bg-white/95 dark:bg-[#051c33] border border-sky-300/80 dark:border-sky-700/80 shadow-xs',
+    accentText: 'text-sky-900 dark:text-sky-300',
+    badgeWalkin: 'bg-white/60 dark:bg-sky-950/60 text-sky-950 dark:text-sky-200 border-sky-600/30 font-bold',
+    badgeStatus: 'bg-white/70 dark:bg-sky-950/70 text-sky-950 dark:text-sky-100 border-sky-600/40 font-bold',
+    primaryBtn: 'bg-gradient-to-r from-sky-600 via-blue-600 to-sky-700 hover:from-sky-700 hover:to-blue-800 text-white shadow-md shadow-sky-800/25 border border-sky-500/60',
+    secondaryBtn: 'bg-white hover:bg-sky-50/90 dark:bg-[#0A223B] dark:hover:bg-[#0F3155] text-sky-800 dark:text-sky-300 border-2 border-sky-500/60 dark:border-sky-500/50 shadow-xs hover:shadow-sm font-bold',
+    slotBtn: 'bg-sky-600/15 hover:bg-sky-600/25 text-sky-950 dark:text-sky-200 border-sky-500/40 dark:border-sky-500/40 hover:border-sky-600/60',
+  },
+  {
+    name: 'warmCream',
+    cardBg: 'bg-[#FCA058] dark:bg-[#381602]',
+    border: 'border-orange-500/80 hover:border-orange-600 dark:border-orange-500/80 dark:hover:border-orange-400',
+    shadow: 'shadow-[0_8px_24px_-4px_rgba(234,88,12,0.25),0_2px_6px_rgba(0,0,0,0.06)]',
+    avatarBg: 'bg-gradient-to-tr from-[#EA580C] to-[#C2410C] text-white',
+    roomBoxBg: 'bg-white/95 dark:bg-[#251204] border border-orange-300/80 dark:border-orange-700/80 shadow-xs',
+    accentText: 'text-orange-900 dark:text-orange-300',
+    badgeWalkin: 'bg-white/60 dark:bg-orange-950/60 text-orange-950 dark:text-orange-200 border-orange-600/30 font-bold',
+    badgeStatus: 'bg-white/70 dark:bg-orange-950/70 text-orange-950 dark:text-orange-100 border-orange-600/40 font-bold',
+    primaryBtn: 'bg-gradient-to-r from-orange-500 via-orange-600 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white shadow-md shadow-orange-800/25 border border-orange-500/60',
+    secondaryBtn: 'bg-white hover:bg-orange-50/90 dark:bg-[#2C1405] dark:hover:bg-[#3D1D09] text-orange-800 dark:text-orange-300 border-2 border-orange-500/60 dark:border-orange-500/50 shadow-xs hover:shadow-sm font-bold',
+    slotBtn: 'bg-orange-600/15 hover:bg-orange-600/25 text-orange-950 dark:text-orange-200 border-orange-500/40 dark:border-orange-500/40 hover:border-orange-600/60',
+  },
+  {
+    name: 'lavender',
+    cardBg: 'bg-[#EEDFFE] dark:bg-[#251347]',
+    border: 'border-purple-400/80 hover:border-purple-600 dark:border-purple-600/80 dark:hover:border-purple-400',
+    shadow: 'shadow-[0_8px_24px_-4px_rgba(126,34,206,0.18),0_2px_6px_rgba(0,0,0,0.06)]',
+    avatarBg: 'bg-gradient-to-tr from-[#7E22CE] to-[#6366F1] text-white',
+    roomBoxBg: 'bg-white/95 dark:bg-[#180b30] border border-purple-300/80 dark:border-purple-700/80 shadow-xs',
+    accentText: 'text-purple-800 dark:text-purple-300',
+    badgeWalkin: 'bg-purple-600/15 text-purple-950 dark:text-purple-200 border-purple-600/30 font-bold',
+    badgeStatus: 'bg-purple-600/20 text-purple-950 dark:text-purple-100 border-purple-600/40 font-bold',
+    primaryBtn: 'bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-700 hover:to-indigo-800 text-white shadow-md shadow-purple-800/25 border border-purple-500/60',
+    secondaryBtn: 'bg-white hover:bg-purple-50/90 dark:bg-[#1E1136] dark:hover:bg-[#2B184D] text-purple-800 dark:text-purple-300 border-2 border-purple-500/60 dark:border-purple-500/50 shadow-xs hover:shadow-sm font-bold',
+  },
+  {
+    name: 'rose',
+    cardBg: 'bg-[#FDD8E0] dark:bg-[#38111e]',
+    border: 'border-rose-400/80 hover:border-rose-600 dark:border-rose-600/80 dark:hover:border-rose-400',
+    shadow: 'shadow-[0_8px_24px_-4px_rgba(225,29,72,0.18),0_2px_6px_rgba(0,0,0,0.06)]',
+    avatarBg: 'bg-gradient-to-tr from-[#E11D48] to-[#BE123C] text-white',
+    roomBoxBg: 'bg-white/95 dark:bg-[#260913] border border-rose-300/80 dark:border-rose-700/80 shadow-xs',
+    accentText: 'text-rose-800 dark:text-rose-300',
+    badgeWalkin: 'bg-rose-600/15 text-rose-950 dark:text-rose-200 border-rose-600/30 font-bold',
+    badgeStatus: 'bg-rose-600/20 text-rose-950 dark:text-rose-100 border-rose-600/40 font-bold',
+    primaryBtn: 'bg-gradient-to-r from-rose-600 via-rose-700 to-pink-700 hover:from-rose-700 hover:to-pink-800 text-white shadow-md shadow-rose-800/25 border border-rose-500/60',
+    secondaryBtn: 'bg-white hover:bg-rose-50/90 dark:bg-[#2C0E18] dark:hover:bg-[#3D1422] text-rose-800 dark:text-rose-300 border-2 border-rose-500/60 dark:border-rose-500/50 shadow-xs hover:shadow-sm font-bold',
+  },
+  {
+    name: 'teal',
+    cardBg: 'bg-[#C6F5EE] dark:bg-[#072c27]',
+    border: 'border-teal-400/80 hover:border-teal-600 dark:border-teal-600/80 dark:hover:border-teal-400',
+    shadow: 'shadow-[0_8px_24px_-4px_rgba(13,148,136,0.18),0_2px_6px_rgba(0,0,0,0.06)]',
+    avatarBg: 'bg-gradient-to-tr from-[#0D9488] to-[#047857] text-white',
+    roomBoxBg: 'bg-white/95 dark:bg-[#041d1a] border border-teal-300/80 dark:border-teal-700/80 shadow-xs',
+    accentText: 'text-teal-800 dark:text-teal-300',
+    badgeWalkin: 'bg-teal-600/15 text-teal-950 dark:text-teal-200 border-teal-600/30 font-bold',
+    badgeStatus: 'bg-teal-600/20 text-teal-950 dark:text-teal-100 border-teal-600/40 font-bold',
+    primaryBtn: 'bg-gradient-to-r from-teal-600 via-emerald-700 to-teal-700 hover:from-teal-700 hover:to-emerald-800 text-white shadow-md shadow-teal-800/25 border border-teal-500/60',
+    secondaryBtn: 'bg-white hover:bg-teal-50/90 dark:bg-[#062421] dark:hover:bg-[#0A332F] text-teal-800 dark:text-teal-300 border-2 border-teal-500/60 dark:border-teal-500/50 shadow-xs hover:shadow-sm font-bold',
+  },
+];
+
+export const VisitedGuestCard = memo(function VisitedGuestCard({
   guest,
   subTab,
   isLoading,
   onOpenModal,
   onSelectUserRequest,
+  onSelectSlot,
   onApproveRequest,
   onRejectRequest,
   onMarkCheckIn,
   onMarkCheckOut,
-  formatIdNumber,
+  onVerifyPayment,
   formatModalDate,
+  paletteIndex = 0,
+  isFocused = false,
+  onFocusCard,
+  onCloseFocus,
+  isSlotSelected = false,
 }) {
-  const isCheckedIn = guest.status === 'CHECKED_IN';
-  const isCheckedOut = guest.status === 'CHECKED_OUT';
-  const rawStatus = String(guest.status || '').toUpperCase();
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
-  // A guest is only truly pending if their status indicates pending and they aren't already confirmed, checked in, or rejected
+  // Exact page color scheme:
+  // - Request page -> orange only
+  // - Check in page -> green only
+  // - Check out page -> blue only
+  const palette = useMemo(() => {
+    if (subTab === 'requests') {
+      return SOFT_PALETTES.find((p) => p.name === 'orange') || SOFT_PALETTES[0];
+    }
+    if (subTab === 'checkin') {
+      return SOFT_PALETTES.find((p) => p.name === 'mint') || SOFT_PALETTES[1];
+    }
+    if (subTab === 'checkout') {
+      return SOFT_PALETTES.find((p) => p.name === 'sky') || SOFT_PALETTES[2];
+    }
+    return SOFT_PALETTES[Math.abs(paletteIndex) % SOFT_PALETTES.length] || SOFT_PALETTES[0];
+  }, [subTab, paletteIndex]);
+
+  const rawStatus = String(guest.status || '').toUpperCase();
+  const isOnline = guest.bookingSource === 'ONLINE' || guest.isOnline === true;
+  const isCheckedOut = rawStatus === 'CHECKED_OUT' || rawStatus === 'COMPLETED';
+  // Offline walk-in guests added by host are automatically approved and in-house (Checked In)
+  const isCheckedIn = !isCheckedOut && (rawStatus === 'CHECKED_IN' || (!isOnline && rawStatus === 'CONFIRMED'));
+
+  const isAwaitingPayment = rawStatus === 'AWAITING_PAYMENT' || rawStatus === 'PAYMENT_PENDING';
   const isPending =
     (rawStatus.includes('PENDING') || guest.status === 'Pending Host Approval' || rawStatus === 'DRAFT') &&
     !isCheckedIn &&
     !isCheckedOut &&
+    !isAwaitingPayment &&
     rawStatus !== 'CONFIRMED' &&
     rawStatus !== 'REJECTED';
 
-  const isOnline = guest.bookingSource === 'ONLINE';
-  const isMonthly = String(guest.rateUnit || '').toLowerCase().includes('month');
+  const isMonthly = useMemo(() => {
+    if (Array.isArray(guest.bookedMonths) && guest.bookedMonths.length > 0) return true;
+    if (Number(guest.durationMonths) > 0) return true;
+    if (String(guest.durationDisplay || '').toLowerCase().includes('month')) return true;
+    if (String(guest.duration || '').toLowerCase().includes('month')) return true;
+    const u = String(guest.rateUnit || '').toLowerCase().trim();
+    if (u.includes('night') || u.includes('day')) return false;
+    return true; // Default rental unit in Hostels / PG is monthly
+  }, [guest.rateUnit, guest.bookedMonths, guest.durationMonths, guest.durationDisplay, guest.duration]);
 
   const cleanPhone = (guest.userPhone || guest.phone || guest.guestPhone || '').replace(/\D/g, '').slice(-10);
-  const displayName = guest.userName || guest.fullName || guest.guestName || 'Guest User';
+  const displayName = guest.userName || guest.fullName || guest.guestName || (isOnline ? 'Online Guest' : 'Walk-in Guest');
   const initials =
     displayName
       .split(' ')
@@ -37,14 +180,18 @@ export function VisitedGuestCard({
       .map((part) => part[0])
       .join('')
       .slice(0, 2)
-      .toUpperCase() || 'GU';
+      .toUpperCase() || (isOnline ? 'OG' : 'WK');
 
-  // Clicking anywhere on the card opens that specific room slot directly in the room schedule calendar
+  const refCode = guest.bookingReferenceId || guest.bookingId || (isOnline ? '#RES-ONLINE' : '#RES-WALKIN');
+
+  // Clicking an inactive card lifts it upward. Clicking an already lifted card body lowers it.
   const handleCardClick = () => {
-    if (onSelectUserRequest) {
-      onSelectUserRequest(guest);
-    } else {
-      onOpenModal(guest);
+    if (!isFocused) {
+      if (onFocusCard) onFocusCard(guest);
+      return;
+    }
+    if (onCloseFocus) {
+      onCloseFocus();
     }
   };
 
@@ -56,230 +203,370 @@ export function VisitedGuestCard({
   return (
     <div
       onClick={handleCardClick}
-      className="group relative p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#111622]/90 backdrop-blur-md border border-slate-200/90 dark:border-zinc-800 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:border-emerald-300 hover:bg-emerald-50/30 dark:hover:border-emerald-800/60 dark:hover:bg-zinc-800/40 hover:shadow-[0_8px_25px_rgba(0,0,0,0.06)] transition-all duration-200 cursor-pointer flex flex-col justify-between gap-3.5 select-none"
+      className={`group relative rounded-2xl p-2.5 sm:p-3 border transition-colors select-none flex flex-col justify-between w-full h-full min-h-[195px] ${
+        onFocusCard ? 'cursor-pointer' : 'cursor-default'
+      } ${palette.cardBg} ${palette.border} ${
+        isFocused
+          ? 'shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] ring-2 ring-emerald-500/50'
+          : palette.shadow
+      }`}
     >
-      {/* Top Row: User Identity, Heading Name, Badges, and Top-Right Cross Icon */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          {/* Avatar with initials */}
-          <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-extrabold text-xs flex items-center justify-center shrink-0 border border-emerald-200/70 dark:border-emerald-800/60 shadow-2xs">
-            {initials}
+      {/* ── Top Header: Avatar + Name + Source Tag + Code + Status Pill ── */}
+      <div>
+        <div className="flex items-start justify-between gap-1.5">
+          {/* Avatar + Guest Name & Code */}
+          <div className="flex items-center gap-2 min-w-0">
+            <div className={`w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full ${palette.avatarBg} flex items-center justify-center font-bold text-[11px] sm:text-xs shrink-0 shadow-xs tracking-tight`}>
+              {initials}
+            </div>
+
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h3 className="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white leading-tight truncate">
+                  {displayName}
+                </h3>
+                {isOnline ? (
+                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 text-[9px] font-semibold border border-purple-200 dark:border-purple-800 shrink-0">
+                    Online
+                  </span>
+                ) : (
+                  <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-semibold border shrink-0 ${palette.badgeWalkin}`}>
+                    Walk-In Guest
+                  </span>
+                )}
+              </div>
+              <span className="text-[9px] font-mono text-slate-600/90 dark:text-slate-400 block truncate mt-0.5">
+                {refCode}
+              </span>
+            </div>
           </div>
 
-          <div className="min-w-0">
-            {/* Heading: User Name */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-tight truncate">
-                {displayName}
-              </h4>
-
-              {/* Status Badge */}
-              {isPending ? (
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/70 dark:border-amber-800/60">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                  Request
-                </span>
-              ) : isCheckedIn ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/60">
-                  <svg className="w-2.5 h-2.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                  </svg>
-                  Checked In
-                </span>
-              ) : isCheckedOut ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                  Checked Out
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50">
-                  Confirmed
-                </span>
-              )}
-
-              {/* Online Badge */}
-              {isOnline && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/50">
-                  <svg className="w-2.5 h-2.5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <circle cx="12" cy="12" r="10" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
-                  </svg>
-                  Online
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-              <span>{guest.durationDisplay || (isMonthly ? 'Monthly Stay' : 'Nightly Stay')}</span>
-              {(guest.adults > 0 || guest.children > 0) && (
-                <>
-                  <span className="text-slate-300 dark:text-slate-700">•</span>
-                  <span>
-                    {guest.adults || 1} Adult{(guest.adults || 1) > 1 ? 's' : ''}
-                    {guest.children > 0 ? `, ${guest.children} Child` : ''}
+          {/* Top-Right Status Badge / Delete confirmation */}
+          <div className="shrink-0 flex items-center gap-1">
+            {isConfirmingDelete ? (
+              <div
+                className="flex items-center gap-1 p-1 rounded-xl bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800 shadow-sm shrink-0 animate-in fade-in duration-150 z-20"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  disabled={isLoading}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsConfirmingDelete(false);
+                  }}
+                  className="px-1.5 py-0.5 rounded-lg bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 text-[10px] font-semibold border border-slate-200 dark:border-zinc-700 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={isLoading}
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (onRejectRequest) await onRejectRequest(guest);
+                    setIsConfirmingDelete(false);
+                  }}
+                  className="px-2 py-0.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-bold shadow-xs cursor-pointer flex items-center gap-1 active:scale-[0.98] transition-all duration-150 ease-out"
+                >
+                  Delete
+                </button>
+              </div>
+            ) : (
+              <>
+                {guest.upiPayment?.verificationStatus === 'PENDING_VERIFICATION' || guest.paymentStatus === 'PENDING_VERIFICATION' ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-100 text-violet-900 dark:bg-violet-950/70 dark:text-violet-200 text-[9.5px] font-bold border border-violet-400/80 animate-pulse">
+                    <span className="w-1.5 h-1.5 rounded-full bg-violet-600 ring-2 ring-violet-400/40" />
+                    <span>UPI Pending</span>
                   </span>
-                </>
-              )}
-            </div>
+                ) : isAwaitingPayment ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 text-[9.5px] font-semibold border border-amber-300/80">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 ring-2 ring-amber-400/40" />
+                    <span>Awaiting Payment</span>
+                  </span>
+                ) : isPending ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 text-[9.5px] font-semibold border border-amber-300/80">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 ring-2 ring-amber-400/40" />
+                    <span>Pending</span>
+                  </span>
+                ) : isCheckedIn ? (
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold border ${palette.badgeStatus}`}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 ring-2 ring-emerald-500/30" />
+                    <span>Checked In</span>
+                  </span>
+                ) : isCheckedOut ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-[9.5px] font-semibold border border-slate-200 dark:border-slate-700">
+                    <span>Checked Out</span>
+                  </span>
+                ) : (
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold border ${palette.badgeStatus}`}>
+                    <span>Confirmed</span>
+                  </span>
+                )}
+
+                {/* Subtle Delete trigger on hover */}
+                {onRejectRequest && !isFocused && (
+                  <button
+                    type="button"
+                    title="Cancel booking and delete record"
+                    disabled={isLoading}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsConfirmingDelete(true);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-full border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800 text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-all duration-150 ease-out cursor-pointer shadow-2xs ml-0.5 shrink-0 active:scale-95"
+                  >
+                    <X className="w-2.5 h-2.5 stroke-[2.5]" />
+                  </button>
+                )}
+
+                {/* Focus Close Button when Focused */}
+                {isFocused && (
+                  <button
+                    type="button"
+                    title="Close focus view (Esc)"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onCloseFocus) onCloseFocus();
+                    }}
+                    className="w-6 h-6 rounded-full border border-slate-300 dark:border-slate-600 bg-white/95 dark:bg-slate-800 text-slate-600 dark:text-slate-200 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-all duration-150 ease-out cursor-pointer shadow-xs ml-0.5 shrink-0 active:scale-95"
+                  >
+                    <X className="w-3 h-3 stroke-[2.5]" />
+                  </button>
+                )}
+              </>
+            )}
           </div>
         </div>
 
-        {/* Top-Right Cross Icon Button to Delete Request / Reject Approval */}
-        {onRejectRequest && (
+        {/* ── Middle Room & Stay Details (White/Glass Box matching Mockup) ── */}
+        <div className={`rounded-xl p-2 sm:p-2.5 border shadow-2xs space-y-1 my-1.5 ${palette.roomBoxBg}`}>
+          {/* Room Name & Total Price */}
+          <div className="flex items-center justify-between gap-1.5">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Key className={`w-3 h-3 shrink-0 ${palette.accentText}`} />
+              <span className="text-[11.5px] sm:text-xs font-bold text-slate-900 dark:text-white truncate">
+                Room {guest.roomNumber || '—'} {guest.roomType ? `(${guest.roomType})` : ''}
+              </span>
+            </div>
+            <div className="text-right shrink-0">
+              <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
+                ₹{Number(guest.totalAmount || 0).toLocaleString('en-IN')}
+              </span>
+            </div>
+          </div>
+
+          {/* Dates & Guests */}
+          <div className="flex items-center justify-between gap-1 text-[10px] sm:text-[10.5px] text-slate-500 dark:text-slate-400">
+            {(() => {
+              const durationText = (() => {
+                if (isMonthly) {
+                  if (Array.isArray(guest.bookedMonths) && guest.bookedMonths.length > 0) {
+                    const count = guest.bookedMonths.length;
+                    return `${count} ${count === 1 ? 'Month' : 'Months'}`;
+                  }
+                  if (Number(guest.durationMonths) > 0) {
+                    const count = Number(guest.durationMonths);
+                    return `${count} ${count === 1 ? 'Month' : 'Months'}`;
+                  }
+                  if (
+                    guest.durationDisplay &&
+                    !String(guest.durationDisplay).includes('undefined') &&
+                    !String(guest.durationDisplay).toLowerCase().includes('night')
+                  ) {
+                    return guest.durationDisplay;
+                  }
+                  if (
+                    guest.duration &&
+                    !String(guest.duration).includes('undefined') &&
+                    !String(guest.duration).toLowerCase().includes('night')
+                  ) {
+                    return guest.duration;
+                  }
+                  const inD = rawCheckIn ? new Date(rawCheckIn) : null;
+                  const outD = rawCheckOut ? new Date(rawCheckOut) : null;
+                  if (inD && outD && !isNaN(inD.getTime()) && !isNaN(outD.getTime())) {
+                    const months = Math.max(
+                      1,
+                      (outD.getUTCFullYear() - inD.getUTCFullYear()) * 12 +
+                      (outD.getUTCMonth() - inD.getUTCMonth()) + 1
+                    );
+                    return `${months} ${months === 1 ? 'Month' : 'Months'}`;
+                  }
+                  return '1 Month';
+                }
+                if (guest.durationDisplay && !String(guest.durationDisplay).includes('undefined')) {
+                  return guest.durationDisplay;
+                }
+                if (guest.duration && !String(guest.duration).includes('undefined')) {
+                  return guest.duration;
+                }
+                const inD = rawCheckIn ? new Date(rawCheckIn) : null;
+                const outD = rawCheckOut ? new Date(rawCheckOut) : null;
+                if (inD && outD && !isNaN(inD.getTime()) && !isNaN(outD.getTime())) {
+                  const diffDays = Math.max(1, Math.round((outD.getTime() - inD.getTime()) / (1000 * 60 * 60 * 24)));
+                  return `${diffDays} ${diffDays === 1 ? 'Night' : 'Nights'}`;
+                }
+                return '1 Night';
+              })();
+
+              return (
+                <span className="truncate">
+                  {formattedIn ? formattedIn.split('(')[0].trim() : '5 Oct'} - {formattedOut ? formattedOut.split('(')[0].trim() : '7 Oct'} • {durationText}
+                </span>
+              );
+            })()}
+            {(() => {
+              const count = Math.max(
+                Number(guest.personCount) || 0,
+                Number(guest.guestCount) || 0,
+                Number(guest.numberOfGuests) || 0,
+                Number(guest.persons) || 0,
+                Array.isArray(guest.occupants) ? guest.occupants.length : 0,
+                Array.isArray(guest.guests) ? guest.guests.length : (Number(guest.guests) || 0),
+                1
+              );
+              return (
+                <span className="shrink-0 font-medium">
+                  {count} {count === 1 ? 'Guest' : 'Guests'}
+                </span>
+              );
+            })()}
+          </div>
+
+          {/* Phone and Slot button */}
+          <div className="text-[10px] font-mono text-slate-600 dark:text-slate-400 pt-1.5 border-t border-slate-200/50 dark:border-white/5 flex items-center justify-between">
+            <span className="font-semibold tracking-tight text-slate-700 dark:text-slate-300">
+              {cleanPhone ? `+91 ${cleanPhone}` : (guest.bookingReferenceId || '')}
+            </span>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onSelectSlot) {
+                  onSelectSlot(guest);
+                } else if (onSelectUserRequest) {
+                  onSelectUserRequest(guest);
+                }
+              }}
+              className={`group/slot inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-tight border transition-all duration-150 ease-out cursor-pointer select-none active:scale-[0.97] shadow-2xs ${
+                isSlotSelected
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-500/90 shadow-xs shadow-emerald-600/30'
+                  : (palette.slotBtn || 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300/80')
+              }`}
+              title={isSlotSelected ? 'Click to reset slot' : 'Click to view slot in calendar'}
+            >
+              {isSlotSelected ? (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-white ring-2 ring-emerald-300/60 shrink-0" />
+                  <span>Slot</span>
+                  <Check className="w-2.5 h-2.5 stroke-[3] text-white shrink-0" />
+                </>
+              ) : (
+                <>
+                  <span className="w-1 h-1 rounded-full bg-current opacity-60 group-hover/slot:opacity-100 shrink-0" />
+                  <span>Slot</span>
+                  <ArrowRight className="w-2.5 h-2.5 stroke-[2.2] shrink-0 opacity-70 group-hover/slot:opacity-100 group-hover/slot:translate-x-0.5 transition-all duration-150" />
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Bottom Action Buttons Row ── */}
+      <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-1.5 pt-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenModal(guest);
+          }}
+          className={`flex-1 min-h-[36px] py-1.5 px-2.5 rounded-xl text-[10.5px] sm:text-[11px] font-bold transition-all duration-150 ease-out cursor-pointer flex items-center justify-center gap-1 active:scale-[0.98] hover:brightness-105 shadow-sm whitespace-nowrap ${palette.primaryBtn}`}
+        >
+          <Eye className="w-3 h-3 stroke-[2.2] shrink-0" />
+          <span>Pass / Details</span>
+        </button>
+
+        {cleanPhone && (
+          <a
+            href={`tel:+91${cleanPhone}`}
+            onClick={(e) => e.stopPropagation()}
+            className={`min-h-[36px] py-1.5 px-3 rounded-xl text-[10.5px] sm:text-[11px] font-bold transition-all duration-150 ease-out cursor-pointer flex items-center justify-center gap-1 active:scale-[0.98] hover:brightness-95 dark:hover:brightness-110 whitespace-nowrap shrink-0 ${palette.secondaryBtn}`}
+          >
+            <Phone className="w-3 h-3 stroke-[2.2] shrink-0" />
+            <span>Call</span>
+          </a>
+        )}
+
+        {/* Requests: Approve CTA */}
+        {subTab === 'requests' && !isCheckedIn && onApproveRequest && (
           <button
             type="button"
-            title="Reject & Delete Request"
             disabled={isLoading}
             onClick={(e) => {
               e.stopPropagation();
-              onRejectRequest(guest);
+              onApproveRequest(guest);
             }}
-            className="w-8 h-8 rounded-full border border-slate-200/90 dark:border-slate-700 bg-white/90 dark:bg-slate-800 text-slate-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-300 dark:hover:bg-rose-950/40 dark:hover:border-rose-800 flex items-center justify-center transition-all cursor-pointer shadow-2xs hover:shadow-xs active:scale-90 shrink-0"
+            className="min-h-[36px] px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-[10.5px] sm:text-[11px] font-bold shadow-md shadow-amber-600/20 cursor-pointer active:scale-[0.98] transition-all duration-150 ease-out flex items-center gap-1 hover:brightness-105 whitespace-nowrap shrink-0"
           >
-            <svg className="w-4 h-4 stroke-[2.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <Check className="w-3 h-3 stroke-[2.5]" />
+            <span>{isLoading ? '...' : 'Approve'}</span>
+          </button>
+        )}
+
+        {/* Verify UPI Payment CTA */}
+        {onVerifyPayment && (guest.upiPayment?.verificationStatus === 'PENDING_VERIFICATION' || (guest.upiPayment?.transactionRef && guest.upiPayment?.verificationStatus !== 'VERIFIED')) && (
+          <button
+            type="button"
+            disabled={isLoading}
+            onClick={(e) => {
+              e.stopPropagation();
+              onVerifyPayment(guest);
+            }}
+            className="min-h-[36px] px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-[10.5px] sm:text-[11px] font-bold shadow-md shadow-indigo-600/20 cursor-pointer active:scale-[0.98] transition-all duration-150 ease-out flex items-center gap-1 hover:brightness-105 whitespace-nowrap shrink-0"
+            title="Verify direct UPI bank credit"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 stroke-[2.5]" />
+            <span>Verify UPI</span>
+          </button>
+        )}
+
+        {/* Check-in CTA */}
+        {subTab === 'checkin' && !isCheckedIn && onMarkCheckIn && (
+          <button
+            type="button"
+            disabled={isLoading}
+            onClick={(e) => {
+              e.stopPropagation();
+              onMarkCheckIn(guest);
+            }}
+            className="min-h-[36px] px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-[10.5px] sm:text-[11px] font-bold shadow-md shadow-emerald-600/20 cursor-pointer active:scale-[0.98] transition-all duration-150 ease-out flex items-center gap-1 hover:brightness-105 whitespace-nowrap shrink-0"
+            title="Review verification details and check in guest"
+          >
+            <Key className="w-3 h-3 stroke-[2.5]" />
+            <span>Check In</span>
+          </button>
+        )}
+
+        {/* Checkout: Check Out CTA */}
+        {subTab === 'checkout' && !isCheckedOut && onMarkCheckOut && (
+          <button
+            type="button"
+            disabled={isLoading}
+            onClick={(e) => {
+              e.stopPropagation();
+              onMarkCheckOut(guest);
+            }}
+            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-[10.5px] sm:text-[11px] font-bold shadow-md shadow-indigo-600/20 cursor-pointer active:scale-[0.98] transition-all duration-150 ease-out flex items-center gap-1 hover:brightness-105 whitespace-nowrap shrink-0"
+          >
+            <LogOut className="w-3 h-3 stroke-[2.5]" />
+            <span>Check Out</span>
           </button>
         )}
       </div>
-
-      {/* Middle Row: Minimal Room, Price, and Slot Info (replaces repetitive 4 boxes) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 px-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/80">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 text-xs font-bold shadow-2xs">
-            <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
-            </svg>
-            <span>Room {guest.roomNumber || '—'}</span>
-            <span className="text-slate-400 font-normal">({guest.roomType || 'Standard'})</span>
-          </span>
-
-          <span className="text-xs font-bold text-slate-900 dark:text-white font-mono">
-            ₹{Number(guest.totalAmount || 0).toLocaleString('en-IN')}
-          </span>
-
-          {(formattedIn || formattedOut) && (
-            <span className="text-[11px] text-slate-500 dark:text-slate-400">
-              • {formattedIn ? formattedIn.split('(')[0].trim() : ''} → {formattedOut ? formattedOut.split('(')[0].trim() : ''}
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 group-hover:underline">
-          <span>Open Room Slot</span>
-          <span className="transition-transform group-hover:translate-x-0.5">→</span>
-        </div>
-      </div>
-
-      {/* Bottom Actions Row: Left = View Pass / Details; Right = Check sign to approve */}
-      <div
-        className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-zinc-800 gap-2 flex-wrap"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Bottom Left Corner: View Pass / Details button */}
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpenModal(guest);
-            }}
-            className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-zinc-800 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300 text-slate-700 dark:text-zinc-200 text-xs font-semibold border border-slate-200 dark:border-zinc-700 shadow-2xs hover:shadow-xs transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
-            title="View User Pass & Full Details"
-          >
-            <svg className="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <span>Pass / Details</span>
-          </button>
-
-          {cleanPhone && (
-            <a
-              href={`tel:+91${cleanPhone}`}
-              onClick={(e) => e.stopPropagation()}
-              className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 text-xs font-semibold border border-slate-200 dark:border-zinc-700 shadow-2xs transition-all flex items-center gap-1 cursor-pointer"
-              title={`Call +91 ${cleanPhone}`}
-            >
-              <svg className="w-3 h-3 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
-              </svg>
-              <span className="hidden sm:inline">Call</span>
-            </a>
-          )}
-        </div>
-
-        {/* Bottom Right Corner: Check sign to approve user */}
-        <div>
-          {subTab === 'requests' || isPending ? (
-            <button
-              type="button"
-              disabled={isLoading}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onApproveRequest) onApproveRequest(guest);
-              }}
-              className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50 active:scale-95"
-              title="Approve User Request"
-            >
-              <svg className="w-4 h-4 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-              </svg>
-              <span>{isLoading ? 'Approving...' : 'Approve'}</span>
-            </button>
-          ) : subTab === 'checkin' ? (
-            <div>
-              {!isCheckedIn && !isCheckedOut ? (
-                <button
-                  type="button"
-                  disabled={isLoading}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (onMarkCheckIn) onMarkCheckIn(guest);
-                  }}
-                  className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50 active:scale-95"
-                  title="Mark Checked In"
-                >
-                  <svg className="w-4 h-4 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                  </svg>
-                  <span>{isLoading ? 'Updating...' : 'Mark Checked In'}</span>
-                </button>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/70">
-                  <svg className="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                  </svg>
-                  <span>Checked In</span>
-                </span>
-              )}
-            </div>
-          ) : subTab === 'checkout' ? (
-            <div>
-              {!isCheckedOut ? (
-                <button
-                  type="button"
-                  disabled={isLoading}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (onMarkCheckOut) onMarkCheckOut(guest);
-                  }}
-                  className="px-4 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-xs transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50 active:scale-95"
-                  title="Complete Check-Out"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                  <span>{isLoading ? 'Updating...' : 'Complete Check-Out'}</span>
-                </button>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                  <span>Checked Out</span>
-                </span>
-              )}
-            </div>
-          ) : null}
-        </div>
-      </div>
     </div>
   );
-}
+});
+
+export default VisitedGuestCard;

@@ -2,18 +2,7 @@ import { useState, useEffect } from 'react';
 import { bookingsAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
-
-function loadRazorpayScript() {
-  return new Promise((resolve) => {
-    if (window.Razorpay) return resolve(true);
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
-  });
-}
+import { DirectUpiPaymentModal } from './payment/DirectUpiPaymentModal';
 
 export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
   const { user } = useAuth();
@@ -29,13 +18,15 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
     sharingType: stay?.sharingType || 'double',
   });
 
-  const [paymentMethod, setPaymentMethod] = useState('RAZORPAY');
+  const [paymentMethod, setPaymentMethod] = useState('UPI');
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [bookingId, setBookingId] = useState('');
   const [paymentId, setPaymentId] = useState('');
   const [confirmedPaymentStatus, setConfirmedPaymentStatus] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentStepNotice, setPaymentStepNotice] = useState('');
+  const [activeUpiBooking, setActiveUpiBooking] = useState(null);
+  const [showUpiModal, setShowUpiModal] = useState(false);
 
   useEffect(() => {
     if (user && isOpen) {
@@ -110,7 +101,7 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
     const schedule = computeExactSchedule();
 
     const bookingPayload = {
-      stayId: stay._id || stay.id,
+      stayId: stay._id,
       stayTitle: stay.title || stay.propertyName || 'Property Stay',
       location: stay.location || stay.city || '',
       roomNumber: String(stay.roomNumber || '101').trim(),
@@ -125,110 +116,32 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
       durationDays: isMonthly ? 0 : formData.durationUnits,
       durationDisplay: schedule.durationDisplay,
       sharingType: formData.sharingType,
+      personCount: 1,
+      gender: 'Other',
       totalAmount,
       bookingReferenceId: generatedRefId,
     };
 
-    // Option 1: Razorpay / Online
-    if (paymentMethod === 'RAZORPAY') {
+    // Option 1: Direct Host UPI Payment
+    if (paymentMethod === 'UPI') {
       try {
-        setPaymentStepNotice('Connecting to Razorpay gateway...');
-        const orderRes = await bookingsAPI.createPaymentOrder({
-          amount: totalAmount,
-          currency: 'INR',
-          bookingReferenceId: generatedRefId,
-          notes: {
-            stayTitle: stay.title,
-            guestName: formData.fullName,
-          },
-        });
-
-        const isLoaded = await loadRazorpayScript();
-
-        if (isLoaded && !orderRes.isSandbox && window.Razorpay) {
-          const options = {
-            key: orderRes.keyId,
-            amount: orderRes.amount,
-            currency: orderRes.currency || 'INR',
-            name: 'Room-Scout Stays',
-            description: `Reservation for ${stay.title}`,
-            order_id: orderRes.orderId,
-            prefill: {
-              name: formData.fullName,
-              email: formData.email,
-              contact: formData.phone,
-            },
-            theme: { color: '#059669' },
-            handler: async (response) => {
-              try {
-                setPaymentStepNotice('Verifying payment signature...');
-                await bookingsAPI.verifyPayment({
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                  bookingReferenceId: generatedRefId,
-                });
-
-                const bookingDoc = await bookingsAPI.createBooking({
-                  ...bookingPayload,
-                  paymentMethod: 'RAZORPAY',
-                  paymentStatus: 'PAID',
-                  status: 'CONFIRMED',
-                });
-
-                setBookingId(bookingDoc.bookingReferenceId || generatedRefId);
-                setPaymentId(response.razorpay_payment_id);
-                setConfirmedPaymentStatus('PAID');
-                setBookingConfirmed(true);
-                toast.success(`Reservation confirmed for ${stay.title}!`);
-                if (onBookingCreated) onBookingCreated(bookingDoc);
-              } catch (verifyErr) {
-                toast.error(`Verification error: ${verifyErr.message}`);
-              } finally {
-                setIsSubmitting(false);
-                setPaymentStepNotice('');
-              }
-            },
-            modal: {
-              ondismiss: () => {
-                setIsSubmitting(false);
-                setPaymentStepNotice('');
-                toast.info('Payment cancelled.');
-              },
-            },
-          };
-
-          const rzpInstance = new window.Razorpay(options);
-          rzpInstance.open();
-          return;
-        }
-
-        // Sandbox / Fallback Mode
-        setPaymentStepNotice('Simulating payment verification...');
-        const mockPayId = `pay_mock_${Date.now()}`;
-        await bookingsAPI.verifyPayment({
-          razorpay_order_id: orderRes.orderId,
-          razorpay_payment_id: mockPayId,
-          razorpay_signature: 'sandbox_verified_signature',
-          bookingReferenceId: generatedRefId,
-        });
-
-        const bookingDoc = await bookingsAPI.createBooking({
+        setPaymentStepNotice('Creating reservation slot...');
+        const res = await bookingsAPI.createBooking({
           ...bookingPayload,
-          paymentMethod: 'RAZORPAY',
-          paymentStatus: 'PAID',
-          status: 'CONFIRMED',
+          paymentMethod: 'UPI',
+          paymentStatus: 'UNPAID',
+          status: 'AWAITING_PAYMENT',
         });
 
-        setBookingId(bookingDoc.bookingReferenceId || generatedRefId);
-        setPaymentId(mockPayId);
-        setConfirmedPaymentStatus('PAID');
-        setBookingConfirmed(true);
-        toast.success(`Reservation confirmed for ${stay.title}!`);
-        if (onBookingCreated) onBookingCreated(bookingDoc);
+        const created = res.booking || res;
+        setBookingId(created.bookingReferenceId || generatedRefId);
+        setActiveUpiBooking(created);
+        setShowUpiModal(true);
+
+        if (onBookingCreated) onBookingCreated(created);
       } catch (err) {
-        console.error('Online Payment Error:', err);
-        toast.error(`Payment failed: ${err.message}`);
+        console.error('Direct UPI Booking Error:', err);
+        toast.error(err.message || 'Failed to initiate room reservation.');
       } finally {
         setIsSubmitting(false);
         setPaymentStepNotice('');
@@ -239,25 +152,20 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
     // Option 2: Pay on Arrival
     try {
       setPaymentStepNotice('Registering reservation...');
-      const bookingDoc = await bookingsAPI.createBooking({
+      const res = await bookingsAPI.createBooking({
         ...bookingPayload,
-        paymentMethod: 'OFFLINE',
+        paymentMethod: 'PAY_ON_ARRIVAL',
         paymentStatus: 'PENDING',
-        status: 'CONFIRMED',
+        status: 'PENDING',
       });
-
-      setBookingId(bookingDoc.bookingReferenceId || generatedRefId);
-      setPaymentId('Pay on Arrival');
-      setConfirmedPaymentStatus('PENDING');
+      const created = res.booking || res;
+      setBookingId(created.bookingReferenceId || generatedRefId);
       setBookingConfirmed(true);
-      toast.success(`Reservation placed for ${stay.title}!`);
-      if (onBookingCreated) onBookingCreated(bookingDoc);
+      toast.success(`Reservation requested for ${stay.title}!`);
+      if (onBookingCreated) onBookingCreated(created);
     } catch (err) {
       console.error('Reservation Error:', err);
-      setBookingId(generatedRefId);
-      setPaymentId('Pay on Arrival');
-      setConfirmedPaymentStatus('PENDING');
-      setBookingConfirmed(true);
+      toast.error(`Reservation failed: ${err.message}`);
     } finally {
       setIsSubmitting(false);
       setPaymentStepNotice('');
@@ -274,19 +182,19 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] overflow-y-auto bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+    <div className="fixed inset-0 z-[9999] overflow-y-auto bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-fade-in">
       <div className="fixed inset-0" onClick={handleResetAndClose} />
 
-      <div className="relative w-full max-w-xl bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-white/10 z-10 my-auto">
+      <div className="relative w-full max-w-xl max-h-[90vh] flex flex-col bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-white/10 z-10 my-auto">
         {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-white/10 flex items-center justify-between bg-slate-50/70 dark:bg-zinc-900/70">
-          <div className="flex items-center gap-2.5">
-            <span className="text-xl">⚡</span>
-            <div>
-              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-200 dark:border-white/10 flex items-center justify-between bg-slate-50/70 dark:bg-zinc-900/70 shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="text-xl shrink-0">⚡</span>
+            <div className="min-w-0">
+              <h2 className="text-sm sm:text-base md:text-lg font-bold text-slate-900 dark:text-white truncate">
                 {bookingConfirmed ? 'Reservation Confirmed!' : 'Reserve Property'}
               </h2>
-              <p className="text-xs text-slate-500 dark:text-zinc-400">
+              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400 truncate">
                 {stay.title} {stay.location ? `(${stay.location})` : ''}
               </p>
             </div>
@@ -295,7 +203,7 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
           <button
             type="button"
             onClick={handleResetAndClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors"
+            className="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
           >
             ✕
           </button>
@@ -340,7 +248,7 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
                         : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                     }`}
                   >
-                    {confirmedPaymentStatus === 'PAID' ? '✓ Paid Online (Razorpay)' : '💵 Pay on Arrival'}
+                    {confirmedPaymentStatus === 'PAID' ? '✓ Paid Directly via UPI' : '💵 Pay on Arrival'}
                   </span>
                 </div>
               </div>
@@ -388,7 +296,7 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
           </div>
         ) : (
           /* Reservation & Payment Form */
-          <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">
@@ -488,32 +396,32 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
                 <div
                   role="button"
                   tabIndex={0}
-                  onClick={() => setPaymentMethod('RAZORPAY')}
+                  onClick={() => setPaymentMethod('UPI')}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') setPaymentMethod('RAZORPAY');
+                    if (e.key === 'Enter' || e.key === ' ') setPaymentMethod('UPI');
                   }}
                   className={`p-3 rounded-2xl border text-left cursor-pointer transition-all flex flex-col justify-between ${
-                    paymentMethod === 'RAZORPAY'
+                    paymentMethod === 'UPI'
                       ? 'border-emerald-500 bg-emerald-500/10 shadow-sm'
                       : 'border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800/60 hover:border-slate-300 dark:hover:border-white/20'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-base">💳</span>
+                    <span className="text-base">📲</span>
                     <span
                       className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
-                        paymentMethod === 'RAZORPAY'
+                        paymentMethod === 'UPI'
                           ? 'border-emerald-500 bg-emerald-500'
                           : 'border-slate-400 dark:border-zinc-600'
                       }`}
                     >
-                      {paymentMethod === 'RAZORPAY' && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      {paymentMethod === 'UPI' && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
                     </span>
                   </div>
                   <div className="mt-2">
-                    <div className="text-xs font-bold text-slate-900 dark:text-white">Pay Online Now</div>
+                    <div className="text-xs font-bold text-slate-900 dark:text-white">Direct UPI to Host</div>
                     <div className="text-[10px] text-slate-500 dark:text-zinc-400">
-                      UPI, Cards, NetBanking (Razorpay)
+                      Exact room fee • 0% gateway fee • QR / App
                     </div>
                   </div>
                 </div>
@@ -600,13 +508,29 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
             >
               {isSubmitting
                 ? 'Processing Reservation...'
-                : paymentMethod === 'RAZORPAY'
-                ? `Pay ₹${totalAmount.toLocaleString('en-IN')} Online & Confirm ⚡`
+                : paymentMethod === 'UPI'
+                ? `Proceed to Direct UPI Payment (₹${totalAmount.toLocaleString('en-IN')}) 📲`
                 : 'Confirm Reservation (Pay on Arrival) 🚀'}
             </button>
           </form>
         )}
       </div>
+
+      {/* Dedicated Direct UPI Payment Modal */}
+      {showUpiModal && activeUpiBooking && (
+        <DirectUpiPaymentModal
+          isOpen={showUpiModal}
+          onClose={() => {
+            setShowUpiModal(false);
+            onClose();
+          }}
+          booking={activeUpiBooking}
+          onPaymentSubmitted={() => {
+            setBookingConfirmed(true);
+            setConfirmedPaymentStatus('AWAITING_VERIFICATION');
+          }}
+        />
+      )}
     </div>
   );
 }

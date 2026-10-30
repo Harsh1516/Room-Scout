@@ -22,9 +22,21 @@ const hostSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    authProvider: {
+      type: String,
+      enum: ['local', 'google'],
+      default: 'local',
+    },
     password: {
       type: String,
-      required: [true, 'Please provide a password'],
+      required: function () {
+        return this.authProvider === 'local';
+      },
       select: false, // Prevents password leaking in default find queries
     },
     avatar: {
@@ -41,6 +53,49 @@ const hostSchema = new mongoose.Schema(
       default: 'Pending Approval',
       index: true,
     },
+    isApproved: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    hasBeenApproved: {
+      type: Boolean,
+      default: false,
+    },
+    upiSettings: {
+      upiId: {
+        type: String,
+        trim: true,
+        default: '',
+      },
+      payeeName: {
+        type: String,
+        trim: true,
+        default: '',
+      },
+      qrCodeUrl: {
+        type: String,
+        default: '',
+      },
+      isConfigured: {
+        type: Boolean,
+        default: false,
+      },
+      isVerified: {
+        type: Boolean,
+        default: false,
+      },
+      updatedAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+    revenueResetSettings: {
+      resetAt: { type: Date, default: null },
+      baselineTotal: { type: Number, default: 0 },
+      baselineOnline: { type: Number, default: 0 },
+      baselineOffline: { type: Number, default: 0 },
+    },
   },
   {
     timestamps: true,
@@ -49,21 +104,9 @@ const hostSchema = new mongoose.Schema(
   }
 );
 
-// Virtual Getter: Exposes hostDetails without duplicate schema fields
-hostSchema.virtual('hostDetails').get(function () {
-  return {
-    name: this.name,
-    email: this.email,
-    phone: this.phone || '',
-    avatar: this.avatar || 'HO',
-    role: this.role || 'host',
-    status: this.status || 'Pending Approval',
-  };
-});
-
 // Password Encryption Pre-Save Hook
 hostSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('password') || !this.password) return next();
   const isBcrypt = /^\$2[abxy]\$\d+\$/.test(this.password);
   if (!isBcrypt) {
     const salt = await bcrypt.genSalt(10);
@@ -74,6 +117,7 @@ hostSchema.pre('save', async function (next) {
 
 // Compare password method
 hostSchema.methods.matchPassword = async function (enteredPassword) {
+  if (!this.password) return false;
   return await bcrypt.compare(enteredPassword, this.password);
 };
 

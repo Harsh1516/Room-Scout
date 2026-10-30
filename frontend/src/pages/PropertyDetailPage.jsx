@@ -6,19 +6,23 @@ import { useAuth } from '../context/AuthContext';
 import { useBookings } from '../context/BookingsContext';
 import { staysAPI } from '../services/api';
 import { getStayPricing } from '../utils/priceUtils';
-import { PropertyRoomCategoriesCard } from '../components/room/PropertyRoomCategoriesCard';
 import { PropertyMediaSection } from '../components/room/PropertyMediaSection';
 import { PropertyOverviewSection } from '../components/room/PropertyOverviewSection';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { toast } from '../context/ToastContext';
 
-export function PropertyDetailPage({ onBookClick }) {
+import { ThemeTogglePill } from '../components/common/ThemeTogglePill';
+import { Login } from '../components/navbar/Login';
+import { Left } from '../components/navbar/Left';
+import { Right } from '../components/navbar/Right';
+
+export function PropertyDetailPage({ onBookClick, onLoginClick }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { isInWishlist, toggleWishlist } = useWishlist();
-  const { bookings } = useBookings();
+  const { isInWishlist, toggleWishlist, wishlist, setIsWishlistOpen } = useWishlist();
+  const { bookings, setIsBookingsOpen } = useBookings();
 
   const [stay, setStay] = useState(() => location.state?.stay || null);
   const [loading, setLoading] = useState(() => !location.state?.stay);
@@ -28,7 +32,7 @@ export function PropertyDetailPage({ onBookClick }) {
   const [activeCenterTab, setActiveCenterTab] = useState('property');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const targetStayId = String(id || stay?._id || stay?.id || '');
+  const targetStayId = String(id || stay?._id || '');
 
   // Check if current user has a paid/confirmed booking for this stay
   const hasPaidBookingForStay = useMemo(() => {
@@ -63,7 +67,7 @@ export function PropertyDetailPage({ onBookClick }) {
   const [editReviewRating, setEditReviewRating] = useState(5);
 
   const startEditingReview = (rev) => {
-    setEditingReviewId(rev.id || rev._id);
+    setEditingReviewId(rev._id);
     setEditReviewText(rev.text || rev.comment || '');
     setEditReviewRating(rev.rating || 5);
   };
@@ -79,14 +83,14 @@ export function PropertyDetailPage({ onBookClick }) {
 
     setReviews((prev) =>
       prev.map((r) => {
-        if (String(r.id || r._id) === String(reviewId)) {
+        if (String(r._id) === String(reviewId)) {
           return { ...r, text: editReviewText.trim(), comment: editReviewText.trim(), rating: editReviewRating };
         }
         return r;
       })
     );
 
-    const targetId = id || stay?._id || stay?.id;
+    const targetId = id || stay?._id;
     cancelEditingReview();
 
     try {
@@ -105,9 +109,9 @@ export function PropertyDetailPage({ onBookClick }) {
   const handleDeleteReview = async (reviewId) => {
     if (!window.confirm('Are you sure you want to delete this review?')) return;
 
-    setReviews((prev) => prev.filter((r) => String(r.id || r._id) !== String(reviewId)));
+    setReviews((prev) => prev.filter((r) => String(r._id) !== String(reviewId)));
 
-    const targetId = id || stay?._id || stay?.id;
+    const targetId = id || stay?._id;
 
     try {
       await staysAPI.deleteReview(targetId, reviewId);
@@ -143,7 +147,7 @@ export function PropertyDetailPage({ onBookClick }) {
       }
       const data = await staysAPI.getStayById(id);
       const stayPayload = data?.stay || data;
-      if (stayPayload && (stayPayload._id || stayPayload.id || stayPayload.title)) {
+      if (stayPayload && (stayPayload._id || stayPayload.title)) {
         setStay((prev) => {
           if (!prev) return stayPayload;
           if (JSON.stringify(prev) === JSON.stringify(stayPayload)) return prev;
@@ -157,7 +161,7 @@ export function PropertyDetailPage({ onBookClick }) {
         const allStays = Array.isArray(res) ? res : (res?.stays || res?.data || []);
         const found = allStays.find(
           (s) =>
-            String(s._id || s.id) === String(id) ||
+            String(s._id) === String(id) ||
             (Array.isArray(s.previousIds) && s.previousIds.some((pid) => String(pid) === String(id)))
         );
         if (found) {
@@ -263,7 +267,7 @@ export function PropertyDetailPage({ onBookClick }) {
   const currentUserReview = useMemo(() => {
     if (!user || !Array.isArray(reviews)) return null;
     const uEmail = (user.email || '').toLowerCase().trim();
-    const uId = String(user._id || user.id || '');
+    const uId = String(user._id || '');
     const uName = (user.name || '').toLowerCase().trim();
 
     return reviews.find((rev) => {
@@ -299,7 +303,7 @@ export function PropertyDetailPage({ onBookClick }) {
     );
   }
 
-  const stayId = stay._id || stay.id;
+  const stayId = stay._id;
   const isSaved = isInWishlist(stayId);
   const pricing = getStayPricing(stay);
 
@@ -332,7 +336,7 @@ export function PropertyDetailPage({ onBookClick }) {
       : activeRateObj;
 
     const categoryType = customCategory || rateToUse?.type || '';
-    const currentStayId = id || stay?._id || stay?.id;
+    const currentStayId = id || stay?._id;
     const url = categoryType
       ? `/stay/${currentStayId}/rooms?type=${encodeURIComponent(categoryType)}`
       : `/stay/${currentStayId}/rooms`;
@@ -368,12 +372,14 @@ export function PropertyDetailPage({ onBookClick }) {
     }
 
     setSubmittingReview(true);
+    const revId = 'rev_' + Date.now();
     const newRevObj = {
-      id: 'rev_' + Date.now(),
+      _id: revId,
+      id: revId,
       author: user?.name || 'Guest User',
       userName: user?.name || 'Guest User',
       userEmail: user?.email || '',
-      userId: user?._id || user?.id || '',
+      userId: user?._id || '',
       rating: newRating,
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       comment: newReviewText.trim(),
@@ -399,300 +405,192 @@ export function PropertyDetailPage({ onBookClick }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 font-sans pb-28">
-      {/* TOP NAVIGATION NAVBAR HEADER */}
-      <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-white/90 dark:bg-slate-900/90 border-b border-slate-200/80 dark:border-slate-800 shadow-2xs">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 sm:gap-3">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 font-body-md host-font-scope antialiased">
+      {/* ── TOP FLOATING NAVIGATION CAPSULES (MATCHING SEARCH / EXPLORE NAVBAR STYLE) ── */}
+      <header className="relative w-full pointer-events-none select-none z-50">
+        {/* 1. Left Island: Back button + Property Type Badge */}
+        <Left propertyType={stay?.propertyType || stay?.type || 'PG'} fallbackUrl="/explore" />
+
+        {/* 2. Center Island: Segmented Tabs (Property | Host | Reviews) */}
+        <div className="hidden md:flex fixed top-3.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 items-center pointer-events-auto">
+          <nav className="apple-liquid-nav relative flex items-center p-1 sm:p-1.5 rounded-full border border-slate-200/80 dark:border-white/15 shadow-sm">
             <button
               type="button"
-              onClick={() => {
-                if (window.history.length > 1) {
-                  navigate(-1);
-                } else {
-                  navigate('/explore');
-                }
-              }}
-              className="flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold transition-all border border-slate-200/80 dark:border-slate-700/80 cursor-pointer shadow-2xs hover:shadow-xs active:scale-95"
-              title="Go Back"
-            >
-              <svg
-                className="w-4 h-4 text-slate-600 dark:text-slate-300 stroke-[2.5]"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="19" y1="12" x2="5" y2="12" />
-                <polyline points="12 19 5 12 12 5" />
-              </svg>
-              <span>Back</span>
-            </button>
-
-            <span className="hidden md:inline-flex text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-amber-500/10 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 items-center gap-1.5 shadow-2xs">
-              <svg className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20 stroke-[2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z" />
-              </svg>
-              <span>{stay.propertyType || stay.type || 'PG'}</span>
-            </span>
-          </div>
-
-          <div className="hidden lg:flex items-center justify-center">
-            <div className="relative flex items-center p-1 rounded-full bg-slate-100 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs select-none">
-              <button
-                type="button"
-                onClick={() => setActiveCenterTab('property')}
-                className={`relative z-10 py-1 px-3.5 rounded-full text-xs font-bold transition-colors duration-200 cursor-pointer flex items-center gap-1.5 ${
-                  activeCenterTab === 'property'
-                    ? 'text-white dark:text-slate-950 font-extrabold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                  <polyline points="9 22 9 12 15 12 15 22" />
-                </svg>
-                <span>Property</span>
-                {activeCenterTab === 'property' && (
-                  <motion.div
-                    layoutId="capsuleTabPillDesktop"
-                    className="absolute inset-0 bg-slate-900 dark:bg-white rounded-full -z-10 shadow-xs"
-                    transition={{ type: 'spring', stiffness: 450, damping: 32 }}
-                  />
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleHostTabClick}
-                className={`relative z-10 py-1 px-3.5 rounded-full text-xs font-bold transition-colors duration-200 cursor-pointer flex items-center gap-1.5 ${
-                  activeCenterTab === 'host'
-                    ? 'text-white dark:text-slate-950 font-extrabold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-                <span>Host</span>
-                {activeCenterTab === 'host' && (
-                  <motion.div
-                    layoutId="capsuleTabPillDesktop"
-                    className="absolute inset-0 bg-slate-900 dark:bg-white rounded-full -z-10 shadow-xs"
-                    transition={{ type: 'spring', stiffness: 450, damping: 32 }}
-                  />
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveCenterTab('reviews')}
-                className={`relative z-10 py-1 px-3.5 rounded-full text-xs font-bold transition-colors duration-200 cursor-pointer flex items-center gap-1.5 ${
-                  activeCenterTab === 'reviews'
-                    ? 'text-white dark:text-slate-950 font-extrabold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>
-                <span>Reviews ({reviews.length})</span>
-                {activeCenterTab === 'reviews' && (
-                  <motion.div
-                    layoutId="capsuleTabPillDesktop"
-                    className="absolute inset-0 bg-slate-900 dark:bg-white rounded-full -z-10 shadow-xs"
-                    transition={{ type: 'spring', stiffness: 450, damping: 32 }}
-                  />
-                )}
-              </button>
-            </div>
-          </div>
-
-          <div className="hidden md:flex items-center gap-2 sm:gap-3">
-            <button
-              type="button"
-              onClick={() => toggleWishlist(stay)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer border ${
-                isSaved
-                  ? 'bg-rose-500 hover:bg-rose-600 text-white border-rose-500 shadow-sm shadow-rose-500/25 active:scale-95'
-                  : 'bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-slate-700 dark:text-slate-300 hover:text-rose-600 border-slate-200/80 dark:border-slate-700 shadow-2xs active:scale-95'
+              onClick={() => setActiveCenterTab('property')}
+              className={`relative z-10 py-2 px-3.5 sm:px-4.5 rounded-full text-xs sm:text-sm font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-2 select-none ${
+                activeCenterTab === 'property'
+                  ? 'text-white dark:text-slate-950 font-semibold'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium'
               }`}
             >
-              <svg
-                className={`w-3.5 h-3.5 ${isSaved ? 'fill-current text-white' : 'fill-none stroke-current stroke-[2.2]'}`}
-                viewBox="0 0 24 24"
-              >
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
               </svg>
-              <span>{isSaved ? 'Saved' : 'Save'}</span>
-            </button>
-          </div>
-
-          <div className="flex lg:hidden items-center gap-2">
-            <button
-              type="button"
-              onClick={() => toggleWishlist(stay)}
-              className={`p-2 rounded-full border text-xs font-bold transition-all ${
-                isSaved
-                  ? 'bg-rose-500 text-white border-rose-500'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
-              }`}
-              title="Save to Wishlist"
-            >
-              <svg
-                className={`w-4 h-4 ${isSaved ? 'fill-current text-white' : 'fill-none stroke-current stroke-[2.2]'}`}
-                viewBox="0 0 24 24"
-              >
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen((prev) => !prev)}
-              className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 text-slate-800 dark:text-slate-200 flex items-center justify-center text-base font-bold transition-all shadow-2xs active:scale-95 cursor-pointer"
-              title="Toggle Menu"
-            >
-              {mobileMenuOpen ? (
-                <svg className="w-4 h-4 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="3" y1="12" x2="21" y2="12" />
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <line x1="3" y1="18" x2="21" y2="18" />
-                </svg>
+              <span>Property</span>
+              {activeCenterTab === 'property' && (
+                <motion.div
+                  layoutId="capsuleTabPillDesktop"
+                  className="absolute inset-0 bg-slate-950 dark:bg-white rounded-full -z-10 shadow-sm"
+                  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                />
               )}
             </button>
-          </div>
+
+            <button
+              type="button"
+              onClick={handleHostTabClick}
+              className={`relative z-10 py-2 px-3.5 sm:px-4.5 rounded-full text-xs sm:text-sm font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-2 select-none ${
+                activeCenterTab === 'host'
+                  ? 'text-white dark:text-slate-950 font-semibold'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium'
+              }`}
+            >
+              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              <span>Host</span>
+              {activeCenterTab === 'host' && (
+                <motion.div
+                  layoutId="capsuleTabPillDesktop"
+                  className="absolute inset-0 bg-slate-950 dark:bg-white rounded-full -z-10 shadow-sm"
+                  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                />
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveCenterTab('reviews')}
+              className={`relative z-10 py-2 px-3.5 sm:px-4.5 rounded-full text-xs sm:text-sm font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-2 select-none ${
+                activeCenterTab === 'reviews'
+                  ? 'text-white dark:text-slate-950 font-semibold'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium'
+              }`}
+            >
+              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+              <span>Reviews ({reviews.length})</span>
+              {activeCenterTab === 'reviews' && (
+                <motion.div
+                  layoutId="capsuleTabPillDesktop"
+                  className="absolute inset-0 bg-slate-950 dark:bg-white rounded-full -z-10 shadow-sm"
+                  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                />
+              )}
+            </button>
+          </nav>
         </div>
 
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2, ease: 'easeInOut' }}
-              className="lg:hidden border-t border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl overflow-hidden px-4 py-3 space-y-3"
-            >
-              <div className="flex items-center justify-center p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveCenterTab('property');
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                    activeCenterTab === 'property'
-                      ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400'
-                  }`}
-                >
-                  <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                    <polyline points="9 22 9 12 15 12 15 22" />
-                  </svg>
-                  <span>Property</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleHostTabClick}
-                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                    activeCenterTab === 'host'
-                      ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400'
-                  }`}
-                >
-                  <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                  </svg>
-                  <span>Host</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveCenterTab('reviews');
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                    activeCenterTab === 'reviews'
-                      ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400'
-                  }`}
-                >
-                  <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                  </svg>
-                  <span>Reviews ({reviews.length})</span>
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30 flex items-center gap-1.5">
-                  <svg className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20 stroke-[2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z" />
-                  </svg>
-                  <span>{stay.propertyType || stay.type || 'PG'}</span>
-                </span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* 3. Right Island: Actions (Wishlist + Booked Places + Theme Toggle + Login/Profile with Mobile Hamburger) */}
+        <Right onLoginClick={onLoginClick} />
       </header>
 
-      {/* 3-PANEL ARCHITECTURE */}
-      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-5 lg:h-[calc(100vh-4.5rem)] lg:overflow-hidden">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start lg:h-full">
-          <ErrorBoundary>
-            <PropertyMediaSection
-              stay={stay}
-              currentRating={currentRating}
-              reviewsCount={reviews.length}
-              activePhotoIdx={activePhotoIdx}
-              setActivePhotoIdx={setActivePhotoIdx}
-              onOpenLightbox={setIsLightboxOpen}
-            />
-          </ErrorBoundary>
+      {/* ── Mobile-Only Center Tabs Pill (Shown on small screens below top capsules) ── */}
+      <div className="md:hidden flex items-center justify-center pt-17 pb-2 px-4 relative z-30">
+        <nav className="apple-liquid-nav relative flex items-center p-1 rounded-full border border-slate-200/80 dark:border-white/15 shadow-sm max-w-full">
+          <button
+            type="button"
+            onClick={() => setActiveCenterTab('property')}
+            className={`py-1.5 px-3.5 rounded-full text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 select-none ${
+              activeCenterTab === 'property'
+                ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 shadow-xs'
+                : 'text-slate-600 dark:text-slate-300'
+            }`}
+          >
+            <span>Property</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleHostTabClick}
+            className={`py-1.5 px-3.5 rounded-full text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 select-none ${
+              activeCenterTab === 'host'
+                ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 shadow-xs'
+                : 'text-slate-600 dark:text-slate-300'
+            }`}
+          >
+            <span>Host</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveCenterTab('reviews')}
+            className={`py-1.5 px-3.5 rounded-full text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 select-none ${
+              activeCenterTab === 'reviews'
+                ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 shadow-xs'
+                : 'text-slate-600 dark:text-slate-300'
+            }`}
+          >
+            <span>Reviews ({reviews.length})</span>
+          </button>
+        </nav>
+      </div>
 
-          <ErrorBoundary>
-            <PropertyOverviewSection
-              stay={stay}
-              activeCenterTab={activeCenterTab}
-              hasPaidBookingForStay={hasPaidBookingForStay}
-              reviews={reviews}
-              currentRating={currentRating}
-              googleMapsUrl={googleMapsUrl}
-              user={user}
-              navigate={navigate}
-              onAddReview={handleAddReview}
-              newRating={newRating}
-              setNewRating={setNewRating}
-              newReviewText={newReviewText}
-              setNewReviewText={setNewReviewText}
-              submittingReview={submittingReview}
-            />
-          </ErrorBoundary>
-
-          <ErrorBoundary>
-            <div className="lg:col-span-3 space-y-4">
-              <PropertyRoomCategoriesCard
+      {/* MAIN CONTENT DISPLAY */}
+      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-6 lg:pt-26 pb-24 min-h-[calc(100vh-4.5rem)]">
+        {activeCenterTab === 'property' ? (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+            <ErrorBoundary>
+              <PropertyMediaSection
                 stay={stay}
-                bookings={bookings}
+                currentRating={currentRating}
+                reviewsCount={reviews.length}
+                activePhotoIdx={activePhotoIdx}
+                setActivePhotoIdx={setActivePhotoIdx}
+                onOpenLightbox={setIsLightboxOpen}
+                isSaved={isSaved}
+                onToggleSave={() => toggleWishlist(stay)}
+              />
+            </ErrorBoundary>
+
+            <ErrorBoundary>
+              <PropertyOverviewSection
+                stay={stay}
+                activeCenterTab={activeCenterTab}
+                hasPaidBookingForStay={hasPaidBookingForStay}
+                reviews={reviews}
+                currentRating={currentRating}
+                googleMapsUrl={googleMapsUrl}
+                user={user}
+                navigate={navigate}
+                onAddReview={handleAddReview}
+                newRating={newRating}
+                setNewRating={setNewRating}
+                newReviewText={newReviewText}
+                setNewReviewText={setNewReviewText}
+                submittingReview={submittingReview}
                 selectedRateIdx={selectedRateIdx}
                 onSelectRateIdx={setSelectedRateIdx}
                 onNavigateToRooms={handleNavigateToRooms}
               />
-            </div>
-          </ErrorBoundary>
-        </div>
+            </ErrorBoundary>
+          </div>
+        ) : (
+          <div className="max-w-3xl mx-auto w-full">
+            <ErrorBoundary>
+              <PropertyOverviewSection
+                stay={stay}
+                activeCenterTab={activeCenterTab}
+                hasPaidBookingForStay={hasPaidBookingForStay}
+                reviews={reviews}
+                currentRating={currentRating}
+                googleMapsUrl={googleMapsUrl}
+                user={user}
+                navigate={navigate}
+                onAddReview={handleAddReview}
+                newRating={newRating}
+                setNewRating={setNewRating}
+                newReviewText={newReviewText}
+                setNewReviewText={setNewReviewText}
+                submittingReview={submittingReview}
+                selectedRateIdx={selectedRateIdx}
+                onSelectRateIdx={setSelectedRateIdx}
+                onNavigateToRooms={handleNavigateToRooms}
+              />
+            </ErrorBoundary>
+          </div>
+        )}
       </main>
 
       {/* FIXED BOTTOM MOBILE BOOKING BAR */}

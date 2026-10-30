@@ -91,7 +91,7 @@ const rateLimitHandler = (req, res, next, options) => {
  * -----------------------------------------------------------------------------
  * Guards entire /api against volumetric scrapers, automated floods, and basic DoS.
  * 1000 requests per 15 minutes per IP.
- * EXEMPTS: Health checks & Razorpay payment webhooks to prevent false positives.
+ * EXEMPTS: Health check endpoints.
  */
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -103,7 +103,7 @@ export const apiLimiter = rateLimit({
   validate: { keyGeneratorIpFallback: false },
   skip: (req) => {
     const url = req.originalUrl || req.url || '';
-    return url.includes('/api/payments/webhook') || url.includes('/api/health');
+    return url.includes('/api/health');
   },
   handler: rateLimitHandler,
   message: {
@@ -300,10 +300,27 @@ export const propertyUploadLimiter = rateLimit({
  */
 export const adminLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 30,
+  max: process.env.NODE_ENV === 'production' ? 30 : 200,
   standardHeaders: true,
   legacyHeaders: false,
   store: rateLimitStore,
+  skipSuccessfulRequests: true, // Only failed/unauthorized attempts count against lockout threshold
+  skip: (req) => {
+    // 1. If valid master admin passkey header is provided, do not rate-limit admin operations
+    const adminKeyHeader = req.headers?.['x-admin-key'];
+    const validAdminKey = process.env.ADMIN_KEY;
+    if (validAdminKey && adminKeyHeader && adminKeyHeader.trim() === validAdminKey.trim()) {
+      return true;
+    }
+    // 2. In local development / loopback IP, never lock out the developer
+    if (process.env.NODE_ENV !== 'production') {
+      const ip = getClientIp(req);
+      if (ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1' || ip === 'localhost') {
+        return true;
+      }
+    }
+    return false;
+  },
   keyGenerator: (req) => ipKeyGenerator(getClientIp(req)),
   validate: { keyGeneratorIpFallback: false },
   handler: rateLimitHandler,

@@ -131,7 +131,7 @@ export function Center({ onSearchSubmit }) {
   return (
     <>
       {/* 🚀 3-SEGMENT SEARCH CONSOLE CENTERED AT TOP FOR ALL RESOLUTIONS */}
-      <div className="fixed top-4 sm:top-5 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[calc(100vw-70px)] sm:max-w-none flex justify-center" ref={navRef}>
+      <div className="fixed top-3.5 sm:top-5 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[calc(100vw-96px)] sm:max-w-none flex justify-center" ref={navRef}>
         <Console
           selectedType={selectedType}
           setSelectedType={setSelectedType}

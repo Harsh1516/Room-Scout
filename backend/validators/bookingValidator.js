@@ -29,8 +29,7 @@ export const createBookingSchema = z
     aadharNumber: z.string().trim().optional(),
     guestAadhar: z.string().trim().optional(),
     roomType: z.string().trim().optional(),
-    adults: z.coerce.number().int().min(1).default(1),
-    children: z.coerce.number().int().min(0).default(0),
+    personCount: z.coerce.number().int().min(1).default(1),
     totalAmount: z.coerce.number().min(0, { message: 'Total amount cannot be negative' }).optional(),
     paymentMethod: z.string().trim().optional(),
     stayTitle: z.string().trim().optional(),
@@ -52,7 +51,18 @@ export const createBookingSchema = z
   .refine(
     (data) => {
       const inDate = new Date(data.checkIn);
-      // Allow 24 hours buffer for international timezones and local clock differences
+      const outDate = new Date(data.checkOut);
+      const isMonthly = Boolean(
+        (data.rateUnit && String(data.rateUnit).toLowerCase().includes('month')) ||
+        (Array.isArray(data.bookedMonths) && data.bookedMonths.length > 0)
+      );
+
+      // For monthly bookings: allow if the reservation period has not already passed
+      if (isMonthly) {
+        return outDate.getTime() >= Date.now();
+      }
+
+      // For nightly bookings: allow 24 hours buffer for international timezones and local clock differences
       const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
       return inDate.getTime() >= oneDayAgo.getTime();
     },
@@ -84,8 +94,7 @@ export const createOfflineBookingSchema = z
     bookedDates: z.array(z.string()).optional(),
     checkIn: z.string().optional(),
     checkOut: z.string().optional(),
-    adults: z.coerce.number().int().min(1).default(1),
-    children: z.coerce.number().int().min(0).default(0),
+    personCount: z.coerce.number().int().min(1).default(1),
     totalAmount: z.coerce.number().min(0).optional(),
     advancePaid: z.coerce.number().min(0).optional(),
     notes: z.string().trim().max(1000).optional(),
@@ -107,16 +116,36 @@ export const createOfflineBookingSchema = z
 
 // Booking Status Update Schema
 export const updateBookingStatusSchema = z.object({
-  status: z.enum(
-    [
-      'PENDING',
-      'CONFIRMED',
-      'CHECKED_IN',
-      'CHECKED_OUT',
-      'CANCELLED',
-      'REJECTED',
-      'EXPIRED',
-    ],
-    { message: 'Invalid booking status' }
-  ),
+  status: z
+    .enum(
+      [
+        'PENDING',
+        'AWAITING_PAYMENT',
+        'CONFIRMED',
+        'CHECKED_IN',
+        'CHECKED_OUT',
+        'CANCELLED',
+        'REJECTED',
+        'EXPIRED',
+      ],
+      { message: 'Invalid booking status' }
+    )
+    .optional(),
+  paymentDeadline: z.string().or(z.date()).optional().nullable(),
+  approvedAt: z.string().or(z.date()).optional().nullable(),
+  totalAmount: z.coerce.number().optional(),
+  fullName: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().optional(),
+  aadharNumber: z.string().optional(),
+  personCount: z.coerce.number().optional(),
+  gender: z.string().optional(),
 });
+
+// Flexible Booking ID param schema supporting both MongoDB ObjectIds and bookingReferenceIds (e.g. BK-xxx, RS-xxx)
+export const bookingIdParamSchema = z
+  .object({
+    id: z.string({ required_error: 'Booking ID parameter is required' }).trim().min(1, 'Booking ID cannot be empty'),
+  })
+  .strict();
+

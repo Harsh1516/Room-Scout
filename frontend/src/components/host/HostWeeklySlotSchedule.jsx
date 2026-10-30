@@ -1,13 +1,12 @@
-import React, { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
+import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { bookingsAPI } from '../../services/api';
 import {
   groupDaysByMonth,
   getUpcoming12Months,
   isMonthlyRateUnit,
-  getDatesForMonthKeys,
   getOccupantsForRoomInMonth,
-  getRoomOccupiedCountInMonth,
+  isBookingRequestExpired,
 } from '../../utils/dateUtils';
 
 import { HostScheduleCalendar } from './schedule/HostScheduleCalendar';
@@ -26,12 +25,15 @@ export default function HostWeeklySlotSchedule({
   setGuests,
   hostProperty,
   onRefreshBookings,
-  onAutoSyncProperty,
   showToast = () => {},
   activeRightPanelTab = 'guest',
   setActiveRightPanelTab = () => {},
   requestedUserBooking = null,
   onClearRequestedBooking = () => {},
+  selectedBookedGuest = null,
+  onClearBookedGuest = () => {},
+  isRoomSavedToDb = true,
+  onGoBackToVisited = null,
 }) {
   const [selectedSlotIndices, setSelectedSlotIndices] = useState([]);
   const [hostUserName, setHostUserName] = useState('');
@@ -39,14 +41,10 @@ export default function HostWeeklySlotSchedule({
   const [hostUserEmail, setHostUserEmail] = useState('');
   const [hostUserAadhar, setHostUserAadhar] = useState('');
   const [hostPaidAmount, setHostPaidAmount] = useState('');
-  const [hostAdults, setHostAdults] = useState(1);
-  const [hostChildren, setHostChildren] = useState(0);
+  const [hostPersonCount, setHostPersonCount] = useState(1);
   const [hostGender, setHostGender] = useState('Male');
   const [isUpdatingSlot, setIsUpdatingSlot] = useState(false);
   const [selectedMonthIdx, setSelectedMonthIdx] = useState(0);
-
-  const [activeCarouselIdx, setActiveCarouselIdx] = useState(0);
-  const carouselRef = useRef(null);
 
   const isMonthly = useMemo(
     () => isMonthlyRateUnit(selectedRoomCard?.rateUnit || activeCategory?.rateUnit || hostProperty?.rateUnit),
@@ -54,7 +52,6 @@ export default function HostWeeklySlotSchedule({
   );
   const isPropertyApproved = hostProperty?.status === 'Approved';
   const upcomingMonths = useMemo(() => getUpcoming12Months(), []);
-  const currentMonthKey = upcomingMonths[0]?.monthKey;
 
   const monthGroups = useMemo(() => groupDaysByMonth(upcomingWeek), [upcomingWeek]);
   const todayISO = upcomingWeek[0]?.fullISO;
@@ -67,8 +64,6 @@ export default function HostWeeklySlotSchedule({
   const [modalEmail, setModalEmail] = useState('');
   const [modalAadhar, setModalAadhar] = useState('');
   const [modalPaidAmount, setModalPaidAmount] = useState('');
-  const [modalAdults, setModalAdults] = useState(1);
-  const [modalChildren, setModalChildren] = useState(0);
   const [modalGender, setModalGender] = useState('Male');
   const [isSavingModalOccupant, setIsSavingModalOccupant] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
@@ -129,7 +124,7 @@ export default function HostWeeklySlotSchedule({
       clearInterval(interval);
       window.removeEventListener('focus', handleFocus);
     };
-  }, [onRefreshBookings, selectedRoomCard?.id, selectedRoomCard?._id, selectedRoomCard?.roomNumber]);
+  }, [onRefreshBookings, selectedRoomCard?._id, selectedRoomCard?.roomNumber]);
 
   const isTargetRoom = useMemo(() => {
     if (!requestedUserBooking || !selectedRoomCard) return false;
@@ -142,33 +137,70 @@ export default function HostWeeklySlotSchedule({
     if (reqDigits && cardDigits && reqDigits === cardDigits) return true;
 
     const reqId = String(requestedUserBooking.roomId || requestedUserBooking.roomCardId || requestedUserBooking.room_id || '');
-    const cardId = String(selectedRoomCard.id || selectedRoomCard._id || '');
+    const cardId = String(selectedRoomCard._id || '');
     if (reqId && cardId && reqId === cardId) return true;
 
     return false;
   }, [requestedUserBooking, selectedRoomCard]);
 
+  const isTargetRoomForBooked = useMemo(() => {
+    if (!selectedBookedGuest || !selectedRoomCard) return false;
+    const reqRoom = String(selectedBookedGuest.roomNumber || '').trim().toLowerCase();
+    const cardRoom = String(selectedRoomCard.roomNumber || '').trim().toLowerCase();
+    if (reqRoom && cardRoom && reqRoom === cardRoom) return true;
+
+    const reqDigits = reqRoom.replace(/[^0-9]/g, '');
+    const cardDigits = cardRoom.replace(/[^0-9]/g, '');
+    if (reqDigits && cardDigits && reqDigits === cardDigits) return true;
+
+    const reqId = String(selectedBookedGuest.roomId || selectedBookedGuest.roomCardId || selectedBookedGuest.room_id || '');
+    const cardId = String(selectedRoomCard._id || '');
+    if (reqId && cardId && reqId === cardId) return true;
+
+    return false;
+  }, [selectedBookedGuest, selectedRoomCard]);
+
   const isUserRequestSelection = Boolean(requestedUserBooking && isTargetRoom);
   const activeRequestedBooking = isTargetRoom ? requestedUserBooking : null;
+  const isExpiredRequest = useMemo(() => isBookingRequestExpired(activeRequestedBooking), [activeRequestedBooking]);
+  const activeBookedGuest = isTargetRoomForBooked ? selectedBookedGuest : null;
+
+  useEffect(() => {
+    if (!activeBookedGuest) return;
+    const rawDate = activeBookedGuest.checkInISO || activeBookedGuest.checkIn;
+    if (rawDate && Array.isArray(monthGroups)) {
+      const d = new Date(rawDate);
+      if (!isNaN(d.getTime())) {
+        const y = d.getFullYear() < 2025 ? 2026 : d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const dateISO = `${y}-${m}-${day}`;
+        const grpIdx = monthGroups.findIndex((g) => g.days.some((dayObj) => dayObj.fullISO === dateISO));
+        if (grpIdx !== -1) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setSelectedMonthIdx(grpIdx);
+        }
+      }
+    }
+  }, [activeBookedGuest, monthGroups]);
 
   useEffect(() => {
     if (!isUserRequestSelection) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedSlotIndices([]);
       setHostPaidAmount('');
       setHostUserName('');
       setHostUserPhone('');
       setHostUserEmail('');
       setHostUserAadhar('');
-      setHostAdults(1);
-      setHostChildren(0);
+      setHostPersonCount(1);
       setHostGender('Male');
     }
     setSelectedOccupantForModal(null);
     setIsModalEditing(false);
     setConfirmDeleteId(null);
     setConfirmModalDelete(false);
-    setActiveCarouselIdx(0);
-  }, [selectedRoomCard?.id, selectedRoomCard?._id, selectedRoomCard?.roomNumber, isUserRequestSelection]);
+  }, [selectedRoomCard?._id, selectedRoomCard?.roomNumber, isUserRequestSelection]);
 
   useEffect(() => {
     if (!isUserRequestSelection || !requestedUserBooking) return;
@@ -179,6 +211,7 @@ export default function HostWeeklySlotSchedule({
     const cleanEmail = requestedUserBooking.email || requestedUserBooking.guestEmail || requestedUserBooking.userEmail || '';
     const cleanAadhar = requestedUserBooking.guestAadhar || requestedUserBooking.aadhar || requestedUserBooking.aadharNumber || requestedUserBooking.aadharId || '';
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHostUserName(cleanName);
     setHostUserPhone(cleanPhone);
     setHostUserEmail(cleanEmail);
@@ -186,8 +219,8 @@ export default function HostWeeklySlotSchedule({
     if (requestedUserBooking.totalAmount !== undefined && requestedUserBooking.totalAmount !== null) {
       setHostPaidAmount(String(requestedUserBooking.totalAmount));
     }
-    if (requestedUserBooking.adults) setHostAdults(Number(requestedUserBooking.adults) || 1);
-    if (requestedUserBooking.children !== undefined) setHostChildren(Number(requestedUserBooking.children) || 0);
+    const reqPersons = Number(requestedUserBooking.personCount) || 1;
+    setHostPersonCount(reqPersons);
     if (requestedUserBooking.gender) setHostGender(requestedUserBooking.gender);
 
     // 2. Select the requested slot schedule
@@ -202,6 +235,25 @@ export default function HostWeeklySlotSchedule({
           let curr = new Date(inD.getFullYear(), inD.getMonth(), 1);
           const endM = new Date(outD.getFullYear(), outD.getMonth(), 1);
           while (curr <= endM) {
+            const y = curr.getFullYear();
+            const m = String(curr.getMonth() + 1).padStart(2, '0');
+            reqMonths.push(`${y}-${m}`);
+            curr.setMonth(curr.getMonth() + 1);
+          }
+        }
+      }
+
+      const durMatch = String(
+        requestedUserBooking.durationDisplay || requestedUserBooking.duration || ''
+      ).match(/(\d+)\s*month/i);
+      const expectedMonths =
+        Number(requestedUserBooking.durationMonths) || (durMatch ? parseInt(durMatch[1], 10) : 0);
+      if (expectedMonths > reqMonths.length && (requestedUserBooking.checkIn || reqMonths.length > 0)) {
+        const inD = new Date(requestedUserBooking.checkIn || Date.now());
+        if (!isNaN(inD.getTime())) {
+          reqMonths = [];
+          let curr = new Date(inD.getFullYear(), inD.getMonth(), 1);
+          for (let i = 0; i < expectedMonths; i++) {
             const y = curr.getFullYear();
             const m = String(curr.getMonth() + 1).padStart(2, '0');
             reqMonths.push(`${y}-${m}`);
@@ -261,7 +313,7 @@ export default function HostWeeklySlotSchedule({
         }
       }
     }
-  }, [requestedUserBooking, isUserRequestSelection, selectedRoomCard?.id, selectedRoomCard?.roomNumber, isMonthly, upcomingMonths, upcomingWeek, monthGroups]);
+  }, [requestedUserBooking, isUserRequestSelection, selectedRoomCard?._id, selectedRoomCard?.roomNumber, isMonthly, upcomingMonths, upcomingWeek, monthGroups]);
 
   const roomBookingInfo = useMemo(() => {
     if (!selectedRoomCard) return { guest: null, bookedDates: new Set(), dateToGuestMap: {}, bookedMonths: new Set(), monthToGuestMap: {}, monthOccupantsMap: {} };
@@ -293,15 +345,15 @@ export default function HostWeeklySlotSchedule({
           source: g.source || (g.bookingSource === 'OFFLINE_HOST' ? 'offline' : 'booking'),
           bookingSource: g.bookingSource || (g.source === 'offline' ? 'OFFLINE_HOST' : 'ONLINE_USER'),
           isOnline: g.isOnline !== undefined ? g.isOnline : (g.bookingSource !== 'OFFLINE_HOST' && g.source !== 'offline'),
-          id: g._id || g.id || g.bookingReferenceId,
+          id: g._id || g.bookingReferenceId,
           bookingReferenceId: g.bookingReferenceId,
-          adults: Number(g.adults) || 1,
+          personCount: Number(g.personCount) || 1,
         };
 
         if (Array.isArray(g.bookedMonths) && g.bookedMonths.length > 0) {
           g.bookedMonths.forEach((m) => {
             monthOccupantsMap[m] = [...(monthOccupantsMap[m] || []), guestObj];
-            monthOccupiedCountMap[m] = (monthOccupiedCountMap[m] || 0) + guestObj.adults;
+            monthOccupiedCountMap[m] = (monthOccupiedCountMap[m] || 0) + (guestObj.personCount || 1);
             if (!monthToGuestMap[m]) monthToGuestMap[m] = guestObj;
             if (monthOccupiedCountMap[m] >= capacity) {
               bookedMonths.add(m);
@@ -335,9 +387,9 @@ export default function HostWeeklySlotSchedule({
           dateToGuestMap[d] = guestObj;
           const mKey = String(d).slice(0, 7);
           if (mKey.length === 7) {
-            if (!monthOccupantsMap[mKey] || !monthOccupantsMap[mKey].some((o) => o.id === guestObj.id)) {
+            if (!monthOccupantsMap[mKey] || !monthOccupantsMap[mKey].some((o) => o._id === guestObj._id)) {
               monthOccupantsMap[mKey] = [...(monthOccupantsMap[mKey] || []), guestObj];
-              monthOccupiedCountMap[mKey] = (monthOccupiedCountMap[mKey] || 0) + guestObj.adults;
+              monthOccupiedCountMap[mKey] = (monthOccupiedCountMap[mKey] || 0) + (guestObj.personCount || 1);
             }
             if (!monthToGuestMap[mKey]) {
               monthToGuestMap[mKey] = guestObj;
@@ -372,8 +424,8 @@ export default function HostWeeklySlotSchedule({
         const mail = g.userEmail || g.email || g.guestEmail || '';
         const phone = (g.userPhone || g.phone || g.guestPhone || '').trim();
         const cleanDigits = phone.replace(/\D/g, '').slice(-10);
-        const uniqueKey = cleanDigits || phone || g.bookingReferenceId || g._id || g.id;
-        const bId = g._id || g.id || g.bookingReferenceId;
+        const uniqueKey = cleanDigits || phone || g.bookingReferenceId || g._id;
+        const bId = g._id || g.bookingReferenceId;
 
         if (!seenKeys.has(uniqueKey) && !seenBookingIds.has(bId)) {
           seenKeys.add(uniqueKey);
@@ -385,8 +437,7 @@ export default function HostWeeklySlotSchedule({
             email: mail,
             phone: phone,
             aadhar: g.guestAadhar || g.aadhar || g.aadharNumber || g.aadharId || '',
-            adults: Number(g.adults) || 1,
-            children: Number(g.children) || 0,
+            personCount: Number(g.personCount) || 1,
             gender: g.gender || '',
             bookedDates: dates,
             bookedMonths: months,
@@ -410,8 +461,16 @@ export default function HostWeeklySlotSchedule({
   }, [selectedRoomCard, guests]);
 
   const handleToggleSlotDay = (index) => {
+    if (isUserRequestSelection) {
+      // Online requests are strictly read-only / display-only
+      return;
+    }
     if (!isPropertyApproved) {
       showToast('🔒 Date slots are locked: Property approval is pending from Admin.', 'error');
+      return;
+    }
+    if (!isRoomSavedToDb) {
+      showToast(`🔒 Date slots are locked: Please click "Update" on the room category to save ${roomDisplay} to the database first.`, 'info');
       return;
     }
     const slotISO = upcomingWeek[index]?.fullISO;
@@ -437,14 +496,22 @@ export default function HostWeeklySlotSchedule({
   };
 
   const handleToggleSlotMonth = (index) => {
+    if (isUserRequestSelection) {
+      // Online requests are strictly read-only / display-only
+      return;
+    }
     if (!isPropertyApproved) {
       showToast('🔒 Month slots are locked: Property approval is pending from Admin.', 'error');
+      return;
+    }
+    if (!isRoomSavedToDb) {
+      showToast(`🔒 Month slots are locked: Please click "Update" on the room category to save ${roomDisplay} to the database first.`, 'info');
       return;
     }
     const monthKey = upcomingMonths[index]?.monthKey;
     const roomCapacity = Math.max(1, Math.min(10, Number(selectedRoomCard?.capacity) || Number(activeCategory?.capacity) || 1));
     const monthOccupants = getOccupantsForRoomInMonth(selectedRoomCard, monthKey, guests);
-    const occupiedSlots = monthOccupants.reduce((sum, g) => sum + (Number(g.adults) || 1), 0);
+    const occupiedSlots = monthOccupants.reduce((sum, g) => sum + (Number(g.personCount) || 1), 0);
 
     if (occupiedSlots >= roomCapacity) {
       showToast(`Room ${selectedRoomCard?.roomNumber || ''} is fully booked (${occupiedSlots}/${roomCapacity}) for ${upcomingMonths[index]?.monthShort} ${upcomingMonths[index]?.year}.`, 'info');
@@ -460,7 +527,7 @@ export default function HostWeeklySlotSchedule({
       for (let i = start; i <= end; i++) {
         const mKey = upcomingMonths[i]?.monthKey;
         const occ = getOccupantsForRoomInMonth(selectedRoomCard, mKey, guests);
-        const count = occ.reduce((sum, g) => sum + (Number(g.adults) || 1), 0);
+        const count = occ.reduce((sum, g) => sum + (Number(g.personCount) || 1), 0);
         if (count >= roomCapacity) {
           showToast(`Cannot select month range: ${upcomingMonths[i]?.monthShort} is already fully booked (${count}/${roomCapacity}).`, 'error');
           return prev;
@@ -479,7 +546,7 @@ export default function HostWeeklySlotSchedule({
     if (Array.isArray(hostProperty?.roomRates)) {
       if (selectedRoomCard?.rateId) {
         const matchById = hostProperty.roomRates.find(
-          (r) => r.id === selectedRoomCard.rateId || (r._id && String(r._id) === String(selectedRoomCard.rateId))
+          (r) => (r._id && String(r._id) === String(selectedRoomCard.rateId))
         );
         if (matchById) return matchById;
       }
@@ -494,7 +561,47 @@ export default function HostWeeklySlotSchedule({
       }
     }
     return activeCategory || null;
-  }, [selectedRoomCard?.rateId, selectedRoomCard?.type, selectedRoomCard?.categoryIndex, hostProperty?.roomRates, activeCategory]);
+  }, [selectedRoomCard, hostProperty, activeCategory]);
+
+  const roomCapacity = useMemo(
+    () => Math.max(1, Math.min(10, Number(selectedRoomCard?.capacity) || Number(currentCategory?.capacity) || Number(activeCategory?.capacity) || 1)),
+    [selectedRoomCard?.capacity, currentCategory?.capacity, activeCategory?.capacity]
+  );
+
+  const maxAllowedPersons = useMemo(() => {
+    if (!selectedRoomCard) return roomCapacity;
+    if (isMonthly) {
+      if (sortedSelected.length === 0) return roomCapacity;
+      let minAvailable = roomCapacity;
+      for (const idx of sortedSelected) {
+        const m = upcomingMonths[idx];
+        if (!m) continue;
+        const occupants = getOccupantsForRoomInMonth(selectedRoomCard, m.monthKey, guests);
+        const occupied = occupants.reduce((sum, g) => sum + (Number(g.personCount) || 1), 0);
+        const available = Math.max(1, roomCapacity - occupied);
+        if (available < minAvailable) {
+          minAvailable = available;
+        }
+      }
+      return Math.max(1, Math.min(roomCapacity, minAvailable));
+    }
+    return roomCapacity;
+  }, [selectedRoomCard, roomCapacity, isMonthly, sortedSelected, upcomingMonths, guests]);
+
+  useEffect(() => {
+    if (hostPersonCount > maxAllowedPersons) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setHostPersonCount(maxAllowedPersons);
+    }
+  }, [maxAllowedPersons, hostPersonCount]);
+
+  const handleHostPersonCountChange = (valOrFn) => {
+    setHostPersonCount((prev) => {
+      const nextVal = typeof valOrFn === 'function' ? valOrFn(prev) : valOrFn;
+      const clamped = Math.max(1, Math.min(maxAllowedPersons, Number(nextVal) || 1));
+      return clamped;
+    });
+  };
 
   const priceDisplay = useMemo(() => {
     const rawPrice = selectedRoomCard?.price || currentCategory?.price || hostProperty?.price || '';
@@ -567,15 +674,25 @@ export default function HostWeeklySlotSchedule({
 
   useEffect(() => {
     if (reservationDetails && reservationDetails.totalPrice !== undefined) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHostPaidAmount(String(reservationDetails.totalPrice));
     } else {
       setHostPaidAmount('');
     }
-  }, [reservationDetails?.totalPrice]);
+  }, [reservationDetails]);
 
   const handleHostMarkSlotBooked = async () => {
+    if (isUserRequestSelection && isExpiredRequest) {
+      showToast('This booking request has expired because the requested check-in date has already arrived.', 'error');
+      if (onClearRequestedBooking) onClearRequestedBooking();
+      return;
+    }
     if (!isPropertyApproved) {
       showToast('🔒 Slots are locked: Property must be approved by Admin before reserving slots.', 'error');
+      return;
+    }
+    if (!isRoomSavedToDb) {
+      showToast(`🔒 Cannot book slot: Please click "Update" on the room category to save ${roomDisplay} to the database first.`, 'error');
       return;
     }
     if (!selectedRoomCard || selectedSlotIndices.length === 0) {
@@ -610,8 +727,8 @@ export default function HostWeeklySlotSchedule({
       const isSamePhone = p && p.slice(-10) === cleanPhone.slice(-10);
       if (!isSamePhone) return false;
       if (activeRequestedBooking) {
-        const occId = String(occ.id || occ._id || occ.bookingReferenceId || '');
-        const reqId = String(activeRequestedBooking.id || activeRequestedBooking._id || activeRequestedBooking.bookingReferenceId || '');
+        const occId = String(occ._id || occ.bookingReferenceId || '');
+        const reqId = String(activeRequestedBooking._id || activeRequestedBooking.bookingReferenceId || '');
         if (occId && reqId && occId === reqId) return false;
       }
       return true;
@@ -629,37 +746,32 @@ export default function HostWeeklySlotSchedule({
       setIsUpdatingSlot(true);
       try {
         const chosenMonths = sortedSelected.map((idx) => upcomingMonths[idx]?.monthKey).filter(Boolean);
-        const chosenDates = getDatesForMonthKeys(chosenMonths);
-        const firstM = upcomingMonths[sortedSelected[0]];
-        const lastM = upcomingMonths[sortedSelected[sortedSelected.length - 1]];
-
-        const checkInLabel = `1st ${firstM.monthShort} ${firstM.year} (12:00 AM)`;
-        const checkOutLabel = `${lastM.daysInMonth} ${lastM.monthShort} ${lastM.year} (11:59 PM)`;
-
         const cleanEmail = hostUserEmail.trim().toLowerCase() || `${cleanName.toLowerCase().replace(/\s+/g, '')}${cleanPhone.slice(-4)}@stayhub.local`;
         const formattedAadhar = formatAadharNumber(cleanAadhar);
-        const bookingRef = `BK-${cleanPhone}`;
 
         // 1. Update existing booking if activeRequestedBooking, else create offline booking
-        let createdBookingMongoId = activeRequestedBooking?._id || activeRequestedBooking?.id || `res_${cleanPhone}`;
         try {
-          if (activeRequestedBooking?._id || activeRequestedBooking?.id) {
-            const bookingId = activeRequestedBooking._id || activeRequestedBooking.id;
+          if (activeRequestedBooking?._id) {
+            const bookingId = activeRequestedBooking._id;
+            const isOnline = activeRequestedBooking.bookingSource === 'ONLINE' || activeRequestedBooking.isOnline === true;
+            const deadline = new Date(Date.now() + 5 * 60 * 1000);
             await bookingsAPI.updateBookingStatus(bookingId, {
-              status: 'CONFIRMED',
+              status: isOnline ? 'AWAITING_PAYMENT' : 'CONFIRMED',
               totalAmount: finalAmount,
               fullName: cleanName,
               phone: cleanPhone,
               email: cleanEmail,
               aadharNumber: formattedAadhar,
-              adults: hostAdults,
-              children: hostChildren,
-              gender: hostGender || 'Male',
+              personCount: hostPersonCount,
+              gender: hostGender || 'Other',
+              approvedAt: new Date().toISOString(),
+              paymentDeadline: isOnline ? deadline.toISOString() : null,
+              paymentStatus: isOnline ? 'UNPAID' : 'PAID',
             });
           } else {
-            const offlineRes = await bookingsAPI.createOfflineBooking({
-              hostId: hostProperty?.hostId?._id || hostProperty?.hostId || hostProperty?._id || hostProperty?.id,
-              stayId: hostProperty?.stayId || hostProperty?._id || hostProperty?.id,
+            await bookingsAPI.createOfflineBooking({
+              hostId: hostProperty?.hostId?._id || hostProperty?.hostId || hostProperty?._id,
+              stayId: hostProperty?.stayId || hostProperty?._id,
               hostEmail: hostProperty?.email || hostProperty?.hostEmail || '',
               roomNumber: selectedRoomCard.roomNumber,
               roomType: selectedRoomCard.type || activeCategory?.type || 'Room',
@@ -668,16 +780,12 @@ export default function HostWeeklySlotSchedule({
               phone: cleanPhone,
               email: cleanEmail,
               aadhar: formattedAadhar,
-              adults: hostAdults,
-              children: hostChildren,
-              gender: hostGender || 'Male',
+              personCount: hostPersonCount,
+              gender: hostGender || 'Other',
               bookedDates: chosenMonths,
               totalAmount: finalAmount,
               stayTitle: hostProperty?.propertyName || hostProperty?.title || 'Room Reservation',
             });
-            if (offlineRes?.booking?._id || offlineRes?._id) {
-              createdBookingMongoId = offlineRes.booking?._id || offlineRes._id;
-            }
           }
         } catch (apiErr) {
           console.error('Booking collection write error:', apiErr);
@@ -702,13 +810,14 @@ export default function HostWeeklySlotSchedule({
         setHostUserEmail('');
         setHostUserAadhar('');
         setHostPaidAmount('');
-        setHostAdults(1);
-        setHostChildren(0);
+        setHostPersonCount(1);
         setActiveRightPanelTab('occupants');
 
         try {
           window.dispatchEvent(new CustomEvent('stayhub_slots_updated', { detail: { sender: 'HostDashboard' } }));
-        } catch (e) {}
+        } catch {
+          /* ignore */
+        }
 
         if (typeof onRefreshBookings === 'function') {
           onRefreshBookings();
@@ -726,41 +835,30 @@ export default function HostWeeklySlotSchedule({
     setIsUpdatingSlot(true);
     try {
       const chosenDates = sortedSelected.map((idx) => upcomingWeek[idx]?.fullISO).filter(Boolean);
-      const firstSlot = upcomingWeek[sortedSelected[0]];
-      const lastSlot = upcomingWeek[sortedSelected[sortedSelected.length - 1]];
-
-      const nextD = new Date(lastSlot.dateObj);
-      nextD.setDate(nextD.getDate() + 1);
-      const checkoutDayName = nextD.toLocaleDateString('en-US', { weekday: 'short' });
-      const checkoutMonthDay = nextD.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      const checkoutYear = nextD.getFullYear();
-      const checkOutLabel = `${checkoutDayName} ${checkoutMonthDay} ${checkoutYear} (11:59 AM)`;
-      const durationLabel = `${chosenDates.length} ${chosenDates.length === 1 ? 'Night' : 'Nights'}`;
-
       const cleanEmail = hostUserEmail.trim().toLowerCase() || `${cleanName.toLowerCase().replace(/\s+/g, '')}${cleanPhone.slice(-4)}@stayhub.local`;
       const formattedAadhar = formatAadharNumber(cleanAadhar);
-      const bookingRef = `BK-${cleanPhone}`;
 
       // 1. Update existing booking if activeRequestedBooking, else create offline booking
-      let createdBookingMongoId = activeRequestedBooking?._id || activeRequestedBooking?.id || `res_${cleanPhone}`;
       try {
-        if (activeRequestedBooking?._id || activeRequestedBooking?.id) {
-          const bookingId = activeRequestedBooking._id || activeRequestedBooking.id;
+        if (activeRequestedBooking?._id) {
+          const bookingId = activeRequestedBooking._id;
+          const deadline = new Date(Date.now() + 5 * 60 * 1000);
           await bookingsAPI.updateBookingStatus(bookingId, {
-            status: 'CONFIRMED',
+            status: 'AWAITING_PAYMENT',
             totalAmount: finalAmount,
             fullName: cleanName,
             phone: cleanPhone,
             email: cleanEmail,
             aadharNumber: formattedAadhar,
-            adults: hostAdults,
-            children: hostChildren,
-            gender: hostGender || 'Male',
+            personCount: hostPersonCount,
+            gender: hostGender || 'Other',
+            approvedAt: new Date().toISOString(),
+            paymentDeadline: deadline.toISOString(),
           });
         } else {
-          const offlineRes = await bookingsAPI.createOfflineBooking({
-            hostId: hostProperty?.hostId?._id || hostProperty?.hostId || hostProperty?._id || hostProperty?.id,
-            stayId: hostProperty?.stayId || hostProperty?._id || hostProperty?.id,
+          await bookingsAPI.createOfflineBooking({
+            hostId: hostProperty?.hostId?._id || hostProperty?.hostId || hostProperty?._id,
+            stayId: hostProperty?.stayId || hostProperty?._id,
             hostEmail: hostProperty?.email || hostProperty?.hostEmail || '',
             roomNumber: selectedRoomCard.roomNumber,
             roomType: selectedRoomCard.type || activeCategory?.type || 'Room',
@@ -769,16 +867,12 @@ export default function HostWeeklySlotSchedule({
             phone: cleanPhone,
             email: cleanEmail,
             aadhar: formattedAadhar,
-            adults: hostAdults,
-            children: hostChildren,
-            gender: hostGender || 'Male',
+            personCount: hostPersonCount,
+            gender: hostGender || 'Other',
             bookedDates: chosenDates,
             totalAmount: finalAmount,
             stayTitle: hostProperty?.propertyName || hostProperty?.title || 'Room Reservation',
           });
-          if (offlineRes?.booking?._id || offlineRes?._id) {
-            createdBookingMongoId = offlineRes.booking?._id || offlineRes._id;
-          }
         }
       } catch (apiErr) {
         console.error('Booking collection write error:', apiErr);
@@ -790,7 +884,7 @@ export default function HostWeeklySlotSchedule({
       // Booking is saved to single source of truth (bookings collection)
       showToast(
         activeRequestedBooking
-          ? `🎉 Online booking request confirmed for ${cleanName}!`
+          ? `🎉 Request approved! 5-minute payment countdown started for ${cleanName}.`
           : `Slot reserved for ${cleanName} with ₹${finalAmount.toLocaleString('en-IN')} paid!`,
         'success'
       );
@@ -803,13 +897,14 @@ export default function HostWeeklySlotSchedule({
       setHostUserEmail('');
       setHostUserAadhar('');
       setHostPaidAmount('');
-      setHostAdults(1);
-      setHostChildren(0);
+      setHostPersonCount(1);
       setActiveRightPanelTab('occupants');
 
       try {
         window.dispatchEvent(new CustomEvent('stayhub_slots_updated', { detail: { sender: 'HostDashboard' } }));
-      } catch (e) {}
+      } catch {
+        /* ignore */
+      }
 
       if (typeof onRefreshBookings === 'function') {
         onRefreshBookings();
@@ -827,73 +922,65 @@ export default function HostWeeklySlotSchedule({
     setConfirmDeleteId(null);
     setConfirmModalDelete(false);
 
-    const occupantId = occupant.id || occupant._id || occupant.bookingId || occupant.bookingReferenceId || occupant.slotBookingId;
+    const occupantId = occupant._id || occupant.bookingId || occupant.bookingReferenceId || occupant.slotBookingId;
     const phone = occupant.phone || occupant.userPhone || occupant.guestPhone || '';
     const cleanPhone = String(phone).replace(/\D/g, '').slice(-10);
     const roomNum = selectedRoomCard?.roomNumber || occupant.roomNumber || '';
     const rawRoom = String(roomNum).replace(/[^0-9]/g, '');
     const cleanAadhar = String(occupant.aadhar || occupant.aadharNumber || occupant.guestAadhar || '').replace(/\D/g, '');
-    const occName = String(occupant.name || occupant.userName || occupant.guestName || '').trim().toLowerCase();
 
     // 1. Optimistically remove from local state so slots and occupants list are freed up immediately (0ms)
     if (typeof setGuests === 'function') {
       setGuests((prev) =>
-        prev.filter((g) => {
-          const gId = g._id || g.id || g.bookingId || g.bookingReferenceId;
-          if (occupantId && gId && (gId === occupantId || String(gId) === String(occupantId))) return false;
-          if (occupant.bookingReferenceId && g.bookingReferenceId === occupant.bookingReferenceId) return false;
-          const gPhone = String(g.userPhone || g.phone || g.guestPhone || '').replace(/\D/g, '').slice(-10);
-          const gRoom = String(g.roomNumber || '').replace(/[^0-9]/g, '');
-          if (cleanPhone && rawRoom && gPhone === cleanPhone && gRoom === rawRoom) return false;
-          if (cleanAadhar) {
-            const gAadhar = String(g.aadhar || g.aadharNumber || g.guestAadhar || '').replace(/\D/g, '');
-            if (gAadhar && gAadhar === cleanAadhar) return false;
-          }
-          if (occName && (cleanPhone ? gPhone === cleanPhone : true) && (rawRoom ? gRoom === rawRoom : true)) {
-            const gName = String(g.userName || g.name || g.guestName || '').trim().toLowerCase();
-            if (gName && gName === occName) return false;
-          }
-          return true;
+        prev.map((g) => {
+          const gId = g._id || g.bookingId || g.bookingReferenceId;
+          const isMatch = Boolean(
+            (occupantId && gId && (gId === occupantId || String(gId) === String(occupantId))) ||
+            (occupant.bookingReferenceId && g.bookingReferenceId === occupant.bookingReferenceId) ||
+            (cleanPhone && rawRoom && String(g.userPhone || g.phone || g.guestPhone || '').replace(/\D/g, '').slice(-10) === cleanPhone && String(g.roomNumber || '').replace(/[^0-9]/g, '') === rawRoom) ||
+            (cleanAadhar && String(g.aadhar || g.aadharNumber || g.guestAadhar || '').replace(/\D/g, '') === cleanAadhar)
+          );
+          return isMatch ? { ...g, status: 'CHECKED_OUT' } : g;
         })
       );
     }
 
     try {
-      // 2. Permanently delete booking and payment records from database
+      const targetBookingId =
+        occupant.bookingReferenceId ||
+        occupant._id ||
+        occupant.slotBookingId;
+
+      if (targetBookingId && !String(targetBookingId).startsWith('res_')) {
+        await bookingsAPI.checkoutBooking(targetBookingId).catch(async () => {
+          await bookingsAPI.updateBookingStatus(targetBookingId, { status: 'CHECKED_OUT' }).catch(() => {});
+        });
+      }
+
       await bookingsAPI
         .checkoutOccupant({
           hostEmail: hostProperty?.email || hostProperty?.hostEmail,
           roomNumber: roomNum,
-          roomId: selectedRoomCard?.id || selectedRoomCard?._id,
-          propertyId: hostProperty?._id || hostProperty?.id,
-          stayId: hostProperty?.stayId || hostProperty?._id || hostProperty?.id,
-          hostId: hostProperty?.hostId?._id || hostProperty?.hostId || hostProperty?._id || hostProperty?.id,
-          occupantId: occupant.id || occupant._id,
-          bookingId: occupant.bookingId || occupant.id || occupant._id,
-          slotBookingId: occupant.slotBookingId || occupant.id || occupant._id,
+          roomId: selectedRoomCard?._id || selectedRoomCard?._id,
+          propertyId: hostProperty?._id,
+          stayId: hostProperty?.stayId || hostProperty?._id,
+          hostId: hostProperty?.hostId?._id || hostProperty?.hostId || hostProperty?._id,
+          occupantId: occupant._id,
+          bookingId: occupant.bookingId || occupant._id,
+          slotBookingId: occupant.slotBookingId || occupant._id,
           bookingReferenceId: occupant.bookingReferenceId,
           phone: cleanPhone || phone,
           name: occupant.name || occupant.guestName || occupant.userName,
           userName: occupant.name || occupant.guestName || occupant.userName,
         })
-        .catch((err) => console.warn('Checkout database error:', err));
+        .catch((err) => console.warn('Checkout database notice:', err));
 
-      const targetBookingId =
-        occupant.bookingReferenceId ||
-        occupant.id ||
-        occupant._id ||
-        occupant.slotBookingId;
-
-      if (targetBookingId && !String(targetBookingId).startsWith('res_')) {
-        await bookingsAPI.deleteBooking(targetBookingId).catch(() => {});
-      }
-
-      showToast(`Check-out approved for ${occupant.name}. Booking deleted and room slots released.`, 'success');
+      showToast('Guest successfully checked out. Room slots freed.', 'success');
       setSelectedSlotIndices([]);
 
       if (
         selectedOccupantForModal &&
-        (selectedOccupantForModal.id === occupant.id ||
+        (selectedOccupantForModal._id === occupant._id ||
           selectedOccupantForModal.phone === occupant.phone)
       ) {
         setSelectedOccupantForModal(null);
@@ -907,10 +994,12 @@ export default function HostWeeklySlotSchedule({
         localStorage.setItem('stayhub_admin_sync_ts', String(Date.now()));
         if (typeof BroadcastChannel !== 'undefined') {
           const bc = new BroadcastChannel('stayhub_live_channel');
-          bc.postMessage({ type: 'HOST_UPDATED', hostId: hostProperty?.id || hostProperty?._id, sender: 'HostDashboard' });
+          bc.postMessage({ type: 'HOST_UPDATED', hostId: hostProperty?._id, sender: 'HostDashboard' });
           bc.close();
         }
-      } catch (e) {}
+      } catch {
+        /* ignore */
+      }
 
       if (typeof onRefreshBookings === 'function') {
         onRefreshBookings();
@@ -940,8 +1029,6 @@ export default function HostWeeklySlotSchedule({
       )
     );
     setModalPaidAmount(occupant.totalAmount !== undefined ? String(occupant.totalAmount) : '0');
-    setModalAdults(Number(occupant.adults) || 1);
-    setModalChildren(Number(occupant.children) || 0);
     setModalGender(occupant.gender || 'Male');
   };
 
@@ -975,8 +1062,6 @@ export default function HostWeeklySlotSchedule({
         )
       );
       setModalPaidAmount(selectedOccupantForModal.totalAmount !== undefined ? String(selectedOccupantForModal.totalAmount) : '0');
-      setModalAdults(Number(selectedOccupantForModal.adults) || 1);
-      setModalChildren(Number(selectedOccupantForModal.children) || 0);
       setModalGender(selectedOccupantForModal.gender || 'Male');
     }
   };
@@ -998,7 +1083,7 @@ export default function HostWeeklySlotSchedule({
     }
 
     const isDuplicateOther = roomOccupantsList.some((occ) => {
-      if (occ.id === selectedOccupantForModal.id) return false;
+      if (occ._id === (selectedOccupantForModal?._id || selectedOccupantForModal?._id)) return false;
       const p = (occ.phone || occ.userPhone || '').replace(/\D/g, '');
       return p && p.slice(-10) === cleanPhone.slice(-10);
     });
@@ -1026,10 +1111,10 @@ export default function HostWeeklySlotSchedule({
         (g) =>
           (selectedOccupantForModal.bookingReferenceId &&
             g.bookingReferenceId === selectedOccupantForModal.bookingReferenceId) ||
-          (selectedOccupantForModal.id &&
-            (g._id === selectedOccupantForModal.id ||
-              g.id === selectedOccupantForModal.id ||
-              g.slotBookingId === selectedOccupantForModal.id)) ||
+          (selectedOccupantForModal._id &&
+            (g._id === selectedOccupantForModal._id ||
+              
+              g.slotBookingId === selectedOccupantForModal._id)) ||
           (g.phone && selectedOccupantForModal.phone &&
             g.phone.replace(/\D/g, '').slice(-10) === cleanModalPhone) ||
           (g.roomNumber &&
@@ -1041,10 +1126,10 @@ export default function HostWeeklySlotSchedule({
 
       const targetBookingId =
         matchingGuest?._id ||
-        matchingGuest?.id ||
+        matchingGuest?._id ||
         matchingGuest?.bookingReferenceId ||
         selectedOccupantForModal.bookingReferenceId ||
-        selectedOccupantForModal.id;
+        selectedOccupantForModal._id;
 
       if (targetBookingId) {
         await bookingsAPI
@@ -1062,8 +1147,6 @@ export default function HostWeeklySlotSchedule({
             aadhar: formattedAadhar,
             aadharNumber: formattedAadhar,
             aadharId: formattedAadhar,
-            adults: modalAdults,
-            children: modalChildren,
             gender: modalGender,
             totalAmount: parsedModalAmount,
             status: matchingGuest?.status || 'CONFIRMED',
@@ -1083,8 +1166,6 @@ export default function HostWeeklySlotSchedule({
         aadhar: formattedAadhar,
         aadharNumber: formattedAadhar,
         aadharId: formattedAadhar,
-        adults: modalAdults,
-        children: modalChildren,
         gender: modalGender,
         totalAmount: parsedModalAmount,
       }));
@@ -1094,7 +1175,9 @@ export default function HostWeeklySlotSchedule({
 
       try {
         window.dispatchEvent(new CustomEvent('stayhub_slots_updated', { detail: { sender: 'HostDashboard' } }));
-      } catch (e) {}
+      } catch {
+        /* ignore */
+      }
 
       if (typeof onRefreshBookings === 'function') {
         onRefreshBookings();
@@ -1111,7 +1194,7 @@ export default function HostWeeklySlotSchedule({
     setIsUpdatingSlot(true);
     setConfirmDeleteId(null);
 
-    const occupantId = occupant.id || occupant._id || occupant.bookingId || occupant.bookingReferenceId || occupant.slotBookingId;
+    const occupantId = occupant._id || occupant.bookingId || occupant.bookingReferenceId || occupant.slotBookingId;
     const phone = occupant.phone || occupant.userPhone || occupant.guestPhone || '';
     const cleanPhone = String(phone).replace(/\D/g, '').slice(-10);
     const roomNum = selectedRoomCard?.roomNumber || occupant.roomNumber || '';
@@ -1124,7 +1207,7 @@ export default function HostWeeklySlotSchedule({
     if (typeof setGuests === 'function') {
       setGuests((prev) =>
         prev.filter((g) => {
-          const gId = g._id || g.id || g.bookingId || g.bookingReferenceId;
+          const gId = g._id || g.bookingId || g.bookingReferenceId;
           if (occupantId && gId && (gId === occupantId || String(gId) === String(occupantId))) return false;
           if (occupant.bookingReferenceId && g.bookingReferenceId === occupant.bookingReferenceId) return false;
           const gPhone = String(g.userPhone || g.phone || g.guestPhone || '').replace(/\D/g, '').slice(-10);
@@ -1149,13 +1232,13 @@ export default function HostWeeklySlotSchedule({
         .removeOccupantBooking({
           hostEmail: hostProperty?.email || hostProperty?.hostEmail,
           roomNumber: roomNum,
-          roomId: selectedRoomCard?.id || selectedRoomCard?._id,
-          propertyId: hostProperty?._id || hostProperty?.id,
-          stayId: hostProperty?.stayId || hostProperty?._id || hostProperty?.id,
-          hostId: hostProperty?.hostId?._id || hostProperty?.hostId || hostProperty?._id || hostProperty?.id,
-          occupantId: occupant.id || occupant._id,
-          bookingId: occupant.bookingId || occupant.id || occupant._id,
-          slotBookingId: occupant.slotBookingId || occupant.id || occupant._id,
+          roomId: selectedRoomCard?._id || selectedRoomCard?._id,
+          propertyId: hostProperty?._id,
+          stayId: hostProperty?.stayId || hostProperty?._id,
+          hostId: hostProperty?.hostId?._id || hostProperty?.hostId || hostProperty?._id,
+          occupantId: occupant._id,
+          bookingId: occupant.bookingId || occupant._id,
+          slotBookingId: occupant.slotBookingId || occupant._id,
           bookingReferenceId: occupant.bookingReferenceId,
           phone: cleanPhone || phone,
           name: occupant.name || occupant.guestName || occupant.userName,
@@ -1165,7 +1248,6 @@ export default function HostWeeklySlotSchedule({
 
       const targetBookingId =
         occupant.bookingReferenceId ||
-        occupant.id ||
         occupant._id ||
         occupant.slotBookingId;
 
@@ -1178,7 +1260,7 @@ export default function HostWeeklySlotSchedule({
 
       if (
         selectedOccupantForModal &&
-        (selectedOccupantForModal.id === occupant.id ||
+        (selectedOccupantForModal._id === occupant._id ||
           selectedOccupantForModal.phone === occupant.phone)
       ) {
         setSelectedOccupantForModal(null);
@@ -1192,10 +1274,12 @@ export default function HostWeeklySlotSchedule({
         localStorage.setItem('stayhub_admin_sync_ts', String(Date.now()));
         if (typeof BroadcastChannel !== 'undefined') {
           const bc = new BroadcastChannel('stayhub_live_channel');
-          bc.postMessage({ type: 'HOST_UPDATED', hostId: hostProperty?.id || hostProperty?._id, sender: 'HostDashboard' });
+          bc.postMessage({ type: 'HOST_UPDATED', hostId: hostProperty?._id, sender: 'HostDashboard' });
           bc.close();
         }
-      } catch (e) {}
+      } catch {
+        /* ignore */
+      }
 
       if (typeof onRefreshBookings === 'function') {
         onRefreshBookings();
@@ -1321,39 +1405,44 @@ export default function HostWeeklySlotSchedule({
   if (!selectedRoomCard) return null;
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5 xl:gap-5 items-start">
-        <HostScheduleCalendar
-          isMonthly={isMonthly}
-          isPropertyApproved={isPropertyApproved}
-          hostProperty={hostProperty}
-          roomDisplay={roomDisplay}
-          roomTypeDisplay={roomTypeDisplay}
-          priceDisplay={priceDisplay}
-          reservationDetails={reservationDetails}
-          sortedSelected={sortedSelected}
-          upcomingMonths={upcomingMonths}
-          roomBookingInfo={roomBookingInfo}
-          selectedSlotIndices={selectedSlotIndices}
-          handleToggleSlotMonth={handleToggleSlotMonth}
-          monthGroups={monthGroups}
-          selectedMonthIdx={selectedMonthIdx}
-          setSelectedMonthIdx={setSelectedMonthIdx}
-          upcomingWeek={upcomingWeek}
-          WEEKDAYS={WEEKDAYS}
-          todayISO={todayISO}
-          handleToggleSlotDay={handleToggleSlotDay}
-          handleOpenOccupantModal={handleOpenOccupantModal}
-          roomOccupantsList={roomOccupantsList}
-          isUserRequestSelection={isUserRequestSelection}
-          requestedUserBooking={activeRequestedBooking}
-          selectedRoomCard={selectedRoomCard}
-          activeCategory={activeCategory}
-          guests={guests}
-          isOccupantModalOpen={Boolean(selectedOccupantForModal)}
-        />
+    <div className="w-full flex flex-col justify-center my-auto">
+      <div className="grid grid-cols-1 xl:grid-cols-8 gap-gutter-desktop items-start xl:items-center">
+        <motion.div layout="position" transition={{ layout: { duration: 0.36, ease: [0.25, 1, 0.5, 1] } }} className="xl:col-span-5 w-full flex flex-col justify-center items-center my-auto min-h-0">
+          <HostScheduleCalendar
+            isMonthly={isMonthly}
+            isPropertyApproved={isPropertyApproved}
+            hostProperty={hostProperty}
+            roomDisplay={roomDisplay}
+            roomTypeDisplay={roomTypeDisplay}
+            priceDisplay={priceDisplay}
+            reservationDetails={reservationDetails}
+            sortedSelected={sortedSelected}
+            upcomingMonths={upcomingMonths}
+            roomBookingInfo={roomBookingInfo}
+            selectedSlotIndices={selectedSlotIndices}
+            handleToggleSlotMonth={handleToggleSlotMonth}
+            monthGroups={monthGroups}
+            selectedMonthIdx={selectedMonthIdx}
+            setSelectedMonthIdx={setSelectedMonthIdx}
+            upcomingWeek={upcomingWeek}
+            WEEKDAYS={WEEKDAYS}
+            todayISO={todayISO}
+            handleToggleSlotDay={handleToggleSlotDay}
+            handleOpenOccupantModal={handleOpenOccupantModal}
+            roomOccupantsList={roomOccupantsList}
+            isUserRequestSelection={isUserRequestSelection}
+            requestedUserBooking={activeRequestedBooking}
+            selectedRoomCard={selectedRoomCard}
+            activeCategory={activeCategory}
+            guests={guests}
+            isOccupantModalOpen={Boolean(selectedOccupantForModal)}
+            isRoomSavedToDb={isRoomSavedToDb}
+            selectedBookedGuest={activeBookedGuest}
+            onClearBookedGuest={onClearBookedGuest}
+          />
+        </motion.div>
 
-        <div className="w-full relative">
+        <div className="xl:col-span-3 w-full relative">
           <AnimatePresence mode="wait" initial={false}>
             {activeRightPanelTab === 'guest' ? (
               <motion.div
@@ -1369,6 +1458,7 @@ export default function HostWeeklySlotSchedule({
               >
                 <HostBookingForm
                   isPropertyApproved={isPropertyApproved}
+                  isRoomSavedToDb={isRoomSavedToDb}
                   isMonthly={isMonthly}
                   roomDisplay={roomDisplay}
                   roomTypeDisplay={roomTypeDisplay}
@@ -1379,10 +1469,10 @@ export default function HostWeeklySlotSchedule({
                   handleHostPhoneChange={handleHostPhoneChange}
                   hostGender={hostGender}
                   setHostGender={setHostGender}
-                  hostAdults={hostAdults}
-                  setHostAdults={setHostAdults}
-                  hostChildren={hostChildren}
-                  setHostChildren={setHostChildren}
+                  hostPersonCount={hostPersonCount}
+                  setHostPersonCount={handleHostPersonCountChange}
+                  maxAllowedPersons={maxAllowedPersons}
+                  roomCapacity={roomCapacity}
                   hostUserEmail={hostUserEmail}
                   setHostUserEmail={setHostUserEmail}
                   hostUserAadhar={hostUserAadhar}
@@ -1394,6 +1484,7 @@ export default function HostWeeklySlotSchedule({
                   sortedSelected={sortedSelected}
                   handleHostMarkSlotBooked={handleHostMarkSlotBooked}
                   isUserRequestSelection={isUserRequestSelection}
+                  isExpiredRequest={isExpiredRequest}
                   requestedUserBooking={activeRequestedBooking}
                   onClearRequestedBooking={onClearRequestedBooking}
                   clearForm={() => {
@@ -1403,8 +1494,7 @@ export default function HostWeeklySlotSchedule({
                     setHostUserEmail('');
                     setHostUserAadhar('');
                     setHostPaidAmount('');
-                    setHostAdults(1);
-                    setHostChildren(0);
+                    setHostPersonCount(1);
                     setHostGender('Male');
                     if (onClearRequestedBooking) onClearRequestedBooking();
                   }}
@@ -1425,6 +1515,7 @@ export default function HostWeeklySlotSchedule({
                 <HostOccupantsList
                   roomDisplay={roomDisplay}
                   roomOccupantsList={roomOccupantsList}
+                  selectedBookedGuest={activeBookedGuest}
                   confirmDeleteId={confirmDeleteId}
                   setConfirmDeleteId={setConfirmDeleteId}
                   isUpdatingSlot={isUpdatingSlot}
@@ -1432,6 +1523,7 @@ export default function HostWeeklySlotSchedule({
                   handleOpenOccupantModal={handleOpenOccupantModal}
                   handleApproveCheckout={handleApproveCheckout}
                   onAddGuestClick={() => setActiveRightPanelTab('guest')}
+                  onGoBackToVisited={onGoBackToVisited}
                 />
               </motion.div>
             )}
@@ -1459,10 +1551,6 @@ export default function HostWeeklySlotSchedule({
             isMonthly={isMonthly}
             modalGender={modalGender}
             setModalGender={setModalGender}
-            modalAdults={modalAdults}
-            setModalAdults={setModalAdults}
-            modalChildren={modalChildren}
-            setModalChildren={setModalChildren}
             handleCancelEditFromModal={handleCancelEditFromModal}
             isSavingModalOccupant={isSavingModalOccupant}
             roomDisplay={roomDisplay}

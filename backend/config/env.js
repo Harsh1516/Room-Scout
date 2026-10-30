@@ -17,10 +17,7 @@ export const envSchema = z
       .default('development'),
 
     PORT: z
-      .string()
-      .regex(/^\d+$/, { message: 'PORT must be a numeric integer string' })
-      .transform(Number)
-      .default('5000'),
+      .preprocess((val) => (val !== undefined && val !== null ? String(val) : '5000'), z.string().regex(/^\d+$/, { message: 'PORT must be a numeric integer string' }).transform(Number)),
 
     MONGO_URI: z
       .string({ required_error: 'MONGO_URI is required' })
@@ -44,11 +41,6 @@ export const envSchema = z
     ALLOWED_ORIGINS: z.string().trim().optional(),
     TRUST_PROXY: z.string().trim().optional(),
 
-    // Payment Gateway (Razorpay)
-    RAZORPAY_KEY_ID: z.string().trim().optional(),
-    RAZORPAY_KEY_SECRET: z.string().trim().optional(),
-    RAZORPAY_WEBHOOK_SECRET: z.string().trim().optional(),
-
     // Media Storage (Cloudinary)
     CLOUDINARY_CLOUD_NAME: z.string().trim().optional(),
     CLOUDINARY_API_KEY: z.string().trim().optional(),
@@ -63,6 +55,13 @@ export const envSchema = z
     EMAIL_USER: z.string().trim().optional(),
     EMAIL_PASS: z.string().trim().optional(),
     EMAIL_FROM: z.string().trim().optional(),
+
+    // Google OAuth
+    GOOGLE_CLIENT_ID: z.string().trim().optional(),
+    GOOGLE_CLIENT_SECRET: z.string().trim().optional(),
+
+    // WhatsApp Automation (whatsapp-web.js)
+    ENABLE_WHATSAPP: z.string().trim().optional(),
   })
   .superRefine((data, ctx) => {
     // 1. In production, JWT_SECRET must be at least 32 characters long
@@ -93,16 +92,7 @@ export const envSchema = z
       });
     }
 
-    // 3. If Razorpay Key is provided, Secret should also be provided
-    if (data.RAZORPAY_KEY_ID && !data.RAZORPAY_KEY_SECRET) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['RAZORPAY_KEY_SECRET'],
-        message: 'RAZORPAY_KEY_SECRET is required when RAZORPAY_KEY_ID is configured.',
-      });
-    }
-
-    // 4. If Cloudinary credentials are provided, ensure all three are present
+    // 3. If Cloudinary credentials are provided, ensure all three are present
     const hasCloudName = Boolean(data.CLOUDINARY_CLOUD_NAME);
     const hasCloudKey = Boolean(data.CLOUDINARY_API_KEY);
     const hasCloudSecret = Boolean(data.CLOUDINARY_API_SECRET);

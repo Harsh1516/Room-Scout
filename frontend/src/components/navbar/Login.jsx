@@ -85,11 +85,24 @@ export function Login({ onLoginClick }) {
     toast.success('All notifications marked as read');
   };
 
+  const handleLoginClick = () => {
+    if (typeof onLoginClick === 'function') {
+      onLoginClick();
+    } else {
+      const defaultRole = location.pathname.startsWith('/host') ? 'host' : 'user';
+      window.dispatchEvent(
+        new CustomEvent('auth:open_login', {
+          detail: { role: defaultRole },
+        })
+      );
+    }
+  };
+
   if (!isAuthenticated || !user) {
     return (
       <button
         type="button"
-        onClick={onLoginClick}
+        onClick={handleLoginClick}
         className="apple-liquid-nav border border-slate-200/80 dark:border-white/15 text-slate-900 dark:text-white font-semibold text-xs tracking-wider px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-xs transition-none cursor-pointer flex items-center gap-2 select-none active:scale-95 focus:outline-none focus:ring-0"
       >
         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -108,7 +121,7 @@ export function Login({ onLoginClick }) {
         <button
           type="button"
           onClick={() => setDropdownOpen((prev) => !prev)}
-          className={`relative w-9 h-9 sm:w-10 sm:h-10 rounded-full text-white font-bold text-xs sm:text-sm shadow-xs border border-slate-200/80 dark:border-white/20 backdrop-blur-[2px] transition-none flex items-center justify-center cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 ${
+          className={`relative w-8 h-8 sm:w-9 sm:h-9 rounded-full text-white font-bold text-[11px] sm:text-xs shadow-xs border border-slate-200/80 dark:border-white/20 backdrop-blur-[2px] transition-none flex items-center justify-center cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 ${
             isHost
               ? 'bg-linear-to-tr from-emerald-600/90 via-teal-600/90 to-emerald-500/90'
               : 'bg-linear-to-tr from-indigo-600/90 via-blue-600/90 to-cyan-500/90'
@@ -119,7 +132,7 @@ export function Login({ onLoginClick }) {
           <span>{initials}</span>
           {/* Host Crown / Online Indicator Dot */}
           <span
-            className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] border-2 border-white dark:border-slate-900 shadow-xs ${
+            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full flex items-center justify-center text-[7.5px] sm:text-[8px] border-2 border-white dark:border-slate-900 shadow-xs ${
               isHost ? 'bg-amber-400 text-slate-950 font-bold' : 'bg-emerald-400 text-white'
             }`}
           >
@@ -136,12 +149,12 @@ export function Login({ onLoginClick }) {
               exit={{ opacity: 0, scale: 0.95, y: -4 }}
               transition={{ duration: 0.12 }}
               style={{ transformOrigin: 'top right', backgroundColor: '#ffffff', opacity: 1 }}
-              className="apple-profile-dropdown absolute right-0 top-11 sm:top-14 w-56 sm:w-72 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3.5 z-50 space-y-1.5 sm:space-y-2 select-none origin-top-right will-change-transform bg-white border border-slate-200/90 shadow-2xl"
+              className="apple-profile-dropdown absolute right-0 top-10 sm:top-12 w-[225px] sm:w-[255px] max-w-[calc(100vw-20px)] rounded-xl sm:rounded-2xl p-2 sm:p-2.5 z-50 space-y-1 sm:space-y-1.5 select-none origin-top-right will-change-transform bg-white border border-slate-200/90 shadow-xl"
             >
               {/* User Header Profile Card */}
-              <div className="flex items-center gap-3 pb-2.5 border-b border-slate-200">
+              <div className="flex items-center gap-2 sm:gap-2.5 pb-2 border-b border-slate-200">
                 <div
-                  className={`w-9 h-9 rounded-xl text-white font-bold text-xs flex items-center justify-center shadow-md shrink-0 ${
+                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl text-white font-bold text-[10px] sm:text-xs flex items-center justify-center shadow-xs shrink-0 ${
                     isHost
                       ? 'bg-gradient-to-tr from-emerald-600 to-teal-500'
                       : 'bg-gradient-to-tr from-indigo-600 to-cyan-500'
@@ -150,14 +163,14 @@ export function Login({ onLoginClick }) {
                   {initials}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-xs sm:text-sm text-slate-900 truncate">
+                  <div className="font-bold text-[11px] sm:text-xs text-slate-900 truncate leading-tight">
                     {user.name}
                   </div>
-                  <div className="text-[11px] text-slate-500 truncate font-normal">
+                  <div className="text-[9.5px] sm:text-[10px] text-slate-500 truncate font-normal leading-tight mt-0.5">
                     {user.email}
                   </div>
                   <div
-                    className={`inline-flex items-center gap-1 text-[9px] font-semibold px-2 py-0.5 mt-0.5 rounded-full border ${
+                    className={`inline-flex items-center gap-1 text-[8px] sm:text-[8.5px] font-bold px-1.5 py-0.2 mt-0.5 rounded-full border ${
                       isHost
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                         : 'bg-cyan-50 text-cyan-700 border-cyan-200'
@@ -169,7 +182,7 @@ export function Login({ onLoginClick }) {
               </div>
 
               {/* Core Feature Buttons with Solid Opaque Styling & Smooth Hover Effects */}
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 {/* Host Dual-Mode Portal Switcher */}
                 {isHost && (
                   location.pathname.startsWith('/host') ? (
@@ -179,18 +192,18 @@ export function Login({ onLoginClick }) {
                         setDropdownOpen(false);
                         navigate('/explore');
                       }}
-                      className="group w-full text-left p-2.5 rounded-2xl text-xs font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-800 hover:border-sky-400 hover:shadow-xs"
+                      className="group w-full text-left px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg sm:rounded-xl text-[10.5px] sm:text-[11.5px] font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-800 hover:border-sky-400 hover:shadow-2xs"
                     >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-xl bg-sky-500/10 text-sky-600 flex items-center justify-center border border-sky-500/20 group-hover:scale-110 group-hover:bg-sky-500/20 transition-all duration-150">
-                          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-sky-500/10 text-sky-600 flex items-center justify-center border border-sky-500/20 group-hover:scale-105 group-hover:bg-sky-500/20 transition-all duration-150 shrink-0">
+                          <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <circle cx="11" cy="11" r="8" />
                             <line x1="21" y1="21" x2="16.65" y2="16.65" />
                           </svg>
                         </div>
-                        <span>Explore Stays</span>
+                        <span className="truncate">Explore Stays</span>
                       </div>
-                      <span className="text-[10px] text-slate-400 group-hover:text-sky-600 font-semibold group-hover:translate-x-0.5 transition-all duration-150">
+                      <span className="text-[9px] sm:text-[9.5px] text-slate-400 group-hover:text-sky-600 font-semibold group-hover:translate-x-0.5 transition-all duration-150 shrink-0">
                         Browse →
                       </span>
                     </button>
@@ -201,18 +214,18 @@ export function Login({ onLoginClick }) {
                         setDropdownOpen(false);
                         navigate('/host/dashboard');
                       }}
-                      className="group w-full text-left p-2.5 rounded-2xl text-xs font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-800 hover:border-emerald-400 hover:shadow-xs"
+                      className="group w-full text-left px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg sm:rounded-xl text-[10.5px] sm:text-[11.5px] font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-800 hover:border-emerald-400 hover:shadow-2xs"
                     >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center border border-emerald-500/20 group-hover:scale-110 group-hover:bg-emerald-500/20 transition-all duration-150">
-                          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center border border-emerald-500/20 group-hover:scale-105 group-hover:bg-emerald-500/20 transition-all duration-150 shrink-0">
+                          <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                             <polyline points="9 22 9 12 15 12 15 22" />
                           </svg>
                         </div>
-                        <span>Host Dashboard</span>
+                        <span className="truncate">Host Dashboard</span>
                       </div>
-                      <span className="text-[10px] text-slate-400 group-hover:text-emerald-600 font-semibold group-hover:translate-x-0.5 transition-all duration-150">
+                      <span className="text-[9px] sm:text-[9.5px] text-slate-400 group-hover:text-emerald-600 font-semibold group-hover:translate-x-0.5 transition-all duration-150 shrink-0">
                         Manage →
                       </span>
                     </button>
@@ -225,22 +238,22 @@ export function Login({ onLoginClick }) {
                     setDropdownOpen(false);
                     navigate('/account');
                   }}
-                  className={`group w-full text-left p-2.5 rounded-2xl text-xs font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 ${
+                  className={`group w-full text-left px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg sm:rounded-xl text-[10.5px] sm:text-[11.5px] font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 ${
                     location.pathname === '/account'
-                      ? 'bg-cyan-50 border border-cyan-300 text-cyan-950 shadow-xs'
-                      : 'bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-800 hover:border-cyan-400 hover:shadow-xs'
+                      ? 'bg-cyan-50 border border-cyan-300 text-cyan-950 shadow-2xs'
+                      : 'bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-800 hover:border-cyan-400 hover:shadow-2xs'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-xl bg-cyan-500/10 text-cyan-600 flex items-center justify-center border border-cyan-500/20 group-hover:scale-110 group-hover:bg-cyan-500/20 transition-all duration-150">
-                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-cyan-500/10 text-cyan-600 flex items-center justify-center border border-cyan-500/20 group-hover:scale-105 group-hover:bg-cyan-500/20 transition-all duration-150 shrink-0">
+                      <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
                         <circle cx="12" cy="7" r="4" />
                       </svg>
                     </div>
-                    <span>Account</span>
+                    <span className="truncate">Account</span>
                   </div>
-                  <span className="text-[10px] text-slate-400 group-hover:text-cyan-600 font-semibold group-hover:translate-x-0.5 transition-all duration-150">
+                  <span className="text-[9px] sm:text-[9.5px] text-slate-400 group-hover:text-cyan-600 font-semibold group-hover:translate-x-0.5 transition-all duration-150 shrink-0">
                     Manage →
                   </span>
                 </button>
@@ -252,22 +265,22 @@ export function Login({ onLoginClick }) {
                     setDropdownOpen(false);
                     setActiveModal('settings');
                   }}
-                  className={`group w-full text-left p-2.5 rounded-2xl text-xs font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 ${
+                  className={`group w-full text-left px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg sm:rounded-xl text-[10.5px] sm:text-[11.5px] font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 ${
                     activeModal === 'settings'
-                      ? 'bg-slate-100 border border-slate-300 text-slate-900 shadow-xs'
-                      : 'bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-800 hover:border-slate-300 hover:shadow-xs'
+                      ? 'bg-slate-100 border border-slate-300 text-slate-900 shadow-2xs'
+                      : 'bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-800 hover:border-slate-300 hover:shadow-2xs'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-xl bg-slate-500/10 text-slate-600 flex items-center justify-center border border-slate-400/20 group-hover:rotate-45 group-hover:scale-110 transition-all duration-200">
-                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-slate-500/10 text-slate-600 flex items-center justify-center border border-slate-400/20 group-hover:rotate-45 group-hover:scale-105 transition-all duration-200 shrink-0">
+                      <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="3" />
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
                       </svg>
                     </div>
-                    <span>Settings</span>
+                    <span className="truncate">Settings</span>
                   </div>
-                  <span className="text-[10px] text-slate-400 group-hover:text-slate-600 font-semibold transition-colors">Options</span>
+                  <span className="text-[9px] sm:text-[9.5px] text-slate-400 group-hover:text-slate-600 font-semibold transition-colors shrink-0">Options</span>
                 </button>
 
                 {/* 3. Updates Button */}
@@ -277,22 +290,22 @@ export function Login({ onLoginClick }) {
                     setDropdownOpen(false);
                     setActiveModal('updates');
                   }}
-                  className={`group w-full text-left p-2.5 rounded-2xl text-xs font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 ${
+                  className={`group w-full text-left px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg sm:rounded-xl text-[10.5px] sm:text-[11.5px] font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 ${
                     activeModal === 'updates'
-                      ? 'bg-emerald-50 border border-emerald-300 text-emerald-950 shadow-xs'
-                      : 'bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-800 hover:border-emerald-400 hover:shadow-xs'
+                      ? 'bg-emerald-50 border border-emerald-300 text-emerald-950 shadow-2xs'
+                      : 'bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-800 hover:border-emerald-400 hover:shadow-2xs'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center border border-emerald-500/20 group-hover:scale-110 group-hover:bg-emerald-500/20 transition-all duration-150">
-                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center border border-emerald-500/20 group-hover:scale-105 group-hover:bg-emerald-500/20 transition-all duration-150 shrink-0">
+                      <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
                         <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
                       </svg>
                     </div>
-                    <span>Updates</span>
+                    <span className="truncate">Updates</span>
                   </div>
-                  <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/10 text-emerald-600 text-[9px] font-black border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-colors">
+                  <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/10 text-emerald-600 text-[8px] sm:text-[8.5px] font-black border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-colors shrink-0">
                     v2.4
                   </span>
                 </button>
@@ -304,27 +317,27 @@ export function Login({ onLoginClick }) {
                     setDropdownOpen(false);
                     setActiveModal('notifications');
                   }}
-                  className={`group w-full text-left p-2.5 rounded-2xl text-xs font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 ${
+                  className={`group w-full text-left px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg sm:rounded-xl text-[10.5px] sm:text-[11.5px] font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 ${
                     activeModal === 'notifications'
-                      ? 'bg-amber-50 border border-amber-300 text-amber-950 shadow-xs'
-                      : 'bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-800 hover:border-amber-400 hover:shadow-xs'
+                      ? 'bg-amber-50 border border-amber-300 text-amber-950 shadow-2xs'
+                      : 'bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-800 hover:border-amber-400 hover:shadow-2xs'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center border border-amber-500/20 group-hover:scale-110 group-hover:bg-amber-500/20 transition-all duration-150">
-                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center border border-amber-500/20 group-hover:scale-105 group-hover:bg-amber-500/20 transition-all duration-150 shrink-0">
+                      <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
                         <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
                       </svg>
                     </div>
-                    <span>Notifications</span>
+                    <span className="truncate">Notifications</span>
                   </div>
                   {unreadCount > 0 ? (
-                    <span className="w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center shadow-xs group-hover:scale-110 transition-transform">
+                    <span className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-rose-500 text-white text-[8px] sm:text-[8.5px] font-black flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform shrink-0">
                       {unreadCount}
                     </span>
                   ) : (
-                    <span className="text-[10px] text-slate-400 group-hover:text-slate-600 font-semibold transition-colors">All read</span>
+                    <span className="text-[9px] sm:text-[9.5px] text-slate-400 group-hover:text-slate-600 font-semibold transition-colors shrink-0">All read</span>
                   )}
                 </button>
               </div>
@@ -338,11 +351,11 @@ export function Login({ onLoginClick }) {
                     setDropdownOpen(false);
                     setActiveModal('logout');
                   }}
-                  className="group w-full p-2.5 rounded-2xl text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 flex items-center justify-between cursor-pointer active:scale-98 hover:bg-rose-100 hover:border-rose-300 hover:shadow-xs transition-all duration-150 focus:outline-none focus:ring-0"
+                  className="group w-full px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg sm:rounded-xl text-[10.5px] sm:text-[11.5px] font-bold text-rose-600 bg-rose-50 border border-rose-200 flex items-center justify-between cursor-pointer active:scale-98 hover:bg-rose-100 hover:border-rose-300 hover:shadow-2xs transition-all duration-150 focus:outline-none focus:ring-0"
                 >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-xl bg-rose-500/15 text-rose-600 flex items-center justify-center border border-rose-500/25 group-hover:scale-110 group-hover:bg-rose-500/25 transition-all duration-150">
-                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-rose-500/15 text-rose-600 flex items-center justify-center border border-rose-500/25 group-hover:scale-105 group-hover:bg-rose-500/25 transition-all duration-150 shrink-0">
+                      <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                         <polyline points="16 17 21 12 16 7" />
                         <line x1="21" y1="12" x2="9" y2="12" />
@@ -350,7 +363,7 @@ export function Login({ onLoginClick }) {
                     </div>
                     <span>Logout</span>
                   </div>
-                  <span className="text-[10px] font-bold group-hover:translate-x-0.5 transition-transform duration-150">Exit</span>
+                  <span className="text-[9px] sm:text-[9.5px] font-bold group-hover:translate-x-0.5 transition-transform duration-150 shrink-0">Exit</span>
                 </button>
               </div>
             </motion.div>

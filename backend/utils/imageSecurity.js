@@ -80,7 +80,12 @@ export function validateImageString(
     return { valid: false, error: `${fieldName} is required and must be a string.` };
   }
 
-  const trimmed = rawString.trim();
+  let trimmed = rawString.trim();
+
+  // Normalize data URI if 'data:' prefix was omitted (e.g. 'image/jpeg;base64,...')
+  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://') && !trimmed.startsWith('data:') && trimmed.startsWith('image/')) {
+    trimmed = `data:${trimmed}`;
+  }
 
   // Allow avatar initials (e.g. 'US', 'HO', 'JD')
   if (allowInitials && trimmed.length <= 4 && !trimmed.startsWith('http') && !trimmed.startsWith('data:')) {
@@ -123,7 +128,7 @@ export function validateImageString(
       };
     }
 
-    const base64Regex = /^data:image\/(jpeg|jpg|png|webp);base64,([A-Za-z0-9+/=]+)$/;
+    const base64Regex = /^data:image\/(jpeg|jpg|png|webp);base64,([A-Za-z0-9+/=\s]+)$/;
     const match = trimmed.match(base64Regex);
 
     if (!match) {
@@ -134,7 +139,7 @@ export function validateImageString(
     }
 
     const declaredSubtype = match[1].toLowerCase().replace('jpg', 'jpeg');
-    const base64Payload = match[2];
+    const base64Payload = match[2].replace(/\s+/g, '');
 
     // Estimate decoded byte length before allocation
     const padding = base64Payload.endsWith('==') ? 2 : base64Payload.endsWith('=') ? 1 : 0;
@@ -242,7 +247,12 @@ export function validateImageArray(
 export async function uploadSecureImage(imageInput, folder = 'roomscout/stays') {
   if (!imageInput || typeof imageInput !== 'string') return '';
 
-  const trimmed = imageInput.trim();
+  let trimmed = imageInput.trim();
+
+  // Normalize data URI if 'data:' prefix was omitted (e.g. 'image/jpeg;base64,...')
+  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://') && !trimmed.startsWith('data:') && trimmed.startsWith('image/')) {
+    trimmed = `data:${trimmed}`;
+  }
 
   // If already a hosted URL, validate and return
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {

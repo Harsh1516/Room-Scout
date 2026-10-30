@@ -4,11 +4,7 @@ import { motion } from 'framer-motion';
 /**
  * HostUploadTabs
  * Dedicated component for the Host Property Onboarding / Upload wizard navigation tabs.
- * - Bold, high-contrast active pill highlighted in BOTH Light and Dark themes.
- * - Razor-sharp text contrast with zero transparency bleeding.
- * - Smooth layout transition physics with Framer Motion.
- * - Completed step status checkmarks.
- * - Step change validation guard before advancing.
+ * Styled with Apple liquid glass capsule matching the exact user-side navigation aesthetic.
  */
 export function HostUploadTabs({
   steps = [],
@@ -19,31 +15,27 @@ export function HostUploadTabs({
   return (
     <nav
       aria-label="Host onboarding steps"
-      className="relative flex items-center p-1 rounded-full bg-slate-100/90 dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800/80 backdrop-blur-xl shadow-xs host-page-scope font-body-md"
+      className="apple-liquid-nav relative flex items-center p-1 sm:p-1.5 rounded-full border border-slate-200/80 dark:border-white/15 shadow-sm select-none font-body-md"
     >
       {steps.map((step) => {
         const isActive = step.id === activeStep;
-        const isPast = step.id < activeStep;
-        const isCompleted = typeof isStepCompleted === 'function' ? isStepCompleted(step.id) : isPast;
 
         return (
           <button
             key={step.id}
             type="button"
             onClick={() => onSelectStep(step.id)}
-            className={`relative px-4 py-1.5 rounded-full text-xs font-medium cursor-pointer flex items-center gap-1.5 select-none transition-colors duration-150 ${
+            className={`group relative py-1.5 sm:py-2 px-3 sm:px-3.5 rounded-full text-xs font-semibold tracking-tight transition-colors duration-200 flex items-center justify-center cursor-pointer z-10 select-none ${
               isActive
-                ? 'text-slate-900 dark:text-white font-semibold'
-                : isCompleted
-                ? 'text-emerald-700 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-emerald-200'
-                : 'text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200'
+                ? 'text-white dark:text-white font-semibold'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium'
             }`}
           >
-            {/* Floating Elevated Active Capsule Glider matching Pic 1 exactly */}
+            {/* Active Pill Glider */}
             {isActive && (
               <motion.div
-                layoutId="host-upload-pill-indicator"
-                className="absolute inset-0 rounded-full bg-white dark:bg-zinc-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_4px_rgba(0,0,0,0.5)] border border-slate-200/60 dark:border-zinc-700/60 pointer-events-none"
+                layoutId="hostUploadActiveCapsuleStep"
+                className="absolute inset-0 bg-[#006C4A] dark:bg-[#006C4A] rounded-full -z-10 shadow-md shadow-[#006C4A]/30"
                 transition={{
                   type: 'spring',
                   stiffness: 450,
@@ -53,13 +45,7 @@ export function HostUploadTabs({
               />
             )}
 
-            {isCompleted && (
-              <span className="relative z-10 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                ✓
-              </span>
-            )}
-
-            <span className="relative z-10 tracking-tight">
+            <span className="tracking-tight whitespace-nowrap">
               {step.shortTitle || step.title}
             </span>
           </button>

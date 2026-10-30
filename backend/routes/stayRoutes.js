@@ -3,6 +3,7 @@ import {
   getAllStays,
   getStayById,
   getStayAvailability,
+  getPublicStats,
   createStay,
   addReviewToStay,
   updateReviewInStay,
@@ -10,6 +11,7 @@ import {
   updateStayRooms,
   resolveMapLink,
   getPropertiesByHost,
+  resetStayRevenue,
 } from '../controllers/stayController.js';
 import { protect, requireHost } from '../middleware/authMiddleware.js';
 import { propertyUploadLimiter, reviewLimiter } from '../middleware/rateLimitMiddleware.js';
@@ -37,10 +39,14 @@ router.post(
 // Dynamic Room Availability Check
 router.get('/:id/availability', validate({ params: idParamSchema }), getStayAvailability);
 
+// Public platform summary stats (stays count, online users booked count)
+router.get('/public-stats', getPublicStats);
+
 // Stay Catalog & Inventory Routes
 router.route('/')
   .get(getAllStays)
   .post(propertyUploadLimiter, protect, requireHost, validate(createStaySchema), createStay);
+
 
 // 🔴 CRITICAL: Place this BEFORE router.route('/:id') so Express doesn't treat 'host' as an ID parameter
 router.get('/host/my-properties', protect, requireHost, getPropertiesByHost);
@@ -50,6 +56,9 @@ router.route('/:id')
 
 router.route('/:id/rooms')
   .put(protect, requireHost, validate({ params: idParamSchema, body: updateStayRoomsSchema }), updateStayRooms);
+
+router.route('/:id/reset-revenue')
+  .post(protect, requireHost, validate({ params: idParamSchema }), resetStayRevenue);
 
 router.route('/:id/reviews')
   .post(reviewLimiter, validate({ params: idParamSchema, body: reviewSchema }), protect, addReviewToStay);

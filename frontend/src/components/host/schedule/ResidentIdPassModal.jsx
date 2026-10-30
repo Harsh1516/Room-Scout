@@ -18,10 +18,6 @@ export function ResidentIdPassModal({
   isMonthly,
   modalGender,
   setModalGender,
-  modalAdults,
-  setModalAdults,
-  modalChildren,
-  setModalChildren,
   handleCancelEditFromModal,
   isSavingModalOccupant,
   roomDisplay,
@@ -192,10 +188,9 @@ export function ResidentIdPassModal({
               </div>
 
               <div>
-                <span className="text-[10px] font-medium uppercase tracking-wider text-slate-500 dark:text-zinc-400 block">Guests</span>
+                <span className="text-[10px] font-medium uppercase tracking-wider text-slate-500 dark:text-zinc-400 block">Person Count</span>
                 <span className="font-semibold text-slate-800 dark:text-zinc-200 mt-0.5 block text-xs">
-                  {selectedOccupantForModal.adults || 1} Adult{(selectedOccupantForModal.adults || 1) > 1 ? 's' : ''}
-                  {selectedOccupantForModal.children > 0 ? `, ${selectedOccupantForModal.children} Child` : ''}
+                  {selectedOccupantForModal.personCount || 1} Person{(Number(selectedOccupantForModal.personCount) || 1) > 1 ? 's' : ''}
                 </span>
               </div>
 
@@ -208,23 +203,75 @@ export function ResidentIdPassModal({
             </div>
 
             {/* Stay Duration Info */}
-            {modalStayInfo && (
-              <div className="p-2.5 rounded-xl bg-slate-50/90 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/80 space-y-1 text-xs shadow-xs">
-                <div className="flex items-center justify-between text-xs">
-                  <div>
-                    <span className="text-[9.5px] font-medium uppercase tracking-wider text-slate-500 dark:text-zinc-400 block">Check-In</span>
-                    <span className="font-semibold text-slate-800 dark:text-zinc-200 text-xs">{modalStayInfo.checkInFormatted}</span>
-                  </div>
-                  <div className="text-center px-1">
-                    <span className="text-[10.5px] font-semibold text-emerald-600 dark:text-emerald-400">{modalStayInfo.durationLabel}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[9.5px] font-medium uppercase tracking-wider text-slate-500 dark:text-zinc-400 block">Check-Out</span>
-                    <span className="font-semibold text-slate-800 dark:text-zinc-200 text-xs">{modalStayInfo.checkOutFormatted}</span>
+            {modalStayInfo && (() => {
+              const parseDateAndTiming = (val, explicitTime) => {
+                if (explicitTime) {
+                  return {
+                    date: typeof val === 'string' ? val.replace(/\s*\([^)]*\)/, '').trim() : String(val || ''),
+                    timing: explicitTime,
+                  };
+                }
+                if (!val) return { date: '', timing: '' };
+                const str = String(val).trim();
+                const match = str.match(/^(.*?)(?:\s*\((.*?)\))$/);
+                if (match && match[2]) {
+                  return {
+                    date: match[1].trim(),
+                    timing: match[2].trim(),
+                  };
+                }
+                return { date: str, timing: '' };
+              };
+
+              const inInfo = parseDateAndTiming(
+                modalStayInfo.checkInDate || modalStayInfo.checkInFormatted,
+                modalStayInfo.checkInTime
+              );
+              const outInfo = parseDateAndTiming(
+                modalStayInfo.checkOutDate || modalStayInfo.checkOutFormatted,
+                modalStayInfo.checkOutTime
+              );
+
+              return (
+                <div className="p-2.5 rounded-xl bg-slate-50/90 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/80 space-y-1 text-xs shadow-xs">
+                  <div className="flex items-center justify-between text-xs">
+                    <div>
+                      <span className="text-[9.5px] font-medium uppercase tracking-wider text-slate-500 dark:text-zinc-400 block">
+                        Check-In
+                      </span>
+                      <span className="font-semibold text-slate-800 dark:text-zinc-200 text-xs block leading-tight mt-0.5">
+                        {inInfo.date}
+                      </span>
+                      {inInfo.timing && (
+                        <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium block leading-tight mt-0.5">
+                          ({inInfo.timing})
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="text-center px-1 shrink-0">
+                      <span className="text-[10.5px] font-semibold text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40">
+                        {modalStayInfo.durationLabel}
+                      </span>
+                    </div>
+
+                    <div className="text-right">
+                      <span className="text-[9.5px] font-medium uppercase tracking-wider text-slate-500 dark:text-zinc-400 block">
+                        Check-Out
+                      </span>
+                      <span className="font-semibold text-slate-800 dark:text-zinc-200 text-xs block leading-tight mt-0.5">
+                        {outInfo.date}
+                      </span>
+                      {outInfo.timing && (
+                        <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium block leading-tight mt-0.5">
+                          ({outInfo.timing})
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Modal Actions */}
             <div className="flex items-center justify-between gap-2 pt-2.5 border-t border-slate-200/80 dark:border-zinc-800">

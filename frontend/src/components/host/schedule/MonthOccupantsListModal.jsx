@@ -187,7 +187,7 @@ export function MonthOccupantsListModal({
 
                 return (
                   <div
-                    key={occ.bookingId || occ.id || occ._id || `occ_${idx}`}
+                    key={occ.bookingId || occ._id || `occ_${idx}`}
                     onClick={() => {
                       if (typeof onSelectOccupant === 'function') {
                         onSelectOccupant(occ);

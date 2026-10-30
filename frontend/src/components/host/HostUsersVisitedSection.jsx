@@ -1,4 +1,4 @@
-import React, { useState, useMemo, lazy, Suspense } from 'react';
+import { useState, useMemo, useDeferredValue, lazy, Suspense } from 'react';
 import { bookingsAPI } from '../../services/api';
 
 const ResidentIdPassModal = lazy(() =>
@@ -6,20 +6,104 @@ const ResidentIdPassModal = lazy(() =>
 );
 
 import { VisitedSubNavbar } from './visited/VisitedSubNavbar';
-import { VisitedCategoriesPanel } from './visited/VisitedCategoriesPanel';
-import { VisitedGuestCard } from './visited/VisitedGuestCard';
+import { PaidUsersList } from './paid/PaidUsersList';
+import { VisitedRequestsView } from './visited/VisitedRequestsView';
+import { HostPaymentVerificationModal } from './HostPaymentVerificationModal';
+import { CheckInVerificationModal } from './CheckInVerificationModal';
+
+function formatIdNumber(raw) {
+  if (!raw) return '';
+  const digits = String(raw).replace(/\D/g, '');
+  if (digits.length === 12) {
+    return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+  }
+  return String(raw).trim();
+}
+
+function extractDateKey(dateVal) {
+  if (!dateVal) return '';
+  if (Array.isArray(dateVal)) return dateVal.length > 0 ? extractDateKey(dateVal[0]) : '';
+  const str = String(dateVal).trim();
+  const d = new Date(str);
+  if (!isNaN(d.getTime())) {
+    const year = d.getFullYear() < 2025 ? 2026 : d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  const match = str.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    const [, y, m, d] = match;
+    const finalYear = parseInt(y, 10) < 2025 ? '2026' : y;
+    return `${finalYear}-${m}-${d}`;
+  }
+  return str;
+}
+
+function parseCleanDate(rawStr) {
+  if (!rawStr) return null;
+  if (rawStr instanceof Date) {
+    if (isNaN(rawStr.getTime())) return null;
+    const year = rawStr.getFullYear() < 2025 ? 2026 : rawStr.getFullYear();
+    return new Date(year, rawStr.getMonth(), rawStr.getDate(), 12, 0, 0);
+  }
+  if (typeof rawStr === 'string') {
+    const trimmed = rawStr.trim();
+    const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (isoMatch) {
+      const y = Number(isoMatch[1]);
+      const m = Number(isoMatch[2]);
+      const d = Number(isoMatch[3]);
+      const year = y < 2025 ? 2026 : y;
+      return new Date(year, m - 1, d, 12, 0, 0);
+    }
+  }
+  const parsed = new Date(rawStr);
+  if (!isNaN(parsed.getTime())) {
+    const year = parsed.getFullYear() < 2025 ? 2026 : parsed.getFullYear();
+    return new Date(year, parsed.getMonth(), parsed.getDate(), 12, 0, 0);
+  }
+  return null;
+}
+
+function formatModalDate(rawDateStr, fallbackTime = '') {
+  if (!rawDateStr || rawDateStr === '—') return rawDateStr || '—';
+  if (typeof rawDateStr === 'string' && rawDateStr.includes('(') && rawDateStr.includes(')')) {
+    return rawDateStr;
+  }
+  const d = parseCleanDate(rawDateStr);
+  if (!d) return String(rawDateStr || '—');
+  const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+  const dateNum = d.getDate();
+  const monthName = d.toLocaleDateString('en-US', { month: 'short' });
+  const yearNum = d.getFullYear();
+  return `${dayName} ${dateNum} ${monthName} ${yearNum}${fallbackTime ? ` (${fallbackTime})` : ''}`;
+}
 
 export function HostUsersVisitedSection({
   guests = [],
   setGuests,
   hostProperty,
-  setHostProperty,
   showToast = () => {},
   refreshGuests = () => {},
   broadcastStayUpdate = () => {},
   onSelectUserRequest = () => {},
+  subTab: externalSubTab,
+  setSubTab: externalSetSubTab,
 }) {
-  const [subTab, setSubTab] = useState('checkin');
+  const [internalSubTab, setInternalSubTab] = useState('requests');
+  const activeSubTab = externalSubTab || internalSubTab;
+
+  const handleSubTabChange = (nextTab) => {
+    if (typeof externalSetSubTab === 'function') {
+      externalSetSubTab(nextTab);
+    }
+    setInternalSubTab(nextTab);
+  };
+
+  const [scope, setScope] = useState('today');
+  const [searchQuery, setSearchQuery] = useState('');
+  const deferredSearchQuery = useDeferredValue(searchQuery);
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [selectedRoomNumber, setSelectedRoomNumber] = useState('ALL');
   const [actionLoadingId, setActionLoadingId] = useState(null);
@@ -38,6 +122,8 @@ export function HostUsersVisitedSection({
   const [isSavingModalOccupant, setIsSavingModalOccupant] = useState(false);
   const [confirmModalDelete, setConfirmModalDelete] = useState(false);
   const [isRemovingModalOccupant, setIsRemovingModalOccupant] = useState(false);
+  const [verifyingPaymentBooking, setVerifyingPaymentBooking] = useState(null);
+  const [checkingInBooking, setCheckingInBooking] = useState(null);
 
   // Current Local Date ISO
   const todayISO = useMemo(() => {
@@ -55,36 +141,7 @@ export function HostUsersVisitedSection({
         .map((rm) => String(rm.roomNumber || '').replace(/[^0-9]/g, ''))
         .filter(Boolean)
     );
-  }, [hostProperty?.rooms]);
-
-  const formatIdNumber = (raw) => {
-    if (!raw) return '';
-    const digits = String(raw).replace(/\D/g, '');
-    if (digits.length === 12) {
-      return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
-    }
-    return String(raw).trim();
-  };
-
-  const extractDateKey = (dateVal) => {
-    if (!dateVal) return '';
-    if (Array.isArray(dateVal)) return dateVal.length > 0 ? extractDateKey(dateVal[0]) : '';
-    const str = String(dateVal).trim();
-    const d = new Date(str);
-    if (!isNaN(d.getTime())) {
-      const year = d.getFullYear() < 2025 ? 2026 : d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
-    const match = str.match(/(\d{4})-(\d{2})-(\d{2})/);
-    if (match) {
-      let [_, y, m, d] = match;
-      if (parseInt(y, 10) < 2025) y = '2026';
-      return `${y}-${m}-${d}`;
-    }
-    return str;
-  };
+  }, [hostProperty]);
 
   const mergedGuests = useMemo(() => {
     return Array.isArray(guests) ? guests : [];
@@ -105,14 +162,40 @@ export function HostUsersVisitedSection({
     });
   }, [mergedGuests, activeRoomNumbers]);
 
-  const todayCheckIns = useMemo(() => {
+  const todayPendingRequests = useMemo(() => {
+    return pendingRequests.filter((g) => {
+      const dKey = extractDateKey(g.createdAt || g.checkInISO || g.checkIn || g.date);
+      return dKey === todayISO;
+    });
+  }, [pendingRequests, todayISO]);
+
+  // Check-ins (All vs Today) - sorted recent / upcoming check-in date first
+  const allCheckIns = useMemo(() => {
     return mergedGuests.filter((g) => {
       const st = String(g.status || '').toUpperCase();
-      if (st === 'REJECTED' || st === 'CANCELLED' || st.includes('PENDING') || st === 'CHECKED_OUT') return false;
+      if (
+        st === 'REJECTED' ||
+        st === 'CANCELLED' ||
+        st.includes('PENDING') ||
+        st === 'CHECKED_OUT' ||
+        st === 'COMPLETED' ||
+        st === 'EXPIRED'
+      ) return false;
 
       const gRoomNum = String(g.roomNumber || '').replace(/[^0-9]/g, '');
       if (activeRoomNumbers.size > 0 && (!gRoomNum || !activeRoomNumbers.has(gRoomNum))) return false;
 
+      return Boolean(g.checkIn || g.checkInISO || g.date || g.bookingId || g._id);
+    }).sort((a, b) => {
+      const dateA = new Date(a.checkInISO || a.checkIn || a.date || 0).getTime();
+      const dateB = new Date(b.checkInISO || b.checkIn || b.date || 0).getTime();
+      if (!isNaN(dateA) && !isNaN(dateB) && dateA !== dateB) return dateA - dateB;
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    });
+  }, [mergedGuests, activeRoomNumbers]);
+
+  const todayCheckIns = useMemo(() => {
+    return allCheckIns.filter((g) => {
       const dateSources = [g.checkInISO, g.checkIn].filter(Boolean);
       const isToday = dateSources.some((src) => extractDateKey(src) === todayISO);
       if (isToday) return true;
@@ -125,28 +208,82 @@ export function HostUsersVisitedSection({
       }
       return false;
     });
-  }, [mergedGuests, activeRoomNumbers, todayISO]);
+  }, [allCheckIns, todayISO]);
 
-  const todayCheckOuts = useMemo(() => {
+  // Check-Outs / Departures (All vs Today) - sorted recent / upcoming departure date first
+  const allCheckOuts = useMemo(() => {
     return mergedGuests.filter((g) => {
       const st = String(g.status || '').toUpperCase();
-      if (st === 'REJECTED' || st === 'CANCELLED' || st.includes('PENDING')) return false;
+      if (
+        st === 'REJECTED' ||
+        st === 'CANCELLED' ||
+        st.includes('PENDING') ||
+        st === 'EXPIRED' ||
+        st === 'CHECKED_OUT' ||
+        st === 'COMPLETED'
+      ) return false;
 
       const gRoomNum = String(g.roomNumber || '').replace(/[^0-9]/g, '');
       if (activeRoomNumbers.size > 0 && (!gRoomNum || !activeRoomNumbers.has(gRoomNum))) return false;
 
+      return Boolean(g.checkOut || g.checkOutISO || g.checkIn || g.bookingId || g._id);
+    }).sort((a, b) => {
+      const dateA = new Date(a.checkOutISO || a.checkOut || a.date || 0).getTime();
+      const dateB = new Date(b.checkOutISO || b.checkOut || b.date || 0).getTime();
+      if (!isNaN(dateA) && !isNaN(dateB) && dateA !== dateB) return dateA - dateB;
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    });
+  }, [mergedGuests, activeRoomNumbers]);
+
+  const todayCheckOuts = useMemo(() => {
+    return allCheckOuts.filter((g) => {
       const checkOutKey = extractDateKey(g.checkOutISO || g.checkOut);
       if (checkOutKey === todayISO) return true;
 
+      if (g.checkOut) {
+        const today = new Date();
+        const shortMonth = today.toLocaleDateString('en-US', { month: 'short' });
+        const dayNum = today.getDate();
+        if (g.checkOut.includes(shortMonth) && g.checkOut.includes(String(dayNum))) return true;
+      }
       return false;
     });
-  }, [mergedGuests, activeRoomNumbers, todayISO]);
+  }, [allCheckOuts, todayISO]);
+
+  // Confirmed Paid Residents
+  const activePaidUsers = useMemo(() => {
+    return mergedGuests.filter((g) => {
+      const gRoom = String(g.roomNumber || '').replace(/[^0-9]/g, '');
+      if (activeRoomNumbers.size > 0 && (!gRoom || !activeRoomNumbers.has(gRoom))) return false;
+
+      const st = String(g.status || '').toUpperCase();
+      const ps = String(g.paymentStatus || '').toUpperCase();
+
+      if (st === 'REJECTED' || st === 'CANCELLED' || st === 'EXPIRED') return false;
+
+      const hasAmount = Number(g.totalAmount || g.paidAmount) > 0;
+      const isPaidStatus = ps === 'PAID' || ps === 'VERIFIED' || ps === 'COMPLETED' || g.isPaid === true;
+      const isOfflineBooking = g.bookingSource === 'OFFLINE_HOST' || g.source === 'offline' || g.paymentMethod === 'OFFLINE';
+
+      const isPaid = isPaidStatus || hasAmount || isOfflineBooking;
+      if (!isPaid) return false;
+
+      return st === 'CONFIRMED' || st === 'CHECKED_IN' || st === 'PAID' || !st.includes('PENDING');
+    });
+  }, [mergedGuests, activeRoomNumbers]);
 
   const activeSubTabGuests = useMemo(() => {
-    if (subTab === 'requests') return pendingRequests;
-    if (subTab === 'checkin') return todayCheckIns;
-    return todayCheckOuts;
-  }, [subTab, pendingRequests, todayCheckIns, todayCheckOuts]);
+    if (activeSubTab === 'requests') {
+      return pendingRequests;
+    }
+    if (activeSubTab === 'checkout') {
+      return scope === 'today' ? todayCheckOuts : allCheckOuts;
+    }
+    if (activeSubTab === 'paid') {
+      return activePaidUsers;
+    }
+    return scope === 'today' ? todayCheckIns : allCheckIns;
+  }, [activeSubTab, scope, pendingRequests, todayCheckOuts, allCheckOuts, todayCheckIns, allCheckIns, activePaidUsers]);
 
   const visibleCategoriesWithRooms = useMemo(() => {
     const categoryMap = {};
@@ -182,16 +319,41 @@ export function HostUsersVisitedSection({
   }, [activeSubTabGuests, activeRoomNumbers]);
 
   const displayedGuests = useMemo(() => {
-    return activeSubTabGuests.filter((g) => {
+    const q = deferredSearchQuery.trim().toLowerCase();
+    const filtered = activeSubTabGuests.filter((g) => {
       const gRoomType = (g.roomType || 'Standard').trim().toLowerCase();
       const gRoomNumber = String(g.roomNumber || '').replace(/[^0-9]/g, '');
 
       if (activeRoomNumbers.size > 0 && (!gRoomNumber || !activeRoomNumbers.has(gRoomNumber))) return false;
       if (selectedCategory !== 'ALL' && gRoomType !== selectedCategory.trim().toLowerCase()) return false;
       if (selectedRoomNumber !== 'ALL' && gRoomNumber !== selectedRoomNumber.replace(/[^0-9]/g, '')) return false;
+
+      if (q) {
+        const name = String(g.userName || g.fullName || g.guestName || '').toLowerCase();
+        const phone = String(g.userPhone || g.phone || g.guestPhone || '').toLowerCase();
+        const room = String(g.roomNumber || '').toLowerCase();
+        const bId = String(g.bookingId || g._id || '').toLowerCase();
+        if (!name.includes(q) && !phone.includes(q) && !room.includes(q) && !bId.includes(q)) {
+          return false;
+        }
+      }
+
       return true;
     });
-  }, [activeSubTabGuests, selectedCategory, selectedRoomNumber, activeRoomNumbers]);
+
+    return [...filtered].sort((a, b) => {
+      if (activeSubTab === 'checkout') {
+        const dateA = new Date(a.checkOutISO || a.checkOut || a.date || 0).getTime();
+        const dateB = new Date(b.checkOutISO || b.checkOut || b.date || 0).getTime();
+        if (!isNaN(dateA) && !isNaN(dateB) && dateA !== dateB) return dateA - dateB;
+      } else if (activeSubTab === 'checkin') {
+        const dateA = new Date(a.checkInISO || a.checkIn || a.date || 0).getTime();
+        const dateB = new Date(b.checkInISO || b.checkIn || b.date || 0).getTime();
+        if (!isNaN(dateA) && !isNaN(dateB) && dateA !== dateB) return dateA - dateB;
+      }
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    });
+  }, [activeSubTabGuests, activeSubTab, selectedCategory, selectedRoomNumber, activeRoomNumbers, deferredSearchQuery]);
 
   const handleOpenOccupantModal = (guestRecord) => {
     if (!guestRecord) return;
@@ -245,7 +407,7 @@ export function HostUsersVisitedSection({
 
     setIsSavingModalOccupant(true);
     try {
-      const targetId = selectedOccupantForModal.bookingId || selectedOccupantForModal._id || selectedOccupantForModal.id;
+      const targetId = selectedOccupantForModal.bookingId || selectedOccupantForModal._id;
       if (targetId) {
         await bookingsAPI.updateBookingStatus(targetId, {
           userName: cleanName,
@@ -266,7 +428,7 @@ export function HostUsersVisitedSection({
 
       setGuests((prev) =>
         prev.map((g) => {
-          const match = (g.bookingId || g._id || g.id) === targetId;
+          const match = (g.bookingId || g._id) === targetId;
           if (match) {
             return {
               ...g,
@@ -314,7 +476,7 @@ export function HostUsersVisitedSection({
   const handleRemoveOccupant = async (occupant) => {
     if (!occupant) return;
     setIsRemovingModalOccupant(true);
-    const targetId = occupant.bookingId || occupant._id || occupant.id || occupant.bookingReferenceId;
+    const targetId = occupant.bookingId || occupant._id || occupant.bookingReferenceId;
     const phone = occupant.phone || occupant.userPhone || occupant.guestPhone || '';
     const cleanPhone = String(phone).replace(/\D/g, '').slice(-10);
     const roomNum = occupant.roomNumber || '';
@@ -323,7 +485,7 @@ export function HostUsersVisitedSection({
     // 1. Optimistic local removal
     setGuests((prev) =>
       prev.filter((g) => {
-        const gId = g.bookingId || g._id || g.id;
+        const gId = g.bookingId || g._id;
         if (targetId && gId && (gId === targetId || String(gId) === String(targetId))) return false;
         if (occupant.bookingReferenceId && g.bookingReferenceId === occupant.bookingReferenceId) return false;
         const gPhone = String(g.userPhone || g.phone || g.guestPhone || '').replace(/\D/g, '').slice(-10);
@@ -343,8 +505,8 @@ export function HostUsersVisitedSection({
         slotBookingId: occupant.slotBookingId,
         phone: cleanPhone || phone,
         name: occupant.name || occupant.fullName || occupant.guestName || occupant.userName,
-        stayId: hostProperty?._id || hostProperty?.id,
-        hostId: hostProperty?.hostId?._id || hostProperty?.hostId || hostProperty?._id || hostProperty?.id,
+        stayId: hostProperty?._id,
+        hostId: hostProperty?.hostId?._id || hostProperty?.hostId || hostProperty?._id,
       });
 
       if (targetId && !String(targetId).startsWith('res_')) {
@@ -354,7 +516,7 @@ export function HostUsersVisitedSection({
       showToast('Occupant removed and slots released.', 'success');
       handleCloseOccupantModal();
       refreshGuests();
-      const propId = hostProperty?._id || hostProperty?.id;
+      const propId = hostProperty?._id;
       if (propId) broadcastStayUpdate(propId);
       window.dispatchEvent(new Event('stayhub_slots_updated'));
       window.dispatchEvent(new Event('stayhub_rooms_updated'));
@@ -367,46 +529,6 @@ export function HostUsersVisitedSection({
       setIsRemovingModalOccupant(false);
       setConfirmModalDelete(false);
     }
-  };
-
-  const parseCleanDate = (rawStr) => {
-    if (!rawStr) return null;
-    if (rawStr instanceof Date) {
-      if (isNaN(rawStr.getTime())) return null;
-      const year = rawStr.getFullYear() < 2025 ? 2026 : rawStr.getFullYear();
-      return new Date(year, rawStr.getMonth(), rawStr.getDate(), 12, 0, 0);
-    }
-    if (typeof rawStr === 'string') {
-      const trimmed = rawStr.trim();
-      const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
-      if (isoMatch) {
-        const y = Number(isoMatch[1]);
-        const m = Number(isoMatch[2]);
-        const d = Number(isoMatch[3]);
-        const year = y < 2025 ? 2026 : y;
-        return new Date(year, m - 1, d, 12, 0, 0);
-      }
-    }
-    const parsed = new Date(rawStr);
-    if (!isNaN(parsed.getTime())) {
-      const year = parsed.getFullYear() < 2025 ? 2026 : parsed.getFullYear();
-      return new Date(year, parsed.getMonth(), parsed.getDate(), 12, 0, 0);
-    }
-    return null;
-  };
-
-  const formatModalDate = (rawDateStr, fallbackTime = '') => {
-    if (!rawDateStr || rawDateStr === '—') return rawDateStr || '—';
-    if (typeof rawDateStr === 'string' && rawDateStr.includes('(') && rawDateStr.includes(')')) {
-      return rawDateStr;
-    }
-    const d = parseCleanDate(rawDateStr);
-    if (!d) return String(rawDateStr || '—');
-    const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
-    const dateNum = d.getDate();
-    const monthName = d.toLocaleDateString('en-US', { month: 'short' });
-    const yearNum = d.getFullYear();
-    return `${dayName} ${dateNum} ${monthName} ${yearNum}${fallbackTime ? ` (${fallbackTime})` : ''}`;
   };
 
   const modalStayInfo = useMemo(() => {
@@ -454,38 +576,73 @@ export function HostUsersVisitedSection({
   }, [selectedOccupantForModal]);
 
   const handleApproveRequest = async (request) => {
-    const bookingId = request.bookingId || request._id || request.id;
+    const bookingId = request.bookingId || request._id;
     if (!bookingId) return;
     setActionLoadingId(bookingId);
+
+    const isOnline =
+      request.bookingSource === 'ONLINE' ||
+      request.isOnline === true ||
+      (request.source === 'booking' && request.bookingSource !== 'OFFLINE_HOST');
+
+    const nextStatus = isOnline ? 'AWAITING_PAYMENT' : 'CONFIRMED';
+    const approvedAt = new Date().toISOString();
+    const deadline = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+
+    // Optimistically update status so request card immediately animates and transitions
+    setGuests((prev) =>
+      prev.map((item) =>
+        (item.bookingId || item._id) === bookingId
+          ? {
+              ...item,
+              status: nextStatus,
+              approvedAt,
+              paymentDeadline: isOnline ? deadline : null,
+              paymentStatus: isOnline ? 'UNPAID' : 'PAID',
+            }
+          : item
+      )
+    );
+
     try {
-      await bookingsAPI.updateBookingStatus(bookingId, { status: 'CONFIRMED' });
-      setGuests((prev) =>
-        prev.map((item) => ((item.bookingId || item._id || item.id) === bookingId ? { ...item, status: 'CONFIRMED' } : item))
-      );
-      const propId = hostProperty?._id || hostProperty?.id;
+      await bookingsAPI.updateBookingStatus(bookingId, {
+        status: nextStatus,
+        approvedAt,
+        paymentDeadline: isOnline ? deadline : null,
+        paymentStatus: isOnline ? 'UNPAID' : 'PAID',
+      });
+      const propId = hostProperty?._id;
       if (propId) broadcastStayUpdate(propId);
       window.dispatchEvent(new Event('stayhub_slots_updated'));
       window.dispatchEvent(new Event('stayhub_rooms_updated'));
-      showToast(`Booking for Room ${request.roomNumber} approved!`, 'success');
+      window.dispatchEvent(new Event('stayhub_my_bookings_updated'));
+
+      if (isOnline) {
+        showToast(`Request for Room ${request.roomNumber} approved! Guest has 5 minutes to complete direct UPI payment.`, 'success');
+      } else {
+        showToast(`Offline booking for Room ${request.roomNumber} confirmed!`, 'success');
+      }
       refreshGuests();
     } catch (err) {
       console.error('Error approving request:', err);
       showToast('Failed to approve booking request.', 'error');
+      refreshGuests();
     } finally {
       setActionLoadingId(null);
     }
   };
 
   const handleRejectRequest = async (request) => {
-    const bookingId = request.bookingId || request._id || request.id;
+    const bookingId = request.bookingId || request._id;
     if (!bookingId) return;
     setActionLoadingId(bookingId);
+    // Optimistically update status to REJECTED so request card immediately animates and disappears
+    setGuests((prev) =>
+      prev.map((item) => ((item.bookingId || item._id) === bookingId ? { ...item, status: 'REJECTED' } : item))
+    );
     try {
       await bookingsAPI.updateBookingStatus(bookingId, { status: 'REJECTED' });
-      setGuests((prev) =>
-        prev.map((item) => ((item.bookingId || item._id || item.id) === bookingId ? { ...item, status: 'REJECTED' } : item))
-      );
-      const propId = hostProperty?._id || hostProperty?.id;
+      const propId = hostProperty?._id;
       if (propId) broadcastStayUpdate(propId);
       window.dispatchEvent(new Event('stayhub_slots_updated'));
       showToast('Booking request rejected.', 'info');
@@ -493,164 +650,148 @@ export function HostUsersVisitedSection({
     } catch (err) {
       console.error('Error rejecting request:', err);
       showToast('Failed to reject request', 'error');
+      refreshGuests();
     } finally {
       setActionLoadingId(null);
     }
   };
 
-  const handleMarkCheckIn = async (booking) => {
-    const bookingId = booking.bookingId || booking._id || booking.id;
-    if (!bookingId) return;
-    setActionLoadingId(bookingId);
-    try {
-      await bookingsAPI.updateBookingStatus(bookingId, { status: 'CHECKED_IN' });
-
-      setGuests((prev) =>
-        prev.map((item) => ((item.bookingId || item._id || item.id) === bookingId ? { ...item, status: 'CHECKED_IN' } : item))
-      );
-      showToast(`Guest ${booking.userName || 'Guest'} marked as CHECKED IN!`, 'success');
-      refreshGuests();
-    } catch (err) {
-      showToast('Failed to update check-in status', 'error');
-    } finally {
-      setActionLoadingId(null);
-    }
+  const handleMarkCheckIn = (booking) => {
+    if (!booking) return;
+    setCheckingInBooking(booking);
   };
 
   const handleMarkCheckOut = async (booking) => {
-    const bookingId = booking.bookingId || booking._id || booking.id;
+    const bookingId = booking.bookingId || booking._id;
     if (!bookingId) return;
     setActionLoadingId(bookingId);
     try {
-      await bookingsAPI.updateBookingStatus(bookingId, { status: 'CHECKED_OUT' });
+      const targetId = (booking._id && /^[0-9a-fA-F]{24}$/.test(booking._id)) ? booking._id : bookingId;
+      await bookingsAPI.updateBookingStatus(targetId, { status: 'CHECKED_OUT' });
       setGuests((prev) =>
-        prev.map((item) => ((item.bookingId || item._id || item.id) === bookingId ? { ...item, status: 'CHECKED_OUT' } : item))
+        prev.map((item) => {
+          const match =
+            (item.bookingId && item.bookingId === booking.bookingId) ||
+            (item._id && item._id === booking._id) ||
+            (item.bookingReferenceId && item.bookingReferenceId === booking.bookingReferenceId);
+          return match ? { ...item, status: 'CHECKED_OUT' } : item;
+        })
       );
-      const propId = hostProperty?._id || hostProperty?.id;
+      const propId = hostProperty?._id;
       if (propId) broadcastStayUpdate(propId);
-      window.dispatchEvent(new Event('stayhub_slots_updated'));
-      window.dispatchEvent(new Event('stayhub_rooms_updated'));
-      showToast(`Guest ${booking.userName || booking.guestName || ''} marked as CHECKED OUT!`, 'info');
+      ['stayhub_slots_updated', 'stayhub_rooms_updated', 'stayhub_admin_sync'].forEach((e) =>
+        window.dispatchEvent(new CustomEvent(e, { detail: { sender: 'HostDashboard' } }))
+      );
+      localStorage.setItem('stayhub_admin_sync_ts', String(Date.now()));
+      showToast(`Guest ${booking.userName || booking.guestName || 'Guest'} checked out successfully!`, 'info');
       refreshGuests();
     } catch (err) {
       console.error('Error updating check-out:', err);
-      showToast('Failed to update check-out status', 'error');
+      showToast('Failed to check out guest', 'error');
     } finally {
       setActionLoadingId(null);
     }
   };
 
   return (
-    <div className="space-y-4">
-      <VisitedSubNavbar
-        subTab={subTab}
-        setSubTab={setSubTab}
-        pendingCount={pendingRequests.length}
-        checkInCount={todayCheckIns.length}
-        checkOutCount={todayCheckOuts.length}
-        onResetFilter={() => {
-          setSelectedCategory('ALL');
-          setSelectedRoomNumber('ALL');
-        }}
-      />
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
-        <VisitedCategoriesPanel
-          subTab={subTab}
-          categoriesWithRooms={visibleCategoriesWithRooms}
-          selectedCategory={selectedCategory}
-          selectedRoomNumber={selectedRoomNumber}
-          onSelectCategory={(catType) => {
-            if (selectedCategory === catType) {
-              setSelectedCategory('ALL');
-              setSelectedRoomNumber('ALL');
-            } else {
-              setSelectedCategory(catType);
-              setSelectedRoomNumber('ALL');
-            }
-          }}
-          onSelectRoom={(rm) => {
-            setSelectedCategory(rm.primaryGuest?.roomType || 'Standard');
-            setSelectedRoomNumber(rm.roomNumber);
-            const target = rm.allGuestsInRoom?.find((g) => g.roomNumber === rm.roomNumber) || rm.primaryGuest;
-            if (target) handleOpenOccupantModal(target);
-          }}
+    <div className="w-full flex-1 min-h-0 flex flex-col space-y-2.5">
+      {/* Top command bar: segmented scope toggle + calendar date info */}
+      {activeSubTab !== 'paid' && (
+        <VisitedSubNavbar
+          operationTab={activeSubTab}
+          setOperationTab={handleSubTabChange}
+          scope={scope}
+          setScope={setScope}
+          pendingCount={pendingRequests.length}
+          todayPendingCount={todayPendingRequests.length}
+          todayCheckInCount={todayCheckIns.length}
+          allCheckInCount={allCheckIns.length}
+          todayCheckOutCount={todayCheckOuts.length}
+          allCheckOutCount={allCheckOuts.length}
+          paidUsersCount={activePaidUsers.length}
           onResetFilter={() => {
             setSelectedCategory('ALL');
             setSelectedRoomNumber('ALL');
+            setSearchQuery('');
           }}
         />
+      )}
 
-        <div className="lg:col-span-2 space-y-4">
-          {/* Subtle Notification for Incoming Online Requests in Check-in Tab */}
-          {subTab === 'checkin' && pendingRequests.length > 0 && (
-            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 shadow-xs">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
-                <span className="text-xs font-medium truncate">
-                  <strong className="font-semibold">{pendingRequests.length} new online request{pendingRequests.length > 1 ? 's' : ''}</strong> awaiting review.
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSubTab('requests')}
-                className="text-xs font-bold text-amber-900 dark:text-amber-300 hover:text-amber-700 dark:hover:text-amber-200 underline cursor-pointer shrink-0 ml-2"
-              >
-                Review in Requests Tab →
-              </button>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between px-1">
-            <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-zinc-400">
-              {subTab === 'requests'
-                ? `Pending Requests (${displayedGuests.length})`
-                : subTab === 'checkin'
-                ? `Today's Check-Ins (${displayedGuests.length})`
-                : `Today's Check-Outs (${displayedGuests.length})`}
-            </h3>
-
-            {(selectedCategory !== 'ALL' || selectedRoomNumber !== 'ALL') && (
-              <span className="text-[11px] font-semibold text-purple-600 dark:text-purple-400">
-                Filtered: {selectedCategory !== 'ALL' ? selectedCategory : ''} {selectedRoomNumber !== 'ALL' ? `(Room ${selectedRoomNumber})` : ''}
-              </span>
-            )}
-          </div>
-
-          {displayedGuests.length === 0 ? (
-            <div className="p-8 rounded-2xl bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-white/10 shadow-sm text-center space-y-2">
-              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 flex items-center justify-center text-lg mx-auto text-slate-500 dark:text-zinc-400 shadow-2xs">
-                🏨
-              </div>
-              <h4 className="text-xs font-bold text-slate-900 dark:text-white">
-                No matching guests found
-              </h4>
-              <p className="text-[11px] text-slate-500 dark:text-zinc-400 max-w-sm mx-auto">
-                No guests in this category or room card match the selected filter.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-3">
-              {displayedGuests.map((g, idx) => (
-                <VisitedGuestCard
-                  key={g.bookingId || idx}
-                  guest={g}
-                  subTab={subTab}
-                  isLoading={actionLoadingId === (g.bookingId || g._id || g.id)}
-                  onOpenModal={handleOpenOccupantModal}
-                  onSelectUserRequest={onSelectUserRequest}
-                  onApproveRequest={handleApproveRequest}
-                  onRejectRequest={handleRejectRequest}
-                  onMarkCheckIn={handleMarkCheckIn}
-                  onMarkCheckOut={handleMarkCheckOut}
-                  formatIdNumber={formatIdNumber}
-                  formatModalDate={formatModalDate}
-                />
-              ))}
-            </div>
-          )}
+      {/* When Paid Users is selected, render the dedicated Paid Users Roster */}
+      {activeSubTab === 'paid' ? (
+        <div className="w-full flex-1 flex flex-col min-h-0 pt-1">
+          <PaidUsersList
+            guests={activePaidUsers}
+            allGuests={mergedGuests}
+            setGuests={setGuests}
+            hostProperty={hostProperty}
+            showToast={showToast}
+            refreshGuests={refreshGuests}
+            broadcastStayUpdate={broadcastStayUpdate}
+            onBack={() => handleSubTabChange('checkin')}
+            onSelectUserRequest={onSelectUserRequest}
+          />
         </div>
-      </div>
+      ) : (
+        <div className="w-full flex-1 min-h-0 flex flex-col">
+          <VisitedRequestsView
+            subTab={activeSubTab}
+            displayedGuests={displayedGuests}
+            allRequests={activeSubTabGuests}
+            allGuests={mergedGuests}
+            categoriesWithRooms={visibleCategoriesWithRooms}
+            hostProperty={hostProperty}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+            selectedRoomNumber={selectedRoomNumber}
+            onSelectRoom={setSelectedRoomNumber}
+            onResetFilter={() => {
+              setSelectedCategory('ALL');
+              setSelectedRoomNumber('ALL');
+              setSearchQuery('');
+            }}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            actionLoadingId={actionLoadingId}
+            onOpenModal={handleOpenOccupantModal}
+            onSelectUserRequest={onSelectUserRequest}
+            onApproveRequest={handleApproveRequest}
+            onRejectRequest={handleRejectRequest}
+            onMarkCheckIn={handleMarkCheckIn}
+            onMarkCheckOut={handleMarkCheckOut}
+            onVerifyPayment={(booking) => setVerifyingPaymentBooking(booking)}
+            formatIdNumber={formatIdNumber}
+            formatModalDate={formatModalDate}
+            scope={scope}
+          />
+        </div>
+      )}
+
+      {/* UPI Host Payment Verification Modal */}
+      {verifyingPaymentBooking && (
+        <HostPaymentVerificationModal
+          isOpen={Boolean(verifyingPaymentBooking)}
+          booking={verifyingPaymentBooking}
+          onClose={() => setVerifyingPaymentBooking(null)}
+          onSuccess={() => {
+            setVerifyingPaymentBooking(null);
+            refreshGuests();
+          }}
+        />
+      )}
+
+      {/* Guest Check-In Verification Modal */}
+      {checkingInBooking && (
+        <CheckInVerificationModal
+          isOpen={Boolean(checkingInBooking)}
+          booking={checkingInBooking}
+          onClose={() => setCheckingInBooking(null)}
+          onCheckInSuccess={() => {
+            setCheckingInBooking(null);
+            refreshGuests();
+          }}
+        />
+      )}
 
       {selectedOccupantForModal && (
         <Suspense fallback={null}>

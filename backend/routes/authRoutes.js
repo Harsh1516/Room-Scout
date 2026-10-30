@@ -2,9 +2,11 @@ import express from 'express';
 import {
   registerUser,
   loginUser,
+  googleAuth,
   forgotPassword,
   updateUserProfile,
   changePassword,
+  setPassword,
   deleteAccount,
   getUserProfile,
   testEmailService,
@@ -17,6 +19,7 @@ import {
   forgotPasswordSchema,
   updateProfileSchema,
   changePasswordSchema,
+  setPasswordSchema,
 } from '../validators/authValidator.js';
 import {
   authLimiter,
@@ -30,6 +33,7 @@ const router = express.Router();
 // Public Authentication Endpoints (Two-tier defense: campus NAT ceiling + per-account targeted limiter)
 router.route('/register').post(authCampusCeilingLimiter, authLimiter, validate(signupSchema), registerUser);
 router.route('/login').post(authCampusCeilingLimiter, authLimiter, validate(loginSchema), loginUser);
+router.route('/google').post(authCampusCeilingLimiter, authLimiter, googleAuth);
 router.route('/forgot-password').post(passwordResetCampusCeilingLimiter, passwordResetLimiter, validate(forgotPasswordSchema), forgotPassword);
 router.route('/test-email').post(passwordResetLimiter, protect, requireAdmin, testEmailService);
 
@@ -37,6 +41,7 @@ router.route('/test-email').post(passwordResetLimiter, protect, requireAdmin, te
 router.route('/me').get(protect, getUserProfile);
 router.route('/profile').put(protect, validate(updateProfileSchema), updateUserProfile);
 router.route('/change-password').put(protect, validate(changePasswordSchema), changePassword);
+router.route('/set-password').post(protect, validate(setPasswordSchema), setPassword).put(protect, validate(setPasswordSchema), setPassword);
 router.route('/delete-account').delete(protect, deleteAccount);
 
 export default router;

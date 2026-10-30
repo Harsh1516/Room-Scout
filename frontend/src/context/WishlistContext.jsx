@@ -116,7 +116,7 @@ export function WishlistProvider({ children }) {
 
   const toggleWishlist = async (stay) => {
     if (!stay) return;
-    const stayId = String(stay._id || stay.id);
+    const stayId = String(stay._id || '');
     const stayTitle = stay.title || stay.propertyName || 'Property';
 
     if (!isAuthenticated || !user) {
@@ -124,12 +124,12 @@ export function WishlistProvider({ children }) {
       return;
     }
 
-    const exists = wishlist.some((item) => String(item._id || item.id) === stayId);
+    const exists = wishlist.some((item) => String(item._id) === stayId);
 
     // Optimistic UI update
     if (exists) {
       toast.info(`Removed "${stayTitle}" from your Wishlist`);
-      setWishlist((prev) => prev.filter((item) => String(item._id || item.id) !== stayId));
+      setWishlist((prev) => prev.filter((item) => String(item._id) !== stayId));
     } else {
       toast.success(`Saved "${stayTitle}" to your Wishlist! ❤️`);
       setWishlist((prev) => [...prev, stay]);
@@ -148,13 +148,13 @@ export function WishlistProvider({ children }) {
   const removeFromWishlist = async (stayId) => {
     if (!stayId) return;
     const targetId = String(stayId);
-    const target = wishlist.find((item) => String(item._id || item.id) === targetId);
+    const target = wishlist.find((item) => String(item._id) === targetId);
     if (target) {
       toast.info(`Removed "${target.title || target.propertyName}" from your Wishlist`);
     }
 
     // Optimistic UI update
-    setWishlist((prev) => prev.filter((item) => String(item._id || item.id) !== targetId));
+    setWishlist((prev) => prev.filter((item) => String(item._id) !== targetId));
 
     // Persist removal in database
     try {
@@ -168,7 +168,7 @@ export function WishlistProvider({ children }) {
   const isInWishlist = (stayId) => {
     if (!stayId) return false;
     const targetId = String(stayId);
-    return wishlist.some((item) => String(item._id || item.id) === targetId);
+    return wishlist.some((item) => String(item._id) === targetId);
   };
 
   return (

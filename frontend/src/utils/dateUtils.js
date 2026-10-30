@@ -135,6 +135,45 @@ export function getDatesForMonthKeys(monthKeys = []) {
   return dates;
 }
 
+export const extractDateKey = (val) => {
+  if (!val) return '';
+  if (val instanceof Date) {
+    if (isNaN(val.getTime())) return '';
+    const y = val.getUTCFullYear() < 2025 ? 2026 : val.getUTCFullYear();
+    const m = String(val.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(val.getUTCDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  const str = String(val).trim();
+  const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    let [_, y, m, d] = isoMatch;
+    if (parseInt(y, 10) < 2025) y = '2026';
+    return `${y}-${m}-${d}`;
+  }
+  const MONTHS = {
+    jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06',
+    jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12',
+  };
+  const textMatch = str.match(/(\d{1,2})\s+([A-Za-z]{3,9})\s+(\d{4})/);
+  if (textMatch) {
+    const d = String(textMatch[1]).padStart(2, '0');
+    const monKey = textMatch[2].slice(0, 3).toLowerCase();
+    const m = MONTHS[monKey] || '10';
+    let y = textMatch[3];
+    if (parseInt(y, 10) < 2025) y = '2026';
+    return `${y}-${m}-${d}`;
+  }
+  const parsed = new Date(str);
+  if (!isNaN(parsed.getTime())) {
+    const y = parsed.getUTCFullYear() < 2025 ? 2026 : parsed.getUTCFullYear();
+    const m = String(parsed.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(parsed.getUTCDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  return '';
+};
+
 /**
  * Retrieves all valid occupants/guests assigned to a specific room for a target month (YYYY-MM).
  */
@@ -143,36 +182,51 @@ export function getOccupantsForRoomInMonth(room, targetMonthKey, guests = []) {
   const rawRoomNum = String(room.roomNumber || '').replace(/[^0-9]/g, '');
   if (!rawRoomNum) return [];
 
-  const [mY, mM] = targetMonthKey.split('-').map(Number);
-  if (!mY || !mM) return [];
-  const monthStart = new Date(Date.UTC(mY, mM - 1, 1, 0, 0, 0)).getTime();
-  const monthEnd = new Date(Date.UTC(mY, mM, 0, 23, 59, 59)).getTime();
-
   return guests.filter((g) => {
     if (!g) return false;
     const status = String(g.status || '').toUpperCase();
-    if (status === 'CANCELLED' || status === 'REJECTED' || status === 'CHECKED_OUT' || status.includes('PENDING')) return false;
+    if (
+      status === 'CANCELLED' ||
+      status === 'REJECTED' ||
+      status === 'CHECKED_OUT' ||
+      status === 'EXPIRED' ||
+      status === 'REQUESTED' ||
+      status === 'AWAITING_PAYMENT' ||
+      status === 'PAYMENT_PENDING' ||
+      status.includes('PENDING') ||
+      status.includes('APPROVAL')
+    ) return false;
+
+    // Online booking must have completed payment to occupy the slot!
+    const isOnline = g.bookingSource === 'ONLINE' || g.isOnline === true;
+    if (isOnline && g.paymentStatus !== 'PAID' && status !== 'CHECKED_IN') {
+      return false;
+    }
 
     const gNum = String(g.roomNumber || '').replace(/[^0-9]/g, '');
     if (!gNum || gNum !== rawRoomNum) return false;
 
-    // Check direct bookedMonths array
-    if (Array.isArray(g.bookedMonths) && g.bookedMonths.includes(targetMonthKey)) {
-      return true;
+    // 1. Direct check on bookedMonths array (canonical ground truth for monthly bookings)
+    if (Array.isArray(g.bookedMonths) && g.bookedMonths.length > 0) {
+      return g.bookedMonths.includes(targetMonthKey);
     }
 
-    // Check checkIn / checkOut range
-    if (g.checkIn && g.checkOut) {
-      const inTime = new Date(g.checkIn).getTime();
-      const outTime = new Date(g.checkOut).getTime();
-      if (!isNaN(inTime) && !isNaN(outTime)) {
-        return inTime < monthEnd && outTime > monthStart;
+    // 2. Check bookedDates
+    if (Array.isArray(g.bookedDates) && g.bookedDates.length > 0) {
+      return g.bookedDates.some((d) => String(d).startsWith(targetMonthKey));
+    }
+
+    // 3. Check checkIn / checkOut canonical date keys (YYYY-MM comparison to prevent timezone bleed)
+    const inVal = g.checkInISO || g.checkIn;
+    const outVal = g.checkOutISO || g.checkOut;
+    if (inVal && outVal) {
+      const inKey = extractDateKey(inVal);
+      const outKey = extractDateKey(outVal);
+      if (inKey && outKey) {
+        const inMonth = inKey.slice(0, 7);
+        const outMonth = outKey.slice(0, 7);
+        return targetMonthKey >= inMonth && targetMonthKey <= outMonth;
       }
-    }
-
-    // Check bookedDates
-    if (Array.isArray(g.bookedDates) && g.bookedDates.some((d) => String(d).startsWith(targetMonthKey))) {
-      return true;
     }
 
     return false;
@@ -184,7 +238,7 @@ export function getOccupantsForRoomInMonth(room, targetMonthKey, guests = []) {
  */
 export function getRoomOccupiedCountInMonth(room, targetMonthKey, guests = []) {
   const occupants = getOccupantsForRoomInMonth(room, targetMonthKey, guests);
-  return occupants.reduce((sum, g) => sum + (Number(g.adults) || 1), 0);
+  return occupants.reduce((sum, g) => sum + (Number(g.personCount) || 1), 0);
 }
 
 /**
@@ -214,15 +268,14 @@ export function isSameRoom(room, identifier) {
   const idStr = String(identifier).trim();
   if (!idStr) return false;
 
-  // Direct match on id or _id
-  if (room.id && String(room.id).trim() === idStr) return true;
+  // Direct match on _id
   if (room._id && String(room._id).trim() === idStr) return true;
 
   // Direct match on roomNumber
   const rNum = String(room.roomNumber || '').trim();
   if (rNum && rNum === idStr) return true;
   if (rNum && `room_${rNum}` === idStr) return true;
-  if (room.id && `room_${String(room.id).trim()}` === idStr) return true;
+  if (room._id && `room_${String(room._id).trim()}` === idStr) return true;
 
   // Numeric digit extraction match (e.g. "room_106" vs "106" or "Room 106")
   const rDigits = rNum.replace(/[^0-9]/g, '');
@@ -231,4 +284,140 @@ export function isSameRoom(room, identifier) {
 
   return false;
 }
+
+/**
+ * Checks whether a booking request has reached or passed its check-in date/time or payment deadline.
+ * Used across the dashboard, calendar, and guest drawer to immediately expire/dismiss stale requests.
+ */
+export function isBookingRequestExpired(booking, now = new Date()) {
+  if (!booking) return false;
+  const status = String(booking.status || '').toUpperCase().trim();
+
+  // Active confirmed or completed bookings are not pending requests
+  if (['CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED', 'REJECTED'].includes(status)) {
+    return false;
+  }
+  if (status === 'EXPIRED') {
+    return true;
+  }
+
+  const isPending =
+    status === 'PENDING' ||
+    status === 'DRAFT' ||
+    status === 'PENDING HOST APPROVAL' ||
+    status.includes('PENDING') ||
+    status.includes('APPROVAL');
+  const isAwaitingPayment = status === 'AWAITING_PAYMENT' || status === 'PAYMENT_PENDING';
+
+  if (!isPending && !isAwaitingPayment) {
+    return false;
+  }
+
+  // 1. Payment window elapsed for awaiting payment
+  if (isAwaitingPayment && booking.paymentDeadline) {
+    const deadline = new Date(booking.paymentDeadline);
+    if (!isNaN(deadline.getTime()) && deadline <= now) {
+      return true;
+    }
+  }
+
+  // 2. Full stay checkout timestamp has elapsed without host approval
+  if (booking.checkOut) {
+    const checkOutDate = new Date(booking.checkOut);
+    if (!isNaN(checkOutDate.getTime()) && checkOutDate <= now) {
+      return true;
+    }
+  }
+
+  // 3. String dates check (e.g. bookedDates: ['2026-10-22'])
+  // Request expires ONLY when the entire check-in date has completely passed (strictly past today)
+  const nowYear = now.getFullYear();
+  const nowMonth = String(now.getMonth() + 1).padStart(2, '0');
+  const nowDay = String(now.getDate()).padStart(2, '0');
+  const todayLocalStr = `${nowYear}-${nowMonth}-${nowDay}`;
+  const todayUTCStr = now.toISOString().slice(0, 10);
+
+  if (Array.isArray(booking.bookedDates) && booking.bookedDates.length > 0) {
+    const sortedDates = [...booking.bookedDates].filter(Boolean).sort();
+    const lastDate = sortedDates[sortedDates.length - 1];
+    if (lastDate && lastDate.length === 10) {
+      if (todayLocalStr > lastDate && todayUTCStr > lastDate) {
+        return true;
+      }
+    }
+  }
+
+  if (Array.isArray(booking.bookedMonths) && booking.bookedMonths.length > 0) {
+    const sortedMonths = [...booking.bookedMonths].filter(Boolean).sort();
+    const lastMonth = sortedMonths[sortedMonths.length - 1];
+    if (lastMonth && lastMonth.length === 7) {
+      const currentMonthLocal = `${nowYear}-${nowMonth}`;
+      const currentMonthUTC = todayUTCStr.slice(0, 7);
+      if (currentMonthLocal > lastMonth && currentMonthUTC > lastMonth) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Strictly verifies whether a room belongs to a given category/rate.
+ * Ensures complete category isolation:
+ * - Direct rateId equality is the primary source of truth.
+ * - Prevents cross-category room contamination (if a room's rateId or type
+ *   matches another known category in allRates, it will NEVER be claimed by targetRate).
+ * - Fallbacks to categoryIndex only if rateId and type do not belong to another category.
+ */
+export function isRoomMatchingCategory(rm, targetRate, targetIdx, allRates = []) {
+  if (!rm || !targetRate) return false;
+
+  const targetRateId = targetRate._id ? String(targetRate._id) : (targetRate.id ? String(targetRate.id) : null);
+  const roomRateId = rm.rateId ? String(rm.rateId) : null;
+  const targetType = String(targetRate.type || '').trim().toLowerCase();
+  const roomType = String(rm.type || '').trim().toLowerCase();
+
+  // 1. Exact rateId equality
+  if (targetRateId && roomRateId && roomRateId === targetRateId) {
+    return true;
+  }
+
+  // 2. Cross-category check: if room has a rateId that belongs to another category, it CANNOT match this category
+  if (roomRateId && Array.isArray(allRates) && allRates.length > 0) {
+    const belongsToAnotherRate = allRates.some((otherRate, oIdx) => {
+      if (oIdx === targetIdx || !otherRate) return false;
+      const otherId = otherRate._id ? String(otherRate._id) : (otherRate.id ? String(otherRate.id) : null);
+      return Boolean(otherId && roomRateId === otherId);
+    });
+    if (belongsToAnotherRate) {
+      return false;
+    }
+  }
+
+  // 3. Match by category type (when both non-empty)
+  if (targetType && roomType && roomType === targetType) {
+    return true;
+  }
+
+  // 4. Cross-category check: if room's type matches another category in allRates, it CANNOT match this category
+  if (roomType && Array.isArray(allRates) && allRates.length > 0) {
+    const belongsToAnotherType = allRates.some((otherRate, oIdx) => {
+      if (oIdx === targetIdx || !otherRate) return false;
+      const otherType = String(otherRate.type || '').trim().toLowerCase();
+      return Boolean(otherType && roomType === otherType);
+    });
+    if (belongsToAnotherType) {
+      return false;
+    }
+  }
+
+  // 5. Fallback: match by numeric categoryIndex (only if room neither belongs to another rateId nor another type)
+  if (typeof rm.categoryIndex === 'number' && rm.categoryIndex === targetIdx) {
+    return true;
+  }
+
+  return false;
+}
+
 

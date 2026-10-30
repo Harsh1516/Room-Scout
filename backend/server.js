@@ -12,6 +12,8 @@ import adminRoutes from './routes/adminRoutes.js';
 import errorMiddleware from './middleware/errorMiddleware.js';
 import { apiLimiter } from './middleware/rateLimitMiddleware.js';
 import { sanitizeInput } from './middleware/sanitizeMiddleware.js';
+import { autoExpireBookings } from './controllers/bookingController.js';
+import { initWhatsAppClient } from './services/whatsappService.js';
 import './config/env.js';
 import { env } from './config/env.js';
 
@@ -51,9 +53,9 @@ app.use(
     },
     // Allow cross-origin resource access for media and public API consumers
     crossOriginResourcePolicy: { policy: 'cross-origin' },
-    // Allow OAuth / Razorpay popups while isolating window context
+    // Allow OAuth popups while isolating window context
     crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
-    // Robust Content Security Policy (CSP) compatible with Leaflet, OpenStreetMap, Fonts, Cloudinary, Razorpay
+    // Robust Content Security Policy (CSP) compatible with Leaflet, OpenStreetMap, Fonts, Cloudinary
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
@@ -61,7 +63,6 @@ app.use(
           "'self'",
           "'unsafe-inline'",
           "'unsafe-eval'",
-          'https://checkout.razorpay.com',
           'https://unpkg.com',
         ],
         styleSrc: [
@@ -86,9 +87,6 @@ app.use(
         ],
         connectSrc: [
           "'self'",
-          'https://api.razorpay.com',
-          'https://checkout.razorpay.com',
-          'https://lumberjack.razorpay.com',
           'https://*.tile.openstreetmap.org',
           'https://*.openstreetmap.org',
           'ws:',
@@ -96,8 +94,6 @@ app.use(
         ],
         frameSrc: [
           "'self'",
-          'https://api.razorpay.com',
-          'https://checkout.razorpay.com',
         ],
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
@@ -119,6 +115,9 @@ const corsOptions = {
 
     if (
       configuredOrigins.includes(origin) ||
+      (env.CLIENT_URL && origin === env.CLIENT_URL) ||
+      origin.endsWith('.vercel.app') ||
+      origin.endsWith('.onrender.com') ||
       origin.startsWith('http://localhost:') ||
       origin.startsWith('http://127.0.0.1:') ||
       origin.startsWith('http://192.168.') ||
@@ -205,6 +204,15 @@ connectDB().then(() => {
   server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Backend Server running on port ${PORT}`);
   });
+
+  // Run initial booking request expiry check & schedule recurring 60s background sweep
+  autoExpireBookings().catch((err) => console.error('Initial auto-expire error:', err));
+  setInterval(() => {
+    autoExpireBookings().catch((err) => console.error('Interval auto-expire error:', err));
+  }, 60 * 1000);
+
+  // Initialize WhatsApp Automation Client
+  initWhatsAppClient();
 });
 
 // Process-level unhandled promise rejection handler (logs safely without corrupting server state)

@@ -21,9 +21,16 @@ export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
   const addToast = useCallback(({ id, message, type }) => {
+    const now = Date.now();
     setToasts((prev) => {
+      // Deduplicate identical message within recent 1200ms window
+      const isDuplicate = prev.some(
+        (t) => t.message === message && (t.timestamp ? now - t.timestamp < 1200 : true)
+      );
+      if (isDuplicate) return prev;
+
       // Keep at most 2 active toasts to keep center neat and uncrowded
-      const next = [...prev, { id, message, type }].slice(-2);
+      const next = [...prev, { id, message, type, timestamp: now }].slice(-2);
       return next;
     });
 

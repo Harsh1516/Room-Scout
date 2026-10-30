@@ -21,7 +21,7 @@ export function PropertyCard({
 
   if (!stay) return null;
 
-  const stayId = stay._id || stay.id;
+  const stayId = stay._id;
   const saved = isInWishlist(stayId);
   const pricing = getStayPricing(stay);
 
@@ -37,8 +37,9 @@ export function PropertyCard({
   const hasUserReviews = Array.isArray(stay.reviews) && stay.reviews.length > 0;
   const computedRating = hasUserReviews
     ? (stay.reviews.reduce((acc, r) => acc + (Number(r.rating) || 5), 0) / stay.reviews.length).toFixed(1)
-    : (stay.rating && !isNaN(Number(stay.rating)) ? Number(stay.rating).toFixed(1) : null);
-  const ratingText = computedRating ? `★ ${computedRating}` : 'NEW';
+    : null;
+  const isNewStay = !computedRating;
+  const ratingText = isNewStay ? 'NEW' : `★ ${computedRating}`;
 
   const displayImage =
     stay.image ||
@@ -76,23 +77,24 @@ export function PropertyCard({
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-black/30 pointer-events-none" />
 
           {/* Top Badges: Property Type + Rating + Wishlist */}
-          <div className="relative z-10 flex items-center justify-between gap-1">
-            <div className="flex items-center gap-1 sm:gap-1.5 truncate">
+          <div className="relative z-10 flex items-center justify-between gap-1.5 p-0.5 sm:p-1">
+            <div className="flex items-center gap-1.5 sm:gap-2 truncate">
               {/* Property Type Badge */}
-              <span className="text-[7.5px] sm:text-[9px] font-mono font-bold text-white bg-black/60 border border-white/20 px-2 py-0.5 rounded-full backdrop-blur-md shrink-0">
+              <span className="text-[10px] sm:text-[11.5px] font-sans font-bold tracking-wider uppercase text-white bg-slate-950/75 dark:bg-black/80 border border-white/20 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-xl backdrop-blur-md shadow-xs shrink-0">
                 {propertyType}
               </span>
 
               {/* Rating / New Badge */}
-              <span
-                className={`text-[7.5px] sm:text-[9px] font-mono font-extrabold border px-1.5 sm:px-2 py-0.5 rounded-full backdrop-blur-md truncate ${
-                  computedRating
-                    ? 'text-white bg-black/60 border-white/20'
-                    : 'text-emerald-300 bg-black/70 border-emerald-500/40'
-                }`}
-              >
-                {ratingText}
-              </span>
+              {isNewStay ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-xl bg-emerald-950/80 dark:bg-emerald-900/80 border border-emerald-400/35 text-emerald-300 dark:text-emerald-200 text-[10px] sm:text-[11.5px] font-sans font-extrabold tracking-wider uppercase backdrop-blur-md shadow-xs shrink-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)] animate-pulse" />
+                  NEW
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-xl bg-slate-950/80 dark:bg-black/80 border border-amber-400/40 text-amber-300 text-[10px] sm:text-[11.5px] font-sans font-extrabold tracking-wider shadow-xs backdrop-blur-md shrink-0">
+                  {ratingText}
+                </span>
+              )}
             </div>
 
             {/* Heart Wishlist Toggle Button */}

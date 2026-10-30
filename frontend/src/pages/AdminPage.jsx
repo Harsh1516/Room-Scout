@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from '../context/ToastContext';
 import { AdminHostsTable } from '../components/admin/AdminHostsTable';
 import { AdminUsersTable } from '../components/admin/AdminUsersTable';
+import { ThemeTogglePill } from '../components/common/ThemeTogglePill';
 
 export function AdminPage() {
   const navigate = useNavigate();
@@ -91,7 +92,7 @@ export function AdminPage() {
 
     const pollInterval = setInterval(() => {
       fetchData(true);
-    }, 3500);
+    }, 15000);
 
     const handleFocus = () => fetchData(true);
     window.addEventListener('focus', handleFocus);
@@ -130,7 +131,9 @@ export function AdminPage() {
       window.dispatchEvent(new CustomEvent('stayhub_admin_sync'));
       window.dispatchEvent(new CustomEvent('stayhub_slots_updated'));
       window.dispatchEvent(new CustomEvent('stayhub_rooms_updated'));
+      window.dispatchEvent(new CustomEvent('stayhub_host_approved'));
       localStorage.setItem('stayhub_admin_sync_ts', String(Date.now()));
+      localStorage.setItem('stayhub_host_approved_ts', String(Date.now()));
       if (typeof BroadcastChannel !== 'undefined') {
         const bc = new BroadcastChannel('stayhub_live_channel');
         bc.postMessage({ type: 'HOST_APPROVED' });
@@ -151,7 +154,7 @@ export function AdminPage() {
       const res = await adminAPI.impersonate({
         email: targetUser.email,
         role: 'user',
-        id: targetUser._id || targetUser.id,
+        _id: targetUser._id,
       });
       if (res?.token && res?.user) {
         updateUserSession(res.user, res.token);
@@ -164,7 +167,7 @@ export function AdminPage() {
     }
 
     const fallbackUser = {
-      _id: targetUser._id || targetUser.id,
+      __id: targetUser._id,
       name: targetUser.name,
       email: targetUser.email,
       phone: targetUser.phone,
@@ -181,7 +184,7 @@ export function AdminPage() {
       const res = await adminAPI.impersonate({
         email: targetHost.email,
         role: 'host',
-        id: targetHost._id || targetHost.id,
+        _id: targetHost._id,
       });
       if (res?.token && res?.user) {
         updateUserSession(res.user, res.token);
@@ -194,7 +197,7 @@ export function AdminPage() {
     }
 
     const fallbackHost = {
-      _id: targetHost._id || targetHost.id,
+      __id: targetHost._id,
       name: targetHost.name,
       email: targetHost.email,
       phone: targetHost.phone,
@@ -220,7 +223,7 @@ export function AdminPage() {
     try {
       setDeletingUserId(userId);
       await adminAPI.deleteUser(userId);
-      setUsers((prev) => prev.filter((u) => String(u._id || u.id) !== String(userId)));
+      setUsers((prev) => prev.filter((u) => String(u._id) !== String(userId)));
       setConfirmDeleteUserId(null);
       broadcastUpdate();
       showToast(`User ${userName || ''} deleted`);
@@ -238,7 +241,7 @@ export function AdminPage() {
       await adminAPI.approveHost(hostId);
       setHosts((prev) =>
         prev.map((h) =>
-          String(h.id || h._id) === String(hostId)
+          String(h._id) === String(hostId)
             ? { ...h, status: 'Approved' }
             : h
         )
@@ -257,7 +260,7 @@ export function AdminPage() {
     try {
       setDeletingHostId(hostId);
       await adminAPI.deleteHost(hostId);
-      setHosts((prev) => prev.filter((h) => String(h.id || h._id) !== String(hostId)));
+      setHosts((prev) => prev.filter((h) => String(h._id) !== String(hostId)));
       setConfirmDeleteHostId(null);
       broadcastUpdate();
       showToast(`Host ${hostName || ''} deleted`);
@@ -450,150 +453,211 @@ export function AdminPage() {
 
   return (
     <div className="bg-slate-50/70 dark:bg-zinc-950 text-slate-800 dark:text-slate-200 antialiased min-h-screen flex flex-col selection:bg-purple-500 selection:text-white transition-colors duration-200 font-sans">
-      {/* BEGIN: TopHeader */}
-      <header className="sticky top-0 z-40 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 px-4 sm:px-6 py-3 transition-all" data-purpose="admin-main-nav">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
-          {/* Left Cluster */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                if (window.history.length > 1) {
-                  navigate(-1);
-                } else {
-                  navigate('/explore');
-                }
-              }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 border border-slate-200 dark:border-slate-700 shadow-2xs hover:border-slate-300 dark:hover:border-slate-600 hover:text-slate-900 dark:hover:text-white active:scale-95 transition-all text-xs font-medium group cursor-pointer"
-              title="Go back"
-            >
-              <svg className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 transition-transform group-hover:-translate-x-0.5 group-hover:text-purple-600 dark:group-hover:text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <span>Back</span>
-            </button>
-
-            <div className="flex items-center gap-2 pl-2 border-l border-slate-200/80 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={() => navigate('/data')}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-zinc-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-zinc-700 text-xs font-medium border border-slate-200 dark:border-slate-700 shadow-2xs cursor-pointer transition-all"
-                title="View Database Records"
+      {/* ===================================================================== */}
+      {/* 🧭 FLOATING LIQUID GLASS ADMIN NAVBAR                                 */}
+      {/* ===================================================================== */}
+      <header className="relative w-full select-none z-50">
+        {/* 1. LEFT: Brand & Quick Navigation Capsules */}
+        <div className="fixed top-3.5 left-3 sm:top-5 sm:left-6 z-50 flex items-center gap-2 select-none">
+          <button
+            type="button"
+            onClick={() => navigate('/explore')}
+            className="apple-liquid-nav flex items-center justify-center p-2 sm:px-3 sm:py-1.5 gap-2 rounded-full border border-slate-200/80 dark:border-white/15 shadow-xs cursor-pointer hover:scale-105 active:scale-95 transition-all duration-200 hover:border-purple-500/40 hover:shadow-[0_0_16px_rgba(168,85,247,0.25)] focus:outline-none focus:ring-0"
+            title="Return to Explore Stays"
+            aria-label="RoomScout Brand Home"
+          >
+            <div className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center transition-transform duration-200 hover:rotate-12 shrink-0">
+              <svg
+                className="w-3.5 h-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               >
-                <svg className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                  <ellipse cx="12" cy="5" rx="9" ry="3" />
-                  <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-                  <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
-                </svg>
-                <span>Database</span>
-              </button>
+                <circle cx="12" cy="12" r="10" />
+                <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" />
+              </svg>
             </div>
+            <span className="hidden sm:inline tracking-tight font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
+              RoomScout
+            </span>
+            <span className="hidden md:inline-flex text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30">
+              Admin
+            </span>
+          </button>
 
-            <div className="hidden md:flex items-center gap-2.5 ml-2 pl-3 border-l border-slate-200/80 dark:border-slate-800">
-              <div className="w-7 h-7 rounded-lg bg-slate-900 dark:bg-zinc-800 flex items-center justify-center text-white shadow-2xs ring-1 ring-slate-800 dark:ring-slate-700">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <span className="text-xs font-semibold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
-                RoomScout
-                <span className="text-[11px] font-medium text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 border border-purple-200/80 dark:border-purple-800/80 px-1.5 py-0.2 rounded-md">
-                  Admin
-                </span>
-              </span>
-            </div>
-          </div>
+          {/* Database Records Pill */}
+          <button
+            type="button"
+            onClick={() => navigate('/data')}
+            className="apple-liquid-nav hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-full border border-slate-200/80 dark:border-white/15 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:border-purple-500/40 transition-all cursor-pointer shadow-xs active:scale-95"
+            title="View Raw Database Records"
+          >
+            <svg className="w-3.5 h-3.5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <ellipse cx="12" cy="5" rx="9" ry="3" />
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+            </svg>
+            <span>Database</span>
+          </button>
+        </div>
 
-          {/* Center Navigation Tabs: Users / Hosts */}
-          <nav aria-label="Audience Type" className="flex items-center bg-slate-100/90 dark:bg-zinc-800/80 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-inner">
+        {/* 2. CENTER: Segmented Admin Console Capsule (Users / Hosts) */}
+        <div className="fixed top-3.5 sm:top-5 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[calc(100vw-96px)] sm:max-w-none flex justify-center select-none">
+          <nav className="apple-liquid-nav relative flex items-center p-1 sm:p-1.5 rounded-full border border-slate-200/80 dark:border-white/15 shadow-sm">
+            {/* Users Tab */}
             <button
               type="button"
               onClick={() => {
                 setActiveTab('users');
                 setSearchQuery('');
               }}
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-all cursor-pointer ${
+              className={`relative px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none transition-colors duration-150 ${
                 activeTab === 'users'
-                  ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-white shadow-2xs border border-slate-200/70 dark:border-slate-700 font-semibold'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                  ? 'text-slate-900 dark:text-white font-bold'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white font-medium'
               }`}
             >
-              <span>Users</span>
-              <span className={`text-[11px] font-semibold px-1.5 py-0.2 rounded-full ${
-                activeTab === 'users'
-                  ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/70 dark:border-purple-800/60'
-                  : 'bg-slate-200/80 dark:bg-zinc-700 text-slate-600 dark:text-slate-300'
-              }`}>
+              {activeTab === 'users' && (
+                <motion.div
+                  layoutId="admin-nav-pill-indicator"
+                  className="absolute inset-0 rounded-full bg-white dark:bg-zinc-800 shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)] border border-slate-200/80 dark:border-white/15"
+                  transition={{
+                    type: 'spring',
+                    stiffness: 450,
+                    damping: 32,
+                    mass: 0.8,
+                  }}
+                />
+              )}
+              <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'users' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400 dark:text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="relative z-10 tracking-tight">Users</span>
+              <span
+                className={`relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none transition-colors ${
+                  activeTab === 'users'
+                    ? 'bg-purple-500/15 text-purple-700 dark:text-purple-300'
+                    : 'bg-slate-200/80 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400'
+                }`}
+              >
                 {users.length}
               </span>
             </button>
 
+            {/* Hosts Tab */}
             <button
               type="button"
               onClick={() => {
                 setActiveTab('hosts');
                 setSearchQuery('');
               }}
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-all cursor-pointer ${
+              className={`relative px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none transition-colors duration-150 ${
                 activeTab === 'hosts'
-                  ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-white shadow-2xs border border-slate-200/70 dark:border-slate-700 font-semibold'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                  ? 'text-slate-900 dark:text-white font-bold'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white font-medium'
               }`}
             >
-              <span>Hosts</span>
-              <span className={`text-[11px] font-medium px-1.5 py-0.2 rounded-full ${
-                activeTab === 'hosts'
-                  ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/70 dark:border-purple-800/60 font-semibold'
-                  : 'bg-slate-200/80 dark:bg-zinc-700 text-slate-600 dark:text-slate-300'
-              }`}>
+              {activeTab === 'hosts' && (
+                <motion.div
+                  layoutId="admin-nav-pill-indicator"
+                  className="absolute inset-0 rounded-full bg-white dark:bg-zinc-800 shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)] border border-slate-200/80 dark:border-white/15"
+                  transition={{
+                    type: 'spring',
+                    stiffness: 450,
+                    damping: 32,
+                    mass: 0.8,
+                  }}
+                />
+              )}
+              <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'hosts' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400 dark:text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="relative z-10 tracking-tight">Hosts</span>
+              <span
+                className={`relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none transition-colors ${
+                  activeTab === 'hosts'
+                    ? 'bg-purple-500/15 text-purple-700 dark:text-purple-300'
+                    : 'bg-slate-200/80 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400'
+                }`}
+              >
                 {hosts.length}
               </span>
             </button>
           </nav>
+        </div>
 
-          {/* Right Utility Cluster */}
-          <div className="flex items-center gap-2">
-            <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/50 text-xs font-medium shadow-2xs select-none">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-              </span>
-              <span>Live Sync</span>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-zinc-800 border border-slate-200 dark:border-slate-700 bg-white dark:bg-zinc-900 shadow-2xs transition-all active:scale-95 cursor-pointer disabled:opacity-50"
-              title="Refresh Live Data"
-            >
-              <motion.svg
-                animate={isRefreshing ? { rotate: 360 } : { rotate: 0 }}
-                transition={{ duration: 0.8, repeat: isRefreshing ? Infinity : 0, ease: 'linear' }}
-                className="w-3.5 h-3.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" strokeLinecap="round" strokeLinejoin="round" />
-              </motion.svg>
-            </button>
-
-            <div className="flex items-center pl-1">
-              <div className="w-7 h-7 rounded-lg bg-slate-900 dark:bg-zinc-800 text-white font-semibold text-xs flex items-center justify-center border border-slate-700 dark:border-slate-600 shadow-2xs select-none">
-                {user?.name?.slice(0, 2).toUpperCase() || 'HC'}
-              </div>
-            </div>
+        {/* 3. RIGHT: Actions & Profile Cluster */}
+        <div className="fixed top-3.5 right-3 sm:top-5 sm:right-6 z-50 flex items-center gap-1.5 sm:gap-2.5">
+          {/* Live Sync Badge */}
+          <div className="apple-liquid-nav hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-full text-xs font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 select-none shadow-xs">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+            </span>
+            <span>Live Sync</span>
           </div>
+
+          {/* Refresh Live Data Button */}
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="apple-liquid-nav relative w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-slate-200/80 dark:border-white/15 shadow-xs flex items-center justify-center text-slate-700 dark:text-slate-200 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+            title="Refresh Live Data"
+            aria-label="Refresh Data"
+          >
+            <motion.svg
+              animate={isRefreshing ? { rotate: 360 } : { rotate: 0 }}
+              transition={{ duration: 0.8, repeat: isRefreshing ? Infinity : 0, ease: 'linear' }}
+              className="w-4 h-4 text-slate-600 dark:text-slate-300"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" strokeLinecap="round" strokeLinejoin="round" />
+            </motion.svg>
+          </button>
+
+          {/* Explore Stays Switcher Button */}
+          <button
+            type="button"
+            onClick={() => navigate('/explore')}
+            className="apple-liquid-nav hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-full bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 text-xs font-bold transition-all shadow-xs cursor-pointer select-none active:scale-95"
+            title="Return to User Explore Stays"
+          >
+            <span>🧭</span>
+            <span>Explore Stays</span>
+          </button>
+
+          {/* Theme Mode Toggle Pill */}
+          <ThemeTogglePill />
+
+          {/* Admin Avatar & Lock Button */}
+          <button
+            type="button"
+            onClick={() => {
+              adminAPI.setAdminKey(null);
+              setIsAdminAuthorized(false);
+              toast.info('Admin console locked');
+            }}
+            className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-tr from-purple-700 via-indigo-600 to-purple-500 text-white font-bold text-xs sm:text-sm shadow-xs border border-purple-400/30 flex items-center justify-center cursor-pointer active:scale-95 transition-all select-none"
+            title="Lock Administrator Console (Click to lock)"
+            aria-label="Lock Admin Console"
+          >
+            <span>{user?.name ? user.name.slice(0, 2).toUpperCase() : 'AD'}</span>
+            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-purple-400 text-slate-950 font-bold flex items-center justify-center text-[7px] border-2 border-white dark:border-slate-900 shadow-xs">
+              🔒
+            </span>
+          </button>
         </div>
       </header>
-      {/* END: TopHeader */}
 
       {/* BEGIN: MainContent */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 flex flex-col gap-5">
+      <main className="flex-1 w-full mx-auto px-3 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-8 flex flex-col gap-5">
         {activeTab === 'users' && (
           <>
             {/* BEGIN: FilterAndSearchToolbar */}

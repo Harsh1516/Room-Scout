@@ -100,7 +100,7 @@ const staySchema = new mongoose.Schema(
     },
     rating: {
       type: Number,
-      default: 4.8,
+      default: 0,
     },
     reviewsCount: {
       type: Number,
@@ -132,7 +132,7 @@ const staySchema = new mongoose.Schema(
           rateUnit: { type: String, default: '' },
           capacity: { type: Number, default: 1, min: 1, max: 10 },
         },
-        { _id: false }
+        { _id: true }
       ),
     ],
     rooms: [roomSchema],
@@ -141,6 +141,18 @@ const staySchema = new mongoose.Schema(
       type: Boolean,
       default: true,
       index: true,
+    },
+    upiSettings: {
+      upiId: { type: String, trim: true, default: '' },
+      payeeName: { type: String, trim: true, default: '' },
+      qrCodeUrl: { type: String, default: '' },
+      isConfigured: { type: Boolean, default: false },
+    },
+    revenueResetSettings: {
+      resetAt: { type: Date, default: null },
+      baselineTotal: { type: Number, default: 0 },
+      baselineOnline: { type: Number, default: 0 },
+      baselineOffline: { type: Number, default: 0 },
     },
   },
   {

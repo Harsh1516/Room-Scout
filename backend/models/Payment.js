@@ -42,13 +42,13 @@ const paymentSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ['OFFLINE', 'ONLINE', 'RAZORPAY', 'STRIPE', 'UPI', 'CASH'],
-      default: 'OFFLINE',
+      enum: ['OFFLINE', 'ONLINE', 'UPI', 'CASH', 'RAZORPAY'],
+      default: 'UPI',
     },
     paymentStatus: {
       type: String,
-      enum: ['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED'],
-      default: 'COMPLETED',
+      enum: ['PENDING', 'AWAITING_VERIFICATION', 'COMPLETED', 'FAILED', 'REFUND_PENDING', 'REFUNDED'],
+      default: 'PENDING',
       index: true,
     },
     transactionId: {
@@ -56,6 +56,50 @@ const paymentSchema = new mongoose.Schema(
       default: '',
       trim: true,
     },
+    transactionRef: {
+      type: String,
+      default: '',
+      trim: true,
+      uppercase: true,
+    },
+    recipientUpiId: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    verificationStatus: {
+      type: String,
+      enum: ['UNSUBMITTED', 'PENDING_VERIFICATION', 'VERIFIED', 'REJECTED'],
+      default: 'UNSUBMITTED',
+      index: true,
+    },
+    receiptUrl: {
+      type: String,
+      default: '',
+    },
+    verifiedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Host',
+      default: null,
+    },
+    verifiedAt: {
+      type: Date,
+      default: null,
+    },
+    auditNotes: {
+      type: String,
+      default: '',
+    },
+    auditLog: [
+      {
+        action: { type: String, required: true },
+        performedBy: { type: mongoose.Schema.Types.ObjectId, default: null },
+        performerRole: { type: String, default: 'system' },
+        timestamp: { type: Date, default: Date.now },
+        details: { type: mongoose.Schema.Types.Mixed, default: {} },
+        note: { type: String, default: '' },
+      },
+    ],
     gatewayResponse: {
       type: mongoose.Schema.Types.Mixed,
       default: {},
@@ -67,6 +111,8 @@ const paymentSchema = new mongoose.Schema(
 );
 
 paymentSchema.index({ hostId: 1, paymentStatus: 1, createdAt: -1 });
+paymentSchema.index({ hostId: 1, verificationStatus: 1, createdAt: -1 });
 paymentSchema.index({ userId: 1, createdAt: -1 });
+paymentSchema.index({ transactionRef: 1 }, { sparse: true });
 
 export const Payment = mongoose.model('Payment', paymentSchema);

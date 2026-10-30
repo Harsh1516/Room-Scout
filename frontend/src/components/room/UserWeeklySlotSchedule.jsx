@@ -13,6 +13,7 @@ export function UserWeeklySlotSchedule({
   upcomingWeek = [],
   upcomingDays = [],
   bookedSlotsForRoom = new Set(),
+  userBookedSlotsForRoom = new Set(),
   selectedSlotIndices = [],
   onToggleSlotDay,
   guestName,
@@ -21,10 +22,10 @@ export function UserWeeklySlotSchedule({
   setGuestPhone,
   guestEmail,
   setGuestEmail,
-  adults = 1,
-  setAdults = () => {},
-  children = 0,
-  setChildren = () => {},
+  personCount,
+  setPersonCount,
+  maxAllowedPersons,
+  roomCapacity,
   submitting,
   onSubmitBooking,
   stay,
@@ -32,6 +33,16 @@ export function UserWeeklySlotSchedule({
   const allDays = upcomingDays.length > 0 ? upcomingDays : upcomingWeek;
   const monthGroups = useMemo(() => groupDaysByMonth(allDays), [allDays]);
   const [selectedMonthIdx, setSelectedMonthIdx] = useState(0);
+
+  const effectiveCapacity = Math.max(1, Math.min(10, Number(roomCapacity) || Number(selectedRoom?.capacity) || 1));
+  const effectiveMax = Math.max(1, Math.min(effectiveCapacity, Number(maxAllowedPersons) || effectiveCapacity));
+  const currentPersonCount = Math.max(1, Math.min(effectiveMax, Number(personCount) || 1));
+  const handleUpdatePersonCount = (nextVal) => {
+    const clamped = Math.max(1, Math.min(effectiveMax, Number(nextVal) || 1));
+    if (typeof setPersonCount === 'function') {
+      setPersonCount(clamped);
+    }
+  };
 
   if (!selectedRoom) {
     return (
@@ -161,6 +172,7 @@ export function UserWeeklySlotSchedule({
                     {/* Next 30 Days: Rendered in Circles */}
                     {group.days.map((slot) => {
                       const isBooked = bookedSlotsForRoom.has(slot.fullISO);
+                      const isUserSlot = isBooked && userBookedSlotsForRoom.has(slot.fullISO);
                       const isSelected = selectedSlotIndices.includes(slot.index);
                       const lastSelectedIdx = sortedSelected[sortedSelected.length - 1];
                       const targetCheckoutIdx = lastSelectedIdx !== undefined && lastSelectedIdx + 1 < allDays.length
@@ -177,7 +189,9 @@ export function UserWeeklySlotSchedule({
                             onClick={() => onToggleSlotDay(slot.index)}
                             className={`w-7.5 h-7.5 sm:w-8 sm:h-8 md:w-8.5 md:h-8.5 rounded-full flex flex-col items-center justify-center font-bold text-[11px] sm:text-xs select-none outline-none relative transition-colors duration-75 ${
                               isBooked
-                                ? 'bg-red-50 dark:bg-red-950/40 text-red-500 dark:text-red-400 border border-red-300 dark:border-red-800/80 cursor-not-allowed line-through opacity-75'
+                                ? isUserSlot
+                                  ? 'bg-purple-100 dark:bg-purple-950/50 text-purple-950 dark:text-purple-200 border border-purple-300 dark:border-purple-600 cursor-not-allowed font-extrabold'
+                                  : 'bg-red-50 dark:bg-red-950/40 text-red-500 dark:text-red-400 border border-red-300 dark:border-red-800/80 cursor-not-allowed line-through opacity-75'
                                 : isSelected
                                 ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-2 border-slate-900 dark:border-white font-black cursor-pointer z-10 shadow-xs'
                                 : isCheckoutDepartureDay
@@ -186,7 +200,7 @@ export function UserWeeklySlotSchedule({
                                 ? 'bg-white dark:bg-slate-900 border-2 border-emerald-500 text-slate-900 dark:text-white hover:bg-emerald-50 dark:hover:bg-emerald-950/30 cursor-pointer font-extrabold'
                                 : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-slate-400 dark:hover:border-slate-500 text-slate-800 dark:text-slate-200 cursor-pointer'
                             }`}
-                            title={`${slot.dayName}, ${slot.monthDay} (12:00 PM) - ${isBooked ? 'Already Booked' : isSelected ? 'Selected Night' : isCheckoutDepartureDay ? 'Check-Out Departure' : 'Available'}`}
+                            title={`${slot.dayName}, ${slot.monthDay} (12:00 PM) - ${isUserSlot ? 'Booked by You (Confirmed)' : isBooked ? 'Already Booked' : isSelected ? 'Selected Night' : isCheckoutDepartureDay ? 'Check-Out Departure' : 'Available'}`}
                           >
                             <span>{slot.dayNum}</span>
                             {isToday && !isSelected && !isBooked && (
@@ -198,7 +212,9 @@ export function UserWeeklySlotSchedule({
                           <span
                             className={`text-[7.5px] sm:text-[8px] tracking-tight uppercase font-bold mt-0.5 leading-none text-center truncate max-w-full ${
                               isBooked
-                                ? 'text-red-500 dark:text-red-400'
+                                ? isUserSlot
+                                  ? 'text-purple-600 dark:text-purple-400 font-extrabold'
+                                  : 'text-red-500 dark:text-red-400'
                                 : isSelected
                                 ? slot.index === sortedSelected[0] ? 'text-slate-900 dark:text-white font-black' : 'text-slate-500 dark:text-slate-400'
                                 : isCheckoutDepartureDay
@@ -209,7 +225,7 @@ export function UserWeeklySlotSchedule({
                             }`}
                           >
                             {isBooked
-                              ? 'Booked'
+                              ? (isUserSlot ? 'You' : 'Booked')
                               : isSelected
                               ? slot.index === sortedSelected[0] ? 'Check-In' : 'Night'
                               : isCheckoutDepartureDay
@@ -386,58 +402,53 @@ export function UserWeeklySlotSchedule({
             </div>
 
             <div>
-              <label className="block text-[10px] font-medium text-slate-500 uppercase mb-1">
-                Guests (Adult &amp; Child)
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[10px] font-medium text-slate-500 uppercase">
+                  Person Count *
+                </label>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50">
+                  Max: {effectiveMax} {effectiveMax === 1 ? 'person' : 'persons'} (Capacity: {effectiveCapacity})
+                </span>
+              </div>
               <div className="flex items-center justify-between h-[38px] px-2.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                {/* Adult */}
-                <div className="flex items-center gap-1">
-                  <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">Adult</span>
-                  <button
-                    type="button"
-                    onClick={() => setAdults((prev) => Math.max(1, prev - 1))}
-                    disabled={adults <= 1}
-                    className="w-5 h-5 rounded flex items-center justify-center font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 disabled:opacity-30 cursor-pointer"
-                  >
-                    −
-                  </button>
-                  <span className="text-xs font-bold text-slate-900 dark:text-white w-3 text-center">
-                    {adults}
+                <div className="flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                    {currentPersonCount} {currentPersonCount === 1 ? 'Person' : 'Persons'}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setAdults((prev) => Math.min(10, prev + 1))}
-                    className="w-5 h-5 rounded flex items-center justify-center font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 cursor-pointer"
-                  >
-                    +
-                  </button>
                 </div>
 
-                <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-0.5" />
-
-                {/* Child */}
-                <div className="flex items-center gap-1">
-                  <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">Child</span>
+                <div className="flex items-center gap-1.5">
                   <button
                     type="button"
-                    onClick={() => setChildren((prev) => Math.max(0, prev - 1))}
-                    disabled={children <= 0}
-                    className="w-5 h-5 rounded flex items-center justify-center font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 disabled:opacity-30 cursor-pointer"
+                    onClick={() => handleUpdatePersonCount(currentPersonCount - 1)}
+                    disabled={currentPersonCount <= 1}
+                    className="w-6 h-6 rounded flex items-center justify-center font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                    title="Decrease person count"
                   >
                     −
                   </button>
-                  <span className="text-xs font-bold text-slate-900 dark:text-white w-3 text-center">
-                    {children}
+                  <span className="text-xs font-bold text-slate-900 dark:text-white w-4 text-center select-none">
+                    {currentPersonCount}
                   </span>
                   <button
                     type="button"
-                    onClick={() => setChildren((prev) => Math.min(10, prev + 1))}
-                    className="w-5 h-5 rounded flex items-center justify-center font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 cursor-pointer"
+                    onClick={() => handleUpdatePersonCount(currentPersonCount + 1)}
+                    disabled={currentPersonCount >= effectiveMax}
+                    className="w-6 h-6 rounded flex items-center justify-center font-bold text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                    title="Increase person count"
                   >
                     +
                   </button>
                 </div>
               </div>
+              {currentPersonCount > 1 && (
+                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 font-medium">
+                  ✓ Occupies {currentPersonCount} of {effectiveCapacity} spaces in Room {roomDisplay}.
+                </p>
+              )}
             </div>
 
           </div>

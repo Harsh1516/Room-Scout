@@ -10,6 +10,7 @@ import { Wishlist } from '../models/Wishlist.js';
 import { generateToken } from '../middleware/authMiddleware.js';
 import { sendPasswordResetEmail, testEmailConnection } from '../services/emailService.js';
 import { uploadSecureImage } from '../utils/imageSecurity.js';
+import { OAuth2Client } from 'google-auth-library';
 
 // Helper to create Nodemailer Gmail Transporter
 function getMailTransporter() {
@@ -109,6 +110,7 @@ export const registerUser = async (req, res, next) => {
         avatar: hostDoc.avatar,
         role: 'host',
         status: hostDoc.status,
+        hasPassword: true,
         token,
       });
     }
@@ -134,6 +136,7 @@ export const registerUser = async (req, res, next) => {
       phone: userDoc.phone,
       avatar: userDoc.avatar,
       role: 'user',
+      hasPassword: true,
       token,
     });
   } catch (error) {
@@ -170,6 +173,12 @@ export const loginUser = async (req, res, next) => {
         return res.status(404).json({ message: 'Host account not found. Please register as a Host through the Upload tab.' });
       }
 
+      if (!host.password) {
+        return res.status(400).json({
+          message: 'This account was registered through Google Sign-In and has no password yet. Please log in with Google, or set a password in your account settings.',
+        });
+      }
+
       const isMatch = await host.matchPassword(password);
       if (!isMatch) {
         return res.status(401).json({ message: 'Invalid password' });
@@ -185,6 +194,7 @@ export const loginUser = async (req, res, next) => {
         avatar: host.avatar || 'HO',
         role: 'host',
         status: host.status,
+        hasPassword: true,
       };
     } else if (targetRole === 'user') {
       const user = await User.findOne({ email: cleanEmail }).select('+password');
@@ -196,6 +206,12 @@ export const loginUser = async (req, res, next) => {
           });
         }
         return res.status(404).json({ message: 'User account not found. Please register as a Guest through the Search tab.' });
+      }
+
+      if (!user.password) {
+        return res.status(400).json({
+          message: 'This account was registered through Google Sign-In and has no password yet. Please log in with Google, or set a password in your account settings.',
+        });
       }
 
       const isMatch = await user.matchPassword(password);
@@ -212,6 +228,7 @@ export const loginUser = async (req, res, next) => {
         phone: user.phone || '',
         avatar: user.avatar || 'US',
         role: user.role || 'user',
+        hasPassword: true,
       };
     } else {
       let account = await User.findOne({ email: cleanEmail }).select('+password');
@@ -224,6 +241,12 @@ export const loginUser = async (req, res, next) => {
 
       if (!account) {
         return res.status(404).json({ message: 'Account not found. Please register first.' });
+      }
+
+      if (!account.password) {
+        return res.status(400).json({
+          message: 'This account was registered through Google Sign-In and has no password yet. Please log in with Google, or set a password in your account settings.',
+        });
       }
 
       const isMatch = await account.matchPassword(password);
@@ -241,6 +264,8 @@ export const loginUser = async (req, res, next) => {
         avatar: account.avatar || (detectedRole === 'host' ? 'HO' : 'US'),
         role: account.role || detectedRole,
         status: account.status,
+        authProvider: account.authProvider || 'local',
+        hasPassword: true,
       };
     }
 
@@ -255,10 +280,170 @@ export const loginUser = async (req, res, next) => {
       avatar: authenticatedAccount.avatar,
       role: authenticatedAccount.role,
       status: authenticatedAccount.status,
+      authProvider: authenticatedAccount.authProvider,
+      hasPassword: true,
       token,
     });
   } catch (error) {
     console.error('Login Error:', error);
+    return next(error);
+  }
+};
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+// @desc    Authenticate with Google OAuth ID Token
+// @route   POST /api/auth/google
+// @access  Public
+export const googleAuth = async (req, res, next) => {
+  try {
+    const { credential, role } = req.body;
+    const targetRole = role === 'host' ? 'host' : 'user';
+
+    if (!credential) {
+      return res.status(400).json({ message: 'Google credential is required.' });
+    }
+
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      return res.status(500).json({ message: 'GOOGLE_CLIENT_ID environment variable is missing on server.' });
+    }
+
+    // Verify Google ID Token
+    let payload;
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: clientId,
+      });
+      payload = ticket.getPayload();
+    } catch (err) {
+      console.error('Google token verification error:', err.message);
+      return res.status(401).json({ message: 'Invalid or expired Google token.' });
+    }
+
+    if (!payload || !payload.email) {
+      return res.status(400).json({ message: 'Unable to retrieve verified email from Google.' });
+    }
+
+    const googleEmail = payload.email.toLowerCase().trim();
+    const googleId = payload.sub;
+    const name = payload.name || payload.given_name || 'Room Scout User';
+    const avatar = payload.picture || (targetRole === 'host' ? 'HO' : 'US');
+
+    let authenticatedAccount = null;
+    let token = null;
+
+    if (targetRole === 'host') {
+      // Prevent cross-role collision: Guest accounts cannot login as Host
+      const existingUser = await User.findOne({ email: googleEmail });
+      if (existingUser) {
+        return res.status(403).json({
+          message: 'This Google account is already registered as a Student/Guest account. Hosts must use a separate host email.',
+        });
+      }
+
+      let host = await Host.findOne({ $or: [{ googleId }, { email: googleEmail }] }).select('+password');
+      if (!host) {
+        // Register new Host with Google
+        host = await Host.create({
+          name,
+          email: googleEmail,
+          googleId,
+          authProvider: 'google',
+          avatar,
+          role: 'host',
+          status: 'Pending Approval',
+          isApproved: false,
+        });
+      } else {
+        if (!host.googleId) {
+          host.googleId = googleId;
+          if (payload.picture && (!host.avatar || host.avatar === 'HO')) {
+            host.avatar = payload.picture;
+          }
+          await host.save();
+        }
+      }
+
+      token = await host.generateToken();
+      authenticatedAccount = {
+        _id: host._id.toString(),
+        id: host._id.toString(),
+        name: host.name,
+        email: host.email,
+        phone: host.phone || '',
+        avatar: host.avatar || 'HO',
+        role: 'host',
+        status: host.status,
+        isApproved: host.isApproved,
+        authProvider: host.authProvider || 'google',
+        hasPassword: Boolean(host.password),
+      };
+    } else {
+      // Regular user / student / guest
+      // Prevent cross-role collision: Host accounts cannot login as Guest
+      const existingHost = await Host.findOne({ email: googleEmail });
+      if (existingHost) {
+        return res.status(403).json({
+          message: 'This Google account is registered as a Property Host. Guests must log in with a student/guest email.',
+        });
+      }
+
+      let user = await User.findOne({ $or: [{ googleId }, { email: googleEmail }] }).select('+password');
+      if (!user) {
+        // Register new User with Google
+        user = await User.create({
+          name,
+          email: googleEmail,
+          googleId,
+          authProvider: 'google',
+          avatar,
+          role: 'user',
+        });
+      } else {
+        if (!user.googleId) {
+          user.googleId = googleId;
+          if (payload.picture && (!user.avatar || user.avatar === 'US')) {
+            user.avatar = payload.picture;
+          }
+          await user.save();
+        }
+      }
+
+      token = await user.generateToken();
+      authenticatedAccount = {
+        _id: user._id.toString(),
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        phone: user.phone || '',
+        avatar: user.avatar || 'US',
+        role: user.role || 'user',
+        isAdmin: user.role === 'admin',
+        authProvider: user.authProvider || 'google',
+        hasPassword: Boolean(user.password),
+      };
+    }
+
+    setAuthCookie(res, token);
+
+    return res.json({
+      _id: authenticatedAccount._id,
+      id: authenticatedAccount._id,
+      name: authenticatedAccount.name,
+      email: authenticatedAccount.email,
+      phone: authenticatedAccount.phone,
+      avatar: authenticatedAccount.avatar,
+      role: authenticatedAccount.role,
+      status: authenticatedAccount.status,
+      isApproved: authenticatedAccount.isApproved,
+      authProvider: authenticatedAccount.authProvider,
+      hasPassword: authenticatedAccount.hasPassword,
+      token,
+    });
+  } catch (error) {
+    console.error('Google Auth Error:', error);
     return next(error);
   }
 };
@@ -362,7 +547,7 @@ export const forgotPassword = async (req, res, next) => {
 // @access  Private
 export const updateUserProfile = async (req, res, next) => {
   try {
-    const userId = req.user._id || req.user.id;
+    const userId = req.user._id;
     const { name, phone, avatar } = req.body;
 
     if (!name || !name.trim()) {
@@ -386,7 +571,7 @@ export const updateUserProfile = async (req, res, next) => {
     let updatedAccount = null;
 
     if (isHostRole) {
-      const host = await Host.findById(userId);
+      const host = await Host.findById(userId).select('+password');
       if (host) {
         host.name = cleanName;
         host.phone = cleanPhone;
@@ -402,10 +587,13 @@ export const updateUserProfile = async (req, res, next) => {
           avatar: host.avatar,
           role: 'host',
           status: host.status,
+          isApproved: host.isApproved,
+          authProvider: host.authProvider || 'local',
+          hasPassword: Boolean(host.password),
         };
       }
     } else {
-      const user = await User.findById(userId);
+      const user = await User.findById(userId).select('+password');
       if (user) {
         user.name = cleanName;
         user.phone = cleanPhone;
@@ -420,6 +608,8 @@ export const updateUserProfile = async (req, res, next) => {
           phone: user.phone,
           avatar: user.avatar,
           role: 'user',
+          authProvider: user.authProvider || 'local',
+          hasPassword: Boolean(user.password),
         };
       }
     }
@@ -447,7 +637,7 @@ export const updateUserProfile = async (req, res, next) => {
 // @access  Private
 export const changePassword = async (req, res, next) => {
   try {
-    const userId = req.user._id || req.user.id;
+    const userId = req.user._id;
     const isHostRole = req.user.role === 'host';
     const { oldPassword, newPassword } = req.body;
 
@@ -467,6 +657,12 @@ export const changePassword = async (req, res, next) => {
       return res.status(404).json({ message: 'Account not found.' });
     }
 
+    if (!account.password) {
+      return res.status(400).json({
+        message: 'This account does not have a password set yet. Please use the Set Password option.',
+      });
+    }
+
     const isMatch = await account.matchPassword(oldPassword);
     if (!isMatch) {
       return res.status(400).json({ message: 'Incorrect current password.' });
@@ -478,9 +674,71 @@ export const changePassword = async (req, res, next) => {
     return res.json({
       success: true,
       message: 'Password updated successfully!',
+      hasPassword: true,
     });
   } catch (error) {
     console.error('Change Password Error:', error);
+    return next(error);
+  }
+};
+
+// @desc    Set Password for accounts with no password (e.g., Google-authenticated)
+// @route   POST /api/auth/set-password
+// @access  Private
+export const setPassword = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const isHostRole = req.user.role === 'host';
+    const { newPassword } = req.body;
+
+    if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 6) {
+      return res.status(400).json({ message: 'New password must be at least 6 characters long.' });
+    }
+
+    const account = isHostRole
+      ? await Host.findById(userId).select('+password')
+      : await User.findById(userId).select('+password');
+
+    if (!account) {
+      return res.status(404).json({ message: 'Account not found.' });
+    }
+
+    if (account.password) {
+      return res.status(400).json({
+        message: 'A password is already set for this account. Please use the Change Password form instead.',
+      });
+    }
+
+    account.password = newPassword;
+    await account.save();
+
+    const updatedAccount = {
+      _id: account._id.toString(),
+      id: account._id.toString(),
+      name: account.name,
+      email: account.email,
+      phone: account.phone || '',
+      avatar: account.avatar || (isHostRole ? 'HO' : 'US'),
+      role: account.role || (isHostRole ? 'host' : 'user'),
+      status: account.status,
+      isApproved: account.isApproved,
+      authProvider: account.authProvider || 'google',
+      hasPassword: true,
+      hasProperty: Boolean(account.hasProperty),
+    };
+
+    const token = await account.generateToken();
+    setAuthCookie(res, token);
+
+    return res.json({
+      success: true,
+      message: 'Password created successfully! You can now log in using either Google or your email and password.',
+      user: updatedAccount,
+      token,
+      hasPassword: true,
+    });
+  } catch (error) {
+    console.error('Set Password Error:', error);
     return next(error);
   }
 };
@@ -490,7 +748,7 @@ export const changePassword = async (req, res, next) => {
 // @access  Private
 export const deleteAccount = async (req, res, next) => {
   try {
-    const userId = req.user._id || req.user.id;
+    const userId = req.user._id;
     const isHostRole = req.user.role === 'host';
 
     if (isHostRole) {
@@ -530,14 +788,41 @@ export const getUserProfile = async (req, res, next) => {
       return res.status(401).json({ message: 'Account not found or deleted from database.' });
     }
 
-    const userId = req.user.id || req.user._id;
+    const userId = req.user._id;
 
     if (req.user.role === 'host') {
-      const host = await Host.findById(userId).select('-password');
-      if (host) return res.json(host);
+      const host = await Host.findById(userId).select('+password');
+      if (host) {
+        const hostObj = host.toObject();
+        hostObj.hasPassword = Boolean(host.password);
+        delete hostObj.password;
+        return res.json(hostObj);
+      }
     } else {
-      const user = await User.findById(userId).select('-password');
-      if (user) return res.json(user);
+      const user = await User.findById(userId).select('+password');
+      if (user) {
+        const userObj = user.toObject();
+        userObj.hasPassword = Boolean(user.password);
+        delete userObj.password;
+        return res.json(userObj);
+      }
+    }
+
+    // Secondary fallback in case of role mismatch
+    const fallbackHost = await Host.findById(userId).select('+password');
+    if (fallbackHost) {
+      const hostObj = fallbackHost.toObject();
+      hostObj.hasPassword = Boolean(fallbackHost.password);
+      delete hostObj.password;
+      return res.json(hostObj);
+    }
+
+    const fallbackUser = await User.findById(userId).select('+password');
+    if (fallbackUser) {
+      const userObj = fallbackUser.toObject();
+      userObj.hasPassword = Boolean(fallbackUser.password);
+      delete userObj.password;
+      return res.json(userObj);
     }
 
     return res.status(401).json({ message: 'Account not found or deleted from database.' });

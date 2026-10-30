@@ -150,13 +150,13 @@ export function useStaySearch() {
   // Insert or update newly published stay directly in state & memory cache
   const addNewStay = (newStay) => {
     if (!newStay) return;
-    const newId = String(newStay._id || newStay.id);
+    const newId = String(newStay._id);
 
     setAllStays((prev) => {
-      const exists = prev.some((s) => String(s._id || s.id) === newId);
+      const exists = prev.some((s) => String(s._id) === newId);
       let updated;
       if (exists) {
-        updated = prev.map((s) => (String(s._id || s.id) === newId ? { ...s, ...newStay } : s));
+        updated = prev.map((s) => (String(s._id) === newId ? { ...s, ...newStay } : s));
       } else {
         updated = [newStay, ...prev];
       }

@@ -6,24 +6,21 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
   const { isInWishlist, toggleWishlist } = useWishlist();
   const [selectedSharing, setSelectedSharing] = useState('double'); // single, double, triple
 
-  const stayId = stay?._id || stay?.id;
+  const stayId = stay?._id;
   const isSaved = isInWishlist(stayId);
 
-  // Initialize reviews from stay catalog if present, fallback to defaults
+  // Initialize reviews from stay catalog if present, empty for new stays
   const [reviews, setReviews] = useState(() => {
     if (stay && Array.isArray(stay.reviews) && stay.reviews.length > 0) {
       return stay.reviews.map((r, i) => ({
-        id: r._id || r.id || i,
+        _id: r._id || i,
         author: r.userName || r.author || 'Guest User',
         rating: r.rating || 5,
         date: r.createdAt ? new Date(r.createdAt).toLocaleDateString() : (r.date || 'Recent'),
         text: r.comment || r.text || '',
       }));
     }
-    return [
-      { id: 1, author: 'Rohan Sharma', rating: 5, date: '2 weeks ago', text: 'Great place with fast wifi and very hygienic homemade meals! Host is super friendly.' },
-      { id: 2, author: 'Ananya Verma', rating: 4, date: '1 month ago', text: 'Comfortable rooms with good ventilation. Laundry service is prompt.' }
-    ];
+    return [];
   });
 
   const [newReviewText, setNewReviewText] = useState('');
@@ -34,13 +31,15 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
     if (stay && Array.isArray(stay.reviews) && stay.reviews.length > 0) {
       setReviews(
         stay.reviews.map((r, i) => ({
-          id: r._id || r.id || i,
+          _id: r._id || i,
           author: r.userName || r.author || 'Guest User',
           rating: r.rating || 5,
           date: r.createdAt ? new Date(r.createdAt).toLocaleDateString() : (r.date || 'Recent'),
           text: r.comment || r.text || '',
         }))
       );
+    } else {
+      setReviews([]);
     }
   }, [stay]);
 
@@ -109,7 +108,7 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
 
       <div className="relative w-full max-w-4xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 z-10 my-auto flex flex-col max-h-[90vh]">
         {/* Header Bar */}
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-900/70">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-900/70 shrink-0">
           <div className="flex items-center gap-3">
             <span className="text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
               {stay.type}
@@ -144,15 +143,29 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
         </div>
 
         {/* Content Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
           {/* Main Title & Location */}
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
                 {stay.title}
               </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1">
-                📍 {stay.location}, Uttarakhand • <span className="text-amber-500 font-bold">★ {stay.rating || 4.8}</span> (18 reviews)
+              <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-1 flex-wrap">
+                <span>📍 {stay.location || stay.city || 'Uttarakhand'}</span>
+                <span>•</span>
+                {Array.isArray(reviews) && reviews.length > 0 ? (
+                  <span className="flex items-center gap-1">
+                    <span className="text-amber-500 font-bold">
+                      ★ {(reviews.reduce((acc, r) => acc + (Number(r.rating) || 5), 0) / reviews.length).toFixed(1)}
+                    </span>
+                    <span>({reviews.length} {reviews.length === 1 ? 'review' : 'reviews'})</span>
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono font-bold text-[10px] border border-slate-200 dark:border-slate-700">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    NEW
+                  </span>
+                )}
               </p>
             </div>
             <div className="text-left sm:text-right shrink-0">
@@ -357,6 +370,12 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
             <div className="space-y-6">
               {/* Existing Reviews List */}
               <div className="space-y-3">
+                {reviews.length === 0 && (
+                  <div className="py-6 text-center text-slate-400 dark:text-slate-500 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+                    <p className="text-xs font-semibold">No reviews yet for this new stay.</p>
+                    <p className="text-[11px] mt-0.5">Be the first guest to share your experience!</p>
+                  </div>
+                )}
                 {reviews.map((rev) => (
                   <div
                     key={rev.id}
@@ -411,12 +430,12 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
         </div>
 
         {/* Footer / CTA Bar */}
-        <div className="p-4 px-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex items-center justify-between shrink-0">
           <div>
             <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
               Selected Rate
             </span>
-            <span className="text-xl font-black text-cyan-600 dark:text-cyan-400">
+            <span className="text-lg sm:text-xl font-black text-cyan-600 dark:text-cyan-400">
               ₹{currentPrice.toLocaleString('en-IN')}
             </span>
             <span className="text-xs text-slate-500"> {rateUnit}</span>
@@ -435,7 +454,7 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
                   });
                 }
               }}
-              className="px-6 py-3 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold text-sm transition-all shadow-lg shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
+              className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold text-xs sm:text-sm transition-all shadow-lg shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
             >
               Book Now ⚡
             </button>

@@ -6,7 +6,7 @@ import { Right } from './navbar/Right';
 export function Navbar({ onSearchSubmit, onLoginClick }) {
   return (
     <header className="relative w-full">
-      <Left />
+      <Left showBrand={true} />
       <Center onSearchSubmit={onSearchSubmit} />
       <Right onLoginClick={onLoginClick} />
     </header>

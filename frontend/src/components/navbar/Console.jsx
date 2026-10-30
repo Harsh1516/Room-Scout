@@ -85,7 +85,7 @@ export function Console({
   return (
     <div ref={consoleRef} className="relative select-none">
       <nav
-        className="relative flex items-center p-1 sm:p-1.5 rounded-full console-clear-capsule shadow-lg border border-white/20 dark:border-white/10 select-none"
+        className="relative flex items-center p-0.5 sm:p-1.5 rounded-full console-clear-capsule shadow-lg border border-white/20 dark:border-white/10 select-none max-w-[calc(100vw-96px)] sm:max-w-none"
         style={{ borderRadius: 9999 }}
       >
         {/* 1. Expandable 3-Segment Controls (What, Where, Who) */}
@@ -97,7 +97,7 @@ export function Console({
               animate={{
                 width: 'auto',
                 opacity: 1,
-                marginRight: 8,
+                marginRight: 4,
                 transitionEnd: { overflow: 'visible' },
               }}
               exit={{
@@ -106,10 +106,10 @@ export function Console({
                 marginRight: 0,
                 overflow: 'hidden',
               }}
-              transition={{ duration: 0.42, ease: [0.25, 0.1, 0.25, 1] }}
+              transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
               className="flex items-center shrink-0"
             >
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                 {/* 1. What: Stay Type Selector */}
                 <WhatControl
                   selectedType={selectedType}
@@ -166,11 +166,11 @@ export function Console({
             }
           }}
           title={!isExpanded ? 'Click to expand search options' : (canSearch ? 'Search verified stays' : 'Select filters or search')}
-          className="relative font-bold text-xs px-3.5 sm:px-4 py-2 rounded-full shrink-0 select-none flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 text-white shadow-[0_0_15px_rgba(6,182,212,0.35)] hover:shadow-[0_0_20px_rgba(6,182,212,0.5)] cursor-pointer active:scale-95 focus:outline-none transition-transform"
+          className="relative font-bold text-[11px] sm:text-xs px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full shrink-0 select-none flex items-center justify-center gap-1 sm:gap-2 bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 text-white shadow-[0_0_15px_rgba(6,182,212,0.35)] hover:shadow-[0_0_20px_rgba(6,182,212,0.5)] cursor-pointer active:scale-95 focus:outline-none transition-transform"
         >
           {/* Search Magnifying Glass or Spinner */}
           <svg
-            className={`w-3.5 h-3.5 shrink-0 ${isSearching ? 'animate-spin' : ''}`}
+            className={`w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0 ${isSearching ? 'animate-spin' : ''}`}
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -189,13 +189,13 @@ export function Console({
           </svg>
 
           {/* Label */}
-          <span className="font-bold tracking-tight">
-            {isSearching ? 'Searching...' : 'Search'}
+          <span className="font-bold tracking-tight text-[11px] sm:text-xs">
+            {isSearching ? '...' : 'Search'}
           </span>
 
           {/* Quick Active Filter Preview or Prompt */}
           {!isExpanded && activeSummary ? (
-            <span className="max-w-24 sm:max-w-32 truncate text-[10px] font-medium bg-white/20 px-2 py-0.5 rounded-full text-cyan-100">
+            <span className="max-w-20 sm:max-w-32 truncate text-[9px] sm:text-[10px] font-medium bg-white/20 px-1.5 py-0.5 rounded-full text-cyan-100">
               {activeSummary}
             </span>
           ) : !isExpanded ? (
@@ -211,16 +211,16 @@ export function Console({
             <motion.button
               type="button"
               initial={{ opacity: 0, scale: 0.8, width: 0, marginLeft: 0 }}
-              animate={{ opacity: 1, scale: 1, width: 'auto', marginLeft: 8 }}
+              animate={{ opacity: 1, scale: 1, width: 'auto', marginLeft: 4 }}
               exit={{ opacity: 0, scale: 0.8, width: 0, marginLeft: 0 }}
-              transition={{ duration: 0.42, ease: [0.25, 0.1, 0.25, 1] }}
+              transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
               style={{ willChange: 'width, opacity', transform: 'translate3d(0, 0, 0)' }}
               onClick={handleClearAndGoHome}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/20 dark:hover:bg-rose-500/35 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-400/30 transition-all cursor-pointer shrink-0 overflow-hidden active:scale-95"
+              className="flex items-center gap-1 px-1.5 sm:px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/20 dark:hover:bg-rose-500/35 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-400/30 transition-all cursor-pointer shrink-0 overflow-hidden active:scale-95"
               title="Reset all search filters"
             >
               <span>✕</span>
-              <span className="hidden xs:inline">Reset</span>
+              <span className="hidden sm:inline">Reset</span>
             </motion.button>
           )}
         </AnimatePresence>

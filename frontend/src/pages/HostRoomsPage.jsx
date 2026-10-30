@@ -126,7 +126,7 @@ export function HostRoomsPage() {
     }
 
     const newCard = {
-      id: `room_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      _id: `room_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
       roomNumber: nextNum,
       roomNumInt: parseInt(nextNum, 10) || 101,
       type: activeRate.type,
@@ -143,7 +143,7 @@ export function HostRoomsPage() {
   const handleUpdateRoomNumber = (roomId, newNumber) => {
     setRooms((prev) =>
       prev.map((r) => {
-        if (r.id === roomId) {
+        if (r._id === roomId) {
           const parsed = parseInt(newNumber.replace(/[^0-9]/g, ''), 10);
           return {
             ...r,
@@ -158,7 +158,7 @@ export function HostRoomsPage() {
 
   // Remove a room card
   const handleRemoveCard = (roomId) => {
-    setRooms((prev) => prev.filter((r) => r.id !== roomId));
+    setRooms((prev) => prev.filter((r) => r._id !== roomId));
     toast.info('Room card removed');
   };
 
@@ -226,7 +226,7 @@ export function HostRoomsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col host-page-scope font-body-md antialiased overflow-x-clip selection:bg-custom-btn-primary selection:text-white">
+    <div className="min-h-screen bg-white dark:bg-[#07131e] text-slate-800 dark:text-on-surface flex flex-col host-page-scope font-body-md antialiased overflow-x-clip selection:bg-custom-btn-primary selection:text-white relative">
       {/* Top Header Navbar */}
       <header className="sticky top-0 z-40 backdrop-blur-md bg-white/95 dark:bg-slate-900/95 border-b border-slate-200/80 dark:border-slate-800 shadow-2xs">
         <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 h-15 flex items-center justify-between gap-3">
@@ -309,12 +309,12 @@ export function HostRoomsPage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {currentTypeRooms.map((card) => (
               <div
-                key={card.id}
+                key={card._id}
                 className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col justify-center h-28 relative group shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
               >
                 <button
                   type="button"
-                  onClick={() => handleRemoveCard(card.id)}
+                  onClick={() => handleRemoveCard(card._id)}
                   className="absolute top-2 right-2 w-6 h-6 rounded-md hover:bg-red-50 dark:hover:bg-red-950/40 text-slate-400 hover:text-red-600 dark:hover:text-red-400 text-xs flex items-center justify-center font-bold transition-colors cursor-pointer"
                   title="Remove this room card"
                 >
@@ -328,7 +328,7 @@ export function HostRoomsPage() {
                   <input
                     type="text"
                     value={card.roomNumber}
-                    onChange={(e) => handleUpdateRoomNumber(card.id, e.target.value)}
+                    onChange={(e) => handleUpdateRoomNumber(card._id, e.target.value)}
                     placeholder="e.g. 101"
                     className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-900 dark:text-white text-center focus:outline-none focus:border-slate-400 transition-colors"
                   />

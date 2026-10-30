@@ -82,7 +82,7 @@ function resolveCoordinates(stay) {
   }
 
   // Stable deterministic fallback
-  const stayId = String(stay._id || stay.id || '0');
+  const stayId = String(stay._id || '0');
   const hash = stayId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
   return [29.35 + (hash % 15) * 0.015, 79.48 + (hash % 15) * 0.015];
 }
@@ -143,7 +143,7 @@ export function SearchInteractiveMap({
       const [lat, lon] = resolveCoordinates(stay);
       return {
         stay,
-        stayId: stay._id || stay.id,
+        stayId: stay._id,
         baseLat: lat,
         baseLon: lon,
       };

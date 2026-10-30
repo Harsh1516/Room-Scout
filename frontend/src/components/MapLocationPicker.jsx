@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { fetchAddressFromCoords } from '../utils/geoUtils';
 
 // Fix Leaflet's default icon path issues in bundlers (Client-only / SSR Safe)
 if (typeof window !== 'undefined' && L?.Icon?.Default) {
@@ -12,33 +13,25 @@ if (typeof window !== 'undefined' && L?.Icon?.Default) {
   });
 }
 
-// Custom Premium SVG Pin Icon
+// Custom Precision SVG Pin Icon with exact pixel-anchored needle tip
 const createCustomPin = () => {
   return L.divIcon({
     className: 'custom-map-pin',
-    html: `<div style="
-      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-      width: 32px;
-      height: 32px;
-      border-radius: 50% 50% 50% 0;
-      transform: rotate(-45deg);
-      border: 3px solid #ffffff;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.45);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    ">
-      <div style="
-        width: 10px;
-        height: 10px;
-        background-color: #ffffff;
-        border-radius: 50%;
-        transform: rotate(45deg);
-      "></div>
+    html: `<div style="width:30px;height:40px;display:flex;align-items:center;justify-content:center;cursor:grab;">
+      <svg width="30" height="40" viewBox="0 0 30 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));">
+        <path d="M15 0C6.71573 0 0 6.71573 0 15C0 26.25 15 40 15 40C15 40 30 26.25 30 15C30 6.71573 23.2843 0 15 0Z" fill="url(#pinGrd)" stroke="#ffffff" stroke-width="2"/>
+        <circle cx="15" cy="15" r="5" fill="#ffffff"/>
+        <defs>
+          <linearGradient id="pinGrd" x1="0" y1="0" x2="30" y2="40" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#059669"/>
+            <stop offset="1" stop-color="#10b981"/>
+          </linearGradient>
+        </defs>
+      </svg>
     </div>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32],
+    iconSize: [30, 40],
+    iconAnchor: [15, 40],
+    popupAnchor: [0, -40],
   });
 };
 
@@ -91,35 +84,12 @@ export function MapLocationPicker({
   // Map Mode: 'satellite' | 'street'
   const [mapMode, setMapMode] = useState(initialMapMode);
 
-  // Reverse Geocoding helper (OpenStreetMap Nominatim)
+  // Reverse Geocoding helper with robust PIN code resolution
   const reverseGeocode = async (lat, lng) => {
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-        { headers: { 'User-Agent': 'StayHub-Property-Locator/1.0' } }
-      );
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.address && onAddressDetected) {
-          const addr = data.address;
-          const roadParts = [
-            addr.building || addr.amenity || addr.house_name || addr.shop || addr.tourism || '',
-            addr.road || addr.pedestrian || addr.footway || addr.path || addr.street || '',
-            addr.suburb || addr.neighbourhood || addr.residential || addr.colony || addr.sector || addr.hamlet || '',
-          ].filter(Boolean);
-
-          const road = roadParts.join(', ') || addr.road || addr.suburb || addr.neighbourhood || addr.village || data.display_name?.split(',')?.[0]?.trim() || '';
-          const city = addr.city || addr.town || addr.city_district || addr.village || addr.county || '';
-          const state = addr.state || '';
-          const postcode = addr.postcode || '';
-          onAddressDetected({
-            roadArea: road,
-            city,
-            state,
-            pincode: postcode,
-            fullAddress: data.display_name,
-          });
-        }
+      const detected = await fetchAddressFromCoords(lat, lng);
+      if (detected && onAddressDetected) {
+        onAddressDetected(detected);
       }
     } catch (e) {
       console.warn('Reverse geocoding note:', e.message);
@@ -158,6 +128,7 @@ export function MapLocationPicker({
   // Initialize Leaflet Map
   useEffect(() => {
     if (!mapContainerRef.current) return;
+    let resizeObserver = null;
 
     if (!mapInstanceRef.current) {
       const initialLat = Number(latitude) || 29.3919;
@@ -180,7 +151,7 @@ export function MapLocationPicker({
         draggable: true,
       }).addTo(map);
 
-      marker.bindPopup('<b>Property Spot</b><br>Drag pin to exact roof or building.').openPopup();
+      marker.bindPopup('<b>Property Spot</b><br><span style="font-size:11px;color:#666">Drag pin to exact roof or building.</span>');
 
       marker.on('dragend', (e) => {
         const { lat, lng } = e.target.getLatLng();
@@ -199,11 +170,24 @@ export function MapLocationPicker({
         reverseGeocode(fixedLat, fixedLng);
       });
 
+      // Keep Leaflet tiles crisp & fully drawn on dynamic container resize
+      if (typeof ResizeObserver !== 'undefined' && mapContainerRef.current) {
+        resizeObserver = new ResizeObserver(() => {
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.invalidateSize();
+          }
+        });
+        resizeObserver.observe(mapContainerRef.current);
+      }
+
       mapInstanceRef.current = map;
       markerRef.current = marker;
     }
 
     return () => {
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -229,19 +213,19 @@ export function MapLocationPicker({
   }, [latitude, longitude]);
 
   return (
-    <div className="space-y-3">
+    <div className="w-full h-full">
       {/* Interactive Map Container with Floating Satellite & Street Switcher */}
-      <div className="relative w-full h-56 sm:h-64 lg:h-[280px] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm z-0">
+      <div className="relative w-full h-full overflow-hidden z-0">
         <div ref={mapContainerRef} className="w-full h-full" />
 
         {/* Top Left Instructions Badge */}
-        <div className="absolute top-3 left-3 z-[400] bg-slate-950/85 backdrop-blur-md text-white px-3 py-1.5 rounded-xl text-[11px] font-normal shadow-md border border-slate-800 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Click map or drag pin to pinpoint property</span>
+        <div className="absolute top-2 left-2 z-[400] bg-slate-950/85 backdrop-blur-md text-white px-2.5 py-1 rounded-lg text-[10px] font-normal shadow-md border border-slate-800 flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span>Click map or drag pin to pinpoint</span>
         </div>
 
         {/* Top Right Satellite & Street Switcher */}
-        <div className="absolute top-3 right-3 z-[400] bg-slate-950/85 backdrop-blur-md p-1 rounded-xl shadow-md border border-slate-800 flex items-center gap-1">
+        <div className="absolute top-2 right-2 z-[400] bg-slate-950/85 backdrop-blur-md p-0.5 rounded-lg shadow-md border border-slate-800 flex items-center gap-0.5">
           {Object.entries(MAP_MODES).map(([key, item]) => (
             <button
               key={key}
@@ -251,7 +235,7 @@ export function MapLocationPicker({
                 e.stopPropagation();
                 setMapMode(key);
               }}
-              className={`px-3 py-1 rounded-lg text-xs font-normal transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-2 py-0.5 rounded-md text-[11px] font-normal transition-all cursor-pointer flex items-center gap-1 ${
                 mapMode === key
                   ? 'bg-emerald-600 text-white shadow-xs font-medium'
                   : 'text-slate-300 hover:text-white hover:bg-white/10'

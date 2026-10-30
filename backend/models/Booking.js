@@ -52,7 +52,7 @@ const bookingSchema = new mongoose.Schema(
     gender: {
       type: String,
       enum: ['Male', 'Female', 'Other'],
-      default: 'Male',
+      default: 'Other',
     },
     aadharNumber: {
       type: String,
@@ -90,17 +90,20 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    bookedDates: {
+      type: [String],
+      default: [],
+    },
+    bookedMonths: {
+      type: [String],
+      default: [],
+    },
 
     // Occupancy & Billing
-    adults: {
+    personCount: {
       type: Number,
       default: 1,
       min: 1,
-    },
-    children: {
-      type: Number,
-      default: 0,
-      min: 0,
     },
     totalAmount: {
       type: Number,
@@ -135,28 +138,78 @@ const bookingSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['PENDING', 'CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED', 'REJECTED', 'EXPIRED'],
+      enum: ['PENDING', 'AWAITING_PAYMENT', 'CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED', 'REJECTED', 'EXPIRED'],
       default: 'CONFIRMED',
       index: true,
+    },
+    paymentDeadline: {
+      type: Date,
+      default: null,
+      index: true,
+    },
+    approvedAt: {
+      type: Date,
+      default: null,
     },
 
     // Payment Tracking
     paymentStatus: {
       type: String,
-      enum: ['UNPAID', 'PENDING', 'PAID', 'FAILED', 'REFUNDED', 'COMPLETED'],
+      enum: ['UNPAID', 'PENDING', 'PAID', 'FAILED', 'REFUND_PENDING', 'REFUNDED', 'COMPLETED'],
       default: 'PAID',
+      index: true,
     },
     paymentMethod: {
       type: String,
-      enum: ['ONLINE', 'RAZORPAY', 'PAY_ON_ARRIVAL', 'CASH', 'OFFLINE'],
+      enum: ['ONLINE', 'UPI', 'PAY_ON_ARRIVAL', 'CASH', 'OFFLINE', 'RAZORPAY'],
       default: 'OFFLINE',
     },
     paymentDetails: {
-      gateway: { type: String, default: 'Offline / Pay at Property' },
+      gateway: { type: String, default: 'Direct Host UPI' },
       paymentId: { type: String, default: '' },
       orderId: { type: String, default: '' },
       signature: { type: String, default: '' },
     },
+    upiPayment: {
+      upiId: { type: String, trim: true, default: '' },
+      payeeName: { type: String, trim: true, default: '' },
+      transactionRef: { type: String, trim: true, uppercase: true, default: '' },
+      receiptUrl: { type: String, default: '' },
+      verificationStatus: {
+        type: String,
+        enum: ['UNSUBMITTED', 'PENDING_VERIFICATION', 'VERIFIED', 'REJECTED'],
+        default: 'UNSUBMITTED',
+        index: true,
+      },
+      submittedAt: { type: Date, default: null },
+      verifiedAt: { type: Date, default: null },
+      verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Host', default: null },
+      verificationNote: { type: String, trim: true, default: '' },
+      rejectionReason: { type: String, trim: true, default: '' },
+    },
+    pricingSnapshot: {
+      basePrice: { type: Number, default: 0 },
+      rateUnit: { type: String, default: '/month' },
+      unitCount: { type: Number, default: 1 },
+      taxes: { type: Number, default: 0 },
+      maintenance: { type: Number, default: 0 },
+      deposit: { type: Number, default: 0 },
+      totalAmount: { type: Number, default: 0 },
+      currency: { type: String, default: 'INR' },
+      recipientUpiId: { type: String, default: '' },
+      recipientPayeeName: { type: String, default: '' },
+      snapshotAt: { type: Date, default: Date.now },
+    },
+    auditLog: [
+      {
+        action: { type: String, required: true },
+        performedBy: { type: mongoose.Schema.Types.ObjectId, default: null },
+        performerRole: { type: String, default: 'system' },
+        timestamp: { type: Date, default: Date.now },
+        details: { type: mongoose.Schema.Types.Mixed, default: {} },
+        note: { type: String, default: '' },
+      },
+    ],
   },
   {
     timestamps: true,
@@ -189,5 +242,6 @@ bookingSchema.virtual('guestAadhar').get(function () { return this.aadharNumber;
 bookingSchema.index({ stayId: 1, roomNumber: 1, checkIn: 1, checkOut: 1 });
 bookingSchema.index({ hostId: 1, status: 1, createdAt: -1 });
 bookingSchema.index({ userId: 1, createdAt: -1 });
+bookingSchema.index({ 'upiPayment.transactionRef': 1 }, { sparse: true });
 
 export const Booking = mongoose.model('Booking', bookingSchema);

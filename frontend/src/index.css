@@ -10,11 +10,93 @@
   --font-h2: 'Manrope', sans-serif;
   --font-h3: 'Manrope', sans-serif;
   --font-h4: 'Manrope', sans-serif;
-  --font-body-md: 'Inter', sans-serif;
-  --font-body-lg: 'Inter', sans-serif;
-  --font-mono-data: 'Inter', monospace;
-  --font-label-sm: 'Inter', sans-serif;
+  --font-body-md: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  --font-body-lg: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  --font-mono-data: 'JetBrains Mono', monospace;
+  --font-label-sm: 'Plus Jakarta Sans', sans-serif;
   --color-custom-btn-primary: #5E6BFF;
+
+  --color-outline-variant: #464554;
+  --color-inverse-surface: #d4e4fa;
+  --color-surface-container-highest: #273647;
+  --color-error-container: #93000a;
+  --color-surface-dim: #051424;
+  --color-secondary-fixed-dim: #4edea3;
+  --color-surface: #051424;
+  --color-error: #ffb4ab;
+  --color-outline: #908fa0;
+  --color-on-primary-fixed: #07006c;
+  --color-on-tertiary-container: #3e2400;
+  --color-surface-container: #122131;
+  --color-on-error-container: #ffdad6;
+  --color-secondary-container: #00a572;
+  --color-surface-tint: #c0c1ff;
+  --color-surface-container-high: #1c2b3c;
+  --color-tertiary-container: #ca8100;
+  --color-on-secondary-fixed-variant: #005236;
+  --color-on-background: #d4e4fa;
+  --color-on-primary: #1000a9;
+  --color-primary: #c0c1ff;
+  --color-background: #051424;
+  --color-on-tertiary-fixed-variant: #653e00;
+  --color-on-primary-fixed-variant: #2f2ebe;
+  --color-surface-bright: #2c3a4c;
+  --color-on-error: #690005;
+  --color-on-primary-container: #0d0096;
+  --color-on-secondary-container: #00311f;
+  --color-on-tertiary-fixed: #2a1700;
+  --color-on-surface: #d4e4fa;
+  --color-surface-container-lowest: #010f1f;
+  --color-on-secondary: #003824;
+  --color-inverse-primary: #494bd6;
+  --color-tertiary-fixed-dim: #ffb95f;
+  --color-on-surface-variant: #c7c4d7;
+  --color-tertiary: #ffb95f;
+  --color-surface-variant: #273647;
+  --color-on-tertiary: #472a00;
+  --color-primary-fixed-dim: #c0c1ff;
+  --color-secondary: #4edea3;
+  --color-secondary-fixed: #6ffbbe;
+  --color-tertiary-fixed: #ffddb8;
+  --color-primary-container: #8083ff;
+  --color-primary-fixed: #e1e0ff;
+  --color-surface-container-low: #0d1c2d;
+  --color-inverse-on-surface: #233143;
+  --color-on-secondary-fixed: #002113;
+
+  --spacing-space-md: 1rem;
+  --spacing-space-xl: 2rem;
+  --spacing-space-sm: 0.5rem;
+  --spacing-space-xs: 0.25rem;
+  --spacing-space-lg: 1.5rem;
+  --spacing-gutter-desktop: 1.5rem;
+  --spacing-margin-desktop: 2rem;
+  --spacing-gutter: 1rem;
+
+  --font-headline-md: 'Plus Jakarta Sans', sans-serif;
+  --font-title-md: 'Plus Jakarta Sans', sans-serif;
+  --font-title-sm: 'Plus Jakarta Sans', sans-serif;
+  --font-headline-lg-mobile: 'Plus Jakarta Sans', sans-serif;
+  --font-label-md: 'Plus Jakarta Sans', sans-serif;
+  --font-body-sm: 'Plus Jakarta Sans', sans-serif;
+  --font-code-sm: 'JetBrains Mono', monospace;
+  --font-headline-xl: 'Plus Jakarta Sans', sans-serif;
+  --font-headline-lg: 'Plus Jakarta Sans', sans-serif;
+  --font-headline-sm: 'Plus Jakarta Sans', sans-serif;
+  --font-headline-xl-mobile: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Global High-Contrast Text Selection (Eliminates illegible green/white selection)
+   ══════════════════════════════════════════════════════════════════ */
+::selection {
+  background-color: #5E6BFF !important;
+  color: #ffffff !important;
+}
+
+::-moz-selection {
+  background-color: #5E6BFF !important;
+  color: #ffffff !important;
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -45,11 +127,59 @@
 
 .font-body-md,
 .font-body-lg,
-.font-mono-data,
 .font-label-sm,
+.font-label-md,
+.font-title-sm,
+.font-title-md,
+.font-headline-sm,
+.font-headline-md,
+.font-headline-lg,
+.font-headline-xl {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+.font-code-sm,
+.font-mono-data {
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
 .font-inter {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
 }
+
+/* Precise Room Dashboard Utilities */
+.px-gutter-desktop { padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
+.py-gutter-desktop { padding-top: 1.5rem !important; padding-bottom: 1.5rem !important; }
+.gap-gutter-desktop { gap: 1.5rem !important; }
+.p-space-md { padding: 1rem !important; }
+.p-space-sm { padding: 0.5rem !important; }
+.p-space-xs { padding: 0.25rem !important; }
+.p-space-lg { padding: 1.5rem !important; }
+.px-space-md { padding-left: 1rem !important; padding-right: 1rem !important; }
+.px-space-sm { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
+.px-space-xs { padding-left: 0.25rem !important; padding-right: 0.25rem !important; }
+.py-space-md { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+.py-space-sm { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
+.py-space-xs { padding-top: 0.25rem !important; padding-bottom: 0.25rem !important; }
+.gap-space-md { gap: 1rem !important; }
+.gap-space-sm { gap: 0.5rem !important; }
+.gap-space-xs { gap: 0.25rem !important; }
+.gap-space-lg { gap: 1.5rem !important; }
+.gap-space-xl { gap: 2rem !important; }
+.my-space-sm { margin-top: 0.5rem !important; margin-bottom: 0.5rem !important; }
+.pb-space-xs { padding-bottom: 0.25rem !important; }
+.pt-space-xs { padding-top: 0.25rem !important; }
+.pt-space-sm { padding-top: 0.5rem !important; }
+.-mx-space-md { margin-left: -1rem !important; margin-right: -1rem !important; }
+.-mb-space-md { margin-bottom: -1rem !important; }
+.mt-space-xs { margin-top: 0.25rem !important; }
+.text-title-md { font-size: 16px !important; line-height: 22px !important; letter-spacing: -0.01em !important; font-weight: 600 !important; }
+.text-title-sm { font-size: 14px !important; line-height: 20px !important; letter-spacing: 0em !important; font-weight: 600 !important; }
+.text-label-md { font-size: 12px !important; line-height: 16px !important; letter-spacing: 0.04em !important; font-weight: 600 !important; }
+.text-label-sm { font-size: 11px !important; line-height: 14px !important; letter-spacing: 0.06em !important; font-weight: 600 !important; }
+.text-code-sm { font-size: 12px !important; line-height: 16px !important; letter-spacing: 0em !important; font-weight: 500 !important; }
+.text-body-md { font-size: 14px !important; line-height: 20px !important; letter-spacing: 0em !important; }
+.text-body-sm { font-size: 13px !important; line-height: 18px !important; letter-spacing: 0.01em !important; }
 
 .text-hero-headline {
   font-size: 76px;
@@ -159,6 +289,38 @@ html, body {
 .no-scrollbar {
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
+}
+
+/* Selected Room Card 360-Degree Boundary Glowing Shadows */
+.shadow-room-booked-selected {
+  box-shadow: 
+    0 0 12px 1px rgba(245, 158, 11, 0.40),
+    0 0 24px 2px rgba(245, 158, 11, 0.22),
+    0 4px 16px -1px rgba(234, 138, 0, 0.28),
+    0 8px 24px -3px rgba(217, 119, 6, 0.16);
+}
+
+.shadow-room-open-selected {
+  box-shadow: 
+    0 0 12px 1px rgba(192, 193, 255, 0.38),
+    0 0 24px 2px rgba(192, 193, 255, 0.20),
+    0 4px 16px -1px rgba(192, 193, 255, 0.24),
+    0 8px 24px -3px rgba(192, 193, 255, 0.14);
+}
+
+/* Stay Detail Page: Clean subtle border card system (Glow removed) */
+.glow-card-purple,
+.glow-card-blue,
+.glow-card-green {
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+}
+
+.dark .glow-card-purple,
+.dark .glow-card-blue,
+.dark .glow-card-green {
+  border-color: rgba(30, 41, 59, 0.9);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
 }
 
 /* Prevent ugly browser default square focus outlines around rounded buttons */
@@ -566,12 +728,67 @@ input:autofill:active {
     background-color: #9333ea;
     color: #ffffff;
     border-color: #a855f7;
-    box-shadow: 0 4px 14px rgba(147, 51, 234, 0.35);
+    box-shadow: 0 4px 14px rgba(147, 51, 234, 0.4);
+  }
+}
+
+@keyframes requestedSlotFlashDark {
+  0%, 100% {
+    background-color: rgba(88, 28, 135, 0.5);
+    color: #e9d5ff;
+    border-color: #7e22ce;
+  }
+  42%, 58% {
+    background-color: #9333ea;
+    color: #ffffff;
+    border-color: #c084fc;
+    box-shadow: 0 4px 14px rgba(147, 51, 234, 0.55);
   }
 }
 
 .animate-slot-flash {
-  animation: requestedSlotFlash 2.8s ease-in-out infinite;
+  animation: requestedSlotFlash 2.4s ease-in-out infinite;
+}
+
+.dark .animate-slot-flash {
+  animation: requestedSlotFlashDark 2.4s ease-in-out infinite;
+}
+
+/* Booked Slot Flashing Animation: Smoothly flashes with emerald/teal glow to highlight the selected booking range */
+@keyframes bookedSlotFlash {
+  0%, 100% {
+    background-color: #d1fae5;
+    color: #065f46;
+    border-color: #6ee7b7;
+  }
+  42%, 58% {
+    background-color: #059669;
+    color: #ffffff;
+    border-color: #34d399;
+    box-shadow: 0 4px 16px rgba(5, 150, 105, 0.45);
+  }
+}
+
+@keyframes bookedSlotFlashDark {
+  0%, 100% {
+    background-color: rgba(6, 78, 59, 0.65);
+    color: #a7f3d0;
+    border-color: #059669;
+  }
+  42%, 58% {
+    background-color: #10b981;
+    color: #ffffff;
+    border-color: #6ee7b7;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.55);
+  }
+}
+
+.animate-booked-slot-flash {
+  animation: bookedSlotFlash 2.4s ease-in-out infinite;
+}
+
+.dark .animate-booked-slot-flash {
+  animation: bookedSlotFlashDark 2.4s ease-in-out infinite;
 }
 
 @keyframes requestedBadgeFlash {
@@ -588,7 +805,7 @@ input:autofill:active {
 }
 
 .animate-badge-flash {
-  animation: requestedBadgeFlash 2.8s ease-in-out infinite;
+  animation: requestedBadgeFlash 2.4s ease-in-out infinite;
 }
 
 /* Material Symbols Outlined font rules */
@@ -605,8 +822,12 @@ input:autofill:active {
   word-wrap: normal;
   direction: ltr;
   -webkit-font-feature-settings: 'liga';
+  font-feature-settings: 'liga';
   -webkit-font-smoothing: antialiased;
+  /* Prevent raw text flash while font loads */
+  font-display: block;
 }
+
 
 /* Stitch Telemetry Dark & Light Theme Variables */
 :root {
@@ -751,20 +972,19 @@ html.light {
    ══════════════════════════════════════════════════════════════════ */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation: none;
   mix-blend-mode: normal;
 }
 ::view-transition-old(root) {
   z-index: 1;
 }
 ::view-transition-new(root) {
-  z-index: 99999;
+  z-index: 2;
 }
 .dark::view-transition-old(root) {
-  z-index: 99999;
+  z-index: 1;
 }
 .dark::view-transition-new(root) {
-  z-index: 1;
+  z-index: 2;
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1025,5 +1245,297 @@ html.light {
 .animate-cinematic-zoom {
   animation: cinematicZoomSlow 22s ease-in-out infinite alternate;
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   Custom Premium Scrollbar
+   ══════════════════════════════════════════════════════════════════ */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.45);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.7);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* Hide scrollbar utility for horizontal carousels */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RoomScout Emerald Luxe Capsule Navbar
+   - Translucent pearl glass with soft emerald-teal ambient glow
+   - Precision 1px emerald/teal border with subtle specular reflection
+   - Elevated pure white / emerald active glider
+   ══════════════════════════════════════════════════════════════════ */
+.emerald-luxe-capsule {
+  position: relative;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, rgba(240, 253, 248, 0.82) 0%, rgba(255, 255, 255, 0.92) 50%, rgba(240, 253, 250, 0.82) 100%);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(0, 108, 74, 0.2);
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 1px 0 rgba(0, 108, 74, 0.05),
+    0 10px 32px -6px rgba(0, 108, 74, 0.09),
+    0 2px 8px -2px rgba(0, 0, 0, 0.04);
+}
+
+.dark .emerald-luxe-capsule {
+  background: linear-gradient(135deg, rgba(5, 20, 28, 0.88) 0%, rgba(8, 28, 36, 0.92) 50%, rgba(6, 22, 26, 0.88) 100%);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(0, 229, 153, 0.28);
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.5),
+    0 14px 40px -8px rgba(0, 0, 0, 0.7),
+    0 0 24px -6px rgba(0, 229, 153, 0.18);
+}
+
+/* Emerald Luxe Button & Control Lens */
+.emerald-luxe-btn {
+  position: relative;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 108, 74, 0.18);
+  color: #064e3b;
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 1),
+    0 1px 3px 0 rgba(0, 108, 74, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.emerald-luxe-btn:hover {
+  background: #ffffff;
+  border-color: rgba(0, 108, 74, 0.32);
+  color: #022c22;
+  box-shadow: 
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 1),
+    0 4px 12px -2px rgba(0, 108, 74, 0.12);
+}
+
+.dark .emerald-luxe-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(0, 229, 153, 0.25);
+  color: #a7f3d0;
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.2),
+    0 2px 6px -1px rgba(0, 0, 0, 0.4);
+}
+
+.dark .emerald-luxe-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(0, 229, 153, 0.45);
+  color: #ffffff;
+  box-shadow: 
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.35),
+    0 4px 14px -2px rgba(0, 229, 153, 0.25);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Premium Flash Light Sweep Line for Action Buttons
+   ══════════════════════════════════════════════════════════════════ */
+@keyframes buttonFlashSweepAnim {
+  0% {
+    transform: translateX(-160%) skewX(-20deg);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  42% {
+    transform: translateX(260%) skewX(-20deg);
+    opacity: 1;
+  }
+  43%, 100% {
+    transform: translateX(260%) skewX(-20deg);
+    opacity: 0;
+  }
+}
+
+.button-flash-sweep {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.32) 50%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  filter: blur(1px);
+  pointer-events: none;
+  animation: buttonFlashSweepAnim 3.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  z-index: 1;
+}
+
+.dark .button-flash-sweep {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.45) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+.group:hover .button-flash-sweep {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.75) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+.dark .group:hover .button-flash-sweep {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.35) 50%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+/* ============================================================
+   HIGH-PERFORMANCE HARDWARE ACCELERATION & SMOOTH SCROLLING
+   ============================================================ */
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Prevent outer window bouncing when reaching scroll boundary of modals / drawers */
+.overscroll-contain {
+  overscroll-behavior: contain;
+}
+
+.overscroll-x-contain {
+  overscroll-behavior-x: contain;
+}
+
+/* Hardware-accelerated GPU layer for silky-smooth animations */
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+/* Off-screen card layout & paint deferral (Saves CPU/GPU cycles on long feeds) */
+.card-deferred {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 260px;
+}
+
+.guest-card-deferred {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 240px;
+}
+
+/* Inactive view state caching (Fast View Switching via CSS containment) */
+.view-state-hidden {
+  content-visibility: hidden;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+@supports not (content-visibility: hidden) {
+  .view-state-hidden {
+    display: none;
+  }
+}
+
+/* Native View Transitions API styling */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.22s;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+::view-transition-old(root) {
+  animation-name: fade-out;
+}
+
+::view-transition-new(root) {
+  animation-name: fade-in;
+}
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Seamless Browser Autofill Styling (Neutralizes jarring WebKit blue)
+   ══════════════════════════════════════════════════════════════════ */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #f8fafc inset !important;
+  -webkit-text-fill-color: #0f172a !important;
+  caret-color: #0f172a !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #09090b inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #ffffff !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Composite console inputs with transparent autofill */
+.composite-input-console input:-webkit-autofill,
+.composite-input-console input:-webkit-autofill:hover,
+.composite-input-console input:-webkit-autofill:focus,
+.composite-input-console input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #f8fafc inset !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+.dark .composite-input-console input:-webkit-autofill,
+.dark .composite-input-console input:-webkit-autofill:hover,
+.dark .composite-input-console input:-webkit-autofill:focus,
+.dark .composite-input-console input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #09090b inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+
+
+
+
 
 

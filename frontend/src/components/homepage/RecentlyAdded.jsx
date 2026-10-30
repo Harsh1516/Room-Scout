@@ -128,7 +128,7 @@ export function RecentlyAdded({ onStayClick, onBookClick }) {
         <HorizontalCarousel itemCount={recentStays.length} gapClass="gap-3 sm:gap-4">
           {recentStays.map((room, idx) => (
             <motion.div
-              key={room._id || room.id || idx}
+              key={room._id || idx}
               initial={{ opacity: 0, y: 15 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}

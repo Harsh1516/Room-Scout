@@ -18,7 +18,7 @@ export function generateToken(userOrId) {
   const secret = getJwtSecret();
 
   if (typeof userOrId === 'object' && userOrId !== null) {
-    const id = (userOrId._id || userOrId.id || userOrId.userId)?.toString();
+    const id = (userOrId._id || userOrId.userId)?.toString();
     return jwt.sign(
       {
         userId: id,
@@ -64,7 +64,7 @@ export async function protect(req, res, next) {
   try {
     const secret = getJwtSecret();
     const decoded = jwt.verify(token, secret);
-    const rawId = decoded.userId || decoded.id;
+    const rawId = decoded.userId || decoded._id;
     const cleanEmail = (decoded.email || '').toLowerCase().trim();
 
     req.user = null;
@@ -111,8 +111,8 @@ export async function protect(req, res, next) {
 
 export function idsMatch(a, b) {
   if (a == null || b == null) return false;
-  const strA = (a._id || a.id || a)?.toString();
-  const strB = (b._id || b.id || b)?.toString();
+  const strA = (a._id || a)?.toString();
+  const strB = (b._id || b)?.toString();
   return Boolean(strA && strB && strA === strB);
 }
 
@@ -125,7 +125,7 @@ export function isHostUser(req) {
 }
 
 export function actorId(req) {
-  const raw = req.user?._id || req.user?.id;
+  const raw = req.user?._id;
   return raw ? raw.toString() : null;
 }
 
@@ -238,7 +238,7 @@ export async function optionalProtect(req, res, next) {
   try {
     const secret = getJwtSecret();
     const decoded = jwt.verify(token, secret);
-    const rawId = decoded.userId || decoded.id;
+    const rawId = decoded.userId || decoded._id;
     const cleanEmail = (decoded.email || '').toLowerCase().trim();
 
     if (decoded.role === 'host') {

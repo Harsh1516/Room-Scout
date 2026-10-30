@@ -105,7 +105,7 @@ export function DataPage({ onStayClick, onBookClick }) {
         });
       }
     }
-    return `Verified Listing #${stay._id || stay.id || index + 1}`;
+    return `Verified Listing #${stay._id || index + 1}`;
   };
 
   // Filtered & Sorted Stays
@@ -168,7 +168,13 @@ export function DataPage({ onStayClick, onBookClick }) {
         return parseNumericPrice(b.price) - parseNumericPrice(a.price);
       }
       if (sortOrder === 'rating-desc') {
-        return Number(b.rating || 0) - Number(a.rating || 0);
+        const getRating = (s) => {
+          if (Array.isArray(s.reviews) && s.reviews.length > 0) {
+            return s.reviews.reduce((acc, r) => acc + (Number(r.rating) || 5), 0) / s.reviews.length;
+          }
+          return s.reviewsCount > 0 ? Number(s.rating || 0) : 0;
+        };
+        return getRating(b) - getRating(a);
       }
       if (sortOrder === 'title-asc') {
         const titleA = a.title || a.propertyName || '';
@@ -391,13 +397,17 @@ export function DataPage({ onStayClick, onBookClick }) {
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs">
                   {filteredStays.map((stay, idx) => {
-                    const stayId = stay._id || stay.id;
+                    const stayId = stay._id;
                     const dateLabel = formatStayDate(stay, idx);
                     const cleanPrice = parseNumericPrice(stay.price);
                     const roomsCount =
                       Array.isArray(stay.rooms) && stay.rooms.length > 0
                         ? stay.rooms.length
                         : (stay.totalRooms || stay.availableRooms || 0);
+                    const hasReviews = Array.isArray(stay.reviews) && stay.reviews.length > 0;
+                    const stayRating = hasReviews
+                      ? (stay.reviews.reduce((acc, r) => acc + (Number(r.rating) || 5), 0) / stay.reviews.length).toFixed(1)
+                      : (stay.reviewsCount > 0 && stay.rating ? Number(stay.rating).toFixed(1) : null);
 
                     return (
                       <tr
@@ -463,7 +473,19 @@ export function DataPage({ onStayClick, onBookClick }) {
                         </td>
 
                         <td className="py-3 px-4">
-                          <span className="font-bold text-amber-500">★ {stay.rating || 4.8}</span>
+                          {stayRating ? (
+                            <span className="font-bold text-amber-500 flex items-center gap-1">
+                              <span>★ {stayRating}</span>
+                              <span className="text-[10px] text-slate-400 font-normal">
+                                ({stay.reviews?.length || stay.reviewsCount || 0})
+                              </span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono font-bold text-[10px] border border-slate-200 dark:border-slate-700">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                              NEW
+                            </span>
+                          )}
                         </td>
 
                         <td className="py-3 px-4 text-slate-500 dark:text-slate-400">

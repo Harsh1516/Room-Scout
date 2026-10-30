@@ -4,7 +4,7 @@ export function HomepageFooter() {
   const navigate = useNavigate();
 
   return (
-    <footer className="w-full relative z-10 border-t border-slate-200 dark:border-white/15 bg-white/90 dark:bg-slate-950/70 backdrop-blur-2xl text-slate-600 dark:text-slate-300 py-6 sm:py-16 px-3 sm:px-8 lg:px-16 2xl:px-24 mt-8 sm:mt-20 transition-colors">
+    <footer className="w-full relative z-10 border-t border-slate-200 dark:border-white/15 bg-white/90 dark:bg-black/70 backdrop-blur-2xl text-slate-600 dark:text-slate-300 py-6 sm:py-16 px-3 sm:px-8 lg:px-16 2xl:px-24 mt-8 sm:mt-20 transition-colors">
       <div className="w-full">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-12 pb-6 sm:pb-12 border-b border-slate-200 dark:border-white/10">
           
@@ -23,8 +23,9 @@ export function HomepageFooter() {
               India's premier 3D-verified stay discovery network. Direct host connections, zero brokerage fees, and 100% physically inspected student PGs, hotels, and luxury villas.
             </p>
             <div className="pt-0.5 sm:pt-2 text-[10px] sm:text-xs md:text-sm font-mono text-slate-500 dark:text-slate-400">
-              ⚡ Covering 14+ States • 5,000+ Verified Units
+              ⚡ Verified Stays • Zero Brokerage Fees
             </div>
+
           </div>
 
           {/* 3 Link Columns Arranged in a ROW side-by-side */}

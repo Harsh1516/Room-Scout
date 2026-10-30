@@ -122,6 +122,10 @@ export function BookingsProvider({ children }) {
         const existingRefId = String(b.bookingReferenceId || b._id || '');
 
         if (newRefId && existingRefId && newRefId === existingRefId) return true;
+        const bStatus = String(b?.status || '').toUpperCase();
+        if (bStatus === 'CHECKED_OUT' || bStatus === 'COMPLETED' || bStatus === 'CANCELLED' || bStatus === 'REJECTED') {
+          return false;
+        }
         return (
           existingStayId === newStayId &&
           existingRoomNum === newRoomNum &&
@@ -139,7 +143,7 @@ export function BookingsProvider({ children }) {
   const updateBookingStatus = async (bookingId, status) => {
     setBookings((prev) =>
       prev.map((b) => {
-        if (String(b.id || b._id || b.bookingReferenceId) === String(bookingId)) {
+        if (String(b._id || b.bookingReferenceId) === String(bookingId)) {
           return { ...b, status };
         }
         return b;
@@ -165,12 +169,10 @@ export function BookingsProvider({ children }) {
     setBookings((prev) =>
       prev.filter((b) => {
         const bId = b._id ? (typeof b._id === 'object' ? String(b._id._id || b._id) : String(b._id)) : '';
-        const bAltId = b.id ? String(b.id) : '';
         const bRef = b.bookingReferenceId ? String(b.bookingReferenceId) : '';
         const bSlot = b.slotBookingId ? String(b.slotBookingId) : '';
         return (
           bId !== strBookingId &&
-          bAltId !== strBookingId &&
           bRef !== strBookingId &&
           bSlot !== strBookingId
         );

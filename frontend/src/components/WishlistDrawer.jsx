@@ -8,7 +8,7 @@ export function WishlistDrawer({ onBookClick, onStayClick }) {
   const handleOpenProperty = (stay) => {
     if (!stay) return;
     setIsWishlistOpen(false);
-    const stayId = stay._id || stay.id;
+    const stayId = stay._id;
     if (!stayId) return;
 
     if (onStayClick) {
@@ -27,18 +27,18 @@ export function WishlistDrawer({ onBookClick, onStayClick }) {
         onClick={() => setIsWishlistOpen(false)}
       />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-4 sm:pl-10">
-        <div className="w-screen max-w-[320px] sm:max-w-md bg-white dark:bg-slate-900 shadow-2xl flex flex-col border-l border-slate-200 dark:border-slate-800">
+      <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10">
+        <div className="w-screen max-w-[calc(100vw-16px)] sm:max-w-md bg-white dark:bg-slate-900 shadow-2xl flex flex-col border-l border-slate-200 dark:border-slate-800">
           {/* Header */}
-          <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
+          <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center font-bold text-lg">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center font-bold text-base sm:text-lg">
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
                 </svg>
               </div>
               <div>
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
                   Your Wishlist
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -58,21 +58,21 @@ export function WishlistDrawer({ onBookClick, onStayClick }) {
           </div>
 
           {/* List Content */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          <div className="flex-1 overflow-y-auto p-3.5 sm:p-6 space-y-3 sm:space-y-4">
             {wishlist.length > 0 ? (
               wishlist.map((stay) => {
-                const stayId = stay._id || stay.id;
+                const stayId = stay._id;
                 const priceNum = parseInt(String(stay.price || 3500).replace(/[^0-9]/g, ''), 10) || 3500;
                 const rateUnit = stay.rateUnit || '/month';
 
                 return (
                   <div
                     key={stayId}
-                    className="group flex gap-4 p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 hover:border-rose-500/40 transition-all duration-300 relative shadow-xs"
+                    className="group flex gap-3 sm:gap-4 p-3 sm:p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 hover:border-rose-500/40 transition-all duration-300 relative shadow-xs"
                   >
                     <div
                       onClick={() => handleOpenProperty(stay)}
-                      className="relative w-24 h-24 rounded-xl overflow-hidden shrink-0 cursor-pointer group/img shadow-xs bg-slate-200 dark:bg-slate-700"
+                      className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden shrink-0 cursor-pointer group/img shadow-xs bg-slate-200 dark:bg-slate-700"
                       title="Click to view property details"
                     >
                       <img
@@ -89,7 +89,7 @@ export function WishlistDrawer({ onBookClick, onStayClick }) {
                         <div className="flex items-start justify-between gap-1">
                           <h3
                             onClick={() => handleOpenProperty(stay)}
-                            className="font-extrabold text-sm text-slate-900 dark:text-white truncate cursor-pointer hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+                            className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white truncate cursor-pointer hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
                             title="Click to view property details"
                           >
                             {stay.title || stay.propertyName} ↗
@@ -97,13 +97,13 @@ export function WishlistDrawer({ onBookClick, onStayClick }) {
                           <button
                             type="button"
                             onClick={() => removeFromWishlist(stayId)}
-                            className="text-slate-400 hover:text-rose-500 transition-colors p-1 cursor-pointer"
+                            className="text-slate-400 hover:text-rose-500 transition-colors p-1 cursor-pointer shrink-0"
                             title="Remove from wishlist"
                           >
                             ✕
                           </button>
                         </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5 truncate">
+                        <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5 truncate">
                           📍 {stay.location || stay.city || 'Uttarakhand'}
                         </p>
                         <span className="inline-block text-[10px] font-extrabold px-2 py-0.5 mt-1 rounded-md bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
@@ -112,14 +112,14 @@ export function WishlistDrawer({ onBookClick, onStayClick }) {
                       </div>
 
                       <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-slate-700/50 gap-2">
-                        <span className="font-black text-rose-500 text-sm">
+                        <span className="font-black text-rose-500 text-xs sm:text-sm">
                           ₹{priceNum.toLocaleString('en-IN')}{rateUnit}
                         </span>
                         <div className="flex items-center">
                           <button
                             type="button"
                             onClick={() => handleOpenProperty(stay)}
-                            className="text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer shadow-xs"
+                            className="text-[11px] sm:text-xs font-bold px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-rose-600 dark:hover:text-rose-400 active:scale-95 transition-all cursor-pointer shadow-xs min-h-[32px] sm:min-h-[28px] inline-flex items-center justify-center"
                             title="Open property details"
                           >
                             View Details ↗

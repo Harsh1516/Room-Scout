@@ -8,7 +8,7 @@ import { Host } from '../models/Host.js';
 // @access  Private
 export const getWishlist = async (req, res, next) => {
   try {
-    const userId = req.user?._id || req.user?.id;
+    const userId = req.user?._id;
     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
       return res.json([]);
     }
@@ -67,13 +67,13 @@ export const getWishlist = async (req, res, next) => {
 export const toggleWishlist = async (req, res, next) => {
   try {
     const { stay, stayId: rawStayId } = req.body;
-    const targetStayId = rawStayId || stay?._id || stay?.id;
+    const targetStayId = rawStayId || stay?._id;
 
     if (!targetStayId || !mongoose.Types.ObjectId.isValid(targetStayId)) {
       return res.status(400).json({ message: 'Valid stayId is required.' });
     }
 
-    const userId = req.user?._id || req.user?.id;
+    const userId = req.user?._id;
     if (!userId) {
       return res.status(401).json({ message: 'Authentication required.' });
     }
@@ -126,7 +126,7 @@ export const toggleWishlist = async (req, res, next) => {
 export const removeFromWishlist = async (req, res, next) => {
   try {
     const { stayId } = req.params;
-    const userId = req.user?._id || req.user?.id;
+    const userId = req.user?._id;
 
     if (!stayId || !mongoose.Types.ObjectId.isValid(stayId)) {
       return res.status(400).json({ message: 'Valid stayId is required.' });

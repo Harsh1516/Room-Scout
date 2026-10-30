@@ -1,70 +1,108 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useLayoutEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { groupDaysByMonth } from '../../utils/dateUtils';
 import { PersonOccupancyGrid } from '../common/PersonOccupancyGrid';
 
 /**
  * UserMonthlySlotCard (Mid Tab)
- * Matches HostScheduleCalendar (Pic 2) in aesthetic, glassmorphic layout,
- * capsule track booked slots, and clean typography.
+ * Exact replica of HostScheduleCalendar (Pic 1) in aesthetic, dimensions,
+ * header badges, month pills, date matrix, and capsule tracks.
  */
 export function UserMonthlySlotCard({
   selectedRoom,
+  roomGrid = [],
   formatRoomNo,
   isMonthly = false,
   // Nightly props
   upcomingWeek = [],
-  upcomingDays = [],
   bookedSlotsForRoom = new Set(),
   requestedSlotsForRoom = new Set(),
+  userBookedSlotsForRoom = new Set(),
+  userRequestedSlotsForRoom = new Set(),
   selectedSlotIndices = [],
   onToggleSlotDay,
   // Monthly props
   upcomingMonths = [],
   bookedMonthsForRoom = new Set(),
   requestedMonthsForRoom = new Set(),
+  userBookedMonthsForRoom = new Set(),
+  userRequestedMonthsForRoom = new Set(),
   selectedMonthIndices = [],
   onToggleSlotMonth,
   stay,
+  WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'],
 }) {
-  const allDays = upcomingDays.length > 0 ? upcomingDays : upcomingWeek;
-  const monthGroups = useMemo(() => groupDaysByMonth(allDays), [allDays]);
+  const monthGroups = useMemo(() => groupDaysByMonth(upcomingWeek), [upcomingWeek]);
   const [selectedMonthIdx, setSelectedMonthIdx] = useState(0);
 
-  const sortedSelectedDays = useMemo(
-    () => [...selectedSlotIndices].sort((a, b) => a - b),
-    [selectedSlotIndices]
-  );
+  const calendarCardRef = useRef(null);
+  const calendarGridContentRef = useRef(null);
+  const [calendarGridHeight, setCalendarGridHeight] = useState('auto');
 
-  const sortedSelectedMonths = useMemo(
-    () => [...selectedMonthIndices].sort((a, b) => a - b),
-    [selectedMonthIndices]
-  );
+  useLayoutEffect(() => {
+    if (!calendarGridContentRef.current) return;
+    const el = calendarGridContentRef.current;
 
-  const roomDisplay = typeof formatRoomNo === 'function' && selectedRoom
-    ? formatRoomNo(selectedRoom.roomNumber)
-    : selectedRoom ? `Room-${selectedRoom.roomNumber}` : 'Room';
+    const measureHeight = () => {
+      const h = el.offsetHeight;
+      if (h > 0) {
+        setCalendarGridHeight(h);
+      }
+    };
 
-  const roomTypeDisplay = selectedRoom?.type || 'Standard Room';
-  const priceDisplay = selectedRoom?.price
-    ? (String(selectedRoom.price).startsWith('₹') ? selectedRoom.price : `₹${selectedRoom.price}`)
-    : (stay?.price ? (String(stay.price).startsWith('₹') ? stay.price : `₹${stay.price}`) : '');
+    measureHeight();
 
-  const todayISO = allDays[0]?.fullISO;
+    const ro = new ResizeObserver(() => {
+      measureHeight();
+    });
+    ro.observe(el);
 
-  // Calculate check-in date, check-out date, and duration/price breakdown
+    return () => ro.disconnect();
+  }, [selectedMonthIdx, monthGroups]);
+
+  const sortedSelected = useMemo(() => {
+    return isMonthly
+      ? [...selectedMonthIndices].sort((a, b) => a - b)
+      : [...selectedSlotIndices].sort((a, b) => a - b);
+  }, [isMonthly, selectedMonthIndices, selectedSlotIndices]);
+
+  const activeRoom = useMemo(() => {
+    if (selectedRoom) return selectedRoom;
+    if (Array.isArray(roomGrid) && roomGrid.length > 0) return roomGrid[0];
+    if (Array.isArray(stay?.rooms) && stay.rooms.length > 0) return stay.rooms[0];
+    return null;
+  }, [selectedRoom, roomGrid, stay]);
+
+  const roomDisplay = typeof formatRoomNo === 'function' && activeRoom
+    ? formatRoomNo(activeRoom.roomNumber)
+    : activeRoom ? `Room-${activeRoom.roomNumber}` : 'Room';
+
+  const roomTypeDisplay = activeRoom?.type || 'Standard Room';
+
+  const priceDisplay = useMemo(() => {
+    const rawPrice = activeRoom?.price || stay?.price || '';
+    if (!rawPrice && rawPrice !== 0) return '';
+    const num = typeof rawPrice === 'number'
+      ? rawPrice
+      : Number(String(rawPrice).replace(/[^0-9]/g, '')) || 0;
+    if (!num) return '';
+    const unit = isMonthly ? '/month' : '/night';
+    return `₹${num.toLocaleString('en-IN')}${unit}`;
+  }, [activeRoom?.price, stay?.price, isMonthly]);
+
+  const todayISO = upcomingWeek[0]?.fullISO;
+
+  // Reservation details banner (State A - Check-in / Check-out / Total Amount)
   const reservationDetails = useMemo(() => {
     if (isMonthly) {
-      if (sortedSelectedMonths.length === 0) return null;
-
-      const startIdx = sortedSelectedMonths[0];
-      const lastIdx = sortedSelectedMonths[sortedSelectedMonths.length - 1];
-      const firstMonth = upcomingMonths[startIdx];
-      const lastMonth = upcomingMonths[lastIdx];
+      if (sortedSelected.length === 0) return null;
+      const firstMonth = upcomingMonths[sortedSelected[0]];
+      const lastMonth = upcomingMonths[sortedSelected[sortedSelected.length - 1]];
       if (!firstMonth || !lastMonth) return null;
 
-      const durationMonths = sortedSelectedMonths.length;
-      const rawPrice = selectedRoom?.price || stay?.price || 0;
-      const unitPrice = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/[^0-9]/g, '')) || 0;
+      const durationMonths = sortedSelected.length;
+      const rawPrice = activeRoom?.price || stay?.price || 0;
+      const unitPrice = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/\D/g, '')) || 0;
       const totalPrice = unitPrice * durationMonths;
 
       return {
@@ -80,87 +118,81 @@ export function UserMonthlySlotCard({
       };
     }
 
-    if (sortedSelectedDays.length === 0) return null;
-
-    const startIdx = sortedSelectedDays[0];
-    const lastIdx = sortedSelectedDays[sortedSelectedDays.length - 1];
-    const firstSlot = allDays[startIdx];
-    const lastSlot = allDays[lastIdx];
+    if (sortedSelected.length === 0) return null;
+    const firstSlot = upcomingWeek[sortedSelected[0]];
+    const lastSlot = upcomingWeek[sortedSelected[sortedSelected.length - 1]];
+    if (!firstSlot || !lastSlot) return null;
 
     const nextDateObj = lastSlot?.dateObj ? new Date(lastSlot.dateObj) : new Date();
     nextDateObj.setDate(nextDateObj.getDate() + 1);
     const checkoutDayName = nextDateObj.toLocaleDateString('en-US', { weekday: 'short' });
     const checkoutMonthDay = nextDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const durationNights = sortedSelectedDays.length;
+    const checkoutYear = nextDateObj.getFullYear();
+    const durationNights = sortedSelected.length;
 
-    const rawPrice = selectedRoom?.price || stay?.price || 0;
-    const nightlyPrice = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/[^0-9]/g, '')) || 0;
+    const rawPrice = activeRoom?.price || stay?.price || 0;
+    const nightlyPrice = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/\D/g, '')) || 0;
     const totalPrice = nightlyPrice * durationNights;
 
     return {
       isMonthly: false,
       firstSlot,
       lastSlot,
+      nextDateObj,
       durationLabel: `${durationNights} ${durationNights === 1 ? 'Night' : 'Nights'}`,
       checkInDate: `${firstSlot?.dayName}, ${firstSlot?.monthDay}`,
       checkInTime: '12:00 PM',
-      checkOutDate: `${checkoutDayName}, ${checkoutMonthDay}`,
+      checkOutDate: `${checkoutDayName}, ${checkoutMonthDay} ${checkoutYear}`,
       checkOutTime: '11:59 AM',
       priceBreakdown: `₹${nightlyPrice.toLocaleString('en-IN')} × ${durationNights} night${durationNights > 1 ? 's' : ''}`,
       unitPrice: nightlyPrice,
       totalPrice,
     };
-  }, [isMonthly, sortedSelectedMonths, upcomingMonths, sortedSelectedDays, allDays, selectedRoom, stay]);
+  }, [isMonthly, sortedSelected, upcomingMonths, upcomingWeek, activeRoom, stay]);
 
-  const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-
-  if (!selectedRoom) {
+  if (!activeRoom) {
     return (
-      <div className="bg-white/70 backdrop-blur-xl rounded-3xl border border-white/80 p-8 text-center text-slate-500 space-y-2 shadow-[0_12px_32px_rgba(31,38,135,0.06),_inset_0_1px_2px_rgba(255,255,255,0.95)]">
-        <div className="w-10 h-10 mx-auto rounded-xl bg-white/80 border border-white/80 flex items-center justify-center text-slate-400 shadow-xs">
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="4" width="18" height="18" rx="2" />
-            <line x1="16" y1="2" x2="16" y2="6" />
-            <line x1="8" y1="2" x2="8" y2="6" />
-            <line x1="3" y1="10" x2="21" y2="10" />
-          </svg>
+      <div className="w-full flex flex-col rounded-[26px] bg-white dark:bg-[#0c1825] border border-slate-200/90 dark:border-[#1f3045] shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] p-6 space-y-4 animate-pulse select-none">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-800" />
+          <div className="space-y-1.5 flex-1">
+            <div className="w-24 h-5 rounded-lg bg-slate-200 dark:bg-slate-800" />
+            <div className="w-40 h-3 rounded bg-slate-100 dark:bg-slate-800/60" />
+          </div>
         </div>
-        <p className="text-xs font-semibold text-slate-800">No Room Selected</p>
-        <p className="text-[11px] text-slate-500">
-          Select a room from the left tab to view its {isMonthly ? '12-month' : '30-day'} schedule.
-        </p>
+        <div className="h-48 rounded-xl bg-slate-100 dark:bg-slate-800/40" />
       </div>
     );
   }
 
+
   return (
-    <div className="bg-white/70 backdrop-blur-xl rounded-3xl border border-white/80 p-5 sm:p-6 space-y-4 shadow-[0_12px_32px_rgba(31,38,135,0.06),_inset_0_1px_2px_rgba(255,255,255,0.95)] transition-all">
-      {/* Active Room Title & Live Reservation Summary */}
-      <div className="border-b border-white/60 pb-3.5 space-y-3">
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-white/80 text-slate-700 border border-white/80 flex items-center justify-center text-xs shrink-0 shadow-xs">
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-                <rect x="3" y="4" width="18" height="18" rx="2" />
-                <line x1="16" y1="2" x2="16" y2="6" />
-                <line x1="8" y1="2" x2="8" y2="6" />
-                <line x1="3" y1="10" x2="21" y2="10" />
-              </svg>
+    <motion.div
+      ref={calendarCardRef}
+      layout="position"
+      transition={{
+        layout: { duration: 0.36, ease: [0.25, 1, 0.5, 1] },
+      }}
+      className="w-full flex flex-col rounded-[26px] bg-white dark:bg-[#0c1825] border border-slate-200/90 dark:border-[#1f3045] shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] overflow-hidden select-none host-page-scope host-font-scope font-body-md antialiased"
+    >
+      {/* Room Detail Banner (Exact Pic 1 Header) */}
+      <div className="px-4 sm:px-5 pt-3 sm:pt-3.5 pb-2.5 sm:pb-3 border-b border-[#238cd6] dark:border-[#1d7bc0] bg-[#2e9dea] dark:bg-[#2e9dea] text-white">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9.5 h-9.5 sm:w-10 sm:h-10 flex items-center justify-center text-white shrink-0">
+              <span className="material-symbols-outlined text-[22px] sm:text-[24px]">calendar_today</span>
             </div>
-            <div>
-              <h3 className="text-sm sm:text-base font-semibold text-slate-900 flex items-center gap-2 flex-wrap">
-                <span>{roomDisplay}</span>
-                <span className="text-xs font-medium text-slate-700 bg-white/80 px-2.5 py-0.5 rounded-lg border border-white/80 shadow-xs">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-manrope text-white font-black tracking-tight text-lg sm:text-[21px]">
+                  {roomDisplay}
+                </h3>
+                <span className="px-2.5 py-0.5 rounded-lg bg-white/20 text-white border border-white/30 text-[11px] font-bold">
                   {roomTypeDisplay}
                 </span>
-                {priceDisplay && (
-                  <span className="inline-flex items-center text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200 shadow-xs">
-                    {priceDisplay}
-                  </span>
-                )}
-              </h3>
+              </div>
               {!reservationDetails && (
-                <p className="text-[11px] text-slate-500 font-normal mt-0.5">
+                <p className="text-[11px] text-sky-50 mt-0.5 font-medium">
                   {isMonthly
                     ? 'Check-in: 1st of Month (12:00 AM) • Check-out: End of Month (11:59 PM)'
                     : 'Check-in: 12:00 PM • Check-out: 11:59 AM'}
@@ -168,291 +200,371 @@ export function UserMonthlySlotCard({
               )}
             </div>
           </div>
+
+          {priceDisplay && (
+            <div className="shrink-0 text-right">
+              {(() => {
+                const parts = String(priceDisplay).split('/');
+                if (parts.length === 2) {
+                  return (
+                    <div className="flex items-baseline justify-end">
+                      <span className="font-manrope text-xl sm:text-2xl font-black text-white tracking-tight leading-none">
+                        {parts[0]}
+                      </span>
+                      <span className="text-xs sm:text-sm font-bold text-white/85 ml-0.5">
+                        /{parts[1]}
+                      </span>
+                    </div>
+                  );
+                }
+                return (
+                  <span className="font-manrope text-xl sm:text-2xl font-black text-white tracking-tight leading-none">
+                    {priceDisplay}
+                  </span>
+                );
+              })()}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="px-4 sm:px-5 pb-3.5 sm:pb-4 pt-2.5 sm:pt-3 flex flex-col gap-2.5">
+        {/* State A: Check-In / Check-Out Pricing Summary Card (Exact Pic 1 Design) */}
+        <AnimatePresence initial={false} mode="sync">
+          {Boolean(reservationDetails) && (
+            <motion.div
+              key="reservation-details-box"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{
+                height: { duration: 0.32, ease: [0.25, 1, 0.5, 1] },
+                opacity: { duration: 0.22, ease: 'easeOut' },
+              }}
+              className="overflow-hidden"
+            >
+              <div className="rounded-xl sm:rounded-2xl p-2.5 sm:p-3 border border-amber-300/90 dark:border-amber-700/60 bg-amber-50/90 dark:bg-amber-950/40 shadow-xs space-y-1.5 mt-0.5">
+                <div className="flex items-center justify-between gap-1.5 sm:gap-2 w-full text-xs">
+                  <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+                    <span className="font-manrope font-extrabold text-[11px] sm:text-[13.5px] text-amber-950 dark:text-amber-100">
+                      {reservationDetails.checkInDate}
+                    </span>
+                    <span className="font-bold text-[8.5px] sm:text-[9.5px] px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-100/90 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 border border-amber-300/80 dark:border-amber-700/60">
+                      {reservationDetails.checkInTime}
+                    </span>
+                  </div>
+
+                  <div className="flex-1 flex items-center justify-center relative mx-1 sm:mx-2 min-w-[24px]">
+                    <div className="w-full border-t border-dashed border-amber-300/80 dark:border-amber-700/60" />
+                    <span className="absolute px-1 sm:px-1.5 py-0.5 bg-white dark:bg-amber-900 text-[8.5px] sm:text-[9px] font-bold text-amber-800 dark:text-amber-300 uppercase rounded-full border border-amber-300/70 dark:border-amber-700/50 tracking-wider shadow-2xs">
+                      TO
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 justify-end">
+                    <span className="font-manrope font-extrabold text-[11px] sm:text-[13.5px] text-amber-950 dark:text-amber-100">
+                      {reservationDetails.checkOutDate}
+                    </span>
+                    <span className="font-bold text-[8.5px] sm:text-[9.5px] px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-100/90 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 border border-amber-300/80 dark:border-amber-700/60">
+                      {reservationDetails.checkOutTime}
+                    </span>
+                  </div>
+                </div>
+
+                {reservationDetails.unitPrice > 0 && (
+                  <div className="pt-1.5 border-t border-amber-200/90 dark:border-amber-800/60 flex items-center justify-between text-xs">
+                    <span className="font-bold text-amber-900/80 dark:text-amber-200/80 text-[11px]">
+                      {reservationDetails.priceBreakdown}
+                    </span>
+                    <span className="font-manrope text-base sm:text-lg font-black text-amber-700 dark:text-amber-400 tracking-tight">
+                      ₹{reservationDetails.totalPrice.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Month Card Header & Subtitle */}
+        <div className="flex items-center justify-between pt-0.5">
+          <span className="font-manrope text-xs sm:text-[13px] font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+            <span>{isMonthly ? 'Month Card (12 Months)' : 'Month Card'}</span>
+          </span>
+          <span className={`text-[11px] sm:text-xs ${
+            sortedSelected.length > 0
+              ? 'text-emerald-800 dark:text-emerald-400 font-bold'
+              : 'text-slate-400 dark:text-slate-400 font-medium'
+          }`}>
+            {isMonthly
+              ? sortedSelected.length > 0
+                ? `${sortedSelected.length} Month(s) Selected`
+                : 'Select month(s) below'
+              : sortedSelected.length > 0
+                ? `${sortedSelected.length} Night(s) Selected`
+                : 'Select dates below'}
+          </span>
         </div>
 
-        {reservationDetails && (
-          <div className="pt-2.5 border-t border-slate-200/80 space-y-2">
-            {/* Dates and timings separated by a horizontal line, flush left to right */}
-            <div className="flex items-center justify-between gap-2.5 w-full text-xs sm:text-[12.5px] leading-tight">
-              <div className="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
-                <span className="font-semibold text-slate-800">
-                  {reservationDetails.checkInDate}
-                </span>
-                <span className="font-normal text-[11px] sm:text-xs text-slate-500">
-                  ({reservationDetails.checkInTime})
-                </span>
-              </div>
+        {/* Schedule Matrix */}
+        {isMonthly ? (
+          <div className="space-y-4">
+            <div className="p-3 sm:p-4 rounded-3xl bg-white dark:bg-zinc-900/40 backdrop-blur-md border border-slate-200/80 dark:border-zinc-800/80 shadow-2xs">
+              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2">
+                {(() => {
+                  const roomCapacity = Math.max(1, Math.min(10, Number(activeRoom?.capacity) || 1));
+                  return upcomingMonths.map((m) => {
+                    const isBooked = bookedMonthsForRoom.has(m.monthKey);
+                    const isUserMonth = isBooked && userBookedMonthsForRoom.has(m.monthKey);
+                    const isUserMonthRequested = !isBooked && userRequestedMonthsForRoom.has(m.monthKey);
+                    const isSelected = selectedMonthIndices.includes(m.index);
+                    const isCurrentMonth = m.isCurrentMonth;
+                    const occupiedCount = isBooked ? roomCapacity : 0;
 
-              <div className="flex-1 mx-2 sm:mx-3 border-t border-slate-300/80" />
+                    return (
+                      <button
+                        type="button"
+                        key={m.monthKey}
+                        disabled={isBooked || isUserMonthRequested}
+                        onClick={() => onToggleSlotMonth && onToggleSlotMonth(m.index)}
+                        className={`relative p-2 sm:p-2.5 rounded-xl border select-none transition-all flex flex-col justify-between items-center text-center outline-none ${
+                          isBooked
+                            ? isUserMonth
+                              ? 'bg-purple-100 dark:bg-purple-950/40 border-2 border-purple-500 text-purple-950 dark:text-purple-200 cursor-not-allowed shadow-xs'
+                              : 'bg-rose-50/75 dark:bg-rose-950/30 border-2 border-rose-400 dark:border-rose-600/80 text-rose-950 dark:text-rose-100 cursor-not-allowed shadow-xs'
+                            : isUserMonthRequested
+                            ? 'bg-purple-50 dark:bg-purple-950/30 border-2 border-purple-300 dark:border-purple-700/60 text-purple-950 dark:text-purple-200 font-bold cursor-not-allowed'
+                            : isSelected
+                            ? 'bg-emerald-50 dark:bg-sky-950/40 border-2 border-emerald-500 dark:border-sky-400 text-emerald-950 dark:text-sky-100 font-semibold shadow-xs cursor-pointer hover:border-emerald-600'
+                            : isCurrentMonth
+                            ? 'bg-white dark:bg-zinc-800/90 border-2 border-[#006C4A] text-slate-900 dark:text-white font-bold hover:bg-slate-50 dark:hover:bg-zinc-800 cursor-pointer'
+                            : 'bg-white dark:bg-zinc-800/60 border border-slate-200 dark:border-zinc-700/70 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-800 dark:text-zinc-200 cursor-pointer'
+                        }`}
+                      >
+                        <span className={`text-[9.5px] font-semibold px-2 py-0.5 rounded-full tracking-wide truncate max-w-[110px] ${
+                          isBooked
+                            ? isUserMonth
+                              ? 'bg-purple-200 dark:bg-purple-900 text-purple-950 dark:text-purple-100 border border-purple-400'
+                              : 'bg-rose-100/90 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200 border border-rose-200 dark:border-rose-800/70'
+                            : isUserMonthRequested
+                            ? 'bg-purple-100 dark:bg-purple-900/60 text-purple-900 dark:text-purple-200 border border-purple-300 dark:border-purple-700'
+                            : isSelected
+                            ? 'bg-emerald-100 dark:bg-sky-900/60 text-emerald-800 dark:text-sky-200 border border-emerald-300 dark:border-sky-700 font-semibold'
+                            : isCurrentMonth
+                            ? 'bg-emerald-50 dark:bg-emerald-950/20 text-[#006C4A] dark:text-emerald-400'
+                            : 'bg-slate-100 dark:bg-zinc-700/50 text-slate-600 dark:text-zinc-400'
+                        }`}>
+                          {isBooked
+                            ? (isUserMonth ? 'You' : 'Booked')
+                            : isUserMonthRequested
+                            ? 'Requested'
+                            : isSelected
+                            ? 'Stay'
+                            : isCurrentMonth
+                            ? 'This Month'
+                            : 'Available'}
+                        </span>
 
-              <div className="flex items-center gap-1.5 shrink-0 justify-end text-right whitespace-nowrap">
-                <span className="font-semibold text-slate-800">
-                  {reservationDetails.checkOutDate}
-                </span>
-                <span className="font-normal text-[11px] sm:text-xs text-slate-500">
-                  ({reservationDetails.checkOutTime})
-                </span>
-              </div>
-            </div>
+                        <div className="my-1 flex items-baseline justify-center gap-1.5 whitespace-nowrap">
+                          <span className="text-xs sm:text-[13.5px] font-bold leading-tight tracking-tight">{m.monthShort}</span>
+                          <span className={`text-[11px] sm:text-xs font-medium leading-tight ${
+                            isSelected ? 'opacity-90' : 'text-slate-500 dark:text-zinc-400'
+                          }`}>{m.year}</span>
+                        </div>
 
-            {reservationDetails.unitPrice > 0 && (
-              <div className="pt-1.5 border-t border-slate-200/60 flex items-center justify-between text-xs sm:text-[12.5px]">
-                <span className="font-medium text-slate-600">
-                  {reservationDetails.priceBreakdown}
-                </span>
-                <span className="font-semibold text-emerald-700">
-                  ₹{reservationDetails.totalPrice.toLocaleString('en-IN')}
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Month Card Header & Subtitle */}
-      <div className="flex items-center justify-between gap-2 text-xs font-semibold text-slate-700">
-        <span className="font-semibold text-slate-900 flex items-center gap-1.5">
-          <span>{isMonthly ? 'Month Card (12 Months)' : 'Month Card'}</span>
-        </span>
-        <span className={`text-[11.5px] ${
-          (isMonthly ? sortedSelectedMonths.length > 0 : sortedSelectedDays.length > 0)
-            ? 'text-[#6594B1] font-semibold'
-            : 'text-slate-500 font-medium'
-        }`}>
-          {isMonthly
-            ? sortedSelectedMonths.length > 0
-              ? `${sortedSelectedMonths.length} Month(s) Selected`
-              : 'Select month(s) below'
-            : sortedSelectedDays.length > 0
-              ? `${sortedSelectedDays.length} Night(s) Selected`
-              : 'Select dates below'}
-        </span>
-      </div>
-
-      {/* Schedule Matrix */}
-      {isMonthly ? (
-        <div className="space-y-4">
-          <div className="p-3 sm:p-4 rounded-2xl bg-white/60 backdrop-blur-md border border-white/80 space-y-3 shadow-xs">
-            <div className="flex items-center justify-between pb-2 border-b border-white/80">
-              <h4 className="text-xs sm:text-sm font-semibold text-slate-900 flex items-center gap-2">
-                <span>Upcoming 12 Months</span>
-                <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-white/80 text-slate-700 border border-white/80">
-                  Monthly Rate
-                </span>
-              </h4>
-              <span className="text-[11px] text-slate-500 font-medium">1st of Month Check-in</span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2">
-              {(() => {
-                const roomCapacity = Math.max(1, Math.min(10, Number(selectedRoom?.capacity) || 1));
-                return upcomingMonths.map((m) => {
-                  const isBooked = bookedMonthsForRoom.has(m.monthKey);
-                  const isRequested = requestedMonthsForRoom.has(m.monthKey);
-                  const isSelected = selectedMonthIndices.includes(m.index);
-                  const isCurrentMonth = m.isCurrentMonth;
-                  const occupiedCount = isBooked ? roomCapacity : 0;
-
-                  return (
-                    <button
-                      type="button"
-                      key={m.monthKey}
-                      disabled={isBooked || isRequested}
-                      onClick={() => onToggleSlotMonth && onToggleSlotMonth(m.index)}
-                      title={
-                        isBooked
-                          ? 'Booked'
-                          : isRequested
-                          ? 'Requested (Pending Host Approval)'
-                          : isSelected
-                          ? 'Selected'
-                          : 'Available'
-                      }
-                      className={`relative p-2.5 sm:p-3 rounded-xl border select-none transition-all flex flex-col justify-between items-center text-center outline-none ${
-                        isBooked
-                          ? 'bg-sky-100 border-sky-300 text-sky-900 cursor-not-allowed opacity-90'
-                          : isRequested
-                          ? 'bg-amber-100/90 border-amber-400 text-amber-950 cursor-not-allowed shadow-xs'
-                          : isSelected
-                          ? 'bg-emerald-600 border-emerald-600 text-white font-bold shadow-md cursor-pointer'
-                          : isCurrentMonth
-                          ? 'bg-white border-2 border-emerald-600 text-slate-900 font-bold hover:bg-slate-50 cursor-pointer'
-                          : 'bg-white/80 border border-white/80 hover:bg-white text-slate-800 shadow-xs cursor-pointer'
-                      }`}
-                    >
-                      <span className={`text-[9.5px] font-semibold px-2 py-0.5 rounded-full tracking-wide ${
-                        isBooked
-                          ? 'bg-sky-200 text-sky-900'
-                          : isRequested
-                          ? 'bg-amber-200 text-amber-900 font-bold border border-amber-300'
-                          : isSelected
-                          ? 'bg-white/20 text-white'
-                          : isCurrentMonth
-                          ? 'bg-emerald-50 text-emerald-700'
-                          : 'bg-slate-100 text-slate-600'
-                      }`}>
-                        {isBooked ? 'Booked' : isRequested ? 'Requested' : isSelected ? 'Stay' : isCurrentMonth ? 'This Month' : 'Available'}
-                      </span>
-                      <div className="my-1 flex items-baseline justify-center gap-1.5 whitespace-nowrap">
-                        <span className="text-xs sm:text-[13.5px] font-bold leading-tight tracking-tight">{m.monthShort}</span>
-                        <span className={`text-[11px] sm:text-xs font-medium leading-tight ${
-                          isSelected ? 'text-white/90' : isRequested ? 'text-amber-800' : 'text-slate-500 dark:text-zinc-400'
-                        }`}>{m.year}</span>
-                      </div>
-
-                      {/* Person Occupancy Icons */}
-                      {roomCapacity > 1 && (
+                        {/* Person Occupancy Icons */}
                         <PersonOccupancyGrid
                           capacity={roomCapacity}
                           occupiedCount={occupiedCount}
-                          className="py-0.5"
-                          occupiedColor={isSelected ? 'text-white' : 'text-slate-900 dark:text-white'}
-                          vacantColor={isSelected ? 'text-white/70' : 'text-slate-400 dark:text-zinc-500'}
+                          className="py-1"
+                          occupiedColor="text-slate-900 dark:text-white"
+                          vacantColor={isSelected ? 'text-emerald-700/80 dark:text-sky-300/80' : 'text-slate-400 dark:text-zinc-500'}
                           customTitle={`${occupiedCount} of ${roomCapacity} slot${roomCapacity > 1 ? 's' : ''} occupied in ${m.monthShort} ${m.year}`}
                         />
+                      </button>
+                    );
+                  });
+                })()}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {/* Month Filter Pill Buttons (with smooth spring active pill) */}
+            {monthGroups.length > 1 && (
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+                {monthGroups.map((group, gIdx) => {
+                  const isCurrent = selectedMonthIdx === gIdx;
+                  return (
+                    <button
+                      key={group.monthYear}
+                      type="button"
+                      onClick={() => setSelectedMonthIdx(gIdx)}
+                      className="relative px-3.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer whitespace-nowrap outline-none select-none transition-colors"
+                    >
+                      {isCurrent && (
+                        <motion.span
+                          layoutId="activeMonthSchedulePill"
+                          className="absolute inset-0 rounded-full bg-[#00e599] shadow-xs shadow-[#00e599]/20 z-0"
+                          transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                        />
                       )}
+                      {!isCurrent && (
+                        <span className="absolute inset-0 rounded-full bg-slate-50 dark:bg-[#0c1825] border border-slate-200 dark:border-slate-700/60 z-0" />
+                      )}
+                      <span className={`relative z-10 transition-colors ${
+                        isCurrent
+                          ? 'text-[#071320] font-bold'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-semibold'
+                      }`}>
+                        {group.monthYear}
+                      </span>
                     </button>
                   );
-                });
-              })()}
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {monthGroups.length > 1 && (
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-              {monthGroups.map((group, gIdx) => (
-                <button
-                  key={group.monthYear}
-                  type="button"
-                  onClick={() => setSelectedMonthIdx(gIdx)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap border ${
-                    selectedMonthIdx === gIdx
-                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                      : 'bg-white/80 text-slate-700 border-white/80 hover:bg-white shadow-xs'
-                  }`}
-                >
-                  {group.monthYear}
-                </button>
-              ))}
-            </div>
-          )}
+                })}
+              </div>
+            )}
 
-          <div className="space-y-4">
-            {(monthGroups[selectedMonthIdx] ? [monthGroups[selectedMonthIdx]] : (monthGroups.length > 0 ? [monthGroups[0]] : [])).map((group) => {
-              const firstDayOfWeek = group.days[0]?.dayOfWeek || 0;
-              const leadingBlanks = Array.from({ length: firstDayOfWeek });
+            {/* Calendar Box (Exact Pic 1 Design) */}
+            <div className="flex flex-col rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-[#142334] bg-white dark:bg-[#071320] shadow-2xs p-3 sm:p-3.5">
+              <div className="grid grid-cols-7 text-center text-[10.5px] sm:text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider pb-2 select-none">
+                {WEEKDAYS.map((wd) => (
+                  <span key={wd}>{wd}</span>
+                ))}
+              </div>
 
-              return (
-                <div key={group.monthYear} className="p-3 sm:p-4 rounded-2xl bg-white/60 backdrop-blur-md border border-white/80 space-y-3 shadow-xs">
-                  <div className="grid grid-cols-7 text-center">
-                    {WEEKDAYS.map((wd) => (
-                      <div key={wd} className="text-[11px] font-semibold text-slate-500 tracking-wider py-0.5">
-                        {wd}
-                      </div>
-                    ))}
-                  </div>
+              <motion.div
+                initial={false}
+                animate={{ height: calendarGridHeight }}
+                transition={{
+                  height: { type: 'spring', stiffness: 280, damping: 28, mass: 0.85 },
+                }}
+                className="overflow-hidden relative w-full"
+              >
+                <div ref={calendarGridContentRef} className="w-full relative pb-2 sm:pb-2.5">
+                  <AnimatePresence mode="popLayout" initial={false}>
+                    {(() => {
+                      const activeGroup = monthGroups[selectedMonthIdx] || (monthGroups.length > 0 ? monthGroups[0] : null);
+                      if (!activeGroup) return null;
 
-                  <div className="grid grid-cols-7 gap-y-3">
-                    {leadingBlanks.map((_, bIdx) => (
-                      <div key={`blank-${bIdx}`} className="h-10 flex items-center justify-center opacity-0 pointer-events-none" />
-                    ))}
-
-                    {group.days.map((slot) => {
-                      const isBooked = bookedSlotsForRoom.has(slot.fullISO);
-                      const isRequested = requestedSlotsForRoom.has(slot.fullISO);
-                      const isSelected = selectedSlotIndices.includes(slot.index);
-                      const isToday = slot.fullISO === todayISO;
-                      const dayOfWeek = slot.dayOfWeek;
-
-                      const [sY, sM, sD] = slot.fullISO.split('-').map(Number);
-                      const prevDateISO = new Date(Date.UTC(sY, sM - 1, sD - 1)).toISOString().split('T')[0];
-                      const nextDateISO = new Date(Date.UTC(sY, sM - 1, sD + 1)).toISOString().split('T')[0];
-                      
-                      const prevBooked = bookedSlotsForRoom.has(prevDateISO);
-                      const nextBooked = bookedSlotsForRoom.has(nextDateISO);
-
-                      const isSameAsPrev = isBooked && prevBooked;
-                      const isSameAsNext = isBooked && nextBooked;
-
-                      const hasPrevInRow = dayOfWeek !== 0 && isSameAsPrev;
-                      const hasNextInRow = dayOfWeek !== 6 && isSameAsNext;
-                      const wrapsToNextRow = dayOfWeek === 6 && isSameAsNext;
-                      const wrapsFromPrevRow = dayOfWeek === 0 && isSameAsPrev;
-
-                      let capsuleTrack = 'mx-auto w-8 h-8 sm:w-9 sm:h-9 rounded-full';
-                      if (isBooked) {
-                        if ((hasPrevInRow || wrapsFromPrevRow) && (hasNextInRow || wrapsToNextRow)) {
-                          capsuleTrack = 'w-full h-8 sm:h-9 rounded-none';
-                        } else if ((hasPrevInRow || wrapsFromPrevRow) && !hasNextInRow) {
-                          capsuleTrack = 'w-full h-8 sm:h-9 rounded-r-full rounded-l-none';
-                        } else if (!hasPrevInRow && (hasNextInRow || wrapsToNextRow)) {
-                          capsuleTrack = 'w-full h-8 sm:h-9 rounded-l-full rounded-r-none';
-                        } else {
-                          capsuleTrack = 'w-8 h-8 sm:w-9 sm:h-9 rounded-full mx-auto';
-                        }
-                      }
-
-                      const capsuleBg = isBooked
-                        ? 'bg-sky-100 text-sky-900 border border-sky-300'
-                        : isRequested
-                        ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                        : '';
-                      const isCheckInDay = isBooked && !isSameAsPrev;
+                      const firstDayOfWeek = activeGroup.days[0]?.dayOfWeek || 0;
+                      const leadingBlanks = Array.from({ length: firstDayOfWeek });
 
                       return (
-                        <div key={slot.fullISO} className="flex flex-col items-center justify-start relative w-full">
-                          <button
-                            type="button"
-                            disabled={isBooked || isRequested}
-                            onClick={() => onToggleSlotDay && onToggleSlotDay(slot.index)}
-                            title={
-                              isBooked
-                                ? 'Booked'
-                                : isRequested
-                                ? 'Requested (Pending Host Approval)'
-                                : isSelected
-                                ? 'Selected'
-                                : 'Available'
-                            }
-                            className={`flex items-center justify-center font-semibold text-xs sm:text-[13px] select-none outline-none transition-all ${capsuleTrack} ${
-                              isBooked || isRequested
-                                ? `${capsuleBg} cursor-not-allowed`
-                                : isSelected
-                                ? 'bg-emerald-600 text-white border-2 border-emerald-600 font-bold cursor-pointer shadow-xs rounded-full'
-                                : isToday
-                                ? 'border-2 border-emerald-500 text-slate-900 cursor-pointer font-bold bg-white rounded-full'
-                                : 'bg-white border border-slate-200 text-slate-800 hover:border-slate-400 cursor-pointer rounded-full font-medium'
-                            }`}
-                          >
-                            <span>{slot.dayNum}</span>
-                          </button>
-                          
-                          <div className="h-3.5 flex items-center justify-center mt-0.5">
-                            {isCheckInDay ? (
-                              <span className="text-[8.5px] font-semibold tracking-tight leading-none text-center truncate max-w-[56px] px-1 py-0.5 rounded text-sky-800 bg-sky-100">
-                                Booked
-                              </span>
-                            ) : isRequested ? (
-                              <span className="text-[8.5px] font-bold tracking-tight leading-none text-center truncate max-w-[56px] px-1 py-0.5 rounded text-amber-900 bg-amber-200">
-                                Req
-                              </span>
-                            ) : null}
+                        <motion.div
+                          key={activeGroup.monthYear}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -8, position: 'absolute', top: 0, left: 0, right: 0 }}
+                          transition={{
+                            opacity: { duration: 0.18, ease: 'easeOut' },
+                            y: { duration: 0.22, ease: [0.25, 1, 0.5, 1] },
+                          }}
+                          className="w-full"
+                        >
+                          <div className="grid grid-cols-7 gap-y-2 sm:gap-y-2.5 items-center text-center">
+                            {leadingBlanks.map((_, bIdx) => (
+                              <div key={`blank-${bIdx}`} className="flex items-center justify-center h-9 sm:h-9.5" />
+                            ))}
+
+                            {activeGroup.days.map((slot) => {
+                              const isBooked = bookedSlotsForRoom.has(slot.fullISO);
+                              const isUserSlot = isBooked && userBookedSlotsForRoom.has(slot.fullISO);
+                              const isUserRequested = !isBooked && userRequestedSlotsForRoom.has(slot.fullISO);
+                              const isSelected = selectedSlotIndices.includes(slot.index);
+                              const isToday = slot.fullISO === todayISO;
+                              const dayOfWeek = slot.dayOfWeek;
+
+                              const [sY, sM, sD] = slot.fullISO.split('-').map(Number);
+                              const prevDateISO = new Date(Date.UTC(sY, sM - 1, sD - 1)).toISOString().split('T')[0];
+                              const nextDateISO = new Date(Date.UTC(sY, sM - 1, sD + 1)).toISOString().split('T')[0];
+
+                              const prevBooked = bookedSlotsForRoom.has(prevDateISO);
+                              const nextBooked = bookedSlotsForRoom.has(nextDateISO);
+
+                              const prevIsUser = userBookedSlotsForRoom.has(prevDateISO);
+                              const nextIsUser = userBookedSlotsForRoom.has(nextDateISO);
+
+                              const isSameAsPrev = isBooked && prevBooked && (isUserSlot === prevIsUser);
+                              const isSameAsNext = isBooked && nextBooked && (isUserSlot === nextIsUser);
+
+                              const hasPrevInRow = dayOfWeek !== 0 && isSameAsPrev;
+                              const hasNextInRow = dayOfWeek !== 6 && isSameAsNext;
+                              const wrapsToNextRow = dayOfWeek === 6 && isSameAsNext;
+                              const wrapsFromPrevRow = dayOfWeek === 0 && isSameAsPrev;
+
+                              let capsuleTrack = 'mx-auto w-9 h-9 sm:w-9.5 sm:h-9.5 rounded-full';
+                              if (isBooked) {
+                                if ((hasPrevInRow || wrapsFromPrevRow) && (hasNextInRow || wrapsToNextRow)) {
+                                  capsuleTrack = 'w-full h-9 sm:h-9.5 rounded-none border-y-2 border-[#38BDF8] dark:border-primary border-l border-[#BAE6FD] dark:border-l-primary/30';
+                                } else if ((hasPrevInRow || wrapsFromPrevRow) && !hasNextInRow) {
+                                  capsuleTrack = 'w-full h-9 sm:h-9.5 rounded-r-full rounded-l-none border-y-2 border-r-2 border-[#38BDF8] dark:border-primary border-l border-[#BAE6FD] dark:border-l-primary/30';
+                                } else if (!hasPrevInRow && (hasNextInRow || wrapsToNextRow)) {
+                                  capsuleTrack = 'w-full h-9 sm:h-9.5 rounded-l-full rounded-r-none border-y-2 border-l-2 border-[#38BDF8] dark:border-primary';
+                                } else {
+                                  capsuleTrack = 'w-9 h-9 sm:w-9.5 sm:h-9.5 rounded-full mx-auto border-2 border-[#38BDF8] dark:border-primary';
+                                }
+                              }
+
+                              const capsuleBg = isBooked
+                                ? isUserSlot
+                                  ? 'bg-purple-100 text-purple-950 border border-purple-300 dark:bg-primary/30 dark:text-on-surface dark:border-purple-600'
+                                  : 'bg-[#E0F2FE] dark:bg-primary/20 text-slate-900 dark:text-on-surface font-bold'
+                                : isUserRequested
+                                ? 'bg-purple-50 text-purple-950 border border-purple-300 dark:bg-primary/25 dark:text-on-surface dark:border-purple-700'
+                                : '';
+
+                              const isCheckInDay = isBooked && !isSameAsPrev;
+
+                              return (
+                                <div key={slot.fullISO} className="flex items-center justify-center h-9 sm:h-9.5 relative w-full">
+                                  <button
+                                    type="button"
+                                    disabled={isBooked || isUserRequested}
+                                    onClick={() => onToggleSlotDay && onToggleSlotDay(slot.index)}
+                                    className={`flex flex-col items-center justify-center text-xs sm:text-[13.5px] select-none outline-none relative ${capsuleTrack} ${
+                                      isBooked
+                                        ? `${capsuleBg} cursor-not-allowed`
+                                        : isUserRequested
+                                        ? `${capsuleBg} cursor-not-allowed`
+                                        : isSelected
+                                        ? 'bg-[#00e599] text-[#071320] font-black cursor-pointer shadow-md shadow-[#00e599]/20 rounded-full'
+                                        : isToday
+                                        ? 'border-2 border-[#c0c1ff] dark:border-[#c0c1ff] text-slate-900 dark:text-white cursor-pointer font-bold bg-transparent rounded-full'
+                                        : 'text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors cursor-pointer rounded-full'
+                                    }`}
+                                  >
+                                    <span>{slot.dayNum}</span>
+                                    {isCheckInDay ? (
+                                      <span
+                                        className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 z-10 px-2 py-0.5 rounded-full bg-[#E0F2FE] dark:bg-surface-container-high/90 border border-[#7DD3FC] dark:border-primary/50 text-[#0369A1] dark:text-primary font-mono text-[9.5px] leading-none font-bold whitespace-nowrap shadow-xs"
+                                      >
+                                        {isUserSlot ? 'You' : 'Booked'}
+                                      </span>
+                                    ) : isUserRequested ? (
+                                      <span
+                                        className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 z-10 px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950/70 border border-purple-300 dark:border-purple-700 text-purple-900 dark:text-purple-200 font-mono text-[9.5px] leading-none font-bold whitespace-nowrap shadow-xs"
+                                      >
+                                        Requested
+                                      </span>
+                                    ) : null}
+                                  </button>
+                                </div>
+                              );
+                            })}
                           </div>
-                        </div>
+                        </motion.div>
                       );
-                    })}
-                  </div>
+                    })()}
+                  </AnimatePresence>
                 </div>
-              );
-            })}
+              </motion.div>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </motion.div>
   );
 }
 
 export default UserMonthlySlotCard;
-

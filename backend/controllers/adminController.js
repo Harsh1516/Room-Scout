@@ -9,6 +9,7 @@ import { Wishlist } from '../models/Wishlist.js';
 import { Payment } from '../models/Payment.js';
 import { generateToken, isAdminUser } from '../middleware/authMiddleware.js';
 import { uploadSecureImage } from '../utils/imageSecurity.js';
+import { isBookingRequestExpired } from './bookingController.js';
 
 // @desc    Get all users list (Online Accounts + Offline Booking Occupants)
 // @route   GET /api/admin/users
@@ -46,8 +47,7 @@ export const getUsers = async (req, res, next) => {
       email: b.email || '—',
       phone: b.phone || '—',
       aadharNumber: b.aadharNumber || '—',
-      adults: b.adults,
-      children: b.children,
+      personCount: b.personCount || 1,
       propertyName: b.stayTitle,
       category: b.roomType,
       roomNumber: b.roomNumber,
@@ -163,6 +163,8 @@ export const getHosts = async (req, res, next) => {
         avatar: h.avatar,
         role: h.role,
         status: h.status,
+        isApproved: h.status === 'Approved' || Boolean(h.isApproved),
+        hasBeenApproved: Boolean(h.hasBeenApproved || h.status === 'Approved'),
         propertyName: s.title || `${h.name}'s Stay`,
         propertyType: s.type || 'PG',
         genderType: s.genderType || 'Both',
@@ -180,7 +182,7 @@ export const getHosts = async (req, res, next) => {
         totalRooms: s.totalRooms || 0,
         price: s.price ? `₹${Number(s.price).toLocaleString('en-IN')}` : '₹4,000',
         rateUnit: s.rateUnit || '/month',
-        rating: s.rating || 5.0,
+        rating: s.rating || 0,
         image: s.image || '',
         images: s.images || [],
         rooms: s.rooms || [],
@@ -233,15 +235,17 @@ export const getHostByEmail = async (req, res, next) => {
 
     const mergedHost = {
       ...host,
-      id: host._id.toString(),
       _id: host._id.toString(),
+      status: host.status,
+      isApproved: host.status === 'Approved' || Boolean(host.isApproved),
+      hasBeenApproved: Boolean(host.hasBeenApproved || host.status === 'Approved'),
       ...(stay
         ? {
             propertyName: stay.title,
             title: stay.title,
-            propertyType: stay.type,
-            type: stay.type,
-            genderType: stay.genderType || 'Both',
+            propertyType: stay.type || '',
+            type: stay.type || '',
+            genderType: stay.genderType || '',
             location: stay.location || '',
             address: stay.address || '',
             roadArea: stay.roadArea || '',
@@ -250,10 +254,10 @@ export const getHostByEmail = async (req, res, next) => {
             pincode: stay.pincode || '',
             latitude: stay.latitude,
             longitude: stay.longitude,
-            price: stay.price ? `₹${Number(stay.price).toLocaleString('en-IN')}` : '₹4,000',
+            price: stay.price ? `₹${Number(stay.price).toLocaleString('en-IN')}` : '',
             rawPrice: stay.price,
             rateUnit: stay.rateUnit || '/month',
-            rating: stay.rating || 5.0,
+            rating: stay.rating || null,
             facilities: stay.facilities || [],
             amenities: stay.facilities || [],
             rules: stay.rules || [],
@@ -349,27 +353,69 @@ export const createHost = async (req, res, next) => {
         role: 'host',
         avatar: (name || 'HO').trim().slice(0, 2).toUpperCase(),
         status: status || 'Pending Approval',
+        isApproved: status === 'Approved',
+        hasBeenApproved: status === 'Approved',
       });
     } else {
       if (name) host.name = name.trim();
       if (phone) host.phone = phone.trim();
-      if (status && ['Active', 'Pending Approval', 'Approved', 'Rejected', 'Draft'].includes(status)) {
+
+      const wasAlreadyApproved = host.status === 'Approved' || host.isApproved || host.hasBeenApproved;
+      if (wasAlreadyApproved) {
+        // One-Time Approval: Once an admin approves the host, they retain Approved status permanently across all room additions and property updates
+        host.status = 'Approved';
+        host.isApproved = true;
+        host.hasBeenApproved = true;
+      } else if (status && ['Active', 'Pending Approval', 'Approved', 'Rejected', 'Draft'].includes(status)) {
         host.status = status;
+        if (status === 'Approved') {
+          host.isApproved = true;
+          host.hasBeenApproved = true;
+        }
+      } else if (!host.status) {
+        host.status = 'Pending Approval';
       }
       await host.save();
+    }
+
+    // Also sync User account role and phone if the host has a corresponding User record
+    try {
+      const userUpdateFields = {
+        role: 'host',
+        hasProperty: true,
+      };
+      if (host.phone) {
+        userUpdateFields.phone = host.phone;
+      }
+      if (host.name) {
+        userUpdateFields.name = host.name;
+      }
+      if (req.user?._id) {
+        await User.findByIdAndUpdate(req.user._id, { $set: userUpdateFields });
+      } else if (cleanEmail) {
+        await User.findOneAndUpdate({ email: cleanEmail }, { $set: userUpdateFields });
+      }
+    } catch (syncErr) {
+      console.warn('Could not sync user profile with host details:', syncErr);
     }
 
     const existingStay = await Stay.findOne({ hostId: host._id });
 
     const cleanPrimaryImage = await uploadSecureImage(image, 'roomscout/properties');
     let processedImages = [];
-    if (Array.isArray(images) && images.length > 0) {
-      processedImages = await Promise.all(images.map((img) => uploadSecureImage(img, 'roomscout/properties')));
+    if (Array.isArray(images)) {
+      if (images.length > 0) {
+        processedImages = await Promise.all(images.map((img) => uploadSecureImage(img, 'roomscout/properties')));
+      } else if (cleanPrimaryImage) {
+        processedImages = [cleanPrimaryImage];
+      }
     } else if (cleanPrimaryImage) {
       processedImages = [cleanPrimaryImage];
     } else if (existingStay?.images?.length > 0) {
       processedImages = existingStay.images;
     }
+
+    const resolvedPrimaryImage = processedImages[0] || cleanPrimaryImage || (images !== undefined ? '' : existingStay?.image) || '';
 
     const resolvedTitle = propertyName || title || existingStay?.title || `${host.name}'s Stay`;
     const resolvedType = propertyType || type || existingStay?.type || 'PG';
@@ -422,8 +468,9 @@ export const createHost = async (req, res, next) => {
     const resolvedRoomRates =
       roomRates !== undefined
         ? Array.isArray(roomRates)
-          ? roomRates.map((rr, idx) => ({
-              id: rr.id || rr._id?.toString() || `rate_${idx}`,
+          ? roomRates.map((rr) => ({
+              ...(rr._id && mongoose.Types.ObjectId.isValid(rr._id) ? { _id: rr._id } : {}),
+              id: rr.id || (rr._id ? String(rr._id) : undefined),
               type: rr.type,
               price: rr.price,
               rateUnit: rr.rateUnit,
@@ -440,11 +487,7 @@ export const createHost = async (req, res, next) => {
         : (existingStay?.rooms || []);
 
     const cleanedRooms = (Array.isArray(resolvedRooms) ? resolvedRooms : []).map((rm) => ({
-      ...(rm._id && mongoose.Types.ObjectId.isValid(rm._id)
-        ? { _id: rm._id }
-        : rm.id && mongoose.Types.ObjectId.isValid(rm.id)
-        ? { _id: rm.id }
-        : {}),
+      ...(rm._id && mongoose.Types.ObjectId.isValid(rm._id) ? { _id: rm._id } : {}),
       roomNumber: rm.roomNumber,
       roomNumInt: rm.roomNumInt || parseInt(String(rm.roomNumber).replace(/\D/g, ''), 10) || 0,
       rateId: rm.rateId || '',
@@ -491,7 +534,7 @@ export const createHost = async (req, res, next) => {
       rooms: cleanedRooms,
       totalRooms: finalTotalRooms,
       availableRooms: finalAvailRooms,
-      image: cleanPrimaryImage || existingStay?.image || processedImages[0] || '',
+      image: resolvedPrimaryImage,
       images: processedImages,
       instagramVideoUrl: instagramVideoUrl !== undefined ? instagramVideoUrl : (existingStay?.instagramVideoUrl || ''),
       description: description !== undefined ? description : (existingStay?.description || ''),
@@ -513,6 +556,8 @@ export const createHost = async (req, res, next) => {
       avatar: host.avatar,
       role: host.role,
       status: host.status,
+      isApproved: host.status === 'Approved' || Boolean(host.isApproved),
+      hasBeenApproved: Boolean(host.hasBeenApproved || host.status === 'Approved'),
       // Property / Stay fields
       propertyName: updatedStay.title,
       title: updatedStay.title,
@@ -563,7 +608,11 @@ export const createHost = async (req, res, next) => {
 export const approveHost = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const host = await Host.findByIdAndUpdate(id, { $set: { status: 'Approved' } }, { new: true });
+    const host = await Host.findByIdAndUpdate(
+      id,
+      { $set: { status: 'Approved', isApproved: true, hasBeenApproved: true } },
+      { new: true }
+    );
 
     if (!host) return res.status(404).json({ success: false, message: 'Host not found' });
 
@@ -591,7 +640,11 @@ export const approveHost = async (req, res, next) => {
 export const rejectHost = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const host = await Host.findByIdAndUpdate(id, { $set: { status: 'Rejected' } });
+    const host = await Host.findByIdAndUpdate(
+      id,
+      { $set: { status: 'Rejected', isApproved: false } },
+      { new: true }
+    );
 
     if (!host) return res.status(404).json({ success: false, message: 'Host not found' });
 
@@ -634,7 +687,7 @@ export const getHostGuests = async (req, res, next) => {
     const hostStays = await Stay.find({ hostId: host._id }).select('_id').lean();
     const stayIds = hostStays.map((s) => s._id);
 
-    const bookings = await Booking.find({
+    const rawBookings = await Booking.find({
       $or: [
         { hostId: host._id },
         ...(stayIds.length > 0 ? [{ stayId: { $in: stayIds } }] : []),
@@ -643,6 +696,16 @@ export const getHostGuests = async (req, res, next) => {
     })
       .sort({ createdAt: -1 })
       .lean();
+
+    const bookings = [];
+    for (const b of rawBookings) {
+      if (b.status === 'EXPIRED') continue;
+      if (isBookingRequestExpired(b)) {
+        Booking.findByIdAndUpdate(b._id, { $set: { status: 'EXPIRED', paymentStatus: 'FAILED' } }).catch(() => {});
+        continue;
+      }
+      bookings.push(b);
+    }
 
     const guests = bookings.map((b) => ({
       _id: b._id.toString(),
@@ -656,6 +719,9 @@ export const getHostGuests = async (req, res, next) => {
       checkInISO: b.checkIn ? new Date(b.checkIn).toISOString() : '',
       checkOut: b.checkOut,
       checkOutISO: b.checkOut ? new Date(b.checkOut).toISOString() : '',
+      bookedMonths: Array.isArray(b.bookedMonths) ? b.bookedMonths : [],
+      bookedDates: Array.isArray(b.bookedDates) ? b.bookedDates : [],
+      durationMonths: Array.isArray(b.bookedMonths) && b.bookedMonths.length > 0 ? b.bookedMonths.length : undefined,
       email: b.email,
       guestEmail: b.email,
       fullName: b.fullName,
@@ -666,13 +732,16 @@ export const getHostGuests = async (req, res, next) => {
       userPhone: b.phone,
       guestAadhar: b.aadharNumber,
       aadharId: b.aadharNumber,
-      adults: b.adults,
-      children: b.children,
+      personCount: b.personCount || 1,
       gender: b.gender,
-      duration: b.durationDisplay || '1 Month',
+      duration: b.durationDisplay || (b.rateUnit && b.rateUnit.includes('night') ? '1 Night' : '1 Month'),
+      durationDisplay: b.durationDisplay || (b.rateUnit && b.rateUnit.includes('night') ? '1 Night' : '1 Month'),
       totalAmount: b.totalAmount,
+      paidAmount: b.paidAmount !== undefined ? b.paidAmount : b.totalAmount,
       stayTitle: b.stayTitle,
       status: b.status,
+      paymentStatus: b.paymentStatus || 'PAID',
+      paymentMethod: b.paymentMethod || (b.bookingSource === 'ONLINE' ? 'ONLINE' : 'OFFLINE'),
       bookingSource: b.bookingSource,
       createdAt: b.createdAt,
     }));

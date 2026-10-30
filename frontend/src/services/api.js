@@ -60,7 +60,10 @@ async function request(endpoint, options = {}) {
         }
       }
 
-      const errorMessage = data.extraDetails || data.message || 'API request failed';
+      let errorMessage = data.extraDetails || data.message || 'API request failed';
+      if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+        errorMessage = data.errors.map((err) => err.message || `${err.field}: invalid`).join(', ');
+      }
       const error = new Error(errorMessage);
       error.status = response.status;
       error.data = data;
@@ -79,6 +82,18 @@ export const authAPI = {
     request('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
+    }),
+
+  googleAuth: ({ credential, role }) =>
+    request('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ credential, role }),
+    }),
+
+  googleLogin: ({ credential, role }) =>
+    request('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ credential, role }),
     }),
 
   register: (userData) =>
@@ -103,6 +118,12 @@ export const authAPI = {
     request('/auth/change-password', {
       method: 'PUT',
       body: JSON.stringify({ oldPassword, newPassword }),
+    }),
+
+  setPassword: ({ newPassword }) =>
+    request('/auth/set-password', {
+      method: 'POST',
+      body: JSON.stringify({ newPassword }),
     }),
 
   deleteAccount: () =>
@@ -163,7 +184,16 @@ export const staysAPI = {
 
   // Add this new method:
   getHostProperties: () => request('/stays/host/my-properties'),
+
+  getPublicStats: () => request('/stays/public-stats'),
+
+  resetRevenue: (stayId, data = {}) =>
+    request(`/stays/${stayId}/reset-revenue`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 };
+
 
 export const bookingsAPI = {
   createBooking: (bookingData) =>
@@ -218,36 +248,62 @@ export const bookingsAPI = {
       body: JSON.stringify(payload),
     }),
 
+  checkoutBooking: (id) =>
+    request(`/bookings/${encodeURIComponent(id)}/checkout`, {
+      method: 'POST',
+    }),
+
   cascadeDeleteRoomBookings: (payload) =>
     request('/bookings/room/cascade-delete', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
 
-  createPaymentOrder: (orderData) =>
-    request('/bookings/payment/create-order', {
+  getBookingUpiDetails: (bookingId) =>
+    request(`/payments/booking-upi-details/${encodeURIComponent(bookingId)}`),
+
+  submitUpiReference: (payload) =>
+    request('/payments/submit-upi-reference', {
       method: 'POST',
-      body: JSON.stringify(orderData),
+      body: JSON.stringify(payload),
     }),
 
-  verifyPayment: (paymentData) =>
-    request('/bookings/payment/verify', {
+  verifyReference: (payload) =>
+    request('/payments/verify-reference', {
       method: 'POST',
-      body: JSON.stringify(paymentData),
+      body: JSON.stringify(payload),
     }),
 };
 
 export const paymentsAPI = {
-  createOrder: (orderData) =>
-    request('/payments/create-order', {
+  getBookingUpiDetails: (bookingId) =>
+    request(`/payments/booking-upi-details/${encodeURIComponent(bookingId)}`),
+
+  submitUpiReference: (payload) =>
+    request('/payments/submit-upi-reference', {
       method: 'POST',
-      body: JSON.stringify(orderData),
+      body: JSON.stringify(payload),
     }),
 
-  verifyPayment: (paymentData) =>
-    request('/payments/verify', {
+  verifyReference: (payload) =>
+    request('/payments/verify-reference', {
       method: 'POST',
-      body: JSON.stringify(paymentData),
+      body: JSON.stringify(payload),
+    }),
+
+  recordRefund: (payload) =>
+    request('/payments/record-refund', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  getHostPaymentSettings: () =>
+    request('/payments/host-payment-settings'),
+
+  updateHostPaymentSettings: (payload) =>
+    request('/payments/host-payment-settings', {
+      method: 'PUT',
+      body: JSON.stringify(payload),
     }),
 
   getHostPayments: (hostId) =>
@@ -260,7 +316,7 @@ export const wishlistAPI = {
   getWishlist: () => request('/wishlist'),
 
   toggleWishlist: (stayOrId) => {
-    const targetStayId = typeof stayOrId === 'string' ? stayOrId : stayOrId?._id || stayOrId?.id;
+    const targetStayId = typeof stayOrId === 'string' ? stayOrId : stayOrId?._id;
     return request('/wishlist/toggle', {
       method: 'POST',
       body: JSON.stringify({

@@ -1,6 +1,14 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { Camera, ImagePlus, Video } from 'lucide-react';
+
+const getSafeImgSrc = (src) => {
+  if (!src) return '';
+  const s = String(src).trim();
+  if (!s.startsWith('http') && !s.startsWith('data:') && s.startsWith('image/')) {
+    return `data:${s}`;
+  }
+  return s;
+};
 
 export function UploadPhotosTab({
   formData,
@@ -24,7 +32,7 @@ export function UploadPhotosTab({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.2 }}
-      className="max-w-3xl w-full mx-auto bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-4 sm:p-6 shadow-xl space-y-4 relative overflow-hidden group"
+      className="max-w-3xl w-full mx-auto bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-3.5 sm:p-5 shadow-xl space-y-3 sm:space-y-3.5 relative overflow-hidden group"
     >
       <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-zinc-800">
         <div className="flex items-center gap-2.5">
@@ -65,7 +73,7 @@ export function UploadPhotosTab({
               onDragOver={(e) => onPhotoDragOver(e, i)}
               onDragLeave={(e) => onPhotoDragLeave(e, i)}
               onDrop={(e) => onPhotoDrop(e, i)}
-              className={`relative rounded-2xl overflow-hidden border-2 h-32 group bg-slate-100 dark:bg-zinc-800 shadow-xs cursor-grab active:cursor-grabbing transition-all select-none ${
+              className={`relative rounded-xl sm:rounded-2xl overflow-hidden border-2 h-28 sm:h-30 group bg-slate-100 dark:bg-zinc-800 shadow-xs cursor-grab active:cursor-grabbing transition-all select-none ${
                 isCover
                   ? 'border-emerald-500 ring-2 ring-emerald-500/20'
                   : isDragTarget
@@ -74,8 +82,10 @@ export function UploadPhotosTab({
               } ${isBeingDragged ? 'opacity-40 scale-95' : 'opacity-100'}`}
             >
               <img
-                src={imgUrl}
+                src={getSafeImgSrc(imgUrl)}
                 alt={`Photo ${i + 1}`}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover pointer-events-none"
               />
               
@@ -115,7 +125,7 @@ export function UploadPhotosTab({
             key={`empty-${idx}`}
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="rounded-2xl border-2 border-dashed border-slate-300 dark:border-zinc-700 h-32 flex flex-col items-center justify-center p-2 text-center text-slate-400 bg-slate-50/50 dark:bg-zinc-800/40 hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50/20 cursor-pointer transition-colors group"
+            className="rounded-xl sm:rounded-2xl border-2 border-dashed border-slate-300 dark:border-zinc-700 h-28 sm:h-30 flex flex-col items-center justify-center p-2 text-center text-slate-400 bg-slate-50/50 dark:bg-zinc-800/40 hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50/20 cursor-pointer transition-colors group"
           >
             <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 group-hover:scale-110 transition-transform mb-1 shadow-2xs">
               <ImagePlus className="w-4 h-4" />
@@ -127,10 +137,10 @@ export function UploadPhotosTab({
       </div>
 
       {/* Video Tour Link */}
-      <div className="p-3 rounded-2xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/80 dark:border-zinc-800 space-y-1.5">
+      <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/80 dark:border-zinc-800 space-y-1.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-pink-500/10 text-pink-500 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-pink-500/10 text-pink-500 flex items-center justify-center shrink-0">
               <Video className="w-4 h-4" />
             </div>
             <div>
@@ -154,7 +164,7 @@ export function UploadPhotosTab({
           value={formData.instagramVideoUrl || ''}
           onChange={(e) => setFormData({ ...formData, instagramVideoUrl: e.target.value })}
           placeholder="https://www.instagram.com/reel/... or https://www.youtube.com/watch?v=..."
-          className="w-full px-3 py-2 rounded-xl bg-slate-100/90 dark:bg-zinc-800/90 border border-slate-300 dark:border-zinc-700 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)]"
+          className="w-full px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100/90 dark:bg-zinc-800/90 border border-slate-300 dark:border-zinc-700 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)]"
         />
       </div>
     </motion.div>

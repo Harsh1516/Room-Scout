@@ -13,7 +13,7 @@ export const AdminHostRow = React.memo(function AdminHostRow({
   confirmDelete,
   setConfirmDeleteHostId,
 }) {
-  const hostId = host.id || host._id;
+  const hostId = host._id;
   const formattedDateTime = formatDateTime(host.createdAt || host.joinedDate);
   const isApproved = host.status === 'Approved';
   const hasRooms = Array.isArray(host.rooms) && host.rooms.length > 0;
@@ -53,7 +53,7 @@ export const AdminHostRow = React.memo(function AdminHostRow({
             </div>
             <div className="flex items-center gap-1.5 mt-1 text-[10.5px] text-slate-500 dark:text-slate-400">
               <span className="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] font-bold text-slate-700 dark:text-slate-300 shrink-0">
-                {host.propertyType || 'PG'} ({host.genderType || 'Both'})
+                {host.propertyType || '—'} {host.genderType ? `(${host.genderType})` : ''}
               </span>
             </div>
             <div className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate mt-1" title={host.location}>
@@ -221,7 +221,7 @@ export function AdminHostsTable({
               </tr>
             ) : (
               hosts.map((host, idx) => {
-                const hostId = host.id || host._id;
+                const hostId = host._id;
                 return (
                   <AdminHostRow
                     key={hostId || host.email || idx}
@@ -251,7 +251,7 @@ export function AdminHostsTable({
           <div className="p-8 text-center text-slate-400 text-xs">No hosts found</div>
         ) : (
           hosts.map((host, idx) => {
-            const hostId = host.id || host._id;
+            const hostId = host._id;
             const isPending = host.status === 'Pending Approval';
             const hasPropertyDetails = Boolean(host.propertyName && host.propertyName !== 'Host Property' && host.location);
 

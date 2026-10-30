@@ -113,8 +113,8 @@ export function UserRoomCards({
             className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 pt-0.5 px-0.5 w-full"
           >
             {filteredRooms.map((rm, cIdx) => {
-              const currentRoomId = rm.id || rm._id;
-              const isSelected = selectedRoom?.id === currentRoomId || selectedRoom?._id === currentRoomId;
+              const currentRoomId = rm._id;
+              const isSelected = selectedRoom?._id === currentRoomId;
               const rawRoomNum = String(rm.roomNumber || '').replace(/[^0-9]/g, '') || rm.roomNumber;
               const capacity = Math.max(1, Math.min(10, Number(rm.capacity) || 1));
 
@@ -128,17 +128,18 @@ export function UserRoomCards({
               if (isMonthly) {
                 const roomBookedMonths =
                   allRoomsBookedMonths[currentRoomId] ||
-                  allRoomsBookedMonths[rm.id] ||
+                  allRoomsBookedMonths[rm._id] ||
                   allRoomsBookedMonths[rm._id] ||
                   new Set();
                 const roomRequestedMonths =
                   allRoomsRequestedMonths[currentRoomId] ||
-                  allRoomsRequestedMonths[rm.id] ||
+                  allRoomsRequestedMonths[rm._id] ||
                   allRoomsRequestedMonths[rm._id] ||
                   new Set();
                 const currentMonthKey = upcomingMonths[0]?.monthKey || new Date().toISOString().slice(0, 7);
                 const isBookedThisMonth = roomBookedMonths.has(currentMonthKey);
                 const isRequestedThisMonth = roomRequestedMonths.has(currentMonthKey);
+                const hasAnyRequestedMonth = roomRequestedMonths.size > 0;
 
                 occupiedCount = Math.min(capacity, getRoomOccupiedCountInMonth(rm, currentMonthKey, allKnownBookings));
                 if (isBookedThisMonth && occupiedCount === 0) {
@@ -147,37 +148,40 @@ export function UserRoomCards({
 
                 isCardOccupied = occupiedCount >= capacity;
                 isCardPartiallyOccupied = occupiedCount > 0 && occupiedCount < capacity;
-                isRoomRequested = isRequestedThisMonth;
+                isRoomRequested = isRequestedThisMonth || hasAnyRequestedMonth;
                 isAvailableCurrent = !isCardOccupied && !isCardPartiallyOccupied && !isRoomRequested;
 
                 bookedNotice = isCardOccupied
                   ? `Room ${rawRoomNum} is booked for this month. You can reserve upcoming months.`
                   : isRoomRequested
-                  ? `Room ${rawRoomNum} is currently requested for this month (Pending Host Approval).`
+                  ? `Room ${rawRoomNum} is currently requested (Pending Host Approval).`
                   : '';
               } else {
                 const roomBookedDates =
                   allRoomsBookedSlots[currentRoomId] ||
-                  allRoomsBookedSlots[rm.id] ||
+                  allRoomsBookedSlots[rm._id] ||
                   allRoomsBookedSlots[rm._id] ||
                   new Set();
                 const roomRequestedDates =
                   allRoomsRequestedSlots[currentRoomId] ||
-                  allRoomsRequestedSlots[rm.id] ||
+                  allRoomsRequestedSlots[rm._id] ||
                   allRoomsRequestedSlots[rm._id] ||
                   new Set();
                 const todayISO = upcomingWeek[0]?.fullISO;
                 const isBookedToday = roomBookedDates.has(todayISO);
                 const isRequestedToday = roomRequestedDates.has(todayISO);
+                const hasAnyRequestedDate = roomRequestedDates.size > 0;
 
                 occupiedCount = isBookedToday ? 1 : 0;
                 isCardOccupied = isBookedToday;
-                isRoomRequested = isRequestedToday;
-                isAvailableCurrent = !isBookedToday && !isRequestedToday;
+                isRoomRequested = isRequestedToday || hasAnyRequestedDate;
+                isAvailableCurrent = !isBookedToday && !isRoomRequested;
 
                 bookedNotice = isBookedToday
                   ? `Room ${rawRoomNum} is booked for today. You can reserve upcoming dates.`
-                  : `Room ${rawRoomNum} is currently requested for today (Pending Host Approval).`;
+                  : hasAnyRequestedDate
+                  ? `Room ${rawRoomNum} has pending booking requests (Pending Host Approval).`
+                  : '';
               }
 
               return (
@@ -198,18 +202,18 @@ export function UserRoomCards({
                   } min-w-[114px] w-28 shrink-0 snap-start p-2 rounded-2xl border transition-colors duration-150 flex flex-col justify-between relative cursor-pointer select-none outline-none ${
                     isSelected
                       ? isRoomRequested
-                        ? 'bg-amber-500/25 text-amber-950 border-2 border-amber-400 dark:border-amber-400/80 shadow-xs'
+                        ? 'bg-amber-500/35 text-amber-950 dark:text-amber-100 border-2 border-amber-500 dark:border-amber-400 shadow-md ring-2 ring-amber-400/40'
                         : isCardOccupied
                         ? 'bg-rose-500/20 dark:bg-rose-500/25 text-rose-950 dark:text-rose-100 border-2 border-rose-500 dark:border-rose-400 shadow-xs'
                         : isCardPartiallyOccupied
-                        ? 'bg-amber-500/20 dark:bg-amber-500/25 text-amber-950 dark:text-amber-50 border-2 border-amber-400/80 shadow-xs'
+                        ? 'bg-amber-500/35 text-amber-950 dark:text-amber-100 border-2 border-amber-500 dark:border-amber-400 shadow-md ring-2 ring-amber-400/40'
                         : 'bg-emerald-500/25 dark:bg-emerald-500/30 text-emerald-950 dark:text-emerald-50 border-2 border-emerald-400 dark:border-emerald-400/80 shadow-xs'
                       : isRoomRequested
-                      ? 'bg-amber-500/15 text-amber-900 border border-amber-300 hover:bg-amber-500/20'
+                      ? 'bg-amber-500/10 dark:bg-amber-500/15 text-amber-900 dark:text-amber-200 border border-amber-300/80 dark:border-amber-700/60 hover:bg-amber-500/20'
                       : isCardOccupied
                       ? 'bg-rose-500/10 dark:bg-rose-500/15 text-rose-950 dark:text-rose-100 border-2 border-rose-400 dark:border-rose-500/80 hover:border-rose-500 hover:bg-rose-500/15'
                       : isCardPartiallyOccupied
-                      ? 'bg-amber-500/10 dark:bg-amber-500/15 text-amber-900 dark:text-amber-100 border border-slate-200 dark:border-zinc-700 hover:border-slate-300 dark:hover:border-zinc-600 hover:bg-amber-500/15'
+                      ? 'bg-amber-500/10 dark:bg-amber-500/15 text-amber-900 dark:text-amber-200 border border-amber-300/80 dark:border-amber-700/60 hover:bg-amber-500/20'
                       : 'bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-900 dark:text-emerald-100 border border-slate-200 dark:border-zinc-700 hover:border-slate-300 dark:hover:border-zinc-600 hover:bg-emerald-500/15'
                   }`}
                 >

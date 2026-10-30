@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { authAPI } from '../services/api';
 
 const AuthContext = createContext();
@@ -29,6 +29,68 @@ export function decodeJwt(jwtToken) {
   }
 }
 
+/**
+ * Standardized User Schema Sanitizer for LocalStorage & Session State:
+ * Strictly retains the 10 mandatory session fields:
+ * [id, _id, name, email, phone, avatar, role, status, isApproved, hasProperty]
+ * Automatically purges redundant duplicates:
+ * (hostDetails nested clone, hasBeenApproved flag, __v versioning, createdAt/updatedAt DB timestamps)
+ */
+export function sanitizeUserSession(rawUserData) {
+  if (!rawUserData || typeof rawUserData !== 'object') return null;
+  const data = rawUserData.user || rawUserData;
+
+  const _id = String(data._id || data.id || '').trim();
+  if (!_id && !data.email) return null;
+
+  const role = String(data.role || 'user').trim().toLowerCase();
+  const isHost = role === 'host';
+  const isAdmin = Boolean(data.isAdmin || role === 'admin');
+
+  // Verification status and approval only apply to Hosts.
+  // Regular users (guests) and Admins are always Active with full platform access.
+  let status = 'Active';
+  let isApproved = true;
+  let hasProperty = false;
+
+  if (isHost) {
+    isApproved = Boolean(data.isApproved || data.status === 'Approved');
+    status = data.status || (isApproved ? 'Approved' : 'Pending Approval');
+    hasProperty = Boolean(data.hasProperty);
+  }
+
+  const hasPassword =
+    typeof data.hasPassword === 'boolean'
+      ? data.hasPassword
+      : Boolean(data.password) || (data.authProvider === 'google' ? false : true);
+
+  const sessionUser = {
+    _id,
+    name: data.name ? String(data.name).trim() : '',
+    email: data.email ? String(data.email).trim().toLowerCase() : '',
+    phone: data.phone ? String(data.phone).trim() : '',
+    avatar: data.avatar || (isHost ? 'HO' : 'US'),
+    role,
+    status,
+    isApproved,
+    hasProperty,
+    authProvider: data.authProvider || (data.googleId ? 'google' : 'local'),
+    hasPassword,
+    ...(isAdmin ? { isAdmin: true } : {}),
+  };
+
+  // Virtual in-memory getter for backward compatibility (non-enumerable: never saved to localStorage)
+  Object.defineProperty(sessionUser, 'id', {
+    get() {
+      return this._id;
+    },
+    enumerable: false,
+    configurable: true,
+  });
+
+  return sessionUser;
+}
+
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => {
     try {
@@ -44,21 +106,33 @@ export function AuthProvider({ children }) {
       const cached = localStorage.getItem('roomscout_user');
       if (cached) {
         const parsed = JSON.parse(cached);
-        if (parsed && (parsed.id || parsed._id || parsed.email)) {
-          return parsed;
+        const clean = sanitizeUserSession(parsed);
+        if (clean) {
+          // If cached data contains redundant legacy keys or stored id duplicate, auto-purge immediately
+          if (
+            parsed.id ||
+            parsed.hostDetails ||
+            parsed.__v !== undefined ||
+            parsed.hasBeenApproved !== undefined ||
+            (parsed.role !== 'host' && parsed.status === 'Pending Approval')
+          ) {
+            try {
+              localStorage.setItem('roomscout_user', JSON.stringify(clean));
+            } catch {}
+          }
+          return clean;
         }
       }
       const rawToken = localStorage.getItem('roomscout_token') || localStorage.getItem('stayhub_jwt_token');
       const decoded = decodeJwt(rawToken);
       if (decoded) {
-        return {
-          id: decoded.userId || decoded.id,
-          _id: decoded.userId || decoded.id,
+        return sanitizeUserSession({
+          _id: decoded.userId || decoded._id,
           name: decoded.name || '',
           email: decoded.email || '',
           role: decoded.role || 'user',
           isAdmin: Boolean(decoded.isAdmin),
-        };
+        });
       }
       return null;
     } catch {
@@ -91,19 +165,12 @@ export function AuthProvider({ children }) {
         setToken(null);
       }
 
-      if (userData) {
-        const resolvedData = userData.user || userData;
-        // Strip duplicate token if present on user object to avoid redundant duplication
-        const { token: _token, ...cleanUserData } = resolvedData;
-        const normalizedUser = {
-          ...cleanUserData,
-          id: cleanUserData.id || cleanUserData._id,
-          _id: cleanUserData._id || cleanUserData.id,
-        };
+      const cleanUser = sanitizeUserSession(userData);
+      if (cleanUser) {
         try {
-          localStorage.setItem('roomscout_user', JSON.stringify(normalizedUser));
+          localStorage.setItem('roomscout_user', JSON.stringify(cleanUser));
         } catch {}
-        setUser(normalizedUser);
+        setUser(cleanUser);
       } else {
         localStorage.removeItem('roomscout_user');
         setUser(null);
@@ -130,6 +197,11 @@ export function AuthProvider({ children }) {
 
         Object.keys(localStorage).forEach((key) => {
           if (key.startsWith('stayhub_') && key !== 'stayhub_jwt_token') {
+            // Migrate old approval notification flag to roomscout_ prefix
+            if (key.startsWith('stayhub_approved_notified_')) {
+              const newKey = key.replace('stayhub_', 'roomscout_');
+              localStorage.setItem(newKey, 'true');
+            }
             localStorage.removeItem(key);
           }
         });
@@ -153,15 +225,10 @@ export function AuthProvider({ children }) {
         const profile = await authAPI.getProfile();
         const resolvedProfile = profile?.user || profile;
 
-        if (resolvedProfile && (resolvedProfile._id || resolvedProfile.id || resolvedProfile.email)) {
-          const { token: _t, ...cleanProfile } = resolvedProfile;
-          const normalizedProfile = {
-            ...cleanProfile,
-            id: cleanProfile.id || cleanProfile._id,
-            _id: cleanProfile._id || cleanProfile.id,
-          };
+        if (resolvedProfile && (resolvedProfile._id || resolvedProfile.email)) {
+          const cleanProfile = sanitizeUserSession(resolvedProfile);
           setUser((prev) => {
-            const updated = { ...(prev || {}), ...normalizedProfile };
+            const updated = sanitizeUserSession({ ...(prev || {}), ...cleanProfile });
             try {
               localStorage.setItem('roomscout_user', JSON.stringify(updated));
             } catch {}
@@ -245,26 +312,136 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const loginWithGoogle = async ({ credential, role = 'user' }) => {
+    setLoading(true);
+    try {
+      const data = await authAPI.googleAuth({ credential, role });
+      const authToken = data.token || (data.user && data.user.token);
+      if (authToken) {
+        syncAuthState(data, authToken);
+      }
+      setLoading(false);
+      return { success: true, data };
+    } catch (error) {
+      setLoading(false);
+      return { success: false, message: error.message || 'Google sign-in failed. Please try again.' };
+    }
+  };
+
+  // Derive effective user with fallback to localStorage or decoded token
+  const effectiveUser = useMemo(() => {
+    if (user && (user._id || user.email)) return user;
+    if (!token) return null;
+    try {
+      const cached = localStorage.getItem('roomscout_user');
+      if (cached) {
+        const clean = sanitizeUserSession(JSON.parse(cached));
+        if (clean) return clean;
+      }
+      const decoded = decodeJwt(token);
+      if (decoded) {
+        return sanitizeUserSession({
+          _id: decoded.userId || decoded._id,
+          name: decoded.name || '',
+          email: decoded.email || '',
+          role: decoded.role || 'user',
+          isAdmin: Boolean(decoded.isAdmin),
+        });
+      }
+    } catch {}
+    return null;
+  }, [user, token]);
+
+  // Keep state synced if effectiveUser was recovered from token
+  useEffect(() => {
+    if (!user && effectiveUser) {
+      setUser(effectiveUser);
+    }
+  }, [user, effectiveUser]);
+
   const logout = () => {
     syncAuthState(null, null);
   };
 
-  const updateUserSession = (updatedUser, newToken) => {
-    const finalToken = newToken || token;
-    syncAuthState(updatedUser, finalToken);
-  };
+  const updateUserSession = useCallback((updatedUser, newToken) => {
+    try {
+      const finalToken =
+        newToken ||
+        token ||
+        (typeof localStorage !== 'undefined'
+          ? localStorage.getItem('roomscout_token') || localStorage.getItem('stayhub_jwt_token')
+          : null);
+
+      setUser((prevUser) => {
+        const patch = typeof updatedUser === 'function' ? updatedUser(prevUser) : updatedUser;
+
+        // Explicit null means logout
+        if (patch === null) {
+          syncAuthState(null, null);
+          return null;
+        }
+
+        // Base user to merge: prevUser -> effectiveUser -> localStorage -> decoded token
+        let baseUser = prevUser || effectiveUser;
+        if (!baseUser && typeof localStorage !== 'undefined') {
+          try {
+            const cached = localStorage.getItem('roomscout_user');
+            if (cached) baseUser = JSON.parse(cached);
+          } catch {}
+        }
+        if (!baseUser && finalToken) {
+          const decoded = decodeJwt(finalToken);
+          if (decoded) {
+            baseUser = {
+              _id: decoded.userId || decoded._id,
+              name: decoded.name || '',
+              email: decoded.email || '',
+              role: decoded.role || 'user',
+              isAdmin: Boolean(decoded.isAdmin),
+            };
+          }
+        }
+
+        const merged = {
+          ...(baseUser || {}),
+          ...(patch || {}),
+        };
+
+        const cleanUser = sanitizeUserSession(merged);
+        if (cleanUser) {
+          try {
+            localStorage.setItem('roomscout_user', JSON.stringify(cleanUser));
+          } catch {}
+          if (finalToken) {
+            try {
+              localStorage.setItem('roomscout_token', finalToken);
+            } catch {}
+            setToken(finalToken);
+          }
+          return cleanUser;
+        }
+
+        return baseUser || null;
+      });
+    } catch (e) {
+      console.error('Failed to update user session:', e);
+    }
+  }, [token, effectiveUser, syncAuthState]);
+
+  const currentUser = user || effectiveUser;
 
   return (
     <AuthContext.Provider
       value={{
-        user,
+        user: currentUser,
         token,
-        isAuthenticated: Boolean(user && token),
-        isHost: user?.role === 'host',
-        isGuest: user?.role === 'user',
-        isAdmin: user?.role === 'admin',
+        isAuthenticated: Boolean(currentUser && token),
+        isHost: currentUser?.role === 'host',
+        isGuest: currentUser?.role === 'user',
+        isAdmin: currentUser?.role === 'admin',
         loading,
         login,
+        loginWithGoogle,
         register,
         signup: register,
         updateUserSession,

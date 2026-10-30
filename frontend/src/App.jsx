@@ -10,6 +10,12 @@ import { ScrollToTop } from './components/ScrollToTop';
 import { ToastProvider, toast } from './context/ToastContext';
 import { FloatingThemeToggle } from './components/common/FloatingThemeToggle';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import AOS from 'aos';
+
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 // Dynamic Lazy-Loaded Page Chunks
 const LandingPage = lazy(() => import('./components/LandingPage').then((m) => ({ default: m.LandingPage })));
@@ -17,7 +23,7 @@ const Homepage = lazy(() => import('./pages/Homepage').then((m) => ({ default: m
 const SearchResultsPage = lazy(() => import('./pages/SearchResultsPage').then((m) => ({ default: m.SearchResultsPage })));
 const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage })));
 const DataPage = lazy(() => import('./pages/DataPage').then((m) => ({ default: m.DataPage })));
-const HostUploadPage = lazy(() => import('./pages/HostUploadPage').then((m) => ({ default: m.HostUploadPage })));
+const HostUploadPage = lazy(() => import('./pages/HostUploadPage').then((m) => ({ default: m.HostUploadPage || m.default })));
 const HostDashboardPage = lazy(() => import('./pages/HostDashboardPage').then((m) => ({ default: m.HostDashboardPage })));
 const HostRoomsPage = lazy(() => import('./pages/HostRoomsPage').then((m) => ({ default: m.HostRoomsPage })));
 const AccountPage = lazy(() => import('./pages/AccountPage').then((m) => ({ default: m.AccountPage })));
@@ -131,6 +137,10 @@ function AppContent() {
       if (!isAuthenticated || !pendingAction) return;
 
       if (pendingAction === 'host-upload') {
+        // Only redirect if the authenticated user has host privileges
+        if (user?.role !== 'host' && user?.role !== 'admin') return;
+
+        setIsLoginOpen(false);
         try {
           const check = await adminAPI.getHostByEmail(user?.email);
           if (check?.hasProperty) {
@@ -142,6 +152,7 @@ function AppContent() {
           navigate('/host/dashboard');
         }
       } else if (pendingAction === 'explore') {
+        setIsLoginOpen(false);
         navigate('/explore');
       }
       setPendingAction(null);
@@ -161,8 +172,20 @@ function AppContent() {
       toast.error(msg);
     };
 
+    const handleOpenLoginEvent = (e) => {
+      const role = e.detail?.role || 'user';
+      const prompt = e.detail?.message || '';
+      setLoginRole(role);
+      setLoginPromptMessage(prompt);
+      setIsLoginOpen(true);
+    };
+
     window.addEventListener('auth:account_deleted', handleAccountDeletedEvent);
-    return () => window.removeEventListener('auth:account_deleted', handleAccountDeletedEvent);
+    window.addEventListener('auth:open_login', handleOpenLoginEvent);
+    return () => {
+      window.removeEventListener('auth:account_deleted', handleAccountDeletedEvent);
+      window.removeEventListener('auth:open_login', handleOpenLoginEvent);
+    };
   }, [navigate]);
 
   // Handler for Tab 1: Upload Your Property Online (HOST ONLY)
@@ -178,7 +201,6 @@ function AppContent() {
     if (user?.role !== 'host' && user?.role !== 'admin') {
       setLoginRole('host');
       setLoginPromptMessage('You are currently signed in as a Guest. Please log in with your Host account to list properties.');
-      setPendingAction('host-upload');
       setIsLoginOpen(true);
       return;
     }
@@ -194,7 +216,7 @@ function AppContent() {
       .catch(() => navigate('/host/dashboard'));
   };
 
-  // Handler for Tab 2: Search Rooms Near You (USER / GUEST ONLY)
+  // Handler for Tab 2: Search Rooms Near You (Explore Stays)
   const handleSelectSearch = () => {
     if (!isAuthenticated) {
       setLoginRole('user');
@@ -204,14 +226,7 @@ function AppContent() {
       return;
     }
 
-    if (user?.role === 'host') {
-      setLoginRole('user');
-      setLoginPromptMessage('You are currently signed in as a Host. Please log in with your Guest account to explore rooms.');
-      setPendingAction('explore');
-      setIsLoginOpen(true);
-      return;
-    }
-
+    // All authenticated users (Hosts, Guests, Admins) can freely browse and explore stays
     navigate('/explore');
   };
 
@@ -226,10 +241,9 @@ function AppContent() {
     // Safely unwrap stay ID if populated as an object
     let stayId =
       (typeof stay.stayId === 'object' && stay.stayId !== null
-        ? stay.stayId._id || stay.stayId.id
+        ? stay.stayId._id
         : stay.stayId) ||
       stay._id ||
-      stay.id ||
       stay.hostId;
 
     if (
@@ -241,7 +255,7 @@ function AppContent() {
     ) {
       stayId =
         (typeof stay.stayId === 'object' && stay.stayId !== null
-          ? stay.stayId._id || stay.stayId.id
+          ? stay.stayId._id
           : stay.stayId) ||
         stay.hostId ||
         stayId;
@@ -274,20 +288,19 @@ function AppContent() {
     if (newBooking) addBooking(newBooking);
   };
 
-  const isNavbarHidden =
-    location.pathname === '/' ||
-    location.pathname === '/enter' ||
-    location.pathname === '/data' ||
-    location.pathname === '/account' ||
-    location.pathname.startsWith('/stay') ||
-    location.pathname.startsWith('/host');
+  useEffect(() => {
+    AOS.refresh();
+  }, [location.pathname]);
 
-  const isHostPage = location.pathname.startsWith('/host');
+  const normalizedPath = location.pathname.replace(/\/+$/, '') || '/';
+  const shouldShowNavbar = normalizedPath === '/explore' || normalizedPath === '/search';
+
+  const isHostPage = location.pathname.startsWith('/host') || location.pathname.startsWith('/account');
 
   return (
-    <div className={`min-h-screen ${isHostPage ? 'host-page-scope font-body-md selection:bg-custom-btn-primary selection:text-white' : ''} bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100`}>
+    <div className={`min-h-screen ${isHostPage ? 'host-page-scope font-body-md selection:bg-custom-btn-primary selection:text-white bg-white dark:bg-slate-950' : (normalizedPath === '/' || normalizedPath === '/explore' ? 'bg-white dark:bg-black' : 'bg-slate-100 dark:bg-slate-950')} text-slate-900 dark:text-slate-100`}>
       <ScrollToTop />
-      {!isNavbarHidden && (
+      {shouldShowNavbar && (
         <Navbar
           onSearchSubmit={onSearch}
           onLoginClick={() => handleOpenLoginModal('user', '')}
@@ -368,7 +381,9 @@ function AppContent() {
             path="/host/upload"
             element={
               <ProtectedRoute requiredRoles={['host', 'admin']}>
-                <HostUploadPage />
+                <ErrorBoundary>
+                  <HostUploadPage />
+                </ErrorBoundary>
               </ProtectedRoute>
             }
           />
@@ -382,11 +397,21 @@ function AppContent() {
           />
           <Route
             path="/stay/:id"
-            element={<PropertyDetailPage onBookClick={handleOpenBooking} />}
+            element={
+              <PropertyDetailPage
+                onBookClick={handleOpenBooking}
+                onLoginClick={() => handleOpenLoginModal('user', '')}
+              />
+            }
           />
           <Route
             path="/stay/:id/rooms"
-            element={<RoomAvailabilityPage onBookClick={handleOpenBooking} />}
+            element={
+              <RoomAvailabilityPage
+                onBookClick={handleOpenBooking}
+                onLoginClick={() => handleOpenLoginModal('user', '')}
+              />
+            }
           />
           <Route path="/host" element={<Navigate to="/host/dashboard" replace />} />
           <Route path="/enter" element={<AdminPage />} />
@@ -458,7 +483,7 @@ function AppContent() {
 }
 
 export default function App() {
-  return (
+  const content = (
     <ThemeProvider>
       <AuthProvider>
         <ToastProvider>
@@ -471,4 +496,14 @@ export default function App() {
       </AuthProvider>
     </ThemeProvider>
   );
+
+  if (GOOGLE_CLIENT_ID) {
+    return (
+      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+        {content}
+      </GoogleOAuthProvider>
+    );
+  }
+
+  return content;
 }

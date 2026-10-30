@@ -11,7 +11,7 @@ export function HostRevenueCalculator() {
 
   return (
     <section className="w-full py-8 sm:py-16 px-3 sm:px-8 lg:px-16 2xl:px-24">
-      <div className="w-full p-4 sm:p-10 2xl:p-14 rounded-2xl sm:rounded-3xl bg-white/85 dark:bg-slate-950/60 border border-slate-200 dark:border-white/15 shadow-xl dark:shadow-[0_30px_90px_rgba(0,0,0,0.8)] backdrop-blur-2xl">
+      <div className="w-full p-4 sm:p-10 2xl:p-14 rounded-2xl sm:rounded-3xl bg-white/85 dark:bg-black/60 border border-slate-200 dark:border-white/15 shadow-xl dark:shadow-[0_30px_90px_rgba(0,0,0,0.8)] backdrop-blur-2xl">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center w-full">
           
           {/* Left: Explainer */}

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
+import { GoogleLogin } from '@react-oauth/google';
 
 // Zod Validation Schemas with 8-character password enforcement
 const loginSchema = z.object({
@@ -56,13 +57,20 @@ const registerSchema = z
     path: ['confirmPassword'],
   });
 
-export function LoginModal({ isOpen, onClose, initialRole = 'user' }) {
-  const { login, register } = useAuth();
+export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessage = '' }) {
+  const { user, isAuthenticated, login, register, loginWithGoogle } = useAuth();
 
   const [accountType, setAccountType] = useState(initialRole);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [isForgotMode, setIsForgotMode] = useState(false);
   const [rememberDevice, setRememberDevice] = useState(true);
+
+  // If already logged in with the requested role, auto-close the modal
+  useEffect(() => {
+    if (isOpen && isAuthenticated && user?.role === (initialRole || 'user')) {
+      onClose();
+    }
+  }, [isOpen, isAuthenticated, user, initialRole, onClose]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -232,6 +240,45 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user' }) {
       toast.error(msg);
       setIsSubmitting(false);
     }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    if (!credentialResponse?.credential) {
+      toast.error('Google Sign-In failed: No credential received.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage('');
+    try {
+      const res = await loginWithGoogle({
+        credential: credentialResponse.credential,
+        role: accountType,
+      });
+
+      if (!res.success) {
+        const msg = res.message || 'Google sign-in failed.';
+        setErrorMessage(msg);
+        toast.error(msg);
+        setIsSubmitting(false);
+        return;
+      }
+
+      toast.success(`Welcome${res.data?.name ? `, ${res.data.name}` : ''}!`);
+      setFormData({ name: '', email: '', phone: '', password: '', confirmPassword: '' });
+      setFieldErrors({});
+      setIsSubmitting(false);
+      onClose();
+    } catch (err) {
+      const msg = err.message || 'Google sign-in error';
+      setErrorMessage(msg);
+      toast.error(msg);
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    toast.error('Google Sign-In was cancelled or failed.');
   };
 
   const handleForgotPasswordSubmit = async (e) => {
@@ -421,6 +468,11 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user' }) {
 
             {/* Modal Body */}
             <div className="px-5 py-5 sm:px-6 sm:py-5 relative z-10">
+              {promptMessage && (
+                <div className="mb-3 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 text-[11px] text-amber-800 dark:text-amber-200 font-medium leading-relaxed text-center">
+                  {promptMessage}
+                </div>
+              )}
               {/* Header Title & Tagline */}
               <div className="text-center mb-3 pt-0.5">
                 <h2 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">
@@ -866,6 +918,27 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user' }) {
                         </>
                       )}
                     </button>
+                  </div>
+
+                  {/* Google OAuth Option */}
+                  <div className="pt-2">
+                    <div className="relative my-2 flex items-center justify-center">
+                      <div className="w-full border-t border-slate-200 dark:border-zinc-800" />
+                      <span className="absolute bg-white dark:bg-zinc-900 px-2 text-[10px] font-medium text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
+                        or continue with
+                      </span>
+                    </div>
+                    <div className="flex justify-center w-full pt-1">
+                      <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={handleGoogleError}
+                        theme="outline"
+                        size="medium"
+                        width="100%"
+                        text={isRegisterMode ? 'signup_with' : 'signin_with'}
+                        shape="pill"
+                      />
+                    </div>
                   </div>
                 </form>
               )}

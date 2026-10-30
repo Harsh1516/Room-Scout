@@ -43,7 +43,7 @@ export const HostRoomsDropdown = React.memo(function HostRoomsDropdown({ host })
       const rateUnitStr = isMonthly ? '/month' : '/night';
 
       return {
-        id: rate.id || `rate_${rIdx}`,
+        _id: rate._id || `rate_${rIdx}`,
         type: typeName,
         price: priceStr,
         rateUnit: rateUnitStr,
@@ -67,7 +67,7 @@ export const HostRoomsDropdown = React.memo(function HostRoomsDropdown({ host })
     <div className="w-full divide-y divide-slate-200/80 dark:divide-slate-800 px-1">
       {categories.map((cat, idx) => (
         <div
-          key={cat.id || idx}
+          key={cat._id || idx}
           className="grid grid-cols-12 items-center gap-1.5 py-2 px-1 text-xs"
         >
           {/* Left Side: Room Category Name */}

@@ -168,7 +168,7 @@ export function AdminUsersTable({
           {/* Table Body */}
           <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80 text-slate-700 dark:text-slate-200 font-normal">
             {paginatedUsers.map((u, idx) => {
-              const currentUserId = u._id || u.id;
+              const currentUserId = u._id;
               const globalIdx = (safeCurrentPage - 1) * pageSize + idx;
               const initials = (u.avatar && u.avatar.length <= 3)
                 ? u.avatar
@@ -229,7 +229,7 @@ export function AdminUsersTable({
                               </span>
                             )}
                             <span className="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-zinc-800 text-[10px] font-medium text-slate-600 dark:text-slate-300">
-                              Adults: {u.adults ?? 1}, Kids: {u.children ?? 0}
+                              Persons: {u.personCount ?? 1}
                             </span>
                           </div>
                         )}

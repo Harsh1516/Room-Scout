@@ -20,18 +20,17 @@ import { impersonateSchema } from '../validators/adminValidator.js';
 
 const router = express.Router();
 
-// Apply administrative rate limiter across all admin routes
-router.use(adminLimiter);
+// Master Admin Security-Gated Endpoints (Guarded against unauthorized brute-forcing)
+router.route('/impersonate').post(adminLimiter, requireAdmin, validate(impersonateSchema), impersonateAccount);
+router.route('/users').get(adminLimiter, requireAdmin, getUsers);
+router.route('/users/:id').delete(adminLimiter, requireAdmin, validate({ params: idParamSchema }), deleteUser);
+router.route('/stats').get(adminLimiter, requireAdmin, getStats);
+router.route('/hosts/:id/approve').put(adminLimiter, requireAdmin, validate({ params: idParamSchema }), approveHost);
+router.route('/hosts/:id/reject').put(adminLimiter, requireAdmin, validate({ params: idParamSchema }), rejectHost);
+router.route('/hosts/:id').delete(adminLimiter, requireAdmin, validate({ params: idParamSchema }), deleteHost);
+router.route('/hosts').get(adminLimiter, requireAdmin, getHosts).post(protect, createHost);
 
-router.route('/impersonate').post(requireAdmin, validate(impersonateSchema), impersonateAccount);
-router.route('/users').get(requireAdmin, getUsers);
-router.route('/users/:id').delete(requireAdmin, validate({ params: idParamSchema }), deleteUser);
-router.route('/stats').get(requireAdmin, getStats);
-router.route('/hosts/:id/approve').put(requireAdmin, validate({ params: idParamSchema }), approveHost);
-router.route('/hosts/:id/reject').put(requireAdmin, validate({ params: idParamSchema }), rejectHost);
-router.route('/hosts/:id').delete(requireAdmin, validate({ params: idParamSchema }), deleteHost);
-
-router.route('/hosts').get(requireAdmin, getHosts).post(protect, createHost);
+// Regular Host-Scoped Utility Endpoints (Exempt from adminLimiter to prevent accidental lockouts from host dashboard polling)
 router.route('/hosts/by-email/:email').get(protect, requireSelfHostOrAdmin, getHostByEmail);
 router.route('/hosts/my-guests/:email').get(protect, requireSelfHostOrAdmin, getHostGuests);
 
