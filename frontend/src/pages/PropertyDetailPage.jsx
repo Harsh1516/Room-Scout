@@ -525,15 +525,7 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
             </ErrorBoundary>
           </div>
         ) : (
-          <div className="max-w-3xl mx-auto w-full relative">
-            {/* Ambient Profile Background Glow for Host Details */}
-            {activeCenterTab === 'host' && (
-              <div className="absolute inset-0 -z-10 pointer-events-none overflow-visible">
-                <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[550px] sm:w-[650px] h-[350px] bg-gradient-to-b from-emerald-500/25 via-teal-500/15 to-transparent rounded-full blur-[100px] opacity-80 dark:opacity-95" />
-                <div className="absolute top-12 -left-16 w-72 h-72 bg-emerald-500/20 dark:bg-emerald-400/25 rounded-full blur-[90px] opacity-75" />
-                <div className="absolute top-16 -right-16 w-72 h-72 bg-amber-500/15 dark:bg-amber-400/20 rounded-full blur-[90px] opacity-70" />
-              </div>
-            )}
+          <div className="max-w-3xl mx-auto w-full">
             <ErrorBoundary>
               <PropertyOverviewSection
                 stay={stay}

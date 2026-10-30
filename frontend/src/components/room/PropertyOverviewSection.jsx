@@ -135,7 +135,11 @@ export function PropertyOverviewSection({
           transition={{ duration: 0.22, ease: 'easeOut' }}
         >
           {/* Main Unified Container */}
-          <div className="w-full p-5 sm:p-8 lg:p-10 rounded-2xl sm:rounded-3xl bg-[#FAF2DB] dark:bg-[#18120D] border border-[#E8DABB] dark:border-[#332419] shadow-xl dark:shadow-[0_30px_90px_rgba(0,0,0,0.8)] backdrop-blur-2xl relative overflow-hidden">
+          <div className={`w-full p-5 sm:p-8 lg:p-10 rounded-2xl sm:rounded-3xl shadow-xl dark:shadow-[0_30px_90px_rgba(0,0,0,0.8)] backdrop-blur-2xl relative overflow-hidden transition-colors duration-300 ${
+            activeCenterTab === 'host'
+              ? 'bg-white dark:bg-[#0c1424] border border-slate-200/90 dark:border-white/[0.08]'
+              : 'bg-[#FAF2DB] dark:bg-[#18120D] border border-[#E8DABB] dark:border-[#332419]'
+          }`}>
             {/* TAB 1: PROPERTY DETAILS VIEW */}
             {activeCenterTab === 'property' && (
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start w-full">
@@ -251,80 +255,162 @@ export function PropertyOverviewSection({
 
             {/* TAB 2: HOST DETAILS VIEW (Directly visible without any requirement) */}
             {activeCenterTab === 'host' && (
-              <div className="w-full relative">
-                {/* Luminous Inner Profile Ambient Background Glows */}
-                <div className="absolute -top-16 -left-12 w-80 h-80 bg-emerald-500/20 dark:bg-emerald-400/25 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute top-12 -right-12 w-72 h-72 bg-amber-500/12 dark:bg-amber-400/18 rounded-full blur-3xl pointer-events-none" />
-
-                <div className="space-y-6 max-w-2xl mx-auto p-4 sm:p-6 relative z-10">
-                  {/* Host Profile Header Card with Ambient Glow */}
-                  <div className="relative overflow-hidden p-4 sm:p-5 rounded-2xl bg-white/70 dark:bg-black/40 border border-slate-200/80 dark:border-white/10 shadow-sm backdrop-blur-md">
-                    {/* Soft Internal Radial Sheen */}
-                    <div className="absolute -top-10 -left-10 w-44 h-44 bg-emerald-500/20 dark:bg-emerald-400/25 rounded-full blur-2xl pointer-events-none" />
-
-                    <div className="relative z-10 flex items-center gap-4">
-                      {/* Host Avatar with Multi-layer Glow Aura */}
+              <div className="w-full">
+                <div className="space-y-5 sm:space-y-6 max-w-2xl mx-auto py-2">
+                  {/* Host Profile Header Card */}
+                  <div className="p-6 sm:p-7 rounded-3xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/90 dark:border-white/[0.08] shadow-xs">
+                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
+                      {/* Avatar */}
                       <div className="relative shrink-0">
-                        {/* Ambient Aura Halo behind Avatar */}
-                        <div className="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-emerald-500 via-teal-400 to-amber-400 opacity-75 dark:opacity-90 blur-md pointer-events-none" />
-
-                        <div className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-full ring-2 ring-emerald-500/40 dark:ring-emerald-400/50 bg-emerald-600 text-white font-black text-xl flex items-center justify-center shadow-lg shadow-emerald-600/30 shrink-0 overflow-hidden">
+                        <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-2xl p-1 bg-white dark:bg-[#080e18] border border-slate-200 dark:border-white/10 shadow-md flex items-center justify-center overflow-hidden">
                           {hostAvatar && (typeof hostAvatar === 'string' && (hostAvatar.startsWith('http') || hostAvatar.startsWith('data:') || hostAvatar.startsWith('/'))) ? (
-                            <img src={hostAvatar} alt={hostName} className="w-full h-full object-cover" />
+                            <img src={hostAvatar} alt={hostName} className="w-full h-full object-cover rounded-xl" />
                           ) : (
-                            hostAvatar || (hostName ? hostName.slice(0, 2).toUpperCase() : 'H')
+                            <div className="w-full h-full rounded-xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-700 text-white font-black text-2xl flex items-center justify-center shadow-inner tracking-wider">
+                              {hostAvatar || (hostName ? hostName.slice(0, 2).toUpperCase() : 'H')}
+                            </div>
                           )}
                         </div>
+                        {/* Status Dot */}
+                        <span
+                          className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-[#0c1424] shadow-xs"
+                          title="Verified Active Host"
+                        />
                       </div>
 
-                      <div className="min-w-0">
-                        <h3 className="text-lg sm:text-xl font-black text-slate-950 dark:text-white flex items-center gap-2 flex-wrap">
-                          <span className="truncate">{hostName}</span>
-                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-xs">
-                            ✓ VERIFIED HOST
+                      {/* Info & Badges */}
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div>
+                          <span className="text-[10px] font-black tracking-widest text-indigo-600 dark:text-indigo-400 uppercase">
+                            Host Profile
                           </span>
-                        </h3>
-                        {hostJoined && (
-                          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                            Member since {new Date(hostJoined).getFullYear()}
-                          </p>
-                        )}
+                          <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5 truncate">
+                            {hostName}
+                          </h3>
+                        </div>
+
+                        <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap pt-0.5">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-2xs">
+                            <span className="material-symbols-outlined text-[15px] leading-none">verified</span>
+                            Verified Host
+                          </span>
+
+                          {hostJoined && (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.05] border border-slate-200/80 dark:border-white/10">
+                              <span className="material-symbols-outlined text-[14px] text-slate-400 dark:text-slate-500 leading-none">calendar_month</span>
+                              Member since {new Date(hostJoined).getFullYear()}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
 
+                  {/* Trust Highlights Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] text-center space-y-1">
+                      <div className="flex items-center justify-center text-amber-400 text-sm">
+                        <span className="material-symbols-outlined text-[18px]">star</span>
+                        <span className="font-extrabold text-sm ml-0.5 text-slate-900 dark:text-white">
+                          {currentRating || '4.9'}
+                        </span>
+                      </div>
+                      <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wider">
+                        Rating
+                      </span>
+                    </div>
+
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] text-center space-y-1">
+                      <div className="flex items-center justify-center text-indigo-500 dark:text-indigo-400 text-sm">
+                        <span className="material-symbols-outlined text-[18px]">reviews</span>
+                        <span className="font-extrabold text-sm ml-0.5 text-slate-900 dark:text-white">
+                          {reviews.length || 0}
+                        </span>
+                      </div>
+                      <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wider">
+                        Reviews
+                      </span>
+                    </div>
+
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] text-center space-y-1">
+                      <div className="flex items-center justify-center text-emerald-500 dark:text-emerald-400 text-sm">
+                        <span className="material-symbols-outlined text-[18px]">shield</span>
+                        <span className="font-extrabold text-sm ml-0.5 text-slate-900 dark:text-white">
+                          100%
+                        </span>
+                      </div>
+                      <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wider">
+                        Verified ID
+                      </span>
+                    </div>
+
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] text-center space-y-1">
+                      <div className="flex items-center justify-center text-sky-500 dark:text-sky-400 text-sm">
+                        <span className="material-symbols-outlined text-[18px]">bolt</span>
+                        <span className="font-extrabold text-sm ml-0.5 text-slate-900 dark:text-white">
+                          Fast
+                        </span>
+                      </div>
+                      <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wider">
+                        Response
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Host Note / Bio */}
                   {hostBio && (
-                    <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-black/30 border border-slate-200/80 dark:border-white/10 space-y-1.5 shadow-2xs">
-                      <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                        Host Note
-                      </h4>
-                      <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                    <div className="p-5 sm:p-6 rounded-3xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] space-y-2">
+                      <div className="flex items-center gap-2 text-slate-900 dark:text-white">
+                        <span className="material-symbols-outlined text-[18px] text-indigo-500 dark:text-indigo-400">
+                          format_quote
+                        </span>
+                        <h4 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider">
+                          Host Note
+                        </h4>
+                      </div>
+                      <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium pl-6">
                         {hostBio}
                       </p>
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-black/30 border border-slate-200/80 dark:border-white/10 text-xs shadow-2xs">
-                      <span className="text-slate-400 dark:text-slate-500 font-semibold block uppercase text-[10px] tracking-wider">Host Email</span>
-                      <span className="font-bold text-sm text-slate-900 dark:text-white truncate block mt-1">
-                        {hostEmail || 'Available on request'}
-                      </span>
+                  {/* Contact Details Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] flex items-center gap-3.5">
+                      <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-500/20 flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-[20px]">mail</span>
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+                          Host Email
+                        </span>
+                        <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate block mt-0.5">
+                          {hostEmail || 'Available on request'}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-black/30 border border-slate-200/80 dark:border-white/10 text-xs shadow-2xs">
-                      <span className="text-slate-400 dark:text-slate-500 font-semibold block uppercase text-[10px] tracking-wider">Host Phone</span>
-                      <span className="font-bold text-sm text-emerald-600 dark:text-emerald-400 truncate block mt-1">
-                        {hostPhone || 'Available on request'}
-                      </span>
+                    <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] flex items-center gap-3.5">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-500/20 flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-[20px]">call</span>
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+                          Host Phone
+                        </span>
+                        <span className="font-bold text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 truncate block mt-0.5">
+                          {hostPhone || 'Available on request'}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
+                  {/* Actions */}
                   <div className="flex flex-col sm:flex-row gap-3 pt-1">
                     {hostPhone && (
                       <a
                         href={`tel:${hostPhone}`}
-                        className="flex-1 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-md shadow-emerald-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                        className="flex-1 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
                       >
                         <span className="material-symbols-outlined text-[18px]">call</span>
                         <span>Call Host ({hostName})</span>
@@ -333,7 +419,7 @@ export function PropertyOverviewSection({
                     {hostEmail && (
                       <a
                         href={`mailto:${hostEmail}`}
-                        className="flex-1 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 font-bold text-sm shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                        className="flex-1 py-3.5 px-6 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 font-bold text-sm shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
                       >
                         <span className="material-symbols-outlined text-[18px]">mail</span>
                         <span>Email Host</span>
