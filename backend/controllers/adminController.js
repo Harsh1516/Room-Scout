@@ -743,6 +743,11 @@ export const getHostGuests = async (req, res, next) => {
       paymentStatus: b.paymentStatus || 'PAID',
       paymentMethod: b.paymentMethod || (b.bookingSource === 'ONLINE' ? 'ONLINE' : 'OFFLINE'),
       bookingSource: b.bookingSource,
+      upiPayment: b.upiPayment || null,
+      transactionRef: b.upiPayment?.transactionRef || b.transactionRef || '',
+      receiptUrl: b.upiPayment?.receiptUrl || b.receiptUrl || '',
+      paymentDeadline: b.paymentDeadline || null,
+      approvedAt: b.approvedAt || null,
       createdAt: b.createdAt,
     }));
 

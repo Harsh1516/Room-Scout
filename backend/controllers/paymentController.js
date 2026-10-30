@@ -233,7 +233,10 @@ export const submitUpiPayment = async (req, res, next) => {
       try {
         finalReceiptUrl = await uploadSecureImage(receiptImage, 'roomscout/receipts');
       } catch (uploadErr) {
-        console.warn('Receipt upload failed, continuing with reference submission:', uploadErr.message);
+        console.warn('Receipt upload failed, using direct payload fallback:', uploadErr.message);
+        if (receiptImage.startsWith('data:image/') || receiptImage.startsWith('http')) {
+          finalReceiptUrl = receiptImage;
+        }
       }
     }
 
@@ -246,6 +249,10 @@ export const submitUpiPayment = async (req, res, next) => {
     // Update Booking Record
     booking.paymentMethod = 'UPI';
     booking.paymentStatus = 'PENDING';
+    booking.transactionRef = normalizedRef;
+    if (finalReceiptUrl) {
+      booking.receiptUrl = finalReceiptUrl;
+    }
     if (!booking.upiPayment) {
       booking.upiPayment = {};
     }
@@ -383,6 +390,12 @@ export const verifyHostPayment = async (req, res, next) => {
       booking.upiPayment.verifiedBy = hostUser;
       booking.upiPayment.verificationNote = verificationNote || 'Verified in host bank/UPI statement';
       booking.approvedAt = booking.approvedAt || now;
+      if (booking.upiPayment.transactionRef) {
+        booking.transactionRef = booking.upiPayment.transactionRef;
+      }
+      if (booking.upiPayment.receiptUrl) {
+        booking.receiptUrl = booking.upiPayment.receiptUrl;
+      }
 
       booking.auditLog.push({
         action: 'PAYMENT_VERIFIED',

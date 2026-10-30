@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { bookingsAPI } from '../../services/api';
+import { bookingsAPI, paymentsAPI } from '../../services/api';
 import { toast } from '../../context/ToastContext';
 
 export function CheckInVerificationModal({
@@ -9,34 +9,109 @@ export function CheckInVerificationModal({
   booking,
   onCheckInSuccess,
 }) {
+  const [localBooking, setLocalBooking] = useState(booking);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isVerifyingUpi, setIsVerifyingUpi] = useState(false);
+  const [isRejectingUpi, setIsRejectingUpi] = useState(false);
+  const [showRejectInput, setShowRejectInput] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [copiedRef, setCopiedRef] = useState(false);
 
   if (!isOpen || !booking) return null;
 
-  const bookingId = booking._id || booking.bookingId;
-  const rawStatus = String(booking.status || '').toUpperCase();
-  const rawPaymentStatus = String(booking.paymentStatus || '').toUpperCase();
-  const isOnline = booking.bookingSource === 'ONLINE' || booking.isOnline === true;
+  const currentBooking = localBooking || booking;
+  const bookingId = currentBooking._id || currentBooking.bookingId;
+  const rawStatus = String(currentBooking.status || '').toUpperCase();
+  const rawPaymentStatus = String(currentBooking.paymentStatus || '').toUpperCase();
+  const isOnline = currentBooking.bookingSource === 'ONLINE' || currentBooking.isOnline === true;
   const isConfirmed = rawStatus === 'CONFIRMED';
   const isPaid =
     rawPaymentStatus === 'PAID' ||
-    booking.paymentMethod === 'PAY_ON_ARRIVAL' ||
-    booking.paymentMethod === 'OFFLINE' ||
-    booking.paymentMethod === 'CASH';
+    currentBooking.paymentMethod === 'PAY_ON_ARRIVAL' ||
+    currentBooking.paymentMethod === 'OFFLINE' ||
+    currentBooking.paymentMethod === 'CASH';
   const isUpiVerified =
-    booking.paymentMethod !== 'UPI' ||
-    booking.upiPayment?.verificationStatus === 'VERIFIED';
+    currentBooking.paymentMethod !== 'UPI' ||
+    currentBooking.upiPayment?.verificationStatus === 'VERIFIED';
 
   const canCheckIn = isConfirmed && isPaid && isUpiVerified;
 
-  const guestName = booking.fullName || booking.userName || booking.guestName || 'Guest';
-  const guestPhone = booking.phone || booking.guestPhone || booking.userPhone || '';
-  const guestEmail = booking.email || booking.guestEmail || '';
-  const aadhar = booking.aadharNumber || booking.guestAadhar || '';
-  const roomNumber = booking.roomNumber || 'Room';
-  const stayTitle = booking.stayTitle || 'Stay';
-  const totalAmount = Number(booking.totalAmount || booking.paidAmount || booking.price || 0);
-  const transactionRef = booking.upiPayment?.transactionRef || booking.transactionRef || '';
+  const guestName = currentBooking.fullName || currentBooking.userName || currentBooking.guestName || 'Guest';
+  const guestPhone = currentBooking.phone || currentBooking.guestPhone || currentBooking.userPhone || '';
+  const guestEmail = currentBooking.email || currentBooking.guestEmail || '';
+  const aadhar = currentBooking.aadharNumber || currentBooking.guestAadhar || '';
+  const roomNumber = currentBooking.roomNumber || 'Room';
+  const stayTitle = currentBooking.stayTitle || 'Stay';
+  const totalAmount = Number(currentBooking.totalAmount || currentBooking.paidAmount || currentBooking.price || 0);
+  const transactionRef = currentBooking.upiPayment?.transactionRef || currentBooking.transactionRef || '';
+  const receiptUrl = currentBooking.upiPayment?.receiptUrl || currentBooking.receiptUrl || '';
+  const verificationStatus = currentBooking.upiPayment?.verificationStatus || (isPaid ? 'VERIFIED' : 'UNVERIFIED');
+
+  const handleVerifyUpi = async () => {
+    setIsVerifyingUpi(true);
+    try {
+      const res = await paymentsAPI.verifyReference({
+        bookingId,
+        action: 'VERIFY',
+        verificationNote: 'Verified in host bank/UPI statement',
+      });
+      toast.success(`🎉 UPI Payment verified! Booking for Room ${roomNumber} is CONFIRMED.`);
+      setLocalBooking((prev) => ({
+        ...(prev || currentBooking),
+        status: 'CONFIRMED',
+        paymentStatus: 'PAID',
+        upiPayment: {
+          ...((prev || currentBooking)?.upiPayment || {}),
+          verificationStatus: 'VERIFIED',
+          transactionRef,
+          receiptUrl,
+        },
+      }));
+      window.dispatchEvent(new Event('stayhub_slots_updated'));
+      window.dispatchEvent(new Event('stayhub_rooms_updated'));
+      window.dispatchEvent(new Event('stayhub_my_bookings_updated'));
+      if (onCheckInSuccess) onCheckInSuccess(res.booking || res);
+    } catch (err) {
+      console.error('Verify error:', err);
+      toast.error(err.message || 'Failed to verify UPI payment.');
+    } finally {
+      setIsVerifyingUpi(false);
+    }
+  };
+
+  const handleRejectUpi = async () => {
+    if (!rejectionReason.trim()) {
+      toast.error('Please enter a rejection reason.');
+      return;
+    }
+    setIsRejectingUpi(true);
+    try {
+      await paymentsAPI.verifyReference({
+        bookingId,
+        action: 'REJECT',
+        rejectionReason: rejectionReason.trim(),
+      });
+      toast.info('Payment reference rejected. Guest has been notified.');
+      setLocalBooking((prev) => ({
+        ...(prev || currentBooking),
+        paymentStatus: 'FAILED',
+        upiPayment: {
+          ...((prev || currentBooking)?.upiPayment || {}),
+          verificationStatus: 'REJECTED',
+          rejectionReason: rejectionReason.trim(),
+        },
+      }));
+      window.dispatchEvent(new Event('stayhub_slots_updated'));
+      window.dispatchEvent(new Event('stayhub_rooms_updated'));
+      window.dispatchEvent(new Event('stayhub_my_bookings_updated'));
+      setShowRejectInput(false);
+    } catch (err) {
+      console.error('Reject error:', err);
+      toast.error(err.message || 'Failed to reject UPI reference.');
+    } finally {
+      setIsRejectingUpi(false);
+    }
+  };
 
   const handleConfirmCheckIn = async () => {
     if (!canCheckIn) {
@@ -52,7 +127,7 @@ export function CheckInVerificationModal({
       window.dispatchEvent(new Event('stayhub_rooms_updated'));
       window.dispatchEvent(new Event('stayhub_my_bookings_updated'));
 
-      if (onCheckInSuccess) onCheckInSuccess(booking);
+      if (onCheckInSuccess) onCheckInSuccess(currentBooking);
       onClose();
     } catch (err) {
       console.error('Check-In Error:', err);
@@ -186,7 +261,7 @@ export function CheckInVerificationModal({
             </div>
 
             {/* Payment & UPI Verification Record */}
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10 space-y-2.5">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10 space-y-3">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                 3. Financial & Payment Record
               </span>
@@ -200,22 +275,115 @@ export function CheckInVerificationModal({
                 <div>
                   <span className="text-slate-400 block text-[10px]">Payment Method:</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">
-                    {booking.paymentMethod === 'UPI' ? 'Direct Host UPI' : booking.paymentMethod || 'Walk-in'}
+                    {currentBooking.paymentMethod === 'UPI' ? 'Direct Host UPI' : currentBooking.paymentMethod || 'Walk-in'}
                   </span>
                 </div>
-                <div className="col-span-2 pt-1 border-t border-slate-200/50 dark:border-white/5 flex items-center justify-between">
-                  <div>
-                    <span className="text-slate-400 block text-[10px]">Submitted UPI Ref (UTR):</span>
-                    <span className="font-mono font-bold text-slate-900 dark:text-white">
-                      {transactionRef || 'N/A (Cash / Pay at Property)'}
-                    </span>
+                <div className="col-span-2 pt-2 border-t border-slate-200/50 dark:border-white/5 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Submitted UPI Ref (UTR / RRN):</span>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="font-mono font-bold text-slate-900 dark:text-white text-sm select-all">
+                          {transactionRef || 'N/A (Cash / Pay at Property)'}
+                        </span>
+                        {transactionRef && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(transactionRef);
+                              setCopiedRef(true);
+                              toast.success('Transaction reference copied!');
+                              setTimeout(() => setCopiedRef(false), 2000);
+                            }}
+                            className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-800 dark:text-slate-200 transition-colors cursor-pointer"
+                          >
+                            {copiedRef ? 'Copied' : 'Copy'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-slate-400 block text-[10px]">Host Verification:</span>
+                      <span className={`font-bold text-xs ${isUpiVerified ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-500'}`}>
+                        {verificationStatus}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-slate-400 block text-[10px] text-right">Host Verification:</span>
-                    <span className={`font-bold ${isUpiVerified ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-500'}`}>
-                      {booking.upiPayment?.verificationStatus || (isPaid ? 'CONFIRMED' : 'UNVERIFIED')}
-                    </span>
-                  </div>
+
+                  {/* Guest Uploaded Receipt / Screenshot Preview */}
+                  {receiptUrl && (
+                    <div className="pt-2 border-t border-slate-200/40 dark:border-white/5 space-y-1.5">
+                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block">
+                        Guest Uploaded Receipt / Screenshot:
+                      </span>
+                      <a href={receiptUrl} target="_blank" rel="noreferrer" className="block max-w-sm relative group">
+                        <img
+                          src={receiptUrl}
+                          alt="Payment Receipt"
+                          className="max-h-40 w-full object-contain rounded-xl border border-slate-200 dark:border-white/10 bg-black/5 dark:bg-black/20"
+                        />
+                        <span className="text-[10px] text-blue-500 underline mt-1 block font-medium">
+                          Click to view full screenshot ↗
+                        </span>
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Quick Direct Verify / Reject Action for Host if UPI is not yet verified */}
+                  {!isUpiVerified && transactionRef && (
+                    <div className="pt-2 border-t border-slate-200/50 dark:border-white/5 space-y-2">
+                      <div className="rounded-xl p-2.5 bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-900 dark:text-amber-200 leading-relaxed">
+                        Verify ₹{totalAmount.toLocaleString('en-IN')} in your UPI/bank statement with UTR <strong>{transactionRef}</strong> before confirming.
+                      </div>
+
+                      {showRejectInput ? (
+                        <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 space-y-2">
+                          <input
+                            type="text"
+                            value={rejectionReason}
+                            onChange={(e) => setRejectionReason(e.target.value)}
+                            placeholder="Reason for rejection (e.g. UTR not found in bank statement)"
+                            className="w-full p-2 text-xs rounded-lg bg-white dark:bg-slate-950 border border-rose-300 dark:border-rose-900/50 text-slate-900 dark:text-white"
+                          />
+                          <div className="flex justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setShowRejectInput(false)}
+                              className="px-2.5 py-1 text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white cursor-pointer"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              disabled={isRejectingUpi || !rejectionReason.trim()}
+                              onClick={handleRejectUpi}
+                              className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg cursor-pointer disabled:opacity-50"
+                            >
+                              {isRejectingUpi ? 'Rejecting...' : 'Confirm Reject'}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setShowRejectInput(true)}
+                            className="px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 border border-rose-300 dark:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+                          >
+                            Reject UTR
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isVerifyingUpi}
+                            onClick={handleVerifyUpi}
+                            className="flex-1 py-2 px-3 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                          >
+                            {isVerifyingUpi ? 'Verifying...' : 'Verify UPI & Confirm Booking'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

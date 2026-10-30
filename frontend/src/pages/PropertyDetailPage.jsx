@@ -50,9 +50,6 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
   const handleHostTabClick = () => {
     setActiveCenterTab('host');
     setMobileMenuOpen(false);
-    if (!hasPaidBookingForStay) {
-      toast.info('Host details will be shared only when you make payments.');
-    }
   };
 
   const [selectedRateIdx, setSelectedRateIdx] = useState(0);

@@ -58,7 +58,7 @@ export function BookingsProvider({ children }) {
     }
   }, [isBookingsOpen, isAuthenticated, user, fetchBookings]);
 
-  // Real-time synchronization across tabs and host actions (approvals/rejections)
+  // Real-time synchronization across tabs and host actions (approvals/rejections/payments)
   useEffect(() => {
     if (!isAuthenticated || !user || user.role === 'host') return;
 
@@ -78,8 +78,14 @@ export function BookingsProvider({ children }) {
 
     window.addEventListener('stayhub_slots_updated', handleSync);
     window.addEventListener('stayhub_rooms_updated', handleSync);
+    window.addEventListener('stayhub_my_bookings_updated', handleSync);
     window.addEventListener('focus', handleFocus);
     document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Fast polling so booking updates appear live without requiring any manual page refresh!
+    const pollInterval = setInterval(() => {
+      fetchBookings();
+    }, isBookingsOpen ? 2500 : 4500);
 
     let bc = null;
     try {
@@ -94,15 +100,17 @@ export function BookingsProvider({ children }) {
     return () => {
       window.removeEventListener('stayhub_slots_updated', handleSync);
       window.removeEventListener('stayhub_rooms_updated', handleSync);
+      window.removeEventListener('stayhub_my_bookings_updated', handleSync);
       window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(pollInterval);
       if (bc) {
         try {
           bc.close();
         } catch {}
       }
     };
-  }, [isAuthenticated, user, fetchBookings]);
+  }, [isAuthenticated, user, isBookingsOpen, fetchBookings]);
 
   const addBooking = (newBooking) => {
     if (!newBooking) return;

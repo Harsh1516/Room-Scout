@@ -1457,14 +1457,10 @@ export function HostDashboardPage() {
       }
     }
 
-    let pollTimer = null;
-    const isApprovedHost = hostProperty?.status === 'Approved' || hostProperty?.isApproved === true;
-    if (!isApprovedHost) {
-      // While awaiting approval, auto-check every 3s so approval appears live without page refresh!
-      pollTimer = setInterval(() => {
-        fetchHostData();
-      }, 3000);
-    }
+    // Auto-poll host data every 3.5s so guest requests, UTR submissions, and payments appear live without page refresh!
+    const pollTimer = setInterval(() => {
+      fetchHostData();
+    }, 3500);
 
     return () => {
       window.removeEventListener('storage', handleStorage);
