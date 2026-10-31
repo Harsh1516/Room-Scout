@@ -274,7 +274,12 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
               </div>
             ) : (
               <>
-                {guest.upiPayment?.verificationStatus === 'PENDING_VERIFICATION' || guest.paymentStatus === 'PENDING_VERIFICATION' ? (
+                {guest.upiPayment?.verificationStatus === 'REJECTED' ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-100 text-rose-900 dark:bg-rose-950/70 dark:text-rose-200 text-[9.5px] font-bold border border-rose-300 dark:border-rose-800">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
+                    <span>UPI Rejected</span>
+                  </span>
+                ) : guest.upiPayment?.verificationStatus === 'PENDING_VERIFICATION' || guest.paymentStatus === 'PENDING_VERIFICATION' ? (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-100 text-violet-900 dark:bg-violet-950/70 dark:text-violet-200 text-[9.5px] font-bold border border-violet-400/80 animate-pulse">
                     <span className="w-1.5 h-1.5 rounded-full bg-violet-600 ring-2 ring-violet-400/40" />
                     <span>UPI Pending</span>
@@ -499,8 +504,8 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
           </a>
         )}
 
-        {/* Requests: Approve CTA */}
-        {subTab === 'requests' && !isCheckedIn && onApproveRequest && (
+        {/* Requests: Approve CTA (Only when pending initial approval) */}
+        {subTab === 'requests' && !isCheckedIn && !isAwaitingPayment && guest.upiPayment?.verificationStatus !== 'PENDING_VERIFICATION' && onApproveRequest && (
           <button
             type="button"
             disabled={isLoading}
@@ -515,6 +520,17 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
           </button>
         )}
 
+        {/* Requests: Awaiting Payment indicator when approved but guest hasn't submitted UPI ref yet */}
+        {subTab === 'requests' && !isCheckedIn && isAwaitingPayment && guest.upiPayment?.verificationStatus !== 'PENDING_VERIFICATION' && (
+          <span
+            className="min-h-[36px] px-2.5 py-1.5 rounded-xl bg-amber-500/10 dark:bg-amber-400/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-[10px] sm:text-[10.5px] font-semibold flex items-center gap-1.5 whitespace-nowrap shrink-0"
+            title="Waiting for guest to complete UPI payment"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+            <span>Awaiting Payment</span>
+          </span>
+        )}
+
         {/* Verify UPI Payment CTA */}
         {onVerifyPayment && (guest.upiPayment?.verificationStatus === 'PENDING_VERIFICATION' || (guest.upiPayment?.transactionRef && guest.upiPayment?.verificationStatus !== 'VERIFIED')) && (
           <button
@@ -524,7 +540,7 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
               e.stopPropagation();
               onVerifyPayment(guest);
             }}
-            className="min-h-[36px] px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-[10.5px] sm:text-[11px] font-bold shadow-md shadow-indigo-600/20 cursor-pointer active:scale-[0.98] transition-all duration-150 ease-out flex items-center gap-1 hover:brightness-105 whitespace-nowrap shrink-0"
+            className="min-h-[36px] px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-[10.5px] sm:text-[11px] font-bold shadow-md shadow-indigo-600/20 cursor-pointer active:scale-[0.98] transition-all duration-150 ease-out flex items-center gap-1 hover:brightness-105 whitespace-nowrap shrink-0 animate-pulse"
             title="Verify direct UPI bank credit"
           >
             <ShieldCheck className="w-3.5 h-3.5 stroke-[2.5]" />

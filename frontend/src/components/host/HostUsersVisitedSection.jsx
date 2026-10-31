@@ -7,6 +7,7 @@ const ResidentIdPassModal = lazy(() =>
 
 import { VisitedSubNavbar } from './visited/VisitedSubNavbar';
 import { PaidUsersList } from './paid/PaidUsersList';
+import { isPaidGuest, isOnlineGuest } from '../../utils/guestFilters';
 import { VisitedRequestsView } from './visited/VisitedRequestsView';
 import { HostPaymentVerificationModal } from './HostPaymentVerificationModal';
 import { CheckInVerificationModal } from './CheckInVerificationModal';
@@ -152,13 +153,17 @@ export function HostUsersVisitedSection({
       const gRoomNum = String(g.roomNumber || '').replace(/[^0-9]/g, '');
       if (activeRoomNumbers.size > 0 && (!gRoomNum || !activeRoomNumbers.has(gRoomNum))) return false;
       const st = String(g.status || '').toUpperCase();
+      if (st === 'REJECTED' || st === 'CANCELLED' || st === 'EXPIRED' || st === 'CONFIRMED' || st === 'CHECKED_IN') return false;
       return (
         st === 'PENDING HOST APPROVAL' ||
         st === 'PENDING' ||
         st === 'DRAFT' ||
         st === 'PAYMENT_PENDING' ||
-        st.includes('PENDING')
-      ) && st !== 'REJECTED' && st !== 'CANCELLED';
+        st === 'AWAITING_PAYMENT' ||
+        st.includes('PENDING') ||
+        st.includes('APPROVAL') ||
+        g.upiPayment?.verificationStatus === 'PENDING_VERIFICATION'
+      );
     });
   }, [mergedGuests, activeRoomNumbers]);
 
@@ -177,10 +182,16 @@ export function HostUsersVisitedSection({
         st === 'REJECTED' ||
         st === 'CANCELLED' ||
         st.includes('PENDING') ||
+        st.includes('APPROVAL') ||
+        st === 'AWAITING_PAYMENT' ||
+        st === 'PAYMENT_PENDING' ||
         st === 'CHECKED_OUT' ||
         st === 'COMPLETED' ||
         st === 'EXPIRED'
       ) return false;
+
+      // Online guests must have verified payment before appearing in check-ins
+      if (isOnlineGuest(g) && !isPaidGuest(g)) return false;
 
       const gRoomNum = String(g.roomNumber || '').replace(/[^0-9]/g, '');
       if (activeRoomNumbers.size > 0 && (!gRoomNum || !activeRoomNumbers.has(gRoomNum))) return false;
@@ -218,10 +229,16 @@ export function HostUsersVisitedSection({
         st === 'REJECTED' ||
         st === 'CANCELLED' ||
         st.includes('PENDING') ||
+        st.includes('APPROVAL') ||
+        st === 'AWAITING_PAYMENT' ||
+        st === 'PAYMENT_PENDING' ||
         st === 'EXPIRED' ||
         st === 'CHECKED_OUT' ||
         st === 'COMPLETED'
       ) return false;
+
+      // Only currently in-house (checked-in) guests can be checked out
+      if (st !== 'CHECKED_IN') return false;
 
       const gRoomNum = String(g.roomNumber || '').replace(/[^0-9]/g, '');
       if (activeRoomNumbers.size > 0 && (!gRoomNum || !activeRoomNumbers.has(gRoomNum))) return false;
@@ -250,25 +267,12 @@ export function HostUsersVisitedSection({
     });
   }, [allCheckOuts, todayISO]);
 
-  // Confirmed Paid Residents
+  // Confirmed Paid Residents (Only verified by host with confirmed payment)
   const activePaidUsers = useMemo(() => {
     return mergedGuests.filter((g) => {
       const gRoom = String(g.roomNumber || '').replace(/[^0-9]/g, '');
       if (activeRoomNumbers.size > 0 && (!gRoom || !activeRoomNumbers.has(gRoom))) return false;
-
-      const st = String(g.status || '').toUpperCase();
-      const ps = String(g.paymentStatus || '').toUpperCase();
-
-      if (st === 'REJECTED' || st === 'CANCELLED' || st === 'EXPIRED') return false;
-
-      const hasAmount = Number(g.totalAmount || g.paidAmount) > 0;
-      const isPaidStatus = ps === 'PAID' || ps === 'VERIFIED' || ps === 'COMPLETED' || g.isPaid === true;
-      const isOfflineBooking = g.bookingSource === 'OFFLINE_HOST' || g.source === 'offline' || g.paymentMethod === 'OFFLINE';
-
-      const isPaid = isPaidStatus || hasAmount || isOfflineBooking;
-      if (!isPaid) return false;
-
-      return st === 'CONFIRMED' || st === 'CHECKED_IN' || st === 'PAID' || !st.includes('PENDING');
+      return isPaidGuest(g);
     });
   }, [mergedGuests, activeRoomNumbers]);
 

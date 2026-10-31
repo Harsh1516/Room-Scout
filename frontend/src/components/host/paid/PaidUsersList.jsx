@@ -12,24 +12,8 @@ const ResidentIdPassModal = lazy(() =>
   import('../schedule/ResidentIdPassModal').then((m) => ({ default: m.ResidentIdPassModal }))
 );
 
-export const isOnlineGuest = (g) => {
-  if (!g) return false;
-  if (
-    g.bookingSource === 'OFFLINE_HOST' ||
-    g.source === 'offline' ||
-    g.paymentMethod === 'OFFLINE' ||
-    g.paymentMethod === 'CASH'
-  ) return false;
-  if (
-    g.bookingSource === 'ONLINE' ||
-    g.bookingSource === 'ONLINE_USER' ||
-    g.isOnline === true ||
-    g.paymentMethod === 'UPI' ||
-    g.upiPayment?.transactionRef ||
-    g.paymentId
-  ) return true;
-  return false;
-};
+import { isOnlineGuest, isPaidGuest } from '../../../utils/guestFilters';
+export { isOnlineGuest, isPaidGuest };
 
 const tabVariants = {
   enter: (dir) => ({ opacity: 0, x: dir > 0 ? 30 : -30 }),
@@ -130,29 +114,7 @@ export function PaidUsersList({
   // They are preserved here and must not be wiped out or reduced upon checkout.
   const activePaidGuests = useMemo(() => {
     const src = Array.isArray(allGuests) && allGuests.length > 0 ? allGuests : guests;
-    return src.filter((g) => {
-      const st = String(g.status || '').toUpperCase();
-      const ps = String(g.paymentStatus || '').toUpperCase();
-      if (st === 'REJECTED' || st === 'CANCELLED' || st === 'EXPIRED') return false;
-      const hasPaid =
-        ps === 'PAID' ||
-        ps === 'VERIFIED' ||
-        ps === 'COMPLETED' ||
-        g.isPaid === true ||
-        Number(g.totalAmount || g.paidAmount) > 0 ||
-        g.bookingSource === 'OFFLINE_HOST' ||
-        g.source === 'offline' ||
-        g.paymentMethod === 'OFFLINE';
-      if (!hasPaid) return false;
-      return (
-        st === 'CONFIRMED' ||
-        st === 'CHECKED_IN' ||
-        st === 'CHECKED_OUT' ||
-        st === 'COMPLETED' ||
-        st === 'PAID' ||
-        !st.includes('PENDING')
-      );
-    });
+    return (Array.isArray(src) ? src : []).filter(isPaidGuest);
   }, [allGuests, guests]);
 
   const onlineGuests = useMemo(() => activePaidGuests.filter(isOnlineGuest), [activePaidGuests]);

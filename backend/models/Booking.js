@@ -156,7 +156,7 @@ const bookingSchema = new mongoose.Schema(
     paymentStatus: {
       type: String,
       enum: ['UNPAID', 'PENDING', 'PAID', 'FAILED', 'REFUND_PENDING', 'REFUNDED', 'COMPLETED'],
-      default: 'PAID',
+      default: 'UNPAID',
       index: true,
     },
     paymentMethod: {
@@ -186,6 +186,8 @@ const bookingSchema = new mongoose.Schema(
       verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Host', default: null },
       verificationNote: { type: String, trim: true, default: '' },
       rejectionReason: { type: String, trim: true, default: '' },
+      submissionCount: { type: Number, default: 0 },
+      isRecheckRequested: { type: Boolean, default: false },
     },
     pricingSnapshot: {
       basePrice: { type: Number, default: 0 },

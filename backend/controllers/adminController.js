@@ -740,7 +740,7 @@ export const getHostGuests = async (req, res, next) => {
       paidAmount: b.paidAmount !== undefined ? b.paidAmount : b.totalAmount,
       stayTitle: b.stayTitle,
       status: b.status,
-      paymentStatus: b.paymentStatus || 'PAID',
+      paymentStatus: b.paymentStatus || (b.bookingSource === 'OFFLINE_HOST' ? 'PAID' : 'PENDING'),
       paymentMethod: b.paymentMethod || (b.bookingSource === 'ONLINE' ? 'ONLINE' : 'OFFLINE'),
       bookingSource: b.bookingSource,
       upiPayment: b.upiPayment || null,
