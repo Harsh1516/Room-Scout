@@ -8,6 +8,7 @@ import { AdminHostsTable } from '../components/admin/AdminHostsTable';
 import { AdminUsersTable } from '../components/admin/AdminUsersTable';
 import { ThemeTogglePill } from '../components/common/ThemeTogglePill';
 import PlatformPaymentSettingsPage from './PlatformPaymentSettingsPage';
+import AdminSubscriptionPaymentsPage from '../components/admin/AdminSubscriptionPaymentsPage';
 
 export function AdminPage() {
   const navigate = useNavigate();
@@ -561,7 +562,9 @@ export function AdminPage() {
                   : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white font-medium'
               }`}
             >
-              {activeTab === 'hosts' && (
+              {activeTab === 'subscriptionPayments' && <div className="w-full px-3 sm:px-6 pt-24 pb-10"><AdminSubscriptionPaymentsPage /></div>}
+
+        {activeTab === 'hosts' && (
                 <motion.div
                   layoutId="admin-nav-pill-indicator"
                   className="absolute inset-0 rounded-full bg-white dark:bg-zinc-800 shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)] border border-slate-200/80 dark:border-white/15"
@@ -588,6 +591,10 @@ export function AdminPage() {
               </span>
             </button>
           
+            <button type="button" onClick={() => { setActiveTab('subscriptionPayments'); setSearchQuery(''); }} className={`relative px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 transition-colors ${activeTab === 'subscriptionPayments' ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-600 dark:text-zinc-400'}`}>
+              <span className="material-symbols-outlined relative z-10 text-sm">receipt_long</span>
+              <span className="relative z-10">Subscription Payments</span>
+            </button>
             <button
               type="button"
               onClick={() => { setActiveTab('upi'); setSearchQuery(''); }}
