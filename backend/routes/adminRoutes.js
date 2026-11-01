@@ -18,10 +18,20 @@ import validate from '../middleware/validateMiddleware.js';
 import { idParamSchema } from '../validators/commonValidator.js';
 import { impersonateSchema } from '../validators/adminValidator.js';
 import { getPlatformPaymentSettings, updatePlatformPaymentSettings } from '../controllers/platformPaymentController.js';
+import {
+  getAdminSubscriptionRequests,
+  verifySubscriptionRequest,
+  manualActivateSubscription,
+} from '../controllers/subscriptionController.js';
 
 const router = express.Router();
 
 router.route('/payment-settings').get(adminLimiter, requireAdmin, getPlatformPaymentSettings).put(adminLimiter, requireAdmin, updatePlatformPaymentSettings);
+
+// Platform Host Subscription Administration
+router.route('/subscriptions').get(adminLimiter, requireAdmin, getAdminSubscriptionRequests);
+router.route('/subscriptions/:id/verify').post(adminLimiter, requireAdmin, verifySubscriptionRequest);
+router.route('/hosts/:id/subscription/manual-activate').post(adminLimiter, requireAdmin, manualActivateSubscription);
 
 // Master Admin Security-Gated Endpoints (Guarded against unauthorized brute-forcing)
 router.route('/impersonate').post(adminLimiter, requireAdmin, validate(impersonateSchema), impersonateAccount);

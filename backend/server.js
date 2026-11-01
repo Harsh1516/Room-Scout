@@ -8,6 +8,7 @@ import stayRoutes from './routes/stayRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import wishlistRoutes from './routes/wishlistRoutes.js';
+import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import errorMiddleware from './middleware/errorMiddleware.js';
 import { apiLimiter } from './middleware/rateLimitMiddleware.js';
@@ -178,6 +179,7 @@ app.use('/api/stays', stayRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/enter', adminRoutes);
 
 // Root Route

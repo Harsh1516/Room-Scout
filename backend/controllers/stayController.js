@@ -29,6 +29,13 @@ export const getAllStays = async (req, res, next) => {
 
     const mongoFilter = { isPublished: true };
 
+    // Public Visibility Guard: A stay is publicly visible ONLY if its host has an active, non-expired subscription
+    const isCallerAdmin = isAdminUser(req) || req.isAdminKey;
+    if (!(isCallerAdmin && req.query.includeAll === 'true')) {
+      mongoFilter['subscription.status'] = 'ACTIVE';
+      mongoFilter['subscription.expiresAt'] = { $gt: new Date() };
+    }
+
     if (city && typeof city === 'string') {
       mongoFilter.city = { $regex: new RegExp(city.trim(), 'i') };
     }
@@ -311,6 +318,21 @@ export const createStay = async (req, res, next) => {
       stayPayload.locationGeo = {
         type: 'Point',
         coordinates: [lngNum, latNum],
+      };
+    }
+
+    // Inherit active subscription from host if present and non-expired
+    const hostDoc = await Host.findById(hostId).lean();
+    if (
+      hostDoc?.subscription?.status === 'ACTIVE' &&
+      hostDoc?.subscription?.expiresAt &&
+      new Date(hostDoc.subscription.expiresAt) > new Date()
+    ) {
+      stayPayload.subscription = {
+        status: 'ACTIVE',
+        planCode: hostDoc.subscription.planCode || 'monthly',
+        planLabel: hostDoc.subscription.planLabel || 'Active Plan',
+        expiresAt: hostDoc.subscription.expiresAt,
       };
     }
 

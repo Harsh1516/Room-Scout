@@ -350,6 +350,18 @@ export const wishlistAPI = {
     }),
 };
 
+export const subscriptionsAPI = {
+  getPlans: () => request('/subscriptions/plans'),
+
+  getMySubscription: () => request('/subscriptions/my-subscription'),
+
+  submitPayment: (payload) =>
+    request('/subscriptions/submit-payment', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+};
+
 export const adminAPI = {
   getUsers: () => request('/enter/users'),
 
@@ -399,6 +411,21 @@ export const adminAPI = {
   updatePlatformPaymentSettings: (payload) =>
     request('/enter/payment-settings', {
       method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+
+  getSubscriptionRequests: (status) =>
+    request('/enter/subscriptions' + (status && status !== 'ALL' ? `?status=${encodeURIComponent(status)}` : '')),
+
+  verifySubscriptionRequest: (id, payload) =>
+    request(`/enter/subscriptions/${encodeURIComponent(id)}/verify`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  manualActivateHostSubscription: (hostId, payload) =>
+    request(`/enter/hosts/${encodeURIComponent(hostId)}/subscription/manual-activate`, {
+      method: 'POST',
       body: JSON.stringify(payload),
     }),
 

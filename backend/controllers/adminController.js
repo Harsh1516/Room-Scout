@@ -189,6 +189,7 @@ export const getHosts = async (req, res, next) => {
         roomRates: s.roomRates || [],
         facilities: s.facilities || [],
         rules: s.rules || [],
+        subscription: h.subscription || { status: 'NONE' },
         createdAt: h.createdAt,
       };
     });

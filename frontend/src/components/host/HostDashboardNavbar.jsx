@@ -76,13 +76,26 @@ export function HostDashboardNavbar({
           <span>Back</span>
         </button>
 
-        {/* Property Type Badge */}
-        <span className="apple-liquid-nav h-8 sm:h-9 inline-flex items-center justify-center text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 sm:px-3 rounded-full text-amber-700 dark:text-amber-300 border border-amber-500/30 gap-1.5 shadow-xs shrink-0 select-none">
-          <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-500 fill-amber-500/20 stroke-[2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z" />
+        {/* Host Subscription Plan Navigation Button */}
+        <button
+          type="button"
+          onClick={() => navigate('/host/subscription')}
+          data-no-hover="true"
+          className="apple-liquid-nav flex items-center justify-center h-8 sm:h-9 px-3 py-1 sm:px-3.5 sm:py-1.5 gap-1.5 sm:gap-2 rounded-full border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 dark:border-purple-400/40 dark:bg-purple-500/15 dark:hover:bg-purple-500/25 shadow-xs cursor-pointer text-purple-700 dark:text-purple-300 font-semibold text-xs sm:text-sm select-none active:scale-95 transition-all shrink-0"
+          title="View Subscription & Purchase Plans"
+        >
+          <svg
+            className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600 dark:text-purple-400 stroke-[2.2]"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
           </svg>
-          <span>{propertyType || 'PG'}</span>
-        </span>
+          <span>Plan</span>
+        </button>
 
         {/* Awaiting Approval Indicator (if property is not yet approved) */}
         {!isApproved && (

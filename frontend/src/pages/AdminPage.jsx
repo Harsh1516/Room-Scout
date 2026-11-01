@@ -8,6 +8,7 @@ import { AdminHostsTable } from '../components/admin/AdminHostsTable';
 import { AdminUsersTable } from '../components/admin/AdminUsersTable';
 import { ThemeTogglePill } from '../components/common/ThemeTogglePill';
 import PlatformPaymentSettingsPage from './PlatformPaymentSettingsPage';
+import { AdminSubscriptionsView } from '../components/admin/AdminSubscriptionsView';
 
 export function AdminPage() {
   const navigate = useNavigate();
@@ -25,6 +26,9 @@ export function AdminPage() {
 
   const [users, setUsers] = useState([]);
   const [hosts, setHosts] = useState([]);
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [subscriptionCounts, setSubscriptionCounts] = useState({ pending: 0, verified: 0, rejected: 0, total: 0 });
+  const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -59,6 +63,21 @@ export function AdminPage() {
     return `${day} ${month} ${year}, ${strHours}:${minutes} ${ampm}`;
   }, []);
 
+  const fetchSubscriptions = useCallback(async (isBackground = false) => {
+    try {
+      if (!isBackground) setLoadingSubscriptions(true);
+      const subRes = await adminAPI.getSubscriptionRequests('ALL');
+      if (subRes && subRes.success) {
+        setSubscriptions(subRes.requests || []);
+        if (subRes.counts) setSubscriptionCounts(subRes.counts);
+      }
+    } catch (err) {
+      if (!isBackground) console.warn('Failed to load subscriptions in admin:', err);
+    } finally {
+      if (!isBackground) setLoadingSubscriptions(false);
+    }
+  }, []);
+
   const fetchData = useCallback(async (isBackground = false) => {
     try {
       if (!isBackground) setLoading(true);
@@ -73,6 +92,8 @@ export function AdminPage() {
 
       const fetchedHosts = Array.isArray(hostsRes) ? hostsRes : hostsRes?.hosts || hostsRes?.data || [];
       setHosts(fetchedHosts);
+
+      fetchSubscriptions(isBackground);
     } catch (err) {
       if (err.status === 403 || err.status === 401) {
         setIsAdminAuthorized(false);
@@ -84,7 +105,7 @@ export function AdminPage() {
       if (!isBackground) setLoading(false);
       setIsRefreshing(false);
     }
-  }, []);
+  }, [fetchSubscriptions]);
 
   useEffect(() => {
     if (!isAdminAuthorized) return;
@@ -256,6 +277,27 @@ export function AdminPage() {
     } finally {
       setApprovingHostId(null);
     }
+  };
+
+  const handleVerifySubscription = async (id, payload) => {
+    const res = await adminAPI.verifySubscriptionRequest(id, payload);
+    toast.success(res.message || 'Subscription plan verified and activated!');
+    fetchSubscriptions(true);
+    fetchData(true);
+  };
+
+  const handleRejectSubscription = async (id, payload) => {
+    const res = await adminAPI.verifySubscriptionRequest(id, payload);
+    toast.success(res.message || 'Subscription request rejected.');
+    fetchSubscriptions(true);
+    fetchData(true);
+  };
+
+  const handleManualActivateHostSubscription = async (hostId, payload) => {
+    const res = await adminAPI.manualActivateHostSubscription(hostId, payload);
+    toast.success(res.message || 'Subscription plan granted successfully!');
+    fetchSubscriptions(true);
+    fetchData(true);
   };
 
   const handleDeleteHost = async (hostId, hostName) => {
@@ -587,6 +629,52 @@ export function AdminPage() {
               >
                 {hosts.length}
               </span>
+            </button>
+
+            {/* Subscriptions Tab */}
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('subscriptions');
+                setSearchQuery('');
+              }}
+              className={`relative px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none transition-colors duration-150 ${
+                activeTab === 'subscriptions'
+                  ? 'text-slate-900 dark:text-white font-bold'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white font-medium'
+              }`}
+            >
+              {activeTab === 'subscriptions' && (
+                <motion.div
+                  layoutId="admin-nav-pill-indicator"
+                  className="absolute inset-0 rounded-full bg-white dark:bg-zinc-800 shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)] border border-slate-200/80 dark:border-white/15"
+                  transition={{
+                    type: 'spring',
+                    stiffness: 450,
+                    damping: 32,
+                    mass: 0.8,
+                  }}
+                />
+              )}
+              <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'subscriptions' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400 dark:text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+              <span className="relative z-10 tracking-tight">Subscriptions</span>
+              {subscriptionCounts.pending > 0 ? (
+                <span className="relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none bg-amber-500 text-slate-950 animate-pulse">
+                  {subscriptionCounts.pending}
+                </span>
+              ) : (
+                <span
+                  className={`relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none transition-colors ${
+                    activeTab === 'subscriptions'
+                      ? 'bg-purple-500/15 text-purple-700 dark:text-purple-300'
+                      : 'bg-slate-200/80 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400'
+                  }`}
+                >
+                  {subscriptions.length}
+                </span>
+              )}
             </button>
           
             <button
@@ -935,6 +1023,20 @@ export function AdminPage() {
               />
             </div>
           </div>
+        )}
+
+        {activeTab === 'subscriptions' && (
+          <AdminSubscriptionsView
+            requests={subscriptions}
+            counts={subscriptionCounts}
+            loading={loadingSubscriptions}
+            onRefresh={() => fetchSubscriptions(false)}
+            onVerify={handleVerifySubscription}
+            onReject={handleRejectSubscription}
+            onManualActivate={handleManualActivateHostSubscription}
+            hosts={hosts}
+            formatDateTime={formatDateTime}
+          />
         )}
       </main>
       {/* END: MainContent */}

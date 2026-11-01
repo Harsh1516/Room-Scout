@@ -74,18 +74,38 @@ export const AdminHostRow = React.memo(function AdminHostRow({
 
       {/* 5. Status & Date */}
       <td className="py-3 px-3 border-r border-slate-100 dark:border-slate-800/80 text-center align-middle">
-        <span
-          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-            isApproved
-              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-              : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-          }`}
-        >
-          {isApproved ? '✓ Approved' : '⏳ Pending'}
-        </span>
-        <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-1 whitespace-nowrap">
-          {formattedDateTime}
-        </span>
+        <div className="flex flex-col items-center gap-1">
+          <span
+            className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+              isApproved
+                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+            }`}
+          >
+            {isApproved ? '✓ Approved' : '⏳ Pending'}
+          </span>
+
+          {/* Subscription Live Status */}
+          {host.subscription?.status === 'ACTIVE' ? (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              Live ({host.subscription.planLabel || 'Active'})
+            </span>
+          ) : host.subscription?.status === 'PENDING_VERIFICATION' ? (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 animate-pulse">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              UTR Pending
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">
+              Hidden (No Plan)
+            </span>
+          )}
+
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 block whitespace-nowrap">
+            {formattedDateTime}
+          </span>
+        </div>
       </td>
 
       {/* 6. Actions */}

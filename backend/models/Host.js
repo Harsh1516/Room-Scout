@@ -96,6 +96,26 @@ const hostSchema = new mongoose.Schema(
       baselineOnline: { type: Number, default: 0 },
       baselineOffline: { type: Number, default: 0 },
     },
+    subscription: {
+      planCode: {
+        type: String,
+        enum: ['monthly', 'quarterly', 'halfYearly', 'yearly', 'none', 'custom'],
+        default: 'none',
+      },
+      planLabel: { type: String, default: '' },
+      durationMonths: { type: Number, default: 0 },
+      amountPaid: { type: Number, default: 0 },
+      startDate: { type: Date, default: null },
+      expiresAt: { type: Date, default: null, index: true },
+      status: {
+        type: String,
+        enum: ['ACTIVE', 'EXPIRED', 'PENDING_VERIFICATION', 'NONE'],
+        default: 'NONE',
+        index: true,
+      },
+      lastPaymentRef: { type: String, default: '' },
+      lastVerifiedAt: { type: Date, default: null },
+    },
   },
   {
     timestamps: true,

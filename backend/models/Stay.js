@@ -154,6 +154,17 @@ const staySchema = new mongoose.Schema(
       baselineOnline: { type: Number, default: 0 },
       baselineOffline: { type: Number, default: 0 },
     },
+    subscription: {
+      status: {
+        type: String,
+        enum: ['ACTIVE', 'EXPIRED', 'NONE'],
+        default: 'NONE',
+        index: true,
+      },
+      planCode: { type: String, default: 'none' },
+      planLabel: { type: String, default: '' },
+      expiresAt: { type: Date, default: null, index: true },
+    },
   },
   {
     timestamps: true,
