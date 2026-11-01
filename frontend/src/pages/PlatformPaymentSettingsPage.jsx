@@ -103,25 +103,25 @@ export default function PlatformPaymentSettingsPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-2 border-b border-slate-200/80 dark:border-white/[0.08]">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-purple-600/25 shrink-0">
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="2" y="5" width="20" height="14" rx="2" />
               <line x1="2" y1="10" x2="22" y2="10" />
             </svg>
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400">
-                Financial Configuration
+              <span className="text-xs font-normal text-purple-600 dark:text-purple-400">
+                Financial configuration
               </span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              UPI & Subscription Pricing
+            <h1 className="text-xl sm:text-2xl font-normal text-slate-900 dark:text-white">
+              UPI & subscription pricing
             </h1>
           </div>
         </div>
-        <div className="text-xs text-slate-500 dark:text-slate-400 max-w-xs text-left sm:text-right">
-          These credentials & prices appear on the host <strong className="text-purple-400">Plan</strong> page.
+        <div className="text-xs text-slate-500 dark:text-slate-400 max-w-xs text-left sm:text-right font-normal">
+          These credentials & prices appear on the host <span className="text-purple-400 font-medium">Plan</span> page.
         </div>
       </div>
 
@@ -133,18 +133,18 @@ export default function PlatformPaymentSettingsPage() {
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/[0.06] pb-3">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-purple-500" />
-              <h2 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white tracking-tight">
-                Platform Payment Receiver Details
+              <h2 className="font-normal text-sm sm:text-base text-slate-900 dark:text-white">
+                Platform payment receiver details
               </h2>
             </div>
-            <span className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2.5 py-0.5 rounded-full border border-purple-500/20">
+            <span className="text-xs font-normal text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2.5 py-0.5 rounded-full border border-purple-500/20">
               UPI Direct Crediting
             </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <label className="block space-y-1.5">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+              <span className="text-xs font-normal text-slate-700 dark:text-slate-300">
                 Payee / Account Holder Name
               </span>
               <input
@@ -157,7 +157,7 @@ export default function PlatformPaymentSettingsPage() {
             </label>
 
             <label className="block space-y-1.5">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+              <span className="text-xs font-normal text-slate-700 dark:text-slate-300">
                 Platform UPI ID (VPA)
               </span>
               <input
@@ -170,7 +170,7 @@ export default function PlatformPaymentSettingsPage() {
             </label>
 
             <label className="block space-y-1.5">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+              <span className="text-xs font-normal text-slate-700 dark:text-slate-300">
                 Linked Mobile Number
               </span>
               <input
@@ -182,7 +182,7 @@ export default function PlatformPaymentSettingsPage() {
             </label>
 
             <label className="block space-y-1.5">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+              <span className="text-xs font-normal text-slate-700 dark:text-slate-300">
                 Platform QR Code Image URL
               </span>
               <input
@@ -202,10 +202,10 @@ export default function PlatformPaymentSettingsPage() {
                 className="h-28 w-28 rounded-xl border border-slate-200 dark:border-white/10 object-contain p-1.5 bg-white shadow-xs"
               />
               <div className="flex flex-col gap-1 text-xs">
-                <span className="font-bold text-slate-800 dark:text-slate-200">
+                <span className="font-normal text-slate-800 dark:text-slate-200">
                   Live QR Code Active
                 </span>
-                <span className="text-slate-400 text-[11px]">
+                <span className="text-slate-400 text-[11px] font-normal">
                   Hosts can scan this QR code directly with Google Pay, PhonePe, or Paytm.
                 </span>
               </div>
@@ -213,11 +213,11 @@ export default function PlatformPaymentSettingsPage() {
           )}
 
           <label className="block space-y-1.5">
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+            <span className="text-xs font-normal text-slate-700 dark:text-slate-300">
               Payment Instructions for Hosts
             </span>
             <textarea
-              className={inputClass + ' min-h-20 resize-none leading-relaxed'}
+              className={inputClass + ' min-h-20 resize-none leading-relaxed font-normal'}
               value={form.paymentInstructions}
               onChange={(e) => updateField('paymentInstructions', e.target.value)}
               placeholder="e.g. Pay the exact plan amount via UPI. After successful payment, copy the 12-digit UTR transaction number and submit it below for fast admin verification."
@@ -232,16 +232,16 @@ export default function PlatformPaymentSettingsPage() {
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/[0.06] pb-3">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <h2 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white tracking-tight">
-                Subscription Plan Pricing Matrix
+              <h2 className="font-normal text-sm sm:text-base text-slate-900 dark:text-white">
+                Subscription plan pricing matrix
               </h2>
             </div>
-            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+            <span className="text-xs font-normal text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
               All in INR (₹)
             </span>
           </div>
 
-          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-normal">
             Set the price for each duration. Hosts will select one of these plans on their dashboard to make their stay visible.
           </p>
 
@@ -259,29 +259,29 @@ export default function PlatformPaymentSettingsPage() {
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="font-extrabold text-sm text-slate-900 dark:text-white">
+                      <span className="font-normal text-sm text-slate-900 dark:text-white">
                         {plan.label}
                       </span>
-                      <span className="block text-[11px] text-slate-400 font-medium">
-                        {plan.durationMonths} Month{plan.durationMonths > 1 ? 's' : ''} Stay Visibility
+                      <span className="block text-[11px] text-slate-400 font-normal">
+                        {plan.durationMonths} Month{plan.durationMonths > 1 ? 's' : ''} stay visibility
                       </span>
                     </div>
                     {perMonth > 0 && (
-                      <span className="text-[10.5px] font-bold text-purple-700 dark:text-purple-300 bg-purple-500/15 border border-purple-500/25 px-2 py-0.5 rounded-lg">
+                      <span className="text-xs font-normal text-purple-700 dark:text-purple-300 bg-purple-500/15 border border-purple-500/25 px-2 py-0.5 rounded-lg">
                         ₹{perMonth}/mo
                       </span>
                     )}
                   </div>
 
                   <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-extrabold text-slate-400 text-sm">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-normal text-slate-400 text-sm">
                       ₹
                     </span>
                     <input
                       type="number"
                       min="1"
                       step="1"
-                      className="w-full rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#080D1A] pl-8 pr-3.5 py-2.5 text-sm font-bold font-mono text-slate-900 dark:text-white outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                      className="w-full rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#080D1A] pl-8 pr-3.5 py-2.5 text-sm font-normal font-mono text-slate-900 dark:text-white outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 transition-all"
                       value={plan.price}
                       onChange={(e) => updatePlanPrice(plan.code, e.target.value)}
                       placeholder="e.g. 200"
@@ -299,19 +299,19 @@ export default function PlatformPaymentSettingsPage() {
           <button
             type="submit"
             disabled={saving}
-            className="w-full sm:w-auto px-7 py-3 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs sm:text-sm shadow-xl shadow-purple-600/30 active:scale-98 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-7 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-normal text-xs sm:text-sm shadow-xl shadow-purple-600/30 active:scale-98 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {saving ? (
               <>
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Saving Configuration…</span>
+                <span>Saving configuration…</span>
               </>
             ) : (
               <>
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
-                <span>Save UPI & Subscription Pricing</span>
+                <span>Save UPI & subscription pricing</span>
               </>
             )}
           </button>

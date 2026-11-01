@@ -129,9 +129,7 @@ export function AdminPage() {
     window.addEventListener('stayhub_admin_sync', handleCustomSync);
 
     return () => {
-      window.removeEventListener('focus', handleFocus);
-      document.removeEventListener('visibilitychange', handleVisibility);
-      window.removeEventListener('storage', handleStorage);
+          window.removeEventListener('storage', handleStorage);
       window.removeEventListener('stayhub_admin_sync', handleCustomSync);
     };
   }, [fetchData, isAdminAuthorized]);
@@ -461,10 +459,10 @@ export function AdminPage() {
             </svg>
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">
+          <h2 className="text-xl sm:text-2xl font-normal text-slate-900 dark:text-white mb-2">
             Administrator Access
           </h2>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 mb-6 font-medium">
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 mb-6 font-normal">
             This management console requires verified admin credentials or your master security passkey.
           </p>
 
@@ -477,12 +475,12 @@ export function AdminPage() {
                 setPasskeyError('');
               }}
               placeholder="Enter Master Admin Passkey..."
-              className="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-black/60 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
+              className="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-black/60 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 text-sm font-normal focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 transition-all"
               autoFocus
             />
 
             {passkeyError && (
-              <p className="text-xs text-rose-500 font-semibold text-left px-1">
+              <p className="text-xs text-rose-500 font-normal text-left px-1">
                 ⚠️ {passkeyError}
               </p>
             )}
@@ -490,16 +488,16 @@ export function AdminPage() {
             <button
               type="submit"
               disabled={isVerifyingKey || !passkeyInput.trim()}
-              className="w-full py-3 px-4 rounded-2xl bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm font-semibold transition-all cursor-pointer active:scale-[0.98] shadow-md shadow-purple-600/20 mt-1"
+              className="w-full py-3 px-4 rounded-2xl bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm font-normal transition-all cursor-pointer active:scale-[0.98] shadow-md shadow-purple-600/20 mt-1"
             >
-              {isVerifyingKey ? 'Verifying Credentials...' : 'Unlock Dashboard'}
+              {isVerifyingKey ? 'Verifying credentials...' : 'Unlock dashboard'}
             </button>
           </form>
 
           <button
             type="button"
             onClick={() => navigate('/explore')}
-            className="mt-4 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-white transition-colors cursor-pointer"
+            className="mt-4 text-xs font-normal text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-white transition-colors cursor-pointer"
           >
             ← Return to Explore
           </button>
@@ -549,10 +547,10 @@ export function AdminPage() {
                 <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" />
               </svg>
             </div>
-            <span className="hidden sm:inline tracking-tight font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm">
+            <span className="hidden sm:inline tracking-tight font-normal text-slate-900 dark:text-white text-xs sm:text-sm">
               RoomScout
             </span>
-            <span className="hidden md:inline-flex text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-500/20 to-indigo-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30">
+            <span className="hidden md:inline-flex text-[10px] font-normal px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-500/20 to-indigo-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30">
               Admin
             </span>
           </button>
@@ -561,7 +559,7 @@ export function AdminPage() {
           <button
             type="button"
             onClick={() => navigate('/data')}
-            className="apple-liquid-nav hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-full border border-slate-200/80 dark:border-white/[0.1] bg-white/70 dark:bg-[#0B0F19]/80 backdrop-blur-2xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:border-purple-500/50 hover:text-purple-400 transition-all cursor-pointer shadow-xs active:scale-95"
+            className="apple-liquid-nav hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-full border border-slate-200/80 dark:border-white/[0.1] bg-white/70 dark:bg-[#0B0F19]/80 backdrop-blur-2xl text-xs font-normal text-slate-700 dark:text-slate-200 hover:border-purple-500/50 hover:text-purple-400 transition-all cursor-pointer shadow-xs active:scale-95"
             title="View Raw Database Records"
           >
             <svg className="w-3.5 h-3.5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -585,8 +583,8 @@ export function AdminPage() {
               }}
               className={`relative px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none transition-colors duration-150 ${
                 activeTab === 'users'
-                  ? 'text-slate-900 dark:text-white font-bold'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white font-medium'
+                  ? 'text-slate-900 dark:text-white font-medium'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white font-normal'
               }`}
             >
               {activeTab === 'users' && (
@@ -604,9 +602,9 @@ export function AdminPage() {
               <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'users' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400 dark:text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <span className="relative z-10 tracking-tight">Users</span>
+              <span className="relative z-10 tracking-tight font-normal">Users</span>
               <span
-                className={`relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none transition-colors ${
+                className={`relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-normal leading-none transition-colors ${
                   activeTab === 'users'
                     ? 'bg-purple-500/15 text-purple-700 dark:text-purple-300'
                     : 'bg-slate-200/80 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400'
@@ -625,8 +623,8 @@ export function AdminPage() {
               }}
               className={`relative px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none transition-colors duration-150 ${
                 activeTab === 'hosts'
-                  ? 'text-slate-900 dark:text-white font-bold'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white font-medium'
+                  ? 'text-slate-900 dark:text-white font-medium'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white font-normal'
               }`}
             >
               {activeTab === 'hosts' && (
@@ -644,9 +642,9 @@ export function AdminPage() {
               <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'hosts' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400 dark:text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <span className="relative z-10 tracking-tight">Hosts</span>
+              <span className="relative z-10 tracking-tight font-normal">Hosts</span>
               <span
-                className={`relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none transition-colors ${
+                className={`relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-normal leading-none transition-colors ${
                   activeTab === 'hosts'
                     ? 'bg-purple-500/15 text-purple-700 dark:text-purple-300'
                     : 'bg-slate-200/80 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400'
@@ -665,8 +663,8 @@ export function AdminPage() {
               }}
               className={`relative px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none transition-colors duration-150 ${
                 activeTab === 'subscriptions'
-                  ? 'text-slate-900 dark:text-white font-bold'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white font-medium'
+                  ? 'text-slate-900 dark:text-white font-medium'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white font-normal'
               }`}
             >
               {activeTab === 'subscriptions' && (
@@ -684,14 +682,14 @@ export function AdminPage() {
               <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'subscriptions' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400 dark:text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
               </svg>
-              <span className="relative z-10 tracking-tight">Subscriptions</span>
+              <span className="relative z-10 tracking-tight font-normal">Subscriptions</span>
               {subscriptionCounts.pending > 0 ? (
-                <span className="relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none bg-amber-500 text-slate-950 animate-pulse">
+                <span className="relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-normal leading-none bg-amber-500 text-slate-950 animate-pulse">
                   {subscriptionCounts.pending}
                 </span>
               ) : (
                 <span
-                  className={`relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-bold leading-none transition-colors ${
+                  className={`relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-normal leading-none transition-colors ${
                     activeTab === 'subscriptions'
                       ? 'bg-purple-500/15 text-purple-700 dark:text-purple-300'
                       : 'bg-slate-200/80 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400'
@@ -711,8 +709,8 @@ export function AdminPage() {
               }}
               className={`relative px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none transition-colors duration-150 ${
                 activeTab === 'upi'
-                  ? 'text-slate-900 dark:text-white font-bold'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white font-medium'
+                  ? 'text-slate-900 dark:text-white font-medium'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white font-normal'
               }`}
             >
               {activeTab === 'upi' && (
@@ -731,7 +729,7 @@ export function AdminPage() {
                 <rect x="2" y="5" width="20" height="14" rx="2" />
                 <line x1="2" y1="10" x2="22" y2="10" />
               </svg>
-              <span className="relative z-10 tracking-tight">UPI Settings</span>
+              <span className="relative z-10 tracking-tight font-normal">UPI Settings</span>
             </button>
           </nav>
         </div>
@@ -742,7 +740,7 @@ export function AdminPage() {
           <button
             type="button"
             onClick={() => navigate('/explore')}
-            className="apple-liquid-nav hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-full bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 text-xs font-bold transition-all shadow-xs cursor-pointer select-none active:scale-95"
+            className="apple-liquid-nav hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-full bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 text-xs font-normal transition-all shadow-xs cursor-pointer select-none active:scale-95"
             title="Return to User Explore Stays"
           >
             <span>🧭</span>
@@ -760,12 +758,12 @@ export function AdminPage() {
               setIsAdminAuthorized(false);
               toast.info('Admin console locked');
             }}
-            className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-tr from-purple-700 via-indigo-600 to-purple-500 text-white font-bold text-xs sm:text-sm shadow-xs border border-purple-400/30 flex items-center justify-center cursor-pointer active:scale-95 transition-all select-none group"
+            className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-tr from-purple-700 via-indigo-600 to-purple-500 text-white font-normal text-xs sm:text-sm shadow-xs border border-purple-400/30 flex items-center justify-center cursor-pointer active:scale-95 transition-all select-none group"
             title="Lock Administrator Console (Click to lock)"
             aria-label="Lock Admin Console"
           >
             <span>{user?.name ? user.name.slice(0, 2).toUpperCase() : 'AD'}</span>
-            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-purple-400 text-slate-950 font-bold flex items-center justify-center text-[7px] border-2 border-white dark:border-slate-900 shadow-xs">
+            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-purple-400 text-slate-950 font-normal flex items-center justify-center text-[7px] border-2 border-white dark:border-slate-900 shadow-xs">
               🔒
             </span>
           </button>
@@ -788,7 +786,7 @@ export function AdminPage() {
                     setUserSubTab('online');
                     setSearchQuery('');
                   }}
-                  className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shadow-xs active:scale-95 cursor-pointer ${
+                  className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-normal transition-all shadow-xs active:scale-95 cursor-pointer ${
                     userSubTab === 'online'
                       ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.15)] ring-1 ring-emerald-500/20'
                       : 'text-slate-600 dark:text-slate-400 bg-white/60 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] hover:bg-slate-100 dark:hover:bg-white/[0.06] hover:text-slate-900 dark:hover:text-white'
@@ -796,7 +794,7 @@ export function AdminPage() {
                 >
                   <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-400/50 animate-pulse" />
                   <span>Online Users</span>
-                  <span className={`px-2 py-0.5 rounded-lg text-[10.5px] font-bold border ${
+                  <span className={`px-2 py-0.5 rounded-lg text-[10.5px] font-normal border ${
                     userSubTab === 'online'
                       ? 'bg-white dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-500/30'
                       : 'bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 border-transparent'
@@ -812,7 +810,7 @@ export function AdminPage() {
                     setUserSubTab('offline');
                     setSearchQuery('');
                   }}
-                  className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shadow-xs active:scale-95 cursor-pointer ${
+                  className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-normal transition-all shadow-xs active:scale-95 cursor-pointer ${
                     userSubTab === 'offline'
                       ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.15)] ring-1 ring-amber-500/20'
                       : 'text-slate-600 dark:text-slate-400 bg-white/60 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] hover:bg-slate-100 dark:hover:bg-white/[0.06] hover:text-slate-900 dark:hover:text-white'
@@ -820,7 +818,7 @@ export function AdminPage() {
                 >
                   <span className="w-2 h-2 rounded-full bg-amber-500 ring-2 ring-amber-400/50" />
                   <span>Offline Users</span>
-                  <span className={`px-2 py-0.5 rounded-lg text-[10.5px] font-bold border ${
+                  <span className={`px-2 py-0.5 rounded-lg text-[10.5px] font-normal border ${
                     userSubTab === 'offline'
                       ? 'bg-white dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-500/30'
                       : 'bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 border-transparent'
@@ -836,14 +834,14 @@ export function AdminPage() {
                     setUserSubTab('all');
                     setSearchQuery('');
                   }}
-                  className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shadow-xs active:scale-95 cursor-pointer ${
+                  className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-normal transition-all shadow-xs active:scale-95 cursor-pointer ${
                     userSubTab === 'all'
                       ? 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/40 shadow-[0_0_15px_rgba(168,85,247,0.15)] ring-1 ring-purple-500/20'
                       : 'text-slate-600 dark:text-slate-400 bg-white/60 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] hover:bg-slate-100 dark:hover:bg-white/[0.06] hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   <span>All Accounts</span>
-                  <span className="bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-lg text-[10.5px] font-bold">
+                  <span className="bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-lg text-[10.5px] font-normal">
                     {users.length}
                   </span>
                 </button>
@@ -853,7 +851,7 @@ export function AdminPage() {
               <div className="flex items-center gap-2.5 flex-1 max-w-lg lg:justify-end">
                 <div className="relative w-full max-w-md group">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-purple-500 transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                       <circle cx="11" cy="11" r="8" />
                       <line x1="21" y1="21" x2="16.65" y2="16.65" />
                     </svg>
@@ -869,7 +867,7 @@ export function AdminPage() {
                         ? 'Search offline guest, phone, stay...'
                         : 'Search all users...'
                     }
-                    className="w-full pl-9 pr-7 py-2 text-xs bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/90 dark:border-white/[0.08] focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 text-slate-900 dark:text-white rounded-xl focus:outline-none transition-all placeholder:text-slate-400 shadow-inner"
+                    className="w-full pl-9 pr-7 py-2 text-xs font-normal bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/90 dark:border-white/[0.08] focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 text-slate-900 dark:text-white rounded-xl focus:outline-none transition-all placeholder:text-slate-400 shadow-inner"
                   />
                   {searchQuery && (
                     <button
@@ -889,7 +887,7 @@ export function AdminPage() {
                     className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-50/80 dark:bg-white/[0.04] border border-slate-200/90 dark:border-white/[0.08] shadow-xs hover:border-purple-500/40 transition-all shrink-0 cursor-pointer active:scale-95"
                     title="Apply Custom Filters"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                       <path d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </button>
@@ -902,12 +900,12 @@ export function AdminPage() {
                         exit={{ opacity: 0, y: 5 }}
                         className="absolute right-0 mt-2 w-48 bg-white/95 dark:bg-[#0E1322] rounded-2xl shadow-2xl border border-slate-200/80 dark:border-white/10 py-2 z-50 text-xs backdrop-blur-2xl"
                       >
-                        <div className="px-3.5 py-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Sort by</div>
+                        <div className="px-3.5 py-1 font-normal text-slate-400 text-xs">Sort by</div>
                         <button
                           type="button"
                           onClick={() => { setSortBy('newest'); setShowFilterMenu(false); }}
                           className={`w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-white/[0.06] flex items-center justify-between cursor-pointer ${
-                            sortBy === 'newest' ? 'font-bold text-purple-600 dark:text-purple-400' : 'text-slate-700 dark:text-slate-300'
+                            sortBy === 'newest' ? 'font-normal text-purple-600 dark:text-purple-400' : 'text-slate-700 dark:text-slate-300'
                           }`}
                         >
                           <span>Newest First</span>
@@ -917,7 +915,7 @@ export function AdminPage() {
                           type="button"
                           onClick={() => { setSortBy('oldest'); setShowFilterMenu(false); }}
                           className={`w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-white/[0.06] flex items-center justify-between cursor-pointer ${
-                            sortBy === 'oldest' ? 'font-bold text-purple-600 dark:text-purple-400' : 'text-slate-700 dark:text-slate-300'
+                            sortBy === 'oldest' ? 'font-normal text-purple-600 dark:text-purple-400' : 'text-slate-700 dark:text-slate-300'
                           }`}
                         >
                           <span>Oldest First</span>
@@ -927,7 +925,7 @@ export function AdminPage() {
                           type="button"
                           onClick={() => { setSortBy('name_asc'); setShowFilterMenu(false); }}
                           className={`w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-white/[0.06] flex items-center justify-between cursor-pointer ${
-                            sortBy === 'name_asc' ? 'font-bold text-purple-600 dark:text-purple-400' : 'text-slate-700 dark:text-slate-300'
+                            sortBy === 'name_asc' ? 'font-normal text-purple-600 dark:text-purple-400' : 'text-slate-700 dark:text-slate-300'
                           }`}
                         >
                           <span>Name (A - Z)</span>
@@ -937,7 +935,7 @@ export function AdminPage() {
                           type="button"
                           onClick={() => { setSortBy('name_desc'); setShowFilterMenu(false); }}
                           className={`w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-white/[0.06] flex items-center justify-between cursor-pointer ${
-                            sortBy === 'name_desc' ? 'font-bold text-purple-600 dark:text-purple-400' : 'text-slate-700 dark:text-slate-300'
+                            sortBy === 'name_desc' ? 'font-normal text-purple-600 dark:text-purple-400' : 'text-slate-700 dark:text-slate-300'
                           }`}
                         >
                           <span>Name (Z - A)</span>
@@ -951,10 +949,10 @@ export function AdminPage() {
                 <button
                   type="button"
                   onClick={() => handleExportCSV(filteredUsers, 'roomscout-users.csv')}
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-50/80 dark:bg-white/[0.04] hover:bg-slate-100 dark:hover:bg-white/[0.08] border border-slate-200/90 dark:border-white/[0.08] shadow-xs hover:border-purple-500/40 transition-all shrink-0 active:scale-95 cursor-pointer"
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-normal text-slate-700 dark:text-slate-200 bg-slate-50/80 dark:bg-white/[0.04] hover:bg-slate-100 dark:hover:bg-white/[0.08] border border-slate-200/90 dark:border-white/[0.08] shadow-xs hover:border-purple-500/40 transition-all shrink-0 active:scale-95 cursor-pointer"
                   title="Export as CSV"
                 >
-                  <svg className="w-3.5 h-3.5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                     <path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   <span>Export</span>
@@ -983,14 +981,14 @@ export function AdminPage() {
           <div className="space-y-4 w-full">
             {/* Toolbar for Hosts */}
             <section className="bg-white/80 dark:bg-[#0B0F1D]/85 rounded-3xl border border-slate-200/80 dark:border-white/[0.08] backdrop-blur-2xl shadow-xl p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-              <div className="text-xs text-slate-600 dark:text-slate-300 font-medium">
-                Showing <strong className="text-slate-900 dark:text-white font-extrabold">{filteredHosts.length}</strong> of <strong className="text-slate-900 dark:text-white font-extrabold">{hosts.length}</strong> property hosts
+              <div className="text-xs text-slate-600 dark:text-slate-300 font-normal">
+                Showing <span className="text-slate-900 dark:text-white font-medium">{filteredHosts.length}</span> of <span className="text-slate-900 dark:text-white font-medium">{hosts.length}</span> property hosts
               </div>
 
               <div className="flex items-center gap-2.5">
                 <div className="relative w-full sm:w-72 group">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-purple-500 transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                       <circle cx="11" cy="11" r="8" />
                       <line x1="21" y1="21" x2="16.65" y2="16.65" />
                     </svg>
@@ -1000,7 +998,7 @@ export function AdminPage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search host, property, status..."
-                    className="w-full pl-9 pr-7 py-2 text-xs bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/90 dark:border-white/[0.08] focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 text-slate-900 dark:text-white rounded-xl focus:outline-none transition-all placeholder:text-slate-400 shadow-inner"
+                    className="w-full pl-9 pr-7 py-2 text-xs font-normal bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/90 dark:border-white/[0.08] focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 text-slate-900 dark:text-white rounded-xl focus:outline-none transition-all placeholder:text-slate-400 shadow-inner"
                   />
                   {searchQuery && (
                     <button
@@ -1016,10 +1014,10 @@ export function AdminPage() {
                 <button
                   type="button"
                   onClick={() => handleExportCSV(filteredHosts, 'roomscout-hosts.csv')}
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-50/80 dark:bg-white/[0.04] hover:bg-slate-100 dark:hover:bg-white/[0.08] border border-slate-200/90 dark:border-white/[0.08] shadow-xs hover:border-purple-500/40 transition-all shrink-0 active:scale-95 cursor-pointer"
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-normal text-slate-700 dark:text-slate-200 bg-slate-50/80 dark:bg-white/[0.04] hover:bg-slate-100 dark:hover:bg-white/[0.08] border border-slate-200/90 dark:border-white/[0.08] shadow-xs hover:border-purple-500/40 transition-all shrink-0 active:scale-95 cursor-pointer"
                   title="Export Hosts as CSV"
                 >
-                  <svg className="w-3.5 h-3.5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                     <path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   <span>Export</span>

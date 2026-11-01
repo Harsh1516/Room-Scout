@@ -139,8 +139,8 @@ export function AdminUsersTable({
             <path d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
-        <h4 className="font-extrabold text-base text-slate-900 dark:text-white">No Users Found</h4>
-        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1">
+        <h4 className="font-normal text-base text-slate-900 dark:text-white">No Users Found</h4>
+        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1 font-normal">
           {isOfflineView ? 'No offline guest records found matching your query.' : 'No registered users match your criteria.'}
         </p>
       </div>
@@ -152,27 +152,27 @@ export function AdminUsersTable({
       <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-purple-400/25 to-transparent pointer-events-none" />
 
       <div className="overflow-x-auto min-w-full">
-        <table className="w-full text-left border-collapse text-sm" id="users-directory-table">
+        <table className="w-full text-left border-collapse text-xs" id="users-directory-table">
           {/* Table Headings */}
           <thead>
-            <tr className="border-b border-slate-200/80 dark:border-white/[0.06] bg-slate-50/80 dark:bg-white/[0.02] text-slate-500 dark:text-slate-400 font-bold text-[10.5px] tracking-wider uppercase">
-              <th className="py-3.5 pl-6 pr-3 w-12 text-slate-400 font-bold" scope="col">#</th>
-              <th className="py-3.5 px-4" scope="col">User Details</th>
+            <tr className="border-b border-slate-200/80 dark:border-white/[0.06] bg-slate-50/80 dark:bg-white/[0.02] text-slate-500 dark:text-slate-400 font-normal text-xs">
+              <th className="py-3.5 pl-6 pr-3 w-12 text-slate-400 font-normal" scope="col">#</th>
+              <th className="py-3.5 px-4 font-normal" scope="col">User details</th>
               {isOfflineView ? (
                 <>
-                  <th className="py-3.5 px-4 min-w-[170px]" scope="col">Property & Room</th>
-                  <th className="py-3.5 px-4 min-w-[320px]" scope="col">Stay Schedule</th>
-                  <th className="py-3.5 px-4 min-w-[90px]" scope="col">Amount</th>
-                  <th className="py-3.5 px-4 text-center" scope="col">Status</th>
+                  <th className="py-3.5 px-4 min-w-[170px] font-normal" scope="col">Property & room</th>
+                  <th className="py-3.5 px-4 min-w-[320px] font-normal" scope="col">Stay schedule</th>
+                  <th className="py-3.5 px-4 min-w-[90px] font-normal" scope="col">Amount</th>
+                  <th className="py-3.5 px-4 text-center font-normal" scope="col">Status</th>
                 </>
               ) : (
                 <>
-                  <th className="py-3.5 px-4" scope="col">Contact Phone</th>
-                  <th className="py-3.5 px-4" scope="col">Account Role</th>
+                  <th className="py-3.5 px-4 font-normal" scope="col">Contact phone</th>
+                  <th className="py-3.5 px-4 font-normal" scope="col">Account role</th>
                 </>
               )}
-              <th className="py-3.5 px-4 min-w-[120px]" scope="col">Date Added</th>
-              <th className="py-3.5 pr-6 pl-4 text-right" scope="col">Action</th>
+              <th className="py-3.5 px-4 min-w-[120px] font-normal" scope="col">Date added</th>
+              <th className="py-3.5 pr-6 pl-4 text-right font-normal" scope="col">Action</th>
             </tr>
           </thead>
 
@@ -198,24 +198,24 @@ export function AdminUsersTable({
               return (
                 <tr key={currentUserId || idx} className="hover:bg-slate-50/70 dark:hover:bg-zinc-800/50 transition-colors group">
                   {/* # */}
-                  <td className="py-4 pl-6 pr-3 text-slate-400 font-medium text-xs">
+                  <td className="py-4 pl-6 pr-3 text-slate-400 font-normal text-xs">
                     {globalIdx + 1}
                   </td>
 
                   {/* User Details */}
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-full text-xs font-bold flex items-center justify-center shrink-0 shadow-2xs ${gradientClass}`}>
+                      <div className={`w-10 h-10 rounded-full text-xs font-normal flex items-center justify-center shrink-0 shadow-2xs ${gradientClass}`}>
                         {initials}
                       </div>
 
                       <div className="flex flex-col">
-                        <span className="font-bold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                        <span className="font-normal text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors text-xs">
                           {u.name}
                         </span>
 
                         {u.email && u.email !== '—' && (
-                          <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                          <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-normal">
                             <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                               <path d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
@@ -224,7 +224,7 @@ export function AdminUsersTable({
                         )}
 
                         {u.phone && (
-                          <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                          <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-normal">
                             <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                               <path d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
@@ -235,11 +235,11 @@ export function AdminUsersTable({
                         {isOfflineView && (
                           <div className="flex items-center gap-2 pt-1 flex-wrap">
                             {u.aadharNumber && (
-                              <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-normal">
                                 🪪 Aadhaar: {u.aadharNumber}
                               </span>
                             )}
-                            <span className="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-zinc-800 text-[10px] font-medium text-slate-600 dark:text-slate-300">
+                            <span className="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-zinc-800 text-[10px] font-normal text-slate-600 dark:text-slate-300">
                               Persons: {u.personCount ?? 1}
                             </span>
                           </div>
@@ -254,14 +254,14 @@ export function AdminUsersTable({
                       {/* Property & Room */}
                       <td className="py-4 px-4">
                         <div className="space-y-1">
-                          <div className="font-semibold text-slate-900 dark:text-white">
+                          <div className="font-normal text-slate-900 dark:text-white text-xs">
                             {u.propertyName || '—'}
                           </div>
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-[10.5px] font-semibold">
+                            <span className="px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-[10.5px] font-normal">
                               {u.category || 'Standard'}
                             </span>
-                            <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-slate-200 font-mono text-[10.5px] font-bold">
+                            <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-slate-200 font-mono text-[10.5px] font-normal">
                               Room {u.roomNumber || '—'}
                             </span>
                           </div>
@@ -273,10 +273,10 @@ export function AdminUsersTable({
                         <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50/90 dark:bg-zinc-800/60 border border-slate-200/80 dark:border-slate-700 flex items-center justify-between gap-2.5 shadow-2xs">
                           {/* Check-In */}
                           <div className="flex flex-col text-left">
-                            <span className="text-[9px] font-bold tracking-wider uppercase text-slate-400 dark:text-zinc-500 mb-0.5">
-                              CHECK-IN
+                            <span className="text-[9px] font-normal text-slate-400 dark:text-zinc-500 mb-0.5">
+                              Check-in
                             </span>
-                            <span className="text-[11px] font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap">
+                            <span className="text-[11px] font-normal text-slate-800 dark:text-slate-100 whitespace-nowrap">
                               {formatScheduleDate(u.checkIn, false, u.rateUnit)}
                             </span>
                           </div>
@@ -284,17 +284,17 @@ export function AdminUsersTable({
                           {/* Divider & Duration */}
                           <div className="flex flex-col items-center justify-center shrink-0 px-1">
                             <div className="w-7 h-[1.5px] bg-slate-300 dark:bg-zinc-600 rounded-full mb-1" />
-                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                            <span className="text-[10px] font-normal text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                               {getComputedDuration(u)}
                             </span>
                           </div>
 
                           {/* Check-Out */}
                           <div className="flex flex-col text-right">
-                            <span className="text-[9px] font-bold tracking-wider uppercase text-slate-400 dark:text-zinc-500 mb-0.5">
-                              CHECK-OUT
+                            <span className="text-[9px] font-normal text-slate-400 dark:text-zinc-500 mb-0.5">
+                              Check-out
                             </span>
-                            <span className="text-[11px] font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap">
+                            <span className="text-[11px] font-normal text-slate-800 dark:text-slate-100 whitespace-nowrap">
                               {formatScheduleDate(u.checkOut, true, u.rateUnit)}
                             </span>
                           </div>
@@ -303,14 +303,14 @@ export function AdminUsersTable({
 
                       {/* Amount */}
                       <td className="py-4 px-4">
-                        <div className="font-bold text-emerald-600 dark:text-emerald-400 text-xs">
+                        <div className="font-normal text-emerald-600 dark:text-emerald-400 text-xs">
                           {u.paidAmount || '₹0'}
                         </div>
                       </td>
 
                       {/* Status */}
                       <td className="py-4 px-4 text-center">
-                        <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10px] font-semibold tracking-wide">
+                        <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10px] font-normal">
                           {u.status || 'CONFIRMED'}
                         </span>
                       </td>
@@ -318,13 +318,13 @@ export function AdminUsersTable({
                   ) : (
                     <>
                       {/* Contact Phone */}
-                      <td className="py-4 px-4 text-xs font-medium text-slate-600 dark:text-slate-300 tracking-tight">
+                      <td className="py-4 px-4 text-xs font-normal text-slate-600 dark:text-slate-300 tracking-tight">
                         {u.phone || '—'}
                       </td>
 
                       {/* Account Role */}
                       <td className="py-4 px-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize ${
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-normal capitalize ${
                           u.isOffline
                             ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
                             : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
@@ -336,7 +336,7 @@ export function AdminUsersTable({
                   )}
 
                   {/* Date Added */}
-                  <td className="py-4 px-4 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                  <td className="py-4 px-4 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap font-normal">
                     {formatDateTime ? formatDateTime(u.createdAt) : String(u.createdAt || '—')}
                   </td>
 
@@ -347,7 +347,7 @@ export function AdminUsersTable({
                         <button
                           type="button"
                           onClick={() => onOpenUserPortal(u)}
-                          className="group/btn inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-slate-700 hover:border-purple-200/80 hover:bg-purple-50/80 dark:hover:bg-purple-950/40 hover:text-purple-700 dark:hover:text-purple-300 transition-all shadow-2xs active:scale-95 cursor-pointer"
+                          className="group/btn inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-normal text-slate-700 dark:text-slate-200 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-slate-700 hover:border-purple-200/80 hover:bg-purple-50/80 dark:hover:bg-purple-950/40 hover:text-purple-700 dark:hover:text-purple-300 transition-all shadow-2xs active:scale-95 cursor-pointer"
                           title="Direct User Portal Login"
                         >
                           <span>User Portal</span>
@@ -363,14 +363,14 @@ export function AdminUsersTable({
                             type="button"
                             onClick={() => onDeleteUser(currentUserId, u.name)}
                             disabled={deletingUserId === currentUserId}
-                            className="px-2.5 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700 transition-colors cursor-pointer shadow-2xs"
+                            className="px-2.5 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-normal hover:bg-rose-700 transition-colors cursor-pointer shadow-2xs"
                           >
                             {deletingUserId === currentUserId ? '...' : 'Confirm'}
                           </button>
                           <button
                             type="button"
                             onClick={() => setConfirmDeleteUserId(null)}
-                            className="px-2.5 py-1.5 rounded-lg bg-slate-200 dark:bg-zinc-800 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-300 transition-colors cursor-pointer"
+                            className="px-2.5 py-1.5 rounded-lg bg-slate-200 dark:bg-zinc-800 text-xs font-normal text-slate-700 dark:text-slate-300 hover:bg-slate-300 transition-colors cursor-pointer"
                           >
                             Cancel
                           </button>
@@ -379,7 +379,7 @@ export function AdminUsersTable({
                         <button
                           type="button"
                           onClick={() => setConfirmDeleteUserId(currentUserId)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-rose-600 dark:text-rose-400 bg-white dark:bg-zinc-800 border border-rose-200/80 dark:border-rose-900/50 hover:bg-rose-50/60 dark:hover:bg-rose-950/40 hover:text-rose-700 hover:border-rose-300 transition-all shadow-2xs active:scale-95 cursor-pointer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-normal text-rose-600 dark:text-rose-400 bg-white dark:bg-zinc-800 border border-rose-200/80 dark:border-rose-900/50 hover:bg-rose-50/60 dark:hover:bg-rose-950/40 hover:text-rose-700 hover:border-rose-300 transition-all shadow-2xs active:scale-95 cursor-pointer"
                           title="Delete User"
                         >
                           <svg className="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
@@ -398,22 +398,22 @@ export function AdminUsersTable({
       </div>
 
       {/* Table Footer Pagination */}
-      <footer className="border-t border-slate-200/80 dark:border-white/[0.06] px-6 py-4 bg-slate-50/60 dark:bg-white/[0.02] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400" data-purpose="table-pagination">
+      <footer className="border-t border-slate-200/80 dark:border-white/[0.06] px-6 py-4 bg-slate-50/60 dark:bg-white/[0.02] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400 font-normal" data-purpose="table-pagination">
         {/* Results Counter */}
         <div className="flex items-center gap-2.5">
           <span>
-            Showing <strong className="text-slate-900 dark:text-white font-extrabold">{startIndex}</strong> to <strong className="text-slate-900 dark:text-white font-extrabold">{endIndex}</strong> of <strong className="text-slate-900 dark:text-white font-extrabold">{totalUsers}</strong> registered users
+            Showing <span className="text-slate-900 dark:text-white font-medium">{startIndex}</span> to <span className="text-slate-900 dark:text-white font-medium">{endIndex}</span> of <span className="text-slate-900 dark:text-white font-medium">{totalUsers}</span> registered users
           </span>
           <span className="hidden md:inline text-slate-300 dark:text-white/20">|</span>
-          <label className="hidden md:flex items-center gap-1.5">
-            <span className="font-medium">Show:</span>
+          <label className="hidden md:flex items-center gap-1.5 font-normal">
+            <span>Show:</span>
             <select
               value={pageSize}
               onChange={(e) => {
                 setPageSize(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="text-xs py-1.5 pl-3 pr-8 border border-slate-200/90 dark:border-white/[0.08] rounded-xl bg-white dark:bg-[#080D1A] text-slate-700 dark:text-slate-200 shadow-xs focus:ring-1 focus:ring-purple-500 focus:border-purple-500 cursor-pointer outline-none"
+              className="text-xs font-normal py-1.5 pl-3 pr-8 border border-slate-200/90 dark:border-white/[0.08] rounded-xl bg-white dark:bg-[#080D1A] text-slate-700 dark:text-slate-200 shadow-xs focus:ring-1 focus:ring-purple-500 focus:border-purple-500 cursor-pointer outline-none"
             >
               <option value={10}>10 per page</option>
               <option value={25}>25 per page</option>
@@ -428,9 +428,9 @@ export function AdminUsersTable({
             type="button"
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={safeCurrentPage === 1}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-white/[0.04] text-slate-700 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-semibold shadow-xs hover:border-purple-500/40 transition-all cursor-pointer active:scale-95"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-white/[0.04] text-slate-700 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-normal shadow-xs hover:border-purple-500/40 transition-all cursor-pointer active:scale-95"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M15.75 19.5L8.25 12l7.5-7.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             <span>Previous</span>
@@ -441,7 +441,7 @@ export function AdminUsersTable({
               key={page}
               type="button"
               onClick={() => setCurrentPage(page)}
-              className={`px-3 py-1.5 rounded-xl font-bold text-xs shadow-xs transition-all cursor-pointer active:scale-95 ${
+              className={`px-3 py-1.5 rounded-xl font-normal text-xs shadow-xs transition-all cursor-pointer active:scale-95 ${
                 safeCurrentPage === page
                   ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
                   : 'bg-white dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.08] border border-slate-200/90 dark:border-white/[0.08]'
@@ -455,10 +455,10 @@ export function AdminUsersTable({
             type="button"
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={safeCurrentPage === totalPages || totalPages === 0}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-white/[0.04] text-slate-700 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-semibold shadow-xs hover:border-purple-500/40 transition-all cursor-pointer active:scale-95"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-white/[0.04] text-slate-700 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-normal shadow-xs hover:border-purple-500/40 transition-all cursor-pointer active:scale-95"
           >
             <span>Next</span>
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>

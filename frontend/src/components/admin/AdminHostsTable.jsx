@@ -31,14 +31,14 @@ export const AdminHostRow = React.memo(function AdminHostRow({
 
       {/* 2. Host & Contact */}
       <td className="py-3 px-3 border-r border-slate-100 dark:border-slate-800/80 align-middle">
-        <div className="font-bold text-slate-900 dark:text-white text-xs truncate" title={host.name}>
+        <div className="font-normal text-slate-900 dark:text-white text-xs truncate" title={host.name}>
           {host.name}
         </div>
-        <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate" title={host.email}>
+        <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate font-normal" title={host.email}>
           {host.email}
         </div>
         {host.phone && (
-          <div className="text-[10.5px] text-slate-400 dark:text-slate-500 font-mono mt-0.5 truncate">
+          <div className="text-[10.5px] text-slate-400 dark:text-slate-500 font-mono mt-0.5 truncate font-normal">
             {host.phone}
           </div>
         )}
@@ -48,20 +48,20 @@ export const AdminHostRow = React.memo(function AdminHostRow({
       <td className="py-3 px-3 border-r border-slate-100 dark:border-slate-800/80 align-middle">
         {hasPropertyDetails ? (
           <>
-            <div className="font-bold text-slate-900 dark:text-white text-xs truncate" title={host.propertyName}>
+            <div className="font-normal text-slate-900 dark:text-white text-xs truncate" title={host.propertyName}>
               {host.propertyName}
             </div>
             <div className="flex items-center gap-1.5 mt-1 text-[10.5px] text-slate-500 dark:text-slate-400">
-              <span className="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] font-bold text-slate-700 dark:text-slate-300 shrink-0">
+              <span className="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] font-normal text-slate-700 dark:text-slate-300 shrink-0">
                 {host.propertyType || '—'} {host.genderType ? `(${host.genderType})` : ''}
               </span>
             </div>
-            <div className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate mt-1" title={host.location}>
+            <div className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate mt-1 font-normal" title={host.location}>
               📍 {host.location}
             </div>
           </>
         ) : (
-          <span className="inline-block px-2.5 py-1 rounded-md text-[11px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+          <span className="inline-block px-2.5 py-1 rounded-md text-[11px] font-normal bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
             No property details added yet
           </span>
         )}
@@ -76,7 +76,7 @@ export const AdminHostRow = React.memo(function AdminHostRow({
       <td className="py-3 px-3 border-r border-slate-100 dark:border-slate-800/80 text-center align-middle">
         <div className="flex flex-col items-center gap-1">
           <span
-            className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+            className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-normal border ${
               isApproved
                 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
                 : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
@@ -87,22 +87,22 @@ export const AdminHostRow = React.memo(function AdminHostRow({
 
           {/* Subscription Live Status */}
           {host.subscription?.status === 'ACTIVE' ? (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-normal bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
               Live ({host.subscription.planLabel || 'Active'})
             </span>
           ) : host.subscription?.status === 'PENDING_VERIFICATION' ? (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 animate-pulse">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-normal bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 animate-pulse">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
               UTR Pending
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-normal bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">
               Hidden (No Plan)
             </span>
           )}
 
-          <span className="text-[10px] text-slate-400 dark:text-slate-500 block whitespace-nowrap">
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 block whitespace-nowrap font-normal">
             {formattedDateTime}
           </span>
         </div>
@@ -201,23 +201,23 @@ export function AdminHostsTable({
       <div className="hidden md:block w-full overflow-hidden">
         <table className="w-full text-left border-collapse table-fixed text-xs">
           <thead>
-            <tr className="bg-slate-50/80 dark:bg-white/[0.02] text-slate-500 dark:text-slate-400 border-b border-slate-200/80 dark:border-white/[0.06] font-bold text-[10.5px] uppercase tracking-wider select-none">
-              <th className="py-3.5 px-3 w-[5%] text-center border-r border-slate-200/70 dark:border-white/[0.06] text-slate-400 font-bold">
+            <tr className="bg-slate-50/80 dark:bg-white/[0.02] text-slate-500 dark:text-slate-400 border-b border-slate-200/80 dark:border-white/[0.06] font-normal text-xs select-none">
+              <th className="py-3.5 px-3 w-[5%] text-center border-r border-slate-200/70 dark:border-white/[0.06] text-slate-400 font-normal">
                 #
               </th>
-              <th className="py-3.5 px-3.5 w-[20%] border-r border-slate-200/70 dark:border-white/[0.06] font-bold">
-                Host & Contact
+              <th className="py-3.5 px-3.5 w-[20%] border-r border-slate-200/70 dark:border-white/[0.06] font-normal">
+                Host & contact
               </th>
-              <th className="py-3.5 px-3.5 w-[22%] border-r border-slate-200/70 dark:border-white/[0.06] font-bold">
-                Property & Location
+              <th className="py-3.5 px-3.5 w-[22%] border-r border-slate-200/70 dark:border-white/[0.06] font-normal">
+                Property & location
               </th>
-              <th className="py-3.5 px-3 w-[33%] border-r border-slate-200/70 dark:border-white/[0.06] font-bold text-center">
-                Rooms & Rates
+              <th className="py-3.5 px-3 w-[33%] border-r border-slate-200/70 dark:border-white/[0.06] font-normal text-center">
+                Rooms & rates
               </th>
-              <th className="py-3.5 px-3 w-[10%] border-r border-slate-200/70 dark:border-white/[0.06] font-bold text-center">
-                Status & Date
+              <th className="py-3.5 px-3 w-[10%] border-r border-slate-200/70 dark:border-white/[0.06] font-normal text-center">
+                Status & date
               </th>
-              <th className="py-3.5 px-3 w-[10%] text-center font-bold">
+              <th className="py-3.5 px-3 w-[10%] text-center font-normal">
                 Actions
               </th>
             </tr>
@@ -229,7 +229,7 @@ export function AdminHostsTable({
                 <td colSpan={6} className="py-16 text-center text-slate-400 font-normal">
                   <div className="flex items-center justify-center gap-2.5">
                     <span className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-                    <span className="font-semibold text-slate-700 dark:text-slate-300">Loading hosts from database...</span>
+                    <span className="font-normal text-slate-700 dark:text-slate-300">Loading hosts from database...</span>
                   </div>
                 </td>
               </tr>
@@ -238,8 +238,8 @@ export function AdminHostsTable({
                 <td colSpan={6} className="py-16 text-center text-slate-400 font-normal">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <span className="text-2xl">🏡</span>
-                    <span className="font-extrabold text-sm text-slate-700 dark:text-slate-300">No Hosts Found</span>
-                    <span className="text-xs text-slate-400">No registered properties or host accounts exist matching your query.</span>
+                    <span className="font-normal text-sm text-slate-700 dark:text-slate-300">No hosts found</span>
+                    <span className="text-xs text-slate-400 font-normal">No registered properties or host accounts exist matching your query.</span>
                   </div>
                 </td>
               </tr>
@@ -285,11 +285,11 @@ export function AdminHostsTable({
                 className="p-4 rounded-xl bg-white dark:bg-black border border-slate-200 dark:border-slate-800 shadow-xs space-y-3"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-900 dark:text-white">
+                  <span className="text-xs font-normal text-slate-900 dark:text-white">
                     #{idx + 1} {host.name}
                   </span>
                   <span
-                    className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                    className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-normal border ${
                       isPending
                         ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
                         : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
@@ -299,16 +299,16 @@ export function AdminHostsTable({
                   </span>
                 </div>
 
-                <div className="text-xs text-slate-600 dark:text-slate-400">
+                <div className="text-xs text-slate-600 dark:text-slate-400 font-normal">
                   {hasPropertyDetails ? (
                     <>
-                      <div className="font-semibold text-slate-800 dark:text-slate-200">{host.propertyName}</div>
+                      <div className="font-normal text-slate-800 dark:text-slate-200">{host.propertyName}</div>
                       <div className="text-[11px] text-slate-500 truncate">{host.email} • {host.phone}</div>
                       <div className="text-[11px] text-slate-500 truncate mt-0.5">📍 {host.location}</div>
                     </>
                   ) : (
                     <div className="py-1">
-                      <span className="inline-block px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                      <span className="inline-block px-2 py-0.5 rounded text-[10px] font-normal bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                         No property details added yet
                       </span>
                       <div className="text-[11px] text-slate-500 truncate mt-1">{host.email} • {host.phone}</div>

@@ -72,14 +72,14 @@ export const HostRoomsDropdown = React.memo(function HostRoomsDropdown({ host })
         >
           {/* Left Side: Room Category Name */}
           <div
-            className="col-span-5 text-left font-semibold text-slate-900 dark:text-slate-100 truncate"
+            className="col-span-5 text-left font-normal text-slate-900 dark:text-slate-100 truncate"
             title={cat.type}
           >
             {cat.type}
           </div>
 
           {/* Mid Side: Price Details with Billing Cycle */}
-          <div className="col-span-4 text-center font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+          <div className="col-span-4 text-center font-normal text-slate-800 dark:text-slate-200 whitespace-nowrap">
             <span>{cat.price}</span>
             <span className="text-[10px] font-normal text-slate-500 dark:text-slate-400 ml-0.5">
               {cat.rateUnit}
@@ -88,7 +88,7 @@ export const HostRoomsDropdown = React.memo(function HostRoomsDropdown({ host })
 
           {/* Right Side: Room Count inside Category */}
           <div className="col-span-3 text-right whitespace-nowrap">
-            <span className="inline-block px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60 text-[10px] font-bold">
+            <span className="inline-block px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60 text-[10px] font-normal">
               {cat.count} {cat.count === 1 ? 'Room' : 'Rooms'}
             </span>
           </div>
