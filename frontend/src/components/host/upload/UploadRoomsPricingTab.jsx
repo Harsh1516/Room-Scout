@@ -83,10 +83,8 @@ export function UploadRoomsPricingTab({
       {/* RIGHT SIDE: Property Description Tab */}
       <div className="lg:col-span-5 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-3 sm:p-4 shadow-xl space-y-2 sm:space-y-2.5 lg:sticky lg:top-2 relative z-10">
         <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-zinc-800">
-          <div className="flex items-center gap-2">
-            <div className="w-6.5 h-6.5 rounded-lg bg-gradient-to-tr from-teal-600 to-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-md shadow-emerald-600/25">
-              <span className="material-symbols-outlined text-[14px]">description</span>
-            </div>
+          <div className="flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[18px] text-emerald-600 dark:text-emerald-400 shrink-0">description</span>
             <span className="font-h4 text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white tracking-tight">Property Description *</span>
           </div>
           <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono-data font-semibold ${

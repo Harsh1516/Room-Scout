@@ -1492,11 +1492,9 @@ export function HostUploadPage() {
     return (
       <div className="h-screen max-h-screen bg-[#fafbfc] dark:bg-[#090b10] flex items-center justify-center p-4">
         <div className="max-w-md w-full p-6 sm:p-8 rounded-3xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-emerald-200/80 dark:border-emerald-800/60 text-center shadow-2xl">
-          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto mb-4 border border-amber-500/20">
-            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </div>
+          <svg className="w-10 h-10 text-amber-500 mx-auto mb-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
           <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-2">Host Account Required</h2>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 mb-6 font-medium">
             You are currently signed in as a Guest ({user.email}). Guest accounts cannot list properties.
@@ -1602,10 +1600,8 @@ export function HostUploadPage() {
             >
               <div className="space-y-4">
                 <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-sm">
-                      📋
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg shrink-0">📋</span>
                     <div>
                       <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-tight">
                         Property Steps

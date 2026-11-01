@@ -35,10 +35,8 @@ export function UploadPhotosTab({
       className="max-w-3xl w-full mx-auto bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-3.5 sm:p-5 shadow-xl space-y-3 sm:space-y-3.5 relative overflow-hidden group"
     >
       <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-zinc-800">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white flex items-center justify-center font-bold shadow-md shadow-emerald-600/25">
-            <Camera className="w-4 h-4" />
-          </div>
+        <div className="flex items-center gap-2">
+          <Camera className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
           <div>
             <h2 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight">Showcase Gallery (Max {maxPhotos} Photos)</h2>
             <p className="text-[11px] text-slate-500 dark:text-zinc-400">First photo is your main cover. Drag photos to reorder.</p>
@@ -140,9 +138,7 @@ export function UploadPhotosTab({
       <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/80 dark:border-zinc-800 space-y-1.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-pink-500/10 text-pink-500 flex items-center justify-center shrink-0">
-              <Video className="w-4 h-4" />
-            </div>
+            <Video className="w-4 h-4 text-pink-500 dark:text-pink-400 shrink-0" />
             <div>
               <h4 className="text-xs font-bold text-slate-900 dark:text-white">Video Tour Link (Optional)</h4>
               <p className="text-[10px] text-slate-500 dark:text-zinc-400">Instagram Reel or YouTube video walkthrough link</p>

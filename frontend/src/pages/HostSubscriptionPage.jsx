@@ -272,12 +272,10 @@ export function HostSubscriptionPage() {
 
           {history.length === 0 ? (
             <div className="rounded-3xl border border-white/10 bg-slate-900/40 p-8 sm:p-12 text-center flex flex-col items-center justify-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
-                <svg className="w-6 h-6 stroke-[1.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <rect x="2" y="5" width="20" height="14" rx="2" />
-                  <line x1="2" y1="10" x2="22" y2="10" />
-                </svg>
-              </div>
+              <svg className="w-10 h-10 stroke-[1.5] text-purple-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <rect x="2" y="5" width="20" height="14" rx="2" />
+                <line x1="2" y1="10" x2="22" y2="10" />
+              </svg>
               <span className="text-sm font-normal text-slate-200">No payment history yet</span>
               <p className="text-xs text-slate-400 max-w-sm font-normal">
                 When you make a payment and submit your 12-digit UTR on the Buy page, the verification records will appear here live.

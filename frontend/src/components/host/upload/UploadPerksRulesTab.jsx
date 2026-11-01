@@ -25,10 +25,8 @@ export function UploadPerksRulesTab({
       <div className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-4 sm:p-5 shadow-lg space-y-3 flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-zinc-800">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white flex items-center justify-center font-bold shadow-md shadow-emerald-600/25">
-                <span className="material-symbols-outlined text-[17px]">deck</span>
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[22px] text-emerald-600 dark:text-emerald-400 shrink-0">deck</span>
               <div>
                 <h3 className="text-sm font-extrabold text-slate-900 dark:text-white tracking-tight">Facilities & Amenities</h3>
                 <p className="text-[11px] text-slate-500 dark:text-zinc-400">Amenities available for residents</p>
@@ -88,10 +86,8 @@ export function UploadPerksRulesTab({
       <div className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-4 sm:p-5 shadow-lg space-y-3 flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-zinc-800">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-600 text-white flex items-center justify-center font-bold shadow-md shadow-indigo-600/25">
-                <span className="material-symbols-outlined text-[17px]">gavel</span>
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[22px] text-indigo-600 dark:text-indigo-400 shrink-0">gavel</span>
               <div>
                 <h3 className="text-sm font-extrabold text-slate-900 dark:text-white tracking-tight">House Rules & Policies</h3>
                 <p className="text-[11px] text-slate-500 dark:text-zinc-400">Rules that guests must follow (add manually)</p>

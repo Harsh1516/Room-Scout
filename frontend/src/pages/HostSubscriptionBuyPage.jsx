@@ -556,11 +556,9 @@ export function HostSubscriptionBuyPage() {
             {/* Plan Confirmation Prompt Card */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-5 rounded-3xl bg-slate-900/80 border border-purple-500/30 shadow-xl backdrop-blur-xl">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 shrink-0">
-                  <svg className="w-5 h-5 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </div>
+                <svg className="w-6 h-6 stroke-[2.5] text-purple-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
                 <div className="flex flex-col">
                   <span className="text-xs text-purple-300 font-normal">Ready to proceed?</span>
                   <span className="text-sm font-normal text-white">
@@ -598,12 +596,10 @@ export function HostSubscriptionBuyPage() {
             {/* Locked Plan Banner (NO Change Button!) */}
             <div className="p-4 sm:p-5 rounded-3xl bg-slate-900/80 border border-purple-500/30 backdrop-blur-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
               <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
-                  <svg className="w-5 h-5 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                  </svg>
-                </div>
+                <svg className="w-6 h-6 stroke-[2] text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs text-purple-300 font-normal">Active Selected Plan</span>
@@ -878,11 +874,9 @@ export function HostSubscriptionBuyPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
           <div className="relative w-full max-w-md bg-slate-900 border border-purple-500/30 rounded-3xl p-6 sm:p-7 shadow-2xl flex flex-col gap-5">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 shrink-0">
-                <svg className="w-5 h-5 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-              </div>
+              <svg className="w-7 h-7 stroke-[2] text-purple-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
               <div>
                 <h3 className="text-lg font-normal text-white">Confirm this plan?</h3>
                 <span className="text-xs text-purple-400 font-normal">Lock selection to proceed with payment</span>

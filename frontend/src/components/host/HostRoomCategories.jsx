@@ -959,9 +959,7 @@ export default function HostRoomCategories({
         </div>
         ) : (
           <div className="flex flex-col items-center justify-center min-h-[200px] sm:min-h-[320px] rounded-2xl sm:rounded-3xl border border-dashed border-slate-300 dark:border-outline-variant/60 bg-white/70 dark:bg-surface-container-low/60 backdrop-blur-sm text-center p-5 sm:p-8 space-y-3 sm:space-y-4 shadow-xs">
-            <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-surface-container-high border border-purple-200/80 dark:border-outline-variant/40 flex items-center justify-center mx-auto text-purple-600 dark:text-primary">
-              <span className="material-symbols-outlined text-[24px]">bedroom_parent</span>
-            </div>
+            <span className="material-symbols-outlined text-[36px] text-purple-600 dark:text-primary mx-auto">bedroom_parent</span>
             <div className="space-y-1">
               <p className="text-sm font-semibold text-slate-800 dark:text-on-surface">No Room Categories Yet</p>
               <p className="text-xs text-slate-500 dark:text-on-surface-variant max-w-xs mx-auto">
@@ -989,11 +987,9 @@ export default function HostRoomCategories({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex flex-col items-center text-center space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-[#93000a]/40 border border-rose-200 dark:border-[#ffb4ab]/30 text-rose-600 dark:text-[#ffb4ab] flex items-center justify-center">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </div>
+              <svg className="w-10 h-10 text-rose-600 dark:text-[#ffb4ab] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
 
               <div className="space-y-1">
                 <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-[#d4e4fa]">
