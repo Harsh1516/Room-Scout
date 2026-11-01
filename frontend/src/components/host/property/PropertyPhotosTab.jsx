@@ -5,8 +5,7 @@ import {
   ReplaceIcon,
   GripIcon,
   PlusIcon,
-  VideoIcon,
-  ExternalIcon,
+  PencilIcon,
   XMarkIcon,
 } from './PropertyIcons';
 
@@ -434,82 +433,50 @@ export function PropertyPhotosTab({
 
       {/* Main Visual Gallery Card */}
       <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/70 dark:bg-[#011C40]/50 backdrop-blur-xl border border-[#54ACBF]/20 dark:border-[#26658C]/40 shadow-[0_4px_24px_rgba(2,56,89,0.04)] dark:shadow-[0_8px_32px_rgba(1,28,64,0.4)] space-y-4 relative overflow-hidden">
-        {/* Header Strip */}
-        <div className="relative flex items-center justify-between flex-wrap gap-2.5 border-b border-[#54ACBF]/20 dark:border-[#26658C]/40 pb-3">
-          <div className="flex items-center gap-2">
-            <p className="text-xs font-medium uppercase tracking-wider text-[#011C40] dark:text-[#A7EBF2] flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#54ACBF] shadow-[0_0_8px_#54ACBF]" />
-              Visual Gallery ({localImages.length}/{MAX_PHOTOS})
-            </p>
-            {isEditing && (
-              <span className="px-2.5 py-0.5 rounded-full bg-[#54ACBF]/15 dark:bg-[#023859]/80 border border-[#54ACBF]/30 text-[#023859] dark:text-[#A7EBF2] text-[10px] font-medium uppercase tracking-wider">
-                Drag to set Cover Pic
-              </span>
-            )}
-          </div>
-
-          {/* Top Center: Memory Size Occupied */}
-          <div className="md:absolute md:left-1/2 md:-translate-x-1/2 flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/80 dark:bg-[#023859]/60 backdrop-blur-sm border border-[#54ACBF]/30 dark:border-[#26658C]/50 shadow-2xs">
-            <span className="w-2 h-2 rounded-full bg-[#54ACBF] shadow-[0_0_8px_#54ACBF] animate-pulse" />
-            <span className="text-[11.5px] font-normal text-[#023859] dark:text-[#A7EBF2]/80">
-              Memory Occupied:
-            </span>
-            <span className="text-[11.5px] font-medium text-[#54ACBF] dark:text-[#A7EBF2]">
-              {totalMemoryFormatted}
-            </span>
-          </div>
+        {/* Header Strip - Aligned with Address & Geography standard */}
+        <div className="flex items-center justify-between flex-wrap gap-2 border-b border-[#54ACBF]/20 dark:border-[#26658C]/40 pb-3 relative z-10">
+          <p className="text-xs font-medium uppercase tracking-wider text-[#011C40] dark:text-[#A7EBF2] flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#54ACBF] shadow-[0_0_8px_#54ACBF]" />
+            Visual Gallery & Walkthrough
+          </p>
 
           {!isEditing ? (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 dark:text-zinc-400 hidden sm:inline">
-                Click photo to inspect full size
-              </span>
-              {onStartEdit && (
-                <button
-                  type="button"
-                  onClick={onStartEdit}
-                  className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-[#023859] dark:text-[#A7EBF2] text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
-                >
-                  <span className="material-symbols-outlined text-[14px] text-[#54ACBF] dark:text-[#A7EBF2]">edit</span>
-                  <span>Reorder / Edit</span>
-                </button>
-              )}
-            </div>
+            onStartEdit && (
+              <button
+                type="button"
+                onClick={onStartEdit}
+                className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-[#023859] dark:text-[#A7EBF2] text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
+              >
+                <PencilIcon className="w-3.5 h-3.5 text-[#54ACBF] dark:text-[#A7EBF2]" />
+                <span>Edit</span>
+              </button>
+            )
           ) : (
-            <div className="flex items-center gap-2.5">
-              <div className="text-xs font-normal text-slate-500 dark:text-zinc-400 hidden sm:inline">
-                {isAtLimit ? (
-                  <span className="text-amber-600 dark:text-amber-400 font-medium">Limit reached (5/5)</span>
-                ) : (
-                  <span>{MAX_PHOTOS - localImages.length} slot{MAX_PHOTOS - localImages.length === 1 ? '' : 's'} available</span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  disabled={isSaving || isProcessingImage}
-                  onClick={() => {
-                    setLocalImages(Array.isArray(images) ? images.slice(0, MAX_PHOTOS) : []);
-                    setLocalVideoUrl(videoUrl || '');
-                    setUploadNotice('');
-                    if (onCancel) onCancel();
-                  }}
-                  className="px-3 py-1.5 rounded-xl border border-[#54ACBF]/30 dark:border-[#26658C]/50 bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] text-[#023859] dark:text-[#A7EBF2] text-xs font-medium transition-all cursor-pointer active:scale-95 disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  disabled={isSaving || isProcessingImage}
-                  onClick={handleSave}
-                  className={`px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] text-xs font-medium transition-all cursor-pointer shadow-md shadow-[#54ACBF]/20 flex items-center gap-1 active:scale-95 ${
-                    isSaving || isProcessingImage ? 'opacity-70 cursor-wait' : ''
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-[14px]">check</span>
-                  <span>{isProcessingImage ? 'Processing...' : isSaving ? 'Saving...' : 'Save Media'}</span>
-                </button>
-              </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={isSaving || isProcessingImage}
+                onClick={() => {
+                  setLocalImages(Array.isArray(images) ? images.slice(0, MAX_PHOTOS) : []);
+                  setLocalVideoUrl(videoUrl || '');
+                  setUploadNotice('');
+                  if (onCancel) onCancel();
+                }}
+                className="px-3 py-1.5 rounded-xl border border-[#54ACBF]/30 dark:border-[#26658C]/50 bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] text-[#023859] dark:text-[#A7EBF2] text-xs font-medium transition-all cursor-pointer active:scale-95 disabled:opacity-50 backdrop-blur-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isSaving || isProcessingImage}
+                onClick={handleSave}
+                className={`px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] text-xs font-medium transition-all cursor-pointer shadow-md shadow-[#54ACBF]/20 flex items-center gap-1 active:scale-95 ${
+                  isSaving || isProcessingImage ? 'opacity-70 cursor-wait' : ''
+                }`}
+              >
+                <span className="material-symbols-outlined text-[14px]">check</span>
+                <span>{isProcessingImage ? 'Processing...' : isSaving ? 'Saving...' : 'Save Media'}</span>
+              </button>
             </div>
           )}
         </div>
@@ -657,7 +624,7 @@ export function PropertyPhotosTab({
                     e.stopPropagation();
                     fileInputRef.current?.click();
                   }}
-                  className="mt-1 py-1.5 px-3 rounded-full bg-slate-200/80 hover:bg-slate-300 dark:bg-zinc-700 dark:hover:bg-zinc-600 border border-slate-300 dark:border-zinc-600 text-slate-800 dark:text-white text-[11px] font-medium transition-all cursor-pointer shadow-xs"
+                  className="mt-1 py-1.5 px-3 rounded-xl bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-[#023859] dark:text-[#A7EBF2] text-[11px] font-medium transition-all cursor-pointer shadow-2xs"
                 >
                   Choose File
                 </button>
@@ -665,13 +632,13 @@ export function PropertyPhotosTab({
             )}
           </div>
         ) : (
-          <div className="p-8 text-center text-xs text-slate-500 dark:text-zinc-400 border border-dashed border-slate-300 dark:border-zinc-700 rounded-2xl bg-slate-50/50 dark:bg-zinc-800/30 space-y-3">
+          <div className="p-8 text-center text-xs text-[#26658C]/80 dark:text-[#A7EBF2]/70 border border-dashed border-[#54ACBF]/30 dark:border-[#26658C]/50 rounded-2xl bg-white/40 dark:bg-[#023859]/20 space-y-3">
             <p>No photos uploaded yet.</p>
             {isEditing && (
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="px-4 py-2 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition-all cursor-pointer shadow-xs"
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] text-xs font-medium transition-all cursor-pointer shadow-md shadow-[#54ACBF]/20 active:scale-95"
               >
                 + Upload First Photo
               </button>
@@ -681,121 +648,121 @@ export function PropertyPhotosTab({
 
         {/* Edit mode drag guidance tip */}
         {isEditing && (
-          <p className="text-xs text-slate-500 dark:text-zinc-400 pt-1">
+          <p className="text-xs text-[#26658C]/80 dark:text-[#A7EBF2]/70 pt-1 font-normal">
             Tip: Simply drag photos left or right to reorder. The 1st photo on the top-left is automatically your listing&apos;s <span className="text-[#54ACBF] dark:text-[#A7EBF2] font-medium">Cover Photo</span>. Limit: {MAX_PHOTOS} photos maximum.
           </p>
         )}
-      </div>
 
-      {/* Video Tour Link Card */}
-      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/70 dark:bg-[#011C40]/50 backdrop-blur-xl border border-[#54ACBF]/20 dark:border-[#26658C]/40 shadow-[0_4px_24px_rgba(2,56,89,0.04)] dark:shadow-[0_8px_32px_rgba(1,28,64,0.4)] space-y-3.5 relative overflow-hidden group">
-        <div className="flex items-center justify-between flex-wrap gap-2.5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#023859] to-[#26658C] text-[#A7EBF2] flex items-center justify-center shadow-md border border-[#54ACBF]/30 shrink-0">
-              <VideoIcon className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-[#011C40] dark:text-[#A7EBF2]">
-                Video Tour Link
-              </p>
-              <p className="text-[11.5px] text-[#26658C]/80 dark:text-[#A7EBF2]/70">
-                Add a walkthrough video tour link to give users a real-time virtual walkthrough
-              </p>
-            </div>
+        {/* Video Tour Link Card - Aligned with Address & Geography standard */}
+        <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-[#023859]/30 backdrop-blur-md border border-[#54ACBF]/20 dark:border-[#26658C]/40 hover:border-[#54ACBF] dark:hover:border-[#54ACBF]/60 hover:bg-white dark:hover:bg-[#023859]/50 transition-all flex flex-col justify-between gap-2.5 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-[#26658C] dark:text-[#A7EBF2]/70 uppercase tracking-wider font-medium">
+              Video Tour Walkthrough
+            </span>
+            <span className="material-symbols-outlined text-[17px] text-[#54ACBF] dark:text-[#A7EBF2] shrink-0">
+              videocam
+            </span>
           </div>
 
-          {!isEditing && formattedVideoUrl && (
-            <a
-              href={formattedVideoUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-medium transition-all flex items-center gap-1.5 shadow-md shadow-emerald-600/25 active:scale-95 cursor-pointer shrink-0"
-            >
-              <span>Open Video</span>
-              <ExternalIcon className="w-3.5 h-3.5 text-white" />
-            </a>
-          )}
-        </div>
-
-        {/* View Mode Display */}
-        {!isEditing ? (
-          localVideoUrl?.trim() ? (
-            <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-[#023859]/30 backdrop-blur-md border border-[#54ACBF]/20 dark:border-[#26658C]/40 shadow-2xs flex items-center justify-between gap-3 flex-wrap">
-              <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                <span className="material-symbols-outlined text-[18px] text-slate-700 dark:text-zinc-300 shrink-0">smart_display</span>
-                <div className="min-w-0 flex-1">
-                  <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase tracking-wider font-medium block">
-                    Public Walkthrough URL
-                  </span>
-                  <span className="text-xs sm:text-sm font-normal text-slate-900 dark:text-white tracking-normal truncate block select-all">
-                    {localVideoUrl.trim()}
-                  </span>
-                </div>
+          {!isEditing ? (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-normal text-[#011C40] dark:text-white tracking-normal truncate select-all">
+                  {localVideoUrl?.trim() || 'No walkthrough video linked yet'}
+                </p>
+                <span className="text-[10.5px] text-[#26658C]/80 dark:text-[#A7EBF2]/60 font-normal">
+                  {localVideoUrl?.trim() ? 'Public walkthrough link' : 'YouTube video or Instagram Reel link to boost listing views'}
+                </span>
               </div>
-            </div>
-          ) : (
-            <div className="p-4 rounded-xl bg-slate-50/90 dark:bg-zinc-800/40 border border-dashed border-slate-300 dark:border-zinc-700 flex items-center justify-between gap-3 flex-wrap">
-              <span className="text-xs text-slate-600 dark:text-zinc-400">
-                No video tour linked yet. Add a YouTube video or Instagram Reel link to boost listing views.
-              </span>
-              {onStartEdit && (
-                <button
-                  type="button"
-                  onClick={onStartEdit}
-                  className="px-3.5 py-1.5 rounded-xl bg-slate-200/80 hover:bg-slate-300/80 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-slate-300/90 dark:border-zinc-700 text-slate-800 dark:text-white text-xs font-medium cursor-pointer transition-all shadow-2xs active:scale-95"
+
+              {localVideoUrl?.trim() ? (
+                <a
+                  href={formattedVideoUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-[#023859] dark:text-[#A7EBF2] text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm shrink-0 self-start sm:self-auto"
                 >
-                  + Add Video Link
-                </button>
+                  <span>Open Video</span>
+                  <span className="material-symbols-outlined text-[13px]">open_in_new</span>
+                </a>
+              ) : (
+                onStartEdit && (
+                  <button
+                    type="button"
+                    onClick={onStartEdit}
+                    className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-[#023859] dark:text-[#A7EBF2] text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm shrink-0 self-start sm:self-auto"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">add</span>
+                    <span>Add Video Link</span>
+                  </button>
+                )
               )}
             </div>
-          )
-        ) : (
-          /* Edit Mode Input */
-          <div className="space-y-2">
-            <div className="relative flex items-center">
-              <input
-                type="url"
-                value={localVideoUrl}
-                onChange={(e) => setLocalVideoUrl(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }
-                }}
-                placeholder="https://www.instagram.com/reel/... or https://www.youtube.com/watch?v=..."
-                className="w-full pl-3.5 pr-24 py-2.5 rounded-xl bg-white dark:bg-[#011C40] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-xs text-[#011C40] dark:text-white placeholder:text-slate-400 dark:placeholder:text-[#A7EBF2]/40 focus:outline-none focus:ring-2 focus:ring-[#54ACBF]/20 focus:border-[#54ACBF] transition-all font-mono shadow-sm"
-              />
-              <div className="absolute right-2 flex items-center gap-1.5">
+          ) : (
+            <div className="space-y-1.5">
+              <div className="relative flex items-center">
+                <input
+                  type="url"
+                  value={localVideoUrl}
+                  onChange={(e) => setLocalVideoUrl(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }
+                  }}
+                  placeholder="https://www.instagram.com/reel/... or https://www.youtube.com/watch?v=..."
+                  className="w-full pl-3.5 pr-20 py-2.5 rounded-xl bg-white dark:bg-[#011C40] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-xs sm:text-[13px] text-[#011C40] dark:text-white placeholder:text-slate-400 dark:placeholder:text-[#A7EBF2]/40 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] focus:outline-none focus:border-[#54ACBF] focus:ring-1 focus:ring-[#54ACBF]/20 transition-colors font-mono"
+                />
                 {localVideoUrl?.trim() && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => setLocalVideoUrl('')}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 transition-all cursor-pointer"
-                      title="Clear video link"
-                    >
-                      <XMarkIcon className="w-3.5 h-3.5" />
-                    </button>
-                    {formattedVideoUrl && (
-                      <a
-                        href={formattedVideoUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="px-3 py-1 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] text-[11px] font-medium transition-all flex items-center gap-1 shrink-0 cursor-pointer shadow-xs"
-                      >
-                        <span>Test ↗</span>
-                      </a>
-                    )}
-                  </>
+                  <button
+                    type="button"
+                    onClick={() => setLocalVideoUrl('')}
+                    className="absolute right-2.5 p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all cursor-pointer"
+                    title="Clear video link"
+                  >
+                    <XMarkIcon className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <span className="text-[10.5px] text-[#26658C]/80 dark:text-[#A7EBF2]/60 font-normal">
+                  Supports standard YouTube URLs, Shorts, and Instagram Reel links
+                </span>
+                {formattedVideoUrl && (
+                  <a
+                    href={formattedVideoUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-2.5 py-1 rounded-lg bg-[#54ACBF]/15 hover:bg-[#54ACBF]/25 border border-[#54ACBF]/30 text-[#023859] dark:text-[#A7EBF2] text-[11px] font-medium flex items-center gap-1 transition-all"
+                  >
+                    <span>Test link</span>
+                    <span className="material-symbols-outlined text-[12px]">open_in_new</span>
+                  </a>
                 )}
               </div>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-              Supports standard YouTube URLs, Shorts, and Instagram Reel links.
-            </p>
+          )}
+        </div>
+
+        {/* Footer Strip - EXACT MATCH TO PIC 2'S FOOTER STRIP */}
+        <div className="pt-3 mt-3 border-t border-[#54ACBF]/20 dark:border-[#26658C]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium uppercase tracking-wider text-[#26658C] dark:text-[#A7EBF2]/80">
+              Memory Occupied:
+            </span>
+            <span className="px-2.5 py-0.5 rounded-full bg-[#54ACBF]/15 dark:bg-[#023859]/80 text-xs font-medium text-[#023859] dark:text-[#A7EBF2] border border-[#54ACBF]/30 shadow-2xs backdrop-blur-sm flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#54ACBF] shadow-[0_0_6px_#54ACBF]" />
+              <span>{localImages.length}/{MAX_PHOTOS} Photos • {totalMemoryFormatted}</span>
+            </span>
           </div>
-        )}
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-normal text-[#26658C]/70 dark:text-[#A7EBF2]/60">
+              Click photo to inspect full size
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Lightbox Image Preview Modal */}

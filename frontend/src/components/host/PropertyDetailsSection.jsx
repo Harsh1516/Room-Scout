@@ -1,5 +1,5 @@
-﻿import { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from '../../context/ToastContext';
 
 // Sub-tabs
@@ -255,10 +255,10 @@ export function PropertyDetailsSection({
                 <button
                   type="button"
                   onClick={handleOpenPublicUrl}
-                  className="flex-1 h-9 rounded-xl bg-[#A7EBF2] hover:bg-[#8ee5ee] active:scale-95 text-[#011C40] font-medium text-xs tracking-normal shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  className="flex-1 h-9 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-[#A7EBF2] flex items-center justify-center gap-1.5 border border-[#54ACBF]/30 shadow-2xs transition-all cursor-pointer"
                 >
-                  <span>Public URL</span>
-                  <span className="material-symbols-outlined text-[15px]">north_east</span>
+                  <span className="text-xs font-normal">Public URL</span>
+                  <span className="material-symbols-outlined text-[15px] text-[#A7EBF2]">north_east</span>
                 </button>
 
                 <button
@@ -283,13 +283,13 @@ export function PropertyDetailsSection({
                   </span>
                 </div>
 
-                {/* Minimal Luna Gradient Progress Bar */}
+                {/* Minimal Luna Gradient Progress Bar with fluid liquid spring */}
                 <div className="w-full h-1.5 bg-[#023859]/10 dark:bg-[#023859]/50 rounded-full overflow-hidden">
                   <motion.div
                     className="h-full bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${completionPercentage}%` }}
-                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                    transition={{ type: 'spring', stiffness: 120, damping: 20 }}
                   />
                 </div>
               </div>
@@ -301,48 +301,57 @@ export function PropertyDetailsSection({
                   const isCompleted = sec.isComplete;
 
                   return (
-                    <button
+                    <motion.button
                       key={sec.id}
                       type="button"
                       onClick={() => {
                         setActiveIndex(idx);
                         setEditingSectionId(null);
                       }}
-                      className={`group relative flex items-center justify-between px-3 py-2 sm:py-2.5 rounded-xl cursor-pointer text-left w-full select-none focus:outline-none transition-colors ${
-                        !isActive ? 'hover:bg-[#011C40]/40' : ''
+                      whileTap={{ scale: 0.985 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                      className={`group relative flex items-center justify-between px-3 py-2 sm:py-2.5 rounded-xl cursor-pointer text-left w-full select-none focus:outline-none transition-colors duration-200 ${
+                        !isActive ? 'hover:bg-[#011C40]/30' : ''
                       }`}
                     >
-                      {/* Animated Sliding Active Background Indicator */}
+                      {/* Animated Sliding Active Background Indicator with Liquid Flow Spring Physics */}
                       {isActive && (
                         <motion.div
                           layoutId="activeSectionIndicator"
-                          className="absolute inset-0 rounded-xl bg-[#011C40] border border-[#54ACBF]/50 shadow-xs pointer-events-none z-0"
+                          className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#01172f] via-[#011C40] to-[#01244d] border border-[#54ACBF]/60 shadow-[0_4px_18px_rgba(1,28,64,0.65),inset_0_1px_1.5px_rgba(167,235,242,0.22),0_0_12px_rgba(84,172,191,0.12)] pointer-events-none z-0"
                           transition={{
-                            type: 'tween',
-                            duration: 0.2,
-                            ease: 'easeInOut',
+                            type: 'spring',
+                            stiffness: 380,
+                            damping: 30,
+                            mass: 0.8,
                           }}
-                        />
+                        >
+                          {/* Specular fluid gloss reflection rim */}
+                          <div className="absolute top-0 inset-x-3 h-[1px] bg-gradient-to-r from-transparent via-[#A7EBF2]/45 to-transparent rounded-full pointer-events-none" />
+                          {/* Subtle bottom grounding glow */}
+                          <div className="absolute bottom-0 inset-x-4 h-[1px] bg-gradient-to-r from-transparent via-[#54ACBF]/20 to-transparent rounded-full pointer-events-none" />
+                        </motion.div>
                       )}
 
-                      {/* Left: Standalone Icon + Title (No icon background box) */}
+                      {/* Left: Standalone Icon + Title */}
                       <div className="flex items-center gap-2.5 min-w-0 relative z-10">
-                        <span
-                          className={`material-symbols-outlined text-[17px] shrink-0 transition-colors ${
-                            isActive
-                              ? 'text-[#A7EBF2]'
-                              : 'text-[#54ACBF] group-hover:text-[#A7EBF2]'
-                          }`}
+                        <motion.span
+                          animate={{
+                            scale: isActive ? 1.08 : 1,
+                            color: isActive ? '#A7EBF2' : '#54ACBF',
+                          }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                          className="material-symbols-outlined text-[17px] shrink-0"
                         >
                           {sec.icon}
-                        </span>
+                        </motion.span>
 
                         {/* Text Column */}
                         <div className="flex min-w-0 items-center">
                           <span
-                            className={`text-xs truncate transition-colors duration-150 ${
+                            className={`text-xs truncate transition-all duration-200 ${
                               isActive
-                                ? 'font-medium text-white'
+                                ? 'font-medium text-white tracking-normal'
                                 : 'font-normal text-[#A7EBF2]/80 group-hover:text-white'
                             }`}
                           >
@@ -351,35 +360,45 @@ export function PropertyDetailsSection({
                         </div>
                       </div>
 
-                      {/* Right: Badge / Status Indicator */}
+                      {/* Right: Badge / Status Indicator with smooth fluid transition */}
                       <div className="relative z-10 flex items-center gap-1.5 shrink-0 pl-2">
-                        {isActive ? (
-                          <div className="flex items-center gap-1.5">
-                            {sec.badge && (
-                              <span className="px-2 py-0.5 rounded-md text-[9.5px] font-mono font-normal bg-[#011C40]/80 text-[#A7EBF2] border border-[#54ACBF]/30">
-                                {sec.badge}
-                              </span>
-                            )}
-                            <span className="material-symbols-outlined text-[15px] text-[#54ACBF] dark:text-[#A7EBF2] shrink-0">
-                              check
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1.5">
-                            {sec.badge !== null && (
-                              <span className="px-2 py-0.5 rounded-md text-[9.5px] font-mono font-normal bg-[#011C40]/60 text-[#A7EBF2]/80 border border-[#54ACBF]/30 transition-colors">
-                                {sec.badge}
-                              </span>
-                            )}
-                            {isCompleted && !sec.badge && (
-                              <span className="material-symbols-outlined text-[#54ACBF]/70 dark:text-[#A7EBF2]/60 text-[14px] shrink-0">
-                                check
-                              </span>
-                            )}
-                          </div>
+                        {sec.badge !== null && (
+                          <span
+                            className={`px-2 py-0.5 rounded-md text-[9.5px] font-mono font-normal transition-all duration-200 ${
+                              isActive
+                                ? 'bg-[#011C40]/90 text-[#A7EBF2] border border-[#54ACBF]/50 shadow-2xs'
+                                : 'bg-[#011C40]/60 text-[#A7EBF2]/80 border border-[#54ACBF]/30'
+                            }`}
+                          >
+                            {sec.badge}
+                          </span>
                         )}
+
+                        {/* Smoothly animated checkmark indicator */}
+                        <AnimatePresence mode="popLayout" initial={false}>
+                          {(isActive || (isCompleted && !sec.badge)) && (
+                            <motion.span
+                              key={isActive ? 'active-check' : 'completed-check'}
+                              initial={{ opacity: 0, scale: 0.5, x: -3 }}
+                              animate={{ opacity: 1, scale: 1, x: 0 }}
+                              exit={{ opacity: 0, scale: 0.5, x: -3 }}
+                              transition={{
+                                type: 'spring',
+                                stiffness: 450,
+                                damping: 25,
+                              }}
+                              className={`material-symbols-outlined text-[15px] shrink-0 select-none ${
+                                isActive
+                                  ? 'text-[#A7EBF2] font-semibold'
+                                  : 'text-[#54ACBF]/70 dark:text-[#A7EBF2]/60'
+                              }`}
+                            >
+                              check
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
                       </div>
-                    </button>
+                    </motion.button>
                   );
                 })}
               </nav>
@@ -404,99 +423,114 @@ export function PropertyDetailsSection({
           </div>
 
           <div className="flex flex-col flex-1 min-h-full justify-between gap-6 sm:gap-8 relative z-10">
-            {/* 1. Centered Top Heading */}
-            <div className="flex flex-col items-center text-center justify-center pt-1 sm:pt-2 w-full">
-              <h2 className="text-xl sm:text-2xl lg:text-3xl font-medium text-[#011C40] tracking-normal">
-                {currentSection.title}
-              </h2>
+            {/* 1. Centered Top Heading with fluid cross-fade */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`heading-${currentSection.id}`}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                className="flex flex-col items-center text-center justify-center pt-1 sm:pt-2 w-full"
+              >
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-medium text-[#011C40] tracking-normal">
+                  {currentSection.title}
+                </h2>
 
-              <p className="text-xs sm:text-sm text-[#011C40]/80 font-normal mt-1.5 max-w-xl text-center leading-relaxed">
-                {currentSection.id === 'overview' && 'Start with the core identity, property type, and guest categorization.'}
-                {currentSection.id === 'description' && 'Add an editorial property description and key highlights for prospective residents.'}
-                {currentSection.id === 'location' && 'Pinpoint exact road access, city zone, postal code, and geolocation coordinates.'}
-                {currentSection.id === 'facilities' && 'Select verified living amenities, daily perks, and infrastructure offerings.'}
-                {currentSection.id === 'rules' && 'Define resident house rules, timings, and code of conduct policies.'}
-                {currentSection.id === 'photos' && 'Upload high-resolution property photos and paste virtual video tour links.'}
-              </p>
-            </div>
+                <p className="text-xs sm:text-sm text-[#011C40]/80 font-normal mt-1.5 max-w-xl text-center leading-relaxed">
+                  {currentSection.id === 'overview' && 'Start with the core identity, property type, and guest categorization.'}
+                  {currentSection.id === 'description' && 'Add an editorial property description and key highlights for prospective residents.'}
+                  {currentSection.id === 'location' && 'Pinpoint exact road access, city zone, postal code, and geolocation coordinates.'}
+                  {currentSection.id === 'facilities' && 'Select verified living amenities, daily perks, and infrastructure offerings.'}
+                  {currentSection.id === 'rules' && 'Define resident house rules, timings, and code of conduct policies.'}
+                  {currentSection.id === 'photos' && 'Upload high-resolution property photos and paste virtual video tour links.'}
+                </p>
+              </motion.div>
+            </AnimatePresence>
 
             {/* 2. Sub-Tab Card Component (positioned lower towards the bottom of the screen with gap) */}
             <div className="w-full mt-auto pt-2">
-              <motion.div
-                key={currentSection.id}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.12, ease: 'easeOut' }}
-                className="w-full"
-              >
-                {currentSection.id === 'overview' && (
-                  <PropertyOverviewTab
-                    hostProperty={hostProperty}
-                    isPending={isPending}
-                    isEditing={editingSectionId === 'overview'}
-                    onSave={handleSaveSection}
-                    onCancel={() => setEditingSectionId(null)}
-                    onStartEdit={() => setEditingSectionId('overview')}
-                    isSaving={isSaving}
-                  />
-                )}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`tab-${currentSection.id}`}
+                  initial={{ opacity: 0, y: 12, filter: 'blur(3px)' }}
+                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  exit={{ opacity: 0, y: -8, filter: 'blur(3px)' }}
+                  transition={{
+                    duration: 0.25,
+                    ease: [0.22, 1, 0.36, 1], // Apple fluid easing curve
+                  }}
+                  className="w-full"
+                >
+                  {currentSection.id === 'overview' && (
+                    <PropertyOverviewTab
+                      hostProperty={hostProperty}
+                      isPending={isPending}
+                      isEditing={editingSectionId === 'overview'}
+                      onSave={handleSaveSection}
+                      onCancel={() => setEditingSectionId(null)}
+                      onStartEdit={() => setEditingSectionId('overview')}
+                      isSaving={isSaving}
+                    />
+                  )}
 
-                {currentSection.id === 'description' && (
-                  <PropertyDescriptionTab
-                    description={hostProperty?.description || hostProperty?.bio}
-                    isEditing={isCurrentSectionEditing}
-                    onSave={handleSaveSection}
-                    onCancel={() => setEditingSectionId(null)}
-                    onStartEdit={() => setEditingSectionId('description')}
-                    isSaving={isSaving}
-                  />
-                )}
+                  {currentSection.id === 'description' && (
+                    <PropertyDescriptionTab
+                      description={hostProperty?.description || hostProperty?.bio}
+                      isEditing={isCurrentSectionEditing}
+                      onSave={handleSaveSection}
+                      onCancel={() => setEditingSectionId(null)}
+                      onStartEdit={() => setEditingSectionId('description')}
+                      isSaving={isSaving}
+                    />
+                  )}
 
-                {currentSection.id === 'location' && (
-                  <PropertyLocationTab
-                    hostProperty={hostProperty}
-                    isEditing={isCurrentSectionEditing}
-                    onSave={handleSaveSection}
-                    onCancel={() => setEditingSectionId(null)}
-                    onStartEdit={() => setEditingSectionId('location')}
-                    isSaving={isSaving}
-                  />
-                )}
+                  {currentSection.id === 'location' && (
+                    <PropertyLocationTab
+                      hostProperty={hostProperty}
+                      isEditing={isCurrentSectionEditing}
+                      onSave={handleSaveSection}
+                      onCancel={() => setEditingSectionId(null)}
+                      onStartEdit={() => setEditingSectionId('location')}
+                      isSaving={isSaving}
+                    />
+                  )}
 
-                {currentSection.id === 'facilities' && (
-                  <PropertyFacilitiesTab
-                    facilities={facilitiesList}
-                    isEditing={isCurrentSectionEditing}
-                    onSave={handleSaveSection}
-                    onCancel={() => setEditingSectionId(null)}
-                    onStartEdit={() => setEditingSectionId('facilities')}
-                    isSaving={isSaving}
-                  />
-                )}
+                  {currentSection.id === 'facilities' && (
+                    <PropertyFacilitiesTab
+                      facilities={facilitiesList}
+                      isEditing={isCurrentSectionEditing}
+                      onSave={handleSaveSection}
+                      onCancel={() => setEditingSectionId(null)}
+                      onStartEdit={() => setEditingSectionId('facilities')}
+                      isSaving={isSaving}
+                    />
+                  )}
 
-                {currentSection.id === 'rules' && (
-                  <PropertyRulesTab
-                    rules={rulesList}
-                    isEditing={isCurrentSectionEditing}
-                    onSave={handleSaveSection}
-                    onCancel={() => setEditingSectionId(null)}
-                    onStartEdit={() => setEditingSectionId('rules')}
-                    isSaving={isSaving}
-                  />
-                )}
+                  {currentSection.id === 'rules' && (
+                    <PropertyRulesTab
+                      rules={rulesList}
+                      isEditing={isCurrentSectionEditing}
+                      onSave={handleSaveSection}
+                      onCancel={() => setEditingSectionId(null)}
+                      onStartEdit={() => setEditingSectionId('rules')}
+                      isSaving={isSaving}
+                    />
+                  )}
 
-                {currentSection.id === 'photos' && (
-                  <PropertyPhotosTab
-                    images={imagesList}
-                    videoUrl={hostProperty?.instagramVideoUrl || ''}
-                    isEditing={isCurrentSectionEditing}
-                    onSave={handleSaveSection}
-                    onCancel={() => setEditingSectionId(null)}
-                    onStartEdit={() => setEditingSectionId('photos')}
-                    isSaving={isSaving}
-                  />
-                )}
-              </motion.div>
+                  {currentSection.id === 'photos' && (
+                    <PropertyPhotosTab
+                      images={imagesList}
+                      videoUrl={hostProperty?.instagramVideoUrl || ''}
+                      isEditing={isCurrentSectionEditing}
+                      onSave={handleSaveSection}
+                      onCancel={() => setEditingSectionId(null)}
+                      onStartEdit={() => setEditingSectionId('photos')}
+                      isSaving={isSaving}
+                    />
+                  )}
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
         </main>
