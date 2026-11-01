@@ -22,6 +22,9 @@ import {
   getAdminSubscriptionRequests,
   verifySubscriptionRequest,
   manualActivateSubscription,
+  deleteSubscriptionRequest,
+  bulkVerifySubscriptions,
+  extractStatementUtrs,
 } from '../controllers/subscriptionController.js';
 
 const router = express.Router();
@@ -30,7 +33,10 @@ router.route('/payment-settings').get(adminLimiter, requireAdmin, getPlatformPay
 
 // Platform Host Subscription Administration
 router.route('/subscriptions').get(adminLimiter, requireAdmin, getAdminSubscriptionRequests);
+router.route('/subscriptions/bulk-verify').post(adminLimiter, requireAdmin, bulkVerifySubscriptions);
+router.route('/subscriptions/extract-statement').post(adminLimiter, requireAdmin, extractStatementUtrs);
 router.route('/subscriptions/:id/verify').post(adminLimiter, requireAdmin, verifySubscriptionRequest);
+router.route('/subscriptions/:id').delete(adminLimiter, requireAdmin, deleteSubscriptionRequest);
 router.route('/hosts/:id/subscription/manual-activate').post(adminLimiter, requireAdmin, manualActivateSubscription);
 
 // Master Admin Security-Gated Endpoints (Guarded against unauthorized brute-forcing)

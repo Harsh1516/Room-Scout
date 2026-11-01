@@ -429,6 +429,23 @@ export const adminAPI = {
       body: JSON.stringify(payload),
     }),
 
+  deleteSubscriptionRequest: (id) =>
+    request(`/enter/subscriptions/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    }),
+
+  bulkVerifySubscriptions: (payload) =>
+    request('/enter/subscriptions/bulk-verify', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  extractStatementUtrs: (payload) =>
+    request('/enter/subscriptions/extract-statement', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
   setAdminKey: (key) => {
     if (typeof sessionStorage !== 'undefined') {
       if (key) sessionStorage.setItem('roomscout_admin_key', key.trim());

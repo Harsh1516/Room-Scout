@@ -59,6 +59,36 @@ export function HostSubscriptionPage() {
 
   useEffect(() => {
     loadSubscriptionData();
+
+    // Real-time live polling: syncs status every 3.5 seconds in background without refreshing
+    const pollInterval = setInterval(() => {
+      if (document.hidden) return;
+      subscriptionsAPI
+        .getMySubscription()
+        .then((res) => {
+          if (res && res.success) {
+            setSubscriptionInfo(res);
+          }
+        })
+        .catch(() => {});
+    }, 3500);
+
+    const handleFocus = () => {
+      subscriptionsAPI
+        .getMySubscription()
+        .then((res) => {
+          if (res && res.success) {
+            setSubscriptionInfo(res);
+          }
+        })
+        .catch(() => {});
+    };
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      clearInterval(pollInterval);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   // Copy helper

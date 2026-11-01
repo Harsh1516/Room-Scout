@@ -113,7 +113,7 @@ export function AdminPage() {
     const pollInterval = setInterval(() => {
       if (document.hidden) return;
       fetchData(true);
-    }, 15000);
+    }, 3500);
 
     const handleFocus = () => fetchData(true);
     window.addEventListener('focus', handleFocus);
@@ -291,6 +291,32 @@ export function AdminPage() {
     toast.success(res.message || 'Subscription plan granted successfully!');
     fetchSubscriptions(true);
     fetchData(true);
+  };
+
+  const handleDeleteSubscription = async (id) => {
+    try {
+      const res = await adminAPI.deleteSubscriptionRequest(id);
+      toast.success(res.message || 'Subscription payment entry deleted.');
+      setSubscriptions((prev) => prev.filter((s) => String(s._id) !== String(id)));
+      fetchSubscriptions(true);
+      fetchData(true);
+    } catch (err) {
+      toast.error(err.message || 'Failed to delete subscription entry.');
+      throw err;
+    }
+  };
+
+  const handleBulkVerifySubscriptions = async (payload) => {
+    try {
+      const res = await adminAPI.bulkVerifySubscriptions(payload);
+      toast.success(res.message || 'Bulk verification successful!');
+      fetchSubscriptions(true);
+      fetchData(true);
+      return res;
+    } catch (err) {
+      toast.error(err.message || 'Bulk verification failed.');
+      throw err;
+    }
   };
 
   const handleDeleteHost = async (hostId, hostName) => {
@@ -995,6 +1021,8 @@ export function AdminPage() {
             onRefresh={() => fetchSubscriptions(false)}
             onVerify={handleVerifySubscription}
             onReject={handleRejectSubscription}
+            onDelete={handleDeleteSubscription}
+            onBulkVerify={handleBulkVerifySubscriptions}
             onManualActivate={handleManualActivateHostSubscription}
             hosts={hosts}
             formatDateTime={formatDateTime}

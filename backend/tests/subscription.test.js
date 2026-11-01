@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { calculateExpirationDate, buildPlatformUpiUri } from '../controllers/subscriptionController.js';
+import { calculateExpirationDate, buildPlatformUpiUri, formatValidityDate } from '../controllers/subscriptionController.js';
 
 describe('Host Subscription System Tests', () => {
   describe('UPI URI Generator for Platform Plans', () => {
@@ -50,6 +50,14 @@ describe('Host Subscription System Tests', () => {
       const diffDays = (extendedExpiry.getTime() - currentExpiry.getTime()) / (1000 * 60 * 60 * 24);
       assert.ok(diffDays >= 28 && diffDays <= 32);
     });
+
+    it('should format validity date in the exact "1 June 27" format', () => {
+      const date1 = new Date(2027, 5, 1); // June is month index 5
+      assert.strictEqual(formatValidityDate(date1), '1 June 27');
+
+      const date2 = new Date(2026, 11, 1); // Dec is month index 11
+      assert.strictEqual(formatValidityDate(date2), '1 December 26');
+    });
   });
 
   describe('12-Digit UTR Format Enforcement', () => {
@@ -73,5 +81,55 @@ describe('Host Subscription System Tests', () => {
       assert.strictEqual(isValidUtr('PAYTM1234567'), false);
     });
   });
+
+  describe('Statement 12-Digit UTR Extraction & Reconciliation Matching', () => {
+    it('should extract all unique 12-digit numeric UTRs from a bank statement CSV/text', () => {
+      const statementSample = `
+        Date,Description,Amount,Reference / UTR
+        01-Nov-2026,UPI/CR/987654321098/Payment from Guest,200.00,987654321098
+        01-Nov-2026,UPI/CR/888888888888/Subscription Host,600.00,888888888888
+        01-Nov-2026,Duplicate line with same UTR,600.00,888888888888
+        01-Nov-2026,Random reference 123456 or phone 98765432109876 (14 digits) or short 9999
+        01-Nov-2026,Another valid UTR: 112233445566 in remarks,1200.00,
+      `;
+
+      const utrRegex = /(?:^|[^0-9])([0-9]{12})(?![0-9])/g;
+      const matches = [...statementSample.matchAll(utrRegex)].map((m) => m[1]);
+      const uniqueUtrs = Array.from(new Set(matches));
+
+      // Should extract 987654321098, 888888888888, 112233445566
+      assert.deepStrictEqual(uniqueUtrs, ['987654321098', '888888888888', '112233445566']);
+      // Should NOT include 14-digit number or short 4/6-digit numbers
+      assert.ok(!uniqueUtrs.includes('98765432109876'));
+      assert.ok(!uniqueUtrs.includes('123456'));
+      assert.ok(!uniqueUtrs.includes('9999'));
+    });
+
+    it('should correctly match and sort bank statement UTRs putting matched requests at the top', () => {
+      const extracted = ['111111111111', '888888888888', '222222222222'];
+      const hostRequests = [
+        { id: 'req_1', transactionRef: '888888888888', status: 'PENDING' }
+      ];
+
+      const reconciliationList = extracted.map(utr => {
+        const matched = hostRequests.find(r => r.transactionRef === utr);
+        return { utr, matchedRequest: matched || null };
+      });
+
+      // Sort matched to top
+      const sorted = [...reconciliationList].sort((a, b) => {
+        const aHas = Boolean(a.matchedRequest);
+        const bHas = Boolean(b.matchedRequest);
+        if (aHas === bHas) return 0;
+        return aHas ? -1 : 1;
+      });
+
+      assert.strictEqual(sorted[0].utr, '888888888888');
+      assert.ok(sorted[0].matchedRequest !== null);
+      assert.ok(sorted[1].matchedRequest === null);
+      assert.ok(sorted[2].matchedRequest === null);
+    });
+  });
 });
+
 

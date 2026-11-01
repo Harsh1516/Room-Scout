@@ -510,3 +510,227 @@ export async function manualActivateSubscription(req, res, next) {
   }
 }
 
+// @desc    Admin deletes a subscription payment request entry
+// @route   DELETE /api/enter/subscriptions/:id
+// @access  Private (Admin)
+export async function deleteSubscriptionRequest(req, res, next) {
+  try {
+    const { id } = req.params;
+
+    const request = await HostSubscriptionPayment.findById(id);
+    if (!request) {
+      return res.status(404).json({ success: false, message: 'Subscription request not found.' });
+    }
+
+    const hostId = request.hostId;
+    const wasPending = request.status === 'PENDING';
+
+    await HostSubscriptionPayment.deleteOne({ _id: id });
+
+    // If deleting a pending request and host was in PENDING_VERIFICATION, reset host status if no other pending requests exist
+    if (wasPending && hostId) {
+      const host = await Host.findById(hostId);
+      if (host && host.subscription?.status === 'PENDING_VERIFICATION') {
+        const remainingPending = await HostSubscriptionPayment.countDocuments({
+          hostId,
+          status: 'PENDING',
+        });
+        if (remainingPending === 0) {
+          host.subscription.status =
+            host.subscription?.expiresAt && new Date(host.subscription.expiresAt) > new Date()
+              ? 'ACTIVE'
+              : 'NONE';
+          await host.save();
+        }
+      }
+    }
+
+    return res.json({
+      success: true,
+      message: 'Subscription payment entry deleted successfully.',
+      deletedId: id,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// @desc    Admin bulk verifies multiple host subscription payment requests
+// @route   POST /api/enter/subscriptions/bulk-verify
+// @access  Private (Admin)
+export async function bulkVerifySubscriptions(req, res, next) {
+  try {
+    const { paymentIds = [], transactionRefs = [], durationMonths } = req.body || {};
+
+    const filter = { status: 'PENDING' };
+    if (Array.isArray(paymentIds) && paymentIds.length > 0) {
+      filter._id = { $in: paymentIds };
+    } else if (Array.isArray(transactionRefs) && transactionRefs.length > 0) {
+      filter.transactionRef = { $in: transactionRefs.map((r) => String(r).trim().toUpperCase()) };
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide paymentIds or transactionRefs to bulk verify.',
+      });
+    }
+
+    const requests = await HostSubscriptionPayment.find(filter);
+    if (!requests || requests.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No pending subscription requests found matching the provided criteria.',
+      });
+    }
+
+    const verifiedRecords = [];
+    const now = new Date();
+
+    for (const request of requests) {
+      const host = await Host.findById(request.hostId);
+      if (!host) continue;
+
+      const monthsToAdd = Number(durationMonths) || Number(request.durationMonths) || 1;
+      let newStartDate = now;
+      let newExpiresAt = null;
+
+      if (
+        host.subscription?.status === 'ACTIVE' &&
+        host.subscription?.expiresAt &&
+        new Date(host.subscription.expiresAt) > now
+      ) {
+        newStartDate = host.subscription.startDate || now;
+        const currentExp = new Date(host.subscription.expiresAt);
+        newExpiresAt = calculateExpirationDate(currentExp, monthsToAdd);
+      } else {
+        newStartDate = now;
+        newExpiresAt = calculateExpirationDate(now, monthsToAdd);
+      }
+
+      request.status = 'VERIFIED';
+      request.durationMonths = monthsToAdd;
+      request.verifiedAt = now;
+      request.verifiedBy = req.user?._id || null;
+      request.activatedStartDate = newStartDate;
+      request.activatedExpiresAt = newExpiresAt;
+      request.adminNotes = 'Bulk verified via bank statement reconciliation';
+      await request.save();
+
+      host.subscription = {
+        planCode: request.planCode,
+        planLabel: request.planLabel,
+        durationMonths: monthsToAdd,
+        amountPaid: request.amount,
+        startDate: newStartDate,
+        expiresAt: newExpiresAt,
+        status: 'ACTIVE',
+        lastPaymentRef: request.transactionRef,
+        lastVerifiedAt: now,
+      };
+      await host.save();
+
+      await Stay.updateMany(
+        { hostId: host._id },
+        {
+          $set: {
+            'subscription.status': 'ACTIVE',
+            'subscription.planCode': request.planCode,
+            'subscription.planLabel': request.planLabel,
+            'subscription.expiresAt': newExpiresAt,
+          },
+        }
+      );
+
+      verifiedRecords.push({
+        id: request._id,
+        transactionRef: request.transactionRef,
+        hostName: host.name,
+        expiresAt: newExpiresAt,
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: `Successfully verified and activated ${verifiedRecords.length} host subscription(s)!`,
+      count: verifiedRecords.length,
+      verifiedRequests: verifiedRecords,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// @desc    Extract 12-digit UTR transaction numbers from bank statement (.csv, .pdf, .txt)
+// @route   POST /api/enter/subscriptions/extract-statement
+// @access  Private (Admin)
+export async function extractStatementUtrs(req, res, next) {
+  try {
+    const { fileBase64, fileName = '', fileText = '' } = req.body || {};
+
+    let rawText = String(fileText || '');
+
+    // If PDF base64 provided
+    if (fileBase64 && (fileName.toLowerCase().endsWith('.pdf') || fileBase64.startsWith('JVBER'))) {
+      try {
+        const { createRequire } = await import('module');
+        const require = createRequire(import.meta.url);
+        const { PDFParse } = require('pdf-parse');
+
+        const cleanBase64 = fileBase64.replace(/^data:[^;]+;base64,/, '');
+        const buffer = Buffer.from(cleanBase64, 'base64');
+        const parser = new PDFParse({ data: buffer });
+        const pdfData = await parser.getText();
+        if (pdfData && pdfData.text) {
+          rawText += '\n' + pdfData.text;
+        }
+      } catch (pdfErr) {
+        console.warn('PDF parsing fallback, scanning buffer bytes:', pdfErr.message);
+        try {
+          const cleanBase64 = fileBase64.replace(/^data:[^;]+;base64,/, '');
+          const buffer = Buffer.from(cleanBase64, 'base64');
+          rawText += '\n' + buffer.toString('latin1');
+        } catch {
+          // ignore
+        }
+      }
+    } else if (fileBase64 && !rawText) {
+      const cleanBase64 = fileBase64.replace(/^data:[^;]+;base64,/, '');
+      rawText = Buffer.from(cleanBase64, 'base64').toString('utf8');
+    }
+
+    if (!rawText.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'No readable text found in statement file.',
+      });
+    }
+
+    // Extract all 12-digit numeric sequences
+    const utrRegex = /(?:^|[^0-9])([0-9]{12})(?![0-9])/g;
+    const matches = [...rawText.matchAll(utrRegex)].map((m) => m[1]);
+
+    // Deduplicate while preserving order of first appearance
+    const uniqueUtrs = Array.from(new Set(matches));
+
+    // Also extract line snippets if possible
+    const lines = rawText.split(/\r?\n/).filter((l) => l.trim().length > 0);
+    const utrEntries = uniqueUtrs.map((utr) => {
+      const matchingLine = lines.find((line) => line.includes(utr)) || '';
+      return {
+        utr,
+        snippet: matchingLine.slice(0, 120).trim(),
+      };
+    });
+
+    return res.json({
+      success: true,
+      fileName,
+      totalCount: uniqueUtrs.length,
+      utrs: uniqueUtrs,
+      entries: utrEntries,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+

@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { toast } from '../../context/ToastContext';
 import { formatValidityDate } from '../../utils/dateUtils';
+import { adminAPI } from '../../services/api';
 
 export function AdminSubscriptionsView({
   requests = [],
@@ -9,13 +10,19 @@ export function AdminSubscriptionsView({
   onRefresh = () => {},
   onVerify = async () => {},
   onReject = async () => {},
+  onDelete = async () => {},
+  onBulkVerify = async () => {},
   onManualActivate = async () => {},
   hosts = [],
   formatDateTime = (d) => String(d),
 }) {
-  const [subFilter, setSubFilter] = useState('PENDING'); // 'PENDING' | 'VERIFIED' | 'REJECTED' | 'ALL'
+  const [subFilter, setSubFilter] = useState('ALL'); // 'ALL' | 'PENDING' | 'VERIFIED' | 'REJECTED'
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedUtr, setCopiedUtr] = useState(null);
+
+  // Delete State
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [isDeletingId, setIsDeletingId] = useState(null);
 
   // Verification Modal State
   const [verifyingItem, setVerifyingItem] = useState(null);
@@ -36,7 +43,16 @@ export function AdminSubscriptionsView({
   const [manualDuration, setManualDuration] = useState(1);
   const [manualNote, setManualNote] = useState('Directly granted by Admin');
 
-  // Filter & Search
+  // ── BANK STATEMENT ATTACHMENT & RECONCILIATION STATE ──
+  const fileInputRef = useRef(null);
+  const [attachedFile, setAttachedFile] = useState(null);
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [extractedUtrs, setExtractedUtrs] = useState([]); // [{ utr, snippet }]
+  const [hasMatched, setHasMatched] = useState(false);
+  const [isSorted, setIsSorted] = useState(false);
+  const [isBulkVerifying, setIsBulkVerifying] = useState(false);
+
+  // Filter & Search for the Subscriptions directory table
   const filteredRequests = useMemo(() => {
     return requests.filter((r) => {
       // Status filter
@@ -121,6 +137,19 @@ export function AdminSubscriptionsView({
     }
   };
 
+  // Confirm Delete action
+  const handleConfirmDelete = async (id) => {
+    try {
+      setIsDeletingId(id);
+      await onDelete(id);
+      setDeleteConfirmId(null);
+    } catch (err) {
+      toast.error(err.message || 'Failed to delete entry.');
+    } finally {
+      setIsDeletingId(null);
+    }
+  };
+
   // Confirm Manual Plan Activation
   const handleConfirmManualActivate = async () => {
     if (!manualHostId) {
@@ -142,9 +171,219 @@ export function AdminSubscriptionsView({
     }
   };
 
+  // ── STATEMENT RECONCILIATION WORKFLOW ──
+
+  // 1. File Selection
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setAttachedFile(file);
+    setExtractedUtrs([]);
+    setHasMatched(false);
+    setIsSorted(false);
+    toast.info(`Attached statement: ${file.name}`);
+  };
+
+  const handleClearAttachedFile = () => {
+    setAttachedFile(null);
+    setExtractedUtrs([]);
+    setHasMatched(false);
+    setIsSorted(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // 2. Extraction of 12-digit UTRs from .csv, .txt, or .pdf
+  const handleExtractUtrs = async () => {
+    if (!attachedFile) {
+      toast.warning('Please attach a bank statement file first.');
+      return;
+    }
+
+    try {
+      setIsExtracting(true);
+      const isPdf = attachedFile.name.toLowerCase().endsWith('.pdf');
+
+      if (isPdf) {
+        // Send to backend for PDF parsing
+        const reader = new FileReader();
+        const base64Promise = new Promise((resolve, reject) => {
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(attachedFile);
+        });
+
+        const fileBase64 = await base64Promise;
+        const res = await adminAPI.extractStatementUtrs({
+          fileBase64,
+          fileName: attachedFile.name,
+        });
+
+        if (res && res.success && Array.isArray(res.entries)) {
+          if (res.entries.length === 0) {
+            toast.warning('No 12-digit UTR numbers were found in this PDF.');
+          } else {
+            setExtractedUtrs(res.entries);
+            setHasMatched(false);
+            setIsSorted(false);
+            toast.success(`✓ Extracted ${res.entries.length} UTR numbers from ${attachedFile.name}!`);
+          }
+        } else {
+          toast.error(res?.message || 'Could not parse PDF statement.');
+        }
+      } else {
+        // CSV / TSV / TXT parsing in browser
+        const reader = new FileReader();
+        const textPromise = new Promise((resolve, reject) => {
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsText(attachedFile);
+        });
+
+        const rawText = await textPromise;
+        const utrRegex = /(?:^|[^0-9])([0-9]{12})(?![0-9])/g;
+        const matches = [...rawText.matchAll(utrRegex)].map((m) => m[1]);
+        const uniqueUtrs = Array.from(new Set(matches));
+
+        if (uniqueUtrs.length === 0) {
+          toast.warning('No 12-digit UTR numbers were detected in this statement.');
+        } else {
+          const lines = rawText.split(/\r?\n/).filter((l) => l.trim().length > 0);
+          const entries = uniqueUtrs.map((utr) => {
+            const line = lines.find((l) => l.includes(utr)) || '';
+            return {
+              utr,
+              snippet: line.slice(0, 120).trim(),
+            };
+          });
+
+          setExtractedUtrs(entries);
+          setHasMatched(false);
+          setIsSorted(false);
+          toast.success(`✓ Extracted ${entries.length} 12-digit UTR numbers from ${attachedFile.name}!`);
+        }
+      }
+    } catch (err) {
+      console.error('Extract error:', err);
+      toast.error(err.message || 'Error extracting UTRs from statement.');
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
+  // 3. Match Extracted UTRs with Host Submissions
+  const handleMatchUtrs = () => {
+    if (extractedUtrs.length === 0) {
+      toast.warning('Please extract statement UTRs first.');
+      return;
+    }
+
+    setHasMatched(true);
+    setIsSorted(false);
+
+    // Calculate match count
+    const matchedCount = extractedUtrs.filter((item) =>
+      requests.some((r) => r.transactionRef === item.utr)
+    ).length;
+
+    toast.success(`✓ Matched ${matchedCount} host request(s) with your bank statement!`);
+  };
+
+  // 4. Sort Matched UTRs to top and non-matched to bottom
+  const handleSortMatched = () => {
+    if (!hasMatched) {
+      toast.info('Click "Match" before sorting.');
+      return;
+    }
+    setIsSorted(true);
+    toast.success('✓ Sorted: All matched UTRs moved to top!');
+  };
+
+  // Compute Reconciliation Items
+  const reconciliationItems = useMemo(() => {
+    if (!extractedUtrs || extractedUtrs.length === 0) return [];
+
+    let items = extractedUtrs.map((entry) => {
+      const utr = typeof entry === 'string' ? entry : entry.utr;
+      const snippet = typeof entry === 'object' ? entry.snippet : '';
+      const matched = hasMatched ? requests.find((r) => r.transactionRef === utr) || null : null;
+
+      return {
+        utr,
+        snippet,
+        matchedRequest: matched,
+      };
+    });
+
+    if (isSorted && hasMatched) {
+      items = [...items].sort((a, b) => {
+        const aM = a.matchedRequest ? 1 : 0;
+        const bM = b.matchedRequest ? 1 : 0;
+        if (bM !== aM) return bM - aM;
+
+        if (a.matchedRequest && b.matchedRequest) {
+          const aP = a.matchedRequest.status === 'PENDING' ? 1 : 0;
+          const bP = b.matchedRequest.status === 'PENDING' ? 1 : 0;
+          return bP - aP;
+        }
+        return 0;
+      });
+    }
+
+    return items;
+  }, [extractedUtrs, requests, hasMatched, isSorted]);
+
+  const matchedPendingRequests = useMemo(() => {
+    if (!hasMatched) return [];
+    return reconciliationItems
+      .filter((i) => i.matchedRequest && i.matchedRequest.status === 'PENDING')
+      .map((i) => i.matchedRequest);
+  }, [reconciliationItems, hasMatched]);
+
+  const matchedCount = useMemo(() => {
+    if (!hasMatched) return 0;
+    return reconciliationItems.filter((i) => i.matchedRequest).length;
+  }, [reconciliationItems, hasMatched]);
+
+  // 5. Allow All Matched Pending Hosts at One Time
+  const handleAllowAllMatched = async () => {
+    if (matchedPendingRequests.length === 0) {
+      toast.info('All matched host requests are already verified!');
+      return;
+    }
+
+    try {
+      setIsBulkVerifying(true);
+      const pendingIds = matchedPendingRequests.map((r) => r._id);
+      await onBulkVerify({ paymentIds: pendingIds });
+      toast.success(`🎉 Verified and granted live access to all ${pendingIds.length} matched hosts!`);
+    } catch (err) {
+      toast.error(err.message || 'Bulk verify failed.');
+    } finally {
+      setIsBulkVerifying(false);
+    }
+  };
+
+  // Single allow from reconciliation table
+  const handleAllowSingleMatched = async (request) => {
+    if (!request) return;
+    try {
+      await onVerify(request._id, {
+        action: 'VERIFY',
+        durationMonths: request.durationMonths || 1,
+        adminNotes: 'Verified via statement reconciliation match',
+      });
+      toast.success(`✓ Plan activated for ${request.hostId?.name || 'Host'}!`);
+    } catch (err) {
+      toast.error(err.message || 'Verification failed.');
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6">
-      {/* ── METRIC STAT CARDS ── */}
+      {/* ── TOP METRIC STAT CARDS ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {/* Pending Requests */}
         <div
@@ -154,6 +393,7 @@ export function AdminSubscriptionsView({
               ? 'bg-amber-500/15 border-amber-500/40 shadow-lg shadow-amber-500/5'
               : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 hover:border-slate-300'
           }`}
+          title="Filter table by Pending"
         >
           <div className="flex items-center justify-between">
             <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
@@ -177,6 +417,7 @@ export function AdminSubscriptionsView({
               ? 'bg-emerald-500/15 border-emerald-500/40 shadow-lg shadow-emerald-500/5'
               : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 hover:border-slate-300'
           }`}
+          title="Filter table by Verified"
         >
           <div className="flex items-center justify-between">
             <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
@@ -200,6 +441,7 @@ export function AdminSubscriptionsView({
               ? 'bg-rose-500/15 border-rose-500/40 shadow-lg shadow-rose-500/5'
               : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 hover:border-slate-300'
           }`}
+          title="Filter table by Rejected"
         >
           <div className="flex items-center justify-between">
             <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">
@@ -223,6 +465,7 @@ export function AdminSubscriptionsView({
               ? 'bg-purple-500/15 border-purple-500/40 shadow-lg shadow-purple-500/5'
               : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 hover:border-slate-300'
           }`}
+          title="Show All requests"
         >
           <div className="flex items-center justify-between">
             <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
@@ -239,41 +482,129 @@ export function AdminSubscriptionsView({
         </div>
       </div>
 
-      {/* ── CONTROLS ROW: SEARCH, TABS & ACTIONS ── */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        {/* Sub-Tabs */}
-        <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-900 rounded-full border border-slate-200 dark:border-white/10 shrink-0 self-start sm:self-auto">
-          {[
-            { id: 'PENDING', label: 'Pending Verification', count: counts.pending },
-            { id: 'VERIFIED', label: 'Verified', count: counts.verified },
-            { id: 'REJECTED', label: 'Rejected', count: counts.rejected },
-            { id: 'ALL', label: 'All', count: counts.total },
-          ].map((tab) => (
+      {/* ── TOOLBAR: STATEMENT ATTACHMENT & RECONCILIATION ACTIONS (Replaces the old switch pill) ── */}
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+        {/* File Attachment & Actions Cluster */}
+        <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-white/10">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,.txt,.tsv,.pdf"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+
+          {/* 1. Attachment Button / Attached Pill */}
+          {!attachedFile ? (
             <button
-              key={tab.id}
               type="button"
-              onClick={() => setSubFilter(tab.id)}
-              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                subFilter === tab.id
-                  ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
+              onClick={() => fileInputRef.current?.click()}
+              className="px-3.5 py-1.5 rounded-xl text-xs font-bold border border-slate-300 dark:border-white/15 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:border-purple-500 hover:text-purple-400 flex items-center gap-1.5 shadow-2xs cursor-pointer transition-all active:scale-95"
+              title="Attach credit bank statement (.csv, .pdf) containing 12-digit UTR numbers"
             >
-              <span>{tab.label}</span>
-              <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                  subFilter === tab.id
-                    ? 'bg-purple-500/20 text-purple-700 dark:text-purple-300'
-                    : 'bg-slate-200 dark:bg-zinc-800 text-slate-500'
-                }`}
-              >
-                {tab.count || 0}
-              </span>
+              <svg className="w-4 h-4 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+              </svg>
+              <span>Attach Statement (.csv, .pdf)</span>
             </button>
-          ))}
+          ) : (
+            <div className="flex items-center gap-2 bg-purple-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 px-3 py-1 rounded-xl text-xs font-semibold">
+              <span className="truncate max-w-[140px] sm:max-w-[200px]" title={attachedFile.name}>
+                📄 {attachedFile.name}
+              </span>
+              <button
+                type="button"
+                onClick={handleClearAttachedFile}
+                className="text-slate-400 hover:text-rose-400 font-bold ml-0.5 cursor-pointer"
+                title="Remove attached statement"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
+          {/* 2. Extract Button */}
+          <button
+            type="button"
+            disabled={!attachedFile || isExtracting}
+            onClick={handleExtractUtrs}
+            className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 text-white flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer disabled:cursor-not-allowed active:scale-95"
+            title="Extract all 12-digit UTR numbers from attached statement"
+          >
+            {isExtracting ? (
+              <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="4 17 10 11 4 5" />
+                <line x1="12" y1="19" x2="20" y2="19" />
+              </svg>
+            )}
+            <span>Extract {extractedUtrs.length > 0 ? `(${extractedUtrs.length})` : ''}</span>
+          </button>
+
+          {/* 3. Match Button */}
+          {extractedUtrs.length > 0 && (
+            <button
+              type="button"
+              onClick={handleMatchUtrs}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer active:scale-95 ${
+                hasMatched
+                  ? 'bg-purple-600/20 text-purple-300 border-purple-500/40'
+                  : 'bg-purple-600 hover:bg-purple-500 text-white border-transparent'
+              }`}
+              title="Match extracted bank UTRs with host submitted 12-digit numbers"
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="8.5" cy="7" r="4" />
+                <polyline points="17 11 19 13 23 9" />
+              </svg>
+              <span>Match</span>
+            </button>
+          )}
+
+          {/* 4. Sort Button */}
+          {hasMatched && (
+            <button
+              type="button"
+              onClick={handleSortMatched}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer active:scale-95 ${
+                isSorted
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                  : 'bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-white/10 hover:border-slate-400'
+              }`}
+              title="Sort: Matched UTRs moved to top of list, non-matched placed at end"
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <polyline points="19 12 12 19 5 12" />
+              </svg>
+              <span>Sort</span>
+            </button>
+          )}
+
+          {/* 5. Allow All Button */}
+          {hasMatched && matchedPendingRequests.length > 0 && (
+            <button
+              type="button"
+              onClick={handleAllowAllMatched}
+              disabled={isBulkVerifying}
+              className="px-4 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20 flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 animate-pulse"
+              title="Verify and grant access to all matched pending hosts at one time"
+            >
+              {isBulkVerifying ? (
+                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <svg className="w-3.5 h-3.5 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              )}
+              <span>Allow All ({matchedPendingRequests.length})</span>
+            </button>
+          )}
         </div>
 
-        {/* Right Actions: Search + Quick Manual Grant Button */}
+        {/* Right Search & Quick Actions */}
         <div className="flex items-center gap-2 flex-1 sm:justify-end">
           <div className="relative flex-1 sm:max-w-xs">
             <input
@@ -320,8 +651,190 @@ export function AdminSubscriptionsView({
         </div>
       </div>
 
-      {/* ── TABLE VIEW ── */}
+      {/* ── STATEMENT RECONCILIATION COMPARISON BOARD (Visible when statement is extracted) ── */}
+      {extractedUtrs.length > 0 && (
+        <div className="rounded-3xl border border-purple-500/40 bg-slate-900/90 backdrop-blur-xl p-5 shadow-2xl flex flex-col gap-4 animate-in fade-in slide-in-from-top-2">
+          {/* Reconciliation Header & Actions */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-400 animate-pulse" />
+                <h3 className="font-extrabold text-white text-sm sm:text-base tracking-tight flex items-center gap-2">
+                  <span>Statement Reconciliation Match Board</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                    {extractedUtrs.length} UTRs Extracted
+                  </span>
+                </h3>
+              </div>
+              <p className="text-xs text-slate-300 mt-1">
+                Statement: <strong className="text-white">{attachedFile?.name}</strong>.
+                {hasMatched ? (
+                  <>
+                    {' '}Matched <strong className="text-emerald-400">{matchedCount}</strong> host requests (
+                    <strong className="text-amber-400">{matchedPendingRequests.length}</strong> pending verification).
+                  </>
+                ) : (
+                  ' Click "Match" to cross-reference with hosts.'
+                )}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 self-end sm:self-auto">
+              {hasMatched && matchedPendingRequests.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleAllowAllMatched}
+                  disabled={isBulkVerifying}
+                  className="px-4 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <svg className="w-3.5 h-3.5 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span>Allow All ({matchedPendingRequests.length})</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleClearAttachedFile}
+                className="px-3 py-1.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer"
+              >
+                Close Board
+              </button>
+            </div>
+          </div>
+
+          {/* 2-Column Comparison Table */}
+          <div className="overflow-x-auto rounded-2xl border border-white/10 bg-slate-950/80">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead className="bg-slate-950 text-slate-400 uppercase tracking-wider font-semibold border-b border-white/10 text-[11px]">
+                <tr>
+                  <th className="py-3 px-4 w-1/3">1. Bank Statement UTR (My UTR No.'s)</th>
+                  <th className="py-3 px-4 w-1/2">2. Host Submitted UTR & Stay Details</th>
+                  <th className="py-3 px-4 text-right w-1/6">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5 text-slate-200">
+                {reconciliationItems.map((item, idx) => {
+                  const matched = item.matchedRequest;
+                  const isMatchedPending = matched && matched.status === 'PENDING';
+                  const isMatchedVerified = matched && matched.status === 'VERIFIED';
+
+                  return (
+                    <tr
+                      key={item.utr + '_' + idx}
+                      className={`transition-colors ${
+                        matched
+                          ? isMatchedPending
+                            ? 'bg-purple-950/30 hover:bg-purple-950/40'
+                            : 'bg-emerald-950/20 hover:bg-emerald-950/30'
+                          : 'hover:bg-white/[0.02]'
+                      }`}
+                    >
+                      {/* Column 1: Bank Statement UTR */}
+                      <td className="py-3 px-4 align-middle">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-white text-xs bg-slate-900 px-2 py-0.5 rounded border border-white/10">
+                            {item.utr}
+                          </span>
+                          {matched ? (
+                            <span className="px-2 py-0.2 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                              ✓ MATCHED
+                            </span>
+                          ) : hasMatched ? (
+                            <span className="px-2 py-0.2 rounded-full text-[10px] font-semibold bg-slate-800 text-slate-400">
+                              Statement Only
+                            </span>
+                          ) : null}
+                        </div>
+                        {item.snippet && (
+                          <div className="text-[10px] text-slate-400 truncate max-w-xs mt-1" title={item.snippet}>
+                            {item.snippet}
+                          </div>
+                        )}
+                      </td>
+
+                      {/* Column 2: Host Submitted Request */}
+                      <td className="py-3 px-4 align-middle">
+                        {matched ? (
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-white text-xs">{matched.hostId?.name || 'Host'}</span>
+                              <span className="text-[11px] text-slate-400 truncate max-w-[180px]">
+                                ({matched.hostId?.email})
+                              </span>
+                            </div>
+                            <div className="text-[11px] text-purple-300 flex items-center gap-1.5">
+                              <span className="truncate max-w-[180px]">🏡 {matched.stayId?.title || 'Stay Property'}</span>
+                              <span>•</span>
+                              <span className="font-bold text-emerald-400 whitespace-nowrap">
+                                {matched.planLabel} (₹{matched.amount})
+                              </span>
+                            </div>
+                          </div>
+                        ) : hasMatched ? (
+                          <span className="text-[11px] text-slate-500 italic">
+                            — No host submission for this UTR —
+                          </span>
+                        ) : (
+                          <span className="text-[11px] text-slate-500">
+                            Click "Match" above to cross-reference host requests
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Column 3: Actions */}
+                      <td className="py-3 px-4 align-middle text-right">
+                        {isMatchedPending ? (
+                          <button
+                            type="button"
+                            onClick={() => handleAllowSingleMatched(matched)}
+                            className="px-3 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs transition-all active:scale-95 cursor-pointer"
+                          >
+                            Allow / Verify
+                          </button>
+                        ) : isMatchedVerified ? (
+                          <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                            ✓ Verified & Live
+                          </span>
+                        ) : matched?.status === 'REJECTED' ? (
+                          <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                            Rejected
+                          </span>
+                        ) : (
+                          <span className="text-slate-600 text-xs">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── SUBSCRIPTIONS DIRECTORY TABLE (All Submissions with Delete Action) ── */}
       <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+        <div className="px-4 py-3 border-b border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-950/40 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Subscription Requests Directory
+            </span>
+            <span className="text-xs px-2 py-0.2 rounded-full font-bold bg-purple-500/15 text-purple-700 dark:text-purple-300">
+              {filteredRequests.length}
+            </span>
+          </div>
+          {subFilter !== 'ALL' && (
+            <button
+              type="button"
+              onClick={() => setSubFilter('ALL')}
+              className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 hover:underline cursor-pointer"
+            >
+              Clear filter ({subFilter})
+            </button>
+          )}
+        </div>
+
         {loading ? (
           <div className="p-12 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
             <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
@@ -336,7 +849,7 @@ export function AdminSubscriptionsView({
             <p className="text-xs text-slate-400 max-w-sm">
               {searchQuery
                 ? `No requests match "${searchQuery}". Clear your search or change filter.`
-                : 'No subscription payment requests have been submitted under this filter yet.'}
+                : 'No subscription payment requests found.'}
             </p>
           </div>
         ) : (
@@ -395,7 +908,7 @@ export function AdminSubscriptionsView({
                           <button
                             type="button"
                             onClick={() => handleCopyUtr(item.transactionRef)}
-                            className="p-1 rounded text-slate-400 hover:text-purple-500 transition-colors"
+                            className="p-1 rounded text-slate-400 hover:text-purple-500 transition-colors cursor-pointer"
                             title="Copy 12-digit UTR"
                           >
                             {copiedUtr === item.transactionRef ? (
@@ -472,46 +985,83 @@ export function AdminSubscriptionsView({
                         )}
                       </td>
 
-                      {/* 7. Actions */}
+                      {/* 7. Actions (with Delete button on each row) */}
                       <td className="py-3.5 px-3.5 align-middle text-right">
-                        {item.status === 'PENDING' ? (
-                          <div className="inline-flex items-center gap-1.5 justify-end">
+                        <div className="inline-flex items-center gap-1.5 justify-end">
+                          {item.status === 'PENDING' ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenVerify(item)}
+                                className="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs active:scale-95 transition-all cursor-pointer"
+                                title="Verify UTR and activate stay"
+                              >
+                                Verify & Activate
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenReject(item)}
+                                className="px-2.5 py-1 text-xs font-medium rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 active:scale-95 transition-all cursor-pointer"
+                                title="Reject invalid request"
+                              >
+                                Reject
+                              </button>
+                            </>
+                          ) : item.status === 'VERIFIED' ? (
                             <button
                               type="button"
                               onClick={() => handleOpenVerify(item)}
-                              className="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs active:scale-95 transition-all cursor-pointer"
-                              title="Verify UTR and activate stay"
+                              className="px-2.5 py-1 text-[11px] font-medium rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white border border-slate-200 dark:border-white/10 transition-all cursor-pointer"
+                              title="Extend or update validity"
                             >
-                              Verify & Activate
+                              Extend Validity
                             </button>
+                          ) : (
                             <button
                               type="button"
-                              onClick={() => handleOpenReject(item)}
-                              className="px-2.5 py-1 text-xs font-medium rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 active:scale-95 transition-all cursor-pointer"
-                              title="Reject invalid request"
+                              onClick={() => handleOpenVerify(item)}
+                              className="px-2.5 py-1 text-[11px] font-medium rounded-lg text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 border border-amber-500/20 transition-all cursor-pointer"
+                              title="Re-evaluate and grant access"
                             >
-                              Reject
+                              Re-verify
                             </button>
-                          </div>
-                        ) : item.status === 'VERIFIED' ? (
-                          <button
-                            type="button"
-                            onClick={() => handleOpenVerify(item)}
-                            className="px-2.5 py-1 text-[11px] font-medium rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white border border-slate-200 dark:border-white/10 transition-all cursor-pointer"
-                            title="Extend or update validity"
-                          >
-                            Extend Validity
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleOpenVerify(item)}
-                            className="px-2.5 py-1 text-[11px] font-medium rounded-lg text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 border border-amber-500/20 transition-all cursor-pointer"
-                            title="Re-evaluate and grant access"
-                          >
-                            Re-verify
-                          </button>
-                        )}
+                          )}
+
+                          {/* ── DELETE BUTTON FOR EACH ENTRY LIST ── */}
+                          {deleteConfirmId === item._id ? (
+                            <div className="inline-flex items-center gap-1 bg-rose-500/10 p-0.5 rounded-lg border border-rose-500/30 animate-in fade-in">
+                              <button
+                                type="button"
+                                onClick={() => handleConfirmDelete(item._id)}
+                                disabled={isDeletingId === item._id}
+                                className="px-2 py-0.5 text-[10.5px] font-bold rounded bg-rose-600 hover:bg-rose-500 text-white active:scale-95 transition-all cursor-pointer"
+                                title="Confirm Deletion"
+                              >
+                                {isDeletingId === item._id ? 'Deleting...' : 'Confirm'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setDeleteConfirmId(null)}
+                                className="px-1.5 py-0.5 text-[10.5px] font-medium text-slate-400 hover:text-white cursor-pointer"
+                                title="Cancel"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setDeleteConfirmId(item._id)}
+                              className="p-1.5 rounded-lg text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all cursor-pointer"
+                              title="Delete this subscription entry"
+                            >
+                              <svg className="w-3.5 h-3.5 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <polyline points="3 6 5 6 21 6" />
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -812,7 +1362,7 @@ export function AdminSubscriptionsView({
               <button
                 type="button"
                 onClick={() => setPreviewImageUrl(null)}
-                className="px-2 py-0.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white bg-white/10"
+                className="px-2 py-0.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white bg-white/10 cursor-pointer"
               >
                 ✕ Close
               </button>
@@ -830,5 +1380,5 @@ export function AdminSubscriptionsView({
     </div>
   );
 }
-export default AdminSubscriptionsView;
 
+export default AdminSubscriptionsView;
