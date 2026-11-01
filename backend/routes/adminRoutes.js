@@ -17,8 +17,11 @@ import { adminLimiter } from '../middleware/rateLimitMiddleware.js';
 import validate from '../middleware/validateMiddleware.js';
 import { idParamSchema } from '../validators/commonValidator.js';
 import { impersonateSchema } from '../validators/adminValidator.js';
+import { getPlatformPaymentSettings, updatePlatformPaymentSettings } from '../controllers/platformPaymentController.js';
 
 const router = express.Router();
+
+router.route('/payment-settings').get(adminLimiter, requireAdmin, getPlatformPaymentSettings).put(adminLimiter, requireAdmin, updatePlatformPaymentSettings);
 
 // Master Admin Security-Gated Endpoints (Guarded against unauthorized brute-forcing)
 router.route('/impersonate').post(adminLimiter, requireAdmin, validate(impersonateSchema), impersonateAccount);
