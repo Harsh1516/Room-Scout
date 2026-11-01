@@ -177,51 +177,51 @@ export function HostSubscriptionPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-purple-500/30">
-      {/* ── TOP FLOATING HEADER ── */}
-      <header className="fixed top-3.5 inset-x-3 sm:top-5 sm:inset-x-6 z-50 flex items-center justify-between max-w-6xl mx-auto pointer-events-none">
-        <div className="pointer-events-auto flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => navigate('/host/dashboard')}
-            className="apple-liquid-nav flex items-center gap-1.5 h-9 px-3.5 rounded-full border border-white/15 bg-slate-900/80 backdrop-blur-md hover:bg-slate-800/80 text-white font-medium text-xs sm:text-sm shadow-lg active:scale-95 transition-all"
+      {/* ── 1. LEFT FLOATING ISLAND: BACK BUTTON (Exact position matching Host Dashboard) ── */}
+      <div className="fixed top-3.5 left-3 sm:top-5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none">
+        <button
+          type="button"
+          onClick={() => navigate('/host/dashboard')}
+          data-no-hover="true"
+          className="apple-liquid-nav flex items-center justify-center h-8 sm:h-9 px-3 py-1 sm:px-3.5 sm:py-1.5 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 dark:border-white/15 shadow-xs cursor-pointer text-slate-800 dark:text-slate-200 font-semibold text-xs sm:text-sm select-none active:scale-95 transition-transform shrink-0"
+          title="Return to Dashboard"
+        >
+          <svg
+            className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 dark:text-slate-300 stroke-[2.5]"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
-            <svg className="w-4 h-4 stroke-[2.2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <line x1="19" y1="12" x2="5" y2="12" />
-              <polyline points="12 19 5 12 12 5" />
-            </svg>
-            <span>Dashboard</span>
-          </button>
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+          <span>Back</span>
+        </button>
+      </div>
 
-          <span className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 font-semibold text-xs tracking-wide">
-            <svg className="w-3.5 h-3.5 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-            </svg>
-            <span>Stay Subscription</span>
-          </span>
-        </div>
-
-        <div className="pointer-events-auto flex items-center gap-2">
-          {/* Live Visibility Status Capsule */}
-          <div
-            className={`apple-liquid-nav h-9 px-3.5 rounded-full border flex items-center gap-2 text-xs font-semibold backdrop-blur-md shadow-md ${
-              isLive
-                ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
-                : status === 'PENDING_VERIFICATION'
-                ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
-                : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
+      {/* ── 2. RIGHT FLOATING ISLAND: STATUS CAPSULE + THEME TOGGLE (Exact position matching Host Dashboard) ── */}
+      <div className="fixed top-3.5 right-3 sm:top-5 sm:right-6 z-50 flex items-center gap-2 sm:gap-2.5 pointer-events-auto select-none">
+        <div
+          className={`apple-liquid-nav h-8 sm:h-9 px-3 sm:px-3.5 rounded-full border flex items-center gap-2 text-xs font-semibold backdrop-blur-md shadow-xs ${
+            isLive
+              ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
+              : status === 'PENDING_VERIFICATION'
+              ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
+              : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
+          }`}
+        >
+          <span
+            className={`w-2 h-2 rounded-full animate-pulse ${
+              isLive ? 'bg-emerald-400' : status === 'PENDING_VERIFICATION' ? 'bg-amber-400' : 'bg-rose-400'
             }`}
-          >
-            <span
-              className={`w-2 h-2 rounded-full animate-pulse ${
-                isLive ? 'bg-emerald-400' : status === 'PENDING_VERIFICATION' ? 'bg-amber-400' : 'bg-rose-400'
-              }`}
-            />
-            <span>{isLive ? 'Stay is Live' : status === 'PENDING_VERIFICATION' ? 'Verification Pending' : 'Stay is Hidden'}</span>
-          </div>
-
-          <ThemeTogglePill />
+          />
+          <span>{isLive ? 'Stay is Live' : status === 'PENDING_VERIFICATION' ? 'Verification Pending' : 'Stay is Hidden'}</span>
         </div>
-      </header>
+
+        <ThemeTogglePill />
+      </div>
 
       {/* ── MAIN CONTENT CONTAINER ── */}
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 pt-24 pb-16 flex flex-col gap-8">
