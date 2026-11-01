@@ -45,7 +45,7 @@ export function PropertyDescriptionTab({
         {/* Header Strip with Character Count and Limit */}
         <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white border-b border-slate-200/60 dark:border-white/[0.08] pb-3 flex-wrap gap-2 relative z-10">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-purple-600 dark:bg-purple-400" />
+            <span className="w-2 h-2 rounded-full bg-slate-900 dark:bg-white" />
             <span>Host Written Summary</span>
           </div>
 
@@ -56,7 +56,7 @@ export function PropertyDescriptionTab({
                   ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-400/40'
                   : isAtMax
                   ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-300/80 dark:border-emerald-800'
-                  : 'bg-purple-500/10 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/20 dark:border-purple-500/30'
+                  : 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-200 dark:border-zinc-700'
               }`}
             >
               {localDesc.length} / {MAX_DESCRIPTION_CHARS} characters
@@ -67,9 +67,9 @@ export function PropertyDescriptionTab({
                 <button
                   type="button"
                   onClick={onStartEdit}
-                  className="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 dark:bg-purple-500/20 dark:hover:bg-purple-500/30 border border-purple-500/20 dark:border-purple-500/30 text-purple-700 dark:text-purple-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
+                  className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-slate-300/80 dark:border-zinc-700 text-slate-800 dark:text-zinc-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
                 >
-                  <PencilIcon className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                  <PencilIcon className="w-3.5 h-3.5 text-slate-600 dark:text-zinc-400" />
                   <span>Edit</span>
                 </button>
               )
@@ -126,14 +126,12 @@ export function PropertyDescriptionTab({
             </div>
           </div>
         ) : (
-          <div className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-purple-400 dark:hover:border-purple-500/50 hover:bg-white/85 dark:hover:bg-white/[0.08] transition-all flex flex-col justify-between gap-3 shadow-2xs relative z-10">
+          <div className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-slate-400 dark:hover:border-zinc-600 hover:bg-white/85 dark:hover:bg-white/[0.08] transition-all flex flex-col justify-between gap-3 shadow-2xs relative z-10">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-purple-700 dark:text-purple-300 uppercase tracking-wider font-bold">
+              <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase tracking-wider font-bold">
                 Editorial Bio & Overview
               </span>
-              <div className="w-7 h-7 rounded-lg bg-purple-500/15 dark:bg-purple-400/15 border border-purple-500/30 dark:border-purple-400/30 flex items-center justify-center text-purple-600 dark:text-purple-300 shadow-2xs">
-                <span className="material-symbols-outlined text-[15px]">description</span>
-              </div>
+              <span className="material-symbols-outlined text-[17px] text-slate-600 dark:text-zinc-400 shrink-0">description</span>
             </div>
             <div>
               <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight leading-relaxed whitespace-pre-wrap">

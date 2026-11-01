@@ -84,7 +84,7 @@ export function PropertyLocationTab({
       <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-xl border border-white/80 dark:border-white/[0.08] shadow-[0_4px_24px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.7)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.36),inset_0_1px_0_rgba(255,255,255,0.08)] space-y-4 relative overflow-hidden">
         <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-200/60 dark:border-white/[0.08] pb-3 relative z-10">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-purple-600 dark:bg-purple-400" />
+            <span className="w-2 h-2 rounded-full bg-slate-900 dark:bg-white" />
             Address & Geography
           </p>
           {!isEditing ? (
@@ -92,9 +92,9 @@ export function PropertyLocationTab({
               <button
                 type="button"
                 onClick={onStartEdit}
-                className="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 dark:bg-purple-500/20 dark:hover:bg-purple-500/30 border border-purple-500/20 dark:border-purple-500/30 text-purple-700 dark:text-purple-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
+                className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-slate-300/80 dark:border-zinc-700 text-slate-800 dark:text-zinc-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
               >
-                <PencilIcon className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                <PencilIcon className="w-3.5 h-3.5 text-slate-600 dark:text-zinc-400" />
                 <span>Edit</span>
               </button>
             )
@@ -230,15 +230,13 @@ export function PropertyLocationTab({
         ) : (
           <div className="relative z-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {/* 1. Full Address - Sky/Blue Tint */}
-              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-sky-400 dark:hover:border-sky-500/50 hover:bg-white/85 dark:hover:bg-white/[0.08] transition-all flex flex-col justify-between gap-2 shadow-2xs">
+              {/* 1. Full Address */}
+              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-slate-400 dark:hover:border-zinc-600 hover:bg-white/85 dark:hover:bg-white/[0.08] transition-all flex flex-col justify-between gap-2 shadow-2xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-sky-700 dark:text-sky-300 uppercase tracking-wider font-bold">
+                  <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase tracking-wider font-bold">
                     Full Address
                   </span>
-                  <div className="w-7 h-7 rounded-lg bg-sky-500/15 dark:bg-sky-400/15 border border-sky-500/30 dark:border-sky-400/30 flex items-center justify-center text-sky-600 dark:text-sky-300 shadow-2xs">
-                    <span className="material-symbols-outlined text-[15px]">location_on</span>
-                  </div>
+                  <span className="material-symbols-outlined text-[17px] text-slate-600 dark:text-zinc-400 shrink-0">location_on</span>
                 </div>
                 <div>
                   <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight leading-snug">
@@ -250,15 +248,13 @@ export function PropertyLocationTab({
                 </div>
               </div>
 
-              {/* 2. Area / Road / Colony - Indigo Tint */}
-              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-indigo-400 dark:hover:border-indigo-500/50 hover:bg-white/85 dark:hover:bg-white/[0.08] transition-all flex flex-col justify-between gap-2 shadow-2xs">
+              {/* 2. Area / Road / Colony */}
+              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-slate-400 dark:hover:border-zinc-600 hover:bg-white/85 dark:hover:bg-white/[0.08] transition-all flex flex-col justify-between gap-2 shadow-2xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-indigo-700 dark:text-indigo-300 uppercase tracking-wider font-bold">
+                  <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase tracking-wider font-bold">
                     Area / Road / Colony
                   </span>
-                  <div className="w-7 h-7 rounded-lg bg-indigo-500/15 dark:bg-indigo-400/15 border border-indigo-500/30 dark:border-indigo-400/30 flex items-center justify-center text-indigo-600 dark:text-indigo-300 shadow-2xs">
-                    <span className="material-symbols-outlined text-[15px]">signpost</span>
-                  </div>
+                  <span className="material-symbols-outlined text-[17px] text-slate-600 dark:text-zinc-400 shrink-0">signpost</span>
                 </div>
                 <div>
                   <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight leading-snug">
@@ -270,15 +266,13 @@ export function PropertyLocationTab({
                 </div>
               </div>
 
-              {/* 3. City & State - Emerald Tint */}
-              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-emerald-400 dark:hover:border-emerald-500/50 hover:bg-white/85 dark:hover:bg-white/[0.08] transition-all flex flex-col justify-between gap-2 shadow-2xs">
+              {/* 3. City & State */}
+              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-slate-400 dark:hover:border-zinc-600 hover:bg-white/85 dark:hover:bg-white/[0.08] transition-all flex flex-col justify-between gap-2 shadow-2xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-emerald-700 dark:text-emerald-300 uppercase tracking-wider font-bold">
+                  <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase tracking-wider font-bold">
                     City & State
                   </span>
-                  <div className="w-7 h-7 rounded-lg bg-emerald-500/15 dark:bg-emerald-400/15 border border-emerald-500/30 dark:border-emerald-400/30 flex items-center justify-center text-emerald-600 dark:text-emerald-300 shadow-2xs">
-                    <span className="material-symbols-outlined text-[15px]">apartment</span>
-                  </div>
+                  <span className="material-symbols-outlined text-[17px] text-slate-600 dark:text-zinc-400 shrink-0">apartment</span>
                 </div>
                 <div>
                   <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">
@@ -290,15 +284,13 @@ export function PropertyLocationTab({
                 </div>
               </div>
 
-              {/* 4. Pincode - Amber Tint */}
-              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-amber-400 dark:hover:border-amber-500/50 hover:bg-white/85 dark:hover:bg-white/[0.08] transition-all flex flex-col justify-between gap-2 shadow-2xs">
+              {/* 4. Pincode */}
+              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-slate-400 dark:hover:border-zinc-600 hover:bg-white/85 dark:hover:bg-white/[0.08] transition-all flex flex-col justify-between gap-2 shadow-2xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-amber-700 dark:text-amber-300 uppercase tracking-wider font-bold">
+                  <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase tracking-wider font-bold">
                     Pincode
                   </span>
-                  <div className="w-7 h-7 rounded-lg bg-amber-500/15 dark:bg-amber-400/15 border border-amber-500/30 dark:border-amber-400/30 flex items-center justify-center text-amber-500 shadow-2xs">
-                    <span className="material-symbols-outlined text-[15px]">pin_drop</span>
-                  </div>
+                  <span className="material-symbols-outlined text-[17px] text-slate-600 dark:text-zinc-400 shrink-0">pin_drop</span>
                 </div>
                 <div>
                   <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">

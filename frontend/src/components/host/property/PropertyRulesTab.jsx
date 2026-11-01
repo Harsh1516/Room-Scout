@@ -80,7 +80,7 @@ export function PropertyRulesTab({
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-200/60 dark:border-white/[0.08] pb-3 relative z-10">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-purple-600 dark:bg-purple-400" />
+            <span className="w-2 h-2 rounded-full bg-slate-900 dark:bg-white" />
             House Rules & Regulations ({localRules.length})
           </p>
 
@@ -89,9 +89,9 @@ export function PropertyRulesTab({
               <button
                 type="button"
                 onClick={onStartEdit}
-                className="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 dark:bg-purple-500/20 dark:hover:bg-purple-500/30 border border-purple-500/20 dark:border-purple-500/30 text-purple-700 dark:text-purple-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
+                className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-slate-300/80 dark:border-zinc-700 text-slate-800 dark:text-zinc-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
               >
-                <PencilIcon className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                <PencilIcon className="w-3.5 h-3.5 text-slate-600 dark:text-zinc-400" />
                 <span>Edit</span>
               </button>
             )
@@ -205,11 +205,9 @@ export function PropertyRulesTab({
                 {rules.map((rule, rIdx) => (
                   <div
                     key={rIdx}
-                    className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-amber-400 dark:hover:border-amber-500/50 hover:bg-white/85 dark:hover:bg-white/[0.08] text-slate-800 dark:text-slate-100 text-xs sm:text-[13px] font-semibold tracking-tight flex items-center gap-3 transition-all shadow-2xs"
+                    className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-slate-400 dark:hover:border-zinc-600 hover:bg-white/85 dark:hover:bg-white/[0.08] text-slate-800 dark:text-slate-100 text-xs sm:text-[13px] font-semibold tracking-tight flex items-center gap-2.5 transition-all shadow-2xs"
                   >
-                    <div className="w-7 h-7 rounded-lg bg-amber-500/15 dark:bg-amber-400/15 border border-amber-500/30 dark:border-amber-400/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 shadow-2xs">
-                      <RulesIcon className="w-3.5 h-3.5" />
-                    </div>
+                    <RulesIcon className="w-4 h-4 text-slate-700 dark:text-zinc-300 shrink-0" />
                     <span className="leading-snug">{rule}</span>
                   </div>
                 ))}

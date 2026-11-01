@@ -76,7 +76,7 @@ export function PropertyFacilitiesTab({
       <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-xl border border-white/80 dark:border-white/[0.08] shadow-[0_4px_24px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.7)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.36),inset_0_1px_0_rgba(255,255,255,0.08)] space-y-4 relative overflow-hidden">
         <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-200/60 dark:border-white/[0.08] pb-3 relative z-10">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-purple-600 dark:bg-purple-400" />
+            <span className="w-2 h-2 rounded-full bg-slate-900 dark:bg-white" />
             Active Amenities ({localFacilities.length})
           </p>
 
@@ -85,9 +85,9 @@ export function PropertyFacilitiesTab({
               <button
                 type="button"
                 onClick={onStartEdit}
-                className="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 dark:bg-purple-500/20 dark:hover:bg-purple-500/30 border border-purple-500/20 dark:border-purple-500/30 text-purple-700 dark:text-purple-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
+                className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-slate-300/80 dark:border-zinc-700 text-slate-800 dark:text-zinc-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
               >
-                <PencilIcon className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                <PencilIcon className="w-3.5 h-3.5 text-slate-600 dark:text-zinc-400" />
                 <span>Edit</span>
               </button>
             )
@@ -196,11 +196,9 @@ export function PropertyFacilitiesTab({
                 {facilities.map((facility, fIdx) => (
                   <div
                     key={fIdx}
-                    className="px-3.5 py-2.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-emerald-500/50 dark:hover:border-emerald-400/50 hover:bg-white/85 dark:hover:bg-white/[0.08] text-slate-800 dark:text-slate-100 text-xs sm:text-[13px] font-semibold tracking-tight flex items-center gap-2.5 transition-all shadow-2xs hover:shadow-xs group"
+                    className="px-3.5 py-2.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-slate-400 dark:hover:border-zinc-600 hover:bg-white/85 dark:hover:bg-white/[0.08] text-slate-800 dark:text-slate-100 text-xs sm:text-[13px] font-semibold tracking-tight flex items-center gap-2 transition-all shadow-2xs hover:shadow-xs group"
                   >
-                    <div className="w-6 h-6 rounded-lg bg-emerald-500/15 dark:bg-emerald-400/15 border border-emerald-500/30 dark:border-emerald-400/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
-                      <CheckIcon className="w-3.5 h-3.5 stroke-[2.5]" />
-                    </div>
+                    <CheckIcon className="w-3.5 h-3.5 text-slate-700 dark:text-zinc-300 stroke-[2] shrink-0" />
                     <span className="truncate">{facility}</span>
                   </div>
                 ))}

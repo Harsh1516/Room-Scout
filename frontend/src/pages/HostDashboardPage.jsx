@@ -1921,9 +1921,7 @@ export function HostDashboardPage() {
                             </Suspense>
                           ) : (
                             <div className="hidden xl:flex flex-col items-center justify-center min-h-[320px] rounded-3xl border border-dashed border-slate-300 dark:border-outline-variant/60 bg-white/70 dark:bg-surface-container-low/60 backdrop-blur-sm text-center p-8 space-y-3 shadow-xs">
-                              <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-surface-container-high border border-slate-200 dark:border-outline-variant/40 flex items-center justify-center mx-auto text-slate-400 dark:text-primary">
-                                <span className="material-symbols-outlined text-[24px]">meeting_room</span>
-                              </div>
+                              <span className="material-symbols-outlined text-[32px] text-slate-400 dark:text-zinc-500 mx-auto">meeting_room</span>
                               <div className="space-y-1">
                                 <p className="text-sm font-semibold text-slate-800 dark:text-on-surface">Select a room to view its schedule</p>
                                 <p className="text-xs text-slate-500 dark:text-on-surface-variant max-w-sm mx-auto">Pick any room card from the left panel to open the booking calendar and occupants roster.</p>

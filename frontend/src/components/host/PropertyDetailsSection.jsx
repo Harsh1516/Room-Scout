@@ -196,23 +196,23 @@ export function PropertyDetailsSection({
     <div className="flex flex-col w-full h-full min-h-0">
       {/* ── Two-Column Dashboard Workspace ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-5 items-stretch h-full min-h-0">
-        {/* Left Navigation Rail: Joined single unit with top purple section and expanded light purple bottom section */}
+        {/* Left Navigation Rail: Joined single unit with top dark section and expanded light bottom section */}
         <aside className="lg:col-span-3 flex flex-col h-full min-h-0 shrink-0">
-          <div className="rounded-2xl sm:rounded-3xl border border-purple-300/60 dark:border-purple-900/40 shadow-xl overflow-hidden flex flex-col h-full transition-all bg-gradient-to-r from-purple-600 to-indigo-600">
-            {/* ── Top Section: Property Info (Matching Property button gradient) ── */}
-            <div className="p-4 sm:p-5 pb-9 sm:pb-10 bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex flex-col gap-3 relative shrink-0">
+          <div className="rounded-2xl sm:rounded-3xl border border-slate-300/80 dark:border-zinc-800 shadow-xl overflow-hidden flex flex-col h-full transition-all bg-slate-900 dark:bg-zinc-950">
+            {/* ── Top Section: Property Info (Clean dark/black aesthetic) ── */}
+            <div className="p-4 sm:p-5 pb-9 sm:pb-10 bg-slate-900 dark:bg-zinc-950 text-white flex flex-col gap-3 relative shrink-0">
               {/* Header: Place Name + Top-Right Edit Button */}
               <div className="flex items-center justify-between gap-2 relative z-10">
                 <h1 className="text-base sm:text-lg lg:text-xl font-extrabold text-white tracking-tight truncate flex-1 min-w-0">
                   {hostProperty?.propertyName || hostProperty?.title || '—'}
                 </h1>
 
-                {/* Edit button: sleek glass on purple */}
+                {/* Edit button: sleek glass */}
                 {onEditDetails && (
                   <button
                     type="button"
                     onClick={onEditDetails}
-                    className="px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 border border-white/25 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs shrink-0"
+                    className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 border border-white/20 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs shrink-0"
                     title="Edit Listing Details"
                   >
                     <PencilIcon className="w-3.5 h-3.5 text-white" />
@@ -224,8 +224,8 @@ export function PropertyDetailsSection({
               {/* Badges/Metadata with crisp contrast in both themes */}
               <div className="flex flex-col gap-1.5 pt-0.5 text-xs relative z-10">
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 font-medium text-purple-100">
-                    <span className="material-symbols-outlined text-[14px] text-purple-200">apartment</span>
+                  <span className="flex items-center gap-1.5 font-medium text-slate-300 dark:text-zinc-400">
+                    <span className="material-symbols-outlined text-[14px] text-slate-400 dark:text-zinc-500">apartment</span>
                     <span>{hostProperty?.propertyType || hostProperty?.category ? `${hostProperty.propertyType || hostProperty.category} Category` : '—'}</span>
                   </span>
                   <span className="flex items-center gap-1 font-semibold text-amber-300">
@@ -240,20 +240,20 @@ export function PropertyDetailsSection({
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between text-purple-100">
-                  <span className="flex items-center gap-1.5 font-medium text-purple-100">
-                    <span className="material-symbols-outlined text-[14px] text-purple-200">group</span>
+                <div className="flex items-center justify-between text-slate-300 dark:text-zinc-400">
+                  <span className="flex items-center gap-1.5 font-medium text-slate-300 dark:text-zinc-400">
+                    <span className="material-symbols-outlined text-[14px] text-slate-400 dark:text-zinc-500">group</span>
                     <span>For: {hostProperty?.genderType ? hostProperty.genderType.charAt(0).toUpperCase() + hostProperty.genderType.slice(1).toLowerCase() : '—'}</span>
                   </span>
                 </div>
               </div>
 
               {/* Actions Row */}
-              <div className="flex items-center gap-2 pt-1 border-t border-white/20 relative z-10">
+              <div className="flex items-center gap-2 pt-1 border-t border-white/15 relative z-10">
                 <button
                   type="button"
                   onClick={handleOpenPublicUrl}
-                  className="flex-1 h-9 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-semibold text-xs tracking-normal shadow-sm shadow-emerald-500/25 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  className="flex-1 h-9 rounded-xl bg-white hover:bg-slate-100 text-slate-900 dark:bg-zinc-100 dark:hover:bg-white dark:text-slate-900 font-bold text-xs tracking-normal shadow-sm active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <span>Public URL</span>
                   <span className="material-symbols-outlined text-[15px]">north_east</span>
@@ -262,7 +262,7 @@ export function PropertyDetailsSection({
                 <button
                   type="button"
                   onClick={handleShare}
-                  className="h-9 px-3.5 shrink-0 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 text-white flex items-center justify-center gap-1.5 border border-white/25 shadow-2xs transition-all cursor-pointer"
+                  className="h-9 px-3.5 shrink-0 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center gap-1.5 border border-white/20 shadow-2xs transition-all cursor-pointer"
                   title="Share listing link"
                 >
                   <span className="material-symbols-outlined text-[16px]">share</span>
@@ -271,26 +271,26 @@ export function PropertyDetailsSection({
               </div>
             </div>
 
-            {/* ── Lower Section: Configuration Matrix / Tabs (Light purple background, rounded top upper border) ── */}
-            <div className="flex-1 flex flex-col p-4 sm:p-5 bg-[#f6f2fe] dark:bg-[#160f26] rounded-t-[28px] sm:rounded-t-[32px] -mt-5 sm:-mt-6 border-t border-x border-b-0 border-purple-200/50 dark:border-purple-800/40 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.35)] transition-colors justify-between min-h-0 relative z-10">
+            {/* ── Lower Section: Configuration Matrix / Tabs (Monochrome black/gray/white styling) ── */}
+            <div className="flex-1 flex flex-col p-4 sm:p-5 bg-slate-50/95 dark:bg-zinc-900/95 rounded-t-[28px] sm:rounded-t-[32px] -mt-5 sm:-mt-6 border-t border-x border-b-0 border-slate-200/80 dark:border-zinc-800 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.35)] transition-colors justify-between min-h-0 relative z-10">
               {/* Header: Title + Dynamic Percentage + Micro Progress Bar */}
-              <div className="flex flex-col gap-2 pb-2.5 px-0.5 border-b border-purple-200/70 dark:border-purple-900/40 mb-2 shrink-0">
+              <div className="flex flex-col gap-2 pb-2.5 px-0.5 border-b border-slate-200 dark:border-zinc-800 mb-2 shrink-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-600 dark:bg-purple-400" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-purple-900 dark:text-purple-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-900 dark:bg-white" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-800 dark:text-zinc-200">
                       Configuration Matrix
                     </span>
                   </div>
-                  <span className="inline-flex items-center text-[10.5px] font-bold text-purple-900 dark:text-purple-200 bg-purple-200/80 dark:bg-purple-900/70 px-2.5 py-0.5 rounded-full border border-purple-300/80 dark:border-purple-700/60 tabular-nums shadow-2xs">
+                  <span className="inline-flex items-center text-[10.5px] font-bold text-slate-800 dark:text-zinc-200 bg-slate-200/80 dark:bg-zinc-800 px-2.5 py-0.5 rounded-full border border-slate-300/80 dark:border-zinc-700 tabular-nums shadow-2xs">
                     {completionPercentage}% Complete
                   </span>
                 </div>
 
                 {/* Minimal Progress Bar */}
-                <div className="w-full h-1.5 bg-purple-200/70 dark:bg-purple-950/80 rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-slate-200 dark:bg-zinc-800 rounded-full overflow-hidden">
                   <motion.div
-                    className="h-full bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-500 rounded-full"
+                    className="h-full bg-slate-900 dark:bg-white rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${completionPercentage}%` }}
                     transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -298,22 +298,11 @@ export function PropertyDetailsSection({
                 </div>
               </div>
 
-              {/* Sub-Tabs Steps Navigation (Expanded to fill available height smoothly) */}
+              {/* Sub-Tabs Steps Navigation */}
               <nav aria-label="Steps Navigation" className="flex-1 flex flex-col justify-between gap-1 relative min-h-0">
                 {sections.map((sec, idx) => {
                   const isActive = activeIndex === idx;
                   const isCompleted = sec.isComplete;
-
-                  // Distinct sweet pastel color styling for each tab icon
-                  const iconColorMap = {
-                    overview: 'text-indigo-600 dark:text-indigo-300 bg-indigo-100/90 dark:bg-indigo-950/60',
-                    description: 'text-violet-600 dark:text-violet-300 bg-violet-100/90 dark:bg-violet-950/60',
-                    location: 'text-sky-600 dark:text-sky-300 bg-sky-100/90 dark:bg-sky-950/60',
-                    facilities: 'text-emerald-600 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-950/60',
-                    rules: 'text-amber-600 dark:text-amber-300 bg-amber-100/90 dark:bg-amber-950/60',
-                    photos: 'text-rose-600 dark:text-rose-300 bg-rose-100/90 dark:bg-rose-950/60',
-                  };
-                  const iconStyle = iconColorMap[sec.id] || 'text-purple-600 dark:text-purple-300 bg-purple-100 dark:bg-purple-950/60';
 
                   return (
                     <button
@@ -324,14 +313,14 @@ export function PropertyDetailsSection({
                         setEditingSectionId(null);
                       }}
                       className={`group relative flex items-center justify-between px-3 py-2 sm:py-2.5 rounded-xl cursor-pointer text-left w-full select-none focus:outline-none transition-colors ${
-                        !isActive ? 'hover:bg-white/70 dark:hover:bg-purple-900/30' : ''
+                        !isActive ? 'hover:bg-slate-100 dark:hover:bg-zinc-800/60' : ''
                       }`}
                     >
-                      {/* Animated Sliding Active Background Indicator (Premium Purple + Gray Border, Normal/Minimal switch animation) */}
+                      {/* Animated Sliding Active Background Indicator */}
                       {isActive && (
                         <motion.div
                           layoutId="activeSectionIndicator"
-                          className="absolute inset-0 rounded-xl bg-purple-100/90 dark:bg-[#2c1b4d] border border-slate-300 dark:border-zinc-700 shadow-xs pointer-events-none z-0"
+                          className="absolute inset-0 rounded-xl bg-white dark:bg-zinc-800 border border-slate-200/90 dark:border-zinc-700 shadow-xs pointer-events-none z-0"
                           transition={{
                             type: 'tween',
                             duration: 0.2,
@@ -340,25 +329,25 @@ export function PropertyDetailsSection({
                         />
                       )}
 
-                      {/* Left: Icon + Title */}
+                      {/* Left: Standalone Icon + Title (No icon background box) */}
                       <div className="flex items-center gap-2.5 min-w-0 relative z-10">
-                        <div
-                          className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-150 ${
+                        <span
+                          className={`material-symbols-outlined text-[17px] shrink-0 transition-colors ${
                             isActive
-                              ? 'bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-xs'
-                              : iconStyle
+                              ? 'text-slate-900 dark:text-white font-bold'
+                              : 'text-slate-500 dark:text-zinc-400 group-hover:text-slate-900 dark:group-hover:text-white'
                           }`}
                         >
-                          <span className="material-symbols-outlined text-[15px]">{sec.icon}</span>
-                        </div>
+                          {sec.icon}
+                        </span>
 
                         {/* Text Column */}
                         <div className="flex min-w-0 items-center">
                           <span
                             className={`text-xs truncate transition-colors duration-150 ${
                               isActive
-                                ? 'font-extrabold text-purple-950 dark:text-white'
-                                : 'font-medium text-slate-700 dark:text-purple-200/90 group-hover:text-purple-950 dark:group-hover:text-white'
+                                ? 'font-bold text-slate-900 dark:text-white'
+                                : 'font-medium text-slate-600 dark:text-zinc-400 group-hover:text-slate-900 dark:group-hover:text-white'
                             }`}
                           >
                             {sec.title}
@@ -371,24 +360,24 @@ export function PropertyDetailsSection({
                         {isActive ? (
                           <div className="flex items-center gap-1.5">
                             {sec.badge && (
-                              <span className="px-2 py-0.5 rounded-md text-[9.5px] font-mono font-bold bg-purple-100 dark:bg-purple-900/70 text-purple-900 dark:text-purple-200 border border-purple-200 dark:border-purple-700/80">
+                              <span className="px-2 py-0.5 rounded-md text-[9.5px] font-mono font-bold bg-slate-200 dark:bg-zinc-700 text-slate-900 dark:text-white border border-slate-300 dark:border-zinc-600">
                                 {sec.badge}
                               </span>
                             )}
-                            <span className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center shadow-2xs">
-                              <span className="material-symbols-outlined text-[13px] font-bold">check</span>
+                            <span className="material-symbols-outlined text-[15px] font-bold text-slate-900 dark:text-white shrink-0">
+                              check
                             </span>
                           </div>
                         ) : (
                           <div className="flex items-center gap-1.5">
                             {sec.badge !== null && (
-                              <span className="px-2 py-0.5 rounded-md text-[9.5px] font-mono font-medium bg-purple-100/60 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/40 transition-colors">
+                              <span className="px-2 py-0.5 rounded-md text-[9.5px] font-mono font-medium bg-slate-100/90 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 border border-slate-200/80 dark:border-zinc-700/80 transition-colors">
                                 {sec.badge}
                               </span>
                             )}
                             {isCompleted && !sec.badge && (
-                              <span className="material-symbols-outlined text-purple-500/80 dark:text-purple-400 text-[15px]">
-                                check_circle
+                              <span className="material-symbols-outlined text-slate-400 dark:text-zinc-500 text-[14px] shrink-0">
+                                check
                               </span>
                             )}
                           </div>

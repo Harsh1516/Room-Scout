@@ -722,11 +722,9 @@ export function PropertyPhotosTab({
           localVideoUrl?.trim() ? (
             <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] shadow-2xs flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                <div className="w-7 h-7 rounded-lg bg-emerald-500/15 dark:bg-emerald-400/15 border border-emerald-500/30 dark:border-emerald-400/30 flex items-center justify-center text-emerald-600 dark:text-emerald-300 shadow-2xs shrink-0">
-                  <span className="material-symbols-outlined text-[15px]">smart_display</span>
-                </div>
+                <span className="material-symbols-outlined text-[18px] text-slate-700 dark:text-zinc-300 shrink-0">smart_display</span>
                 <div className="min-w-0 flex-1">
-                  <span className="text-[10px] text-emerald-700 dark:text-emerald-300 uppercase tracking-wider font-bold block">
+                  <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase tracking-wider font-bold block">
                     Public Walkthrough URL
                   </span>
                   <span className="text-sm font-bold text-slate-900 dark:text-white tracking-tight truncate block select-all">

@@ -81,11 +81,11 @@ export function HostDashboardNavbar({
           type="button"
           onClick={() => navigate('/host/subscription')}
           data-no-hover="true"
-          className="apple-liquid-nav flex items-center justify-center h-8 sm:h-9 px-3 py-1 sm:px-3.5 sm:py-1.5 gap-1.5 sm:gap-2 rounded-full border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 dark:border-purple-400/40 dark:bg-purple-500/15 dark:hover:bg-purple-500/25 shadow-xs cursor-pointer text-purple-700 dark:text-purple-300 font-semibold text-xs sm:text-sm select-none active:scale-95 transition-all shrink-0"
+          className="apple-liquid-nav flex items-center justify-center h-8 sm:h-9 px-3 py-1 sm:px-3.5 sm:py-1.5 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 dark:border-white/15 bg-white/70 dark:bg-zinc-800/70 hover:bg-white dark:hover:bg-zinc-700 shadow-xs cursor-pointer text-slate-800 dark:text-zinc-200 font-semibold text-xs sm:text-sm select-none active:scale-95 transition-all shrink-0"
           title="View Subscription & Purchase Plans"
         >
           <svg
-            className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600 dark:text-purple-400 stroke-[2.2]"
+            className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 dark:text-zinc-400 stroke-[2.2]"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"

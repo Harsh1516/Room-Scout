@@ -60,7 +60,7 @@ export function PropertyOverviewTab({
       <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-xl border border-white/80 dark:border-white/[0.08] shadow-[0_4px_24px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.7)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.36),inset_0_1px_0_rgba(255,255,255,0.08)] space-y-4 relative overflow-hidden">
         <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-200/60 dark:border-white/[0.08] pb-3 relative z-10">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-purple-600 dark:bg-purple-400" />
+            <span className="w-2 h-2 rounded-full bg-slate-900 dark:bg-white" />
             Property Identity
           </h3>
           {!isEditing ? (
@@ -68,9 +68,9 @@ export function PropertyOverviewTab({
               <button
                 type="button"
                 onClick={onStartEdit}
-                className="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 dark:bg-purple-500/20 dark:hover:bg-purple-500/30 border border-purple-500/20 dark:border-purple-500/30 text-purple-700 dark:text-purple-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
+                className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-slate-300/80 dark:border-zinc-700 text-slate-800 dark:text-zinc-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
               >
-                <PencilIcon className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                <PencilIcon className="w-3.5 h-3.5 text-slate-600 dark:text-zinc-400" />
                 <span>Edit Information</span>
               </button>
             )
@@ -110,7 +110,7 @@ export function PropertyOverviewTab({
           <div className="space-y-4 pt-1 relative z-10">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
               <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/70 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/80 dark:border-white/10 space-y-1.5 shadow-2xs">
-                <label className="text-[10.5px] text-indigo-700 dark:text-indigo-300 font-bold block uppercase font-mono tracking-wider">
+                <label className="text-[10.5px] text-slate-700 dark:text-zinc-300 font-bold block uppercase font-mono tracking-wider">
                   Property Name *
                 </label>
                 <input
@@ -119,18 +119,18 @@ export function PropertyOverviewTab({
                   onChange={(e) => handleChange('propertyName', e.target.value)}
                   placeholder="e.g. Green Valley Luxury PG"
                   required
-                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/15 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-colors"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/15 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] focus:outline-none focus:border-slate-800 dark:focus:border-white focus:ring-1 focus:ring-slate-800/10 transition-colors"
                 />
               </div>
 
               <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/70 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/80 dark:border-white/10 space-y-1.5 shadow-2xs">
-                <label className="text-[10.5px] text-teal-700 dark:text-teal-300 font-bold block uppercase font-mono tracking-wider">
+                <label className="text-[10.5px] text-slate-700 dark:text-zinc-300 font-bold block uppercase font-mono tracking-wider">
                   Property Type
                 </label>
                 <select
                   value={formData.propertyType}
                   onChange={(e) => handleChange('propertyType', e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/15 text-xs sm:text-[13px] text-slate-900 dark:text-white focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-colors cursor-pointer"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/15 text-xs sm:text-[13px] text-slate-900 dark:text-white focus:outline-none focus:border-slate-800 dark:focus:border-white focus:ring-1 focus:ring-slate-800/10 transition-colors cursor-pointer"
                 >
                   <option value="" disabled className="bg-white dark:bg-zinc-900 text-slate-400">
                     Select Property Type
@@ -144,13 +144,13 @@ export function PropertyOverviewTab({
               </div>
 
               <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/70 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/80 dark:border-white/10 space-y-1.5 shadow-2xs">
-                <label className="text-[10.5px] text-purple-700 dark:text-purple-300 font-bold block uppercase font-mono tracking-wider">
+                <label className="text-[10.5px] text-slate-700 dark:text-zinc-300 font-bold block uppercase font-mono tracking-wider">
                   Gender Allowed
                 </label>
                 <select
                   value={formData.genderType}
                   onChange={(e) => handleChange('genderType', e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/15 text-xs sm:text-[13px] text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-colors cursor-pointer"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/15 text-xs sm:text-[13px] text-slate-900 dark:text-white focus:outline-none focus:border-slate-800 dark:focus:border-white focus:ring-1 focus:ring-slate-800/10 transition-colors cursor-pointer"
                 >
                   <option value="" disabled className="bg-white dark:bg-zinc-900 text-slate-400">
                     Select Gender Allowed
@@ -166,15 +166,13 @@ export function PropertyOverviewTab({
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 relative z-10">
-            {/* 1. Property Name - Sweet Indigo/Blue Tint */}
-            <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-indigo-400 dark:hover:border-indigo-500/50 hover:bg-white/85 dark:hover:bg-white/[0.08] transition-all flex flex-col justify-between gap-2 shadow-2xs">
+            {/* 1. Property Name */}
+            <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-slate-400 dark:hover:border-zinc-600 hover:bg-white/85 dark:hover:bg-white/[0.08] transition-all flex flex-col justify-between gap-2 shadow-2xs">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-indigo-700 dark:text-indigo-300 uppercase tracking-wider font-bold">
+                <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase tracking-wider font-bold">
                   Property Name
                 </span>
-                <div className="w-7 h-7 rounded-lg bg-indigo-500/15 dark:bg-indigo-400/15 border border-indigo-500/30 dark:border-indigo-400/30 flex items-center justify-center text-indigo-600 dark:text-indigo-300 shadow-2xs">
-                  <span className="material-symbols-outlined text-[15px]">badge</span>
-                </div>
+                <span className="material-symbols-outlined text-[17px] text-slate-600 dark:text-zinc-400 shrink-0">badge</span>
               </div>
               <div>
                 <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight truncate">
@@ -186,15 +184,13 @@ export function PropertyOverviewTab({
               </div>
             </div>
 
-            {/* 2. Property Type - Sweet Emerald/Teal Tint */}
-            <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-emerald-400 dark:hover:border-emerald-500/50 hover:bg-white/85 dark:hover:bg-white/[0.08] transition-all flex flex-col justify-between gap-2 shadow-2xs">
+            {/* 2. Property Type */}
+            <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-slate-400 dark:hover:border-zinc-600 hover:bg-white/85 dark:hover:bg-white/[0.08] transition-all flex flex-col justify-between gap-2 shadow-2xs">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-emerald-700 dark:text-emerald-300 uppercase tracking-wider font-bold">
+                <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase tracking-wider font-bold">
                   Property Type
                 </span>
-                <div className="w-7 h-7 rounded-lg bg-emerald-500/15 dark:bg-emerald-400/15 border border-emerald-500/30 dark:border-emerald-400/30 flex items-center justify-center text-emerald-600 dark:text-emerald-300 shadow-2xs">
-                  <span className="material-symbols-outlined text-[15px]">apartment</span>
-                </div>
+                <span className="material-symbols-outlined text-[17px] text-slate-600 dark:text-zinc-400 shrink-0">apartment</span>
               </div>
               <div>
                 <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">
@@ -206,15 +202,13 @@ export function PropertyOverviewTab({
               </div>
             </div>
 
-            {/* 3. Gender Allowed - Sweet Purple/Violet Tint */}
-            <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-purple-400 dark:hover:border-purple-500/50 hover:bg-white/85 dark:hover:bg-white/[0.08] transition-all flex flex-col justify-between gap-2 shadow-2xs">
+            {/* 3. Gender Allowed */}
+            <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-slate-400 dark:hover:border-zinc-600 hover:bg-white/85 dark:hover:bg-white/[0.08] transition-all flex flex-col justify-between gap-2 shadow-2xs">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-purple-700 dark:text-purple-300 uppercase tracking-wider font-bold">
+                <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase tracking-wider font-bold">
                   Gender Allowed
                 </span>
-                <div className="w-7 h-7 rounded-lg bg-purple-500/15 dark:bg-purple-400/15 border border-purple-500/30 dark:border-purple-400/30 flex items-center justify-center text-purple-600 dark:text-purple-300 shadow-2xs">
-                  <span className="material-symbols-outlined text-[15px]">group</span>
-                </div>
+                <span className="material-symbols-outlined text-[17px] text-slate-600 dark:text-zinc-400 shrink-0">group</span>
               </div>
               <div>
                 <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">
@@ -226,15 +220,13 @@ export function PropertyOverviewTab({
               </div>
             </div>
 
-            {/* 4. Current Rating - Sweet Amber/Warm Tint */}
-            <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-amber-400 dark:hover:border-amber-500/50 hover:bg-white/85 dark:hover:bg-white/[0.08] transition-all flex flex-col justify-between gap-2 shadow-2xs">
+            {/* 4. Current Rating */}
+            <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-slate-400 dark:hover:border-zinc-600 hover:bg-white/85 dark:hover:bg-white/[0.08] transition-all flex flex-col justify-between gap-2 shadow-2xs">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-amber-700 dark:text-amber-300 uppercase tracking-wider font-bold">
+                <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase tracking-wider font-bold">
                   Current Rating
                 </span>
-                <div className="w-7 h-7 rounded-lg bg-amber-500/15 dark:bg-amber-400/15 border border-amber-500/30 dark:border-amber-400/30 flex items-center justify-center text-amber-500 shadow-2xs">
-                  <span className="material-symbols-outlined text-[15px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                </div>
+                <span className="material-symbols-outlined text-[17px] text-slate-600 dark:text-zinc-400 shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
               </div>
               <div>
                 <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1">
