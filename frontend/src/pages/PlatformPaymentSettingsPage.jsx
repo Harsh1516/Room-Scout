@@ -47,7 +47,7 @@ export default function PlatformPaymentSettingsPage() {
 
   const handleSave = async (event) => {
     event.preventDefault();
-    if (form.upiId && !/^[^\\s@]+@[^\\s@]+$/.test(form.upiId)) {
+    if (form.upiId && !/^[^\s@]+@[^\s@]+$/.test(form.upiId)) {
       toast.error('Please enter a valid UPI ID.');
       return;
     }
