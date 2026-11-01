@@ -206,6 +206,18 @@ export function HostDashboardNavbar({
             )}
           </button>
 
+          {/* Subscription Tab */}
+          <button
+            type="button"
+            onClick={() => handleSelectTab('subscription')}
+            className={`relative py-2 px-3.5 sm:px-4.5 rounded-full text-xs sm:text-sm font-semibold tracking-tight transition-colors duration-200 flex items-center gap-2 select-none ${activeTab === 'subscription' ? 'text-white dark:text-slate-950' : 'text-slate-600 dark:text-slate-300'}`}
+            title="Host Subscription"
+          >
+            {activeTab === 'subscription' && <motion.div layoutId="hostNavbarActiveCapsuleTab" className="absolute inset-0 bg-slate-950 dark:bg-white rounded-full shadow-sm z-0 pointer-events-none" />}
+            <svg className="relative z-10 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M7 9h10M7 13h6" /></svg>
+            <span className="relative z-10">Subscription</span>
+          </button>
+
           {/* UPI Settings Tab */}
           <button
             type="button"
