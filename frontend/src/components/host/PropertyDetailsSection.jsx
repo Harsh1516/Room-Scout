@@ -195,86 +195,85 @@ export function PropertyDetailsSection({
     <div className="flex flex-col w-full h-full min-h-0">
       {/* ── Two-Column Dashboard Workspace ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-5 items-stretch h-full min-h-0">
-        {/* Left Navigation Rail: Luna styled unified card */}
-        <aside className="lg:col-span-3 flex flex-col h-full min-h-0 shrink-0">
-          <div className="rounded-2xl sm:rounded-3xl border border-[#54ACBF]/35 dark:border-[#26658C]/60 shadow-[0_20px_50px_-12px_rgba(1,28,64,0.65),0_8px_24px_-4px_rgba(1,28,64,0.45),inset_0_1px_1px_0_rgba(167,235,242,0.25)] ring-1 ring-[#54ACBF]/20 overflow-hidden flex flex-col h-full transition-all bg-[#011C40] relative">
-            {/* Top Specular Rim Reflection for Left Card */}
+        {/* Left Navigation Rail: Stepped Layered Cards */}
+        <aside className="lg:col-span-3 flex flex-col lg:self-start w-full shrink-0 relative">
+          {/* ── Upper Tab: Property Info (Slightly Lesser Width, Clearly Observable) ── */}
+          <div className="w-[calc(100%-18px)] sm:w-[calc(100%-22px)] mx-auto rounded-2xl sm:rounded-3xl border border-[#54ACBF]/35 dark:border-[#26658C]/60 shadow-[0_16px_36px_-10px_rgba(1,28,64,0.65),inset_0_1px_1px_0_rgba(167,235,242,0.25)] ring-1 ring-[#54ACBF]/20 overflow-hidden bg-gradient-to-b from-[#01224d] via-[#011C40] to-[#011C40] text-white flex flex-col gap-3 p-4 sm:p-5 pb-8 sm:pb-9 relative shrink-0 z-0">
+            {/* Top Specular Rim Reflection for Upper Tab */}
             <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#A7EBF2]/60 to-transparent pointer-events-none z-20" />
-            {/* ── Top Section: Property Info (Luna Gradient Aesthetic) ── */}
-            <div className="p-4 sm:p-5 pb-9 sm:pb-10 bg-gradient-to-b from-[#01224d] via-[#011C40] to-[#011C40] text-white flex flex-col gap-3 relative shrink-0 overflow-hidden">
 
-              {/* Header: Place Name + Top-Right Edit Button */}
-              <div className="flex items-center justify-between gap-2 relative z-10">
-                <h1 className="text-base sm:text-lg lg:text-xl font-medium text-white tracking-normal truncate flex-1 min-w-0">
-                  {hostProperty?.propertyName || hostProperty?.title || '—'}
-                </h1>
+            {/* Header: Place Name + Top-Right Edit Button */}
+            <div className="flex items-center justify-between gap-2 relative z-10">
+              <h1 className="text-base sm:text-lg lg:text-xl font-medium text-white tracking-normal truncate flex-1 min-w-0">
+                {hostProperty?.propertyName || hostProperty?.title || '—'}
+              </h1>
 
-                {/* Edit button: sleek Luna glass */}
-                {onEditDetails && (
-                  <button
-                    type="button"
-                    onClick={onEditDetails}
-                    className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 border border-[#54ACBF]/30 text-[#A7EBF2] text-xs font-normal flex items-center gap-1.5 cursor-pointer transition-all shadow-xs shrink-0"
-                    title="Edit Listing Details"
-                  >
-                    <PencilIcon className="w-3.5 h-3.5 text-[#A7EBF2]" />
-                    <span>Edit</span>
-                  </button>
-                )}
-              </div>
-
-              {/* Badges/Metadata in Luna Palette */}
-              <div className="flex flex-col gap-1.5 pt-0.5 text-xs relative z-10">
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 font-medium text-[#A7EBF2]/80">
-                    <span className="material-symbols-outlined text-[15px] text-[#54ACBF]">apartment</span>
-                    <span>{hostProperty?.propertyType || hostProperty?.category ? `${hostProperty.propertyType || hostProperty.category} Category` : '—'}</span>
-                  </span>
-                  <span className="flex items-center gap-1 font-medium text-[#A7EBF2]">
-                    <span className="material-symbols-outlined text-[14px] text-[#A7EBF2]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      star
-                    </span>
-                    <span>
-                      {(Number(hostProperty?.reviewsCount) > 0 || (Array.isArray(hostProperty?.reviews) && hostProperty.reviews.length > 0)) && Number(hostProperty?.rating) > 0
-                        ? Number(hostProperty.rating).toFixed(1)
-                        : 'New'}
-                    </span>
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between text-[#A7EBF2]/80">
-                  <span className="flex items-center gap-1.5 font-normal text-[#A7EBF2]/80">
-                    <span className="material-symbols-outlined text-[15px] text-[#54ACBF]">group</span>
-                    <span>For: {hostProperty?.genderType ? hostProperty.genderType.charAt(0).toUpperCase() + hostProperty.genderType.slice(1).toLowerCase() : '—'}</span>
-                  </span>
-                </div>
-              </div>
-
-              {/* Actions Row */}
-              <div className="flex items-center gap-2 pt-1 border-t border-[#54ACBF]/20 relative z-10">
+              {/* Edit button: sleek Luna glass */}
+              {onEditDetails && (
                 <button
                   type="button"
-                  onClick={handleOpenPublicUrl}
-                  className="flex-1 h-9 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-[#A7EBF2] flex items-center justify-center gap-1.5 border border-[#54ACBF]/30 shadow-2xs transition-all cursor-pointer"
+                  onClick={onEditDetails}
+                  className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 border border-[#54ACBF]/30 text-[#A7EBF2] text-xs font-normal flex items-center gap-1.5 cursor-pointer transition-all shadow-xs shrink-0"
+                  title="Edit Listing Details"
                 >
-                  <span className="text-xs font-normal">Public URL</span>
-                  <span className="material-symbols-outlined text-[15px] text-[#A7EBF2]">north_east</span>
+                  <PencilIcon className="w-3.5 h-3.5 text-[#A7EBF2]" />
+                  <span>Edit</span>
                 </button>
+              )}
+            </div>
 
-                <button
-                  type="button"
-                  onClick={handleShare}
-                  className="h-9 px-3.5 shrink-0 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-[#A7EBF2] flex items-center justify-center gap-1.5 border border-[#54ACBF]/30 shadow-2xs transition-all cursor-pointer"
-                  title="Share listing link"
-                >
-                  <span className="material-symbols-outlined text-[16px] text-[#A7EBF2]">share</span>
-                  <span className="text-xs font-normal">Share</span>
-                </button>
+            {/* Badges/Metadata in Luna Palette */}
+            <div className="flex flex-col gap-1.5 pt-0.5 text-xs relative z-10">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 font-medium text-[#A7EBF2]/80">
+                  <span className="material-symbols-outlined text-[15px] text-[#54ACBF]">apartment</span>
+                  <span>{hostProperty?.propertyType || hostProperty?.category ? `${hostProperty.propertyType || hostProperty.category} Category` : '—'}</span>
+                </span>
+                <span className="flex items-center gap-1 font-medium text-[#A7EBF2]">
+                  <span className="material-symbols-outlined text-[14px] text-[#A7EBF2]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                    star
+                  </span>
+                  <span>
+                    {(Number(hostProperty?.reviewsCount) > 0 || (Array.isArray(hostProperty?.reviews) && hostProperty.reviews.length > 0)) && Number(hostProperty?.rating) > 0
+                      ? Number(hostProperty.rating).toFixed(1)
+                      : 'New'}
+                  </span>
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between text-[#A7EBF2]/80">
+                <span className="flex items-center gap-1.5 font-normal text-[#A7EBF2]/80">
+                  <span className="material-symbols-outlined text-[15px] text-[#54ACBF]">group</span>
+                  <span>For: {hostProperty?.genderType ? hostProperty.genderType.charAt(0).toUpperCase() + hostProperty.genderType.slice(1).toLowerCase() : '—'}</span>
+                </span>
               </div>
             </div>
 
-            {/* ── Lower Section: Configuration Matrix / Tabs (Luna Aesthetic) ── */}
-            <div className="flex-1 flex flex-col p-4 sm:p-5 bg-gradient-to-b from-[#02436a] to-[#023859] rounded-t-[28px] sm:rounded-t-[32px] -mt-5 sm:-mt-6 border-t border-x border-b-0 border-[#54ACBF]/40 shadow-[0_-8px_25px_rgba(1,28,64,0.55),inset_0_1px_1px_0_rgba(167,235,242,0.3)] transition-colors justify-between min-h-0 relative z-10">
+            {/* Actions Row */}
+            <div className="flex items-center gap-2 pt-1 border-t border-[#54ACBF]/20 relative z-10">
+              <button
+                type="button"
+                onClick={handleOpenPublicUrl}
+                className="flex-1 h-9 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-[#A7EBF2] flex items-center justify-center gap-1.5 border border-[#54ACBF]/30 shadow-2xs transition-all cursor-pointer"
+              >
+                <span className="text-xs font-normal">Public URL</span>
+                <span className="material-symbols-outlined text-[15px] text-[#A7EBF2]">north_east</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleShare}
+                className="h-9 px-3.5 shrink-0 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-[#A7EBF2] flex items-center justify-center gap-1.5 border border-[#54ACBF]/30 shadow-2xs transition-all cursor-pointer"
+                title="Share listing link"
+              >
+                <span className="material-symbols-outlined text-[16px] text-[#A7EBF2]">share</span>
+                <span className="text-xs font-normal">Share</span>
+              </button>
+            </div>
+          </div>
+
+          {/* ── Lower Tab: Configuration Matrix / Tabs (Visibly Broader Full Width) ── */}
+          <div className="w-full flex flex-col p-4 sm:p-5 pb-5 bg-gradient-to-b from-[#02436a] to-[#023859] rounded-2xl sm:rounded-3xl rounded-t-[28px] sm:rounded-t-[32px] -mt-4 sm:-mt-5 border border-[#54ACBF]/40 shadow-[0_20px_50px_-12px_rgba(1,28,64,0.65),0_-8px_25px_rgba(1,28,64,0.55),inset_0_1px_1px_0_rgba(167,235,242,0.3)] transition-colors relative z-10">
               {/* Header: Title + Dynamic Percentage + Micro Progress Bar */}
               <div className="flex flex-col gap-2 pb-2.5 px-0.5 border-b border-[#54ACBF]/20 dark:border-[#26658C]/40 mb-2 shrink-0">
                 <div className="flex items-center justify-center py-0.5">
@@ -295,7 +294,7 @@ export function PropertyDetailsSection({
               </div>
 
               {/* Sub-Tabs Steps Navigation */}
-              <nav aria-label="Steps Navigation" className="flex-1 flex flex-col justify-between gap-1 relative min-h-0">
+              <nav aria-label="Steps Navigation" className="flex flex-col gap-1.5 relative">
                 {sections.map((sec, idx) => {
                   const isActive = activeIndex === idx;
                   const isCompleted = sec.isComplete;
@@ -310,37 +309,31 @@ export function PropertyDetailsSection({
                       }}
                       whileTap={{ scale: 0.985 }}
                       transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                      className={`group relative flex items-center justify-between px-3 py-2 sm:py-2.5 rounded-xl cursor-pointer text-left w-full select-none focus:outline-none transition-colors duration-200 ${
+                      className={`group relative flex items-center justify-between px-3 h-[42px] rounded-xl cursor-pointer text-left w-full select-none focus:outline-none transition-colors duration-200 ${
                         !isActive ? 'hover:bg-[#011C40]/30' : ''
                       }`}
                     >
-                      {/* Animated Sliding Active Background Indicator with Liquid Flow Spring Physics */}
+                      {/* Minimal, Simple Active Indicator */}
                       {isActive && (
                         <motion.div
                           layoutId="activeSectionIndicator"
-                          className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#01172f] via-[#011C40] to-[#01244d] border border-[#54ACBF]/60 shadow-[0_4px_18px_rgba(1,28,64,0.65),inset_0_1px_1.5px_rgba(167,235,242,0.22),0_0_12px_rgba(84,172,191,0.12)] pointer-events-none z-0"
+                          className="absolute inset-0 rounded-xl bg-[#011C40] border border-[#54ACBF]/20 shadow-xs pointer-events-none z-0"
                           transition={{
                             type: 'spring',
                             stiffness: 380,
                             damping: 30,
                             mass: 0.8,
                           }}
-                        >
-                          {/* Specular fluid gloss reflection rim */}
-                          <div className="absolute top-0 inset-x-3 h-[1px] bg-gradient-to-r from-transparent via-[#A7EBF2]/45 to-transparent rounded-full pointer-events-none" />
-                          {/* Subtle bottom grounding glow */}
-                          <div className="absolute bottom-0 inset-x-4 h-[1px] bg-gradient-to-r from-transparent via-[#54ACBF]/20 to-transparent rounded-full pointer-events-none" />
-                        </motion.div>
+                        />
                       )}
 
                       {/* Left: Standalone Icon + Title */}
                       <div className="flex items-center gap-2.5 min-w-0 relative z-10">
                         <motion.span
                           animate={{
-                            scale: isActive ? 1.08 : 1,
                             color: isActive ? '#A7EBF2' : '#54ACBF',
                           }}
-                          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                          transition={{ duration: 0.15 }}
                           className="material-symbols-outlined text-[17px] shrink-0"
                         >
                           {sec.icon}
@@ -360,14 +353,14 @@ export function PropertyDetailsSection({
                         </div>
                       </div>
 
-                      {/* Right: Badge / Status Indicator with smooth fluid transition */}
+                      {/* Right: Badge / Status Indicator */}
                       <div className="relative z-10 flex items-center gap-1.5 shrink-0 pl-2">
                         {sec.badge !== null && (
                           <span
                             className={`px-2 py-0.5 rounded-md text-[9.5px] font-mono font-normal transition-all duration-200 ${
                               isActive
-                                ? 'bg-[#011C40]/90 text-[#A7EBF2] border border-[#54ACBF]/50 shadow-2xs'
-                                : 'bg-[#011C40]/60 text-[#A7EBF2]/80 border border-[#54ACBF]/30'
+                                ? 'bg-[#011C40]/90 text-[#A7EBF2] border border-[#54ACBF]/25'
+                                : 'bg-[#011C40]/60 text-[#A7EBF2]/70 border border-[#54ACBF]/20'
                             }`}
                           >
                             {sec.badge}
@@ -389,7 +382,7 @@ export function PropertyDetailsSection({
                               }}
                               className={`material-symbols-outlined text-[15px] shrink-0 select-none ${
                                 isActive
-                                  ? 'text-[#A7EBF2] font-semibold'
+                                  ? 'text-[#A7EBF2]'
                                   : 'text-[#54ACBF]/70 dark:text-[#A7EBF2]/60'
                               }`}
                             >
@@ -403,8 +396,7 @@ export function PropertyDetailsSection({
                 })}
               </nav>
             </div>
-          </div>
-        </aside>
+          </aside>
 
         {/* Main Content Panel (col-span-9 - Luna Glassmorphic Aesthetic) */}
         <main className="lg:col-span-9 flex flex-col h-full min-h-0 overflow-y-auto no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden rounded-2xl sm:rounded-3xl relative overflow-hidden bg-gradient-to-b from-[#5db9cc] via-[#54ACBF] to-[#459aad] border border-[#A7EBF2]/60 shadow-[0_25px_60px_-12px_rgba(1,28,64,0.55),0_10px_25px_-5px_rgba(1,28,64,0.35),inset_0_1px_2px_0_rgba(255,255,255,0.45)] ring-1 ring-[#011C40]/10 p-4 sm:p-7 lg:p-8 pb-8 sm:pb-10 lg:pb-8 transition-colors">
