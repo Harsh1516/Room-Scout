@@ -33,7 +33,7 @@ const HostPaymentSettingsSection = lazy(() =>
 function DashboardSkeletonLoader() {
   return (
     <div className="w-full min-h-[320px] rounded-2xl bg-white/60 dark:bg-zinc-900/60 animate-pulse border border-slate-200 dark:border-zinc-800 flex flex-col items-center justify-center gap-3 p-8">
-      <div className="w-8 h-8 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin" />
+      <div className="w-8 h-8 rounded-full border-2 border-[#54ACBF]/20 border-t-[#54ACBF] animate-spin" />
       <span className="text-xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500">
         Loading Panel Content...
       </span>
@@ -68,13 +68,202 @@ const DEFAULT_HOST_PROPERTY = {
   pincode: '',
 };
 
+// Module-level in-memory cache for ultra-fast, zero-flicker mounts & back-navigation
+const cachedHostPropertyMap = new Map();
+const cachedGuestsMap = new Map();
+const lastHostFetchTimeMap = new Map();
+
+function getInitialHostProperty(userEmail, stateUpdatedHost) {
+  if (stateUpdatedHost && (stateUpdatedHost._id || stateUpdatedHost.propertyName)) {
+    return stateUpdatedHost;
+  }
+  const emailKey = userEmail ? userEmail.trim().toLowerCase() : '';
+  if (emailKey && cachedHostPropertyMap.has(emailKey)) {
+    return cachedHostPropertyMap.get(emailKey);
+  }
+  if (cachedHostPropertyMap.has('me')) {
+    return cachedHostPropertyMap.get('me');
+  }
+  for (const prop of cachedHostPropertyMap.values()) {
+    if (prop && (prop._id || prop.propertyName)) return prop;
+  }
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    try {
+      if (emailKey) {
+        const raw = window.sessionStorage.getItem(`roomscout_cached_host_${emailKey}`);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && (parsed._id || parsed.propertyName)) {
+            cachedHostPropertyMap.set(emailKey, parsed);
+            return parsed;
+          }
+        }
+      }
+      const rawFallback = window.sessionStorage.getItem('roomscout_cached_host_latest');
+      if (rawFallback) {
+        const parsed = JSON.parse(rawFallback);
+        if (parsed && (parsed._id || parsed.propertyName)) {
+          return parsed;
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  return DEFAULT_HOST_PROPERTY;
+}
+
+function getInitialGuests(userEmail) {
+  const emailKey = userEmail ? userEmail.trim().toLowerCase() : '';
+  if (emailKey && cachedGuestsMap.has(emailKey)) {
+    return cachedGuestsMap.get(emailKey);
+  }
+  if (cachedGuestsMap.has('me')) {
+    return cachedGuestsMap.get('me');
+  }
+  for (const gList of cachedGuestsMap.values()) {
+    if (Array.isArray(gList) && gList.length > 0) return gList;
+  }
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    try {
+      if (emailKey) {
+        const raw = window.sessionStorage.getItem(`roomscout_cached_guests_${emailKey}`);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) return parsed;
+        }
+      }
+      const rawLatest = window.sessionStorage.getItem('roomscout_cached_guests_latest');
+      if (rawLatest) {
+        const parsed = JSON.parse(rawLatest);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  return [];
+}
+
+function saveHostPropertyToCache(email, data) {
+  if (!data || (!data._id && !data.propertyName)) return;
+  const emailKey = email ? email.trim().toLowerCase() : '';
+  if (emailKey) cachedHostPropertyMap.set(emailKey, data);
+  cachedHostPropertyMap.set('me', data);
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    try {
+      if (emailKey) {
+        window.sessionStorage.setItem(`roomscout_cached_host_${emailKey}`, JSON.stringify(data));
+      }
+      window.sessionStorage.setItem('roomscout_cached_host_latest', JSON.stringify(data));
+    } catch {
+      /* ignore storage quota */
+    }
+  }
+}
+
+function saveGuestsToCache(email, data) {
+  if (!Array.isArray(data)) return;
+  const emailKey = email ? email.trim().toLowerCase() : '';
+  if (emailKey) cachedGuestsMap.set(emailKey, data);
+  cachedGuestsMap.set('me', data);
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    try {
+      if (emailKey) {
+        window.sessionStorage.setItem(`roomscout_cached_guests_${emailKey}`, JSON.stringify(data));
+      }
+      window.sessionStorage.setItem('roomscout_cached_guests_latest', JSON.stringify(data));
+    } catch {
+      /* ignore storage quota */
+    }
+  }
+}
+
+function isHostPropertyEqual(prev, next) {
+  if (!prev || !next) return false;
+  if (prev === next) return true;
+  if (prev._id !== next._id) return false;
+  if (prev.status !== next.status || Boolean(prev.isApproved) !== Boolean(next.isApproved)) return false;
+  if (prev.propertyName !== next.propertyName || prev.title !== next.title) return false;
+  if (prev.propertyType !== next.propertyType || prev.genderType !== next.genderType) return false;
+  if (prev.description !== next.description) return false;
+  if (prev.address !== next.address || prev.city !== next.city || prev.state !== next.state || prev.pincode !== next.pincode) return false;
+  if (prev.latitude !== next.latitude || prev.longitude !== next.longitude) return false;
+  if (prev.image !== next.image) return false;
+  if (prev.rating !== next.rating) return false;
+
+  const prevImages = prev.images || [];
+  const nextImages = next.images || [];
+  if (prevImages.length !== nextImages.length) return false;
+  for (let i = 0; i < nextImages.length; i++) {
+    if (prevImages[i] !== nextImages[i]) return false;
+  }
+
+  const prevFac = prev.facilities || [];
+  const nextFac = next.facilities || [];
+  if (prevFac.length !== nextFac.length) return false;
+
+  const prevRates = prev.roomRates || [];
+  const nextRates = next.roomRates || [];
+  if (prevRates.length !== nextRates.length) return false;
+  for (let i = 0; i < nextRates.length; i++) {
+    const pr = prevRates[i];
+    const nr = nextRates[i];
+    if (!pr || !nr) return false;
+    if (
+      pr._id !== nr._id ||
+      pr.type !== nr.type ||
+      pr.price !== nr.price ||
+      pr.rateUnit !== nr.rateUnit ||
+      pr.capacity !== nr.capacity
+    ) {
+      return false;
+    }
+  }
+
+  const prevRooms = prev.rooms || [];
+  const nextRooms = next.rooms || [];
+  if (prevRooms.length !== nextRooms.length) return false;
+  for (let i = 0; i < nextRooms.length; i++) {
+    const pr = prevRooms[i];
+    const nr = nextRooms[i];
+    if (!pr || !nr) return false;
+    if (
+      pr._id !== nr._id ||
+      pr.roomNumber !== nr.roomNumber ||
+      pr.type !== nr.type ||
+      pr.status !== nr.status ||
+      pr.price !== nr.price ||
+      pr.rateId !== nr.rateId ||
+      pr.capacity !== nr.capacity
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 export function HostDashboardPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, updateUserSession } = useAuth();
   const { isDark } = useTheme();
 
-  const [activeTab, setActiveTab] = useState(() => location.state?.tab || 'property');
+  const [activeTab, setActiveTab] = useState(() => {
+    if (location.state?.tab) return location.state.tab;
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      try {
+        const saved = window.sessionStorage.getItem('roomscout_host_active_tab');
+        if (saved && ['property', 'room', 'users', 'paid', 'payment'].includes(saved)) {
+          return saved;
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+    return 'property';
+  });
   const TAB_ORDER = useMemo(() => ({ property: 0, room: 1, users: 2, paid: 3, payment: 4 }), []);
   const prevTabRef = useRef(activeTab);
   const [tabDirection, setTabDirection] = useState(1);
@@ -119,10 +308,21 @@ export function HostDashboardPage() {
 
   const handleTabSwitch = useCallback((nextTab) => {
     setActiveTab(nextTab);
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      try {
+        window.sessionStorage.setItem('roomscout_host_active_tab', nextTab);
+      } catch {
+        /* ignore */
+      }
+    }
   }, []);
 
-  const [hostProperty, setHostProperty] = useState(() => location.state?.updatedHost || DEFAULT_HOST_PROPERTY);
-  const [guests, setGuests] = useState([]);
+  const [hostProperty, setHostProperty] = useState(() =>
+    getInitialHostProperty(user?.email, location.state?.updatedHost)
+  );
+  const [guests, setGuests] = useState(() =>
+    getInitialGuests(user?.email)
+  );
   const [visitedSubTab, setVisitedSubTab] = useState('requests');
   const [showPropertyTelemetry, setShowPropertyTelemetry] = useState(false);
   const [propertySubTabIndex, setPropertySubTabIndex] = useState(0);
@@ -1027,6 +1227,7 @@ export function HostDashboardPage() {
       // Optimistically update local dashboard state
       latestHostPropertyRef.current = payload;
       setHostProperty(payload);
+      saveHostPropertyToCache(targetEmail, payload);
 
       const res = await adminAPI.createHost(payload);
       if (res?.success && res.host) {
@@ -1039,6 +1240,7 @@ export function HostDashboardPage() {
         };
         latestHostPropertyRef.current = merged;
         setHostProperty(merged);
+        saveHostPropertyToCache(targetEmail, merged);
 
         if (Array.isArray(merged.rooms)) {
           const updatedNumbers = new Set(
@@ -1079,6 +1281,7 @@ export function HostDashboardPage() {
 
       const guestsRes = await adminAPI.getHostGuests(targetEmail).catch(() => ({ guests: [] }));
       if (Array.isArray(guestsRes?.guests)) {
+        saveGuestsToCache(targetEmail, guestsRes.guests);
         setGuests((prev) => {
           if (Array.isArray(prev) && prev.length === guestsRes.guests.length) {
             const isSame = prev.every((g, i) => {
@@ -1188,8 +1391,14 @@ export function HostDashboardPage() {
       return;
     }
     try {
-      if (!latestHostPropertyRef.current) setLoading(true);
+      if (!latestHostPropertyRef.current || !latestHostPropertyRef.current._id) {
+        setLoading(true);
+      }
       const targetEmail = user?.email ? user.email.trim().toLowerCase() : '';
+      if (targetEmail) {
+        lastHostFetchTimeMap.set(targetEmail, Date.now());
+      }
+      lastHostFetchTimeMap.set('me', Date.now());
 
       const [staysData, hostByEmailRes, guestsRes] = await Promise.all([
         staysAPI.getHostProperties().catch((e) => {
@@ -1201,6 +1410,7 @@ export function HostDashboardPage() {
       ]);
 
       if (Array.isArray(guestsRes?.guests)) {
+        saveGuestsToCache(targetEmail, guestsRes.guests);
         setGuests((prev) => {
           if (Array.isArray(prev) && prev.length === guestsRes.guests.length) {
             const isSame = prev.every((g, i) => {
@@ -1390,7 +1600,13 @@ export function HostDashboardPage() {
             totalRooms: finalRooms.length,
             availableRooms: finalRooms.filter((rm) => rm.status === 'Available').length,
           };
+          if (isHostPropertyEqual(prev, res)) {
+            latestHostPropertyRef.current = prev;
+            return prev;
+          }
+
           latestHostPropertyRef.current = res;
+          saveHostPropertyToCache(targetEmail, res);
           return res;
         });
       }
@@ -1404,18 +1620,29 @@ export function HostDashboardPage() {
   useEffect(() => {
     if (location.state?.tab) {
       const isApprovedHost = hostProperty?.status === 'Approved' || hostProperty?.isApproved === true || location.state?.updatedHost?.status === 'Approved';
-      if (isApprovedHost || location.state.tab === 'property') {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setActiveTab(location.state.tab);
-      } else {
-        setActiveTab('property');
+      const targetTab = (isApprovedHost || location.state.tab === 'property') ? location.state.tab : 'property';
+      setActiveTab(targetTab);
+      try {
+        window.sessionStorage.setItem('roomscout_host_active_tab', targetTab);
+      } catch {
+        /* ignore */
       }
     }
     if (location.state?.updatedHost) {
       setHostProperty(location.state.updatedHost);
+      saveHostPropertyToCache(user?.email, location.state.updatedHost);
       setLoading(false);
     }
-    fetchHostData();
+
+    const emailKey = user?.email ? user.email.trim().toLowerCase() : '';
+    const lastFetch = (emailKey ? lastHostFetchTimeMap.get(emailKey) : 0) || lastHostFetchTimeMap.get('me') || 0;
+    const cached = emailKey ? cachedHostPropertyMap.get(emailKey) : cachedHostPropertyMap.get('me');
+    const isFresh = Boolean(cached?._id) && (Date.now() - lastFetch < 20000);
+
+    // If cached data is already fresh from the last 20 seconds, avoid redundant network re-fetch on navigation
+    if (!isFresh) {
+      fetchHostData();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.key, user?.email, user?._id]);
 
@@ -1460,16 +1687,27 @@ export function HostDashboardPage() {
     window.addEventListener('stayhub_rooms_updated', handleCustomSync);
     window.addEventListener('stayhub_host_approved', handleCustomSync);
 
+    const FOCUS_THROTTLE_MS = 25000;
+    const targetEmail = user?.email ? user.email.trim().toLowerCase() : 'me';
+
     const handleFocus = () => {
       if (!document.hidden) {
-        fetchHostData();
+        const now = Date.now();
+        const lastFetch = (targetEmail !== 'me' ? lastHostFetchTimeMap.get(targetEmail) : 0) || lastHostFetchTimeMap.get('me') || 0;
+        if (now - lastFetch >= FOCUS_THROTTLE_MS) {
+          fetchHostData();
+        }
       }
     };
     window.addEventListener('focus', handleFocus);
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        fetchHostData();
+        const now = Date.now();
+        const lastFetch = (targetEmail !== 'me' ? lastHostFetchTimeMap.get(targetEmail) : 0) || lastHostFetchTimeMap.get('me') || 0;
+        if (now - lastFetch >= FOCUS_THROTTLE_MS) {
+          fetchHostData();
+        }
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -1510,7 +1748,7 @@ export function HostDashboardPage() {
       if (bc) bc.close();
       if (pollTimer) clearInterval(pollTimer);
     };
-  }, [hostProperty?.status, hostProperty?.isApproved, fetchHostData, refreshGuests]);
+  }, [hostProperty?.status, hostProperty?.isApproved, fetchHostData, refreshGuests, user?.email]);
 
   // Active check-in count for the current day
   const todayCheckInsCount = useMemo(() => {
@@ -1701,7 +1939,11 @@ export function HostDashboardPage() {
 
   return (
     <div
-      className={`min-h-screen flex flex-col host-page-scope font-body-md antialiased text-slate-800 dark:text-on-surface bg-[#F8FAFC] dark:bg-[#070D18] selection:bg-custom-btn-primary selection:text-white relative transition-colors duration-300 ${
+      style={{
+        background: 'radial-gradient(circle at 18% 12%, #54ACBF 0%, #3B85A2 24%, #26658C 50%, #023859 76%, #011C40 100%)',
+        backgroundAttachment: 'fixed',
+      }}
+      className={`min-h-screen w-full flex flex-col host-page-scope font-body-md antialiased text-slate-800 dark:text-on-surface selection:bg-[#54ACBF] selection:text-[#011C40] relative transition-colors duration-300 ${
         activeTab === 'users' || activeTab === 'room' ? 'lg:h-screen lg:max-h-screen lg:overflow-hidden' : ''
       }`}
     >
@@ -1743,7 +1985,7 @@ export function HostDashboardPage() {
 
       {/* MAIN CONTENT */}
       <main
-        className={`w-full flex-1 relative bg-transparent text-slate-800 dark:text-on-surface font-body-md antialiased flex flex-col selection:bg-[#5E6BFF] selection:text-white ${
+        className={`w-full flex-1 relative bg-transparent text-slate-800 dark:text-on-surface font-body-md antialiased flex flex-col selection:bg-[#54ACBF] selection:text-[#011C40] ${
           activeTab === 'users' || activeTab === 'room' || activeTab === 'property'
             ? 'lg:h-[calc(100vh-4.75rem)] lg:overflow-hidden lg:min-h-0'
             : 'min-h-[calc(100vh-4rem)] overflow-x-hidden'
@@ -1805,7 +2047,7 @@ export function HostDashboardPage() {
                         <button
                           type="button"
                           onClick={handleAddNewRoomTypeRow}
-                          className="group flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white border border-purple-500/80 dark:border-purple-400/50 text-xs font-bold transition-all shadow-sm shadow-purple-600/20 cursor-pointer active:scale-95 shrink-0"
+                          className="group flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] border border-[#54ACBF]/50 text-xs font-extrabold transition-all shadow-md shadow-[#54ACBF]/20 cursor-pointer active:scale-95 shrink-0"
                         >
                           <span className="material-symbols-outlined text-[18px] text-white group-hover:rotate-90 transition-transform">add</span>
                           <span>Add Room Type</span>
