@@ -29,6 +29,7 @@ const HostUploadPage = lazy(() => import('./pages/HostUploadPage').then((m) => (
 const HostDashboardPage = lazy(() => import('./pages/HostDashboardPage').then((m) => ({ default: m.HostDashboardPage })));
 const HostRoomsPage = lazy(() => import('./pages/HostRoomsPage').then((m) => ({ default: m.HostRoomsPage })));
 const HostSubscriptionPage = lazy(() => import('./pages/HostSubscriptionPage').then((m) => ({ default: m.HostSubscriptionPage || m.default })));
+const HostSubscriptionBuyPage = lazy(() => import('./pages/HostSubscriptionBuyPage').then((m) => ({ default: m.HostSubscriptionBuyPage || m.default })));
 const AccountPage = lazy(() => import('./pages/AccountPage').then((m) => ({ default: m.AccountPage })));
 const PropertyDetailPage = lazy(() => import('./pages/PropertyDetailPage').then((m) => ({ default: m.PropertyDetailPage })));
 const RoomAvailabilityPage = lazy(() => import('./pages/RoomAvailabilityPage').then((m) => ({ default: m.RoomAvailabilityPage })));
@@ -379,6 +380,16 @@ function AppContent() {
               <ProtectedRoute requiredRoles={['host', 'admin']}>
                 <ErrorBoundary>
                   <HostSubscriptionPage />
+                </ErrorBoundary>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/host/subscription/buy"
+            element={
+              <ProtectedRoute requiredRoles={['host', 'admin']}>
+                <ErrorBoundary>
+                  <HostSubscriptionBuyPage />
                 </ErrorBoundary>
               </ProtectedRoute>
             }
