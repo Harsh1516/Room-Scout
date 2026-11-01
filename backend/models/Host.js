@@ -90,6 +90,10 @@ const hostSchema = new mongoose.Schema(
         default: Date.now,
       },
     },
+    subscriptionStatus: { type: String, enum: ['inactive', 'active', 'expired'], default: 'inactive', index: true },
+    subscriptionPlan: { type: String, enum: ['monthly', 'quarterly', 'halfYearly', 'yearly'], default: null },
+    subscriptionStartsAt: { type: Date, default: null },
+    subscriptionEndsAt: { type: Date, default: null },
     revenueResetSettings: {
       resetAt: { type: Date, default: null },
       baselineTotal: { type: Number, default: 0 },
