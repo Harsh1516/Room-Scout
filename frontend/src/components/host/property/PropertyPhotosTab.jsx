@@ -433,28 +433,28 @@ export function PropertyPhotosTab({
       />
 
       {/* Main Visual Gallery Card */}
-      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-xl border border-white/80 dark:border-white/[0.08] shadow-[0_4px_24px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.7)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.36),inset_0_1px_0_rgba(255,255,255,0.08)] space-y-4 relative overflow-hidden">
+      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/70 dark:bg-[#011C40]/50 backdrop-blur-xl border border-[#54ACBF]/20 dark:border-[#26658C]/40 shadow-[0_4px_24px_rgba(2,56,89,0.04)] dark:shadow-[0_8px_32px_rgba(1,28,64,0.4)] space-y-4 relative overflow-hidden">
         {/* Header Strip */}
-        <div className="relative flex items-center justify-between flex-wrap gap-2.5 border-b border-slate-200/60 dark:border-white/[0.08] pb-3">
+        <div className="relative flex items-center justify-between flex-wrap gap-2.5 border-b border-[#54ACBF]/20 dark:border-[#26658C]/40 pb-3">
           <div className="flex items-center gap-2">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-purple-600 dark:bg-purple-400" />
+            <p className="text-xs font-bold uppercase tracking-wider text-[#011C40] dark:text-[#A7EBF2] flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#54ACBF] shadow-[0_0_8px_#54ACBF]" />
               Visual Gallery ({localImages.length}/{MAX_PHOTOS})
             </p>
             {isEditing && (
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold uppercase tracking-wider">
+              <span className="px-2.5 py-0.5 rounded-full bg-[#54ACBF]/15 dark:bg-[#023859]/80 border border-[#54ACBF]/30 text-[#023859] dark:text-[#A7EBF2] text-[10px] font-bold uppercase tracking-wider">
                 Drag to set Cover Pic
               </span>
             )}
           </div>
 
           {/* Top Center: Memory Size Occupied */}
-          <div className="md:absolute md:left-1/2 md:-translate-x-1/2 flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/80 dark:bg-white/[0.06] backdrop-blur-sm border border-slate-200/80 dark:border-white/10 shadow-2xs">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11.5px] font-semibold text-slate-600 dark:text-zinc-300">
+          <div className="md:absolute md:left-1/2 md:-translate-x-1/2 flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/80 dark:bg-[#023859]/60 backdrop-blur-sm border border-[#54ACBF]/30 dark:border-[#26658C]/50 shadow-2xs">
+            <span className="w-2 h-2 rounded-full bg-[#54ACBF] shadow-[0_0_8px_#54ACBF] animate-pulse" />
+            <span className="text-[11.5px] font-semibold text-[#023859] dark:text-[#A7EBF2]/80">
               Memory Occupied:
             </span>
-            <span className="text-[11.5px] font-bold text-emerald-600 dark:text-emerald-400">
+            <span className="text-[11.5px] font-bold text-[#54ACBF] dark:text-[#A7EBF2]">
               {totalMemoryFormatted}
             </span>
           </div>
@@ -468,9 +468,9 @@ export function PropertyPhotosTab({
                 <button
                   type="button"
                   onClick={onStartEdit}
-                  className="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 dark:bg-purple-500/20 dark:hover:bg-purple-500/30 border border-purple-500/20 dark:border-purple-500/30 text-purple-700 dark:text-purple-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
+                  className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-[#023859] dark:text-[#A7EBF2] text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
                 >
-                  <span className="material-symbols-outlined text-[14px] text-purple-600 dark:text-purple-400">edit</span>
+                  <span className="material-symbols-outlined text-[14px] text-[#54ACBF] dark:text-[#A7EBF2]">edit</span>
                   <span>Reorder / Edit</span>
                 </button>
               )}
@@ -494,7 +494,7 @@ export function PropertyPhotosTab({
                     setUploadNotice('');
                     if (onCancel) onCancel();
                   }}
-                  className="px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-zinc-700 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 text-xs font-semibold transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                  className="px-3 py-1.5 rounded-xl border border-[#54ACBF]/30 dark:border-[#26658C]/50 bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] text-[#023859] dark:text-[#A7EBF2] text-xs font-semibold transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -502,7 +502,7 @@ export function PropertyPhotosTab({
                   type="button"
                   disabled={isSaving || isProcessingImage}
                   onClick={handleSave}
-                  className={`px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-semibold transition-all cursor-pointer shadow-md shadow-emerald-600/25 flex items-center gap-1 active:scale-95 ${
+                  className={`px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] text-xs font-extrabold transition-all cursor-pointer shadow-md shadow-[#54ACBF]/20 flex items-center gap-1 active:scale-95 ${
                     isSaving || isProcessingImage ? 'opacity-70 cursor-wait' : ''
                   }`}
                 >
@@ -573,7 +573,7 @@ export function PropertyPhotosTab({
 
                     {/* Cover Photo Badge on 1st image */}
                     {isCover && (
-                      <span className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-emerald-600 text-white font-bold text-[10px] tracking-wider uppercase shadow-lg backdrop-blur-md flex items-center gap-1 z-10 border border-emerald-400/40">
+                      <span className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-gradient-to-r from-[#023859] to-[#26658C] text-[#A7EBF2] font-bold text-[10px] tracking-wider uppercase shadow-lg backdrop-blur-md flex items-center gap-1 z-10 border border-[#54ACBF]/50">
                         <span>★</span>
                         <span>Cover Photo</span>
                       </span>
@@ -640,9 +640,9 @@ export function PropertyPhotosTab({
             {isEditing && !isAtLimit && (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="rounded-2xl border-2 border-dashed border-slate-300 dark:border-zinc-700 hover:border-emerald-500 dark:hover:border-emerald-400 p-4 flex flex-col items-center justify-center gap-2 bg-slate-50/80 hover:bg-slate-100/90 dark:bg-zinc-800/40 dark:hover:bg-zinc-800/70 transition-all min-h-[200px] cursor-pointer group shadow-sm"
+                className="rounded-2xl border-2 border-dashed border-[#54ACBF]/35 dark:border-[#26658C]/60 hover:border-[#54ACBF] p-4 flex flex-col items-center justify-center gap-2 bg-white/40 hover:bg-[#54ACBF]/10 dark:bg-[#023859]/20 dark:hover:bg-[#023859]/40 transition-all min-h-[200px] cursor-pointer group shadow-sm"
               >
-                <div className="w-10 h-10 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 group-hover:bg-emerald-500/20 dark:group-hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center transition-colors">
+                <div className="w-10 h-10 rounded-full bg-[#54ACBF]/15 dark:bg-[#54ACBF]/20 group-hover:bg-[#54ACBF]/25 border border-[#54ACBF]/30 text-[#54ACBF] dark:text-[#A7EBF2] flex items-center justify-center transition-colors">
                   <PlusIcon className="w-5 h-5" />
                 </div>
                 <div className="text-center">
@@ -682,23 +682,23 @@ export function PropertyPhotosTab({
         {/* Edit mode drag guidance tip */}
         {isEditing && (
           <p className="text-xs text-slate-500 dark:text-zinc-400 pt-1">
-            Tip: Simply drag photos left or right to reorder. The 1st photo on the top-left is automatically your listing&apos;s <strong className="text-emerald-600 dark:text-emerald-400 font-bold">Cover Photo</strong>. Limit: {MAX_PHOTOS} photos maximum.
+            Tip: Simply drag photos left or right to reorder. The 1st photo on the top-left is automatically your listing&apos;s <strong className="text-[#54ACBF] dark:text-[#A7EBF2] font-bold">Cover Photo</strong>. Limit: {MAX_PHOTOS} photos maximum.
           </p>
         )}
       </div>
 
       {/* Video Tour Link Card */}
-      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-xl border border-white/80 dark:border-white/[0.08] shadow-[0_4px_24px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.7)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.36),inset_0_1px_0_rgba(255,255,255,0.08)] space-y-3.5 relative overflow-hidden group">
+      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/70 dark:bg-[#011C40]/50 backdrop-blur-xl border border-[#54ACBF]/20 dark:border-[#26658C]/40 shadow-[0_4px_24px_rgba(2,56,89,0.04)] dark:shadow-[0_8px_32px_rgba(1,28,64,0.4)] space-y-3.5 relative overflow-hidden group">
         <div className="flex items-center justify-between flex-wrap gap-2.5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-600/30 shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#023859] to-[#26658C] text-[#A7EBF2] flex items-center justify-center shadow-md border border-[#54ACBF]/30 shrink-0">
               <VideoIcon className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+              <p className="text-xs font-bold uppercase tracking-wider text-[#011C40] dark:text-[#A7EBF2]">
                 Video Tour Link
               </p>
-              <p className="text-[11.5px] text-slate-500 dark:text-zinc-400">
+              <p className="text-[11.5px] text-[#26658C]/80 dark:text-[#A7EBF2]/70">
                 Add a walkthrough video tour link to give users a real-time virtual walkthrough
               </p>
             </div>
@@ -720,7 +720,7 @@ export function PropertyPhotosTab({
         {/* View Mode Display */}
         {!isEditing ? (
           localVideoUrl?.trim() ? (
-            <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] shadow-2xs flex items-center justify-between gap-3 flex-wrap">
+            <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-[#023859]/30 backdrop-blur-md border border-[#54ACBF]/20 dark:border-[#26658C]/40 shadow-2xs flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-2.5 min-w-0 flex-1">
                 <span className="material-symbols-outlined text-[18px] text-slate-700 dark:text-zinc-300 shrink-0">smart_display</span>
                 <div className="min-w-0 flex-1">
@@ -764,7 +764,7 @@ export function PropertyPhotosTab({
                   }
                 }}
                 placeholder="https://www.instagram.com/reel/... or https://www.youtube.com/watch?v=..."
-                className="w-full pl-3.5 pr-24 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-mono shadow-sm"
+                className="w-full pl-3.5 pr-24 py-2.5 rounded-xl bg-white dark:bg-[#011C40] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-xs text-[#011C40] dark:text-white placeholder:text-slate-400 dark:placeholder:text-[#A7EBF2]/40 focus:outline-none focus:ring-2 focus:ring-[#54ACBF]/20 focus:border-[#54ACBF] transition-all font-mono shadow-sm"
               />
               <div className="absolute right-2 flex items-center gap-1.5">
                 {localVideoUrl?.trim() && (
@@ -782,7 +782,7 @@ export function PropertyPhotosTab({
                         href={formattedVideoUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold transition-colors flex items-center gap-1 shrink-0 cursor-pointer shadow-xs"
+                        className="px-3 py-1 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] text-[11px] font-extrabold transition-all flex items-center gap-1 shrink-0 cursor-pointer shadow-xs"
                       >
                         <span>Test ↗</span>
                       </a>

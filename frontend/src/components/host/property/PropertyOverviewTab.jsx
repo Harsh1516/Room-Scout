@@ -57,10 +57,10 @@ export function PropertyOverviewTab({
   return (
     <div className="space-y-3.5">
       {/* Property Identity Card */}
-      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-xl border border-white/80 dark:border-white/[0.08] shadow-[0_4px_24px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.7)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.36),inset_0_1px_0_rgba(255,255,255,0.08)] space-y-4 relative overflow-hidden">
-        <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-200/60 dark:border-white/[0.08] pb-3 relative z-10">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-slate-900 dark:bg-white" />
+      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/70 dark:bg-[#011C40]/50 backdrop-blur-xl border border-[#54ACBF]/20 dark:border-[#26658C]/40 shadow-[0_4px_24px_rgba(2,56,89,0.04)] dark:shadow-[0_8px_32px_rgba(1,28,64,0.4)] space-y-4 relative overflow-hidden">
+        <div className="flex items-center justify-between flex-wrap gap-2 border-b border-[#54ACBF]/20 dark:border-[#26658C]/40 pb-3 relative z-10">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-[#011C40] dark:text-[#A7EBF2] flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#54ACBF] shadow-[0_0_8px_#54ACBF]" />
             Property Identity
           </h3>
           {!isEditing ? (
@@ -68,9 +68,9 @@ export function PropertyOverviewTab({
               <button
                 type="button"
                 onClick={onStartEdit}
-                className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-slate-300/80 dark:border-zinc-700 text-slate-800 dark:text-zinc-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
+                className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-[#023859] dark:text-[#A7EBF2] text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
               >
-                <PencilIcon className="w-3.5 h-3.5 text-slate-600 dark:text-zinc-400" />
+                <PencilIcon className="w-3.5 h-3.5 text-[#54ACBF] dark:text-[#A7EBF2]" />
                 <span>Edit Information</span>
               </button>
             )
@@ -87,7 +87,7 @@ export function PropertyOverviewTab({
                   });
                   if (onCancel) onCancel();
                 }}
-                className="px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-100/80 hover:bg-slate-200/80 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-zinc-200 text-xs font-semibold transition-all cursor-pointer active:scale-95 disabled:opacity-50 backdrop-blur-sm"
+                className="px-3 py-1.5 rounded-xl border border-[#54ACBF]/30 dark:border-[#26658C]/50 bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] text-[#023859] dark:text-[#A7EBF2] text-xs font-semibold transition-all cursor-pointer active:scale-95 disabled:opacity-50 backdrop-blur-sm"
               >
                 Cancel
               </button>
@@ -95,7 +95,7 @@ export function PropertyOverviewTab({
                 type="button"
                 disabled={isSaving || !formData.propertyName.trim()}
                 onClick={handleSave}
-                className={`px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-semibold transition-all cursor-pointer shadow-md shadow-emerald-600/25 flex items-center gap-1 active:scale-95 ${
+                className={`px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] text-xs font-extrabold transition-all cursor-pointer shadow-md shadow-[#54ACBF]/20 flex items-center gap-1 active:scale-95 ${
                   isSaving || !formData.propertyName.trim() ? 'opacity-70 cursor-wait' : ''
                 }`}
               >
@@ -109,8 +109,8 @@ export function PropertyOverviewTab({
         {isEditing ? (
           <div className="space-y-4 pt-1 relative z-10">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/70 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/80 dark:border-white/10 space-y-1.5 shadow-2xs">
-                <label className="text-[10.5px] text-slate-700 dark:text-zinc-300 font-bold block uppercase font-mono tracking-wider">
+              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-[#023859]/30 backdrop-blur-md border border-[#54ACBF]/20 dark:border-[#26658C]/40 space-y-1.5 shadow-2xs">
+                <label className="text-[10.5px] text-[#26658C] dark:text-[#A7EBF2]/80 font-bold block uppercase font-mono tracking-wider">
                   Property Name *
                 </label>
                 <input
@@ -119,44 +119,44 @@ export function PropertyOverviewTab({
                   onChange={(e) => handleChange('propertyName', e.target.value)}
                   placeholder="e.g. Green Valley Luxury PG"
                   required
-                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/15 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] focus:outline-none focus:border-slate-800 dark:focus:border-white focus:ring-1 focus:ring-slate-800/10 transition-colors"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#011C40] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-xs sm:text-[13px] text-[#011C40] dark:text-white placeholder:text-slate-400 dark:placeholder:text-[#A7EBF2]/40 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] focus:outline-none focus:border-[#54ACBF] focus:ring-1 focus:ring-[#54ACBF]/20 transition-colors"
                 />
               </div>
 
-              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/70 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/80 dark:border-white/10 space-y-1.5 shadow-2xs">
-                <label className="text-[10.5px] text-slate-700 dark:text-zinc-300 font-bold block uppercase font-mono tracking-wider">
+              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-[#023859]/30 backdrop-blur-md border border-[#54ACBF]/20 dark:border-[#26658C]/40 space-y-1.5 shadow-2xs">
+                <label className="text-[10.5px] text-[#26658C] dark:text-[#A7EBF2]/80 font-bold block uppercase font-mono tracking-wider">
                   Property Type
                 </label>
                 <select
                   value={formData.propertyType}
                   onChange={(e) => handleChange('propertyType', e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/15 text-xs sm:text-[13px] text-slate-900 dark:text-white focus:outline-none focus:border-slate-800 dark:focus:border-white focus:ring-1 focus:ring-slate-800/10 transition-colors cursor-pointer"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#011C40] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-xs sm:text-[13px] text-[#011C40] dark:text-white focus:outline-none focus:border-[#54ACBF] focus:ring-1 focus:ring-[#54ACBF]/20 transition-colors cursor-pointer"
                 >
-                  <option value="" disabled className="bg-white dark:bg-zinc-900 text-slate-400">
+                  <option value="" disabled className="bg-white dark:bg-[#011C40] text-slate-400">
                     Select Property Type
                   </option>
                   {PROPERTY_TYPES.map((type) => (
-                    <option key={type} value={type} className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white">
+                    <option key={type} value={type} className="bg-white dark:bg-[#011C40] text-[#011C40] dark:text-white">
                       {type}
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/70 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/80 dark:border-white/10 space-y-1.5 shadow-2xs">
-                <label className="text-[10.5px] text-slate-700 dark:text-zinc-300 font-bold block uppercase font-mono tracking-wider">
+              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-[#023859]/30 backdrop-blur-md border border-[#54ACBF]/20 dark:border-[#26658C]/40 space-y-1.5 shadow-2xs">
+                <label className="text-[10.5px] text-[#26658C] dark:text-[#A7EBF2]/80 font-bold block uppercase font-mono tracking-wider">
                   Gender Allowed
                 </label>
                 <select
                   value={formData.genderType}
                   onChange={(e) => handleChange('genderType', e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/15 text-xs sm:text-[13px] text-slate-900 dark:text-white focus:outline-none focus:border-slate-800 dark:focus:border-white focus:ring-1 focus:ring-slate-800/10 transition-colors cursor-pointer"
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-[#011C40] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-xs sm:text-[13px] text-[#011C40] dark:text-white focus:outline-none focus:border-[#54ACBF] focus:ring-1 focus:ring-[#54ACBF]/20 transition-colors cursor-pointer"
                 >
-                  <option value="" disabled className="bg-white dark:bg-zinc-900 text-slate-400">
+                  <option value="" disabled className="bg-white dark:bg-[#011C40] text-slate-400">
                     Select Gender Allowed
                   </option>
                   {GENDER_OPTIONS.map((gender) => (
-                    <option key={gender} value={gender} className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white">
+                    <option key={gender} value={gender} className="bg-white dark:bg-[#011C40] text-[#011C40] dark:text-white">
                       {gender}
                     </option>
                   ))}
@@ -167,79 +167,79 @@ export function PropertyOverviewTab({
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 relative z-10">
             {/* 1. Property Name */}
-            <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-slate-400 dark:hover:border-zinc-600 hover:bg-white/85 dark:hover:bg-white/[0.08] transition-all flex flex-col justify-between gap-2 shadow-2xs">
+            <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-[#023859]/30 backdrop-blur-md border border-[#54ACBF]/20 dark:border-[#26658C]/40 hover:border-[#54ACBF] dark:hover:border-[#54ACBF]/60 hover:bg-white dark:hover:bg-[#023859]/50 transition-all flex flex-col justify-between gap-2 shadow-2xs">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase tracking-wider font-bold">
+                <span className="text-[10px] text-[#26658C] dark:text-[#A7EBF2]/70 uppercase tracking-wider font-bold">
                   Property Name
                 </span>
-                <span className="material-symbols-outlined text-[17px] text-slate-600 dark:text-zinc-400 shrink-0">badge</span>
+                <span className="material-symbols-outlined text-[17px] text-[#54ACBF] dark:text-[#A7EBF2] shrink-0">badge</span>
               </div>
               <div>
-                <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight truncate">
+                <p className="text-sm sm:text-base font-extrabold text-[#011C40] dark:text-white tracking-tight truncate">
                   {hostProperty?.propertyName || hostProperty?.title || '—'}
                 </p>
-                <span className="text-[10.5px] text-slate-500 dark:text-zinc-400">
+                <span className="text-[10.5px] text-[#26658C]/80 dark:text-[#A7EBF2]/60">
                   {hostProperty?.propertyName || hostProperty?.title ? 'Primary public title' : '—'}
                 </span>
               </div>
             </div>
 
             {/* 2. Property Type */}
-            <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-slate-400 dark:hover:border-zinc-600 hover:bg-white/85 dark:hover:bg-white/[0.08] transition-all flex flex-col justify-between gap-2 shadow-2xs">
+            <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-[#023859]/30 backdrop-blur-md border border-[#54ACBF]/20 dark:border-[#26658C]/40 hover:border-[#54ACBF] dark:hover:border-[#54ACBF]/60 hover:bg-white dark:hover:bg-[#023859]/50 transition-all flex flex-col justify-between gap-2 shadow-2xs">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase tracking-wider font-bold">
+                <span className="text-[10px] text-[#26658C] dark:text-[#A7EBF2]/70 uppercase tracking-wider font-bold">
                   Property Type
                 </span>
-                <span className="material-symbols-outlined text-[17px] text-slate-600 dark:text-zinc-400 shrink-0">apartment</span>
+                <span className="material-symbols-outlined text-[17px] text-[#54ACBF] dark:text-[#A7EBF2] shrink-0">apartment</span>
               </div>
               <div>
-                <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">
+                <p className="text-sm sm:text-base font-extrabold text-[#011C40] dark:text-white tracking-tight">
                   {hostProperty?.propertyType || hostProperty?.category || '—'}
                 </p>
-                <span className="text-[10.5px] text-slate-500 dark:text-zinc-400">
+                <span className="text-[10.5px] text-[#26658C]/80 dark:text-[#A7EBF2]/60">
                   {hostProperty?.propertyType || hostProperty?.category ? `${hostProperty.propertyType || hostProperty.category} Accommodation` : '—'}
                 </span>
               </div>
             </div>
 
             {/* 3. Gender Allowed */}
-            <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-slate-400 dark:hover:border-zinc-600 hover:bg-white/85 dark:hover:bg-white/[0.08] transition-all flex flex-col justify-between gap-2 shadow-2xs">
+            <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-[#023859]/30 backdrop-blur-md border border-[#54ACBF]/20 dark:border-[#26658C]/40 hover:border-[#54ACBF] dark:hover:border-[#54ACBF]/60 hover:bg-white dark:hover:bg-[#023859]/50 transition-all flex flex-col justify-between gap-2 shadow-2xs">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase tracking-wider font-bold">
+                <span className="text-[10px] text-[#26658C] dark:text-[#A7EBF2]/70 uppercase tracking-wider font-bold">
                   Gender Allowed
                 </span>
-                <span className="material-symbols-outlined text-[17px] text-slate-600 dark:text-zinc-400 shrink-0">group</span>
+                <span className="material-symbols-outlined text-[17px] text-[#54ACBF] dark:text-[#A7EBF2] shrink-0">group</span>
               </div>
               <div>
-                <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">
+                <p className="text-sm sm:text-base font-extrabold text-[#011C40] dark:text-white tracking-tight">
                   {hostProperty?.genderType ? hostProperty.genderType.charAt(0).toUpperCase() + hostProperty.genderType.slice(1).toLowerCase() : '—'}
                 </p>
-                <span className="text-[10.5px] text-slate-500 dark:text-zinc-400">
+                <span className="text-[10.5px] text-[#26658C]/80 dark:text-[#A7EBF2]/60">
                   {hostProperty?.genderType ? (hostProperty.genderType.toLowerCase() === 'both' ? 'Co-living permitted' : `${hostProperty.genderType.charAt(0).toUpperCase() + hostProperty.genderType.slice(1).toLowerCase()} only`) : '—'}
                 </span>
               </div>
             </div>
 
             {/* 4. Current Rating */}
-            <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/60 dark:bg-white/[0.04] backdrop-blur-md border border-slate-200/70 dark:border-white/[0.08] hover:border-slate-400 dark:hover:border-zinc-600 hover:bg-white/85 dark:hover:bg-white/[0.08] transition-all flex flex-col justify-between gap-2 shadow-2xs">
+            <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-[#023859]/30 backdrop-blur-md border border-[#54ACBF]/20 dark:border-[#26658C]/40 hover:border-[#54ACBF] dark:hover:border-[#54ACBF]/60 hover:bg-white dark:hover:bg-[#023859]/50 transition-all flex flex-col justify-between gap-2 shadow-2xs">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase tracking-wider font-bold">
+                <span className="text-[10px] text-[#26658C] dark:text-[#A7EBF2]/70 uppercase tracking-wider font-bold">
                   Current Rating
                 </span>
-                <span className="material-symbols-outlined text-[17px] text-slate-600 dark:text-zinc-400 shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                <span className="material-symbols-outlined text-[17px] text-[#54ACBF] dark:text-[#A7EBF2] shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
               </div>
               <div>
-                <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1">
+                <p className="text-sm sm:text-base font-extrabold text-[#011C40] dark:text-white tracking-tight flex items-center gap-1">
                   {(Number(hostProperty?.reviewsCount) > 0 || (Array.isArray(hostProperty?.reviews) && hostProperty.reviews.length > 0)) && Number(hostProperty?.rating) > 0 ? (
                     <>
                       <span>{Number(hostProperty.rating).toFixed(1)}</span>
-                      <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-normal">/ 5.0</span>
+                      <span className="text-[10px] text-[#26658C]/80 dark:text-[#A7EBF2]/60 font-normal">/ 5.0</span>
                     </>
                   ) : (
-                    <span className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-zinc-300">No ratings yet</span>
+                    <span className="text-xs sm:text-sm font-semibold text-[#26658C] dark:text-[#A7EBF2]/80">No ratings yet</span>
                   )}
                 </p>
-                <span className="text-[10.5px] text-slate-500 dark:text-zinc-400">
+                <span className="text-[10.5px] text-[#26658C]/80 dark:text-[#A7EBF2]/60">
                   {(Number(hostProperty?.reviewsCount) > 0 || (Array.isArray(hostProperty?.reviews) && hostProperty.reviews.length > 0))
                     ? `${hostProperty.reviewsCount || hostProperty.reviews?.length} review${(hostProperty.reviewsCount || hostProperty.reviews?.length) === 1 ? '' : 's'}`
                     : 'New listing • 0 reviews'}

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+﻿import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from '../../context/ToastContext';
 
@@ -10,49 +10,6 @@ import { PropertyFacilitiesTab } from './property/PropertyFacilitiesTab';
 import { PropertyRulesTab } from './property/PropertyRulesTab';
 import { PropertyPhotosTab } from './property/PropertyPhotosTab';
 import { PencilIcon } from './property/PropertyIcons';
-
-export const GLOW_PRESETS = {
-  neutral: {
-    id: 'neutral',
-    label: 'Pure Neutral',
-    desc: 'Clean Apple & Linear glass (no colored haze)',
-    topGlow: 'opacity-0',
-    bottomGlow: 'opacity-0',
-    rim: 'via-white/80 dark:via-white/20',
-  },
-  titanium: {
-    id: 'titanium',
-    label: 'Titanium Slate',
-    desc: 'Subtle cool silver/slate ambient haze',
-    topGlow: 'bg-slate-400/20 dark:bg-zinc-500/20 opacity-100',
-    bottomGlow: 'bg-slate-300/15 dark:bg-zinc-600/15 opacity-100',
-    rim: 'via-slate-300/80 dark:via-zinc-400/30',
-  },
-  emerald: {
-    id: 'emerald',
-    label: 'Whisper Emerald',
-    desc: 'Boutique single-brand subtle sage/emerald luxury',
-    topGlow: 'bg-emerald-500/15 dark:bg-emerald-500/20 opacity-100',
-    bottomGlow: 'bg-teal-500/12 dark:bg-teal-500/15 opacity-100',
-    rim: 'via-emerald-300/60 dark:via-emerald-500/30',
-  },
-  champagne: {
-    id: 'champagne',
-    label: 'Champagne Warmth',
-    desc: 'Warm alabaster luxury glow',
-    topGlow: 'bg-amber-400/18 dark:bg-amber-500/18 opacity-100',
-    bottomGlow: 'bg-orange-300/12 dark:bg-stone-500/15 opacity-100',
-    rim: 'via-amber-200/70 dark:via-amber-400/30',
-  },
-  original: {
-    id: 'original',
-    label: 'Original (Purple + Teal)',
-    desc: 'Previous multi-color corner gradient',
-    topGlow: 'bg-purple-500/15 dark:bg-purple-500/20 opacity-100',
-    bottomGlow: 'bg-teal-500/15 dark:bg-teal-500/20 opacity-100',
-    rim: 'via-white/80 dark:via-white/20',
-  },
-};
 
 export function PropertyDetailsSection({
   hostProperty,
@@ -70,16 +27,6 @@ export function PropertyDetailsSection({
   };
   const [editingSectionId, setEditingSectionId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [glowMode, setGlowMode] = useState(() => {
-    return localStorage.getItem('host_dashboard_glow_mode') || 'neutral';
-  });
-
-  const handleSetGlowMode = (mode) => {
-    setGlowMode(mode);
-    localStorage.setItem('host_dashboard_glow_mode', mode);
-  };
-
-  const activeGlow = GLOW_PRESETS[glowMode] || GLOW_PRESETS.neutral;
 
   const facilitiesList = useMemo(() => {
     if (Array.isArray(hostProperty?.facilities) && hostProperty.facilities.length > 0) {
@@ -195,7 +142,6 @@ export function PropertyDetailsSection({
   const currentSection = sections[activeIndex] || sections[0];
   const isCurrentSectionEditing = editingSectionId === currentSection.id;
 
-
   const handleShare = () => {
     const url = window.location.origin + `/stay/${hostProperty?.stayId || hostProperty?._id || ''}`;
     navigator.clipboard?.writeText(url);
@@ -249,40 +195,41 @@ export function PropertyDetailsSection({
     <div className="flex flex-col w-full h-full min-h-0">
       {/* ── Two-Column Dashboard Workspace ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-5 items-stretch h-full min-h-0">
-        {/* Left Navigation Rail: Joined single unit with top dark section and expanded light bottom section */}
+        {/* Left Navigation Rail: Luna styled unified card */}
         <aside className="lg:col-span-3 flex flex-col h-full min-h-0 shrink-0">
-          <div className="rounded-2xl sm:rounded-3xl border border-slate-300/80 dark:border-zinc-800 shadow-xl overflow-hidden flex flex-col h-full transition-all bg-slate-900 dark:bg-zinc-950">
-            {/* ── Top Section: Property Info (Clean dark/black aesthetic) ── */}
-            <div className="p-4 sm:p-5 pb-9 sm:pb-10 bg-slate-900 dark:bg-zinc-950 text-white flex flex-col gap-3 relative shrink-0">
+          <div className="rounded-2xl sm:rounded-3xl border border-[#54ACBF]/20 dark:border-[#26658C]/50 shadow-xl overflow-hidden flex flex-col h-full transition-all bg-[#011C40]">
+            {/* ── Top Section: Property Info (Luna Gradient Aesthetic) ── */}
+            <div className="p-4 sm:p-5 pb-9 sm:pb-10 bg-[#011C40] text-white flex flex-col gap-3 relative shrink-0 overflow-hidden">
+
               {/* Header: Place Name + Top-Right Edit Button */}
               <div className="flex items-center justify-between gap-2 relative z-10">
                 <h1 className="text-base sm:text-lg lg:text-xl font-extrabold text-white tracking-tight truncate flex-1 min-w-0">
                   {hostProperty?.propertyName || hostProperty?.title || '—'}
                 </h1>
 
-                {/* Edit button: sleek glass */}
+                {/* Edit button: sleek Luna glass */}
                 {onEditDetails && (
                   <button
                     type="button"
                     onClick={onEditDetails}
-                    className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 border border-white/20 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs shrink-0"
+                    className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 border border-[#54ACBF]/30 text-[#A7EBF2] text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs shrink-0"
                     title="Edit Listing Details"
                   >
-                    <PencilIcon className="w-3.5 h-3.5 text-white" />
+                    <PencilIcon className="w-3.5 h-3.5 text-[#A7EBF2]" />
                     <span>Edit</span>
                   </button>
                 )}
               </div>
 
-              {/* Badges/Metadata with crisp contrast in both themes */}
+              {/* Badges/Metadata in Luna Palette */}
               <div className="flex flex-col gap-1.5 pt-0.5 text-xs relative z-10">
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 font-medium text-slate-300 dark:text-zinc-400">
-                    <span className="material-symbols-outlined text-[14px] text-slate-400 dark:text-zinc-500">apartment</span>
+                  <span className="flex items-center gap-1.5 font-medium text-[#A7EBF2]/80">
+                    <span className="material-symbols-outlined text-[15px] text-[#54ACBF]">apartment</span>
                     <span>{hostProperty?.propertyType || hostProperty?.category ? `${hostProperty.propertyType || hostProperty.category} Category` : '—'}</span>
                   </span>
-                  <span className="flex items-center gap-1 font-semibold text-amber-300">
-                    <span className="material-symbols-outlined text-[14px] text-amber-300" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  <span className="flex items-center gap-1 font-semibold text-[#A7EBF2]">
+                    <span className="material-symbols-outlined text-[14px] text-[#A7EBF2]" style={{ fontVariationSettings: "'FILL' 1" }}>
                       star
                     </span>
                     <span>
@@ -293,20 +240,20 @@ export function PropertyDetailsSection({
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between text-slate-300 dark:text-zinc-400">
-                  <span className="flex items-center gap-1.5 font-medium text-slate-300 dark:text-zinc-400">
-                    <span className="material-symbols-outlined text-[14px] text-slate-400 dark:text-zinc-500">group</span>
+                <div className="flex items-center justify-between text-[#A7EBF2]/80">
+                  <span className="flex items-center gap-1.5 font-medium text-[#A7EBF2]/80">
+                    <span className="material-symbols-outlined text-[15px] text-[#54ACBF]">group</span>
                     <span>For: {hostProperty?.genderType ? hostProperty.genderType.charAt(0).toUpperCase() + hostProperty.genderType.slice(1).toLowerCase() : '—'}</span>
                   </span>
                 </div>
               </div>
 
               {/* Actions Row */}
-              <div className="flex items-center gap-2 pt-1 border-t border-white/15 relative z-10">
+              <div className="flex items-center gap-2 pt-1 border-t border-[#54ACBF]/20 relative z-10">
                 <button
                   type="button"
                   onClick={handleOpenPublicUrl}
-                  className="flex-1 h-9 rounded-xl bg-white hover:bg-slate-100 text-slate-900 dark:bg-zinc-100 dark:hover:bg-white dark:text-slate-900 font-bold text-xs tracking-normal shadow-sm active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  className="flex-1 h-9 rounded-xl bg-[#A7EBF2] hover:bg-[#8ee5ee] active:scale-95 text-[#011C40] font-extrabold text-xs tracking-normal shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <span>Public URL</span>
                   <span className="material-symbols-outlined text-[15px]">north_east</span>
@@ -315,35 +262,29 @@ export function PropertyDetailsSection({
                 <button
                   type="button"
                   onClick={handleShare}
-                  className="h-9 px-3.5 shrink-0 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center gap-1.5 border border-white/20 shadow-2xs transition-all cursor-pointer"
+                  className="h-9 px-3.5 shrink-0 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-[#A7EBF2] flex items-center justify-center gap-1.5 border border-[#54ACBF]/30 shadow-2xs transition-all cursor-pointer"
                   title="Share listing link"
                 >
-                  <span className="material-symbols-outlined text-[16px]">share</span>
+                  <span className="material-symbols-outlined text-[16px] text-[#A7EBF2]">share</span>
                   <span className="text-xs font-semibold">Share</span>
                 </button>
               </div>
             </div>
 
-            {/* ── Lower Section: Configuration Matrix / Tabs (Monochrome black/gray/white styling) ── */}
-            <div className="flex-1 flex flex-col p-4 sm:p-5 bg-slate-50/95 dark:bg-zinc-900/95 rounded-t-[28px] sm:rounded-t-[32px] -mt-5 sm:-mt-6 border-t border-x border-b-0 border-slate-200/80 dark:border-zinc-800 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.35)] transition-colors justify-between min-h-0 relative z-10">
+            {/* ── Lower Section: Configuration Matrix / Tabs (Luna Aesthetic) ── */}
+            <div className="flex-1 flex flex-col p-4 sm:p-5 bg-[#023859] rounded-t-[28px] sm:rounded-t-[32px] -mt-5 sm:-mt-6 border-t border-x border-b-0 border-[#54ACBF]/30 shadow-[0_-4px_20px_rgba(1,28,64,0.4)] transition-colors justify-between min-h-0 relative z-10">
               {/* Header: Title + Dynamic Percentage + Micro Progress Bar */}
-              <div className="flex flex-col gap-2 pb-2.5 px-0.5 border-b border-slate-200 dark:border-zinc-800 mb-2 shrink-0">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-900 dark:bg-white" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-800 dark:text-zinc-200">
-                      Configuration Matrix
-                    </span>
-                  </div>
-                  <span className="inline-flex items-center text-[10.5px] font-bold text-slate-800 dark:text-zinc-200 bg-slate-200/80 dark:bg-zinc-800 px-2.5 py-0.5 rounded-full border border-slate-300/80 dark:border-zinc-700 tabular-nums shadow-2xs">
-                    {completionPercentage}% Complete
+              <div className="flex flex-col gap-2 pb-2.5 px-0.5 border-b border-[#54ACBF]/20 dark:border-[#26658C]/40 mb-2 shrink-0">
+                <div className="flex items-center justify-center py-0.5">
+                  <span className="text-xs font-medium tracking-widest text-[#A7EBF2] font-mono tabular-nums select-none">
+                    {completionPercentage}%
                   </span>
                 </div>
 
-                {/* Minimal Progress Bar */}
-                <div className="w-full h-1.5 bg-slate-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+                {/* Minimal Luna Gradient Progress Bar */}
+                <div className="w-full h-1.5 bg-[#023859]/10 dark:bg-[#023859]/50 rounded-full overflow-hidden">
                   <motion.div
-                    className="h-full bg-slate-900 dark:bg-white rounded-full"
+                    className="h-full bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${completionPercentage}%` }}
                     transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -366,14 +307,14 @@ export function PropertyDetailsSection({
                         setEditingSectionId(null);
                       }}
                       className={`group relative flex items-center justify-between px-3 py-2 sm:py-2.5 rounded-xl cursor-pointer text-left w-full select-none focus:outline-none transition-colors ${
-                        !isActive ? 'hover:bg-slate-100 dark:hover:bg-zinc-800/60' : ''
+                        !isActive ? 'hover:bg-[#011C40]/40' : ''
                       }`}
                     >
                       {/* Animated Sliding Active Background Indicator */}
                       {isActive && (
                         <motion.div
                           layoutId="activeSectionIndicator"
-                          className="absolute inset-0 rounded-xl bg-white dark:bg-zinc-800 border border-slate-200/90 dark:border-zinc-700 shadow-xs pointer-events-none z-0"
+                          className="absolute inset-0 rounded-xl bg-[#011C40] border border-[#54ACBF]/50 shadow-xs pointer-events-none z-0"
                           transition={{
                             type: 'tween',
                             duration: 0.2,
@@ -387,8 +328,8 @@ export function PropertyDetailsSection({
                         <span
                           className={`material-symbols-outlined text-[17px] shrink-0 transition-colors ${
                             isActive
-                              ? 'text-slate-900 dark:text-white font-bold'
-                              : 'text-slate-500 dark:text-zinc-400 group-hover:text-slate-900 dark:group-hover:text-white'
+                              ? 'text-[#A7EBF2] font-bold'
+                              : 'text-[#54ACBF] group-hover:text-[#A7EBF2]'
                           }`}
                         >
                           {sec.icon}
@@ -399,8 +340,8 @@ export function PropertyDetailsSection({
                           <span
                             className={`text-xs truncate transition-colors duration-150 ${
                               isActive
-                                ? 'font-bold text-slate-900 dark:text-white'
-                                : 'font-medium text-slate-600 dark:text-zinc-400 group-hover:text-slate-900 dark:group-hover:text-white'
+                                ? 'font-bold text-white'
+                                : 'font-medium text-[#A7EBF2]/80 group-hover:text-white'
                             }`}
                           >
                             {sec.title}
@@ -413,23 +354,23 @@ export function PropertyDetailsSection({
                         {isActive ? (
                           <div className="flex items-center gap-1.5">
                             {sec.badge && (
-                              <span className="px-2 py-0.5 rounded-md text-[9.5px] font-mono font-bold bg-slate-200 dark:bg-zinc-700 text-slate-900 dark:text-white border border-slate-300 dark:border-zinc-600">
+                              <span className="px-2 py-0.5 rounded-md text-[9.5px] font-mono font-bold bg-[#011C40]/80 text-[#A7EBF2] border border-[#54ACBF]/30">
                                 {sec.badge}
                               </span>
                             )}
-                            <span className="material-symbols-outlined text-[15px] font-bold text-slate-900 dark:text-white shrink-0">
+                            <span className="material-symbols-outlined text-[15px] font-bold text-[#54ACBF] dark:text-[#A7EBF2] shrink-0">
                               check
                             </span>
                           </div>
                         ) : (
                           <div className="flex items-center gap-1.5">
                             {sec.badge !== null && (
-                              <span className="px-2 py-0.5 rounded-md text-[9.5px] font-mono font-medium bg-slate-100/90 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 border border-slate-200/80 dark:border-zinc-700/80 transition-colors">
+                              <span className="px-2 py-0.5 rounded-md text-[9.5px] font-mono font-medium bg-[#011C40]/60 text-[#A7EBF2]/80 border border-[#54ACBF]/30 transition-colors">
                                 {sec.badge}
                               </span>
                             )}
                             {isCompleted && !sec.badge && (
-                              <span className="material-symbols-outlined text-slate-400 dark:text-zinc-500 text-[14px] shrink-0">
+                              <span className="material-symbols-outlined text-[#54ACBF]/70 dark:text-[#A7EBF2]/60 text-[14px] shrink-0">
                                 check
                               </span>
                             )}
@@ -444,28 +385,28 @@ export function PropertyDetailsSection({
           </div>
         </aside>
 
-        {/* Main Content Panel (col-span-9 - Glassmorphic Aesthetic) */}
-        <main className="lg:col-span-9 flex flex-col h-full min-h-0 overflow-y-auto no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden rounded-2xl sm:rounded-3xl relative overflow-hidden bg-white/70 dark:bg-slate-900/40 backdrop-blur-2xl backdrop-saturate-150 border border-white/80 dark:border-white/10 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.08),inset_0_1px_1px_rgba(255,255,255,0.85)] dark:shadow-[0_24px_64px_-12px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.14)] p-4 sm:p-7 lg:p-8 pb-8 sm:pb-10 lg:pb-8 transition-colors">
-          {/* Ambient Glass Reflections & Refractive Lighting */}
+        {/* Main Content Panel (col-span-9 - Luna Glassmorphic Aesthetic) */}
+        <main className="lg:col-span-9 flex flex-col h-full min-h-0 overflow-y-auto no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden rounded-2xl sm:rounded-3xl relative overflow-hidden bg-[#54ACBF] border border-[#A7EBF2]/40 shadow-[0_12px_40px_-8px_rgba(1,28,64,0.35)] p-4 sm:p-7 lg:p-8 pb-8 sm:pb-10 lg:pb-8 transition-colors">
+          {/* Ambient Glass Reflections & Refractive Lighting in Luna cyan & deep navy */}
           <div
             aria-hidden="true"
             className="absolute inset-0 pointer-events-none select-none overflow-hidden rounded-2xl sm:rounded-3xl z-0"
           >
             {/* Top Specular Rim Reflection */}
-            <div className={`absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent ${activeGlow.rim} to-transparent transition-all duration-300`} />
-            {/* Corner Refraction Glows (Dynamically reactive to glowMode) */}
-            <div className={`absolute -top-24 -right-24 w-80 h-80 rounded-full ${activeGlow.topGlow} blur-3xl pointer-events-none transition-all duration-300`} />
-            <div className={`absolute -bottom-24 -left-24 w-80 h-80 rounded-full ${activeGlow.bottomGlow} blur-3xl pointer-events-none transition-all duration-300`} />
+            <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[#A7EBF2]/40 to-transparent" />
+            {/* Corner Refraction Glows */}
+            <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#54ACBF]/15 dark:bg-[#54ACBF]/20 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-[#26658C]/15 dark:bg-[#023859]/40 blur-3xl pointer-events-none" />
           </div>
 
           <div className="flex flex-col flex-1 min-h-full justify-between gap-6 sm:gap-8 relative z-10">
             {/* 1. Centered Top Heading */}
             <div className="flex flex-col items-center text-center justify-center pt-1 sm:pt-2 w-full">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#011C40] tracking-tight">
                 {currentSection.title}
               </h2>
 
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-normal mt-1.5 max-w-xl text-center leading-relaxed">
+              <p className="text-xs sm:text-sm text-[#011C40]/85 font-medium mt-1.5 max-w-xl text-center leading-relaxed">
                 {currentSection.id === 'overview' && 'Start with the core identity, property type, and guest categorization.'}
                 {currentSection.id === 'description' && 'Add an editorial property description and key highlights for prospective residents.'}
                 {currentSection.id === 'location' && 'Pinpoint exact road access, city zone, postal code, and geolocation coordinates.'}
@@ -473,45 +414,6 @@ export function PropertyDetailsSection({
                 {currentSection.id === 'rules' && 'Define resident house rules, timings, and code of conduct policies.'}
                 {currentSection.id === 'photos' && 'Upload high-resolution property photos and paste virtual video tour links.'}
               </p>
-
-              {/* Interactive Ambience Corner Glow Switcher (Live Preview Bar) */}
-              <div className="mt-3.5 inline-flex items-center justify-center flex-wrap gap-1 p-1 rounded-full bg-slate-100/90 dark:bg-zinc-800/90 border border-slate-200/90 dark:border-zinc-700/80 shadow-2xs backdrop-blur-md">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider pl-2.5 pr-1 select-none flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[13px]">palette</span>
-                  <span>Corner Ambience:</span>
-                </span>
-                {Object.values(GLOW_PRESETS).map((preset) => {
-                  const isCurrent = glowMode === preset.id;
-                  return (
-                    <button
-                      key={preset.id}
-                      type="button"
-                      onClick={() => handleSetGlowMode(preset.id)}
-                      className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
-                        isCurrent
-                          ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs scale-[1.02]'
-                          : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-zinc-700/60'
-                      }`}
-                      title={preset.desc}
-                    >
-                      <span
-                        className={`w-2 h-2 rounded-full shrink-0 ${
-                          preset.id === 'neutral'
-                            ? 'bg-slate-300 dark:bg-zinc-500 border border-slate-400/50'
-                            : preset.id === 'titanium'
-                            ? 'bg-slate-500 dark:bg-zinc-300'
-                            : preset.id === 'emerald'
-                            ? 'bg-emerald-500'
-                            : preset.id === 'champagne'
-                            ? 'bg-amber-400'
-                            : 'bg-gradient-to-tr from-purple-500 to-teal-400'
-                        }`}
-                      />
-                      <span>{preset.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
             </div>
 
             {/* 2. Sub-Tab Card Component (positioned lower towards the bottom of the screen with gap) */}

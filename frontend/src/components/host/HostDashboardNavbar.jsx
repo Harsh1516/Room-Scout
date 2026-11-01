@@ -59,11 +59,11 @@ export function HostDashboardNavbar({
           type="button"
           onClick={handleBack}
           data-no-hover="true"
-          className="apple-liquid-nav flex items-center justify-center h-8 sm:h-9 px-3 py-1 sm:px-3.5 sm:py-1.5 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 dark:border-white/15 shadow-xs cursor-pointer text-slate-800 dark:text-slate-200 font-semibold text-xs sm:text-sm select-none active:scale-95 transition-transform shrink-0"
+          className="apple-liquid-nav flex items-center justify-center h-8 sm:h-9 px-3 py-1 sm:px-3.5 sm:py-1.5 gap-1.5 sm:gap-2 rounded-full border border-[#54ACBF]/30 dark:border-[#26658C]/50 bg-white/80 dark:bg-[#011C40]/80 shadow-xs cursor-pointer text-[#023859] dark:text-[#A7EBF2] hover:bg-[#54ACBF]/15 dark:hover:bg-[#023859] font-semibold text-xs sm:text-sm select-none active:scale-95 transition-all shrink-0"
           title="Return"
         >
           <svg
-            className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 dark:text-slate-300 stroke-[2.5]"
+            className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#54ACBF] dark:text-[#A7EBF2] stroke-[2.5]"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -81,11 +81,11 @@ export function HostDashboardNavbar({
           type="button"
           onClick={() => navigate('/host/subscription')}
           data-no-hover="true"
-          className="apple-liquid-nav flex items-center justify-center h-8 sm:h-9 px-3 py-1 sm:px-3.5 sm:py-1.5 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 dark:border-white/15 bg-white/70 dark:bg-zinc-800/70 hover:bg-white dark:hover:bg-zinc-700 shadow-xs cursor-pointer text-slate-800 dark:text-zinc-200 font-semibold text-xs sm:text-sm select-none active:scale-95 transition-all shrink-0"
+          className="apple-liquid-nav flex items-center justify-center h-8 sm:h-9 px-3 py-1 sm:px-3.5 sm:py-1.5 gap-1.5 sm:gap-2 rounded-full border border-[#54ACBF]/35 dark:border-[#26658C]/60 bg-[#A7EBF2]/15 dark:bg-[#023859]/60 hover:bg-[#54ACBF]/20 dark:hover:bg-[#023859] shadow-xs cursor-pointer text-[#023859] dark:text-[#A7EBF2] font-semibold text-xs sm:text-sm select-none active:scale-95 transition-all shrink-0"
           title="View Subscription & Purchase Plans"
         >
           <svg
-            className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 dark:text-zinc-400 stroke-[2.2]"
+            className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#54ACBF] dark:text-[#A7EBF2] stroke-[2.2]"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -114,21 +114,19 @@ export function HostDashboardNavbar({
         className="hidden md:flex fixed top-3.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 items-center pointer-events-auto select-none"
         style={{ viewTransitionName: 'none' }}
       >
-        <nav className="apple-liquid-nav relative flex items-center p-1 sm:p-1.5 rounded-full border border-slate-200/80 dark:border-white/15 shadow-sm">
+        <nav className="apple-liquid-nav relative flex items-center p-1 sm:p-1.5 rounded-full border border-[#54ACBF]/25 dark:border-[#26658C]/50 bg-white/80 dark:bg-[#011C40]/80 backdrop-blur-xl shadow-sm">
           {/* Property Tab */}
           <button
             type="button"
             onClick={() => handleSelectTab('property')}
             className={`relative py-2 px-3.5 sm:px-4.5 rounded-full text-xs sm:text-sm font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-2 select-none ${
-              activeTab === 'property'
-                ? 'text-white dark:text-slate-950 font-semibold'
-                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium'
+              activeTab === 'property' ? 'text-[#A7EBF2] dark:text-[#011C40] font-bold' : 'text-[#023859]/75 dark:text-[#A7EBF2]/70 hover:text-[#011C40] dark:hover:text-white font-medium'
             }`}
           >
             {activeTab === 'property' && (
               <motion.div
                 layoutId="hostNavbarActiveCapsuleTab"
-                className="absolute inset-0 bg-slate-950 dark:bg-white rounded-full shadow-sm z-0 pointer-events-none"
+                className="absolute inset-0 bg-gradient-to-r from-[#023859] to-[#26658C] dark:from-[#54ACBF] dark:to-[#A7EBF2] rounded-full shadow-[0_2px_10px_rgba(2,56,89,0.25)] dark:shadow-[0_0_15px_rgba(84,172,191,0.4)] z-0 pointer-events-none"
                 transition={{ type: 'spring', stiffness: 500, damping: 35, mass: 0.6 }}
               />
             )}
@@ -146,16 +144,14 @@ export function HostDashboardNavbar({
             className={`relative py-2 px-3.5 sm:px-4.5 rounded-full text-xs sm:text-sm font-semibold tracking-tight transition-colors duration-200 flex items-center gap-2 select-none ${
               !isApproved
                 ? 'opacity-50 cursor-not-allowed text-slate-400 dark:text-slate-500'
-                : activeTab === 'room'
-                ? 'text-white dark:text-slate-950 font-semibold cursor-pointer'
-                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium cursor-pointer'
+                : activeTab === 'room' ? 'text-[#A7EBF2] dark:text-[#011C40] font-bold cursor-pointer' : 'text-[#023859]/75 dark:text-[#A7EBF2]/70 hover:text-[#011C40] dark:hover:text-white font-medium cursor-pointer'
             }`}
             title={!isApproved ? 'Locked until Admin Approval' : 'Room Categories & Schedule'}
           >
             {activeTab === 'room' && (
               <motion.div
                 layoutId="hostNavbarActiveCapsuleTab"
-                className="absolute inset-0 bg-slate-950 dark:bg-white rounded-full shadow-sm z-0 pointer-events-none"
+                className="absolute inset-0 bg-gradient-to-r from-[#023859] to-[#26658C] dark:from-[#54ACBF] dark:to-[#A7EBF2] rounded-full shadow-[0_2px_10px_rgba(2,56,89,0.25)] dark:shadow-[0_0_15px_rgba(84,172,191,0.4)] z-0 pointer-events-none"
                 transition={{ type: 'spring', stiffness: 500, damping: 35, mass: 0.6 }}
               />
             )}
@@ -180,16 +176,14 @@ export function HostDashboardNavbar({
             className={`relative py-2 px-3.5 sm:px-4.5 rounded-full text-xs sm:text-sm font-semibold tracking-tight transition-colors duration-200 flex items-center gap-2 select-none ${
               !isApproved
                 ? 'opacity-50 cursor-not-allowed text-slate-400 dark:text-slate-500'
-                : activeTab === 'users'
-                ? 'text-white dark:text-slate-950 font-semibold cursor-pointer'
-                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium cursor-pointer'
+                : activeTab === 'users' ? 'text-[#A7EBF2] dark:text-[#011C40] font-bold cursor-pointer' : 'text-[#023859]/75 dark:text-[#A7EBF2]/70 hover:text-[#011C40] dark:hover:text-white font-medium cursor-pointer'
             }`}
             title={!isApproved ? 'Locked until Admin Approval' : 'Guests and Visitors'}
           >
             {activeTab === 'users' && (
               <motion.div
                 layoutId="hostNavbarActiveCapsuleTab"
-                className="absolute inset-0 bg-slate-950 dark:bg-white rounded-full shadow-sm z-0 pointer-events-none"
+                className="absolute inset-0 bg-gradient-to-r from-[#023859] to-[#26658C] dark:from-[#54ACBF] dark:to-[#A7EBF2] rounded-full shadow-[0_2px_10px_rgba(2,56,89,0.25)] dark:shadow-[0_0_15px_rgba(84,172,191,0.4)] z-0 pointer-events-none"
                 transition={{ type: 'spring', stiffness: 500, damping: 35, mass: 0.6 }}
               />
             )}
@@ -224,16 +218,14 @@ export function HostDashboardNavbar({
             type="button"
             onClick={() => handleSelectTab('payment')}
             className={`relative py-2 px-3.5 sm:px-4.5 rounded-full text-xs sm:text-sm font-semibold tracking-tight transition-colors duration-200 flex items-center gap-2 select-none ${
-              activeTab === 'payment'
-                ? 'text-white dark:text-slate-950 font-semibold cursor-pointer'
-                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium cursor-pointer'
+              activeTab === 'payment' ? 'text-[#A7EBF2] dark:text-[#011C40] font-bold cursor-pointer' : 'text-[#023859]/75 dark:text-[#A7EBF2]/70 hover:text-[#011C40] dark:hover:text-white font-medium cursor-pointer'
             }`}
             title="Host Direct UPI & QR Configuration"
           >
             {activeTab === 'payment' && (
               <motion.div
                 layoutId="hostNavbarActiveCapsuleTab"
-                className="absolute inset-0 bg-slate-950 dark:bg-white rounded-full shadow-sm z-0 pointer-events-none"
+                className="absolute inset-0 bg-gradient-to-r from-[#023859] to-[#26658C] dark:from-[#54ACBF] dark:to-[#A7EBF2] rounded-full shadow-[0_2px_10px_rgba(2,56,89,0.25)] dark:shadow-[0_0_15px_rgba(84,172,191,0.4)] z-0 pointer-events-none"
                 transition={{ type: 'spring', stiffness: 500, damping: 35, mass: 0.6 }}
               />
             )}
@@ -253,11 +245,11 @@ export function HostDashboardNavbar({
           <button
             type="button"
             onClick={onOpenPropertyTelemetry}
-            className="apple-liquid-nav relative flex items-center justify-center h-8 sm:h-9 gap-1.5 sm:gap-2 px-2.5 sm:px-3 rounded-full border border-slate-200/80 dark:border-white/15 text-slate-800 dark:text-slate-200 text-xs font-semibold shadow-xs hover:border-emerald-500/40 cursor-pointer select-none active:scale-95 transition-all shrink-0"
+            className="apple-liquid-nav relative flex items-center justify-center h-8 sm:h-9 gap-1.5 sm:gap-2 px-2.5 sm:px-3 rounded-full border border-[#54ACBF]/30 dark:border-[#26658C]/50 bg-white/80 dark:bg-[#011C40]/80 text-[#023859] dark:text-[#A7EBF2] text-xs font-semibold shadow-xs hover:border-[#54ACBF] hover:bg-[#54ACBF]/10 dark:hover:bg-[#023859] cursor-pointer select-none active:scale-95 transition-all shrink-0"
             title="View Occupancy Telemetry & Quick Actions"
           >
             {/* Analytics icon */}
-            <svg className="w-3.5 h-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="w-3.5 h-3.5 shrink-0 text-[#54ACBF] dark:text-[#A7EBF2]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="20" x2="18" y2="10" />
               <line x1="12" y1="20" x2="12" y2="4" />
               <line x1="6" y1="20" x2="6" y2="14" />
@@ -267,7 +259,7 @@ export function HostDashboardNavbar({
               Occupancy &amp; Actions
             </span>
 
-            <span className="font-mono text-[10px] sm:text-[11px] font-bold px-1.5 py-0.5 rounded-full leading-none bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700/50">
+            <span className="font-mono text-[10px] sm:text-[11px] font-bold px-1.5 py-0.5 rounded-full leading-none bg-[#54ACBF]/15 dark:bg-[#023859] text-[#023859] dark:text-[#A7EBF2] border border-[#54ACBF]/30 dark:border-[#26658C]/60">
               {propertyOccupancyRate || '0.0'}%
             </span>
           </button>
@@ -284,8 +276,8 @@ export function HostDashboardNavbar({
             }}
             className={`h-8 sm:h-9 relative flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 rounded-full border text-xs font-semibold transition-all cursor-pointer select-none active:scale-95 shrink-0 ${
               visitedSubTab === 'paid'
-                ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 border-slate-950 dark:border-white shadow-sm'
-                : 'apple-liquid-nav border-slate-200/80 dark:border-white/15 text-slate-800 dark:text-slate-200 shadow-xs hover:border-emerald-500/40'
+                ? 'bg-gradient-to-r from-[#023859] to-[#26658C] dark:from-[#54ACBF] dark:to-[#A7EBF2] text-[#A7EBF2] dark:text-[#011C40] border-[#023859] dark:border-[#54ACBF] shadow-xs'
+                : 'apple-liquid-nav border-[#54ACBF]/30 dark:border-[#26658C]/50 bg-white/80 dark:bg-[#011C40]/80 text-[#023859] dark:text-[#A7EBF2] shadow-xs hover:border-[#54ACBF]'
             }`}
             title="View Paid Residents list"
           >
@@ -333,14 +325,12 @@ export function HostDashboardNavbar({
 
       {/* ── 4. MOBILE CENTER CAPSULE (Fixed at bottom on mobile screens) ── */}
       <div className="md:hidden fixed bottom-4 sm:bottom-5 left-1/2 -translate-x-1/2 z-50 pointer-events-auto px-3 sm:px-4 w-full max-w-sm flex justify-center select-none pb-[env(safe-area-inset-bottom,0px)]">
-        <nav className="apple-liquid-nav relative flex items-center p-1 rounded-full border border-slate-200/80 dark:border-white/15 shadow-lg backdrop-blur-2xl max-w-full justify-between gap-1">
+        <nav className="apple-liquid-nav relative flex items-center p-1 rounded-full border border-[#54ACBF]/30 dark:border-[#26658C]/50 bg-white/90 dark:bg-[#011C40]/90 shadow-lg backdrop-blur-2xl max-w-full justify-between gap-1">
           <button
             type="button"
             onClick={() => handleSelectTab('property')}
             className={`min-h-[38px] py-1.5 px-3 rounded-full text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
-              activeTab === 'property'
-                ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 shadow-xs'
-                : 'text-slate-600 dark:text-slate-300'
+              activeTab === 'property' ? 'bg-gradient-to-r from-[#023859] to-[#26658C] dark:from-[#54ACBF] dark:to-[#A7EBF2] text-[#A7EBF2] dark:text-[#011C40] shadow-xs' : 'text-[#023859]/80 dark:text-[#A7EBF2]/70'
             }`}
           >
             <span>Property</span>
@@ -352,9 +342,7 @@ export function HostDashboardNavbar({
             className={`min-h-[38px] py-1.5 px-3 rounded-full text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
               !isApproved
                 ? 'opacity-40 cursor-not-allowed text-slate-400'
-                : activeTab === 'room'
-                ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 shadow-xs'
-                : 'text-slate-600 dark:text-slate-300'
+                : activeTab === 'room' ? 'bg-gradient-to-r from-[#023859] to-[#26658C] dark:from-[#54ACBF] dark:to-[#A7EBF2] text-[#A7EBF2] dark:text-[#011C40] shadow-xs' : 'text-[#023859]/80 dark:text-[#A7EBF2]/70'
             }`}
           >
             <span>Rooms</span>
@@ -366,9 +354,7 @@ export function HostDashboardNavbar({
             className={`min-h-[38px] py-1.5 px-3 rounded-full text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
               !isApproved
                 ? 'opacity-40 cursor-not-allowed text-slate-400'
-                : activeTab === 'users'
-                ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 shadow-xs'
-                : 'text-slate-600 dark:text-slate-300'
+                : activeTab === 'users' ? 'bg-gradient-to-r from-[#023859] to-[#26658C] dark:from-[#54ACBF] dark:to-[#A7EBF2] text-[#A7EBF2] dark:text-[#011C40] shadow-xs' : 'text-[#023859]/80 dark:text-[#A7EBF2]/70'
             }`}
           >
             <span>Users</span>
@@ -384,9 +370,7 @@ export function HostDashboardNavbar({
             type="button"
             onClick={() => handleSelectTab('payment')}
             className={`min-h-[38px] py-1.5 px-3 rounded-full text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
-              activeTab === 'payment'
-                ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 shadow-xs'
-                : 'text-slate-600 dark:text-slate-300'
+              activeTab === 'payment' ? 'bg-gradient-to-r from-[#023859] to-[#26658C] dark:from-[#54ACBF] dark:to-[#A7EBF2] text-[#A7EBF2] dark:text-[#011C40] shadow-xs' : 'text-[#023859]/80 dark:text-[#A7EBF2]/70'
             }`}
           >
             <span>UPI</span>
