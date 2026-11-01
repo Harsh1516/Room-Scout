@@ -180,6 +180,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/enter', adminRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
 
 // Root Route
 app.get('/', (req, res) => {
