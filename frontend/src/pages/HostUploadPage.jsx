@@ -1516,10 +1516,10 @@ export function HostUploadPage() {
   const currentStepConfig = WIZARD_STEPS.find((s) => s.id === activeStep) || WIZARD_STEPS[0];
 
   return (
-    <div className="bg-white dark:bg-black text-slate-800 dark:text-zinc-100 host-page-scope font-body-md antialiased h-screen max-h-screen flex flex-col justify-between overflow-hidden relative select-none selection:bg-custom-btn-primary selection:text-white transition-colors duration-300">
+    <div className="bg-white dark:bg-black text-slate-800 dark:text-zinc-100 host-page-scope font-body-md antialiased h-screen max-h-screen flex flex-col justify-start overflow-hidden relative select-none selection:bg-custom-btn-primary selection:text-white transition-colors duration-300">
 
       {/* ── Top Header Navigation Bar (Matching User Side Floating Liquid Glass Capsules) ── */}
-      <header className="relative w-full h-13 sm:h-15 pointer-events-none select-none z-50 font-body-md host-font-scope antialiased">
+      <header className="relative w-full h-14 sm:h-16 pointer-events-none select-none z-50 font-body-md host-font-scope antialiased">
         {/* Left Action: Return to Host Dashboard + Mobile Steps Drawer Button */}
         <div className="fixed top-3 left-2.5 sm:top-5 sm:left-6 z-50 flex items-center gap-1.5 sm:gap-2 pointer-events-auto select-none">
           <button

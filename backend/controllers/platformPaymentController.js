@@ -4,7 +4,7 @@ const DEFAULT_PLANS = [
   { code: 'monthly', label: 'Monthly', durationMonths: 1, price: null },
   { code: 'quarterly', label: '3 Months', durationMonths: 3, price: null },
   { code: 'halfYearly', label: '6 Months', durationMonths: 6, price: null },
-  { code: 'yearly', label: '1 Year', durationMonths: 12, price: null },
+
 ];
 
 export async function getPlatformPaymentSettings(req, res, next) {
@@ -13,6 +13,15 @@ export async function getPlatformPaymentSettings(req, res, next) {
     if (!settings) {
       settings = await PlatformPaymentSettings.create({ key: 'platform', plans: DEFAULT_PLANS });
       settings = settings.toObject();
+    }
+    if (Array.isArray(settings.plans)) {
+      if (settings.plans.some((p) => p.code === 'yearly')) {
+        await PlatformPaymentSettings.updateOne(
+          { key: 'platform' },
+          { $pull: { plans: { code: 'yearly' } } }
+        );
+      }
+      settings.plans = settings.plans.filter((p) => p.code !== 'yearly');
     }
     return res.json({ success: true, settings });
   } catch (error) {
@@ -23,12 +32,12 @@ export async function getPlatformPaymentSettings(req, res, next) {
 export async function updatePlatformPaymentSettings(req, res, next) {
   try {
     const { payeeName, upiId, mobileNumber, qrCodeUrl, paymentInstructions, plans } = req.body || {};
-    if (!Array.isArray(plans) || plans.length !== 4) {
-      return res.status(400).json({ success: false, message: 'All four subscription durations are required.' });
+    if (!Array.isArray(plans) || plans.length !== 3) {
+      return res.status(400).json({ success: false, message: 'All three subscription durations (Monthly, 3 Months, 6 Months) are required.' });
     }
 
     const expected = new Map([
-      ['monthly', 1], ['quarterly', 3], ['halfYearly', 6], ['yearly', 12],
+      ['monthly', 1], ['quarterly', 3], ['halfYearly', 6],
     ]);
     for (const plan of plans) {
       if (!expected.has(plan.code) || expected.get(plan.code) !== Number(plan.durationMonths)) {

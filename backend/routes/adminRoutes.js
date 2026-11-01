@@ -25,6 +25,7 @@ import {
   deleteSubscriptionRequest,
   deleteAllSubscriptionRequests,
   bulkVerifySubscriptions,
+  bulkRejectSubscriptions,
   extractStatementUtrs,
 } from '../controllers/subscriptionController.js';
 
@@ -37,6 +38,7 @@ router.route('/subscriptions')
   .get(adminLimiter, requireAdmin, getAdminSubscriptionRequests)
   .delete(adminLimiter, requireAdmin, deleteAllSubscriptionRequests);
 router.route('/subscriptions/bulk-verify').post(adminLimiter, requireAdmin, bulkVerifySubscriptions);
+router.route('/subscriptions/bulk-reject').post(adminLimiter, requireAdmin, bulkRejectSubscriptions);
 router.route('/subscriptions/extract-statement').post(adminLimiter, requireAdmin, extractStatementUtrs);
 router.route('/subscriptions/:id/verify').post(adminLimiter, requireAdmin, verifySubscriptionRequest);
 router.route('/subscriptions/:id').delete(adminLimiter, requireAdmin, deleteSubscriptionRequest);

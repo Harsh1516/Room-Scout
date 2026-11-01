@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { adminAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { toast } from '../context/ToastContext';
@@ -10,8 +10,37 @@ import { ThemeTogglePill } from '../components/common/ThemeTogglePill';
 import PlatformPaymentSettingsPage from './PlatformPaymentSettingsPage';
 import { AdminSubscriptionsView } from '../components/admin/AdminSubscriptionsView';
 
+// Instant local cache helpers to avoid any reload, flash, or blank state
+const getStoredAdminSubscriptions = () => {
+  try {
+    const raw = localStorage.getItem('stayhub_admin_subscriptions_cache');
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+
+const getStoredAdminSubCounts = () => {
+  try {
+    const raw = localStorage.getItem('stayhub_admin_sub_counts_cache');
+    return raw ? JSON.parse(raw) : { pending: 0, verified: 0, rejected: 0, total: 0 };
+  } catch {
+    return { pending: 0, verified: 0, rejected: 0, total: 0 };
+  }
+};
+
+const saveStoredAdminSubscriptions = (list, counts) => {
+  try {
+    if (list) localStorage.setItem('stayhub_admin_subscriptions_cache', JSON.stringify(list));
+    if (counts) localStorage.setItem('stayhub_admin_sub_counts_cache', JSON.stringify(counts));
+  } catch (e) {
+    console.warn('Failed to cache admin subscriptions:', e);
+  }
+};
+
 export function AdminPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, updateUserSession } = useAuth();
 
   const [isAdminAuthorized, setIsAdminAuthorized] = useState(() => {
@@ -21,13 +50,45 @@ export function AdminPage() {
   const [passkeyError, setPasskeyError] = useState('');
   const [isVerifyingKey, setIsVerifyingKey] = useState(false);
 
-  const [activeTab, setActiveTab] = useState('users');
+  // Tab persistence: sync tab with URL query parameter & localStorage so refreshing stays on the tab
+  const urlTab = searchParams.get('tab');
+  const storedTab = typeof window !== 'undefined' ? localStorage.getItem('stayhub_admin_active_tab') : null;
+  const initialTab = ['users', 'hosts', 'subscriptions', 'upi'].includes(urlTab)
+    ? urlTab
+    : ['users', 'hosts', 'subscriptions', 'upi'].includes(storedTab)
+    ? storedTab
+    : 'users';
+
+  const [activeTab, setActiveTabState] = useState(initialTab);
+
+  const setActiveTab = useCallback((newTab) => {
+    setActiveTabState(newTab);
+    try {
+      localStorage.setItem('stayhub_admin_active_tab', newTab);
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.set('tab', newTab);
+        return next;
+      }, { replace: false });
+    } catch (e) {
+      console.warn('Failed to persist admin tab:', e);
+    }
+  }, [setSearchParams]);
+
+  // Sync tab if URL changes (e.g. browser back/forward buttons) without reloading
+  useEffect(() => {
+    const paramTab = searchParams.get('tab');
+    if (paramTab && ['users', 'hosts', 'subscriptions', 'upi'].includes(paramTab) && paramTab !== activeTab) {
+      setActiveTabState(paramTab);
+      localStorage.setItem('stayhub_admin_active_tab', paramTab);
+    }
+  }, [searchParams, activeTab]);
   const [userSubTab, setUserSubTab] = useState('online'); // 'online' | 'offline' | 'all'
 
   const [users, setUsers] = useState([]);
   const [hosts, setHosts] = useState([]);
-  const [subscriptions, setSubscriptions] = useState([]);
-  const [subscriptionCounts, setSubscriptionCounts] = useState({ pending: 0, verified: 0, rejected: 0, total: 0 });
+  const [subscriptions, setSubscriptions] = useState(getStoredAdminSubscriptions);
+  const [subscriptionCounts, setSubscriptionCounts] = useState(getStoredAdminSubCounts);
   const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -64,11 +125,15 @@ export function AdminPage() {
 
   const fetchSubscriptions = useCallback(async (isBackground = false) => {
     try {
-      if (!isBackground) setLoadingSubscriptions(true);
+      if (!isBackground && subscriptions.length === 0) setLoadingSubscriptions(true);
       const subRes = await adminAPI.getSubscriptionRequests('ALL');
       if (subRes && subRes.success) {
-        setSubscriptions(subRes.requests || []);
-        if (subRes.counts) setSubscriptionCounts(subRes.counts);
+        const reqs = subRes.requests || [];
+        const cnts = subRes.counts || { pending: 0, verified: 0, rejected: 0, total: 0 };
+        setSubscriptions(reqs);
+        setSubscriptionCounts(cnts);
+        saveStoredAdminSubscriptions(reqs, cnts);
+
       }
     } catch (err) {
       if (!isBackground) console.warn('Failed to load subscriptions in admin:', err);
@@ -309,6 +374,19 @@ export function AdminPage() {
       return res;
     } catch (err) {
       toast.error(err.message || 'Failed to delete all subscription records.');
+      throw err;
+    }
+  };
+
+  const handleBulkRejectSubscriptions = async (payload) => {
+    try {
+      const res = await adminAPI.bulkRejectSubscriptions(payload);
+      toast.success(res.message || 'Bulk rejection of underpaid requests complete.');
+      fetchSubscriptions(true);
+      fetchData(true);
+      return res;
+    } catch (err) {
+      toast.error(err.message || 'Bulk rejection failed.');
       throw err;
     }
   };
@@ -1063,12 +1141,13 @@ export function AdminPage() {
             requests={subscriptions}
             counts={subscriptionCounts}
             loading={loadingSubscriptions}
-            onRefresh={() => fetchSubscriptions(false)}
+            onRefresh={() => fetchSubscriptions(true)}
             onVerify={handleVerifySubscription}
             onReject={handleRejectSubscription}
             onDelete={handleDeleteSubscription}
             onDeleteAll={handleDeleteAllSubscriptions}
             onBulkVerify={handleBulkVerifySubscriptions}
+            onBulkReject={handleBulkRejectSubscriptions}
             onManualActivate={handleManualActivateHostSubscription}
             hosts={hosts}
             formatDateTime={formatDateTime}

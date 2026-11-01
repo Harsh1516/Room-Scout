@@ -1,3 +1,57 @@
+// ── BANK STATEMENT PARSING UTILITIES ──
+export function extractCreditAmountFromLine(line, utr) {
+  if (!line || typeof line !== 'string') return null;
+
+  const delimiter = line.includes('\t') ? '\t' : ',';
+  const parts = line.split(delimiter).map((p) => p.trim().replace(/^[\"']|[\"']$/g, ''));
+
+  if (parts.length >= 3) {
+    const descIdx = parts.findIndex((p) => p.includes(utr));
+    const searchParts = descIdx >= 0 ? parts.slice(descIdx + 1) : parts;
+
+    const candidates = [];
+    for (let i = 0; i < searchParts.length; i++) {
+      const col = searchParts[i];
+      const clean = col.replace(/,/g, '');
+      if (
+        /^\d+(?:\.\d{1,2})?$/.test(clean) &&
+        clean !== utr &&
+        clean.length <= 10 &&
+        !col.includes('/') &&
+        !col.includes('-')
+      ) {
+        const val = parseFloat(clean);
+        if (val > 0) candidates.push({ idx: i, val });
+      }
+    }
+
+    if (candidates.length === 1) return candidates[0].val;
+    if (candidates.length >= 2) {
+      return candidates[candidates.length - 2].val;
+    }
+  }
+
+  const match = line.match(/(?:CR|Credit|Deposit|INR|Rs\.?|\u20B9)[\s:,/-]*([0-9,]+(?:\.[0-9]{1,2})?)/i);
+  if (match) {
+    const num = parseFloat(match[1].replace(/,/g, ''));
+    if (!isNaN(num) && num > 0) return num;
+  }
+
+  const generalNumbers = [...line.matchAll(/(?:^|[\s,])(\d{2,6}(?:\.\d{2}))(?=[\s,]|$)/g)]
+    .map((m) => parseFloat(m[1]))
+    .filter((v) => !isNaN(v) && v > 0);
+  if (generalNumbers.length === 1) return generalNumbers[0];
+  if (generalNumbers.length >= 2) return generalNumbers[generalNumbers.length - 2];
+
+  return null;
+}
+
+export function extractDateFromLine(line) {
+  if (!line || typeof line !== 'string') return '';
+  const dateMatch = line.match(/\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})\b/);
+  return dateMatch ? dateMatch[1] : '';
+}
+
 import { useState, useMemo, useRef } from 'react';
 import { toast } from '../../context/ToastContext';
 import { formatValidityDate } from '../../utils/dateUtils';
@@ -13,6 +67,7 @@ export function AdminSubscriptionsView({
   onDelete = async () => {},
   onDeleteAll = async () => {},
   onBulkVerify = async () => {},
+  onBulkReject = async () => {},
   onManualActivate = async () => {},
   hosts = [],
   formatDateTime = (d) => String(d),
@@ -54,6 +109,9 @@ export function AdminSubscriptionsView({
   const [hasMatched, setHasMatched] = useState(false);
   const [isSorted, setIsSorted] = useState(false);
   const [isBulkVerifying, setIsBulkVerifying] = useState(false);
+  const [isBulkRejecting, setIsBulkRejecting] = useState(false);
+  const [confirmingRow, setConfirmingRow] = useState(null); // { id: string, action: 'ACCEPT' | 'REJECT' }
+  const [isRowProcessing, setIsRowProcessing] = useState(false);
 
   // Filter & Search for the Subscriptions directory table
   const filteredRequests = useMemo(() => {
@@ -242,7 +300,7 @@ export function AdminSubscriptionsView({
             toast.warning('No 12-digit UTR numbers were found in this PDF.');
           } else {
             setExtractedUtrs(res.entries);
-            setHasMatched(false);
+            setHasMatched(true);
             setIsSorted(false);
             toast.success(`✓ Extracted ${res.entries.length} UTR numbers from ${attachedFile.name}!`);
           }
@@ -269,14 +327,19 @@ export function AdminSubscriptionsView({
           const lines = rawText.split(/\r?\n/).filter((l) => l.trim().length > 0);
           const entries = uniqueUtrs.map((utr) => {
             const line = lines.find((l) => l.includes(utr)) || '';
+            const amount = extractCreditAmountFromLine(line, utr);
+            const date = extractDateFromLine(line);
             return {
               utr,
-              snippet: line.slice(0, 120).trim(),
+              amount,
+              date,
+              snippet: line.slice(0, 160).trim(),
+              rawLine: line,
             };
           });
 
           setExtractedUtrs(entries);
-          setHasMatched(false);
+          setHasMatched(true);
           setIsSorted(false);
           toast.success(`✓ Extracted ${entries.length} 12-digit UTR numbers from ${attachedFile.name}!`);
         }
@@ -324,16 +387,20 @@ export function AdminSubscriptionsView({
     let items = extractedUtrs.map((entry) => {
       const utr = typeof entry === 'string' ? entry : entry.utr;
       const snippet = typeof entry === 'object' ? entry.snippet : '';
-      const matched = hasMatched ? requests.find((r) => r.transactionRef === utr) || null : null;
+      const amount = typeof entry === 'object' ? entry.amount : null;
+      const date = typeof entry === 'object' ? entry.date : '';
+      const matched = requests.find((r) => r.transactionRef === utr) || null;
 
       return {
         utr,
         snippet,
+        amount,
+        date,
         matchedRequest: matched,
       };
     });
 
-    if (isSorted && hasMatched) {
+    if (isSorted) {
       items = [...items].sort((a, b) => {
         const aM = a.matchedRequest ? 1 : 0;
         const bM = b.matchedRequest ? 1 : 0;
@@ -349,32 +416,67 @@ export function AdminSubscriptionsView({
     }
 
     return items;
-  }, [extractedUtrs, requests, hasMatched, isSorted]);
+  }, [extractedUtrs, requests, isSorted]);
 
-  const matchedPendingRequests = useMemo(() => {
+  // 1. Fully Verified Matches: Both UTR matches AND Credited Amount >= Required Plan Price
+  const validPricePendingMatches = useMemo(() => {
+    if (!hasMatched) return [];
+    return reconciliationItems
+      .filter((i) => {
+        if (!i.matchedRequest || i.matchedRequest.status !== 'PENDING') return false;
+        if (i.amount == null) return false;
+        const paid = Number(i.amount);
+        const required = Number(i.matchedRequest.amount);
+        return Math.abs(paid - required) < 0.01 || paid >= required;
+      })
+      .map((i) => i.matchedRequest);
+  }, [reconciliationItems, hasMatched]);
+
+  // 2. Underpaid / Tampered Price Matches: UTR matches, but credited amount < Required Plan Price
+  const underpaidPendingMatches = useMemo(() => {
+    if (!hasMatched) return [];
+    return reconciliationItems
+      .filter((i) => {
+        if (!i.matchedRequest || i.matchedRequest.status !== 'PENDING') return false;
+        if (i.amount == null) return false;
+        const paid = Number(i.amount);
+        const required = Number(i.matchedRequest.amount);
+        return paid < required;
+      })
+      .map((i) => ({
+        request: i.matchedRequest,
+        paidAmount: Number(i.amount),
+        requiredAmount: Number(i.matchedRequest.amount),
+      }));
+  }, [reconciliationItems, hasMatched]);
+
+  // All matched pending requests
+  const allMatchedPendingRequests = useMemo(() => {
     if (!hasMatched) return [];
     return reconciliationItems
       .filter((i) => i.matchedRequest && i.matchedRequest.status === 'PENDING')
       .map((i) => i.matchedRequest);
   }, [reconciliationItems, hasMatched]);
 
+  const matchedPendingRequests = allMatchedPendingRequests;
+
   const matchedCount = useMemo(() => {
     if (!hasMatched) return 0;
     return reconciliationItems.filter((i) => i.matchedRequest).length;
   }, [reconciliationItems, hasMatched]);
 
-  // 5. Allow All Matched Pending Hosts at One Time
-  const handleAllowAllMatched = async () => {
-    if (matchedPendingRequests.length === 0) {
-      toast.info('All matched host requests are already verified!');
+  // Allow all verified hosts where price matches
+  const handleAllowVerifiedMatched = async () => {
+    if (validPricePendingMatches.length === 0) {
+      toast.info('No pending host requests with verified matching price.');
       return;
     }
 
     try {
       setIsBulkVerifying(true);
-      const pendingIds = matchedPendingRequests.map((r) => r._id);
+      const pendingIds = validPricePendingMatches.map((r) => r._id);
       await onBulkVerify({ paymentIds: pendingIds });
-      toast.success(`🎉 Verified and granted live access to all ${pendingIds.length} matched hosts!`);
+      toast.success(`🎉 Verified and activated ${pendingIds.length} host plan(s) with matching payment!`);
     } catch (err) {
       toast.error(err.message || 'Bulk verify failed.');
     } finally {
@@ -382,18 +484,84 @@ export function AdminSubscriptionsView({
     }
   };
 
-  // Single allow from reconciliation table
-  const handleAllowSingleMatched = async (request) => {
+  // Reject all underpaid/tampered host submissions automatically
+  const handleRejectUnderpaidMatched = async () => {
+    if (underpaidPendingMatches.length === 0) {
+      toast.info('No underpaid host requests found.');
+      return;
+    }
+
+    try {
+      setIsBulkRejecting(true);
+      const underpaidIds = underpaidPendingMatches.map((m) => m.request._id);
+      await onBulkReject({
+        paymentIds: underpaidIds,
+        rejectionReason: 'Paid amount in bank statement did not match required subscription plan price.',
+      });
+      toast.success(`✕ Successfully rejected ${underpaidIds.length} underpaid request(s).`);
+    } catch (err) {
+      toast.error(err.message || 'Bulk rejection failed.');
+    } finally {
+      setIsBulkRejecting(false);
+    }
+  };
+
+  // 1-Click Auto-Resolve: Accepts verified price matches AND rejects underpaid matches
+  const handleAutoResolveAll = async () => {
+    if (validPricePendingMatches.length === 0 && underpaidPendingMatches.length === 0) {
+      toast.info('No pending matches available to auto-resolve.');
+      return;
+    }
+
+    try {
+      setIsBulkVerifying(true);
+      if (validPricePendingMatches.length > 0) {
+        const pendingIds = validPricePendingMatches.map((r) => r._id);
+        await onBulkVerify({ paymentIds: pendingIds });
+      }
+      if (underpaidPendingMatches.length > 0) {
+        const underpaidIds = underpaidPendingMatches.map((m) => m.request._id);
+        await onBulkReject({
+          paymentIds: underpaidIds,
+          rejectionReason: 'Paid amount in bank statement did not match required subscription plan price.',
+        });
+      }
+      toast.success(
+        `✓ Auto-reconciliation complete: ${validPricePendingMatches.length} verified & accepted, ${underpaidPendingMatches.length} underpaid rejected!`
+      );
+    } catch (err) {
+      toast.error(err.message || 'Auto-resolve failed.');
+    } finally {
+      setIsBulkVerifying(false);
+    }
+  };
+
+  // Execute single confirm (Accept or Reject) from the reconciliation table
+  const handleExecuteConfirm = async (request, action, customReason = null) => {
     if (!request) return;
     try {
-      await onVerify(request._id, {
-        action: 'VERIFY',
-        durationMonths: request.durationMonths || 1,
-        adminNotes: 'Verified via statement reconciliation match',
-      });
-      toast.success(`✓ Plan activated for ${request.hostId?.name || 'Host'}!`);
+      setIsRowProcessing(true);
+      if (action === 'ACCEPT') {
+        await onVerify(request._id, {
+          action: 'VERIFY',
+          durationMonths: request.durationMonths || 1,
+          adminNotes: 'Verified via statement reconciliation match',
+        });
+        toast.success(`✓ Plan activated for ${request.hostId?.name || 'Host'}!`);
+      } else {
+        await onReject(request._id, {
+          action: 'REJECT',
+          rejectionReason:
+            customReason ||
+            'Paid amount in bank statement did not match required subscription plan price.',
+        });
+        toast.success(`✕ Request rejected for ${request.hostId?.name || 'Host'}.`);
+      }
+      setConfirmingRow(null);
     } catch (err) {
-      toast.error(err.message || 'Verification failed.');
+      toast.error(err.message || 'Action failed.');
+    } finally {
+      setIsRowProcessing(false);
     }
   };
 
@@ -637,14 +805,14 @@ export function AdminSubscriptionsView({
             </button>
           )}
 
-          {/* 5. Allow All Button */}
-          {hasMatched && matchedPendingRequests.length > 0 && (
+          {/* 5. Allow Verified Button (Only where amount matches plan price) */}
+          {hasMatched && validPricePendingMatches.length > 0 && (
             <button
               type="button"
-              onClick={handleAllowAllMatched}
-              disabled={isBulkVerifying}
+              onClick={handleAllowVerifiedMatched}
+              disabled={isBulkVerifying || isBulkRejecting}
               className="px-4 py-1.5 rounded-xl text-xs font-normal bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.35)] flex items-center gap-2 transition-all cursor-pointer active:scale-95 animate-pulse"
-              title="Verify and grant access to all matched pending hosts at one time"
+              title="Verify and grant access to hosts with matching payment"
             >
               {isBulkVerifying ? (
                 <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -653,7 +821,41 @@ export function AdminSubscriptionsView({
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               )}
-              <span>Allow All ({matchedPendingRequests.length})</span>
+              <span>Allow Verified ({validPricePendingMatches.length})</span>
+            </button>
+          )}
+
+          {/* 6. Reject Underpaid Button (Automatically reject tampered / underpaid payments) */}
+          {hasMatched && underpaidPendingMatches.length > 0 && (
+            <button
+              type="button"
+              onClick={handleRejectUnderpaidMatched}
+              disabled={isBulkVerifying || isBulkRejecting}
+              className="px-3.5 py-1.5 rounded-xl text-xs font-normal bg-rose-600/90 hover:bg-rose-500 text-white shadow-xs flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+              title="Reject all submissions where credited amount does not match required plan price"
+            >
+              {isBulkRejecting ? (
+                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <svg className="w-3.5 h-3.5 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              )}
+              <span>Reject Underpaid ({underpaidPendingMatches.length})</span>
+            </button>
+          )}
+
+          {/* 7. Auto-Resolve (When both verified and underpaid exist) */}
+          {hasMatched && validPricePendingMatches.length > 0 && underpaidPendingMatches.length > 0 && (
+            <button
+              type="button"
+              onClick={handleAutoResolveAll}
+              disabled={isBulkVerifying || isBulkRejecting}
+              className="px-3 py-1.5 rounded-xl text-xs font-normal bg-purple-600 hover:bg-purple-500 text-white shadow-xs flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+              title="Accept verified payments and reject underpaid payments in 1 click"
+            >
+              <span>⚡ Auto-Resolve</span>
             </button>
           )}
         </div>
@@ -698,7 +900,7 @@ export function AdminSubscriptionsView({
             className="p-1.5 rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-slate-50/80 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.08] text-slate-600 dark:text-slate-300 transition-all cursor-pointer active:scale-95"
             title="Refresh subscriptions"
           >
-            <svg className="w-4 h-4 stroke-[1.8]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <svg className={`w-4 h-4 stroke-[1.8] ${loading ? 'animate-spin text-purple-400' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
             </svg>
           </button>
@@ -724,8 +926,12 @@ export function AdminSubscriptionsView({
                 Statement: <span className="text-white font-medium">{attachedFile?.name}</span>.
                 {hasMatched ? (
                   <>
-                    {' '}Matched <span className="text-emerald-400 font-medium">{matchedCount}</span> host requests (
-                    <span className="text-amber-400 font-medium">{matchedPendingRequests.length}</span> pending verification).
+                    {' '}Matched <span className="text-emerald-400 font-medium">{matchedCount}</span> host request{matchedCount !== 1 ? 's' : ''} (
+                    <span className="text-amber-400 font-medium">{matchedPendingRequests.length}</span> pending verification
+                    {underpaidPendingMatches.length > 0 ? (
+                      <span className="text-rose-400 font-medium"> — {underpaidPendingMatches.length} underpaid</span>
+                    ) : null}
+                    ).
                   </>
                 ) : (
                   ' Click "Match" to cross-reference with hosts.'
@@ -733,18 +939,34 @@ export function AdminSubscriptionsView({
               </p>
             </div>
 
-            <div className="flex items-center gap-2 self-end sm:self-auto">
-              {hasMatched && matchedPendingRequests.length > 0 && (
+            <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
+              {hasMatched && validPricePendingMatches.length > 0 && (
                 <button
                   type="button"
-                  onClick={handleAllowAllMatched}
-                  disabled={isBulkVerifying}
-                  className="px-4 py-1.5 rounded-xl text-xs font-normal bg-emerald-600 hover:bg-emerald-500 text-white shadow-md active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                  onClick={handleAllowVerifiedMatched}
+                  disabled={isBulkVerifying || isBulkRejecting}
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-normal bg-emerald-600 hover:bg-emerald-500 text-white shadow-md active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                  title="Verify matching amount hosts"
                 >
                   <svg className="w-3.5 h-3.5 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  <span>Allow all ({matchedPendingRequests.length})</span>
+                  <span>Allow Verified ({validPricePendingMatches.length})</span>
+                </button>
+              )}
+              {hasMatched && underpaidPendingMatches.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleRejectUnderpaidMatched}
+                  disabled={isBulkVerifying || isBulkRejecting}
+                  className="px-3 py-1.5 rounded-xl text-xs font-normal bg-rose-600/90 hover:bg-rose-500 text-white shadow-xs active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                  title="Reject underpaid hosts"
+                >
+                  <svg className="w-3.5 h-3.5 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                  <span>Reject Underpaid ({underpaidPendingMatches.length})</span>
                 </button>
               )}
               <button
@@ -757,14 +979,23 @@ export function AdminSubscriptionsView({
             </div>
           </div>
 
-          {/* 2-Column Comparison Table */}
-          <div className="overflow-x-auto rounded-2xl border border-white/10 bg-slate-950/80">
+          {/* 4-Column Balanced Statement Reconciliation Table */}
+          <div className="overflow-x-auto rounded-2xl border border-white/10 bg-slate-950/80 shadow-inner">
             <table className="w-full text-left text-xs border-collapse">
-              <thead className="bg-slate-950 text-slate-400 font-normal border-b border-white/10 text-xs">
+              <thead className="bg-slate-950/90 text-slate-400 font-normal border-b border-white/10 text-xs select-none">
                 <tr>
-                  <th className="py-3 px-4 w-1/3 font-normal">1. Bank statement UTR (My UTR numbers)</th>
-                  <th className="py-3 px-4 w-1/2 font-normal">2. Host submitted UTR & stay details</th>
-                  <th className="py-3 px-4 text-right w-1/6 font-normal">Action</th>
+                  <th className="py-3 px-4 sm:px-5 font-normal text-slate-300 w-[24%]">
+                    1. My UTR No.
+                  </th>
+                  <th className="py-3 px-4 font-normal text-slate-300 w-[18%]">
+                    2. Credited Amount
+                  </th>
+                  <th className="py-3 px-4 font-normal text-slate-300 w-[38%]">
+                    3. Host Submitter UTR & Plan
+                  </th>
+                  <th className="py-3 px-4 sm:px-5 font-normal text-slate-300 w-[20%] text-right">
+                    4. Action
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-slate-200">
@@ -772,87 +1003,284 @@ export function AdminSubscriptionsView({
                   const matched = item.matchedRequest;
                   const isMatchedPending = matched && matched.status === 'PENDING';
                   const isMatchedVerified = matched && matched.status === 'VERIFIED';
+                  const isConfirmingThis = confirmingRow?.id === matched?._id;
+                  const statementPaid = item.amount != null ? Number(item.amount) : null;
+                  const hostPlanPrice = matched?.amount != null ? Number(matched.amount) : null;
+                  const isUnderpaid = statementPaid != null && hostPlanPrice != null && statementPaid < hostPlanPrice;
+                  const isPriceMatched = statementPaid != null && hostPlanPrice != null && (Math.abs(statementPaid - hostPlanPrice) < 0.01 || statementPaid >= hostPlanPrice);
 
                   return (
                     <tr
                       key={item.utr + '_' + idx}
-                      className={`transition-colors ${
+                      className={`transition-colors duration-150 ${
                         matched
                           ? isMatchedPending
-                            ? 'bg-purple-950/30 hover:bg-purple-950/40'
-                            : 'bg-emerald-950/20 hover:bg-emerald-950/30'
+                            ? 'bg-purple-950/20 hover:bg-purple-950/30'
+                            : 'bg-emerald-950/15 hover:bg-emerald-950/25'
                           : 'hover:bg-white/[0.02]'
                       }`}
                     >
-                      {/* Column 1: Bank Statement UTR */}
-                      <td className="py-3 px-4 align-middle">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-normal text-white text-xs bg-slate-900 px-2 py-0.5 rounded border border-white/10">
-                            {item.utr}
-                          </span>
-                          {matched ? (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-normal bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                              ✓ Matched
+                      {/* Column 1: My UTR No. */}
+                      <td className="py-3.5 px-4 sm:px-5 align-middle">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-medium text-white text-xs bg-slate-900 px-2 py-0.5 rounded border border-white/10 tracking-wider">
+                              {item.utr}
                             </span>
-                          ) : hasMatched ? (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-normal bg-slate-800 text-slate-400">
-                              Statement only
-                            </span>
-                          ) : null}
+                            <button
+                              type="button"
+                              onClick={() => handleCopyUtr(item.utr)}
+                              title="Copy UTR"
+                              className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                            >
+                              {copiedUtr === item.utr ? (
+                                <span className="text-emerald-400 text-[10px]">✓</span>
+                              ) : (
+                                <svg className="w-3.5 h-3.5 stroke-[1.8]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                </svg>
+                              )}
+                            </button>
+                            {matched ? (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                                ✓ Matched
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-normal bg-slate-800 text-slate-400">
+                                Statement only
+                              </span>
+                            )}
+                          </div>
+                          {/* Context / Date / Narration */}
+                          <div className="flex items-center gap-1.5 text-[11px] text-slate-400 truncate max-w-xs sm:max-w-sm">
+                            {item.date && (
+                              <span className="text-slate-300 font-mono text-[10px] px-1 py-0.2 bg-white/5 rounded shrink-0">
+                                {item.date}
+                              </span>
+                            )}
+                            {item.snippet && (
+                              <span className="truncate text-slate-400" title={item.snippet}>
+                                {item.snippet}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        {item.snippet && (
-                          <div className="text-[10px] text-slate-400 truncate max-w-xs mt-1" title={item.snippet}>
-                            {item.snippet}
-                          </div>
-                        )}
                       </td>
 
-                      {/* Column 2: Host Submitted Request */}
-                      <td className="py-3 px-4 align-middle">
-                        {matched ? (
+                      {/* Column 2: Credited Amount */}
+                      <td className="py-3.5 px-4 align-middle">
+                        {item.amount != null ? (
                           <div className="flex flex-col gap-0.5">
-                            <div className="flex items-center gap-2">
-                              <span className="font-normal text-white text-xs">{matched.hostId?.name || 'Host'}</span>
-                              <span className="text-[11px] text-slate-400 truncate max-w-[180px]">
-                                ({matched.hostId?.email})
+                            <div className="flex items-baseline gap-1.5">
+                              <span className="font-mono text-sm sm:text-base font-semibold text-emerald-400">
+                                ₹{Number(item.amount).toLocaleString('en-IN')}
+                              </span>
+                              <span className="text-[10px] font-medium text-emerald-500/80 uppercase">
+                                CR
                               </span>
                             </div>
-                            <div className="text-[11px] text-purple-300 flex items-center gap-1.5 font-normal">
-                              <span className="truncate max-w-[180px]">🏡 {matched.stayId?.title || 'Stay Property'}</span>
-                              <span>•</span>
-                              <span className="font-normal text-emerald-400 whitespace-nowrap">
-                                {matched.planLabel} (₹{matched.amount})
+                            {isPriceMatched && (
+                              <span className="text-[10px] text-emerald-400/90 flex items-center gap-1 font-medium bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                                ✓ Matches host price
+                              </span>
+                            )}
+                            {isUnderpaid && (
+                              <span className="text-[10px] text-rose-400 flex items-center gap-1 font-semibold bg-rose-500/15 px-1.5 py-0.5 rounded border border-rose-500/30">
+                                ⚠ Underpaid: Paid ₹{statementPaid} (Plan is ₹{hostPlanPrice})
+                              </span>
+                            )}
+                          </div>
+                        ) : matched && matched.amount ? (
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-mono text-sm font-medium text-slate-300">
+                              ₹{Number(matched.amount).toLocaleString('en-IN')}
+                            </span>
+                            <span className="text-[10px] text-slate-500">(from request)</span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-500 text-xs">—</span>
+                        )}
+                      </td>
+
+                      {/* Column 3: Host Submitter UTR with Price and Month Plan */}
+                      <td className="py-3.5 px-4 align-middle">
+                        {matched ? (
+                          <div className="flex flex-col gap-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-mono text-xs text-purple-200 bg-purple-950/60 border border-purple-500/30 px-2 py-0.5 rounded font-medium">
+                                UTR: {matched.transactionRef}
+                              </span>
+                              <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-purple-500/20 text-purple-200 border border-purple-500/40">
+                                ₹{matched.amount} • {matched.planLabel || `${matched.durationMonths || 1} Month${(matched.durationMonths || 1) > 1 ? 's' : ''}`}
+                              </span>
+                              {matched.startOption === 'NEXT' ? (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
+                                  {matched.startMonthLabel || 'Next Month'}
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                                  {matched.startMonthLabel || 'This Month'}
+                                </span>
+                              )}
+                              {matched.status === 'VERIFIED' ? (
+                                <span className="text-[10px] text-emerald-400 font-medium">● Active Plan</span>
+                              ) : matched.status === 'PENDING' ? (
+                                <span className="text-[10px] text-amber-400 font-medium">● Pending Verification</span>
+                              ) : (
+                                <span className="text-[10px] text-rose-400 font-medium">● {matched.status}</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="font-medium text-white">{matched.hostId?.name || 'Host'}</span>
+                              <span className="text-slate-400 text-[11px] truncate max-w-[150px]">
+                                ({matched.hostId?.email || 'No email'})
+                              </span>
+                              <span className="text-slate-500">•</span>
+                              <span className="text-slate-300 text-[11px] truncate max-w-[170px]">
+                                🏡 {matched.stayId?.title || 'Stay Property'}
                               </span>
                             </div>
                           </div>
-                        ) : hasMatched ? (
-                          <span className="text-[11px] text-slate-500 italic">
-                            — No host submission for this UTR —
-                          </span>
                         ) : (
-                          <span className="text-[11px] text-slate-500">
-                            Click "Match" above to cross-reference host requests
+                          <span className="text-[11px] text-slate-500 italic">
+                            — No host submission found for this UTR —
                           </span>
                         )}
                       </td>
 
-                      {/* Column 3: Actions */}
-                      <td className="py-3 px-4 align-middle text-right">
+                      {/* Column 4: Accept or Reject button with confirmation */}
+                      <td className="py-3.5 px-4 sm:px-5 align-middle text-right">
                         {isMatchedPending ? (
-                          <button
-                            type="button"
-                            onClick={() => handleAllowSingleMatched(matched)}
-                            className="px-3 py-1 rounded-lg text-xs font-normal bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs transition-all active:scale-95 cursor-pointer"
-                          >
-                            Allow / Verify
-                          </button>
+                          isConfirmingThis ? (
+                            /* Inline Confirmation */
+                            <div className="inline-flex flex-col items-end gap-1.5 bg-slate-900/95 border border-white/15 p-2 rounded-xl shadow-xl">
+                              <span className="text-[11px] font-medium text-slate-200">
+                                {confirmingRow.action === 'ACCEPT' || confirmingRow.action === 'FORCE_ACCEPT'
+                                  ? isUnderpaid
+                                    ? `⚠️ Confirm override? Host only paid ₹${statementPaid} for ₹${hostPlanPrice} plan.`
+                                    : `Confirm Accept ₹${hostPlanPrice} plan?`
+                                  : isUnderpaid
+                                  ? `Confirm reject? (Paid ₹${statementPaid} < Plan ₹${hostPlanPrice})`
+                                  : `Confirm Reject request?`}
+                              </span>
+                              <div className="flex items-center gap-1.5">
+                                {confirmingRow.action === 'ACCEPT' || confirmingRow.action === 'FORCE_ACCEPT' ? (
+                                  <button
+                                    type="button"
+                                    disabled={isRowProcessing}
+                                    onClick={() => handleExecuteConfirm(matched, 'ACCEPT')}
+                                    className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm active:scale-95 transition-all cursor-pointer flex items-center gap-1"
+                                  >
+                                    {isRowProcessing ? (
+                                      <div className="w-3 h-3 rounded-full border border-white/30 border-t-white animate-spin" />
+                                    ) : (
+                                      '✓ Yes, Accept'
+                                    )}
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    disabled={isRowProcessing}
+                                    onClick={() =>
+                                      handleExecuteConfirm(
+                                        matched,
+                                        'REJECT',
+                                        confirmingRow.reason ||
+                                          `Paid amount of ₹${statementPaid} does not match required plan price ₹${hostPlanPrice}.`
+                                      )
+                                    }
+                                    className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white shadow-sm active:scale-95 transition-all cursor-pointer flex items-center gap-1"
+                                  >
+                                    {isRowProcessing ? (
+                                      <div className="w-3 h-3 rounded-full border border-white/30 border-t-white animate-spin" />
+                                    ) : (
+                                      '✕ Yes, Reject'
+                                    )}
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  disabled={isRowProcessing}
+                                  onClick={() => setConfirmingRow(null)}
+                                  className="px-2 py-1 rounded-lg text-xs font-normal text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : isUnderpaid ? (
+                            /* Underpaid Row: REJECT is primary default action */
+                            <div className="inline-flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setConfirmingRow({
+                                    id: matched._id,
+                                    action: 'REJECT',
+                                    reason: `Paid amount of ₹${statementPaid} does not match required plan price ₹${hostPlanPrice}. Payment rejected for insufficient amount.`,
+                                  })
+                                }
+                                className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white shadow-xs active:scale-95 transition-all cursor-pointer flex items-center gap-1"
+                                title={`Reject underpaid payment: host paid ₹${statementPaid} for ₹${hostPlanPrice} plan`}
+                              >
+                                <svg className="w-3.5 h-3.5 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                  <line x1="18" y1="6" x2="6" y2="18" />
+                                  <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                                <span>Reject (Underpaid)</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setConfirmingRow({ id: matched._id, action: 'FORCE_ACCEPT' })}
+                                className="px-2 py-1 text-[10px] font-normal text-slate-400 hover:text-amber-300 hover:bg-amber-500/10 rounded-lg transition-colors cursor-pointer"
+                                title="Override and force accept despite underpayment"
+                              >
+                                Override
+                              </button>
+                            </div>
+                          ) : (
+                            /* Price Verified Row: ACCEPT is primary action */
+                            <div className="inline-flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => setConfirmingRow({ id: matched._id, action: 'ACCEPT' })}
+                                className="px-3 py-1.5 rounded-xl text-xs font-medium bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs active:scale-95 transition-all cursor-pointer flex items-center gap-1"
+                                title={`Accept ₹${matched.amount} plan for ${matched.hostId?.name || 'Host'}`}
+                              >
+                                <svg className="w-3.5 h-3.5 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                  <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                <span>Accept</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setConfirmingRow({ id: matched._id, action: 'REJECT' })}
+                                className="px-2.5 py-1.5 rounded-xl text-xs font-medium text-rose-300 hover:text-white bg-rose-500/15 hover:bg-rose-600/30 border border-rose-500/30 transition-all active:scale-95 cursor-pointer flex items-center gap-1"
+                                title={`Reject request from ${matched.hostId?.name || 'Host'}`}
+                              >
+                                <svg className="w-3.5 h-3.5 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                  <line x1="18" y1="6" x2="6" y2="18" />
+                                  <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                                <span>Reject</span>
+                              </button>
+                            </div>
+                          )
                         ) : isMatchedVerified ? (
-                          <span className="inline-flex items-center gap-1 text-xs font-normal text-emerald-600 dark:text-emerald-400">
-                            ✓ Verified & live
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                            <svg className="w-3 h-3 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            <span>Accepted & Live</span>
                           </span>
                         ) : matched?.status === 'REJECTED' ? (
-                          <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-normal bg-rose-500/20 text-rose-300 border border-rose-500/40">
-                            Rejected
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-lg border border-rose-500/20">
+                            <svg className="w-3 h-3 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                              <line x1="18" y1="6" x2="6" y2="18" />
+                              <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                            <span>Rejected</span>
                           </span>
                         ) : (
                           <span className="text-slate-600 text-xs">—</span>
@@ -941,7 +1369,7 @@ export function AdminSubscriptionsView({
           )}
         </div>
 
-        {loading ? (
+        {loading && requests.length === 0 ? (
           <div className="py-16 px-6 text-center text-slate-400 flex flex-col items-center justify-center gap-3">
             <div className="w-7 h-7 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
             <span className="text-xs font-normal text-slate-600 dark:text-slate-300">Loading subscription requests...</span>
@@ -1040,9 +1468,18 @@ export function AdminSubscriptionsView({
                         <div className="text-emerald-600 dark:text-emerald-400 font-normal text-sm mt-0.5">
                           ₹{Number(item.amount).toLocaleString('en-IN')}
                         </div>
-                        <span className="text-[10px] text-slate-400">
+                        <div className="text-[10px] text-slate-400">
                           {item.durationMonths} Month{item.durationMonths > 1 ? 's' : ''} validity
-                        </span>
+                        </div>
+                        {item.startOption === 'NEXT' ? (
+                          <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-normal mt-1 bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
+                            {item.startMonthLabel || 'Next Month'}
+                          </span>
+                        ) : (
+                          <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-normal mt-1 bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                            {item.startMonthLabel || 'This Month'}
+                          </span>
+                        )}
                       </td>
 
                       {/* 3. 12-Digit UTR */}

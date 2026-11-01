@@ -45,6 +45,15 @@ const hostSubscriptionPaymentSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    startOption: {
+      type: String,
+      enum: ['CURRENT', 'NEXT'],
+      default: 'CURRENT',
+    },
+    startMonthLabel: {
+      type: String,
+      default: '',
+    },
     recipientUpiId: {
       type: String,
       trim: true,

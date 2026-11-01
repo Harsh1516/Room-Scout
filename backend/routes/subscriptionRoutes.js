@@ -2,6 +2,7 @@ import express from 'express';
 import {
   getSubscriptionPlans,
   getHostSubscriptionStatus,
+  lockHostSubscriptionPlan,
   submitHostSubscriptionPayment,
 } from '../controllers/subscriptionController.js';
 import { protect, requireHost } from '../middleware/authMiddleware.js';
@@ -14,6 +15,7 @@ router.get('/plans', getSubscriptionPlans);
 
 // Host-scoped subscription management
 router.get('/my-subscription', protect, requireHost, getHostSubscriptionStatus);
+router.post('/lock-plan', protect, requireHost, lockHostSubscriptionPlan);
 router.post('/submit-payment', bookingLimiter, protect, requireHost, submitHostSubscriptionPayment);
 
 export default router;

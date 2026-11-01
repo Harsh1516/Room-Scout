@@ -355,6 +355,12 @@ export const subscriptionsAPI = {
 
   getMySubscription: () => request('/subscriptions/my-subscription'),
 
+  lockPlan: (payload) =>
+    request('/subscriptions/lock-plan', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
   submitPayment: (payload) =>
     request('/subscriptions/submit-payment', {
       method: 'POST',
@@ -437,6 +443,12 @@ export const adminAPI = {
   deleteSubscriptionRequest: (id) =>
     request(`/enter/subscriptions/${encodeURIComponent(id)}`, {
       method: 'DELETE',
+    }),
+
+  bulkRejectSubscriptions: (payload) =>
+    request('/enter/subscriptions/bulk-reject', {
+      method: 'POST',
+      body: JSON.stringify(payload),
     }),
 
   bulkVerifySubscriptions: (payload) =>

@@ -29,7 +29,7 @@ const platformPaymentSettingsSchema = new mongoose.Schema(
         { code: 'monthly', label: 'Monthly', durationMonths: 1, price: null },
         { code: 'quarterly', label: '3 Months', durationMonths: 3, price: null },
         { code: 'halfYearly', label: '6 Months', durationMonths: 6, price: null },
-        { code: 'yearly', label: '1 Year', durationMonths: 12, price: null },
+
       ],
     },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, default: null },

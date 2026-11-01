@@ -514,6 +514,13 @@ export const createHost = async (req, res, next) => {
       rateUnit || existingStay?.rateUnit || '/month'
     );
 
+    const hasActiveSub = Boolean(
+      host.subscription?.status === 'ACTIVE' &&
+      host.subscription?.expiresAt &&
+      new Date(host.subscription.expiresAt) > new Date()
+    );
+    const isApprovedHost = host.status === 'Approved' || Boolean(host.isApproved);
+
     const stayPayload = {
       hostId: host._id,
       title: resolvedTitle,
@@ -539,7 +546,8 @@ export const createHost = async (req, res, next) => {
       images: processedImages,
       instagramVideoUrl: instagramVideoUrl !== undefined ? instagramVideoUrl : (existingStay?.instagramVideoUrl || ''),
       description: description !== undefined ? description : (existingStay?.description || ''),
-      isPublished: host.status === 'Approved',
+      isApproved: isApprovedHost,
+      isPublished: isApprovedHost && hasActiveSub,
     };
 
     const updatedStay = await Stay.findOneAndUpdate(
@@ -603,7 +611,7 @@ export const createHost = async (req, res, next) => {
   }
 };
 
-// @desc    Approve host and publish stay
+// @desc    Approve host and stay record in database
 // @route   PUT /api/admin/hosts/:id/approve
 // @access  Public / Admin
 export const approveHost = async (req, res, next) => {
@@ -617,17 +625,33 @@ export const approveHost = async (req, res, next) => {
 
     if (!host) return res.status(404).json({ success: false, message: 'Host not found' });
 
+    // Host approval strictly stores the approved stay in the database.
+    // It only becomes published (live on the website) if an active subscription plan is verified!
+    const hasActiveSub = Boolean(
+      host.subscription?.status === 'ACTIVE' &&
+      host.subscription?.expiresAt &&
+      new Date(host.subscription.expiresAt) > new Date()
+    );
+
     const stay = await Stay.findOneAndUpdate(
       { hostId: host._id },
-      { $set: { isPublished: true } },
+      { 
+        $set: { 
+          isApproved: true,
+          isPublished: hasActiveSub 
+        } 
+      },
       { new: true }
     );
 
     return res.json({
       success: true,
-      message: `Property approved and published successfully!`,
+      message: hasActiveSub
+        ? 'Property approved and live on website!'
+        : 'Property approved and saved in database! It will go live once an active subscription plan is purchased and verified.',
       host,
       stay,
+      isLive: hasActiveSub,
     });
   } catch (error) {
     console.error('Error approving host:', error);
@@ -649,7 +673,7 @@ export const rejectHost = async (req, res, next) => {
 
     if (!host) return res.status(404).json({ success: false, message: 'Host not found' });
 
-    await Stay.updateMany({ hostId: host._id }, { $set: { isPublished: false } });
+    await Stay.updateMany({ hostId: host._id }, { $set: { isApproved: false, isPublished: false } });
 
     return res.json({ success: true, message: 'Host application rejected.' });
   } catch (error) {

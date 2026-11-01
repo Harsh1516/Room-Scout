@@ -358,6 +358,21 @@ export const createBooking = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Stay property not found.' });
     }
 
+    // Public booking safeguard: Property must be actively live with verified subscription
+    const isLive = Boolean(
+      stay.isPublished &&
+      stay.subscription?.status === 'ACTIVE' &&
+      stay.subscription?.expiresAt &&
+      new Date(stay.subscription.expiresAt) > new Date()
+    );
+
+    if (!isLive) {
+      return res.status(403).json({
+        success: false,
+        message: 'This property listing is not currently live for online bookings. An active subscription plan is required.',
+      });
+    }
+
     const roomNumber = String(body.roomNumber || stay.rooms?.[0]?.roomNumber || '').trim();
     if (!roomNumber) {
       return res.status(400).json({ success: false, message: 'roomNumber is required.' });

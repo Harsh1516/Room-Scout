@@ -4,15 +4,36 @@ import { subscriptionsAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
 import { formatValidityDate } from '../utils/dateUtils';
 
+// Local storage caching helpers to prevent any reload, flash, or blank frame
+const getStoredSubscriptionInfo = () => {
+  try {
+    const raw = localStorage.getItem('stayhub_host_subscription_cache');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const saveStoredSubscriptionInfo = (data) => {
+  try {
+    if (data) {
+      localStorage.setItem('stayhub_host_subscription_cache', JSON.stringify(data));
+    }
+  } catch (err) {
+    console.warn('Failed to cache host subscription info:', err);
+  }
+};
+
 export function HostSubscriptionPage() {
   const navigate = useNavigate();
 
-  // State
-  const [loading, setLoading] = useState(true);
-  const [subscriptionInfo, setSubscriptionInfo] = useState(null);
+  // Instant cached state
+  const cachedData = getStoredSubscriptionInfo();
+  const [loading, setLoading] = useState(!cachedData);
+  const [subscriptionInfo, setSubscriptionInfo] = useState(cachedData);
 
   // Fetch host subscription status and history
-  const loadSubscriptionData = async (silent = false) => {
+  const loadSubscriptionData = async (silent = Boolean(cachedData)) => {
     try {
       if (!silent) setLoading(true);
       const mySubRes = await subscriptionsAPI.getMySubscription().catch((err) => {
@@ -22,6 +43,7 @@ export function HostSubscriptionPage() {
 
       if (mySubRes && mySubRes.success) {
         setSubscriptionInfo(mySubRes);
+        saveStoredSubscriptionInfo(mySubRes);
       }
     } catch (error) {
       console.error('Error loading subscription data:', error);
@@ -34,21 +56,25 @@ export function HostSubscriptionPage() {
   useEffect(() => {
     loadSubscriptionData();
 
-    // Auto-polling every 5 seconds so updates appear without manual refresh
-    const pollInterval = setInterval(() => {
-      loadSubscriptionData(true);
-    }, 5000);
-
-    const handleFocus = () => {
+    // Event-driven reactive update listener instead of continuous polling loop
+    const handleSubscriptionUpdate = () => {
       loadSubscriptionData(true);
     };
-    window.addEventListener('focus', handleFocus);
+
+    window.addEventListener('stayhub_subscription_updated', handleSubscriptionUpdate);
+
+    // Prevent browser back from performing an unhandled hard reload
+    const handlePopState = (e) => {
+      if (e && e.preventDefault) e.preventDefault();
+      navigate('/host/dashboard');
+    };
+    window.addEventListener('popstate', handlePopState);
 
     return () => {
-      clearInterval(pollInterval);
-      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('stayhub_subscription_updated', handleSubscriptionUpdate);
+      window.removeEventListener('popstate', handlePopState);
     };
-  }, []);
+  }, [navigate]);
 
   const subscription = subscriptionInfo?.subscription;
   const stay = subscriptionInfo?.stay;
@@ -57,18 +83,15 @@ export function HostSubscriptionPage() {
   const isLive = Boolean(subscription?.isLive);
   const status = subscription?.status || 'NONE';
 
-  const handleBack = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate('/host/dashboard');
-    }
+  const handleBack = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    navigate('/host/dashboard');
   };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-purple-500/30 host-font-scope host-page-scope">
       {/* ── Top Header Navigation Bar (Matching Host Dashboard) ── */}
-      <header className="relative w-full h-16 sm:h-20 pointer-events-none select-none z-50 font-body-md host-font-scope antialiased">
+      <header className="relative w-full h-14 sm:h-16 pointer-events-none select-none z-50 font-body-md host-font-scope antialiased">
         {/* ── 1. LEFT FLOATING ISLAND: BACK BUTTON (Exact match to Host Dashboard) ── */}
         <div className="fixed top-3.5 left-3 sm:top-5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none">
           <button
@@ -112,7 +135,7 @@ export function HostSubscriptionPage() {
       </header>
 
       {/* ── MAIN CONTENT CONTAINER ── */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 pt-24 pb-16 flex flex-col gap-8">
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 pt-3 sm:pt-4 pb-16 flex flex-col gap-8">
         {/* Title & Introduction */}
         <div className="flex flex-col gap-2">
           <div className="inline-flex items-center gap-2 text-xs font-normal tracking-wide text-purple-400">
@@ -292,7 +315,16 @@ export function HostSubscriptionPage() {
                           })}
                         </td>
                         <td className="py-3.5 px-4 font-normal text-white">
-                          {item.planLabel}
+                          <div>{item.planLabel}</div>
+                          {item.startOption === 'NEXT' ? (
+                            <span className="text-[10px] text-indigo-400 font-normal block mt-0.5">
+                              {item.startMonthLabel || 'Next Month'}
+                            </span>
+                          ) : item.startMonthLabel ? (
+                            <span className="text-[10px] text-purple-300/80 font-normal block mt-0.5">
+                              {item.startMonthLabel}
+                            </span>
+                          ) : null}
                         </td>
                         <td className="py-3.5 px-4 font-normal text-emerald-400">
                           ₹{Number(item.amount).toLocaleString('en-IN')}

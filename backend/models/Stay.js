@@ -137,9 +137,14 @@ const staySchema = new mongoose.Schema(
     ],
     rooms: [roomSchema],
 
+    isApproved: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
     isPublished: {
       type: Boolean,
-      default: true,
+      default: false,
       index: true,
     },
     upiSettings: {

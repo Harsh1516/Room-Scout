@@ -115,6 +115,8 @@ const hostSchema = new mongoose.Schema(
       },
       lastPaymentRef: { type: String, default: '' },
       lastVerifiedAt: { type: Date, default: null },
+      lockedPlanCode: { type: String, default: '' },
+      lockedStartOption: { type: String, enum: ['CURRENT', 'NEXT'], default: 'CURRENT' },
     },
   },
   {

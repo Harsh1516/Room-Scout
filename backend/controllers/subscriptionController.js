@@ -1,3 +1,64 @@
+/**
+ * Intelligently extracts the credited deposit amount from a bank statement line
+ */
+export function extractCreditAmountFromLine(line, utr) {
+  if (!line || typeof line !== 'string') return null;
+
+  // 1. Try CSV / TSV / Delimited splitting
+  const delimiter = line.includes('\t') ? '\t' : ',';
+  const parts = line.split(delimiter).map((p) => p.trim().replace(/^["']|["']$/g, ''));
+
+  if (parts.length >= 3) {
+    const descIdx = parts.findIndex((p) => p.includes(utr));
+    const searchParts = descIdx >= 0 ? parts.slice(descIdx + 1) : parts;
+
+    // Filter valid positive numeric amounts (ignore dates, UTR, long numbers)
+    const candidates = [];
+    for (let i = 0; i < searchParts.length; i++) {
+      const col = searchParts[i];
+      const clean = col.replace(/,/g, '');
+      if (
+        /^\d+(?:\.\d{1,2})?$/.test(clean) &&
+        clean !== utr &&
+        clean.length <= 10 &&
+        !col.includes('/') &&
+        !col.includes('-')
+      ) {
+        const val = parseFloat(clean);
+        if (val > 0) candidates.push({ idx: i, val });
+      }
+    }
+
+    if (candidates.length === 1) return candidates[0].val;
+    if (candidates.length >= 2) {
+      // In typical bank CSV [Debit, Credit, Balance], Balance is last. Credit is candidate before last.
+      return candidates[candidates.length - 2].val;
+    }
+  }
+
+  // 2. Regex search for CR / Credit / Deposit / Rs / INR patterns
+  const match = line.match(/(?:CR|Credit|Deposit|INR|Rs\.?|\u20B9)[\s:,/-]*([0-9,]+(?:\.[0-9]{1,2})?)/i);
+  if (match) {
+    const num = parseFloat(match[1].replace(/,/g, ''));
+    if (!isNaN(num) && num > 0) return num;
+  }
+
+  // 3. Fallback: Any standalone decimal currency number in the line that isn't the UTR
+  const generalNumbers = [...line.matchAll(/(?:^|[\s,])(\d{2,6}(?:\.\d{2}))(?=[\s,]|$)/g)]
+    .map((m) => parseFloat(m[1]))
+    .filter((v) => !isNaN(v) && v > 0);
+  if (generalNumbers.length === 1) return generalNumbers[0];
+  if (generalNumbers.length >= 2) return generalNumbers[generalNumbers.length - 2];
+
+  return null;
+}
+
+export function extractDateFromLine(line) {
+  if (!line || typeof line !== 'string') return '';
+  const dateMatch = line.match(/\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})\b/);
+  return dateMatch ? dateMatch[1] : '';
+}
+
 import mongoose from 'mongoose';
 import QRCode from 'qrcode';
 import { Host } from '../models/Host.js';
@@ -90,12 +151,11 @@ export async function getSubscriptionPlans(req, res, next) {
     }
 
     const rawPlans = Array.isArray(settings.plans) && settings.plans.length > 0
-      ? settings.plans.filter((p) => p.isActive !== false)
+      ? settings.plans.filter((p) => p.isActive !== false && p.code !== 'yearly')
       : [
           { code: 'monthly', label: '1 Month', durationMonths: 1, price: 250, isActive: true },
           { code: 'quarterly', label: '3 Months', durationMonths: 3, price: 675, isActive: true },
           { code: 'halfYearly', label: '6 Months', durationMonths: 6, price: 1200, isActive: true },
-          { code: 'yearly', label: '1 Year', durationMonths: 12, price: 2100, isActive: true },
         ];
 
     // Generate dynamic QR code encoding the exact payable amount for each plan
@@ -183,12 +243,12 @@ export async function getHostSubscriptionStatus(req, res, next) {
       if (stay) {
         await Stay.updateOne(
           { _id: stay._id },
-          { $set: { 'subscription.status': 'EXPIRED' } }
+          { $set: { 'subscription.status': 'EXPIRED', isPublished: false } }
         );
       }
     }
 
-    const isLive = currentStatus === 'ACTIVE' && Boolean(expiresAt && expiresAt > now);
+    const isLive = currentStatus === 'ACTIVE' && Boolean(expiresAt && expiresAt > now) && Boolean(stay?.isApproved);
     const daysRemaining = expiresAt && expiresAt > now
       ? Math.max(0, Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
       : 0;
@@ -223,7 +283,11 @@ export async function getHostSubscriptionStatus(req, res, next) {
         daysRemaining,
         isLive,
         lastPaymentRef: host.subscription?.lastPaymentRef || '',
+        lockedPlanCode: host.subscription?.lockedPlanCode || '',
+        lockedStartOption: host.subscription?.lockedStartOption || 'CURRENT',
       },
+      lockedPlanCode: host.subscription?.lockedPlanCode || '',
+      lockedStartOption: host.subscription?.lockedStartOption || 'CURRENT',
       stay: stay
         ? {
             id: stay._id,
@@ -235,6 +299,48 @@ export async function getHostSubscriptionStatus(req, res, next) {
         : null,
       pendingPayment: pendingPayment || null,
       history: history || [],
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// @desc    Host locks a subscription plan before paying & generating dynamic QR
+// @route   POST /api/subscriptions/lock-plan
+// @access  Private (Host)
+export async function lockHostSubscriptionPlan(req, res, next) {
+  try {
+    const callerId = req.user?._id;
+    const callerEmail = req.user?.email?.toLowerCase().trim();
+    const { planCode, startOption = 'CURRENT' } = req.body || {};
+
+    if (!planCode || !['monthly', 'quarterly', 'halfYearly'].includes(planCode)) {
+      return res.status(400).json({ success: false, message: 'Invalid plan selected.' });
+    }
+
+    const host = await Host.findOne({
+      $or: [
+        ...(callerId && mongoose.Types.ObjectId.isValid(callerId) ? [{ _id: callerId }] : []),
+        ...(callerEmail ? [{ email: callerEmail }] : []),
+      ],
+    });
+
+    if (!host) {
+      return res.status(404).json({ success: false, message: 'Host account not found.' });
+    }
+
+    if (!host.subscription) {
+      host.subscription = {};
+    }
+    const cleanStartOption = startOption === 'NEXT' ? 'NEXT' : 'CURRENT';
+    host.subscription.lockedPlanCode = planCode;
+    host.subscription.lockedStartOption = cleanStartOption;
+    await host.save();
+
+    return res.json({
+      success: true,
+      lockedPlanCode: planCode,
+      lockedStartOption: cleanStartOption,
     });
   } catch (error) {
     return next(error);
@@ -260,9 +366,9 @@ export async function submitHostSubscriptionPayment(req, res, next) {
       return res.status(404).json({ success: false, message: 'Host account not found.' });
     }
 
-    const { planCode, transactionRef, receiptImage } = req.body || {};
+    const { planCode, startOption = 'CURRENT', transactionRef, receiptImage } = req.body || {};
 
-    if (!planCode || !['monthly', 'quarterly', 'halfYearly', 'yearly'].includes(planCode)) {
+    if (!planCode || !['monthly', 'quarterly', 'halfYearly'].includes(planCode)) {
       return res.status(400).json({ success: false, message: 'Please select a valid subscription plan.' });
     }
 
@@ -276,6 +382,13 @@ export async function submitHostSubscriptionPayment(req, res, next) {
 
     // Resolve plan price and settings
     const settings = await PlatformPaymentSettings.findOne({ key: 'platform' }).lean();
+    if (!settings || !settings.upiId) {
+      return res.status(503).json({
+        success: false,
+        message: 'Platform payment is temporarily unavailable: Admin UPI ID is not configured.',
+      });
+    }
+
     const planObj = settings?.plans?.find((p) => p.code === planCode);
     if (!planObj || !planObj.price || Number(planObj.price) <= 0) {
       return res.status(400).json({
@@ -313,6 +426,20 @@ export async function submitHostSubscriptionPayment(req, res, next) {
       }
     }
 
+    const cleanStartOption = startOption === 'NEXT' ? 'NEXT' : 'CURRENT';
+    const now = new Date();
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    let startMonthLabel = '';
+    if (cleanStartOption === 'NEXT') {
+      const nextMonthDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      startMonthLabel = `Next Month (1 ${monthNames[nextMonthDate.getMonth()]} ${nextMonthDate.getFullYear()})`;
+    } else {
+      startMonthLabel = `This Month (${monthNames[now.getMonth()]} ${now.getFullYear()})`;
+    }
+
     const paymentRecord = await HostSubscriptionPayment.create({
       hostId: host._id,
       stayId: stay?._id || null,
@@ -320,6 +447,8 @@ export async function submitHostSubscriptionPayment(req, res, next) {
       planLabel: planObj.label,
       durationMonths: planObj.durationMonths,
       amount: Number(planObj.price),
+      startOption: cleanStartOption,
+      startMonthLabel,
       transactionRef: cleanRef,
       receiptUrl: finalReceiptUrl,
       recipientUpiId: settings.upiId || '',
@@ -328,6 +457,11 @@ export async function submitHostSubscriptionPayment(req, res, next) {
 
     // Auto-prune database so host keeps only latest 3 records (older records deleted)
     await pruneHostSubscriptionHistory(host._id);
+
+    // Clear locked plan code and start option since payment UTR has now been completely sent to admin
+    if (!host.subscription) host.subscription = {};
+    host.subscription.lockedPlanCode = '';
+    host.subscription.lockedStartOption = 'CURRENT';
 
     // If host doesn't have an active subscription, mark as PENDING_VERIFICATION
     if (host.subscription?.status !== 'ACTIVE') {
@@ -339,9 +473,10 @@ export async function submitHostSubscriptionPayment(req, res, next) {
         durationMonths: planObj.durationMonths,
         amountPaid: Number(planObj.price),
         lastPaymentRef: cleanRef,
+        lockedPlanCode: '',
       };
-      await host.save();
     }
+    await host.save();
 
     return res.status(201).json({
       success: true,
@@ -417,18 +552,33 @@ export async function verifySubscriptionRequest(req, res, next) {
       let newStartDate = now;
       let newExpiresAt = null;
 
-      // If host currently has an active subscription that hasn't expired yet, extend from current expiry date!
-      if (
-        host.subscription?.status === 'ACTIVE' &&
-        host.subscription?.expiresAt &&
-        new Date(host.subscription.expiresAt) > now
-      ) {
-        newStartDate = host.subscription.startDate || now;
-        const currentExp = new Date(host.subscription.expiresAt);
-        newExpiresAt = calculateExpirationDate(currentExp, monthsToAdd);
+      if (request.startOption === 'NEXT') {
+        const nextMonthFirst = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0);
+        if (
+          host.subscription?.status === 'ACTIVE' &&
+          host.subscription?.expiresAt &&
+          new Date(host.subscription.expiresAt) > nextMonthFirst
+        ) {
+          newStartDate = host.subscription.startDate || nextMonthFirst;
+          const currentExp = new Date(host.subscription.expiresAt);
+          newExpiresAt = calculateExpirationDate(currentExp, monthsToAdd);
+        } else {
+          newStartDate = nextMonthFirst;
+          newExpiresAt = calculateExpirationDate(nextMonthFirst, monthsToAdd);
+        }
       } else {
-        newStartDate = now;
-        newExpiresAt = calculateExpirationDate(now, monthsToAdd);
+        if (
+          host.subscription?.status === 'ACTIVE' &&
+          host.subscription?.expiresAt &&
+          new Date(host.subscription.expiresAt) > now
+        ) {
+          newStartDate = host.subscription.startDate || now;
+          const currentExp = new Date(host.subscription.expiresAt);
+          newExpiresAt = calculateExpirationDate(currentExp, monthsToAdd);
+        } else {
+          newStartDate = now;
+          newExpiresAt = calculateExpirationDate(now, monthsToAdd);
+        }
       }
 
       // Update payment record
@@ -455,11 +605,14 @@ export async function verifySubscriptionRequest(req, res, next) {
       };
       await host.save();
 
-      // Update Stay records for this host to make them LIVE!
+      // Update Stay records for this host: if stay was approved by admin, make it live!
+      const isApprovedHost = host.status === 'Approved' || Boolean(host.isApproved);
       await Stay.updateMany(
         { hostId: host._id },
         {
           $set: {
+            isApproved: isApprovedHost,
+            isPublished: isApprovedHost,
             'subscription.status': 'ACTIVE',
             'subscription.planCode': request.planCode,
             'subscription.planLabel': request.planLabel,
@@ -470,7 +623,9 @@ export async function verifySubscriptionRequest(req, res, next) {
 
       return res.json({
         success: true,
-        message: `Plan verified! ${host.name}'s stay is now actively live Until ${formatValidityDate(newExpiresAt)}.`,
+        message: isApprovedHost
+          ? `Plan verified! ${host.name}'s stay is now actively live Until ${formatValidityDate(newExpiresAt)}.`
+          : `Plan verified! Host has active subscription Until ${formatValidityDate(newExpiresAt)}. Stay will go live once approved by admin.`,
         subscription: host.subscription,
       });
     } else if (action === 'REJECT') {
@@ -483,10 +638,15 @@ export async function verifySubscriptionRequest(req, res, next) {
 
       // If host was pending verification and doesn't have an active plan, mark as expired/none
       if (host.subscription?.status === 'PENDING_VERIFICATION') {
-        host.subscription.status = host.subscription?.expiresAt && new Date(host.subscription.expiresAt) > new Date()
-          ? 'ACTIVE'
-          : 'EXPIRED';
+        const hasOtherActive = Boolean(host.subscription?.expiresAt && new Date(host.subscription.expiresAt) > new Date());
+        host.subscription.status = hasOtherActive ? 'ACTIVE' : 'EXPIRED';
         await host.save();
+        if (!hasOtherActive) {
+          await Stay.updateMany(
+            { hostId: host._id },
+            { $set: { isPublished: false, 'subscription.status': 'EXPIRED' } }
+          );
+        }
       }
 
       return res.json({
@@ -552,10 +712,13 @@ export async function manualActivateSubscription(req, res, next) {
     };
     await host.save();
 
+    const isApprovedHost = host.status === 'Approved' || Boolean(host.isApproved);
     await Stay.updateMany(
       { hostId: host._id },
       {
         $set: {
+          isApproved: isApprovedHost,
+          isPublished: isApprovedHost,
           'subscription.status': 'ACTIVE',
           'subscription.planCode': code,
           'subscription.planLabel': host.subscription.planLabel,
@@ -600,11 +763,17 @@ export async function deleteSubscriptionRequest(req, res, next) {
           status: 'PENDING',
         });
         if (remainingPending === 0) {
-          host.subscription.status =
+          const hasActive = Boolean(
             host.subscription?.expiresAt && new Date(host.subscription.expiresAt) > new Date()
-              ? 'ACTIVE'
-              : 'NONE';
+          );
+          host.subscription.status = hasActive ? 'ACTIVE' : 'NONE';
           await host.save();
+          if (!hasActive) {
+            await Stay.updateMany(
+              { hostId: host._id },
+              { $set: { isPublished: false, 'subscription.status': 'NONE' } }
+            );
+          }
         }
       }
     }
@@ -634,11 +803,17 @@ export async function deleteAllSubscriptionRequests(req, res, next) {
         status: 'PENDING',
       });
       if (remainingPending === 0) {
-        host.subscription.status =
+        const hasActive = Boolean(
           host.subscription?.expiresAt && new Date(host.subscription.expiresAt) > new Date()
-            ? 'ACTIVE'
-            : 'NONE';
+        );
+        host.subscription.status = hasActive ? 'ACTIVE' : 'NONE';
         await host.save();
+        if (!hasActive) {
+          await Stay.updateMany(
+            { hostId: host._id },
+            { $set: { isPublished: false, 'subscription.status': 'NONE' } }
+          );
+        }
       }
     }
 
@@ -690,17 +865,33 @@ export async function bulkVerifySubscriptions(req, res, next) {
       let newStartDate = now;
       let newExpiresAt = null;
 
-      if (
-        host.subscription?.status === 'ACTIVE' &&
-        host.subscription?.expiresAt &&
-        new Date(host.subscription.expiresAt) > now
-      ) {
-        newStartDate = host.subscription.startDate || now;
-        const currentExp = new Date(host.subscription.expiresAt);
-        newExpiresAt = calculateExpirationDate(currentExp, monthsToAdd);
+      if (request.startOption === 'NEXT') {
+        const nextMonthFirst = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0);
+        if (
+          host.subscription?.status === 'ACTIVE' &&
+          host.subscription?.expiresAt &&
+          new Date(host.subscription.expiresAt) > nextMonthFirst
+        ) {
+          newStartDate = host.subscription.startDate || nextMonthFirst;
+          const currentExp = new Date(host.subscription.expiresAt);
+          newExpiresAt = calculateExpirationDate(currentExp, monthsToAdd);
+        } else {
+          newStartDate = nextMonthFirst;
+          newExpiresAt = calculateExpirationDate(nextMonthFirst, monthsToAdd);
+        }
       } else {
-        newStartDate = now;
-        newExpiresAt = calculateExpirationDate(now, monthsToAdd);
+        if (
+          host.subscription?.status === 'ACTIVE' &&
+          host.subscription?.expiresAt &&
+          new Date(host.subscription.expiresAt) > now
+        ) {
+          newStartDate = host.subscription.startDate || now;
+          const currentExp = new Date(host.subscription.expiresAt);
+          newExpiresAt = calculateExpirationDate(currentExp, monthsToAdd);
+        } else {
+          newStartDate = now;
+          newExpiresAt = calculateExpirationDate(now, monthsToAdd);
+        }
       }
 
       request.status = 'VERIFIED';
@@ -725,10 +916,13 @@ export async function bulkVerifySubscriptions(req, res, next) {
       };
       await host.save();
 
+      const isApprovedHost = host.status === 'Approved' || Boolean(host.isApproved);
       await Stay.updateMany(
         { hostId: host._id },
         {
           $set: {
+            isApproved: isApprovedHost,
+            isPublished: isApprovedHost,
             'subscription.status': 'ACTIVE',
             'subscription.planCode': request.planCode,
             'subscription.planLabel': request.planLabel,
@@ -750,6 +944,73 @@ export async function bulkVerifySubscriptions(req, res, next) {
       message: `Successfully verified and activated ${verifiedRecords.length} host subscription(s)!`,
       count: verifiedRecords.length,
       verifiedRequests: verifiedRecords,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// @desc    Bulk reject host subscriptions (e.g. statement reconciliation amount mismatch / underpaid)
+// @route   POST /api/enter/subscriptions/bulk-reject
+// @access  Private (Admin)
+export async function bulkRejectSubscriptions(req, res, next) {
+  try {
+    const { paymentIds = [], rejectionReason = 'Paid amount did not match required plan price.' } = req.body || {};
+
+    if (!Array.isArray(paymentIds) || paymentIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide paymentIds to bulk reject.',
+      });
+    }
+
+    const requests = await HostSubscriptionPayment.find({
+      _id: { $in: paymentIds },
+      status: 'PENDING',
+    });
+
+    if (!requests || requests.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No pending requests found matching the provided IDs.',
+      });
+    }
+
+    const now = new Date();
+    const rejectedRecords = [];
+
+    for (const request of requests) {
+      request.status = 'REJECTED';
+      request.rejectionReason = String(rejectionReason).trim();
+      request.verifiedAt = now;
+      request.verifiedBy = req.user?._id || null;
+      request.adminNotes = 'Rejected via bank statement reconciliation (amount mismatch)';
+      await request.save();
+
+      const host = await Host.findById(request.hostId);
+      if (host && host.subscription?.status === 'PENDING_VERIFICATION') {
+        const hasOtherActive = Boolean(host.subscription?.expiresAt && new Date(host.subscription.expiresAt) > now);
+        host.subscription.status = hasOtherActive ? 'ACTIVE' : 'EXPIRED';
+        await host.save();
+        if (!hasOtherActive) {
+          await Stay.updateMany(
+            { hostId: host._id },
+            { $set: { isPublished: false, 'subscription.status': 'EXPIRED' } }
+          );
+        }
+      }
+
+      rejectedRecords.push({
+        id: request._id,
+        transactionRef: request.transactionRef,
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: `Successfully rejected ${rejectedRecords.length} invalid/underpaid request(s).`,
+      count: rejectedRecords.length,
+      rejectedRequests: rejectedRecords,
     });
   } catch (error) {
     return next(error);
@@ -808,13 +1069,17 @@ export async function extractStatementUtrs(req, res, next) {
     // Deduplicate while preserving order of first appearance
     const uniqueUtrs = Array.from(new Set(matches));
 
-    // Also extract line snippets if possible
+    // Also extract line snippets and amounts if possible
     const lines = rawText.split(/\r?\n/).filter((l) => l.trim().length > 0);
     const utrEntries = uniqueUtrs.map((utr) => {
       const matchingLine = lines.find((line) => line.includes(utr)) || '';
+      const amount = extractCreditAmountFromLine(matchingLine, utr);
+      const date = extractDateFromLine(matchingLine);
       return {
         utr,
-        snippet: matchingLine.slice(0, 120).trim(),
+        amount,
+        date,
+        snippet: matchingLine.slice(0, 160).trim(),
       };
     });
 

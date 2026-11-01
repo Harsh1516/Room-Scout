@@ -6,7 +6,7 @@ const EMPTY_PLANS = [
   { code: 'monthly', label: 'Monthly', durationMonths: 1, price: '' },
   { code: 'quarterly', label: '3 Months', durationMonths: 3, price: '' },
   { code: 'halfYearly', label: '6 Months', durationMonths: 6, price: '' },
-  { code: 'yearly', label: '1 Year', durationMonths: 12, price: '' },
+
 ];
 
 export default function PlatformPaymentSettingsPage() {
@@ -27,7 +27,9 @@ export default function PlatformPaymentSettingsPage() {
         setForm({
           payeeName: settings.payeeName || '',
           upiId: settings.upiId || '',
-          plans: (settings.plans || EMPTY_PLANS).map((plan) => ({
+          plans: (settings.plans || EMPTY_PLANS)
+            .filter((p) => p.code !== 'yearly')
+            .map((plan) => ({
             ...plan,
             price: plan.price ?? '',
           })),
@@ -58,7 +60,7 @@ export default function PlatformPaymentSettingsPage() {
         (plan) => plan.price === '' || Number(plan.price) <= 0 || !Number.isFinite(Number(plan.price))
       )
     ) {
-      toast.error('Enter a price greater than zero for all four subscription durations.');
+      toast.error('Enter a price greater than zero for all three subscription durations.');
       return;
     }
     setSaving(true);
@@ -67,7 +69,9 @@ export default function PlatformPaymentSettingsPage() {
       setForm((current) => ({
         ...current,
         ...result.settings,
-        plans: result.settings.plans.map((plan) => ({ ...plan, price: plan.price ?? '' })),
+        plans: (result.settings.plans || [])
+          .filter((p) => p.code !== 'yearly')
+          .map((plan) => ({ ...plan, price: plan.price ?? '' })),
       }));
       toast.success('✓ Platform UPI details and subscription pricing saved successfully!');
     } catch (error) {
@@ -185,7 +189,7 @@ export default function PlatformPaymentSettingsPage() {
             Set the price for each duration. Hosts will select one of these plans on their dashboard to make their stay visible.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {form.plans.map((plan) => {
               const perMonth =
                 plan.price && Number(plan.price) > 0

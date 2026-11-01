@@ -27,7 +27,7 @@ export const getAllStays = async (req, res, next) => {
       paginate,
     } = req.query;
 
-    const mongoFilter = { isPublished: true };
+    const mongoFilter = { isPublished: true, isApproved: true };
 
     // Public Visibility Guard: A stay is publicly visible ONLY if its host has an active, non-expired subscription
     const isCallerAdmin = isAdminUser(req) || req.isAdminKey;
@@ -138,10 +138,31 @@ export const getStayById = async (req, res, next) => {
       return res.status(404).json({ message: 'Stay property not found in database.' });
     }
 
+    const isCallerAdmin = isAdminUser(req) || req.isAdminKey;
+    const callerEmail = (req.user?.email || req.hostAccount?.email || '').toLowerCase().trim();
+    const stayHostEmail = (stay.hostId?.email || '').toLowerCase().trim();
+    const isOwner = Boolean(callerEmail && stayHostEmail && callerEmail === stayHostEmail);
+
+    const isLive = Boolean(
+      stay.isPublished &&
+      (stay.isApproved || stay.hostId?.status === 'Approved') &&
+      stay.subscription?.status === 'ACTIVE' &&
+      stay.subscription?.expiresAt &&
+      new Date(stay.subscription.expiresAt) > new Date()
+    );
+
+    if (!isLive && !isCallerAdmin && !isOwner) {
+      return res.status(404).json({
+        message: 'This property listing is not currently live on the platform. Active subscription required.',
+        isLive: false,
+      });
+    }
+
     return res.json({
       ...stay,
       id: stay._id.toString(),
       _id: stay._id.toString(),
+      isLive,
     });
   } catch (error) {
     return next(error);
@@ -321,6 +342,10 @@ export const createStay = async (req, res, next) => {
       };
     }
 
+    // Newly created stays must be approved by admin AND have active subscription to go live
+    stayPayload.isApproved = false;
+    stayPayload.isPublished = false;
+
     // Inherit active subscription from host if present and non-expired
     const hostDoc = await Host.findById(hostId).lean();
     if (
@@ -333,6 +358,13 @@ export const createStay = async (req, res, next) => {
         planCode: hostDoc.subscription.planCode || 'monthly',
         planLabel: hostDoc.subscription.planLabel || 'Active Plan',
         expiresAt: hostDoc.subscription.expiresAt,
+      };
+    } else {
+      stayPayload.subscription = {
+        status: 'NONE',
+        planCode: 'none',
+        planLabel: '',
+        expiresAt: null,
       };
     }
 
@@ -713,8 +745,9 @@ export const getPropertiesByHost = async (req, res, next) => {
       hostEmail: host?.email || req.user?.email || '',
       email: host?.email || req.user?.email || '',
       phone: host?.phone || req.user?.phone || '',
-      status: host?.status || (s.isPublished ? 'Approved' : 'Pending Approval'),
-      isApproved: host?.status === 'Approved' || Boolean(s.isPublished),
+      status: host?.status || (s.isApproved ? 'Approved' : 'Pending Approval'),
+      isApproved: host?.status === 'Approved' || Boolean(s.isApproved),
+      isPublished: Boolean(s.isPublished),
     }));
 
     return res.json(mappedStays);
@@ -728,7 +761,12 @@ export const getPropertiesByHost = async (req, res, next) => {
 // @access  Public
 export const getPublicStats = async (req, res, next) => {
   try {
-    const totalStays = await Stay.countDocuments({ isPublished: true });
+    const totalStays = await Stay.countDocuments({
+      isPublished: true,
+      isApproved: true,
+      'subscription.status': 'ACTIVE',
+      'subscription.expiresAt': { $gt: new Date() },
+    });
 
     // Query online bookings created via website
     const onlineBookings = await Booking.find({
