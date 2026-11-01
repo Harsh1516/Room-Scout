@@ -9,6 +9,7 @@ import bookingRoutes from './routes/bookingRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import wishlistRoutes from './routes/wishlistRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import errorMiddleware from './middleware/errorMiddleware.js';
 import { apiLimiter } from './middleware/rateLimitMiddleware.js';
 import { sanitizeInput } from './middleware/sanitizeMiddleware.js';
