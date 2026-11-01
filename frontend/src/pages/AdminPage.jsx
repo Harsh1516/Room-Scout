@@ -31,7 +31,6 @@ export function AdminPage() {
   const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'name_asc' | 'name_desc'
@@ -103,7 +102,6 @@ export function AdminPage() {
       }
     } finally {
       if (!isBackground) setLoading(false);
-      setIsRefreshing(false);
     }
   }, [fetchSubscriptions]);
 
@@ -143,11 +141,6 @@ export function AdminPage() {
       window.removeEventListener('stayhub_admin_sync', handleCustomSync);
     };
   }, [fetchData, isAdminAuthorized]);
-
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    fetchData(false);
-  };
 
   const broadcastUpdate = () => {
     try {
@@ -690,37 +683,6 @@ export function AdminPage() {
 
         {/* 3. RIGHT: Actions & Profile Cluster */}
         <div className="fixed top-3.5 right-3 sm:top-5 sm:right-6 z-50 flex items-center gap-1.5 sm:gap-2.5">
-          {/* Live Sync Badge */}
-          <div className="apple-liquid-nav hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-full text-xs font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 select-none shadow-xs">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-            </span>
-            <span>Live Sync</span>
-          </div>
-
-          {/* Refresh Live Data Button */}
-          <button
-            type="button"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="apple-liquid-nav relative w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-slate-200/80 dark:border-white/15 shadow-xs flex items-center justify-center text-slate-700 dark:text-slate-200 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
-            title="Refresh Live Data"
-            aria-label="Refresh Data"
-          >
-            <motion.svg
-              animate={isRefreshing ? { rotate: 360 } : { rotate: 0 }}
-              transition={{ duration: 0.8, repeat: isRefreshing ? Infinity : 0, ease: 'linear' }}
-              className="w-4 h-4 text-slate-600 dark:text-slate-300"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              <path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" strokeLinecap="round" strokeLinejoin="round" />
-            </motion.svg>
-          </button>
-
           {/* Explore Stays Switcher Button */}
           <button
             type="button"

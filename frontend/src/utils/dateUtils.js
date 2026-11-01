@@ -574,5 +574,36 @@ export function calculateCategoryFreePercentage({
   return { percentFree, totalUnbooked, totalPossible, roomStats };
 }
 
+/**
+ * Format subscription validity date into the clean user-facing format:
+ * "1 June 27", "1 December 26", etc.
+ */
+export function formatValidityDate(dateVal) {
+  if (!dateVal) return 'N/A';
+  const d = new Date(dateVal);
+  if (isNaN(d.getTime())) return String(dateVal);
+
+  const day = d.getDate();
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  const month = months[d.getMonth()];
+  const year = String(d.getFullYear()).slice(-2);
+
+  return `${day} ${month} ${year}`;
+}
+
+
 
 

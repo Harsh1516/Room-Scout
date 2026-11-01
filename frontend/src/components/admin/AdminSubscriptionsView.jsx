@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { toast } from '../../context/ToastContext';
+import { formatValidityDate } from '../../utils/dateUtils';
 
 export function AdminSubscriptionsView({
   requests = [],
@@ -449,7 +450,7 @@ export function AdminSubscriptionsView({
                             </span>
                             {item.activatedExpiresAt && (
                               <span className="text-[10px] text-slate-400">
-                                Live until {new Date(item.activatedExpiresAt).toLocaleDateString('en-IN')}
+                                Until {formatValidityDate(item.activatedExpiresAt)}
                               </span>
                             )}
                           </div>
@@ -830,3 +831,4 @@ export function AdminSubscriptionsView({
   );
 }
 export default AdminSubscriptionsView;
+

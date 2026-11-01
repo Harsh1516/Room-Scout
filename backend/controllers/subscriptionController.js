@@ -14,6 +14,21 @@ export function calculateExpirationDate(startDate, durationMonths) {
   return d;
 }
 
+// Helper: Format subscription validity date (e.g. "1 June 27")
+export function formatValidityDate(dateVal) {
+  if (!dateVal) return 'N/A';
+  const d = new Date(dateVal);
+  if (isNaN(d.getTime())) return String(dateVal);
+  const day = d.getDate();
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  const month = months[d.getMonth()];
+  const year = String(d.getFullYear()).slice(-2);
+  return `${day} ${month} ${year}`;
+}
+
 // Helper: Build standard UPI intent URI
 export function buildPlatformUpiUri({ upiId, payeeName, amount, hostNote = '' }) {
   if (!upiId) return '';
@@ -391,7 +406,7 @@ export async function verifySubscriptionRequest(req, res, next) {
 
       return res.json({
         success: true,
-        message: `Plan verified! ${host.name}'s stay is now actively live until ${newExpiresAt.toLocaleDateString('en-IN')}.`,
+        message: `Plan verified! ${host.name}'s stay is now actively live Until ${formatValidityDate(newExpiresAt)}.`,
         subscription: host.subscription,
       });
     } else if (action === 'REJECT') {
@@ -487,10 +502,11 @@ export async function manualActivateSubscription(req, res, next) {
 
     return res.json({
       success: true,
-      message: `Subscription successfully activated for ${host.name} for ${monthsToAdd} month(s) until ${newExpiresAt.toLocaleDateString('en-IN')}.`,
+      message: `Subscription successfully activated for ${host.name} for ${monthsToAdd} month(s) Until ${formatValidityDate(newExpiresAt)}.`,
       subscription: host.subscription,
     });
   } catch (error) {
     return next(error);
   }
 }
+

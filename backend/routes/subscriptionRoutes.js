@@ -17,3 +17,4 @@ router.get('/my-subscription', protect, requireHost, getHostSubscriptionStatus);
 router.post('/submit-payment', bookingLimiter, protect, requireHost, submitHostSubscriptionPayment);
 
 export default router;
+

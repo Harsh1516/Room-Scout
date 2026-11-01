@@ -97,3 +97,4 @@ export const HostSubscriptionPayment = mongoose.model(
   'HostSubscriptionPayment',
   hostSubscriptionPaymentSchema
 );
+

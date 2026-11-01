@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { subscriptionsAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
 import { ThemeTogglePill } from '../components/common/ThemeTogglePill';
+import { formatValidityDate } from '../utils/dateUtils';
 
 export function HostSubscriptionPage() {
   const navigate = useNavigate();
@@ -256,7 +257,7 @@ export function HostSubscriptionPage() {
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xl">
                 {isLive
                   ? `Your property listing is live on RoomScout search and explore. Valid until ${
-                      subscription?.expiresAt ? new Date(subscription.expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'
+                      subscription?.expiresAt ? formatValidityDate(subscription.expiresAt) : 'N/A'
                     } (${subscription?.daysRemaining} days remaining).`
                   : status === 'PENDING_VERIFICATION'
                   ? 'Your payment reference has been submitted. Admin is currently verifying the 12-digit UTR against platform records. Your stay will become live immediately upon confirmation.'
@@ -282,11 +283,7 @@ export function HostSubscriptionPage() {
                 <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Expires On</span>
                 <span className="text-xs sm:text-sm font-semibold text-slate-200">
                   {subscription?.expiresAt
-                    ? new Date(subscription.expiresAt).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })
+                    ? `Until ${formatValidityDate(subscription.expiresAt)}`
                     : 'Not Subscribed'}
                 </span>
               </div>
@@ -769,7 +766,7 @@ export function HostSubscriptionPage() {
                         </td>
                         <td className="py-3.5 px-4 text-slate-400">
                           {item.activatedExpiresAt
-                            ? `Until ${new Date(item.activatedExpiresAt).toLocaleDateString('en-IN')}`
+                            ? `Until ${formatValidityDate(item.activatedExpiresAt)}`
                             : item.status === 'PENDING'
                             ? 'Awaiting admin verification'
                             : 'N/A'}
@@ -787,3 +784,4 @@ export function HostSubscriptionPage() {
   );
 }
 export default HostSubscriptionPage;
+
