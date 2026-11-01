@@ -18,6 +18,7 @@ import validate from '../middleware/validateMiddleware.js';
 import { idParamSchema } from '../validators/commonValidator.js';
 import { impersonateSchema } from '../validators/adminValidator.js';
 import { getPlatformPaymentSettings, updatePlatformPaymentSettings } from '../controllers/platformPaymentController.js';
+import { getPendingSubscriptionPayments, reviewSubscriptionPayment } from '../controllers/subscriptionController.js';
 
 const router = express.Router();
 
