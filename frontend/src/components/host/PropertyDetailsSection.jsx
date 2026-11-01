@@ -11,6 +11,49 @@ import { PropertyRulesTab } from './property/PropertyRulesTab';
 import { PropertyPhotosTab } from './property/PropertyPhotosTab';
 import { PencilIcon } from './property/PropertyIcons';
 
+export const GLOW_PRESETS = {
+  neutral: {
+    id: 'neutral',
+    label: 'Pure Neutral',
+    desc: 'Clean Apple & Linear glass (no colored haze)',
+    topGlow: 'opacity-0',
+    bottomGlow: 'opacity-0',
+    rim: 'via-white/80 dark:via-white/20',
+  },
+  titanium: {
+    id: 'titanium',
+    label: 'Titanium Slate',
+    desc: 'Subtle cool silver/slate ambient haze',
+    topGlow: 'bg-slate-400/20 dark:bg-zinc-500/20 opacity-100',
+    bottomGlow: 'bg-slate-300/15 dark:bg-zinc-600/15 opacity-100',
+    rim: 'via-slate-300/80 dark:via-zinc-400/30',
+  },
+  emerald: {
+    id: 'emerald',
+    label: 'Whisper Emerald',
+    desc: 'Boutique single-brand subtle sage/emerald luxury',
+    topGlow: 'bg-emerald-500/15 dark:bg-emerald-500/20 opacity-100',
+    bottomGlow: 'bg-teal-500/12 dark:bg-teal-500/15 opacity-100',
+    rim: 'via-emerald-300/60 dark:via-emerald-500/30',
+  },
+  champagne: {
+    id: 'champagne',
+    label: 'Champagne Warmth',
+    desc: 'Warm alabaster luxury glow',
+    topGlow: 'bg-amber-400/18 dark:bg-amber-500/18 opacity-100',
+    bottomGlow: 'bg-orange-300/12 dark:bg-stone-500/15 opacity-100',
+    rim: 'via-amber-200/70 dark:via-amber-400/30',
+  },
+  original: {
+    id: 'original',
+    label: 'Original (Purple + Teal)',
+    desc: 'Previous multi-color corner gradient',
+    topGlow: 'bg-purple-500/15 dark:bg-purple-500/20 opacity-100',
+    bottomGlow: 'bg-teal-500/15 dark:bg-teal-500/20 opacity-100',
+    rim: 'via-white/80 dark:via-white/20',
+  },
+};
+
 export function PropertyDetailsSection({
   hostProperty,
   isPending,
@@ -27,6 +70,16 @@ export function PropertyDetailsSection({
   };
   const [editingSectionId, setEditingSectionId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [glowMode, setGlowMode] = useState(() => {
+    return localStorage.getItem('host_dashboard_glow_mode') || 'neutral';
+  });
+
+  const handleSetGlowMode = (mode) => {
+    setGlowMode(mode);
+    localStorage.setItem('host_dashboard_glow_mode', mode);
+  };
+
+  const activeGlow = GLOW_PRESETS[glowMode] || GLOW_PRESETS.neutral;
 
   const facilitiesList = useMemo(() => {
     if (Array.isArray(hostProperty?.facilities) && hostProperty.facilities.length > 0) {
@@ -399,10 +452,10 @@ export function PropertyDetailsSection({
             className="absolute inset-0 pointer-events-none select-none overflow-hidden rounded-2xl sm:rounded-3xl z-0"
           >
             {/* Top Specular Rim Reflection */}
-            <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-white/20 to-transparent" />
-            {/* Corner Refraction Glows */}
-            <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-purple-500/10 dark:bg-purple-500/15 blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-teal-500/10 dark:bg-teal-500/15 blur-3xl pointer-events-none" />
+            <div className={`absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent ${activeGlow.rim} to-transparent transition-all duration-300`} />
+            {/* Corner Refraction Glows (Dynamically reactive to glowMode) */}
+            <div className={`absolute -top-24 -right-24 w-80 h-80 rounded-full ${activeGlow.topGlow} blur-3xl pointer-events-none transition-all duration-300`} />
+            <div className={`absolute -bottom-24 -left-24 w-80 h-80 rounded-full ${activeGlow.bottomGlow} blur-3xl pointer-events-none transition-all duration-300`} />
           </div>
 
           <div className="flex flex-col flex-1 min-h-full justify-between gap-6 sm:gap-8 relative z-10">
@@ -420,6 +473,45 @@ export function PropertyDetailsSection({
                 {currentSection.id === 'rules' && 'Define resident house rules, timings, and code of conduct policies.'}
                 {currentSection.id === 'photos' && 'Upload high-resolution property photos and paste virtual video tour links.'}
               </p>
+
+              {/* Interactive Ambience Corner Glow Switcher (Live Preview Bar) */}
+              <div className="mt-3.5 inline-flex items-center justify-center flex-wrap gap-1 p-1 rounded-full bg-slate-100/90 dark:bg-zinc-800/90 border border-slate-200/90 dark:border-zinc-700/80 shadow-2xs backdrop-blur-md">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider pl-2.5 pr-1 select-none flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[13px]">palette</span>
+                  <span>Corner Ambience:</span>
+                </span>
+                {Object.values(GLOW_PRESETS).map((preset) => {
+                  const isCurrent = glowMode === preset.id;
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => handleSetGlowMode(preset.id)}
+                      className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        isCurrent
+                          ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs scale-[1.02]'
+                          : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-zinc-700/60'
+                      }`}
+                      title={preset.desc}
+                    >
+                      <span
+                        className={`w-2 h-2 rounded-full shrink-0 ${
+                          preset.id === 'neutral'
+                            ? 'bg-slate-300 dark:bg-zinc-500 border border-slate-400/50'
+                            : preset.id === 'titanium'
+                            ? 'bg-slate-500 dark:bg-zinc-300'
+                            : preset.id === 'emerald'
+                            ? 'bg-emerald-500'
+                            : preset.id === 'champagne'
+                            ? 'bg-amber-400'
+                            : 'bg-gradient-to-tr from-purple-500 to-teal-400'
+                        }`}
+                      />
+                      <span>{preset.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* 2. Sub-Tab Card Component (positioned lower towards the bottom of the screen with gap) */}
