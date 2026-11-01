@@ -178,9 +178,6 @@ export function HostSubscriptionBuyPage() {
           <div className="flex flex-col gap-1">
             <span className="text-xs font-normal text-purple-400">Step 1 of 3</span>
             <h2 className="text-xl sm:text-2xl font-normal text-white">Choose Next Plan</h2>
-            <p className="text-xs sm:text-sm text-slate-400 font-normal">
-              Select your desired duration. Admin pricing configured for platform access:
-            </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -248,28 +245,6 @@ export function HostSubscriptionBuyPage() {
                       ₹{perMonth}/month
                     </span>
                   </div>
-
-                  {/* Features list */}
-                  <ul className="text-xs text-slate-300 space-y-1.5 border-t border-white/5 pt-3 font-normal">
-                    <li className="flex items-center gap-1.5">
-                      <svg className="w-3.5 h-3.5 text-emerald-400 shrink-0 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                      <span>Public Search & Live Listing</span>
-                    </li>
-                    <li className="flex items-center gap-1.5">
-                      <svg className="w-3.5 h-3.5 text-emerald-400 shrink-0 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                      <span>Direct Guest Booking Leads</span>
-                    </li>
-                    <li className="flex items-center gap-1.5">
-                      <svg className="w-3.5 h-3.5 text-emerald-400 shrink-0 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                      <span>Zero Platform Surcharge</span>
-                    </li>
-                  </ul>
                 </button>
               );
             })}
@@ -334,42 +309,6 @@ export function HostSubscriptionBuyPage() {
                   {copiedKey === 'payee' ? '✓ Copied' : 'Copy'}
                 </button>
               </div>
-
-              {/* UPI ID */}
-              <div className="bg-slate-950/70 border border-white/10 rounded-2xl p-3 flex items-center justify-between gap-2">
-                <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-400 font-normal">UPI ID (VPA)</span>
-                  <span className="text-xs sm:text-sm font-mono font-normal text-purple-300 truncate">
-                    {plansData?.upiId || '7988295563@ptyes'}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleCopy(plansData?.upiId, 'upi')}
-                  className="px-2.5 py-1 rounded-xl text-xs font-normal bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 active:scale-95 transition-all cursor-pointer"
-                >
-                  {copiedKey === 'upi' ? '✓ Copied' : 'Copy VPA'}
-                </button>
-              </div>
-
-              {/* Mobile Number if present */}
-              {plansData?.mobileNumber && (
-                <div className="bg-slate-950/70 border border-white/10 rounded-2xl p-3 flex items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-slate-400 font-normal">Phone / GPay</span>
-                    <span className="text-xs sm:text-sm font-normal text-white">
-                      {plansData.mobileNumber}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleCopy(plansData.mobileNumber, 'phone')}
-                    className="px-2.5 py-1 rounded-xl text-xs font-normal bg-white/10 hover:bg-white/20 text-slate-200 border border-white/10 active:scale-95 transition-all cursor-pointer"
-                  >
-                    {copiedKey === 'phone' ? '✓ Copied' : 'Copy'}
-                  </button>
-                </div>
-              )}
             </div>
 
             {/* Direct UPI Intent Link for mobile */}
@@ -542,3 +481,4 @@ export function HostSubscriptionBuyPage() {
 }
 
 export default HostSubscriptionBuyPage;
+

@@ -22,12 +22,12 @@ export function formatCountdown(totalSeconds) {
 }
 
 /**
- * Validates format of standard UPI transaction reference number (UTR / RRN)
+ * Validates format of standard 12-digit numeric UPI transaction reference number (UTR / RRN)
  */
 export function validateUpiReference(ref) {
   if (!ref || typeof ref !== 'string') return false;
-  const cleaned = ref.trim().toUpperCase();
-  return /^[A-Z0-9\-_/]{6,40}$/.test(cleaned);
+  const cleaned = ref.trim().replace(/[^0-9]/g, '');
+  return cleaned.length === 12 && /^\d{12}$/.test(cleaned);
 }
 
 /**
@@ -71,10 +71,10 @@ export async function submitBookingUpiPayment({
   onSuccess,
   onError,
 }) {
-  const cleanedRef = String(transactionRef || '').trim().toUpperCase();
+  const cleanedRef = String(transactionRef || '').trim().replace(/[^0-9]/g, '');
 
   if (!validateUpiReference(cleanedRef)) {
-    const msg = 'Please enter a valid UPI transaction reference number (UTR / RRN, 6-40 characters).';
+    const msg = 'Please enter a valid 12-digit numeric UPI transaction reference number (UTR / RRN).';
     toast.error(msg);
     if (onError) onError(new Error(msg));
     return;

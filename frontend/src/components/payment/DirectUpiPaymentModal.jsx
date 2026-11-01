@@ -110,7 +110,7 @@ export function DirectUpiPaymentModal({
 
     if (!validateUpiReference(cleanRef)) {
       toast.error(
-        'Please enter a valid UPI transaction reference number (UTR / RRN, 6-40 alphanumeric characters).'
+        'Please enter a valid 12-digit UPI reference number (UTR / RRN).'
       );
       return;
     }
@@ -406,7 +406,7 @@ export function DirectUpiPaymentModal({
 
                     <button
                       type="submit"
-                      disabled={isSubmitting || !transactionRef.trim()}
+                      disabled={isSubmitting || transactionRef.trim().length !== 12}
                       className="w-full py-3 rounded-xl font-bold text-xs bg-slate-950 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-950 shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
                     >
                       {isSubmitting ? (
