@@ -297,8 +297,13 @@ export function isBookingRequestExpired(booking, now = new Date()) {
   if (['CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED', 'REJECTED'].includes(status)) {
     return false;
   }
-  if (status === 'EXPIRED') {
+  if (booking.isTimedOut || status === 'EXPIRED') {
     return true;
+  }
+
+  // 0. If payment reference has been submitted and is awaiting host verification, do not expire
+  if (booking.upiPayment?.verificationStatus === 'PENDING_VERIFICATION') {
+    return false;
   }
 
   const isPending =

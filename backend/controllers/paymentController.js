@@ -143,6 +143,9 @@ export const getBookingUpiPaymentDetails = async (req, res, next) => {
       submittedAt: booking.upiPayment?.submittedAt || null,
       rejectionReason: booking.upiPayment?.rejectionReason || '',
       receiptUrl: booking.upiPayment?.receiptUrl || '',
+      submissionCount: booking.upiPayment?.submissionCount || 0,
+      isRecheckRequested: Boolean(booking.upiPayment?.isRecheckRequested),
+      maxSubmissions: 2,
       paymentDeadline: booking.paymentDeadline,
     });
   } catch (error) {
@@ -196,6 +199,15 @@ export const submitUpiPayment = async (req, res, next) => {
       return res.status(400).json({
         success: false,
         message: 'This payment has already been verified and confirmed by the host.',
+      });
+    }
+
+    // Check submission attempts limit (Max 2 attempts: 1 initial + 1 re-submission)
+    const currentSubmissions = Number(booking.upiPayment?.submissionCount || 0);
+    if (currentSubmissions >= 2) {
+      return res.status(400).json({
+        success: false,
+        message: 'Maximum payment attempts (2) reached for this booking. Please contact the host directly.',
       });
     }
 
@@ -263,6 +275,8 @@ export const submitUpiPayment = async (req, res, next) => {
     booking.upiPayment.verificationStatus = 'PENDING_VERIFICATION';
     booking.upiPayment.submittedAt = new Date();
     booking.upiPayment.rejectionReason = '';
+    booking.upiPayment.submissionCount = currentSubmissions + 1;
+    booking.upiPayment.isRecheckRequested = false;
 
     // If booking was awaiting payment, keep it open for verification
     if (booking.status === 'AWAITING_PAYMENT' || booking.status === 'PENDING') {
@@ -279,8 +293,12 @@ export const submitUpiPayment = async (req, res, next) => {
         transactionRef: normalizedRef,
         amount: booking.totalAmount,
         receiptUrl: finalReceiptUrl,
+        submissionAttempt: currentSubmissions + 1,
+        maxAttempts: 2,
       },
-      note: 'Guest submitted UPI transaction reference for host verification',
+      note: currentSubmissions === 0
+        ? 'Guest submitted UPI transaction reference for host verification'
+        : 'Guest re-submitted corrected UPI transaction reference (Final Attempt)',
     });
 
     await booking.save();
@@ -340,10 +358,14 @@ export const submitUpiPayment = async (req, res, next) => {
 
     return res.json({
       success: true,
-      message: 'Payment reference submitted successfully! The host will verify your payment in their bank/UPI app.',
+      message: currentSubmissions === 0
+        ? 'Payment reference submitted successfully! The host will verify your payment in their bank/UPI app.'
+        : 'Corrected payment reference submitted for final verification. The host will review your details.',
       booking,
       submittedReference: normalizedRef,
       verificationStatus: 'PENDING_VERIFICATION',
+      submissionCount: booking.upiPayment.submissionCount,
+      maxSubmissions: 2,
     });
   } catch (error) {
     console.error('Submit UPI Payment Error:', error);
@@ -384,6 +406,9 @@ export const verifyHostPayment = async (req, res, next) => {
     if (action === 'VERIFY') {
       booking.paymentStatus = 'PAID';
       booking.status = 'CONFIRMED';
+      if (!booking.checkInCode) {
+        booking.checkInCode = Math.floor(10000000 + Math.random() * 90000000).toString();
+      }
       if (!booking.upiPayment) booking.upiPayment = {};
       booking.upiPayment.verificationStatus = 'VERIFIED';
       booking.upiPayment.verifiedAt = now;
@@ -453,24 +478,32 @@ export const verifyHostPayment = async (req, res, next) => {
       });
     }
 
-    if (action === 'REJECT') {
+    if (action === 'REJECT' || action === 'REQUEST_RECHECK') {
       const cleanReason = String(rejectionReason || 'Payment could not be verified in host bank account').trim();
 
       if (!booking.upiPayment) booking.upiPayment = {};
+      const currentCount = Number(booking.upiPayment.submissionCount || 0);
+      const canResubmit = currentCount < 2;
+
       booking.upiPayment.verificationStatus = 'REJECTED';
       booking.upiPayment.rejectionReason = cleanReason;
+      booking.upiPayment.isRecheckRequested = canResubmit;
       booking.paymentStatus = 'FAILED';
 
       booking.auditLog.push({
-        action: 'PAYMENT_REJECTED',
+        action: canResubmit ? 'PAYMENT_RECHECK_REQUESTED' : 'PAYMENT_REJECTED',
         performedBy: hostUser,
         performerRole: 'host',
         timestamp: now,
         details: {
           transactionRef: booking.upiPayment.transactionRef,
           rejectionReason: cleanReason,
+          submissionCount: currentCount,
+          canResubmit,
         },
-        note: `Host rejected payment reference: ${cleanReason}`,
+        note: canResubmit
+          ? `Host requested correct UTR from guest (Attempt ${currentCount} of 2): ${cleanReason}`
+          : `Host rejected payment reference (Final attempt reached): ${cleanReason}`,
       });
 
       await booking.save();
@@ -486,12 +519,12 @@ export const verifyHostPayment = async (req, res, next) => {
           },
           $push: {
             auditLog: {
-              action: 'PAYMENT_REJECTED',
+              action: canResubmit ? 'PAYMENT_RECHECK_REQUESTED' : 'PAYMENT_REJECTED',
               performedBy: hostUser,
               performerRole: 'host',
               timestamp: now,
               details: { rejectionReason: cleanReason },
-              note: 'Host rejected payment reference',
+              note: canResubmit ? 'Host requested re-entry of payment reference' : 'Host rejected payment reference',
             },
           },
         }
@@ -499,12 +532,15 @@ export const verifyHostPayment = async (req, res, next) => {
 
       return res.json({
         success: true,
-        message: 'Payment reference rejected. Guest will be notified to review their payment or resubmit.',
+        message: canResubmit
+          ? 'Re-request sent to guest to provide correct UTR (last chance).'
+          : 'Payment reference rejected. Maximum attempts reached.',
         booking,
+        canResubmit,
       });
     }
 
-    return res.status(400).json({ success: false, message: 'Invalid verification action. Must be VERIFY or REJECT.' });
+    return res.status(400).json({ success: false, message: 'Invalid verification action. Must be VERIFY, REJECT, or REQUEST_RECHECK.' });
   } catch (error) {
     console.error('Verify Host Payment Error:', error);
     return next(error);

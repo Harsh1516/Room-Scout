@@ -41,8 +41,8 @@ export const submitUpiPaymentSchema = z.object({
 // Host UPI Reference Verification / Rejection Schema
 export const verifyUpiPaymentSchema = z.object({
   bookingId: mongoIdSchema,
-  action: z.enum(['VERIFY', 'REJECT'], {
-    required_error: 'Action must be either VERIFY or REJECT',
+  action: z.enum(['VERIFY', 'REJECT', 'REQUEST_RECHECK'], {
+    required_error: 'Action must be VERIFY, REJECT, or REQUEST_RECHECK',
   }),
   rejectionReason: z
     .string()

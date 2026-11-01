@@ -5,6 +5,13 @@ import { Host } from '../models/Host.js';
 import { Payment } from '../models/Payment.js';
 import { actorId, assertSelfHostOrAdmin, idsMatch, isAdminUser } from '../middleware/authMiddleware.js';
 import { sendWhatsAppNotification } from '../services/whatsappService.js';
+import {
+  sendBookingRequestToHostEmail,
+  sendBookingSubmittedToGuestEmail,
+  sendBookingApprovedToGuestEmail,
+  sendBookingRejectedToGuestEmail,
+  sendBookingConfirmedEmail,
+} from '../services/emailService.js';
 
 const BOOKING_STATUS_ENUM = [
   'PENDING',
@@ -69,6 +76,10 @@ export function isBookingRequestExpired(booking, now = new Date()) {
     status.includes('PENDING') ||
     status.includes('APPROVAL');
   const isAwaitingPayment = status === 'AWAITING_PAYMENT' || status === 'PAYMENT_PENDING';
+
+  if (booking.isTimedOut) {
+    return true;
+  }
 
   if (!isPending && !isAwaitingPayment) {
     return false;
@@ -149,7 +160,7 @@ export async function autoExpireBookings(filter = {}) {
       ...filter,
       status: { $in: pendingStatuses },
     })
-      .select('_id status checkIn checkOut bookedDates bookedMonths paymentDeadline phone fullName stayTitle roomNumber bookingReferenceId totalAmount')
+      .select('_id status checkIn checkOut bookedDates bookedMonths paymentDeadline phone fullName stayTitle roomNumber bookingReferenceId totalAmount paymentReRequested isTimedOut upiPayment')
       .lean();
 
     const expiredCandidates = [];
@@ -160,16 +171,41 @@ export async function autoExpireBookings(filter = {}) {
     }
 
     if (expiredCandidates.length > 0) {
-      const expiredIds = expiredCandidates.map((b) => b._id);
-      await Booking.updateMany(
-        { _id: { $in: expiredIds } },
-        {
-          $set: {
-            status: 'EXPIRED',
-            paymentStatus: 'FAILED',
-          },
+      const expiredTimedOutIds = [];
+      const standardExpiredIds = [];
+
+      for (const b of expiredCandidates) {
+        if (b.paymentReRequested) {
+          expiredTimedOutIds.push(b._id);
+        } else {
+          standardExpiredIds.push(b._id);
         }
-      );
+      }
+
+      if (standardExpiredIds.length > 0) {
+        await Booking.updateMany(
+          { _id: { $in: standardExpiredIds } },
+          {
+            $set: {
+              status: 'EXPIRED',
+              paymentStatus: 'FAILED',
+            },
+          }
+        );
+      }
+
+      if (expiredTimedOutIds.length > 0) {
+        await Booking.updateMany(
+          { _id: { $in: expiredTimedOutIds } },
+          {
+            $set: {
+              status: 'EXPIRED',
+              paymentStatus: 'FAILED',
+              isTimedOut: true,
+            },
+          }
+        );
+      }
 
       // Dispatch automated WhatsApp alerts for expired bookings
       for (const expiredBooking of expiredCandidates) {
@@ -902,6 +938,94 @@ export const getMyBookings = async (req, res, next) => {
   }
 };
 
+// @desc    Get single booking details by ID or reference ID
+// @route   GET /api/bookings/:id
+// @access  Private
+export const getBookingById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'Booking ID is required' });
+    }
+
+    const query = mongoose.Types.ObjectId.isValid(id)
+      ? { $or: [{ _id: id }, { bookingReferenceId: id }, { slotBookingId: id }] }
+      : { $or: [{ bookingReferenceId: id }, { slotBookingId: id }] };
+
+    await autoExpireAwaitingBookings();
+
+    const booking = await Booking.findOne(query)
+      .populate('stayId', 'title propertyName location images address rooms roomRates upiSettings hostId description amenities policies')
+      .populate('hostId', 'name phone email upiSettings')
+      .lean();
+
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking reservation not found' });
+    }
+
+    // Check if re-requested payment window has expired and user has not submitted for verification
+    if (
+      booking.paymentReRequested &&
+      !booking.isTimedOut &&
+      booking.upiPayment?.verificationStatus !== 'PENDING_VERIFICATION' &&
+      booking.upiPayment?.verificationStatus !== 'VERIFIED'
+    ) {
+      if (
+        booking.status === 'EXPIRED' ||
+        (booking.paymentDeadline && new Date(booking.paymentDeadline).getTime() <= Date.now())
+      ) {
+        booking.isTimedOut = true;
+        booking.status = 'EXPIRED';
+        booking.paymentStatus = 'FAILED';
+        await Booking.updateOne(
+          { _id: booking._id },
+          { $set: { isTimedOut: true, status: 'EXPIRED', paymentStatus: 'FAILED' } }
+        );
+      }
+    }
+
+    // Ensure confirmed/checked-in bookings have an 8-digit check-in pass code
+    if (
+      (booking.status === 'CONFIRMED' || booking.status === 'CHECKED_IN' || booking.upiPayment?.verificationStatus === 'VERIFIED') &&
+      !booking.checkInCode
+    ) {
+      const generatedCode = Math.floor(10000000 + Math.random() * 90000000).toString();
+      await Booking.updateOne({ _id: booking._id }, { $set: { checkInCode: generatedCode } });
+      booking.checkInCode = generatedCode;
+    }
+
+    const callerId = req.user?._id?.toString();
+    const callerEmail = req.user?.email ? req.user.email.toLowerCase().trim() : '';
+    const callerPhone = req.user?.phone ? String(req.user.phone).replace(/\D/g, '').slice(-10) : '';
+
+    const isOwner =
+      Boolean(callerId && booking.userId && idsMatch(booking.userId, callerId)) ||
+      Boolean(callerEmail && booking.email && booking.email.toLowerCase().trim() === callerEmail) ||
+      Boolean(callerPhone && booking.phone && String(booking.phone).replace(/\D/g, '').endsWith(callerPhone));
+
+    const isPropertyHost =
+      Boolean(callerId && booking.hostId && (idsMatch(booking.hostId, callerId) || idsMatch(booking.hostId?._id, callerId))) ||
+      Boolean(req.hostAccount && idsMatch(booking.hostId, req.hostAccount._id));
+
+    const isAdmin = isAdminUser(req) || req.isAdminKey;
+
+    if (!isOwner && !isPropertyHost && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: You do not have permission to view this reservation.',
+      });
+    }
+
+    return res.json({
+      success: true,
+      booking,
+    });
+  } catch (error) {
+    console.error('Get booking by id error:', error);
+    return next(error);
+  }
+};
+
 // @desc    Update booking details or status
 // @route   PATCH /api/bookings/:id/status
 // @access  Private
@@ -1032,6 +1156,8 @@ export const updateBookingStatus = async (req, res, next) => {
           'paymentDeadline',
           'approvedAt',
           'paymentStatus',
+          'paymentReRequested',
+          'isTimedOut',
         ];
 
     allowedFields.forEach((field) => {
@@ -1071,6 +1197,14 @@ export const updateBookingStatus = async (req, res, next) => {
       updateFields.paymentDeadline = req.body.paymentDeadline
         ? new Date(req.body.paymentDeadline)
         : new Date(Date.now() + 15 * 60 * 1000);
+    }
+
+    if (req.body.status === 'EXPIRED') {
+      updateFields.status = 'EXPIRED';
+      updateFields.paymentStatus = 'FAILED';
+      if (booking.paymentReRequested || req.body.isTimedOut) {
+        updateFields.isTimedOut = true;
+      }
     }
 
     if (req.body.status === 'REJECTED' || req.body.status === 'CANCELLED') {
@@ -1117,6 +1251,10 @@ export const updateBookingStatus = async (req, res, next) => {
 
     if (req.body.personCount !== undefined) {
       updateFields.personCount = Number(req.body.personCount) || 1;
+    }
+
+    if ((req.body.status === 'CONFIRMED' || req.body.status === 'CHECKED_IN') && !booking.checkInCode) {
+      updateFields.checkInCode = Math.floor(10000000 + Math.random() * 90000000).toString();
     }
 
     if (isPropertyHost || isAdmin) {
@@ -1719,6 +1857,167 @@ export const getBookingsByStayId = async (req, res, next) => {
     });
   } catch (error) {
     console.error('Error fetching bookings by stay:', error);
+    return next(error);
+  }
+};
+
+// @desc    Guest re-requests payment access for the last time (starts new 5-minute timer)
+// @route   POST /api/bookings/:id/re-request-payment
+// @access  Private
+export const reRequestPayment = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'Booking ID is required' });
+    }
+
+    const query = mongoose.Types.ObjectId.isValid(id)
+      ? { $or: [{ _id: id }, { bookingReferenceId: id }, { slotBookingId: id }] }
+      : { $or: [{ bookingReferenceId: id }, { slotBookingId: id }] };
+
+    const booking = await Booking.findOne(query);
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking reservation not found' });
+    }
+
+    const callerId = req.user?._id?.toString();
+    const callerEmail = req.user?.email ? req.user.email.toLowerCase().trim() : '';
+    const callerPhone = req.user?.phone ? String(req.user.phone).replace(/\D/g, '').slice(-10) : '';
+
+    const isOwner =
+      Boolean(callerId && booking.userId && idsMatch(booking.userId, callerId)) ||
+      Boolean(callerEmail && booking.email && booking.email.toLowerCase().trim() === callerEmail) ||
+      Boolean(callerPhone && booking.phone && String(booking.phone).replace(/\D/g, '').endsWith(callerPhone));
+
+    const isAdmin = isAdminUser(req) || req.isAdminKey;
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: You do not have permission to modify this reservation.',
+      });
+    }
+
+    // Must not have already re-requested (this is strictly the LAST chance)
+    if (booking.isTimedOut || booking.paymentReRequested) {
+      return res.status(400).json({
+        success: false,
+        message: 'Payment re-request has already been used for this booking. This reservation has permanently timed out.',
+      });
+    }
+
+    if (
+      booking.status === 'CONFIRMED' ||
+      booking.status === 'CHECKED_IN' ||
+      booking.upiPayment?.verificationStatus === 'VERIFIED'
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'This booking has already been verified and confirmed.',
+      });
+    }
+
+    // Check that reservation check-out date has not elapsed
+    if (booking.checkOut && new Date(booking.checkOut) <= new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot re-request payment: reservation stay period has already passed.',
+      });
+    }
+
+    // Give new 5-minute timer (300 seconds)
+    const fiveMinutesMs = 5 * 60 * 1000;
+    const newDeadline = new Date(Date.now() + fiveMinutesMs);
+
+    booking.status = 'AWAITING_PAYMENT';
+    booking.paymentStatus = 'UNPAID';
+    booking.paymentDeadline = newDeadline;
+    booking.paymentReRequested = true;
+    booking.paymentReRequestedAt = new Date();
+    booking.isTimedOut = false;
+
+    if (!booking.upiPayment) {
+      booking.upiPayment = {};
+    }
+    if (booking.upiPayment.verificationStatus !== 'PENDING_VERIFICATION') {
+      booking.upiPayment.verificationStatus = 'UNSUBMITTED';
+    }
+
+    booking.auditLog.push({
+      action: 'PAYMENT_RE_REQUESTED',
+      performedBy: req.user?._id || null,
+      performerRole: 'guest',
+      timestamp: new Date(),
+      details: {
+        newDeadline,
+        durationMinutes: 5,
+        isFinalAttempt: true,
+      },
+      note: 'Guest activated final 5-minute payment window to show QR and UPI details',
+    });
+
+    await booking.save();
+
+    const populated = await Booking.findById(booking._id)
+      .populate('stayId', 'title propertyName location images address rooms roomRates upiSettings hostId description amenities policies')
+      .populate('hostId', 'name phone email upiSettings')
+      .lean();
+
+    return res.json({
+      success: true,
+      booking: populated,
+      message: 'Final 5-minute payment window activated. Please complete payment and send for verification before time runs out.',
+    });
+  } catch (error) {
+    console.error('Error re-requesting payment:', error);
+    return next(error);
+  }
+};
+
+// @desc    Mark booking as timed out when final 5-minute payment window expires
+// @route   POST /api/bookings/:id/timeout
+// @access  Private
+export const markBookingTimedOut = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const query = mongoose.Types.ObjectId.isValid(id)
+      ? { $or: [{ _id: id }, { bookingReferenceId: id }, { slotBookingId: id }] }
+      : { $or: [{ bookingReferenceId: id }, { slotBookingId: id }] };
+
+    const booking = await Booking.findOne(query);
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking reservation not found' });
+    }
+
+    // If payment reference is already submitted for verification, do not timeout!
+    if (
+      booking.upiPayment?.verificationStatus === 'PENDING_VERIFICATION' ||
+      booking.upiPayment?.verificationStatus === 'VERIFIED'
+    ) {
+      return res.json({ success: true, booking, isTimedOut: false });
+    }
+
+    booking.status = 'EXPIRED';
+    booking.paymentStatus = 'FAILED';
+    booking.isTimedOut = true;
+
+    booking.auditLog.push({
+      action: 'PAYMENT_TIMED_OUT',
+      performedBy: req.user?._id || null,
+      performerRole: 'system',
+      timestamp: new Date(),
+      note: 'Payment window timed out permanently',
+    });
+
+    await booking.save();
+
+    return res.json({
+      success: true,
+      isTimedOut: true,
+      message: 'Booking has timed out.',
+    });
+  } catch (error) {
+    console.error('Error marking booking timed out:', error);
     return next(error);
   }
 };

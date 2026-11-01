@@ -312,10 +312,10 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const loginWithGoogle = async ({ credential, role = 'user' }) => {
+  const loginWithGoogle = async ({ credential, accessToken, role = 'user' }) => {
     setLoading(true);
     try {
-      const data = await authAPI.googleAuth({ credential, role });
+      const data = await authAPI.googleAuth({ credential, accessToken, role });
       const authToken = data.token || (data.user && data.user.token);
       if (authToken) {
         syncAuthState(data, authToken);

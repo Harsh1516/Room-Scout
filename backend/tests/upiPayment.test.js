@@ -146,6 +146,15 @@ describe('Direct UPI Payment System Tests', () => {
       assert.equal(result.success, true);
     });
 
+    it('should accept REQUEST_RECHECK action', () => {
+      const result = verifyUpiPaymentSchema.safeParse({
+        bookingId: '507f1f77bcf86cd799439011',
+        action: 'REQUEST_RECHECK',
+        rejectionReason: 'Incorrect UTR provided. Please re-enter 12-digit reference.',
+      });
+      assert.equal(result.success, true);
+    });
+
     it('should reject unknown actions', () => {
       const result = verifyUpiPaymentSchema.safeParse({
         bookingId: '507f1f77bcf86cd799439011',
@@ -197,6 +206,37 @@ describe('Direct UPI Payment System Tests', () => {
 
       const expired = isBookingRequestExpired(booking);
       assert.equal(expired, true, 'Abandoned booking request must expire after timeout');
+    });
+
+    it('should identify a booking as timed out if re-requested 5-minute payment window elapsed without verification submission', () => {
+      const booking = {
+        status: 'EXPIRED',
+        paymentReRequested: true,
+        isTimedOut: true,
+        upiPayment: {
+          verificationStatus: 'UNSUBMITTED',
+        },
+      };
+
+      const expired = isBookingRequestExpired(booking);
+      assert.equal(expired, true, 'Timed out booking must be treated as expired');
+      assert.equal(booking.isTimedOut, true, 'Booking is marked permanently timed out');
+    });
+
+    it('should NOT time out a re-requested booking if the user clicked send for verification in time', () => {
+      const pastDeadline = new Date(Date.now() - 60 * 1000);
+      const booking = {
+        status: 'AWAITING_PAYMENT',
+        paymentDeadline: pastDeadline,
+        paymentReRequested: true,
+        isTimedOut: false,
+        upiPayment: {
+          verificationStatus: 'PENDING_VERIFICATION',
+        },
+      };
+
+      const expired = isBookingRequestExpired(booking);
+      assert.equal(expired, false, 'Booking must NOT expire or time out while verification is pending');
     });
   });
 

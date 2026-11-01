@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBookings } from '../context/BookingsContext';
 import { useAuth } from '../context/AuthContext';
@@ -6,10 +6,8 @@ import { toast } from '../context/ToastContext';
 import {
   calculateRemainingSeconds,
   formatCountdown,
-  cancelUserBooking,
 } from '../utils/bookingPayment';
 import { isBookingRequestExpired } from '../utils/dateUtils';
-import { DirectUpiPaymentModal } from './payment/DirectUpiPaymentModal';
 
 /* ─────────────────────────────── helpers ─────────────────────────────── */
 
@@ -29,9 +27,16 @@ function AwaitingPaymentCountdown({ deadline }) {
     }, 1000);
     return () => clearInterval(timer);
   }, [deadline]);
+
   if (sec <= 0) return <span className="text-[10px] font-semibold text-rose-500">Expired</span>;
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold tracking-wide ${sec <= 120 ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'}`}>
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold tracking-wide ${
+        sec <= 120
+          ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+          : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+      }`}
+    >
       {formatCountdown(sec)}
     </span>
   );
@@ -43,7 +48,9 @@ function formatShortDate(iso) {
     const d = new Date(iso);
     if (isNaN(d.getTime())) return iso;
     return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
-  } catch { return iso; }
+  } catch {
+    return iso;
+  }
 }
 
 function computeDuration(item) {
@@ -69,9 +76,7 @@ function computeDuration(item) {
       const outD = new Date(item.checkOut);
       if (!isNaN(inD.getTime()) && !isNaN(outD.getTime())) {
         let months = (outD.getUTCFullYear() - inD.getUTCFullYear()) * 12 + (outD.getUTCMonth() - inD.getUTCMonth());
-        if (outD.getUTCDate() >= 27) {
-          months += 1;
-        }
+        if (outD.getUTCDate() >= 27) months += 1;
         const count = Math.max(1, months);
         return `${count} Month${count > 1 ? 's' : ''}`;
       }
@@ -105,18 +110,50 @@ function getStatusMeta(rawStatus, booking = null) {
     };
   }
 
-  if (upiVerification === 'REJECTED') {
+  if (upiVerification === 'REJECTED' || Boolean(booking?.upiPayment?.isRecheckRequested)) {
     return {
-      label: 'UPI Ref Rejected',
+      label: 'Action Required',
       dot: 'bg-rose-500 animate-pulse',
       text: 'text-rose-500 dark:text-rose-400',
       type: 'upi_rejected',
-      subNotice: booking?.upiPayment?.rejectionReason || 'Host could not verify transaction',
+      subNotice: booking?.upiPayment?.rejectionReason || 'Host requested updated UTR',
     };
   }
 
   if (st === 'REJECTED') return { label: 'Rejected', dot: 'bg-rose-500', text: 'text-rose-500 dark:text-rose-400', type: 'rejected' };
   if (st === 'CANCELLED') return { label: 'Cancelled', dot: 'bg-slate-400', text: 'text-slate-400', type: 'cancelled' };
+
+  if (
+    booking?.isTimedOut ||
+    (booking?.paymentReRequested &&
+      (st === 'EXPIRED' || (booking && isBookingRequestExpired(booking))) &&
+      upiVerification !== 'PENDING_VERIFICATION' &&
+      upiVerification !== 'VERIFIED')
+  ) {
+    return {
+      label: 'Time Out',
+      dot: 'bg-rose-500',
+      text: 'text-rose-500 dark:text-rose-400',
+      type: 'expired',
+      subNotice: 'Payment window timed out',
+    };
+  }
+
+  if (
+    !booking?.paymentReRequested &&
+    (st === 'EXPIRED' || (booking && isBookingRequestExpired(booking))) &&
+    upiVerification !== 'PENDING_VERIFICATION' &&
+    upiVerification !== 'VERIFIED'
+  ) {
+    return {
+      label: 'Payment Expired',
+      dot: 'bg-amber-500 animate-pulse',
+      text: 'text-amber-600 dark:text-amber-400',
+      type: 'approved',
+      subNotice: '1 Re-request available',
+    };
+  }
+
   if (st === 'EXPIRED' || (booking && isBookingRequestExpired(booking)))
     return {
       label: 'Request Expired',
@@ -136,60 +173,37 @@ function getStatusMeta(rawStatus, booking = null) {
 
 /* ─────────────────────────────── component ─────────────────────────────── */
 
-export function BookedPlacesDrawer({ onLoginClick, onStayClick }) {
+export function BookedPlacesDrawer({ onLoginClick }) {
   const { bookings, isBookingsOpen, setIsBookingsOpen, deleteBooking } = useBookings();
   const { isAuthenticated } = useAuth();
-  const [selectedPass, setSelectedPass] = useState(null);
   const [bookingToDelete, setBookingToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [activeUpiBooking, setActiveUpiBooking] = useState(null);
-  const [showUpiModal, setShowUpiModal] = useState(false);
   const navigate = useNavigate();
 
-  const confirmedCount = bookings.filter((b) => { const s = String(b.status || '').toUpperCase(); return s === 'CONFIRMED' || s === 'CHECKED_IN'; }).length;
+  const confirmedCount = bookings.filter((b) => {
+    const s = String(b.status || '').toUpperCase();
+    return s === 'CONFIRMED' || s === 'CHECKED_IN';
+  }).length;
+
   const pendingCount = bookings.filter((b) => {
     const s = String(b.status || '').toUpperCase();
     if (s === 'EXPIRED' || isBookingRequestExpired(b)) return false;
     return s.includes('PENDING') || s.includes('APPROVAL') || s === 'AWAITING_PAYMENT';
   }).length;
 
-  const handleOpenProperty = (item, opts = {}) => {
+  const handleOpenBookingDetails = (item) => {
     if (!item) return;
     setIsBookingsOpen(false);
-    const targetStayId =
-      (typeof item.stayId === 'object' && item.stayId !== null ? item.stayId._id : item.stayId) ||
-      (item.stay ? item.stay._id : null) || item.hostId;
-    if (!targetStayId) { toast.info('Property details not found.'); return; }
-    const populatedStay = typeof item.stayId === 'object' && item.stayId !== null ? item.stayId : item.stay;
-    const resolvedTitle =
-      item.stayTitle && item.stayTitle !== 'Host Room Stay' && item.stayTitle !== 'Host Stay'
-        ? item.stayTitle : populatedStay?.title || populatedStay?.propertyName || item.propertyName || item.title || 'Stay';
-    const stayObj = populatedStay || { _id: targetStayId, id: targetStayId, title: resolvedTitle, location: item.location || '' };
+    const bookingIdentifier =
+      item.bookingReferenceId ||
+      (typeof item._id === 'object' && item._id?._id ? String(item._id._id) : item._id) ||
+      item.slotBookingId;
 
-    // For confirmed bookings, navigate to the rooms page with the specific room pre-selected
-    const statusType = opts.statusType || '';
-    const isConfirmed = statusType === 'confirmed' || statusType === 'completed';
-    const roomType = item.roomType || item.type || null;
-    const roomNumber = item.roomNumber || null;
-
-    if (isConfirmed && (roomType || roomNumber)) {
-      const roomsPath = `/stay/${targetStayId}/rooms`;
-      const params = new URLSearchParams();
-      if (roomType) params.set('type', roomType);
-      const fullPath = params.toString() ? `${roomsPath}?${params.toString()}` : roomsPath;
-      navigate(fullPath, {
-        state: {
-          stay: stayObj,
-          selectedCategory: roomType || 'All',
-          roomType: roomType || null,
-          roomNumber: roomNumber,   // used by RoomAvailabilityPage to auto-select the card
-        },
-      });
+    if (!bookingIdentifier) {
+      toast.info('Booking reference not found.');
       return;
     }
-
-    if (onStayClick) onStayClick(stayObj);
-    else navigate(`/stay/${targetStayId}`, { state: { stay: stayObj } });
+    navigate(`/booking/${encodeURIComponent(bookingIdentifier)}`);
   };
 
   if (!isBookingsOpen) return null;
@@ -208,13 +222,18 @@ export function BookedPlacesDrawer({ onLoginClick, onStayClick }) {
             <div>
               <h2 className="text-sm font-semibold text-slate-900 dark:text-white tracking-tight">Booked Places</h2>
               <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
-                {!isAuthenticated ? 'Sign in to view reservations'
-                  : bookings.length === 0 ? 'No reservations yet'
+                {!isAuthenticated
+                  ? 'Sign in to view reservations'
+                  : bookings.length === 0
+                  ? 'No reservations yet'
                   : `${bookings.length} reservation${bookings.length > 1 ? 's' : ''}${confirmedCount > 0 ? ` · ${confirmedCount} confirmed` : ''}${pendingCount > 0 ? ` · ${pendingCount} pending` : ''}`}
               </p>
             </div>
-            <button type="button" onClick={() => setIsBookingsOpen(false)}
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors cursor-pointer">
+            <button
+              type="button"
+              onClick={() => setIsBookingsOpen(false)}
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors cursor-pointer"
+            >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -234,8 +253,14 @@ export function BookedPlacesDrawer({ onLoginClick, onStayClick }) {
                   <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Sign in to view bookings</p>
                   <p className="text-xs text-slate-400 mt-1">Your confirmed reservations appear here.</p>
                 </div>
-                <button type="button" onClick={() => { setIsBookingsOpen(false); if (onLoginClick) onLoginClick(); }}
-                  className="text-xs font-semibold px-4 py-2 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 transition-opacity cursor-pointer">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsBookingsOpen(false);
+                    if (onLoginClick) onLoginClick();
+                  }}
+                  className="text-xs font-semibold px-4 py-2 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 transition-opacity cursor-pointer"
+                >
                   Sign In
                 </button>
               </div>
@@ -243,10 +268,17 @@ export function BookedPlacesDrawer({ onLoginClick, onStayClick }) {
               bookings.map((item, idx) => {
                 const status = getStatusMeta(item.status, item);
                 const dur = computeDuration(item);
-                const img = item.stayImage || (typeof item.stayId === 'object' && (item.stayId?.image || item.stayId?.images?.[0])) || item.image || null;
-                const displayTitle = item.stayTitle && item.stayTitle !== 'Host Room Stay' && item.stayTitle !== 'Host Stay'
-                  ? item.stayTitle : typeof item.stayId === 'object' && item.stayId?.title ? item.stayId.title
-                  : item.propertyName || item.title || 'Stay';
+                const img =
+                  item.stayImage ||
+                  (typeof item.stayId === 'object' && (item.stayId?.image || item.stayId?.images?.[0])) ||
+                  item.image ||
+                  null;
+                const displayTitle =
+                  item.stayTitle && item.stayTitle !== 'Host Room Stay' && item.stayTitle !== 'Host Stay'
+                    ? item.stayTitle
+                    : typeof item.stayId === 'object' && item.stayId?.title
+                    ? item.stayId.title
+                    : item.propertyName || item.title || 'Stay';
 
                 const roomCategory =
                   item.roomType ||
@@ -260,11 +292,15 @@ export function BookedPlacesDrawer({ onLoginClick, onStayClick }) {
                   '';
 
                 return (
-                  <div key={item._id || item.bookingReferenceId || idx}
-                    className="rounded-xl border border-slate-200 dark:border-white/[0.07] bg-white dark:bg-white/[0.02] hover:border-slate-300 dark:hover:border-white/[0.12] transition-colors duration-150 overflow-hidden">
-
-                    {/* Top: thumbnail + info */}
-                    <div className="flex gap-3 p-3 cursor-pointer" onClick={() => handleOpenProperty(item, { statusType: status.type })}>
+                  <div
+                    key={item._id || item.bookingReferenceId || idx}
+                    className="rounded-xl border border-slate-200 dark:border-white/[0.07] bg-white dark:bg-white/[0.02] hover:border-slate-300 dark:hover:border-white/[0.12] transition-colors duration-150 overflow-hidden"
+                  >
+                    {/* Top: thumbnail + info (Clicking opens details) */}
+                    <div
+                      className="flex gap-3 p-3 cursor-pointer"
+                      onClick={() => handleOpenBookingDetails(item)}
+                    >
                       {/* Thumbnail */}
                       <div className="w-[52px] h-[52px] rounded-lg overflow-hidden shrink-0 bg-slate-100 dark:bg-white/[0.05]">
                         {img ? (
@@ -281,7 +317,9 @@ export function BookedPlacesDrawer({ onLoginClick, onStayClick }) {
                       {/* Text */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <span className="text-[13px] font-semibold text-slate-900 dark:text-white leading-snug truncate">{displayTitle}</span>
+                          <span className="text-[13px] font-semibold text-slate-900 dark:text-white leading-snug truncate">
+                            {displayTitle}
+                          </span>
                           <div className="flex items-center gap-1.5 shrink-0">
                             <span className={`inline-flex items-center gap-1.5 text-[10px] font-semibold ${status.text} whitespace-nowrap`}>
                               <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${status.dot}`} />
@@ -338,116 +376,51 @@ export function BookedPlacesDrawer({ onLoginClick, onStayClick }) {
                         )}
 
                         {status.type === 'upi_rejected' && (
-                          <div className="mt-2 p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-[11px] text-rose-800 dark:text-rose-200 space-y-1">
-                            <div className="flex items-center gap-1.5 font-bold text-rose-700 dark:text-rose-300">
-                              <svg className="w-3.5 h-3.5 shrink-0 text-rose-600 dark:text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                <circle cx="12" cy="12" r="10" />
-                                <line x1="12" y1="8" x2="12" y2="12" />
-                                <line x1="12" y1="16" x2="12.01" y2="16" />
-                              </svg>
-                              <span>UPI Reference Rejected by Host</span>
-                            </div>
-                            <p className="text-[11px] text-rose-700/95 dark:text-rose-300/95 leading-snug">
-                              <span className="font-semibold text-rose-800 dark:text-rose-200">Host Reason: </span>
-                              "{item.upiPayment?.rejectionReason || status.subNotice || 'UPI reference did not match host bank records'}"
-                            </p>
-                            <p className="text-[10px] text-rose-600/80 dark:text-rose-400/80">
-                              Check your UPI app (UTR/RRN) and re-request verification below.
-                            </p>
+                          <div className="mt-1.5 py-1 px-2 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-[10.5px] font-medium text-rose-700 dark:text-rose-300 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
+                            <span className="truncate">Host requested correct UTR — Tap Open to fix</span>
                           </div>
                         )}
                       </div>
                     </div>
 
-                    {/* Action strip */}
-                    <div className="flex items-center gap-1.5 px-3 pb-3 flex-wrap" onClick={(e) => e.stopPropagation()}>
-                      <button type="button" onClick={() => handleOpenProperty(item, { statusType: status.type })}
-                        className="text-[11px] font-medium px-2.5 py-1.5 min-h-[34px] sm:min-h-[28px] rounded-lg border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/[0.05] active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center">
-                        View →
+                    {/* Single Action Button: Open */}
+                    <div
+                      className="flex items-center justify-between px-3 pb-2.5 pt-2 border-t border-slate-100 dark:border-white/[0.04]"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        {status.type === 'approved' && <AwaitingPaymentCountdown deadline={item.paymentDeadline} />}
+                        {status.type === 'upi_rejected' && (
+                          <span className="text-[10.5px] font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                            Action required
+                          </span>
+                        )}
+                        {status.type === 'verifying' && (
+                          <span className="text-[10.5px] font-semibold text-teal-600 dark:text-teal-400 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
+                            Verifying payment
+                          </span>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleOpenBookingDetails(item)}
+                        className={`text-xs font-bold px-3.5 py-1.5 min-h-[30px] rounded-lg active:scale-95 transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-xs ${
+                          status.type === 'approved'
+                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
+                            : status.type === 'upi_rejected'
+                            ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20'
+                            : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90'
+                        }`}
+                      >
+                        <span>Open</span>
+                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                        </svg>
                       </button>
-
-                      {status.type === 'upi_rejected' && (
-                        <>
-                          <button type="button" onClick={() => setSelectedPass(item)}
-                            className="text-[11px] font-medium px-2.5 py-1.5 min-h-[34px] sm:min-h-[28px] rounded-lg border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/[0.05] active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center">
-                            Details
-                          </button>
-                          <button type="button"
-                            onClick={async () => {
-                              await cancelUserBooking({ booking: item, onCancelled: () => { if (deleteBooking) deleteBooking(item._id || item.bookingReferenceId).catch(() => {}); } });
-                            }}
-                            className="text-[11px] font-medium px-2.5 py-1.5 min-h-[34px] sm:min-h-[28px] rounded-lg border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center">
-                            Cancel
-                          </button>
-                          <button type="button"
-                            onClick={() => {
-                              setActiveUpiBooking(item);
-                              setShowUpiModal(true);
-                            }}
-                            className="ml-auto text-[11px] font-bold px-3 py-1.5 min-h-[34px] sm:min-h-[28px] rounded-lg bg-rose-600 hover:bg-rose-700 active:scale-95 text-white transition-all cursor-pointer inline-flex items-center gap-1 shadow-xs shadow-rose-600/30">
-                            <span>Update & Re-verify UPI</span>
-                            <span>→</span>
-                          </button>
-                        </>
-                      )}
-
-                      {(status.type === 'approved' || status.type === 'verifying') && (
-                        <>
-                          {status.type === 'approved' && <AwaitingPaymentCountdown deadline={item.paymentDeadline} />}
-                          <button type="button"
-                            onClick={async () => {
-                              await cancelUserBooking({ booking: item, onCancelled: () => { if (deleteBooking) deleteBooking(item._id || item.bookingReferenceId).catch(() => {}); } });
-                            }}
-                            className="text-[11px] font-medium px-2.5 py-1.5 min-h-[34px] sm:min-h-[28px] rounded-lg border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center">
-                            Cancel
-                          </button>
-                          <button type="button"
-                            onClick={() => {
-                              setActiveUpiBooking(item);
-                              setShowUpiModal(true);
-                            }}
-                            className="ml-auto text-[11px] font-semibold px-3 py-1.5 min-h-[34px] sm:min-h-[28px] rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white transition-all cursor-pointer inline-flex items-center justify-center">
-                            {status.type === 'verifying' ? 'View UPI Status' : `Pay ₹${Number(item.totalAmount || 0).toLocaleString('en-IN')} (UPI)`}
-                          </button>
-                        </>
-                      )}
-
-                      {status.type === 'pending' && (
-                        <>
-                          <button type="button"
-                            onClick={async () => {
-                              await cancelUserBooking({ booking: item, onCancelled: () => { if (deleteBooking) deleteBooking(item._id || item.bookingReferenceId).catch(() => {}); } });
-                            }}
-                            className="text-[11px] font-medium px-2.5 py-1.5 min-h-[34px] sm:min-h-[28px] rounded-lg border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center">
-                            Cancel Request
-                          </button>
-                          <span className="ml-auto text-[10px] text-slate-400 dark:text-slate-500 font-medium">Awaiting host</span>
-                        </>
-                      )}
-
-                      {status.type === 'rejected' && (
-                        <>
-                          <button type="button" onClick={() => setSelectedPass(item)}
-                            className="text-[11px] font-medium px-2.5 py-1.5 min-h-[34px] sm:min-h-[28px] rounded-lg border border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/[0.05] active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center">
-                            Details
-                          </button>
-                          <button type="button"
-                            onClick={async () => {
-                              const tid = (typeof item._id === 'object' && item._id?._id ? String(item._id._id) : item._id) || item.bookingReferenceId || item.slotBookingId;
-                              if (tid && deleteBooking) { try { await deleteBooking(tid); toast.info('Removed.'); } catch (e) { toast.error(e.message); } }
-                            }}
-                            className="text-[11px] font-medium px-2.5 py-1.5 min-h-[34px] sm:min-h-[28px] rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center">
-                            Dismiss
-                          </button>
-                        </>
-                      )}
-
-                      {(status.type === 'confirmed' || status.type === 'completed') && (
-                        <button type="button" onClick={() => setSelectedPass(item)}
-                          className="ml-auto text-[11px] font-semibold px-3 py-1.5 min-h-[34px] sm:min-h-[28px] rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 active:scale-95 transition-all cursor-pointer inline-flex items-center justify-center">
-                          View Pass
-                        </button>
-                      )}
                     </div>
                   </div>
                 );
@@ -473,178 +446,17 @@ export function BookedPlacesDrawer({ onLoginClick, onStayClick }) {
               <span className="text-[11px] text-slate-400 dark:text-slate-500">
                 {confirmedCount > 0 ? `${confirmedCount} confirmed · ` : ''}{bookings.length} total
               </span>
-              <button type="button" onClick={() => setIsBookingsOpen(false)}
-                className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer">
+              <button
+                type="button"
+                onClick={() => setIsBookingsOpen(false)}
+                className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+              >
                 Close
               </button>
             </div>
           )}
         </div>
       </div>
-
-      {/* Pass Detail Modal */}
-      {selectedPass && (() => {
-        const st = getStatusMeta(selectedPass.status, selectedPass);
-        const amt = Number(selectedPass.totalAmount || 0);
-        const passTitle = selectedPass.stayTitle && selectedPass.stayTitle !== 'Host Room Stay'
-          ? selectedPass.stayTitle : typeof selectedPass.stayId === 'object' && selectedPass.stayId?.title
-          ? selectedPass.stayId.title : selectedPass.propertyName || 'Stay';
-        return (
-          <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-md" onClick={() => setSelectedPass(null)} />
-            <div className="relative z-10 w-full max-w-[340px] rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/[0.08] shadow-2xl overflow-hidden">
-
-              {/* Modal header */}
-              <div className="px-5 pt-5 pb-4 border-b border-slate-100 dark:border-white/[0.06] flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <span className={`text-[10px] font-semibold uppercase tracking-widest ${st.text}`}>{st.label}</span>
-                  <h3 className="text-[14px] font-semibold text-slate-900 dark:text-white mt-0.5 leading-snug truncate">{passTitle}</h3>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 font-mono">{selectedPass.bookingReferenceId || 'N/A'}</p>
-                </div>
-                <button type="button" onClick={() => setSelectedPass(null)}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors cursor-pointer shrink-0">
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-              </div>
-
-              {st.type === 'upi_rejected' && (
-                <div className="mx-5 mt-4 p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 rounded-xl space-y-1">
-                  <div className="flex items-center gap-1.5 text-[11.5px] font-bold text-rose-700 dark:text-rose-400">
-                    <svg className="w-3.5 h-3.5 shrink-0 text-rose-600 dark:text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="8" x2="12" y2="12" />
-                      <line x1="12" y1="16" x2="12.01" y2="16" />
-                    </svg>
-                    <span>UPI Reference Rejected by Host</span>
-                  </div>
-                  <p className="text-[11px] text-rose-600 dark:text-rose-300/90 leading-snug">
-                    <span className="font-semibold text-rose-700 dark:text-rose-300">Host Reason: </span>
-                    "{selectedPass.upiPayment?.rejectionReason || 'Reference ID did not match received payment amount.'}"
-                  </p>
-                  <p className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1">
-                    Please update your 12-digit UTR/RRN reference number or upload a screenshot receipt to re-request verification.
-                  </p>
-                </div>
-              )}
-
-              {st.type === 'rejected' && (
-                <div className="mx-5 mt-4 p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 rounded-xl">
-                  <p className="text-[11px] font-semibold text-rose-700 dark:text-rose-400">Request Declined by Host</p>
-                  <p className="text-[11px] text-rose-600/80 dark:text-rose-300/70 mt-0.5">The host was unable to accept this reservation. No charge was made.</p>
-                </div>
-              )}
-
-              {/* Details grid */}
-              <div className="mx-5 my-4 rounded-xl border border-slate-100 dark:border-white/[0.06] divide-y divide-slate-100 dark:divide-white/[0.04] overflow-hidden">
-                {[
-                  { label: 'Guest', value: selectedPass.fullName || selectedPass.guestName || 'Guest' },
-                  { label: 'Phone', value: selectedPass.phone || '—' },
-                  selectedPass.roomNumber ? { label: 'Room', value: `Room ${selectedPass.roomNumber}` } : null,
-                  (selectedPass.roomType || selectedPass.category || selectedPass.roomCategory || (typeof selectedPass.stayId === 'object' && Array.isArray(selectedPass.stayId?.rooms) ? selectedPass.stayId.rooms.find((r) => String(r.roomNumber || '').trim() === String(selectedPass.roomNumber || '').trim())?.type : null)) ? {
-                    label: 'Room Category',
-                    value: selectedPass.roomType || selectedPass.category || selectedPass.roomCategory || (typeof selectedPass.stayId === 'object' && Array.isArray(selectedPass.stayId?.rooms) ? selectedPass.stayId.rooms.find((r) => String(r.roomNumber || '').trim() === String(selectedPass.roomNumber || '').trim())?.type : ''),
-                  } : null,
-                  { label: 'Check-in', value: formatShortDate(selectedPass.checkIn) || '—' },
-                  { label: 'Check-out', value: formatShortDate(selectedPass.checkOut) || '—' },
-                  { label: 'Duration', value: computeDuration(selectedPass) || '—' },
-                  { label: 'Status', value: st.label, extra: st.text },
-                  { label: selectedPass.paymentStatus === 'PAID' ? 'Paid' : 'Amount', value: `₹${amt.toLocaleString('en-IN')}`, extra: st.type === 'rejected' ? 'line-through text-slate-400' : 'font-bold text-slate-900 dark:text-white' },
-                ].filter(Boolean).map(({ label, value, extra }) => (
-                  <div key={label} className="flex items-center justify-between px-3.5 py-2.5">
-                    <span className="text-[11px] text-slate-400 dark:text-slate-500">{label}</span>
-                    <span className={`text-[11px] font-semibold text-slate-700 dark:text-slate-300 text-right ${extra || ''}`}>{value}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Modal actions */}
-              <div className="flex gap-2 px-5 pb-5">
-                <button type="button" onClick={() => { const p = selectedPass; setSelectedPass(null); handleOpenProperty(p, { statusType: st.type }); }}
-                  className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.08] text-slate-700 dark:text-slate-300 text-[12px] font-semibold hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors cursor-pointer">
-                  View Property
-                </button>
-
-                {(st.type === 'approved' || st.type === 'verifying') && (
-                  <>
-                    <button type="button"
-                      onClick={async () => {
-                        const p = selectedPass; setSelectedPass(null);
-                        await cancelUserBooking({ booking: p, onCancelled: () => { if (deleteBooking) deleteBooking(p._id || p.bookingReferenceId).catch(() => {}); } });
-                      }}
-                      className="py-2.5 px-3 rounded-xl border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 text-[12px] font-semibold hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer">
-                      Cancel
-                    </button>
-                    <button type="button"
-                      onClick={() => {
-                        const p = selectedPass;
-                        setActiveUpiBooking(p);
-                        setShowUpiModal(true);
-                      }}
-                      className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] font-semibold transition-colors cursor-pointer">
-                      {st.type === 'verifying' ? 'View UPI Status' : `Direct UPI Pay ₹${amt.toLocaleString('en-IN')}`}
-                    </button>
-                  </>
-                )}
-                {st.type === 'pending' && (
-                  <>
-                    <button type="button"
-                      onClick={async () => {
-                        const p = selectedPass; setSelectedPass(null);
-                        await cancelUserBooking({ booking: p, onCancelled: () => { if (deleteBooking) deleteBooking(p._id || p.bookingReferenceId).catch(() => {}); } });
-                      }}
-                      className="py-2.5 px-3 rounded-xl border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 text-[12px] font-semibold hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer">
-                      Cancel
-                    </button>
-                    <button type="button" onClick={() => setSelectedPass(null)}
-                      className="flex-1 py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[12px] font-semibold cursor-pointer">
-                      Done
-                    </button>
-                  </>
-                )}
-                {st.type === 'upi_rejected' && (
-                  <>
-                    <button type="button"
-                      onClick={async () => {
-                        const p = selectedPass; setSelectedPass(null);
-                        await cancelUserBooking({ booking: p, onCancelled: () => { if (deleteBooking) deleteBooking(p._id || p.bookingReferenceId).catch(() => {}); } });
-                      }}
-                      className="py-2.5 px-3 rounded-xl border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 text-[12px] font-semibold hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer">
-                      Cancel
-                    </button>
-                    <button type="button"
-                      onClick={() => {
-                        const p = selectedPass;
-                        setSelectedPass(null);
-                        setActiveUpiBooking(p);
-                        setShowUpiModal(true);
-                      }}
-                      className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-[12px] font-semibold transition-colors cursor-pointer shadow-xs shadow-rose-600/30">
-                      Update & Re-verify UPI
-                    </button>
-                  </>
-                )}
-                {st.type === 'rejected' && (
-                  <button type="button"
-                    onClick={async () => {
-                      const tid = (typeof selectedPass._id === 'object' && selectedPass._id?._id ? String(selectedPass._id._id) : selectedPass._id) || selectedPass.bookingReferenceId || selectedPass.slotBookingId;
-                      setSelectedPass(null);
-                      if (tid && deleteBooking) { try { await deleteBooking(tid); toast.info('Removed.'); } catch (e) { toast.error(e.message); } }
-                    }}
-                    className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.08] text-rose-500 dark:text-rose-400 text-[12px] font-semibold hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer">
-                    Dismiss
-                  </button>
-                )}
-                {(st.type === 'confirmed' || st.type === 'completed' || st.type === 'expired') && (
-                  <button type="button" onClick={() => setSelectedPass(null)}
-                    className="flex-1 py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[12px] font-semibold cursor-pointer">
-                    Done
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      })()}
 
       {/* Remove Booking Confirmation Modal */}
       {bookingToDelete && (
@@ -695,9 +507,12 @@ export function BookedPlacesDrawer({ onLoginClick, onStayClick }) {
                 onClick={async () => {
                   try {
                     setIsDeleting(true);
-                    const tid = (typeof bookingToDelete._id === 'object' && bookingToDelete._id?._id
-                      ? String(bookingToDelete._id._id)
-                      : bookingToDelete._id) || bookingToDelete.bookingReferenceId || bookingToDelete.slotBookingId;
+                    const tid =
+                      (typeof bookingToDelete._id === 'object' && bookingToDelete._id?._id
+                        ? String(bookingToDelete._id._id)
+                        : bookingToDelete._id) ||
+                      bookingToDelete.bookingReferenceId ||
+                      bookingToDelete.slotBookingId;
 
                     if (deleteBooking && tid) {
                       await deleteBooking(tid);
@@ -717,24 +532,6 @@ export function BookedPlacesDrawer({ onLoginClick, onStayClick }) {
             </div>
           </div>
         </div>
-      )}
-
-      {/* Direct UPI Payment Modal */}
-      {showUpiModal && activeUpiBooking && (
-        <DirectUpiPaymentModal
-          isOpen={showUpiModal}
-          onClose={() => setShowUpiModal(false)}
-          booking={activeUpiBooking}
-          onPaymentSubmitted={() => {
-            setShowUpiModal(false);
-            if (selectedPass) {
-              setSelectedPass((prev) => ({
-                ...prev,
-                upiPayment: { ...prev.upiPayment, verificationStatus: 'PENDING_VERIFICATION' },
-              }));
-            }
-          }}
-        />
       )}
     </div>
   );

@@ -126,6 +126,12 @@ const bookingSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
+    checkInCode: {
+      type: String,
+      trim: true,
+      default: '',
+      index: true,
+    },
     slotBookingId: {
       type: String,
       default: '',
@@ -150,6 +156,20 @@ const bookingSchema = new mongoose.Schema(
     approvedAt: {
       type: Date,
       default: null,
+    },
+    paymentReRequested: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    paymentReRequestedAt: {
+      type: Date,
+      default: null,
+    },
+    isTimedOut: {
+      type: Boolean,
+      default: false,
+      index: true,
     },
 
     // Payment Tracking

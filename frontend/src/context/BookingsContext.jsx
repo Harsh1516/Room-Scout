@@ -82,10 +82,11 @@ export function BookingsProvider({ children }) {
     window.addEventListener('focus', handleFocus);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // Fast polling so booking updates appear live without requiring any manual page refresh!
+    // Fast polling when active so booking updates appear live without requiring manual page refresh
     const pollInterval = setInterval(() => {
+      if (document.hidden) return;
       fetchBookings();
-    }, isBookingsOpen ? 2500 : 4500);
+    }, isBookingsOpen ? 3000 : 15000);
 
     let bc = null;
     try {

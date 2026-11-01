@@ -43,6 +43,24 @@ export function buildUpiPaymentUri({ upiId, payeeName, amount, bookingRef }) {
 }
 
 /**
+ * Broadcasts booking status change across all windows, tabs, and components
+ */
+export function broadcastBookingChange(detail = {}) {
+  try {
+    window.dispatchEvent(new CustomEvent('stayhub_slots_updated', { detail }));
+    window.dispatchEvent(new CustomEvent('stayhub_rooms_updated', { detail }));
+    window.dispatchEvent(new CustomEvent('stayhub_my_bookings_updated', { detail }));
+    if (typeof BroadcastChannel !== 'undefined') {
+      const bc = new BroadcastChannel('stayhub_live_channel');
+      bc.postMessage({ type: 'BOOKING_CHANGED', ...detail, timestamp: Date.now() });
+      bc.close();
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
  * Submits guest UPI payment reference to backend for host verification
  */
 export async function submitBookingUpiPayment({
@@ -73,9 +91,11 @@ export async function submitBookingUpiPayment({
     toast.success('🎉 Payment reference submitted! The host has been notified to verify your transaction.');
 
     // Broadcast refresh events across tabs and components
-    window.dispatchEvent(new Event('stayhub_slots_updated'));
-    window.dispatchEvent(new Event('stayhub_rooms_updated'));
-    window.dispatchEvent(new Event('stayhub_my_bookings_updated'));
+    broadcastBookingChange({
+      bookingId: bookingId || bookingReferenceId,
+      status: 'PENDING_VERIFICATION',
+      sender: 'GuestUPI',
+    });
 
     if (onSuccess) onSuccess(res);
     return res;
@@ -100,9 +120,11 @@ export async function cancelUserBooking({ booking, onCancelled, onError }) {
 
     toast.success(`Booking for Room ${booking.roomNumber || ''} has been cancelled.`);
 
-    window.dispatchEvent(new Event('stayhub_slots_updated'));
-    window.dispatchEvent(new Event('stayhub_rooms_updated'));
-    window.dispatchEvent(new Event('stayhub_my_bookings_updated'));
+    broadcastBookingChange({
+      bookingId,
+      status: 'CANCELLED',
+      sender: 'GuestCancel',
+    });
 
     if (onCancelled) onCancelled(booking);
   } catch (err) {

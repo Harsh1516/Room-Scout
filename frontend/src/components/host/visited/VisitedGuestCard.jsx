@@ -184,6 +184,17 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
 
   const refCode = guest.bookingReferenceId || guest.bookingId || (isOnline ? '#RES-ONLINE' : '#RES-WALKIN');
 
+  const displayCheckInCode = useMemo(() => {
+    if (guest.checkInCode && String(guest.checkInCode).trim()) {
+      return String(guest.checkInCode).trim();
+    }
+    const digits = String(guest.bookingReferenceId || guest._id || '').replace(/\D/g, '');
+    if (digits.length >= 8) {
+      return digits.slice(-8);
+    }
+    return (digits + '84920153').slice(0, 8);
+  }, [guest.checkInCode, guest.bookingReferenceId, guest._id]);
+
   // Clicking an inactive card lifts it upward. Clicking an already lifted card body lowers it.
   const handleCardClick = () => {
     if (!isFocused) {
@@ -361,83 +372,94 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
             </div>
           </div>
 
-          {/* Dates & Guests */}
-          <div className="flex items-center justify-between gap-1 text-[10px] sm:text-[10.5px] text-slate-500 dark:text-slate-400">
-            {(() => {
-              const durationText = (() => {
-                if (isMonthly) {
-                  if (Array.isArray(guest.bookedMonths) && guest.bookedMonths.length > 0) {
-                    const count = guest.bookedMonths.length;
-                    return `${count} ${count === 1 ? 'Month' : 'Months'}`;
+          {/* Dates & Guests OR 8-Digit Entry Code for Check-In page */}
+          {subTab === 'checkin' ? (
+            <div className="flex items-center justify-between gap-1.5 py-0.5">
+              <span className="text-[10px] sm:text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 shrink-0">
+                Entry Pass Code:
+              </span>
+              <span className="font-mono text-xs sm:text-[12.5px] font-black tracking-widest text-emerald-800 dark:text-emerald-300 bg-emerald-500/15 dark:bg-emerald-500/25 px-2 py-0.5 rounded-md border border-emerald-500/30 select-all shrink-0">
+                {displayCheckInCode}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-1 text-[10px] sm:text-[10.5px] text-slate-500 dark:text-slate-400">
+              {(() => {
+                const durationText = (() => {
+                  if (isMonthly) {
+                    if (Array.isArray(guest.bookedMonths) && guest.bookedMonths.length > 0) {
+                      const count = guest.bookedMonths.length;
+                      return `${count} ${count === 1 ? 'Month' : 'Months'}`;
+                    }
+                    if (Number(guest.durationMonths) > 0) {
+                      const count = Number(guest.durationMonths);
+                      return `${count} ${count === 1 ? 'Month' : 'Months'}`;
+                    }
+                    if (
+                      guest.durationDisplay &&
+                      !String(guest.durationDisplay).includes('undefined') &&
+                      !String(guest.durationDisplay).toLowerCase().includes('night')
+                    ) {
+                      return guest.durationDisplay;
+                    }
+                    if (
+                      guest.duration &&
+                      !String(guest.duration).includes('undefined') &&
+                      !String(guest.duration).toLowerCase().includes('night')
+                    ) {
+                      return guest.duration;
+                    }
+                    const inD = rawCheckIn ? new Date(rawCheckIn) : null;
+                    const outD = rawCheckOut ? new Date(rawCheckOut) : null;
+                    if (inD && outD && !isNaN(inD.getTime()) && !isNaN(outD.getTime())) {
+                      const months = Math.max(
+                        1,
+                        (outD.getUTCFullYear() - inD.getUTCFullYear()) * 12 +
+                        (outD.getUTCMonth() - inD.getUTCMonth()) + 1
+                      );
+                      return `${months} ${months === 1 ? 'Month' : 'Months'}`;
+                    }
+                    return '1 Month';
                   }
-                  if (Number(guest.durationMonths) > 0) {
-                    const count = Number(guest.durationMonths);
-                    return `${count} ${count === 1 ? 'Month' : 'Months'}`;
-                  }
-                  if (
-                    guest.durationDisplay &&
-                    !String(guest.durationDisplay).includes('undefined') &&
-                    !String(guest.durationDisplay).toLowerCase().includes('night')
-                  ) {
+                  if (guest.durationDisplay && !String(guest.durationDisplay).includes('undefined')) {
                     return guest.durationDisplay;
                   }
-                  if (
-                    guest.duration &&
-                    !String(guest.duration).includes('undefined') &&
-                    !String(guest.duration).toLowerCase().includes('night')
-                  ) {
+                  if (guest.duration && !String(guest.duration).includes('undefined')) {
                     return guest.duration;
                   }
                   const inD = rawCheckIn ? new Date(rawCheckIn) : null;
                   const outD = rawCheckOut ? new Date(rawCheckOut) : null;
                   if (inD && outD && !isNaN(inD.getTime()) && !isNaN(outD.getTime())) {
-                    const months = Math.max(
-                      1,
-                      (outD.getUTCFullYear() - inD.getUTCFullYear()) * 12 +
-                      (outD.getUTCMonth() - inD.getUTCMonth()) + 1
-                    );
-                    return `${months} ${months === 1 ? 'Month' : 'Months'}`;
+                    const diffDays = Math.max(1, Math.round((outD.getTime() - inD.getTime()) / (1000 * 60 * 60 * 24)));
+                    return `${diffDays} ${diffDays === 1 ? 'Night' : 'Nights'}`;
                   }
-                  return '1 Month';
-                }
-                if (guest.durationDisplay && !String(guest.durationDisplay).includes('undefined')) {
-                  return guest.durationDisplay;
-                }
-                if (guest.duration && !String(guest.duration).includes('undefined')) {
-                  return guest.duration;
-                }
-                const inD = rawCheckIn ? new Date(rawCheckIn) : null;
-                const outD = rawCheckOut ? new Date(rawCheckOut) : null;
-                if (inD && outD && !isNaN(inD.getTime()) && !isNaN(outD.getTime())) {
-                  const diffDays = Math.max(1, Math.round((outD.getTime() - inD.getTime()) / (1000 * 60 * 60 * 24)));
-                  return `${diffDays} ${diffDays === 1 ? 'Night' : 'Nights'}`;
-                }
-                return '1 Night';
-              })();
+                  return '1 Night';
+                })();
 
-              return (
-                <span className="truncate">
-                  {formattedIn ? formattedIn.split('(')[0].trim() : '5 Oct'} - {formattedOut ? formattedOut.split('(')[0].trim() : '7 Oct'} • {durationText}
-                </span>
-              );
-            })()}
-            {(() => {
-              const count = Math.max(
-                Number(guest.personCount) || 0,
-                Number(guest.guestCount) || 0,
-                Number(guest.numberOfGuests) || 0,
-                Number(guest.persons) || 0,
-                Array.isArray(guest.occupants) ? guest.occupants.length : 0,
-                Array.isArray(guest.guests) ? guest.guests.length : (Number(guest.guests) || 0),
-                1
-              );
-              return (
-                <span className="shrink-0 font-medium">
-                  {count} {count === 1 ? 'Guest' : 'Guests'}
-                </span>
-              );
-            })()}
-          </div>
+                return (
+                  <span className="truncate">
+                    {formattedIn ? formattedIn.split('(')[0].trim() : '5 Oct'} - {formattedOut ? formattedOut.split('(')[0].trim() : '7 Oct'} • {durationText}
+                  </span>
+                );
+              })()}
+              {(() => {
+                const count = Math.max(
+                  Number(guest.personCount) || 0,
+                  Number(guest.guestCount) || 0,
+                  Number(guest.numberOfGuests) || 0,
+                  Number(guest.persons) || 0,
+                  Array.isArray(guest.occupants) ? guest.occupants.length : 0,
+                  Array.isArray(guest.guests) ? guest.guests.length : (Number(guest.guests) || 0),
+                  1
+                );
+                return (
+                  <span className="shrink-0 font-medium">
+                    {count} {count === 1 ? 'Guest' : 'Guests'}
+                  </span>
+                );
+              })()}
+            </div>
+          )}
 
           {/* Phone and Slot button */}
           <div className="text-[10px] font-mono text-slate-600 dark:text-slate-400 pt-1.5 border-t border-slate-200/50 dark:border-white/5 flex items-center justify-between">

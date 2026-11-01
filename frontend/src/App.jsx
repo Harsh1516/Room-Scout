@@ -31,6 +31,7 @@ const HostRoomsPage = lazy(() => import('./pages/HostRoomsPage').then((m) => ({ 
 const AccountPage = lazy(() => import('./pages/AccountPage').then((m) => ({ default: m.AccountPage })));
 const PropertyDetailPage = lazy(() => import('./pages/PropertyDetailPage').then((m) => ({ default: m.PropertyDetailPage })));
 const RoomAvailabilityPage = lazy(() => import('./pages/RoomAvailabilityPage').then((m) => ({ default: m.RoomAvailabilityPage })));
+const BookingDetailsPage = lazy(() => import('./pages/BookingDetailsPage').then((m) => ({ default: m.BookingDetailsPage || m.default })));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })));
 
 // Dynamic Lazy-Loaded Interaction Modals & Drawers (Downloaded strictly on first user interaction)
@@ -413,6 +414,14 @@ function AppContent() {
                 onBookClick={handleOpenBooking}
                 onLoginClick={() => handleOpenLoginModal('user', '')}
               />
+            }
+          />
+          <Route
+            path="/booking/:id"
+            element={
+              <ProtectedRoute>
+                <BookingDetailsPage />
+              </ProtectedRoute>
             }
           />
           <Route path="/host" element={<Navigate to="/host/dashboard" replace />} />

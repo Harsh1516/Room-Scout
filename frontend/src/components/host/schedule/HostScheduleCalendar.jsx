@@ -222,10 +222,14 @@ export function HostScheduleCalendar({
 
   const findFullOccupant = (guestSummary) => {
     if (!guestSummary) return null;
-    const matched = roomOccupantsList.find((occ) => {
-      const gId = guestSummary.bookingId || guestSummary._id || guestSummary.bookingReferenceId;
-      const occId = occ.bookingId || occ._id || occ.bookingReferenceId;
+    let matched = roomOccupantsList.find((occ) => {
+      const gId = guestSummary.bookingId || guestSummary._id || guestSummary.bookingReferenceId || guestSummary.id;
+      const occId = occ.bookingId || occ._id || occ.bookingReferenceId || occ.id;
       if (gId && occId && String(gId) === String(occId)) return true;
+
+      const gRef = guestSummary.bookingReferenceId;
+      const occRef = occ.bookingReferenceId;
+      if (gRef && occRef && String(gRef) === String(occRef)) return true;
 
       const gName = guestSummary.userName || guestSummary.name;
       const occName = occ.name || occ.userName;
@@ -234,20 +238,88 @@ export function HostScheduleCalendar({
 
       if (gName && occName && gName.trim().toLowerCase() === occName.trim().toLowerCase()) {
         if (gPhone && occPhone) {
-          return gPhone.replace(/\D/g, '') === occPhone.replace(/\D/g, '');
+          return gPhone.replace(/\D/g, '').slice(-10) === occPhone.replace(/\D/g, '').slice(-10);
         }
         return true;
       }
       return false;
     });
 
-    if (matched) return matched;
+    const cleanDigits = (guestSummary.phone || guestSummary.userPhone || '').replace(/\D/g, '').slice(-10);
+    const guestFromAll = (Array.isArray(guests) ? guests : []).find((g) => {
+      const gId = g._id || g.id || g.bookingReferenceId;
+      const targetId = guestSummary.bookingId || guestSummary._id || guestSummary.bookingReferenceId || guestSummary.id;
+      if (targetId && gId && (String(gId) === String(targetId) || String(g.bookingReferenceId) === String(targetId))) return true;
+      if (guestSummary.bookingReferenceId && String(g.bookingReferenceId) === String(guestSummary.bookingReferenceId)) return true;
+      const gDigits = (g.phone || g.userPhone || '').replace(/\D/g, '').slice(-10);
+      if (cleanDigits && gDigits && cleanDigits === gDigits) return true;
+      return false;
+    });
+
+    if (matched || guestFromAll) {
+      return {
+        ...(guestFromAll || {}),
+        ...(matched || {}),
+        checkInCode: matched?.checkInCode || guestFromAll?.checkInCode || guestSummary.checkInCode || '',
+        aadhar:
+          matched?.aadhar ||
+          matched?.aadharNumber ||
+          matched?.guestAadhar ||
+          guestFromAll?.guestAadhar ||
+          guestFromAll?.aadharNumber ||
+          guestFromAll?.aadhar ||
+          guestSummary.aadhar ||
+          '',
+        aadharNumber:
+          matched?.aadharNumber ||
+          matched?.guestAadhar ||
+          matched?.aadhar ||
+          guestFromAll?.aadharNumber ||
+          guestFromAll?.guestAadhar ||
+          guestFromAll?.aadhar ||
+          guestSummary.aadharNumber ||
+          '',
+        guestAadhar:
+          matched?.guestAadhar ||
+          matched?.aadharNumber ||
+          matched?.aadhar ||
+          guestFromAll?.guestAadhar ||
+          guestFromAll?.aadharNumber ||
+          guestFromAll?.aadhar ||
+          guestSummary.guestAadhar ||
+          '',
+        bookingReferenceId:
+          matched?.bookingReferenceId || guestFromAll?.bookingReferenceId || guestSummary.bookingReferenceId || '',
+        name:
+          matched?.name ||
+          guestFromAll?.userName ||
+          guestFromAll?.fullName ||
+          guestSummary.userName ||
+          guestSummary.name ||
+          'Occupant',
+        phone:
+          matched?.phone ||
+          guestFromAll?.userPhone ||
+          guestFromAll?.phone ||
+          guestSummary.phone ||
+          guestSummary.userPhone ||
+          '',
+        email:
+          matched?.email ||
+          guestFromAll?.userEmail ||
+          guestFromAll?.email ||
+          guestSummary.email ||
+          guestSummary.userEmail ||
+          '',
+      };
+    }
 
     return {
       ...guestSummary,
       _id: guestSummary._id || guestSummary.bookingId || guestSummary.bookingReferenceId,
-        bookingId: guestSummary.bookingId || guestSummary._id,
+      bookingId: guestSummary.bookingId || guestSummary._id,
       bookingReferenceId: guestSummary.bookingReferenceId,
+      checkInCode: guestSummary.checkInCode || '',
       name: guestSummary.userName || guestSummary.fullName || guestSummary.name || guestSummary.guestName || 'Occupant',
       phone: guestSummary.phone || guestSummary.userPhone || guestSummary.guestPhone || '',
       email: guestSummary.email || guestSummary.userEmail || guestSummary.guestEmail || '',

@@ -186,7 +186,10 @@ export function RoomAvailabilityPage({ onBookClick, onLoginClick }) {
       }
     };
 
-    const interval = setInterval(performLiveSync, 3000);
+    const interval = setInterval(() => {
+      if (document.hidden) return;
+      performLiveSync();
+    }, 8000);
 
     const handleFocus = () => {
       performLiveSync();

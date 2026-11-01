@@ -297,11 +297,11 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // @access  Public
 export const googleAuth = async (req, res, next) => {
   try {
-    const { credential, role } = req.body;
+    const { credential, accessToken, role } = req.body;
     const targetRole = role === 'host' ? 'host' : 'user';
 
-    if (!credential) {
-      return res.status(400).json({ message: 'Google credential is required.' });
+    if (!credential && !accessToken) {
+      return res.status(400).json({ message: 'Google credential or access token is required.' });
     }
 
     const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -309,14 +309,24 @@ export const googleAuth = async (req, res, next) => {
       return res.status(500).json({ message: 'GOOGLE_CLIENT_ID environment variable is missing on server.' });
     }
 
-    // Verify Google ID Token
+    // Verify Google ID Token or Access Token
     let payload;
     try {
-      const ticket = await googleClient.verifyIdToken({
-        idToken: credential,
-        audience: clientId,
-      });
-      payload = ticket.getPayload();
+      if (credential) {
+        const ticket = await googleClient.verifyIdToken({
+          idToken: credential,
+          audience: clientId,
+        });
+        payload = ticket.getPayload();
+      } else {
+        const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!userInfoRes.ok) {
+          return res.status(401).json({ message: 'Invalid or expired Google access token.' });
+        }
+        payload = await userInfoRes.json();
+      }
     } catch (err) {
       console.error('Google token verification error:', err.message);
       return res.status(401).json({ message: 'Invalid or expired Google token.' });

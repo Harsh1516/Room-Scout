@@ -133,6 +133,8 @@ export const updateBookingStatusSchema = z.object({
     .optional(),
   paymentDeadline: z.string().or(z.date()).optional().nullable(),
   approvedAt: z.string().or(z.date()).optional().nullable(),
+  paymentReRequested: z.boolean().optional(),
+  isTimedOut: z.boolean().optional(),
   totalAmount: z.coerce.number().optional(),
   fullName: z.string().optional(),
   phone: z.string().optional(),

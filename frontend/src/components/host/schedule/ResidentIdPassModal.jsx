@@ -1,4 +1,5 @@
 import React from 'react';
+import { generateEntryPassPdf } from '../../../utils/entryPassPdf';
 
 export function ResidentIdPassModal({
   selectedOccupantForModal,
@@ -144,6 +145,25 @@ export function ResidentIdPassModal({
       </span>
     );
   }
+
+  const handleDownloadPdf = () => {
+    try {
+      generateEntryPassPdf({
+        booking: selectedOccupantForModal,
+        stay: modalStayInfo || {
+          title: selectedOccupantForModal?.stayTitle || selectedOccupantForModal?.propertyName,
+          location: selectedOccupantForModal?.location || selectedOccupantForModal?.address,
+        },
+        host: {
+          name: selectedOccupantForModal?.hostName,
+          phone: selectedOccupantForModal?.hostPhone,
+          email: selectedOccupantForModal?.hostEmail,
+        },
+      });
+    } catch (err) {
+      console.error('PDF generation error:', err);
+    }
+  };
 
   return (
     <div
@@ -359,6 +379,47 @@ export function ResidentIdPassModal({
                 </div>
               </div>
             </div>
+
+            {/* Entry Pass Code Box for Check-In Verification */}
+            {(() => {
+              const code =
+                selectedOccupantForModal.checkInCode ||
+                selectedOccupantForModal.booking?.checkInCode ||
+                selectedOccupantForModal.passCode ||
+                (selectedOccupantForModal.bookingReferenceId
+                  ? String(selectedOccupantForModal.bookingReferenceId).replace(/\D/g, '').slice(-8)
+                  : '');
+              if (!code) return null;
+
+              return (
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/30 text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+                      Entry Pass Code:
+                    </span>
+                    <span className="text-[10px] text-slate-500 dark:text-zinc-400">
+                      (Verify face-to-face)
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-black tracking-widest text-emerald-800 dark:text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-md border border-emerald-500/40 select-all">
+                      {code}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleDownloadPdf}
+                      title="Download Official Resident Entry Pass PDF"
+                      className="px-2 py-1 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-[10.5px] font-semibold flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      <span>PDF</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Stay Duration Info */}
             {modalStayInfo && (() => {

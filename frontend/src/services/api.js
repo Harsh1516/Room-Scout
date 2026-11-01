@@ -90,16 +90,16 @@ export const authAPI = {
       body: JSON.stringify(credentials),
     }),
 
-  googleAuth: ({ credential, role }) =>
+  googleAuth: ({ credential, accessToken, role }) =>
     request('/auth/google', {
       method: 'POST',
-      body: JSON.stringify({ credential, role }),
+      body: JSON.stringify({ credential, accessToken, role }),
     }),
 
-  googleLogin: ({ credential, role }) =>
+  googleLogin: ({ credential, accessToken, role }) =>
     request('/auth/google', {
       method: 'POST',
-      body: JSON.stringify({ credential, role }),
+      body: JSON.stringify({ credential, accessToken, role }),
     }),
 
   register: (userData) =>
@@ -224,6 +224,8 @@ export const bookingsAPI = {
 
   getMyBookings: () => request('/bookings/my-bookings'),
 
+  getBookingById: (id) => request(`/bookings/${encodeURIComponent(id)}`),
+
   getHostBookings: (email) => {
     if (email) {
       return request(`/bookings/host/${encodeURIComponent(email)}`);
@@ -235,6 +237,16 @@ export const bookingsAPI = {
     request(`/bookings/${id}/status`, {
       method: 'PATCH',
       body: JSON.stringify(statusData),
+    }),
+
+  reRequestPayment: (id) =>
+    request(`/bookings/${encodeURIComponent(id)}/re-request-payment`, {
+      method: 'POST',
+    }),
+
+  markTimedOut: (id) =>
+    request(`/bookings/${encodeURIComponent(id)}/timeout`, {
+      method: 'POST',
     }),
 
   deleteBooking: (id) =>

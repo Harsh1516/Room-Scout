@@ -1074,17 +1074,31 @@ export function HostDashboardPage() {
 
   const refreshGuests = useCallback(async () => {
     try {
-      const targetEmail = hostProperty?.email || (user?.email ? user.email.trim().toLowerCase() : '');
+      const targetEmail = latestHostPropertyRef.current?.email || hostProperty?.email || (user?.email ? user.email.trim().toLowerCase() : '');
       if (!targetEmail) return;
 
       const guestsRes = await adminAPI.getHostGuests(targetEmail).catch(() => ({ guests: [] }));
       if (Array.isArray(guestsRes?.guests)) {
-        setGuests(guestsRes.guests);
+        setGuests((prev) => {
+          if (Array.isArray(prev) && prev.length === guestsRes.guests.length) {
+            const isSame = prev.every((g, i) => {
+              const nextG = guestsRes.guests[i];
+              return (
+                g._id === nextG._id &&
+                g.status === nextG.status &&
+                g.paymentStatus === nextG.paymentStatus &&
+                g.updatedAt === nextG.updatedAt
+              );
+            });
+            if (isSame) return prev;
+          }
+          return guestsRes.guests;
+        });
       }
     } catch (err) {
       console.warn('refreshGuests error:', err);
     }
-  }, [user, hostProperty]);
+  }, [user?.email, hostProperty?.email]);
 
   const handleDismissOrRejectBooking = useCallback(async (bookingOrRequest) => {
     if (!bookingOrRequest) {
@@ -1174,7 +1188,7 @@ export function HostDashboardPage() {
       return;
     }
     try {
-      if (!hostProperty) setLoading(true);
+      if (!latestHostPropertyRef.current) setLoading(true);
       const targetEmail = user?.email ? user.email.trim().toLowerCase() : '';
 
       const [staysData, hostByEmailRes, guestsRes] = await Promise.all([
@@ -1187,7 +1201,21 @@ export function HostDashboardPage() {
       ]);
 
       if (Array.isArray(guestsRes?.guests)) {
-        setGuests(guestsRes.guests);
+        setGuests((prev) => {
+          if (Array.isArray(prev) && prev.length === guestsRes.guests.length) {
+            const isSame = prev.every((g, i) => {
+              const nextG = guestsRes.guests[i];
+              return (
+                g._id === nextG._id &&
+                g.status === nextG.status &&
+                g.paymentStatus === nextG.paymentStatus &&
+                g.updatedAt === nextG.updatedAt
+              );
+            });
+            if (isSame) return prev;
+          }
+          return guestsRes.guests;
+        });
       }
 
       let foundHost = Array.isArray(staysData) && staysData.length > 0 ? staysData[0] : null;
@@ -1371,7 +1399,7 @@ export function HostDashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [user, updateUserSession, hostProperty]);
+  }, [user?.email, updateUserSession]);
 
   useEffect(() => {
     if (location.state?.tab) {
@@ -1402,11 +1430,12 @@ export function HostDashboardPage() {
     }
   }, [hostProperty, activeTab, loading]);
 
+  const prevActiveTabRef = useRef(activeTab);
   useEffect(() => {
-    if (activeTab === 'users') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (activeTab === 'users' && prevActiveTabRef.current !== 'users') {
       refreshGuests();
     }
+    prevActiveTabRef.current = activeTab;
   }, [activeTab, refreshGuests]);
 
   useEffect(() => {
@@ -1432,7 +1461,9 @@ export function HostDashboardPage() {
     window.addEventListener('stayhub_host_approved', handleCustomSync);
 
     const handleFocus = () => {
-      fetchHostData();
+      if (!document.hidden) {
+        fetchHostData();
+      }
     };
     window.addEventListener('focus', handleFocus);
 
@@ -1458,10 +1489,15 @@ export function HostDashboardPage() {
       }
     }
 
-    // Auto-poll host data every 3.5s so guest requests, UTR submissions, and payments appear live without page refresh!
+    // Auto-poll host data every 10s (only when active and visible) to keep live bookings fresh without overwhelming the backend
     const pollTimer = setInterval(() => {
-      fetchHostData();
-    }, 3500);
+      if (document.hidden) return;
+      if (latestHostPropertyRef.current?.isApproved || latestHostPropertyRef.current?.status === 'Approved') {
+        refreshGuests();
+      } else {
+        fetchHostData();
+      }
+    }, 10000);
 
     return () => {
       window.removeEventListener('storage', handleStorage);
@@ -1474,7 +1510,7 @@ export function HostDashboardPage() {
       if (bc) bc.close();
       if (pollTimer) clearInterval(pollTimer);
     };
-  }, [hostProperty?.status, hostProperty?.isApproved, fetchHostData]);
+  }, [hostProperty?.status, hostProperty?.isApproved, fetchHostData, refreshGuests]);
 
   // Active check-in count for the current day
   const todayCheckInsCount = useMemo(() => {

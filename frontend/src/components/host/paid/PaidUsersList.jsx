@@ -87,6 +87,7 @@ export function PaidUsersList({
     if (!raw) return '';
     const digits = String(raw).replace(/\D/g, '');
     if (digits.length === 12) return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+    if (digits.length === 4) return `XXXX-XXXX-${digits}`;
     return String(raw).trim();
   };
 
@@ -354,17 +355,33 @@ export function PaidUsersList({
     const rawPhone = occupant.phone || occupant.userPhone || occupant.guestPhone || '';
     const cleanPhone = String(rawPhone).replace(/\D/g, '').slice(-10);
     const cleanEmail = occupant.email || occupant.userEmail || '';
-    const rawAadhar = occupant.guestAadhar || occupant.aadharId || occupant.aadhar || occupant.nationalId || '';
+    const rawAadhar =
+      occupant.aadharNumber ||
+      occupant.guestAadhar ||
+      occupant.aadharId ||
+      occupant.aadhar ||
+      occupant.nationalId ||
+      '';
     const cleanAadhar = String(rawAadhar).replace(/\D/g, '');
     const rawPaid = occupant.totalAmount || occupant.paidAmount || occupant.amount || '';
     const parsedPaid = rawPaid ? String(rawPaid).replace(/[^0-9.]/g, '') : '';
     const parsedGender = occupant.gender === 'Female' ? 'Female' : 'Male';
 
-    setSelectedOccupantForModal(occupant);
+    const normalizedOccupant = {
+      ...occupant,
+      name: cleanName,
+      phone: cleanPhone,
+      email: cleanEmail,
+      aadhar: formatIdNumber(cleanAadhar || rawAadhar),
+      aadharNumber: rawAadhar,
+      guestAadhar: rawAadhar,
+    };
+
+    setSelectedOccupantForModal(normalizedOccupant);
     setModalName(cleanName);
     setModalPhone(cleanPhone);
     setModalEmail(cleanEmail);
-    setModalAadhar(formatIdNumber(cleanAadhar));
+    setModalAadhar(formatIdNumber(cleanAadhar || rawAadhar));
     setModalPaidAmount(parsedPaid);
     setModalGender(parsedGender);
     setIsModalEditing(false);
@@ -399,6 +416,8 @@ export function PaidUsersList({
                 phone: cleanPhone,
                 userPhone: cleanPhone,
                 email: modalEmail,
+                aadhar: formatIdNumber(cleanAadhar),
+                aadharNumber: formatIdNumber(cleanAadhar),
                 guestAadhar: formatIdNumber(cleanAadhar),
                 gender: modalGender,
                 totalAmount: parsedAmount,
@@ -412,6 +431,8 @@ export function PaidUsersList({
         phone: cleanPhone,
         email: modalEmail,
         aadhar: formatIdNumber(cleanAadhar),
+        aadharNumber: formatIdNumber(cleanAadhar),
+        guestAadhar: formatIdNumber(cleanAadhar),
         gender: modalGender,
         totalAmount: parsedAmount,
       }));

@@ -91,6 +91,7 @@ export function AdminPage() {
     fetchData();
 
     const pollInterval = setInterval(() => {
+      if (document.hidden) return;
       fetchData(true);
     }, 15000);
 

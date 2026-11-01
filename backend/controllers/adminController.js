@@ -704,6 +704,13 @@ export const getHostGuests = async (req, res, next) => {
         Booking.findByIdAndUpdate(b._id, { $set: { status: 'EXPIRED', paymentStatus: 'FAILED' } }).catch(() => {});
         continue;
       }
+      if (
+        (b.status === 'CONFIRMED' || b.status === 'CHECKED_IN' || b.upiPayment?.verificationStatus === 'VERIFIED') &&
+        !b.checkInCode
+      ) {
+        b.checkInCode = Math.floor(10000000 + Math.random() * 90000000).toString();
+        Booking.findByIdAndUpdate(b._id, { $set: { checkInCode: b.checkInCode } }).catch(() => {});
+      }
       bookings.push(b);
     }
 
@@ -748,6 +755,7 @@ export const getHostGuests = async (req, res, next) => {
       receiptUrl: b.upiPayment?.receiptUrl || b.receiptUrl || '',
       paymentDeadline: b.paymentDeadline || null,
       approvedAt: b.approvedAt || null,
+      checkInCode: b.checkInCode || '',
       createdAt: b.createdAt,
     }));
 

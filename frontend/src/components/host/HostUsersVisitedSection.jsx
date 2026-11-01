@@ -11,12 +11,16 @@ import { isPaidGuest, isOnlineGuest } from '../../utils/guestFilters';
 import { VisitedRequestsView } from './visited/VisitedRequestsView';
 import { HostPaymentVerificationModal } from './HostPaymentVerificationModal';
 import { CheckInVerificationModal } from './CheckInVerificationModal';
+import { broadcastBookingChange } from '../../utils/bookingPayment';
 
 function formatIdNumber(raw) {
   if (!raw) return '';
   const digits = String(raw).replace(/\D/g, '');
   if (digits.length === 12) {
     return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+  }
+  if (digits.length === 4) {
+    return `XXXX-XXXX-${digits}`;
   }
   return String(raw).trim();
 }
@@ -361,12 +365,21 @@ export function HostUsersVisitedSection({
 
   const handleOpenOccupantModal = (guestRecord) => {
     if (!guestRecord) return;
+    const rawAadhar =
+      guestRecord.aadharNumber ||
+      guestRecord.guestAadhar ||
+      guestRecord.aadharId ||
+      guestRecord.aadhar ||
+      guestRecord.nationalId ||
+      '';
     const occ = {
       ...guestRecord,
       name: guestRecord.userName || guestRecord.fullName || guestRecord.guestName || 'Guest User',
       phone: guestRecord.userPhone || guestRecord.phone || guestRecord.guestPhone || '',
       email: guestRecord.userEmail || guestRecord.email || guestRecord.guestEmail || '',
-      aadhar: guestRecord.guestAadhar || guestRecord.aadharId || '',
+      aadhar: rawAadhar,
+      aadharNumber: rawAadhar,
+      guestAadhar: rawAadhar,
       totalAmount: guestRecord.totalAmount !== undefined ? guestRecord.totalAmount : guestRecord.price || 0,
       adults: Number(guestRecord.adults) || 1,
       children: Number(guestRecord.children) || 0,
@@ -522,7 +535,12 @@ export function HostUsersVisitedSection({
       refreshGuests();
       const propId = hostProperty?._id;
       if (propId) broadcastStayUpdate(propId);
-      window.dispatchEvent(new Event('stayhub_slots_updated'));
+      broadcastBookingChange({
+        bookingId,
+        status: 'REJECTED',
+        stayId: propId,
+        sender: 'HostReject',
+      });
       window.dispatchEvent(new Event('stayhub_rooms_updated'));
       window.dispatchEvent(new CustomEvent('stayhub_admin_sync'));
       localStorage.setItem('stayhub_admin_sync_ts', String(Date.now()));
@@ -617,9 +635,13 @@ export function HostUsersVisitedSection({
       });
       const propId = hostProperty?._id;
       if (propId) broadcastStayUpdate(propId);
-      window.dispatchEvent(new Event('stayhub_slots_updated'));
-      window.dispatchEvent(new Event('stayhub_rooms_updated'));
-      window.dispatchEvent(new Event('stayhub_my_bookings_updated'));
+      broadcastBookingChange({
+        bookingId,
+        status: nextStatus,
+        paymentDeadline: isOnline ? deadline : null,
+        stayId: propId,
+        sender: 'HostApproval',
+      });
 
       if (isOnline) {
         showToast(`Request for Room ${request.roomNumber} approved! Guest has 5 minutes to complete direct UPI payment.`, 'success');
@@ -648,7 +670,12 @@ export function HostUsersVisitedSection({
       await bookingsAPI.updateBookingStatus(bookingId, { status: 'REJECTED' });
       const propId = hostProperty?._id;
       if (propId) broadcastStayUpdate(propId);
-      window.dispatchEvent(new Event('stayhub_slots_updated'));
+      broadcastBookingChange({
+        bookingId,
+        status: 'REJECTED',
+        stayId: propId,
+        sender: 'HostReject',
+      });
       showToast('Booking request rejected.', 'info');
       refreshGuests();
     } catch (err) {
@@ -789,6 +816,7 @@ export function HostUsersVisitedSection({
         <CheckInVerificationModal
           isOpen={Boolean(checkingInBooking)}
           booking={checkingInBooking}
+          hostProperty={hostProperty}
           onClose={() => setCheckingInBooking(null)}
           onCheckInSuccess={() => {
             setCheckingInBooking(null);

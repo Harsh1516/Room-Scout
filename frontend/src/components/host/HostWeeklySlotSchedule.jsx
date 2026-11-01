@@ -114,17 +114,14 @@ export default function HostWeeklySlotSchedule({
 
   useEffect(() => {
     if (typeof onRefreshBookings !== 'function') return;
-    onRefreshBookings();
-    const interval = setInterval(() => {
-      onRefreshBookings();
-    }, 5000);
-    const handleFocus = () => onRefreshBookings();
+    const handleFocus = () => {
+      if (!document.hidden) onRefreshBookings();
+    };
     window.addEventListener('focus', handleFocus);
     return () => {
-      clearInterval(interval);
       window.removeEventListener('focus', handleFocus);
     };
-  }, [onRefreshBookings, selectedRoomCard?._id, selectedRoomCard?.roomNumber]);
+  }, [onRefreshBookings]);
 
   const isTargetRoom = useMemo(() => {
     if (!requestedUserBooking || !selectedRoomCard) return false;
@@ -336,16 +333,28 @@ export default function HostWeeklySlotSchedule({
         if (!matchedGuest) matchedGuest = g;
 
         const guestObj = {
+          ...g,
+          _id: g._id || g.id,
+          id: g._id || g.id || g.bookingReferenceId,
+          bookingId: g.bookingId || g._id || g.bookingReferenceId,
+          checkInCode: g.checkInCode || '',
           userName: g.userName || g.fullName || g.guestName || 'Guest User',
+          name: g.userName || g.fullName || g.guestName || 'Guest User',
           userEmail: g.userEmail || g.email || g.guestEmail || '',
+          email: g.userEmail || g.email || g.guestEmail || '',
           userPhone: g.userPhone || g.phone || g.guestPhone || '',
+          phone: g.userPhone || g.phone || g.guestPhone || '',
+          aadhar: g.guestAadhar || g.aadharNumber || g.aadhar || g.aadharId || '',
+          guestAadhar: g.guestAadhar || g.aadharNumber || g.aadhar || g.aadharId || '',
+          aadharNumber: g.aadharNumber || g.guestAadhar || g.aadhar || g.aadharId || '',
           status: g.status || 'CONFIRMED',
           checkIn: g.checkIn || '',
           checkOut: g.checkOut || '',
+          totalAmount: g.totalAmount !== undefined ? g.totalAmount : (g.paidAmount || 0),
+          paidAmount: g.paidAmount !== undefined ? g.paidAmount : (g.totalAmount || 0),
           source: g.source || (g.bookingSource === 'OFFLINE_HOST' ? 'offline' : 'booking'),
           bookingSource: g.bookingSource || (g.source === 'offline' ? 'OFFLINE_HOST' : 'ONLINE_USER'),
           isOnline: g.isOnline !== undefined ? g.isOnline : (g.bookingSource !== 'OFFLINE_HOST' && g.source !== 'offline'),
-          id: g._id || g.bookingReferenceId,
           bookingReferenceId: g.bookingReferenceId,
           personCount: Number(g.personCount) || 1,
         };
@@ -431,12 +440,18 @@ export default function HostWeeklySlotSchedule({
           seenKeys.add(uniqueKey);
           if (bId) seenBookingIds.add(bId);
           list.push({
+            ...g,
+            _id: g._id || bId,
             id: bId,
+            bookingId: g.bookingId || bId,
+            checkInCode: g.checkInCode || '',
             bookingReferenceId: g.bookingReferenceId || (cleanDigits ? `BK-${cleanDigits}` : ''),
             name: g.userName || g.fullName || g.guestName || 'Guest User',
             email: mail,
             phone: phone,
             aadhar: g.guestAadhar || g.aadhar || g.aadharNumber || g.aadharId || '',
+            guestAadhar: g.guestAadhar || g.aadharNumber || g.aadhar || g.aadharId || '',
+            aadharNumber: g.aadharNumber || g.guestAadhar || g.aadhar || g.aadharId || '',
             personCount: Number(g.personCount) || 1,
             gender: g.gender || '',
             bookedDates: dates,
@@ -447,7 +462,8 @@ export default function HostWeeklySlotSchedule({
             checkInISO: g.checkInISO,
             checkOutISO: g.checkOutISO,
             status: g.status || 'CONFIRMED',
-            totalAmount: g.totalAmount !== undefined ? g.totalAmount : 0,
+            totalAmount: g.totalAmount !== undefined ? g.totalAmount : (g.paidAmount || 0),
+            paidAmount: g.paidAmount !== undefined ? g.paidAmount : (g.totalAmount || 0),
             createdAt: g.createdAt || g.bookingDate,
             bookingSource: g.bookingSource || (g.source === 'offline' ? 'OFFLINE_HOST' : 'ONLINE_USER'),
             isOnline: g.isOnline !== undefined ? g.isOnline : (g.bookingSource !== 'OFFLINE_HOST' && g.source !== 'offline'),
@@ -1013,23 +1029,74 @@ export default function HostWeeklySlotSchedule({
   };
 
   const handleOpenOccupantModal = (occupant) => {
-    setSelectedOccupantForModal(occupant);
+    if (!occupant) return;
+    const cleanDigits = (occupant.phone || occupant.userPhone || '').replace(/\D/g, '').slice(-10);
+    const matchedGuest = (Array.isArray(guests) ? guests : []).find((g) => {
+      const gId = g._id || g.id || g.bookingReferenceId;
+      const occId = occupant._id || occupant.id || occupant.bookingId || occupant.bookingReferenceId;
+      if (gId && occId && String(gId) === String(occId)) return true;
+      if (g.bookingReferenceId && occupant.bookingReferenceId && String(g.bookingReferenceId) === String(occupant.bookingReferenceId)) return true;
+      const gDigits = (g.phone || g.userPhone || '').replace(/\D/g, '').slice(-10);
+      if (cleanDigits && gDigits && cleanDigits === gDigits) return true;
+      return false;
+    });
+
+    const fullOccupant = {
+      ...(matchedGuest || {}),
+      ...occupant,
+      checkInCode: occupant.checkInCode || matchedGuest?.checkInCode || '',
+      aadhar:
+        occupant.aadhar ||
+        occupant.aadharNumber ||
+        occupant.guestAadhar ||
+        occupant.aadharId ||
+        matchedGuest?.aadhar ||
+        matchedGuest?.guestAadhar ||
+        matchedGuest?.aadharNumber ||
+        matchedGuest?.aadharId ||
+        '',
+      aadharNumber:
+        occupant.aadharNumber ||
+        occupant.guestAadhar ||
+        occupant.aadhar ||
+        matchedGuest?.aadharNumber ||
+        matchedGuest?.guestAadhar ||
+        matchedGuest?.aadhar ||
+        '',
+      guestAadhar:
+        occupant.guestAadhar ||
+        occupant.aadharNumber ||
+        occupant.aadhar ||
+        matchedGuest?.guestAadhar ||
+        matchedGuest?.aadharNumber ||
+        matchedGuest?.aadhar ||
+        '',
+      totalAmount:
+        occupant.totalAmount !== undefined
+          ? occupant.totalAmount
+          : matchedGuest?.totalAmount !== undefined
+          ? matchedGuest.totalAmount
+          : occupant.paidAmount || matchedGuest?.paidAmount || 0,
+      bookingReferenceId: occupant.bookingReferenceId || matchedGuest?.bookingReferenceId || '',
+    };
+
+    setSelectedOccupantForModal(fullOccupant);
     setIsModalEditing(false);
     setConfirmModalDelete(false);
-    setModalName(occupant.name || '');
-    setModalPhone((occupant.phone || occupant.userPhone || '').replace(/\D/g, '').slice(-10));
+    setModalName(fullOccupant.name || '');
+    setModalPhone((fullOccupant.phone || fullOccupant.userPhone || '').replace(/\D/g, '').slice(-10));
     setModalEmail(
-      occupant.email && !occupant.email.includes('@stayhub.local')
-        ? occupant.email
-        : occupant.userEmail || ''
+      fullOccupant.email && !fullOccupant.email.includes('@stayhub.local')
+        ? fullOccupant.email
+        : fullOccupant.userEmail || ''
     );
     setModalAadhar(
       formatAadharNumber(
-        occupant.aadhar || occupant.aadharNumber || occupant.guestAadhar || occupant.aadharId || ''
+        fullOccupant.aadhar || fullOccupant.aadharNumber || fullOccupant.guestAadhar || fullOccupant.aadharId || ''
       )
     );
-    setModalPaidAmount(occupant.totalAmount !== undefined ? String(occupant.totalAmount) : '0');
-    setModalGender(occupant.gender || 'Male');
+    setModalPaidAmount(fullOccupant.totalAmount !== undefined ? String(fullOccupant.totalAmount) : '0');
+    setModalGender(fullOccupant.gender || 'Male');
   };
 
   const handleCloseOccupantModal = () => {

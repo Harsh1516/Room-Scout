@@ -4,6 +4,7 @@ import {
   createOfflineBooking,
   getHostBookings,
   getMyBookings,
+  getBookingById,
   checkStayAvailability,
   getBookingsByStayId,
   updateBookingStatus,
@@ -12,6 +13,8 @@ import {
   checkoutBooking,
   cascadeDeleteRoomBookings,
   deleteBooking,
+  reRequestPayment,
+  markBookingTimedOut,
 } from '../controllers/bookingController.js';
 import { protect, optionalProtect, requireHost, requireSelfHostOrAdmin } from '../middleware/authMiddleware.js';
 import { bookingLimiter } from '../middleware/rateLimitMiddleware.js';
@@ -35,8 +38,11 @@ router.get('/stay/:stayId', validate({ params: stayIdParamSchema }), getBookings
 router.get('/host-bookings', protect, requireHost, getHostBookings);
 router.get('/host/:email', protect, requireHost, requireSelfHostOrAdmin, getHostBookings);
 router.get('/my-bookings', protect, getMyBookings);
+router.get('/:id', protect, validate({ params: bookingIdParamSchema }), getBookingById);
 
 router.patch('/:id/status', protect, validate({ params: bookingIdParamSchema, body: updateBookingStatusSchema }), updateBookingStatus);
+router.post('/:id/re-request-payment', protect, validate({ params: bookingIdParamSchema }), reRequestPayment);
+router.post('/:id/timeout', protect, validate({ params: bookingIdParamSchema }), markBookingTimedOut);
 router.post('/:id/checkout', protect, validate({ params: bookingIdParamSchema }), checkoutBooking);
 router.patch('/:id/checkout', protect, validate({ params: bookingIdParamSchema }), checkoutBooking);
 router.delete('/:id', protect, validate({ params: bookingIdParamSchema }), deleteBooking);
