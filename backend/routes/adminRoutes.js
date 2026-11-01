@@ -23,6 +23,8 @@ import { getPendingSubscriptionPayments, reviewSubscriptionPayment } from '../co
 const router = express.Router();
 
 router.route('/payment-settings').get(adminLimiter, requireAdmin, getPlatformPaymentSettings).put(adminLimiter, requireAdmin, updatePlatformPaymentSettings);
+router.get('/subscription-payments', adminLimiter, requireAdmin, getPendingSubscriptionPayments);
+router.patch('/subscription-payments/:id/review', adminLimiter, requireAdmin, validate({ params: idParamSchema }), reviewSubscriptionPayment);
 
 // Master Admin Security-Gated Endpoints (Guarded against unauthorized brute-forcing)
 router.route('/impersonate').post(adminLimiter, requireAdmin, validate(impersonateSchema), impersonateAccount);
