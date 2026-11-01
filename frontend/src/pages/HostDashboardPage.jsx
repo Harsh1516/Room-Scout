@@ -314,7 +314,7 @@ export function HostDashboardPage() {
             : 'min-h-[calc(100vh-4rem)] overflow-x-hidden'
         }`}
       >
-        <div className="w-full flex-1 flex flex-col min-h-0">
+        <div className="w-full flex-1 h-full flex flex-col min-h-0">
           <AnimatePresence mode="wait" custom={tabDirection} initial={false}>
             {/* 1. Property Details Tab */}
             {activeTab === 'property' && (
