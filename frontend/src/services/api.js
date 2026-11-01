@@ -389,6 +389,8 @@ export const adminAPI = {
     }),
 
   getPlatformPaymentSettings: () => request('/enter/payment-settings'),
+  getSubscriptionPayments: () => request('/enter/subscription-payments'),
+  reviewSubscriptionPayment: (id, payload) => request(`/enter/subscription-payments/${encodeURIComponent(id)}/review`, { method: 'PATCH', body: JSON.stringify(payload) }),
 
   updatePlatformPaymentSettings: (payload) =>
     request('/enter/payment-settings', {
