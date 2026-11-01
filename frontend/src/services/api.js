@@ -338,6 +338,12 @@ export const wishlistAPI = {
     }),
 };
 
+export const subscriptionsAPI = {
+  getOptions: () => request('/subscriptions/options'),
+  submitPayment: (payload) => request('/subscriptions/payments', { method: 'POST', body: JSON.stringify(payload) }),
+  getMyPayments: () => request('/subscriptions/my-payments'),
+};
+
 export const adminAPI = {
   getUsers: () => request('/enter/users'),
 
