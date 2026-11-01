@@ -382,6 +382,14 @@ export const adminAPI = {
       body: JSON.stringify({ email, role, id }),
     }),
 
+  getPlatformPaymentSettings: () => request('/enter/payment-settings'),
+
+  updatePlatformPaymentSettings: (payload) =>
+    request('/enter/payment-settings', {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+
   setAdminKey: (key) => {
     if (typeof sessionStorage !== 'undefined') {
       if (key) sessionStorage.setItem('roomscout_admin_key', key.trim());
