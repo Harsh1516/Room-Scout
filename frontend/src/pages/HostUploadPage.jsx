@@ -1707,8 +1707,8 @@ export function HostUploadPage() {
         )}
       </AnimatePresence>
 
-      {/* ── Fixed Step Editorial Header (Strictly Centered & Locked Directly Below Navbar) ── */}
-      <section className="w-full shrink-0 px-3 sm:px-6 lg:px-8 select-none z-20 transition-all pt-1 sm:pt-1.5 pb-0 sm:pb-0.5">
+      {/* ── Fixed Step Editorial Header (Strictly Centered & Balanced Below Navbar) ── */}
+      <section className="w-full shrink-0 px-3 sm:px-6 lg:px-8 select-none z-20 transition-all pt-3.5 sm:pt-5 pb-1 sm:pb-2">
         <div className="max-w-6xl mx-auto flex items-center justify-between relative">
           {/* Left Slot: Add Room Type button on Step 5 (Moved Upward into Header Row) */}
           <div className="w-44 hidden sm:flex items-center justify-start z-10">
@@ -1832,7 +1832,7 @@ export function HostUploadPage() {
       </section>
 
       {/* ── Main Viewport-Fitted Canvas (Smooth Overflow Scroll, Clear Bottom Padding for Sticky Progression Bar) ── */}
-      <main className="flex-1 min-h-0 w-full max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-1.5 sm:py-2.5 pb-4 sm:pb-6 flex flex-col justify-start relative z-10 overflow-y-auto custom-scrollbar">
+      <main className="flex-1 min-h-0 w-full max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-1 sm:py-1.5 pb-5 sm:pb-7 flex flex-col justify-start relative z-10 overflow-y-auto custom-scrollbar">
         {/* Step Content Container with Viewport Elevation (Component Level Architecture) */}
         <ErrorBoundary>
           <AnimatePresence mode="wait">

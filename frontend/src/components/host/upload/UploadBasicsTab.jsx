@@ -145,18 +145,14 @@ export function UploadBasicsTab({
       transition={{ duration: 0.2 }}
       className="max-w-2xl w-full mx-auto bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-3.5 sm:p-4 shadow-xl space-y-2 sm:space-y-2.5 relative overflow-hidden group"
     >
-      <div className="absolute -right-8 -top-8 w-32 h-32 bg-emerald-200/40 dark:bg-emerald-500/20 rounded-full blur-2xl pointer-events-none group-hover:scale-150 transition-transform duration-500" />
-
       {/* Host Details Section (Identity & Contact Information) */}
       <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-50/90 dark:bg-zinc-800/50 border border-slate-200/80 dark:border-zinc-700/60 space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-            </div>
+            <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
             <div>
               <h3 className="text-xs font-bold text-slate-800 dark:text-zinc-200">
                 Host Contact Details
@@ -302,10 +298,10 @@ export function UploadBasicsTab({
                     : 'bg-slate-100/80 dark:bg-zinc-800/60 hover:bg-slate-200/70 dark:hover:bg-zinc-800 text-slate-800 dark:text-zinc-200 border-slate-200 dark:border-zinc-700'
                 }`}
               >
-                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform ${
+                <div className={`shrink-0 transition-colors ${
                   isSelected
-                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
-                    : 'bg-white dark:bg-zinc-700 text-slate-700 dark:text-zinc-200 shadow-2xs'
+                    ? 'text-emerald-500 dark:text-emerald-600'
+                    : 'text-slate-600 dark:text-zinc-400'
                 }`}>
                   {pt.icon}
                 </div>
