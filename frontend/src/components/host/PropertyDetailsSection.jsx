@@ -197,13 +197,15 @@ export function PropertyDetailsSection({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-5 items-stretch h-full min-h-0">
         {/* Left Navigation Rail: Luna styled unified card */}
         <aside className="lg:col-span-3 flex flex-col h-full min-h-0 shrink-0">
-          <div className="rounded-2xl sm:rounded-3xl border border-[#54ACBF]/20 dark:border-[#26658C]/50 shadow-xl overflow-hidden flex flex-col h-full transition-all bg-[#011C40]">
+          <div className="rounded-2xl sm:rounded-3xl border border-[#54ACBF]/35 dark:border-[#26658C]/60 shadow-[0_20px_50px_-12px_rgba(1,28,64,0.65),0_8px_24px_-4px_rgba(1,28,64,0.45),inset_0_1px_1px_0_rgba(167,235,242,0.25)] ring-1 ring-[#54ACBF]/20 overflow-hidden flex flex-col h-full transition-all bg-[#011C40] relative">
+            {/* Top Specular Rim Reflection for Left Card */}
+            <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#A7EBF2]/60 to-transparent pointer-events-none z-20" />
             {/* ── Top Section: Property Info (Luna Gradient Aesthetic) ── */}
-            <div className="p-4 sm:p-5 pb-9 sm:pb-10 bg-[#011C40] text-white flex flex-col gap-3 relative shrink-0 overflow-hidden">
+            <div className="p-4 sm:p-5 pb-9 sm:pb-10 bg-gradient-to-b from-[#01224d] via-[#011C40] to-[#011C40] text-white flex flex-col gap-3 relative shrink-0 overflow-hidden">
 
               {/* Header: Place Name + Top-Right Edit Button */}
               <div className="flex items-center justify-between gap-2 relative z-10">
-                <h1 className="text-base sm:text-lg lg:text-xl font-extrabold text-white tracking-tight truncate flex-1 min-w-0">
+                <h1 className="text-base sm:text-lg lg:text-xl font-medium text-white tracking-normal truncate flex-1 min-w-0">
                   {hostProperty?.propertyName || hostProperty?.title || '—'}
                 </h1>
 
@@ -212,7 +214,7 @@ export function PropertyDetailsSection({
                   <button
                     type="button"
                     onClick={onEditDetails}
-                    className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 border border-[#54ACBF]/30 text-[#A7EBF2] text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs shrink-0"
+                    className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 border border-[#54ACBF]/30 text-[#A7EBF2] text-xs font-normal flex items-center gap-1.5 cursor-pointer transition-all shadow-xs shrink-0"
                     title="Edit Listing Details"
                   >
                     <PencilIcon className="w-3.5 h-3.5 text-[#A7EBF2]" />
@@ -228,7 +230,7 @@ export function PropertyDetailsSection({
                     <span className="material-symbols-outlined text-[15px] text-[#54ACBF]">apartment</span>
                     <span>{hostProperty?.propertyType || hostProperty?.category ? `${hostProperty.propertyType || hostProperty.category} Category` : '—'}</span>
                   </span>
-                  <span className="flex items-center gap-1 font-semibold text-[#A7EBF2]">
+                  <span className="flex items-center gap-1 font-medium text-[#A7EBF2]">
                     <span className="material-symbols-outlined text-[14px] text-[#A7EBF2]" style={{ fontVariationSettings: "'FILL' 1" }}>
                       star
                     </span>
@@ -241,7 +243,7 @@ export function PropertyDetailsSection({
                 </div>
 
                 <div className="flex items-center justify-between text-[#A7EBF2]/80">
-                  <span className="flex items-center gap-1.5 font-medium text-[#A7EBF2]/80">
+                  <span className="flex items-center gap-1.5 font-normal text-[#A7EBF2]/80">
                     <span className="material-symbols-outlined text-[15px] text-[#54ACBF]">group</span>
                     <span>For: {hostProperty?.genderType ? hostProperty.genderType.charAt(0).toUpperCase() + hostProperty.genderType.slice(1).toLowerCase() : '—'}</span>
                   </span>
@@ -253,7 +255,7 @@ export function PropertyDetailsSection({
                 <button
                   type="button"
                   onClick={handleOpenPublicUrl}
-                  className="flex-1 h-9 rounded-xl bg-[#A7EBF2] hover:bg-[#8ee5ee] active:scale-95 text-[#011C40] font-extrabold text-xs tracking-normal shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  className="flex-1 h-9 rounded-xl bg-[#A7EBF2] hover:bg-[#8ee5ee] active:scale-95 text-[#011C40] font-medium text-xs tracking-normal shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <span>Public URL</span>
                   <span className="material-symbols-outlined text-[15px]">north_east</span>
@@ -266,13 +268,13 @@ export function PropertyDetailsSection({
                   title="Share listing link"
                 >
                   <span className="material-symbols-outlined text-[16px] text-[#A7EBF2]">share</span>
-                  <span className="text-xs font-semibold">Share</span>
+                  <span className="text-xs font-normal">Share</span>
                 </button>
               </div>
             </div>
 
             {/* ── Lower Section: Configuration Matrix / Tabs (Luna Aesthetic) ── */}
-            <div className="flex-1 flex flex-col p-4 sm:p-5 bg-[#023859] rounded-t-[28px] sm:rounded-t-[32px] -mt-5 sm:-mt-6 border-t border-x border-b-0 border-[#54ACBF]/30 shadow-[0_-4px_20px_rgba(1,28,64,0.4)] transition-colors justify-between min-h-0 relative z-10">
+            <div className="flex-1 flex flex-col p-4 sm:p-5 bg-gradient-to-b from-[#02436a] to-[#023859] rounded-t-[28px] sm:rounded-t-[32px] -mt-5 sm:-mt-6 border-t border-x border-b-0 border-[#54ACBF]/40 shadow-[0_-8px_25px_rgba(1,28,64,0.55),inset_0_1px_1px_0_rgba(167,235,242,0.3)] transition-colors justify-between min-h-0 relative z-10">
               {/* Header: Title + Dynamic Percentage + Micro Progress Bar */}
               <div className="flex flex-col gap-2 pb-2.5 px-0.5 border-b border-[#54ACBF]/20 dark:border-[#26658C]/40 mb-2 shrink-0">
                 <div className="flex items-center justify-center py-0.5">
@@ -328,7 +330,7 @@ export function PropertyDetailsSection({
                         <span
                           className={`material-symbols-outlined text-[17px] shrink-0 transition-colors ${
                             isActive
-                              ? 'text-[#A7EBF2] font-bold'
+                              ? 'text-[#A7EBF2]'
                               : 'text-[#54ACBF] group-hover:text-[#A7EBF2]'
                           }`}
                         >
@@ -340,8 +342,8 @@ export function PropertyDetailsSection({
                           <span
                             className={`text-xs truncate transition-colors duration-150 ${
                               isActive
-                                ? 'font-bold text-white'
-                                : 'font-medium text-[#A7EBF2]/80 group-hover:text-white'
+                                ? 'font-medium text-white'
+                                : 'font-normal text-[#A7EBF2]/80 group-hover:text-white'
                             }`}
                           >
                             {sec.title}
@@ -354,18 +356,18 @@ export function PropertyDetailsSection({
                         {isActive ? (
                           <div className="flex items-center gap-1.5">
                             {sec.badge && (
-                              <span className="px-2 py-0.5 rounded-md text-[9.5px] font-mono font-bold bg-[#011C40]/80 text-[#A7EBF2] border border-[#54ACBF]/30">
+                              <span className="px-2 py-0.5 rounded-md text-[9.5px] font-mono font-normal bg-[#011C40]/80 text-[#A7EBF2] border border-[#54ACBF]/30">
                                 {sec.badge}
                               </span>
                             )}
-                            <span className="material-symbols-outlined text-[15px] font-bold text-[#54ACBF] dark:text-[#A7EBF2] shrink-0">
+                            <span className="material-symbols-outlined text-[15px] text-[#54ACBF] dark:text-[#A7EBF2] shrink-0">
                               check
                             </span>
                           </div>
                         ) : (
                           <div className="flex items-center gap-1.5">
                             {sec.badge !== null && (
-                              <span className="px-2 py-0.5 rounded-md text-[9.5px] font-mono font-medium bg-[#011C40]/60 text-[#A7EBF2]/80 border border-[#54ACBF]/30 transition-colors">
+                              <span className="px-2 py-0.5 rounded-md text-[9.5px] font-mono font-normal bg-[#011C40]/60 text-[#A7EBF2]/80 border border-[#54ACBF]/30 transition-colors">
                                 {sec.badge}
                               </span>
                             )}
@@ -386,27 +388,29 @@ export function PropertyDetailsSection({
         </aside>
 
         {/* Main Content Panel (col-span-9 - Luna Glassmorphic Aesthetic) */}
-        <main className="lg:col-span-9 flex flex-col h-full min-h-0 overflow-y-auto no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden rounded-2xl sm:rounded-3xl relative overflow-hidden bg-[#54ACBF] border border-[#A7EBF2]/40 shadow-[0_12px_40px_-8px_rgba(1,28,64,0.35)] p-4 sm:p-7 lg:p-8 pb-8 sm:pb-10 lg:pb-8 transition-colors">
+        <main className="lg:col-span-9 flex flex-col h-full min-h-0 overflow-y-auto no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden rounded-2xl sm:rounded-3xl relative overflow-hidden bg-gradient-to-b from-[#5db9cc] via-[#54ACBF] to-[#459aad] border border-[#A7EBF2]/60 shadow-[0_25px_60px_-12px_rgba(1,28,64,0.55),0_10px_25px_-5px_rgba(1,28,64,0.35),inset_0_1px_2px_0_rgba(255,255,255,0.45)] ring-1 ring-[#011C40]/10 p-4 sm:p-7 lg:p-8 pb-8 sm:pb-10 lg:pb-8 transition-colors">
           {/* Ambient Glass Reflections & Refractive Lighting in Luna cyan & deep navy */}
           <div
             aria-hidden="true"
             className="absolute inset-0 pointer-events-none select-none overflow-hidden rounded-2xl sm:rounded-3xl z-0"
           >
             {/* Top Specular Rim Reflection */}
-            <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[#A7EBF2]/40 to-transparent" />
+            <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/70 to-transparent pointer-events-none z-20" />
             {/* Corner Refraction Glows */}
-            <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#54ACBF]/15 dark:bg-[#54ACBF]/20 blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-[#26658C]/15 dark:bg-[#023859]/40 blur-3xl pointer-events-none" />
+            <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#54ACBF]/20 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-[#011C40]/25 blur-3xl pointer-events-none" />
+            {/* Bottom Grounding Vignette */}
+            <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-[#011C40]/12 to-transparent pointer-events-none z-0" />
           </div>
 
           <div className="flex flex-col flex-1 min-h-full justify-between gap-6 sm:gap-8 relative z-10">
             {/* 1. Centered Top Heading */}
             <div className="flex flex-col items-center text-center justify-center pt-1 sm:pt-2 w-full">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#011C40] tracking-tight">
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-medium text-[#011C40] tracking-normal">
                 {currentSection.title}
               </h2>
 
-              <p className="text-xs sm:text-sm text-[#011C40]/85 font-medium mt-1.5 max-w-xl text-center leading-relaxed">
+              <p className="text-xs sm:text-sm text-[#011C40]/80 font-normal mt-1.5 max-w-xl text-center leading-relaxed">
                 {currentSection.id === 'overview' && 'Start with the core identity, property type, and guest categorization.'}
                 {currentSection.id === 'description' && 'Add an editorial property description and key highlights for prospective residents.'}
                 {currentSection.id === 'location' && 'Pinpoint exact road access, city zone, postal code, and geolocation coordinates.'}

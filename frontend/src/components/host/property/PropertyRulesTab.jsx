@@ -79,7 +79,7 @@ export function PropertyRulesTab({
       <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/70 dark:bg-[#011C40]/50 backdrop-blur-xl border border-[#54ACBF]/20 dark:border-[#26658C]/40 shadow-[0_4px_24px_rgba(2,56,89,0.04)] dark:shadow-[0_8px_32px_rgba(1,28,64,0.4)] space-y-4 relative overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-2 border-b border-[#54ACBF]/20 dark:border-[#26658C]/40 pb-3 relative z-10">
-          <p className="text-xs font-bold uppercase tracking-wider text-[#011C40] dark:text-[#A7EBF2] flex items-center gap-2">
+          <p className="text-xs font-medium uppercase tracking-wider text-[#011C40] dark:text-[#A7EBF2] flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#54ACBF] shadow-[0_0_8px_#54ACBF]" />
             House Rules & Regulations ({localRules.length})
           </p>
@@ -89,7 +89,7 @@ export function PropertyRulesTab({
               <button
                 type="button"
                 onClick={onStartEdit}
-                className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-[#023859] dark:text-[#A7EBF2] text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
+                className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-[#023859] dark:text-[#A7EBF2] text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
               >
                 <PencilIcon className="w-3.5 h-3.5 text-[#54ACBF] dark:text-[#A7EBF2]" />
                 <span>Edit</span>
@@ -104,7 +104,7 @@ export function PropertyRulesTab({
                   setLocalRules(rules);
                   if (onCancel) onCancel();
                 }}
-                className="px-3 py-1.5 rounded-xl border border-[#54ACBF]/30 dark:border-[#26658C]/50 bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] text-[#023859] dark:text-[#A7EBF2] text-xs font-semibold transition-all cursor-pointer active:scale-95 disabled:opacity-50 backdrop-blur-sm"
+                className="px-3 py-1.5 rounded-xl border border-[#54ACBF]/30 dark:border-[#26658C]/50 bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] text-[#023859] dark:text-[#A7EBF2] text-xs font-medium transition-all cursor-pointer active:scale-95 disabled:opacity-50 backdrop-blur-sm"
               >
                 Cancel
               </button>
@@ -112,7 +112,7 @@ export function PropertyRulesTab({
                 type="button"
                 disabled={isSaving}
                 onClick={handleSave}
-                className={`px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] text-xs font-extrabold transition-all cursor-pointer shadow-md shadow-[#54ACBF]/20 flex items-center gap-1 active:scale-95 ${
+                className={`px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] text-xs font-medium transition-all cursor-pointer shadow-md shadow-[#54ACBF]/20 flex items-center gap-1 active:scale-95 ${
                   isSaving ? 'opacity-70 cursor-wait' : ''
                 }`}
               >
@@ -133,7 +133,7 @@ export function PropertyRulesTab({
                     key={rIdx}
                     className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-[#023859]/50 backdrop-blur-md border border-[#54ACBF]/30 dark:border-[#26658C]/60 flex items-center gap-2.5 shadow-2xs group"
                   >
-                    <span className="w-6 h-6 rounded-lg bg-[#54ACBF]/20 text-[#54ACBF] dark:text-[#A7EBF2] border border-[#54ACBF]/30 font-mono text-[11px] font-bold flex items-center justify-center shrink-0">
+                    <span className="w-6 h-6 rounded-lg bg-[#54ACBF]/20 text-[#54ACBF] dark:text-[#A7EBF2] border border-[#54ACBF]/30 font-mono text-[11px] font-medium flex items-center justify-center shrink-0">
                       {rIdx + 1}
                     </span>
                     <input
@@ -169,7 +169,7 @@ export function PropertyRulesTab({
               <button
                 type="submit"
                 disabled={!newRuleInput.trim()}
-                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] text-xs font-extrabold transition-all cursor-pointer disabled:opacity-40 flex items-center gap-1.5 shadow-md shadow-[#54ACBF]/25 shrink-0 active:scale-95"
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] text-xs font-medium transition-all cursor-pointer disabled:opacity-40 flex items-center gap-1.5 shadow-md shadow-[#54ACBF]/25 shrink-0 active:scale-95"
               >
                 <PlusIcon className="w-3.5 h-3.5" />
                 <span>Add</span>
@@ -179,7 +179,7 @@ export function PropertyRulesTab({
             {/* Presets */}
             {availablePresets.length > 0 && (
               <div className="space-y-2 pt-3 border-t border-[#54ACBF]/20 dark:border-[#26658C]/40">
-                <p className="text-[10.5px] uppercase tracking-wider text-[#26658C] dark:text-[#A7EBF2]/80 font-bold">
+                <p className="text-[10.5px] uppercase tracking-wider text-[#26658C] dark:text-[#A7EBF2]/80 font-medium">
                   Quick Add Common Guidelines:
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -188,9 +188,9 @@ export function PropertyRulesTab({
                       key={preset}
                       type="button"
                       onClick={() => handleAddPreset(preset)}
-                      className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/40 dark:hover:bg-[#023859]/70 border border-[#54ACBF]/30 dark:border-[#26658C]/50 text-xs font-semibold text-[#023859] dark:text-[#A7EBF2] cursor-pointer transition-all flex items-center gap-1.5 shadow-2xs active:scale-95 backdrop-blur-sm"
+                      className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/40 dark:hover:bg-[#023859]/70 border border-[#54ACBF]/30 dark:border-[#26658C]/50 text-xs font-normal text-[#023859] dark:text-[#A7EBF2] cursor-pointer transition-all flex items-center gap-1.5 shadow-2xs active:scale-95 backdrop-blur-sm"
                     >
-                      <span className="text-[#54ACBF] dark:text-[#A7EBF2] font-bold">+</span>
+                      <span className="text-[#54ACBF] dark:text-[#A7EBF2] font-medium">+</span>
                       <span>{preset}</span>
                     </button>
                   ))}
@@ -205,7 +205,7 @@ export function PropertyRulesTab({
                 {rules.map((rule, rIdx) => (
                   <div
                     key={rIdx}
-                    className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-[#023859]/30 backdrop-blur-md border border-[#54ACBF]/20 dark:border-[#26658C]/40 hover:border-[#54ACBF] dark:hover:border-[#54ACBF]/60 hover:bg-white dark:hover:bg-[#023859]/50 text-[#011C40] dark:text-white text-xs sm:text-[13px] font-extrabold tracking-tight flex items-center gap-2.5 transition-all shadow-2xs"
+                    className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-[#023859]/30 backdrop-blur-md border border-[#54ACBF]/20 dark:border-[#26658C]/40 hover:border-[#54ACBF] dark:hover:border-[#54ACBF]/60 hover:bg-white dark:hover:bg-[#023859]/50 text-[#011C40] dark:text-white text-xs sm:text-[13px] font-normal tracking-normal flex items-center gap-2.5 transition-all shadow-2xs"
                   >
                     <RulesIcon className="w-4 h-4 text-[#54ACBF] dark:text-[#A7EBF2] shrink-0" />
                     <span className="leading-snug">{rule}</span>

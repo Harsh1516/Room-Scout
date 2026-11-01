@@ -437,12 +437,12 @@ export function PropertyPhotosTab({
         {/* Header Strip */}
         <div className="relative flex items-center justify-between flex-wrap gap-2.5 border-b border-[#54ACBF]/20 dark:border-[#26658C]/40 pb-3">
           <div className="flex items-center gap-2">
-            <p className="text-xs font-bold uppercase tracking-wider text-[#011C40] dark:text-[#A7EBF2] flex items-center gap-2">
+            <p className="text-xs font-medium uppercase tracking-wider text-[#011C40] dark:text-[#A7EBF2] flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-[#54ACBF] shadow-[0_0_8px_#54ACBF]" />
               Visual Gallery ({localImages.length}/{MAX_PHOTOS})
             </p>
             {isEditing && (
-              <span className="px-2.5 py-0.5 rounded-full bg-[#54ACBF]/15 dark:bg-[#023859]/80 border border-[#54ACBF]/30 text-[#023859] dark:text-[#A7EBF2] text-[10px] font-bold uppercase tracking-wider">
+              <span className="px-2.5 py-0.5 rounded-full bg-[#54ACBF]/15 dark:bg-[#023859]/80 border border-[#54ACBF]/30 text-[#023859] dark:text-[#A7EBF2] text-[10px] font-medium uppercase tracking-wider">
                 Drag to set Cover Pic
               </span>
             )}
@@ -451,10 +451,10 @@ export function PropertyPhotosTab({
           {/* Top Center: Memory Size Occupied */}
           <div className="md:absolute md:left-1/2 md:-translate-x-1/2 flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/80 dark:bg-[#023859]/60 backdrop-blur-sm border border-[#54ACBF]/30 dark:border-[#26658C]/50 shadow-2xs">
             <span className="w-2 h-2 rounded-full bg-[#54ACBF] shadow-[0_0_8px_#54ACBF] animate-pulse" />
-            <span className="text-[11.5px] font-semibold text-[#023859] dark:text-[#A7EBF2]/80">
+            <span className="text-[11.5px] font-normal text-[#023859] dark:text-[#A7EBF2]/80">
               Memory Occupied:
             </span>
-            <span className="text-[11.5px] font-bold text-[#54ACBF] dark:text-[#A7EBF2]">
+            <span className="text-[11.5px] font-medium text-[#54ACBF] dark:text-[#A7EBF2]">
               {totalMemoryFormatted}
             </span>
           </div>
@@ -468,7 +468,7 @@ export function PropertyPhotosTab({
                 <button
                   type="button"
                   onClick={onStartEdit}
-                  className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-[#023859] dark:text-[#A7EBF2] text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
+                  className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-[#023859] dark:text-[#A7EBF2] text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
                 >
                   <span className="material-symbols-outlined text-[14px] text-[#54ACBF] dark:text-[#A7EBF2]">edit</span>
                   <span>Reorder / Edit</span>
@@ -477,7 +477,7 @@ export function PropertyPhotosTab({
             </div>
           ) : (
             <div className="flex items-center gap-2.5">
-              <div className="text-xs font-semibold text-slate-500 dark:text-zinc-400 hidden sm:inline">
+              <div className="text-xs font-normal text-slate-500 dark:text-zinc-400 hidden sm:inline">
                 {isAtLimit ? (
                   <span className="text-amber-600 dark:text-amber-400 font-medium">Limit reached (5/5)</span>
                 ) : (
@@ -494,7 +494,7 @@ export function PropertyPhotosTab({
                     setUploadNotice('');
                     if (onCancel) onCancel();
                   }}
-                  className="px-3 py-1.5 rounded-xl border border-[#54ACBF]/30 dark:border-[#26658C]/50 bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] text-[#023859] dark:text-[#A7EBF2] text-xs font-semibold transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                  className="px-3 py-1.5 rounded-xl border border-[#54ACBF]/30 dark:border-[#26658C]/50 bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] text-[#023859] dark:text-[#A7EBF2] text-xs font-medium transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -502,7 +502,7 @@ export function PropertyPhotosTab({
                   type="button"
                   disabled={isSaving || isProcessingImage}
                   onClick={handleSave}
-                  className={`px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] text-xs font-extrabold transition-all cursor-pointer shadow-md shadow-[#54ACBF]/20 flex items-center gap-1 active:scale-95 ${
+                  className={`px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] text-xs font-medium transition-all cursor-pointer shadow-md shadow-[#54ACBF]/20 flex items-center gap-1 active:scale-95 ${
                     isSaving || isProcessingImage ? 'opacity-70 cursor-wait' : ''
                   }`}
                 >
@@ -565,7 +565,7 @@ export function PropertyPhotosTab({
                     {/* Non-editing hover overlay */}
                     {!isEditing && (
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span className="px-3 py-1 rounded-full bg-white/20 border border-white/40 text-white text-xs font-semibold backdrop-blur-md">
+                        <span className="px-3 py-1 rounded-full bg-white/20 border border-white/40 text-white text-xs font-medium backdrop-blur-md">
                           View Full
                         </span>
                       </div>
@@ -573,7 +573,7 @@ export function PropertyPhotosTab({
 
                     {/* Cover Photo Badge on 1st image */}
                     {isCover && (
-                      <span className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-gradient-to-r from-[#023859] to-[#26658C] text-[#A7EBF2] font-bold text-[10px] tracking-wider uppercase shadow-lg backdrop-blur-md flex items-center gap-1 z-10 border border-[#54ACBF]/50">
+                      <span className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-gradient-to-r from-[#023859] to-[#26658C] text-[#A7EBF2] font-medium text-[10px] tracking-wider uppercase shadow-lg backdrop-blur-md flex items-center gap-1 z-10 border border-[#54ACBF]/50">
                         <span>★</span>
                         <span>Cover Photo</span>
                       </span>
@@ -581,13 +581,13 @@ export function PropertyPhotosTab({
 
                     {/* Photo Index & Memory Size Tag */}
                     <div className="absolute bottom-2 left-2 flex items-center gap-1.5 z-10">
-                      <span className="px-2 py-0.5 rounded-md bg-black/70 border border-white/20 text-white font-semibold text-[10px]">
+                      <span className="px-2 py-0.5 rounded-md bg-black/70 border border-white/20 text-white font-normal text-[10px]">
                         #{iIdx + 1}
                       </span>
                       {(() => {
                         const size = getImageSize(imgUrl);
                         return size > 0 ? (
-                          <span className="px-2 py-0.5 rounded-md bg-black/70 border border-white/20 text-emerald-400 font-semibold text-[10px]">
+                          <span className="px-2 py-0.5 rounded-md bg-black/70 border border-white/20 text-emerald-400 font-normal text-[10px]">
                             {formatMemorySize(size)}
                           </span>
                         ) : null;
@@ -611,7 +611,7 @@ export function PropertyPhotosTab({
                           e.stopPropagation();
                           triggerReplaceFile(iIdx);
                         }}
-                        className="flex-1 py-1 px-2 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 hover:border-white text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-xs active:scale-95"
+                        className="flex-1 py-1 px-2 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 hover:border-white text-white text-[11px] font-medium flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-xs active:scale-95"
                         title="Replace photo with another file"
                       >
                         <ReplaceIcon className="w-3 h-3" />
@@ -624,7 +624,7 @@ export function PropertyPhotosTab({
                           e.stopPropagation();
                           handleRemovePhoto(iIdx);
                         }}
-                        className="py-1 px-2.5 rounded-full bg-red-500/20 hover:bg-red-500/35 border border-red-400/40 hover:border-red-400 text-red-200 hover:text-white text-[11px] font-semibold flex items-center justify-center gap-1 cursor-pointer transition-all shadow-xs active:scale-95"
+                        className="py-1 px-2.5 rounded-full bg-red-500/20 hover:bg-red-500/35 border border-red-400/40 hover:border-red-400 text-red-200 hover:text-white text-[11px] font-medium flex items-center justify-center gap-1 cursor-pointer transition-all shadow-xs active:scale-95"
                         title="Remove photo"
                       >
                         <TrashIcon className="w-3 h-3" />
@@ -646,7 +646,7 @@ export function PropertyPhotosTab({
                   <PlusIcon className="w-5 h-5" />
                 </div>
                 <div className="text-center">
-                  <p className="text-xs font-bold text-slate-800 dark:text-white">Upload Photo</p>
+                  <p className="text-xs font-normal text-slate-800 dark:text-white">Upload Photo</p>
                   <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-0.5">
                     {MAX_PHOTOS - localImages.length} of {MAX_PHOTOS} remaining
                   </p>
@@ -657,7 +657,7 @@ export function PropertyPhotosTab({
                     e.stopPropagation();
                     fileInputRef.current?.click();
                   }}
-                  className="mt-1 py-1.5 px-3 rounded-full bg-slate-200/80 hover:bg-slate-300 dark:bg-zinc-700 dark:hover:bg-zinc-600 border border-slate-300 dark:border-zinc-600 text-slate-800 dark:text-white text-[11px] font-bold transition-all cursor-pointer shadow-xs"
+                  className="mt-1 py-1.5 px-3 rounded-full bg-slate-200/80 hover:bg-slate-300 dark:bg-zinc-700 dark:hover:bg-zinc-600 border border-slate-300 dark:border-zinc-600 text-slate-800 dark:text-white text-[11px] font-medium transition-all cursor-pointer shadow-xs"
                 >
                   Choose File
                 </button>
@@ -671,7 +671,7 @@ export function PropertyPhotosTab({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="px-4 py-2 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all cursor-pointer shadow-xs"
+                className="px-4 py-2 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition-all cursor-pointer shadow-xs"
               >
                 + Upload First Photo
               </button>
@@ -682,7 +682,7 @@ export function PropertyPhotosTab({
         {/* Edit mode drag guidance tip */}
         {isEditing && (
           <p className="text-xs text-slate-500 dark:text-zinc-400 pt-1">
-            Tip: Simply drag photos left or right to reorder. The 1st photo on the top-left is automatically your listing&apos;s <strong className="text-[#54ACBF] dark:text-[#A7EBF2] font-bold">Cover Photo</strong>. Limit: {MAX_PHOTOS} photos maximum.
+            Tip: Simply drag photos left or right to reorder. The 1st photo on the top-left is automatically your listing&apos;s <span className="text-[#54ACBF] dark:text-[#A7EBF2] font-medium">Cover Photo</span>. Limit: {MAX_PHOTOS} photos maximum.
           </p>
         )}
       </div>
@@ -695,7 +695,7 @@ export function PropertyPhotosTab({
               <VideoIcon className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-[#011C40] dark:text-[#A7EBF2]">
+              <p className="text-xs font-medium uppercase tracking-wider text-[#011C40] dark:text-[#A7EBF2]">
                 Video Tour Link
               </p>
               <p className="text-[11.5px] text-[#26658C]/80 dark:text-[#A7EBF2]/70">
@@ -709,7 +709,7 @@ export function PropertyPhotosTab({
               href={formattedVideoUrl}
               target="_blank"
               rel="noreferrer"
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-semibold transition-all flex items-center gap-1.5 shadow-md shadow-emerald-600/25 active:scale-95 cursor-pointer shrink-0"
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-medium transition-all flex items-center gap-1.5 shadow-md shadow-emerald-600/25 active:scale-95 cursor-pointer shrink-0"
             >
               <span>Open Video</span>
               <ExternalIcon className="w-3.5 h-3.5 text-white" />
@@ -724,10 +724,10 @@ export function PropertyPhotosTab({
               <div className="flex items-center gap-2.5 min-w-0 flex-1">
                 <span className="material-symbols-outlined text-[18px] text-slate-700 dark:text-zinc-300 shrink-0">smart_display</span>
                 <div className="min-w-0 flex-1">
-                  <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase tracking-wider font-bold block">
+                  <span className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase tracking-wider font-medium block">
                     Public Walkthrough URL
                   </span>
-                  <span className="text-sm font-bold text-slate-900 dark:text-white tracking-tight truncate block select-all">
+                  <span className="text-xs sm:text-sm font-normal text-slate-900 dark:text-white tracking-normal truncate block select-all">
                     {localVideoUrl.trim()}
                   </span>
                 </div>
@@ -742,7 +742,7 @@ export function PropertyPhotosTab({
                 <button
                   type="button"
                   onClick={onStartEdit}
-                  className="px-3.5 py-1.5 rounded-xl bg-slate-200/80 hover:bg-slate-300/80 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-slate-300/90 dark:border-zinc-700 text-slate-800 dark:text-white text-xs font-semibold cursor-pointer transition-all shadow-2xs active:scale-95"
+                  className="px-3.5 py-1.5 rounded-xl bg-slate-200/80 hover:bg-slate-300/80 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-slate-300/90 dark:border-zinc-700 text-slate-800 dark:text-white text-xs font-medium cursor-pointer transition-all shadow-2xs active:scale-95"
                 >
                   + Add Video Link
                 </button>
@@ -782,7 +782,7 @@ export function PropertyPhotosTab({
                         href={formattedVideoUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="px-3 py-1 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] text-[11px] font-extrabold transition-all flex items-center gap-1 shrink-0 cursor-pointer shadow-xs"
+                        className="px-3 py-1 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] text-[11px] font-medium transition-all flex items-center gap-1 shrink-0 cursor-pointer shadow-xs"
                       >
                         <span>Test ↗</span>
                       </a>
@@ -824,7 +824,7 @@ export function PropertyPhotosTab({
               <button
                 type="button"
                 onClick={() => setPreviewImage(null)}
-                className="absolute top-4 right-4 px-4 py-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs font-bold border border-white/40 cursor-pointer shadow-lg backdrop-blur-md transition-all active:scale-95"
+                className="absolute top-4 right-4 px-4 py-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs font-medium border border-white/40 cursor-pointer shadow-lg backdrop-blur-md transition-all active:scale-95"
               >
                 ✕ Close
               </button>

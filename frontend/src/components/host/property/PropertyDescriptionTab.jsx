@@ -43,7 +43,7 @@ export function PropertyDescriptionTab({
     <div className="space-y-3.5">
       <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/70 dark:bg-[#011C40]/50 backdrop-blur-xl border border-[#54ACBF]/20 dark:border-[#26658C]/40 shadow-[0_4px_24px_rgba(2,56,89,0.04)] dark:shadow-[0_8px_32px_rgba(1,28,64,0.4)] space-y-4 relative overflow-hidden">
         {/* Header Strip with Character Count and Limit */}
-        <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-[#011C40] dark:text-[#A7EBF2] border-b border-[#54ACBF]/20 dark:border-[#26658C]/40 pb-3 flex-wrap gap-2 relative z-10">
+        <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wider text-[#011C40] dark:text-[#A7EBF2] border-b border-[#54ACBF]/20 dark:border-[#26658C]/40 pb-3 flex-wrap gap-2 relative z-10">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#54ACBF] shadow-[0_0_8px_#54ACBF]" />
             <span>Host Written Summary</span>
@@ -51,7 +51,7 @@ export function PropertyDescriptionTab({
 
           <div className="flex items-center gap-2.5">
             <span
-              className={`text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border transition-colors ${
+              className={`text-[10.5px] font-medium uppercase tracking-wider px-2.5 py-0.5 rounded-full border transition-colors ${
                 isBelowMin && isEditing
                   ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-400/40'
                   : isAtMax
@@ -67,7 +67,7 @@ export function PropertyDescriptionTab({
                 <button
                   type="button"
                   onClick={onStartEdit}
-                  className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-[#023859] dark:text-[#A7EBF2] text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
+                  className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-[#023859] dark:text-[#A7EBF2] text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
                 >
                   <PencilIcon className="w-3.5 h-3.5 text-[#54ACBF] dark:text-[#A7EBF2]" />
                   <span>Edit</span>
@@ -82,7 +82,7 @@ export function PropertyDescriptionTab({
                     setLocalDesc((description || '').slice(0, MAX_DESCRIPTION_CHARS));
                     if (onCancel) onCancel();
                   }}
-                  className="px-3 py-1.5 rounded-xl border border-[#54ACBF]/30 dark:border-[#26658C]/50 bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] text-[#023859] dark:text-[#A7EBF2] text-xs font-semibold transition-all cursor-pointer active:scale-95 disabled:opacity-50 backdrop-blur-sm"
+                  className="px-3 py-1.5 rounded-xl border border-[#54ACBF]/30 dark:border-[#26658C]/50 bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] text-[#023859] dark:text-[#A7EBF2] text-xs font-medium transition-all cursor-pointer active:scale-95 disabled:opacity-50 backdrop-blur-sm"
                 >
                   Cancel
                 </button>
@@ -90,7 +90,7 @@ export function PropertyDescriptionTab({
                   type="button"
                   disabled={isSaving || isBelowMin}
                   onClick={handleSave}
-                  className={`px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] text-xs font-extrabold transition-all cursor-pointer shadow-md shadow-[#54ACBF]/20 flex items-center gap-1 active:scale-95 ${
+                  className={`px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] text-xs font-medium transition-all cursor-pointer shadow-md shadow-[#54ACBF]/20 flex items-center gap-1 active:scale-95 ${
                     isSaving || isBelowMin ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                 >
@@ -116,7 +116,7 @@ export function PropertyDescriptionTab({
             <div className="flex items-center justify-between gap-3 pt-1 border-t border-[#54ACBF]/20 dark:border-[#26658C]/40 flex-wrap">
               <span
                 className={`text-[11px] transition-colors ${
-                  isBelowMin ? 'text-amber-600 dark:text-amber-400 font-semibold' : 'text-[#26658C] dark:text-[#A7EBF2]/80'
+                  isBelowMin ? 'text-amber-600 dark:text-amber-400 font-medium' : 'text-[#26658C] dark:text-[#A7EBF2]/80'
                 }`}
               >
                 {isBelowMin
@@ -128,17 +128,17 @@ export function PropertyDescriptionTab({
         ) : (
           <div className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-[#023859]/30 backdrop-blur-md border border-[#54ACBF]/20 dark:border-[#26658C]/40 hover:border-[#54ACBF] dark:hover:border-[#54ACBF]/60 hover:bg-white dark:hover:bg-[#023859]/50 transition-all flex flex-col justify-between gap-3 shadow-2xs relative z-10">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-[#26658C] dark:text-[#A7EBF2]/70 uppercase tracking-wider font-bold">
+              <span className="text-[10px] text-[#26658C] dark:text-[#A7EBF2]/70 uppercase tracking-wider font-medium">
                 Editorial Bio & Overview
               </span>
               <span className="material-symbols-outlined text-[17px] text-[#54ACBF] dark:text-[#A7EBF2] shrink-0">description</span>
             </div>
             <div>
-              <p className="text-sm sm:text-base font-extrabold text-[#011C40] dark:text-white tracking-tight leading-relaxed whitespace-pre-wrap">
+              <p className="text-xs sm:text-sm font-normal text-[#011C40] dark:text-white tracking-normal leading-relaxed whitespace-pre-wrap">
                 {description ? (
                   description
                 ) : (
-                  <span className="text-xs sm:text-sm font-semibold text-[#26658C]/60 dark:text-[#A7EBF2]/50 italic">
+                  <span className="text-xs sm:text-sm font-normal text-[#26658C]/60 dark:text-[#A7EBF2]/50 italic">
                     No description provided yet. Click &quot;Edit&quot; to write a description (max {MAX_DESCRIPTION_CHARS} characters).
                   </span>
                 )}

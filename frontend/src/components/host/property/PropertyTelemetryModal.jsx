@@ -105,7 +105,7 @@ export function PropertyTelemetryModal({
                   <span className="material-symbols-outlined text-[20px]">analytics</span>
                 </div>
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold tracking-tight text-[#011C40] dark:text-white">
+                  <h3 className="text-base sm:text-lg font-medium tracking-normal text-[#011C40] dark:text-white">
                     Property Telemetry &amp; Quick Actions
                   </h3>
                   <p className="text-xs text-[#26658C] dark:text-[#A7EBF2]/80">
@@ -115,7 +115,7 @@ export function PropertyTelemetryModal({
               </div>
 
               <div className="flex items-center gap-2.5">
-                <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-[#54ACBF]/15 dark:bg-[#023859]/80 text-[#023859] dark:text-[#A7EBF2] border border-[#54ACBF]/30 shadow-2xs">
+                <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium uppercase tracking-wider bg-[#54ACBF]/15 dark:bg-[#023859]/80 text-[#023859] dark:text-[#A7EBF2] border border-[#54ACBF]/30 shadow-2xs">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#54ACBF] animate-pulse" />
                   {occupancyRate}% OCCUPANCY
                 </span>
@@ -135,14 +135,14 @@ export function PropertyTelemetryModal({
             <div className="p-4 sm:p-5 rounded-2xl bg-white/80 dark:bg-[#023859]/30 border border-[#54ACBF]/20 dark:border-[#26658C]/40 space-y-3.5 shadow-xs">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-xs font-bold text-[#011C40] dark:text-white uppercase tracking-wider">
+                  <h4 className="text-xs font-medium text-[#011C40] dark:text-white uppercase tracking-wider">
                     Occupancy &amp; Inventory Snapshot
                   </h4>
                   <p className="text-[11px] text-[#26658C] dark:text-[#A7EBF2]/80">
                     Real-time room allocation across all wings
                   </p>
                 </div>
-                <span className="sm:hidden inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#54ACBF]/15 dark:bg-[#023859]/80 text-[#023859] dark:text-[#A7EBF2] border border-[#54ACBF]/30">
+                <span className="sm:hidden inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium uppercase bg-[#54ACBF]/15 dark:bg-[#023859]/80 text-[#023859] dark:text-[#A7EBF2] border border-[#54ACBF]/30">
                   {occupancyRate}%
                 </span>
               </div>
@@ -172,32 +172,32 @@ export function PropertyTelemetryModal({
                       Vacant: {vacantBeds} Beds
                     </span>
                   </div>
-                  <span className="font-semibold text-[#011C40] dark:text-white">Total: {totalBeds} Beds</span>
+                  <span className="font-normal text-[#011C40] dark:text-white">Total: {totalBeds} Beds</span>
                 </div>
               </div>
 
               {/* 4 Stats Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
                 <div className="p-3 rounded-xl bg-white dark:bg-[#011C40] border border-[#54ACBF]/20 dark:border-[#26658C]/50 shadow-2xs flex flex-col gap-1">
-                  <span className="text-[10px] text-[#26658C] dark:text-[#A7EBF2]/70 uppercase font-bold tracking-wider">Total Beds</span>
-                  <span className="text-base sm:text-lg text-[#011C40] dark:text-white font-bold">{totalBeds}</span>
+                  <span className="text-[10px] text-[#26658C] dark:text-[#A7EBF2]/70 uppercase font-medium tracking-wider">Total Beds</span>
+                  <span className="text-base sm:text-lg text-[#011C40] dark:text-white font-normal">{totalBeds}</span>
                   <span className="text-[10.5px] text-[#26658C]/70 dark:text-[#A7EBF2]/60">{totalBeds > 0 ? 'Across Units' : '—'}</span>
                 </div>
                 <div className="p-3 rounded-xl bg-white dark:bg-[#011C40] border border-[#54ACBF]/20 dark:border-[#26658C]/50 shadow-2xs flex flex-col gap-1">
-                  <span className="text-[10px] text-[#26658C] dark:text-[#A7EBF2]/70 uppercase font-bold tracking-wider">Active Tenants</span>
-                  <span className="text-base sm:text-lg text-[#54ACBF] dark:text-[#A7EBF2] font-bold">{activeTenants}</span>
+                  <span className="text-[10px] text-[#26658C] dark:text-[#A7EBF2]/70 uppercase font-medium tracking-wider">Active Tenants</span>
+                  <span className="text-base sm:text-lg text-[#54ACBF] dark:text-[#A7EBF2] font-normal">{activeTenants}</span>
                   <span className="text-[10.5px] text-[#26658C]/70 dark:text-[#A7EBF2]/60 font-medium">
                     {activeTenants > 0 ? `${activeTenants} occupants` : '—'}
                   </span>
                 </div>
                 <div className="p-3 rounded-xl bg-white dark:bg-[#011C40] border border-[#54ACBF]/20 dark:border-[#26658C]/50 shadow-2xs flex flex-col gap-1">
-                  <span className="text-[10px] text-[#26658C] dark:text-[#A7EBF2]/70 uppercase font-bold tracking-wider">Vacant Beds</span>
-                  <span className="text-base sm:text-lg text-[#26658C] dark:text-[#54ACBF] font-bold">{vacantBeds}</span>
+                  <span className="text-[10px] text-[#26658C] dark:text-[#A7EBF2]/70 uppercase font-medium tracking-wider">Vacant Beds</span>
+                  <span className="text-base sm:text-lg text-[#26658C] dark:text-[#54ACBF] font-normal">{vacantBeds}</span>
                   <span className="text-[10.5px] text-[#26658C]/70 dark:text-[#A7EBF2]/60">{totalBeds > 0 ? 'Under inquiry' : '—'}</span>
                 </div>
                 <div className="p-3 rounded-xl bg-white dark:bg-[#011C40] border border-[#54ACBF]/20 dark:border-[#26658C]/50 shadow-2xs flex flex-col gap-1">
-                  <span className="text-[10px] text-[#26658C] dark:text-[#A7EBF2]/70 uppercase font-bold tracking-wider">Est. Monthly Rev</span>
-                  <span className="text-base sm:text-lg text-[#011C40] dark:text-white font-bold">{monthlyRevFormatted}</span>
+                  <span className="text-[10px] text-[#26658C] dark:text-[#A7EBF2]/70 uppercase font-medium tracking-wider">Est. Monthly Rev</span>
+                  <span className="text-base sm:text-lg text-[#011C40] dark:text-white font-normal">{monthlyRevFormatted}</span>
                   <span className="text-[10.5px] text-[#26658C]/70 dark:text-[#A7EBF2]/60 font-medium">
                     {activeTenants > 0 ? 'Monthly estimate' : '—'}
                   </span>
@@ -215,7 +215,7 @@ export function PropertyTelemetryModal({
                   <span className="material-symbols-outlined text-[#54ACBF] text-[15px] group-hover:text-[#A7EBF2] transition-colors">north_east</span>
                 </div>
                 <div>
-                  <h5 className="text-xs font-bold text-[#011C40] dark:text-white">Preview Listing</h5>
+                  <h5 className="text-xs font-medium text-[#011C40] dark:text-white">Preview Listing</h5>
                   <p className="text-[11px] text-[#26658C] dark:text-[#A7EBF2]/80 mt-0.5 leading-relaxed">
                     View the public listing page as seen by prospective residents.
                   </p>
@@ -223,7 +223,7 @@ export function PropertyTelemetryModal({
                 <button
                   type="button"
                   onClick={handleOpenPublicUrl}
-                  className="w-full py-2 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] font-extrabold text-xs transition-all cursor-pointer shadow-sm active:scale-95"
+                  className="w-full py-2 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] font-medium text-xs transition-all cursor-pointer shadow-sm active:scale-95"
                 >
                   Launch Preview
                 </button>
@@ -237,7 +237,7 @@ export function PropertyTelemetryModal({
                   <span className="material-symbols-outlined text-[#54ACBF] text-[15px] group-hover:text-[#A7EBF2] transition-colors">chevron_right</span>
                 </div>
                 <div>
-                  <h5 className="text-xs font-bold text-[#011C40] dark:text-white">Update Amenities</h5>
+                  <h5 className="text-xs font-medium text-[#011C40] dark:text-white">Update Amenities</h5>
                   <p className="text-[11px] text-[#26658C] dark:text-[#A7EBF2]/80 mt-0.5 leading-relaxed">
                     Configure Wi-Fi, food options, gym passes, and house rules.
                   </p>
@@ -245,7 +245,7 @@ export function PropertyTelemetryModal({
                 <button
                   type="button"
                   onClick={handleConfigureAmenities}
-                  className="w-full py-2 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] font-extrabold text-xs transition-all cursor-pointer shadow-sm active:scale-95"
+                  className="w-full py-2 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] font-medium text-xs transition-all cursor-pointer shadow-sm active:scale-95"
                 >
                   Configure Perks
                 </button>
@@ -259,7 +259,7 @@ export function PropertyTelemetryModal({
                   <span className="material-symbols-outlined text-[#54ACBF] text-[15px] group-hover:text-[#A7EBF2] transition-colors">open_in_new</span>
                 </div>
                 <div>
-                  <h5 className="text-xs font-bold text-[#011C40] dark:text-white">Manage Rooms</h5>
+                  <h5 className="text-xs font-medium text-[#011C40] dark:text-white">Manage Rooms</h5>
                   <p className="text-[11px] text-[#26658C] dark:text-[#A7EBF2]/80 mt-0.5 leading-relaxed">
                     Adjust per-bed pricing, AC/Non-AC categories, and allocations.
                   </p>
@@ -267,7 +267,7 @@ export function PropertyTelemetryModal({
                 <button
                   type="button"
                   onClick={handleManageRooms}
-                  className="w-full py-2 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] font-extrabold text-xs transition-all cursor-pointer shadow-sm active:scale-95"
+                  className="w-full py-2 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] font-medium text-xs transition-all cursor-pointer shadow-sm active:scale-95"
                 >
                   Room Inventory
                 </button>
