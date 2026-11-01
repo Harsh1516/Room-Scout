@@ -87,7 +87,7 @@ export const getAllStays = async (req, res, next) => {
     else if (sort === 'title-asc') sortOption = { title: 1 };
 
     const staysQuery = Stay.find(mongoFilter)
-      .populate('hostId', 'name email phone avatar status')
+      .populate('hostId', 'name email phone avatar status createdAt')
       .sort(sortOption)
       .lean();
 
@@ -131,7 +131,7 @@ export const getStayById = async (req, res, next) => {
     }
 
     const stay = await Stay.findById(id)
-      .populate('hostId', 'name email phone avatar status')
+      .populate('hostId', 'name email phone avatar status createdAt')
       .lean();
 
     if (!stay) {

@@ -23,6 +23,7 @@ import {
   verifySubscriptionRequest,
   manualActivateSubscription,
   deleteSubscriptionRequest,
+  deleteAllSubscriptionRequests,
   bulkVerifySubscriptions,
   extractStatementUtrs,
 } from '../controllers/subscriptionController.js';
@@ -32,7 +33,9 @@ const router = express.Router();
 router.route('/payment-settings').get(adminLimiter, requireAdmin, getPlatformPaymentSettings).put(adminLimiter, requireAdmin, updatePlatformPaymentSettings);
 
 // Platform Host Subscription Administration
-router.route('/subscriptions').get(adminLimiter, requireAdmin, getAdminSubscriptionRequests);
+router.route('/subscriptions')
+  .get(adminLimiter, requireAdmin, getAdminSubscriptionRequests)
+  .delete(adminLimiter, requireAdmin, deleteAllSubscriptionRequests);
 router.route('/subscriptions/bulk-verify').post(adminLimiter, requireAdmin, bulkVerifySubscriptions);
 router.route('/subscriptions/extract-statement').post(adminLimiter, requireAdmin, extractStatementUtrs);
 router.route('/subscriptions/:id/verify').post(adminLimiter, requireAdmin, verifySubscriptionRequest);

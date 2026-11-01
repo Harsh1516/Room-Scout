@@ -58,7 +58,18 @@ export function PropertyOverviewSection({
   const hostPhone = hostData.phone || stay?.hostPhone || stay?.phone;
   const hostAvatar = hostData.avatar || stay?.avatar;
   const hostBio = hostData.bio || stay?.bio || stay?.description;
-  const hostJoined = hostData.joinedDate || hostData.createdAt || stay?.joinedDate;
+  const hostJoined = hostData.joinedDate || hostData.createdAt || stay?.hostJoined || stay?.joinedDate || stay?.createdAt;
+
+  const formattedJoinedDate = useMemo(() => {
+    if (!hostJoined) return null;
+    const d = new Date(hostJoined);
+    if (isNaN(d.getTime())) return null;
+    return d.toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  }, [hostJoined]);
 
   // Exact Host Facilities / Amenities
   const actualAmenities = (Array.isArray(stay?.facilities) && stay.facilities.length > 0)
@@ -259,87 +270,66 @@ export function PropertyOverviewSection({
                 <div className="space-y-5 sm:space-y-6 max-w-2xl mx-auto py-2">
                   {/* Host Profile Header Card */}
                   <div className="p-6 sm:p-7 rounded-3xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/90 dark:border-white/[0.08] shadow-xs">
-                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
-                      {/* Avatar */}
-                      <div className="relative shrink-0">
-                        <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-2xl p-1 bg-white dark:bg-[#080e18] border border-slate-200 dark:border-white/10 shadow-md flex items-center justify-center overflow-hidden">
-                          {hostAvatar && (typeof hostAvatar === 'string' && (hostAvatar.startsWith('http') || hostAvatar.startsWith('data:') || hostAvatar.startsWith('/'))) ? (
-                            <img src={hostAvatar} alt={hostName} className="w-full h-full object-cover rounded-xl" />
-                          ) : (
-                            <div className="w-full h-full rounded-xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-700 text-white font-black text-2xl flex items-center justify-center shadow-inner tracking-wider">
-                              {hostAvatar || (hostName ? hostName.slice(0, 2).toUpperCase() : 'H')}
-                            </div>
-                          )}
-                        </div>
-                        {/* Status Dot */}
-                        <span
-                          className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-[#0c1424] shadow-xs"
-                          title="Verified Active Host"
-                        />
-                      </div>
-
-                      {/* Info & Badges */}
-                      <div className="flex-1 min-w-0 space-y-2">
-                        <div>
-                          <span className="text-[10px] font-black tracking-widest text-indigo-600 dark:text-indigo-400 uppercase">
-                            Host Profile
-                          </span>
-                          <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5 truncate">
-                            {hostName}
-                          </h3>
+                    <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-5 text-center sm:text-left">
+                      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+                        {/* Avatar */}
+                        <div className="relative shrink-0">
+                          <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-2xl p-1 bg-white dark:bg-[#080e18] border border-slate-200 dark:border-white/10 shadow-md flex items-center justify-center overflow-hidden">
+                            {hostAvatar && (typeof hostAvatar === 'string' && (hostAvatar.startsWith('http') || hostAvatar.startsWith('data:') || hostAvatar.startsWith('/'))) ? (
+                              <img src={hostAvatar} alt={hostName} className="w-full h-full object-cover rounded-xl" />
+                            ) : (
+                              <div className="w-full h-full rounded-xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-700 text-white font-normal text-2xl flex items-center justify-center shadow-inner tracking-wider">
+                                {hostAvatar || (hostName ? hostName.slice(0, 2).toUpperCase() : 'H')}
+                              </div>
+                            )}
+                          </div>
+                          {/* Status Dot */}
+                          <span
+                            className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-[#0c1424] shadow-xs"
+                            title="Verified Active Host"
+                          />
                         </div>
 
-                        <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap pt-0.5">
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-2xs">
-                            <span className="material-symbols-outlined text-[15px] leading-none">verified</span>
-                            Verified Host
-                          </span>
-
-                          {hostJoined && (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.05] border border-slate-200/80 dark:border-white/10">
-                              <span className="material-symbols-outlined text-[14px] text-slate-400 dark:text-slate-500 leading-none">calendar_month</span>
-                              Member since {new Date(hostJoined).getFullYear()}
+                        {/* Info & Badges */}
+                        <div className="space-y-1.5">
+                          <div>
+                            <span className="text-[10px] font-normal tracking-wider text-indigo-600 dark:text-indigo-400 uppercase">
+                              Host Profile
                             </span>
-                          )}
+                            <h3 className="text-xl sm:text-2xl font-normal text-slate-900 dark:text-white tracking-tight mt-0.5 truncate">
+                              {hostName}
+                            </h3>
+                          </div>
+
+                          <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap pt-0.5">
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-normal tracking-wide uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-2xs">
+                              <span className="material-symbols-outlined text-[15px] leading-none">verified</span>
+                              Verified Host
+                            </span>
+                          </div>
                         </div>
                       </div>
+
+                      {/* Right-most side: Joined Date */}
+                      {formattedJoinedDate && (
+                        <div className="sm:self-start shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-normal text-slate-600 dark:text-slate-300 bg-slate-100/90 dark:bg-white/[0.05] border border-slate-200/80 dark:border-white/10">
+                          <span className="material-symbols-outlined text-[15px] text-slate-400 dark:text-slate-400 leading-none">calendar_today</span>
+                          <span>Joined on {formattedJoinedDate}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  {/* Trust Highlights Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] text-center space-y-1">
-                      <div className="flex items-center justify-center text-amber-400 text-sm">
-                        <span className="material-symbols-outlined text-[18px]">star</span>
-                        <span className="font-extrabold text-sm ml-0.5 text-slate-900 dark:text-white">
-                          {currentRating || '4.9'}
-                        </span>
-                      </div>
-                      <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wider">
-                        Rating
-                      </span>
-                    </div>
-
-                    <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] text-center space-y-1">
-                      <div className="flex items-center justify-center text-indigo-500 dark:text-indigo-400 text-sm">
-                        <span className="material-symbols-outlined text-[18px]">reviews</span>
-                        <span className="font-extrabold text-sm ml-0.5 text-slate-900 dark:text-white">
-                          {reviews.length || 0}
-                        </span>
-                      </div>
-                      <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wider">
-                        Reviews
-                      </span>
-                    </div>
-
+                  {/* Trust Highlights Grid (Rating and Reviews removed) */}
+                  <div className="grid grid-cols-2 gap-3">
                     <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] text-center space-y-1">
                       <div className="flex items-center justify-center text-emerald-500 dark:text-emerald-400 text-sm">
                         <span className="material-symbols-outlined text-[18px]">shield</span>
-                        <span className="font-extrabold text-sm ml-0.5 text-slate-900 dark:text-white">
+                        <span className="font-normal text-sm ml-1 text-slate-900 dark:text-white">
                           100%
                         </span>
                       </div>
-                      <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wider">
+                      <span className="text-[10px] sm:text-[11px] font-normal text-slate-500 dark:text-slate-400 block uppercase tracking-wider">
                         Verified ID
                       </span>
                     </div>
@@ -347,11 +337,11 @@ export function PropertyOverviewSection({
                     <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] text-center space-y-1">
                       <div className="flex items-center justify-center text-sky-500 dark:text-sky-400 text-sm">
                         <span className="material-symbols-outlined text-[18px]">bolt</span>
-                        <span className="font-extrabold text-sm ml-0.5 text-slate-900 dark:text-white">
+                        <span className="font-normal text-sm ml-1 text-slate-900 dark:text-white">
                           Fast
                         </span>
                       </div>
-                      <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wider">
+                      <span className="text-[10px] sm:text-[11px] font-normal text-slate-500 dark:text-slate-400 block uppercase tracking-wider">
                         Response
                       </span>
                     </div>
@@ -364,11 +354,11 @@ export function PropertyOverviewSection({
                         <span className="material-symbols-outlined text-[18px] text-indigo-500 dark:text-indigo-400">
                           format_quote
                         </span>
-                        <h4 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider">
+                        <h4 className="text-xs sm:text-sm font-normal uppercase tracking-wider">
                           Host Note
                         </h4>
                       </div>
-                      <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium pl-6">
+                      <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-normal pl-6">
                         {hostBio}
                       </p>
                     </div>
@@ -381,10 +371,10 @@ export function PropertyOverviewSection({
                         <span className="material-symbols-outlined text-[20px]">mail</span>
                       </div>
                       <div className="min-w-0">
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+                        <span className="text-[10px] font-normal uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
                           Host Email
                         </span>
-                        <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate block mt-0.5">
+                        <span className="font-normal text-xs sm:text-sm text-slate-900 dark:text-white truncate block mt-0.5">
                           {hostEmail || 'Available on request'}
                         </span>
                       </div>
@@ -395,35 +385,35 @@ export function PropertyOverviewSection({
                         <span className="material-symbols-outlined text-[20px]">call</span>
                       </div>
                       <div className="min-w-0">
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+                        <span className="text-[10px] font-normal uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
                           Host Phone
                         </span>
-                        <span className="font-bold text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 truncate block mt-0.5">
+                        <span className="font-normal text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 truncate block mt-0.5">
                           {hostPhone || 'Available on request'}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex flex-col sm:flex-row gap-3 pt-1">
-                    {hostPhone && (
+                  {/* Actions: Centered Call Host button only (Black in light mode, White in dark mode) */}
+                  <div className="flex justify-center pt-2">
+                    {hostPhone ? (
                       <a
                         href={`tel:${hostPhone}`}
-                        className="flex-1 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+                        className="w-full sm:w-auto min-w-[220px] py-3.5 px-8 rounded-2xl bg-black hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-200 dark:text-black font-normal text-sm shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
                       >
                         <span className="material-symbols-outlined text-[18px]">call</span>
-                        <span>Call Host ({hostName})</span>
+                        <span>Call Host</span>
                       </a>
-                    )}
-                    {hostEmail && (
-                      <a
-                        href={`mailto:${hostEmail}`}
-                        className="flex-1 py-3.5 px-6 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 font-bold text-sm shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+                    ) : (
+                      <button
+                        type="button"
+                        disabled
+                        className="w-full sm:w-auto min-w-[220px] py-3.5 px-8 rounded-2xl bg-slate-200 text-slate-500 dark:bg-white/10 dark:text-slate-400 font-normal text-sm cursor-not-allowed flex items-center justify-center gap-2"
                       >
-                        <span className="material-symbols-outlined text-[18px]">mail</span>
-                        <span>Email Host</span>
-                      </a>
+                        <span className="material-symbols-outlined text-[18px]">call</span>
+                        <span>Call Host (Not Available)</span>
+                      </button>
                     )}
                   </div>
                 </div>

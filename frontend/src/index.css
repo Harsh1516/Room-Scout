@@ -420,6 +420,15 @@ input:autofill:active {
     inset 0 -1px 1.5px rgba(0, 0, 0, 0.2) !important;
 }
 
+/* Blue Hover effect for Buy or Renew Plan button */
+.apple-liquid-nav.host-buy-btn:hover,
+.dark .apple-liquid-nav.host-buy-btn:hover {
+  background: #2563eb !important;
+  border-color: #3b82f6 !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 25px -3px rgba(37, 99, 235, 0.45), inset 0 1px 1.5px rgba(255, 255, 255, 0.3) !important;
+}
+
 /* Apple iOS Crystal Glass Console Capsule with Defined Floating Shadow */
 .console-clear-capsule {
   background: rgba(255, 255, 255, 0.95) !important;

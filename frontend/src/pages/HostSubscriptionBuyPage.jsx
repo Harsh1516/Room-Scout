@@ -11,6 +11,8 @@ export function HostSubscriptionBuyPage() {
   const [submitting, setSubmitting] = useState(false);
   const [plansData, setPlansData] = useState(null);
   const [selectedPlanCode, setSelectedPlanCode] = useState('monthly');
+  const [isPlanConfirmed, setIsPlanConfirmed] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [transactionRef, setTransactionRef] = useState('');
   const [receiptImage, setReceiptImage] = useState('');
   const [receiptPreview, setReceiptPreview] = useState('');
@@ -112,6 +114,7 @@ export function HostSubscriptionBuyPage() {
         setTransactionRef('');
         setReceiptImage('');
         setReceiptPreview('');
+        setIsPlanConfirmed(false);
         // Return to subscription status & history page where request is now visible
         navigate('/host/subscription');
       } else {
@@ -126,53 +129,63 @@ export function HostSubscriptionBuyPage() {
 
   const selectedPlan = plansData?.plans?.find((p) => p.code === selectedPlanCode) || {
     code: 'monthly',
-    label: '1 Month Plan',
+    label: '1 Month',
     durationMonths: 1,
-    price: 200,
+    price: 250,
+  };
+
+  const handleConfirmPlan = () => {
+    setIsPlanConfirmed(true);
+    setShowConfirmModal(false);
+    toast.success(`${selectedPlan.label} locked. Proceed with payment below.`);
+  };
+
+  const handleResetPlan = () => {
+    setIsPlanConfirmed(false);
+    setTransactionRef('');
+    setReceiptImage('');
+    setReceiptPreview('');
+  };
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/host/subscription');
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-purple-500/30">
-      {/* ── 1. LEFT FLOATING ISLAND: BACK BUTTON (Navigates back to /host/subscription) ── */}
-      <div className="fixed top-3.5 left-3 sm:top-5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none">
-        <button
-          type="button"
-          onClick={() => navigate('/host/subscription')}
-          data-no-hover="true"
-          className="apple-liquid-nav flex items-center justify-center h-8 sm:h-9 px-3 py-1 sm:px-3.5 sm:py-1.5 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 dark:border-white/15 shadow-xs cursor-pointer text-slate-800 dark:text-slate-200 font-normal text-xs sm:text-sm select-none active:scale-95 transition-transform shrink-0"
-          title="Return to Subscription Status"
-        >
-          <svg
-            className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 dark:text-slate-300 stroke-[2.5]"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-purple-500/30 host-font-scope host-page-scope">
+      {/* ── Top Header Navigation Bar (Matching Host Dashboard) ── */}
+      <header className="relative w-full h-16 sm:h-20 pointer-events-none select-none z-50 font-body-md host-font-scope antialiased">
+        {/* ── 1. LEFT FLOATING ISLAND: BACK BUTTON (Exact match to Host Dashboard) ── */}
+        <div className="fixed top-3.5 left-3 sm:top-5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none">
+          <button
+            type="button"
+            onClick={handleBack}
+            data-no-hover="true"
+            className="apple-liquid-nav flex items-center justify-center h-8 sm:h-9 px-3 py-1 sm:px-3.5 sm:py-1.5 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 dark:border-white/15 shadow-xs cursor-pointer text-slate-800 dark:text-slate-200 font-semibold text-xs sm:text-sm select-none active:scale-95 transition-transform shrink-0"
+            title="Return to Subscription Status"
           >
-            <line x1="19" y1="12" x2="5" y2="12" />
-            <polyline points="12 19 5 12 12 5" />
-          </svg>
-          <span>Back</span>
-        </button>
-      </div>
+            <svg
+              className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 dark:text-slate-300 stroke-[2]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+            <span>Back</span>
+          </button>
+        </div>
+      </header>
 
       {/* ── MAIN CONTENT CONTAINER ── */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 pt-24 pb-16 flex flex-col gap-8">
-        {/* Title & Introduction */}
-        <div className="flex flex-col gap-2">
-          <div className="inline-flex items-center gap-2 text-xs font-normal tracking-wide text-purple-400">
-            <span>Property visibility & access</span>
-          </div>
-          <h1 className="text-2xl sm:text-4xl font-normal text-white flex items-center gap-3">
-            <span>Purchase Subscription Plan</span>
-            <span className="text-xl sm:text-2xl">✨</span>
-          </h1>
-          <p className="text-slate-400 text-sm sm:text-base max-w-2xl leading-relaxed font-normal">
-            Choose your desired duration, pay the exact amount via UPI or QR code, and submit your 12-digit transaction reference number for instant verification.
-          </p>
-        </div>
-
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 pt-20 sm:pt-24 pb-16 flex flex-col gap-8">
         {/* ── STEP 1: CHOOSE SUBSCRIPTION PLAN ── */}
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
@@ -317,12 +330,12 @@ export function HostSubscriptionBuyPage() {
                 href={`upi://pay?pa=${encodeURIComponent(plansData.upiId)}&pn=${encodeURIComponent(
                   plansData.payeeName || 'Room Scout Platform'
                 )}&am=${selectedPlan.price}&cu=INR&tn=${encodeURIComponent(`RoomScout ${selectedPlan.label}`)}`}
-                className="w-full py-2.5 px-4 rounded-2xl text-center font-normal text-xs sm:text-sm bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-2xl text-center font-medium text-xs sm:text-sm bg-white hover:bg-slate-100 text-black shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-98 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer border border-white/20"
               >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                <svg className="w-4 h-4 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
                 </svg>
-                <span>Open in UPI App (GPay / PhonePe / Paytm)</span>
+                <span>Open UPI App</span>
               </a>
             )}
           </div>

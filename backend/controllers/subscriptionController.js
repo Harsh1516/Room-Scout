@@ -41,6 +41,24 @@ export function buildPlatformUpiUri({ upiId, payeeName, amount, hostNote = '' })
   return `upi://pay?${params.toString()}`;
 }
 
+// Helper: Retain only the latest 3 subscription payment records for a host; delete all previous records from DB
+export async function pruneHostSubscriptionHistory(hostId) {
+  if (!hostId) return;
+  try {
+    const allRecords = await HostSubscriptionPayment.find({ hostId })
+      .sort({ createdAt: -1 })
+      .select('_id')
+      .lean();
+
+    if (allRecords.length > 3) {
+      const idsToDelete = allRecords.slice(3).map((r) => r._id);
+      await HostSubscriptionPayment.deleteMany({ _id: { $in: idsToDelete } });
+    }
+  } catch (err) {
+    console.error('Error pruning host subscription history:', err.message);
+  }
+}
+
 // @desc    Get platform subscription plans and platform UPI details
 // @route   GET /api/subscriptions/plans
 // @access  Public / Host
@@ -71,6 +89,48 @@ export async function getSubscriptionPlans(req, res, next) {
       }
     }
 
+    const rawPlans = Array.isArray(settings.plans) && settings.plans.length > 0
+      ? settings.plans.filter((p) => p.isActive !== false)
+      : [
+          { code: 'monthly', label: '1 Month', durationMonths: 1, price: 250, isActive: true },
+          { code: 'quarterly', label: '3 Months', durationMonths: 3, price: 675, isActive: true },
+          { code: 'halfYearly', label: '6 Months', durationMonths: 6, price: 1200, isActive: true },
+          { code: 'yearly', label: '1 Year', durationMonths: 12, price: 2100, isActive: true },
+        ];
+
+    // Generate dynamic QR code encoding the exact payable amount for each plan
+    const plans = await Promise.all(
+      rawPlans.map(async (p) => {
+        const priceNum = Number(p.price) || 0;
+        let planQr = '';
+        let planUpiUri = '';
+        if (settings.upiId && priceNum > 0) {
+          planUpiUri = buildPlatformUpiUri({
+            upiId: settings.upiId,
+            payeeName: settings.payeeName || 'Room Scout Platform',
+            amount: priceNum,
+            hostNote: `RoomScout ${p.label || p.code} Subscription`,
+          });
+          try {
+            planQr = await QRCode.toDataURL(planUpiUri, {
+              errorCorrectionLevel: 'M',
+              margin: 2,
+              width: 320,
+              color: { dark: '#030712', light: '#ffffff' },
+            });
+          } catch (qrErr) {
+            console.warn(`Dynamic QR generation failed for plan ${p.code}:`, qrErr.message);
+          }
+        }
+        return {
+          ...p,
+          price: priceNum,
+          upiUri: planUpiUri,
+          qrCodeDataUrl: planQr || qrCodeDataUrl,
+        };
+      })
+    );
+
     return res.json({
       success: true,
       payeeName: settings.payeeName || '',
@@ -79,9 +139,7 @@ export async function getSubscriptionPlans(req, res, next) {
       qrCodeUrl: settings.qrCodeUrl || qrCodeDataUrl,
       qrCodeDataUrl: qrCodeDataUrl || settings.qrCodeUrl || '',
       paymentInstructions: settings.paymentInstructions || 'Scan QR, pay via UPI, and submit the 12-digit UTR reference number.',
-      plans: Array.isArray(settings.plans)
-        ? settings.plans.filter((p) => p.isActive !== false)
-        : [],
+      plans,
     });
   } catch (error) {
     return next(error);
@@ -135,6 +193,9 @@ export async function getHostSubscriptionStatus(req, res, next) {
       ? Math.max(0, Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
       : 0;
 
+    // Ensure host payment history strictly retains only latest 3 records (deleting previous records from DB)
+    await pruneHostSubscriptionHistory(host._id);
+
     // Fetch latest pending payment request
     const pendingPayment = await HostSubscriptionPayment.findOne({
       hostId: host._id,
@@ -143,10 +204,10 @@ export async function getHostSubscriptionStatus(req, res, next) {
       .sort({ createdAt: -1 })
       .lean();
 
-    // Fetch recent payment history
+    // Fetch recent payment history (strictly latest 3 records)
     const history = await HostSubscriptionPayment.find({ hostId: host._id })
       .sort({ createdAt: -1 })
-      .limit(15)
+      .limit(3)
       .lean();
 
     return res.json({
@@ -264,6 +325,9 @@ export async function submitHostSubscriptionPayment(req, res, next) {
       recipientUpiId: settings.upiId || '',
       status: 'PENDING',
     });
+
+    // Auto-prune database so host keeps only latest 3 records (older records deleted)
+    await pruneHostSubscriptionHistory(host._id);
 
     // If host doesn't have an active subscription, mark as PENDING_VERIFICATION
     if (host.subscription?.status !== 'ACTIVE') {
@@ -549,6 +613,39 @@ export async function deleteSubscriptionRequest(req, res, next) {
       success: true,
       message: 'Subscription payment entry deleted successfully.',
       deletedId: id,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// @desc    Admin deletes all subscription payment requests
+// @route   DELETE /api/enter/subscriptions
+// @access  Private (Admin)
+export async function deleteAllSubscriptionRequests(req, res, next) {
+  try {
+    const result = await HostSubscriptionPayment.deleteMany({});
+
+    // Reset pending verification for hosts if no pending requests remain
+    const pendingHosts = await Host.find({ 'subscription.status': 'PENDING_VERIFICATION' });
+    for (const host of pendingHosts) {
+      const remainingPending = await HostSubscriptionPayment.countDocuments({
+        hostId: host._id,
+        status: 'PENDING',
+      });
+      if (remainingPending === 0) {
+        host.subscription.status =
+          host.subscription?.expiresAt && new Date(host.subscription.expiresAt) > new Date()
+            ? 'ACTIVE'
+            : 'NONE';
+        await host.save();
+      }
+    }
+
+    return res.json({
+      success: true,
+      message: `All subscription payment records (${result.deletedCount || 0}) deleted successfully.`,
+      deletedCount: result.deletedCount || 0,
     });
   } catch (error) {
     return next(error);

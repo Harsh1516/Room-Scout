@@ -298,6 +298,21 @@ export function AdminPage() {
     }
   };
 
+  const handleDeleteAllSubscriptions = async () => {
+    try {
+      const res = await adminAPI.deleteAllSubscriptionRequests();
+      toast.success(res.message || 'All subscription payment records deleted.');
+      setSubscriptions([]);
+      setSubscriptionCounts({ pending: 0, verified: 0, rejected: 0, total: 0 });
+      fetchSubscriptions(true);
+      fetchData(true);
+      return res;
+    } catch (err) {
+      toast.error(err.message || 'Failed to delete all subscription records.');
+      throw err;
+    }
+  };
+
   const handleBulkVerifySubscriptions = async (payload) => {
     try {
       const res = await adminAPI.bulkVerifySubscriptions(payload);
@@ -1052,6 +1067,7 @@ export function AdminPage() {
             onVerify={handleVerifySubscription}
             onReject={handleRejectSubscription}
             onDelete={handleDeleteSubscription}
+            onDeleteAll={handleDeleteAllSubscriptions}
             onBulkVerify={handleBulkVerifySubscriptions}
             onManualActivate={handleManualActivateHostSubscription}
             hosts={hosts}

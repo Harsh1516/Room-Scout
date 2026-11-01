@@ -429,6 +429,11 @@ export const adminAPI = {
       body: JSON.stringify(payload),
     }),
 
+  deleteAllSubscriptionRequests: () =>
+    request('/enter/subscriptions', {
+      method: 'DELETE',
+    }),
+
   deleteSubscriptionRequest: (id) =>
     request(`/enter/subscriptions/${encodeURIComponent(id)}`, {
       method: 'DELETE',

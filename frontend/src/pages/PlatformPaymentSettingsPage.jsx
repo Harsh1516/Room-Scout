@@ -13,9 +13,6 @@ export default function PlatformPaymentSettingsPage() {
   const [form, setForm] = useState({
     payeeName: '',
     upiId: '',
-    mobileNumber: '',
-    qrCodeUrl: '',
-    paymentInstructions: '',
     plans: EMPTY_PLANS,
   });
   const [loading, setLoading] = useState(true);
@@ -30,9 +27,6 @@ export default function PlatformPaymentSettingsPage() {
         setForm({
           payeeName: settings.payeeName || '',
           upiId: settings.upiId || '',
-          mobileNumber: settings.mobileNumber || '',
-          qrCodeUrl: settings.qrCodeUrl || '',
-          paymentInstructions: settings.paymentInstructions || '',
           plans: (settings.plans || EMPTY_PLANS).map((plan) => ({
             ...plan,
             price: plan.price ?? '',
@@ -168,61 +162,7 @@ export default function PlatformPaymentSettingsPage() {
                 required
               />
             </label>
-
-            <label className="block space-y-1.5">
-              <span className="text-xs font-normal text-slate-700 dark:text-slate-300">
-                Linked Mobile Number
-              </span>
-              <input
-                className={inputClass}
-                value={form.mobileNumber}
-                onChange={(e) => updateField('mobileNumber', e.target.value)}
-                placeholder="e.g. 7988295563"
-              />
-            </label>
-
-            <label className="block space-y-1.5">
-              <span className="text-xs font-normal text-slate-700 dark:text-slate-300">
-                Platform QR Code Image URL
-              </span>
-              <input
-                className={inputClass}
-                value={form.qrCodeUrl}
-                onChange={(e) => updateField('qrCodeUrl', e.target.value)}
-                placeholder="https://... or upload link"
-              />
-            </label>
           </div>
-
-          {form.qrCodeUrl && (
-            <div className="flex items-center gap-4 p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.06]">
-              <img
-                src={form.qrCodeUrl}
-                alt="Platform UPI QR code preview"
-                className="h-28 w-28 rounded-xl border border-slate-200 dark:border-white/10 object-contain p-1.5 bg-white shadow-xs"
-              />
-              <div className="flex flex-col gap-1 text-xs">
-                <span className="font-normal text-slate-800 dark:text-slate-200">
-                  Live QR Code Active
-                </span>
-                <span className="text-slate-400 text-[11px] font-normal">
-                  Hosts can scan this QR code directly with Google Pay, PhonePe, or Paytm.
-                </span>
-              </div>
-            </div>
-          )}
-
-          <label className="block space-y-1.5">
-            <span className="text-xs font-normal text-slate-700 dark:text-slate-300">
-              Payment Instructions for Hosts
-            </span>
-            <textarea
-              className={inputClass + ' min-h-20 resize-none leading-relaxed font-normal'}
-              value={form.paymentInstructions}
-              onChange={(e) => updateField('paymentInstructions', e.target.value)}
-              placeholder="e.g. Pay the exact plan amount via UPI. After successful payment, copy the 12-digit UTR transaction number and submit it below for fast admin verification."
-            />
-          </label>
         </div>
 
         {/* ── CARD 2: SUBSCRIPTION DURATION & PRICING MATRIX ── */}

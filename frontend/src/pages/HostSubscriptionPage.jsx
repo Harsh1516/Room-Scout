@@ -52,53 +52,64 @@ export function HostSubscriptionPage() {
 
   const subscription = subscriptionInfo?.subscription;
   const stay = subscriptionInfo?.stay;
-  const history = subscriptionInfo?.history || [];
+  const history = (subscriptionInfo?.history || []).slice(0, 3);
 
   const isLive = Boolean(subscription?.isLive);
   const status = subscription?.status || 'NONE';
 
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-purple-500/30">
-      {/* ── 1. LEFT FLOATING ISLAND: BACK BUTTON (Exact position matching Host Dashboard) ── */}
-      <div className="fixed top-3.5 left-3 sm:top-5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none">
-        <button
-          type="button"
-          onClick={() => navigate('/host/dashboard')}
-          data-no-hover="true"
-          className="apple-liquid-nav flex items-center justify-center h-8 sm:h-9 px-3 py-1 sm:px-3.5 sm:py-1.5 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 dark:border-white/15 shadow-xs cursor-pointer text-slate-800 dark:text-slate-200 font-normal text-xs sm:text-sm select-none active:scale-95 transition-transform shrink-0"
-          title="Return to Dashboard"
-        >
-          <svg
-            className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 dark:text-slate-300 stroke-[2]"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <line x1="19" y1="12" x2="5" y2="12" />
-            <polyline points="12 19 5 12 12 5" />
-          </svg>
-          <span>Back</span>
-        </button>
-      </div>
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/host/dashboard');
+    }
+  };
 
-      {/* ── 2. RIGHT FLOATING ISLAND: ONLY BUY BUTTON (Replaces Status Capsule & Theme Toggle) ── */}
-      <div className="fixed top-3.5 right-3 sm:top-5 sm:right-6 z-50 flex items-center gap-2 pointer-events-auto select-none">
-        <button
-          type="button"
-          onClick={() => navigate('/host/subscription/buy')}
-          className="apple-liquid-nav flex items-center justify-center h-8 sm:h-9 px-3.5 sm:px-4 gap-1.5 rounded-full border border-purple-500/30 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-normal text-xs sm:text-sm shadow-md active:scale-95 transition-all cursor-pointer"
-          title="Buy Subscription Plan"
-        >
-          <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <circle cx="9" cy="21" r="1" />
-            <circle cx="20" cy="21" r="1" />
-            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-          </svg>
-          <span>Buy</span>
-        </button>
-      </div>
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-purple-500/30 host-font-scope host-page-scope">
+      {/* ── Top Header Navigation Bar (Matching Host Dashboard) ── */}
+      <header className="relative w-full h-16 sm:h-20 pointer-events-none select-none z-50 font-body-md host-font-scope antialiased">
+        {/* ── 1. LEFT FLOATING ISLAND: BACK BUTTON (Exact match to Host Dashboard) ── */}
+        <div className="fixed top-3.5 left-3 sm:top-5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none">
+          <button
+            type="button"
+            onClick={handleBack}
+            data-no-hover="true"
+            className="apple-liquid-nav flex items-center justify-center h-8 sm:h-9 px-3 py-1 sm:px-3.5 sm:py-1.5 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 dark:border-white/15 shadow-xs cursor-pointer text-slate-800 dark:text-slate-200 font-semibold text-xs sm:text-sm select-none active:scale-95 transition-transform shrink-0"
+            title="Return to Dashboard"
+          >
+            <svg
+              className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 dark:text-slate-300 stroke-[2]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+            <span>Back</span>
+          </button>
+        </div>
+
+        {/* ── 2. RIGHT FLOATING ISLAND: BUY OR RENEW PLAN BUTTON ── */}
+        <div className="fixed top-3.5 right-3 sm:top-5 sm:right-6 z-50 flex items-center gap-2 pointer-events-auto select-none">
+          <button
+            type="button"
+            onClick={() => navigate('/host/subscription/buy')}
+            className="apple-liquid-nav host-buy-btn flex items-center justify-center h-8 sm:h-9 px-3.5 sm:px-4 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 dark:border-white/15 text-slate-800 dark:text-slate-200 font-semibold text-xs sm:text-sm shadow-xs active:scale-95 transition-all cursor-pointer select-none"
+            title="Buy or Renew Subscription Plan"
+          >
+            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="9" cy="21" r="1" />
+              <circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+            </svg>
+            <span>Buy or Renew Plan</span>
+          </button>
+        </div>
+      </header>
 
       {/* ── MAIN CONTENT CONTAINER ── */}
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 pt-24 pb-16 flex flex-col gap-8">
@@ -112,19 +123,6 @@ export function HostSubscriptionPage() {
               <span>Host Subscription Plans</span>
               <span className="text-xl sm:text-2xl">✨</span>
             </h1>
-
-            <button
-              type="button"
-              onClick={() => navigate('/host/subscription/buy')}
-              className="inline-flex items-center self-start sm:self-auto gap-2 px-4 py-2 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white text-xs sm:text-sm font-normal shadow-lg shadow-purple-600/20 active:scale-95 transition-all cursor-pointer"
-            >
-              <svg className="w-4 h-4 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <circle cx="9" cy="21" r="1" />
-                <circle cx="20" cy="21" r="1" />
-                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-              </svg>
-              <span>Buy or Renew Plan</span>
-            </button>
           </div>
           <p className="text-slate-400 text-sm sm:text-base max-w-2xl leading-relaxed font-normal">
             Keep your stay actively live on RoomScout so travelers and students can find, explore, and request direct bookings for your property.

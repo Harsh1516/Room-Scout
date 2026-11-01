@@ -353,17 +353,43 @@ export function DirectUpiPaymentModal({
                 {statusState !== 'VERIFIED' && (
                   <form onSubmit={handleSubmitReference} className="space-y-4 pt-1">
                     <div>
-                      <label className="block text-xs font-bold text-slate-900 dark:text-white mb-1">
-                        {statusState === 'REJECTED'
-                          ? 'Updated UPI Transaction Reference (UTR / RRN) *'
-                          : 'UPI Transaction Reference (UTR / RRN / 12-Digit Ref) *'}
-                      </label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-bold text-slate-900 dark:text-white">
+                          {statusState === 'REJECTED'
+                            ? 'Updated 12-Digit UPI Reference (UTR / RRN) *'
+                            : '12-Digit UPI Reference (UTR / RRN) *'}
+                        </label>
+                        <span
+                          className={`text-xs font-mono font-bold ${
+                            transactionRef.length === 12
+                              ? 'text-emerald-600 dark:text-emerald-400'
+                              : 'text-slate-400 dark:text-slate-500'
+                          }`}
+                        >
+                          {transactionRef.length}/12
+                        </span>
+                      </div>
                       <input
                         type="text"
+                        inputMode="numeric"
+                        pattern="\d{12}"
+                        maxLength={12}
                         value={transactionRef}
-                        onChange={(e) => setTransactionRef(e.target.value.toUpperCase())}
-                        placeholder="e.g. 423512349876 or UPI-TXN-12345"
-                        maxLength={40}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '').slice(0, 12);
+                          setTransactionRef(val);
+                        }}
+                        onKeyDown={(e) => {
+                          if (
+                            !/^\d$/.test(e.key) &&
+                            !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'].includes(e.key) &&
+                            !e.ctrlKey &&
+                            !e.metaKey
+                          ) {
+                            e.preventDefault();
+                          }
+                        }}
+                        placeholder="Enter 12-digit UPI reference (e.g. 430219882711)"
                         required
                         className="w-full px-3.5 py-2.5 rounded-xl text-xs font-mono font-semibold bg-white dark:bg-slate-950 border border-slate-300 dark:border-white/15 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 uppercase placeholder:normal-case placeholder:font-sans placeholder:text-slate-400"
                       />

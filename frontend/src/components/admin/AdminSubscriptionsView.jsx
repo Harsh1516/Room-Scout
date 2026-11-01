@@ -11,6 +11,7 @@ export function AdminSubscriptionsView({
   onVerify = async () => {},
   onReject = async () => {},
   onDelete = async () => {},
+  onDeleteAll = async () => {},
   onBulkVerify = async () => {},
   onManualActivate = async () => {},
   hosts = [],
@@ -23,6 +24,8 @@ export function AdminSubscriptionsView({
   // Delete State
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [isDeletingId, setIsDeletingId] = useState(null);
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
 
   // Verification Modal State
   const [verifyingItem, setVerifyingItem] = useState(null);
@@ -147,6 +150,19 @@ export function AdminSubscriptionsView({
       toast.error(err.message || 'Failed to delete entry.');
     } finally {
       setIsDeletingId(null);
+    }
+  };
+
+  // Confirm Delete All action
+  const handleConfirmDeleteAll = async () => {
+    try {
+      setIsDeletingAll(true);
+      await onDeleteAll();
+      setConfirmDeleteAll(false);
+    } catch (err) {
+      toast.error(err.message || 'Failed to delete all records.');
+    } finally {
+      setIsDeletingAll(false);
     }
   };
 
@@ -831,7 +847,7 @@ export function AdminSubscriptionsView({
                             Allow / Verify
                           </button>
                         ) : isMatchedVerified ? (
-                          <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-normal bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                          <span className="inline-flex items-center gap-1 text-xs font-normal text-emerald-600 dark:text-emerald-400">
                             ✓ Verified & live
                           </span>
                         ) : matched?.status === 'REJECTED' ? (
@@ -855,22 +871,72 @@ export function AdminSubscriptionsView({
       <div className="rounded-3xl border border-slate-200/80 dark:border-white/[0.08] bg-white/80 dark:bg-[#0B0F1D]/80 backdrop-blur-2xl shadow-xl overflow-hidden relative">
         <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-purple-400/25 to-transparent pointer-events-none" />
 
-        <div className="px-5 py-4 border-b border-slate-200/80 dark:border-white/[0.08] bg-slate-50/60 dark:bg-white/[0.02] flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
+        <div className="px-5 py-4 border-b border-slate-200/80 dark:border-white/[0.08] bg-slate-50/60 dark:bg-white/[0.02] flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <span className="font-normal text-xs text-slate-600 dark:text-slate-300">
               Subscription requests directory
             </span>
             <span className="text-xs px-2.5 py-0.5 rounded-full font-normal bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/20">
               {filteredRequests.length}
             </span>
+            {subFilter !== 'ALL' && (
+              <button
+                type="button"
+                onClick={() => setSubFilter('ALL')}
+                className="inline-flex items-center gap-1 text-[11px] font-normal text-purple-600 dark:text-purple-400 hover:text-purple-500 bg-purple-500/10 hover:bg-purple-500/20 px-2 py-0.5 rounded-full border border-purple-500/20 cursor-pointer transition-colors"
+                title="Reset filter to all requests"
+              >
+                <span>Filter: {subFilter}</span>
+                <span className="text-xs font-bold leading-none">✕</span>
+              </button>
+            )}
           </div>
-          {subFilter !== 'ALL' && (
+
+          {/* Delete All Records Button with Confirmation */}
+          {confirmDeleteAll ? (
+            <div className="inline-flex items-center gap-2 bg-rose-500/10 dark:bg-rose-950/30 p-1 rounded-xl border border-rose-500/30 animate-in fade-in duration-200">
+              <span className="text-[11px] sm:text-xs text-rose-600 dark:text-rose-300 font-normal pl-1">
+                Delete all records?
+              </span>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteAll}
+                disabled={isDeletingAll}
+                className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-normal transition-all cursor-pointer shadow-xs active:scale-95 disabled:opacity-50 flex items-center gap-1"
+                title="Confirm deletion of all records"
+              >
+                {isDeletingAll ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  'Confirm'
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmDeleteAll(false)}
+                disabled={isDeletingAll}
+                className="px-2 py-1 rounded-lg bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300 text-xs font-normal transition-colors cursor-pointer"
+                title="Cancel deletion"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
             <button
               type="button"
-              onClick={() => setSubFilter('ALL')}
-              className="text-xs font-normal text-purple-600 dark:text-purple-400 hover:text-purple-500 hover:underline cursor-pointer transition-colors"
+              onClick={() => setConfirmDeleteAll(true)}
+              disabled={requests.length === 0}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-normal text-rose-600 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 hover:border-rose-500/40 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 shadow-2xs"
+              title={requests.length === 0 ? 'No records to delete' : 'Delete all subscription records'}
             >
-              Clear filter ({subFilter})
+              <svg className="w-3.5 h-3.5 stroke-[1.8]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+              <span>Delete all</span>
             </button>
           )}
         </div>
@@ -1038,7 +1104,7 @@ export function AdminSubscriptionsView({
                       <td className="py-3.5 px-3.5 align-middle">
                         {item.status === 'VERIFIED' ? (
                           <div className="flex flex-col gap-0.5">
-                            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-normal bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                            <span className="inline-flex items-center gap-1 text-xs font-normal text-emerald-600 dark:text-emerald-400">
                               ✓ Verified
                             </span>
                             {item.activatedExpiresAt && (
