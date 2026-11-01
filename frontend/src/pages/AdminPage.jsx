@@ -7,6 +7,7 @@ import { toast } from '../context/ToastContext';
 import { AdminHostsTable } from '../components/admin/AdminHostsTable';
 import { AdminUsersTable } from '../components/admin/AdminUsersTable';
 import { ThemeTogglePill } from '../components/common/ThemeTogglePill';
+import PlatformPaymentSettingsPage from './PlatformPaymentSettingsPage';
 
 export function AdminPage() {
   const navigate = useNavigate();
@@ -586,7 +587,16 @@ export function AdminPage() {
                 {hosts.length}
               </span>
             </button>
-          </nav>
+          
+            <button
+              type="button"
+              onClick={() => { setActiveTab('upi'); setSearchQuery(''); }}
+              className={`relative px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 transition-colors ${activeTab === 'upi' ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-600 dark:text-zinc-400'}`}
+            >
+              <span className="material-symbols-outlined relative z-10 text-sm">account_balance</span>
+              <span className="relative z-10">UPI Settings</span>
+            </button>
+</nav>
         </div>
 
         {/* 3. RIGHT: Actions & Profile Cluster */}
@@ -658,6 +668,8 @@ export function AdminPage() {
 
       {/* BEGIN: MainContent */}
       <main className="flex-1 w-full mx-auto px-3 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-8 flex flex-col gap-5">
+        {activeTab === 'upi' && <PlatformPaymentSettingsPage />}
+
         {activeTab === 'users' && (
           <>
             {/* BEGIN: FilterAndSearchToolbar */}
