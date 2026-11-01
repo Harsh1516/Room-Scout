@@ -562,9 +562,7 @@ export function AdminPage() {
                   : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white font-medium'
               }`}
             >
-              {activeTab === 'subscriptionPayments' && <div className="w-full px-3 sm:px-6 pt-24 pb-10"><AdminSubscriptionPaymentsPage /></div>}
-
-        {activeTab === 'hosts' && (
+              {activeTab === 'hosts' && (
                 <motion.div
                   layoutId="admin-nav-pill-indicator"
                   className="absolute inset-0 rounded-full bg-white dark:bg-zinc-800 shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)] border border-slate-200/80 dark:border-white/15"
@@ -878,6 +876,8 @@ export function AdminPage() {
             {/* END: UsersTableContainer */}
           </>
         )}
+
+        {activeTab === 'subscriptionPayments' && <div className="w-full px-3 sm:px-6 pt-24 pb-10"><AdminSubscriptionPaymentsPage /></div>}
 
         {activeTab === 'hosts' && (
           <div className="space-y-4 w-full">
