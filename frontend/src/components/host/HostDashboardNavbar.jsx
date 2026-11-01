@@ -38,7 +38,7 @@ export function HostDashboardNavbar({
   };
 
   const handleSelectTab = (tabKey) => {
-    if (!isApproved && tabKey !== 'property' && tabKey !== 'payment') {
+    if (!isApproved && tabKey !== 'property' && tabKey !== 'payment' && tabKey !== 'subscription') {
       toast.warning('🔒 Access Locked: Rooms & Guest Management unlock permanently once your property receives initial one-time admin approval.');
       return;
     }
