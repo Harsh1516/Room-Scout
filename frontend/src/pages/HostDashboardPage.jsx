@@ -26,6 +26,7 @@ const PropertyDetailsSection = lazy(() =>
 const PropertyArchitecturalBackground = lazy(() =>
   import('../components/common/PropertyArchitecturalBackground').then((m) => ({ default: m.PropertyArchitecturalBackground }))
 );
+const HostSubscriptionSection = lazy(() => import('../components/host/HostSubscriptionSection'));
 const HostPaymentSettingsSection = lazy(() =>
   import('../components/host/HostPaymentSettingsSection').then((m) => ({ default: m.HostPaymentSettingsSection }))
 );
@@ -75,7 +76,7 @@ export function HostDashboardPage() {
   const { isDark } = useTheme();
 
   const [activeTab, setActiveTab] = useState(() => location.state?.tab || 'property');
-  const TAB_ORDER = useMemo(() => ({ property: 0, room: 1, users: 2, paid: 3, payment: 4 }), []);
+  const TAB_ORDER = useMemo(() => ({ property: 0, room: 1, users: 2, paid: 3, subscription: 4, payment: 5 }), []);
   const prevTabRef = useRef(activeTab);
   const [tabDirection, setTabDirection] = useState(1);
 
@@ -1959,6 +1960,12 @@ export function HostDashboardPage() {
                     onSelectUserRequest={handleSelectUserRequest}
                   />
                 </Suspense>
+              </motion.div>
+            )}
+
+            {activeTab === 'subscription' && (
+              <motion.div key="console-tab-subscription" custom={tabDirection} variants={pageConsoleVariants} initial="enter" animate="center" exit="exit" className="w-full flex-1 flex flex-col px-3 sm:px-6 pt-3 sm:pt-4 pb-28 sm:pb-32 lg:pb-8 max-w-[1200px] mx-auto overflow-y-auto">
+                <Suspense fallback={<DashboardSkeletonLoader />}><HostSubscriptionSection /></Suspense>
               </motion.div>
             )}
 
