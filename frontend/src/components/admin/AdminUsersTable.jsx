@@ -123,28 +123,39 @@ export function AdminUsersTable({
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-12 text-center text-slate-500 dark:text-slate-400 text-xs">
-        <div className="inline-block animate-spin w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full mb-3" />
-        <p>Loading user records...</p>
+      <div className="rounded-3xl border border-slate-200/80 dark:border-white/[0.08] bg-white/80 dark:bg-[#0B0F1D]/85 backdrop-blur-2xl shadow-xl p-16 text-center text-slate-500 dark:text-slate-400 text-xs flex flex-col items-center justify-center gap-3">
+        <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+        <p className="font-semibold text-slate-700 dark:text-slate-300">Loading user records…</p>
       </div>
     );
   }
 
   if (users.length === 0) {
     return (
-      <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-12 text-center text-slate-400 text-xs">
-        {isOfflineView ? 'No offline guest records found.' : 'No registered users found.'}
+      <div className="rounded-3xl border border-slate-200/80 dark:border-white/[0.08] bg-white/80 dark:bg-[#0B0F1D]/85 backdrop-blur-2xl shadow-xl p-16 text-center flex flex-col items-center justify-center relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-purple-600/10 blur-3xl rounded-full pointer-events-none" />
+        <div className="w-14 h-14 rounded-2xl bg-purple-500/10 border border-purple-500/25 flex items-center justify-center text-purple-400 shadow-lg mb-3">
+          <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+            <path d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+        <h4 className="font-extrabold text-base text-slate-900 dark:text-white">No Users Found</h4>
+        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1">
+          {isOfflineView ? 'No offline guest records found matching your query.' : 'No registered users match your criteria.'}
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col" data-purpose="users-data-table-card">
+    <div className="rounded-3xl border border-slate-200/80 dark:border-white/[0.08] bg-white/80 dark:bg-[#0B0F1D]/85 backdrop-blur-2xl shadow-xl overflow-hidden flex flex-col relative" data-purpose="users-data-table-card">
+      <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-purple-400/25 to-transparent pointer-events-none" />
+
       <div className="overflow-x-auto min-w-full">
         <table className="w-full text-left border-collapse text-sm" id="users-directory-table">
           {/* Table Headings */}
           <thead>
-            <tr className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-zinc-900/60 text-slate-500 dark:text-slate-400 font-semibold text-xs tracking-wider uppercase">
+            <tr className="border-b border-slate-200/80 dark:border-white/[0.06] bg-slate-50/80 dark:bg-white/[0.02] text-slate-500 dark:text-slate-400 font-bold text-[10.5px] tracking-wider uppercase">
               <th className="py-3.5 pl-6 pr-3 w-12 text-slate-400 font-bold" scope="col">#</th>
               <th className="py-3.5 px-4" scope="col">User Details</th>
               {isOfflineView ? (
@@ -387,22 +398,22 @@ export function AdminUsersTable({
       </div>
 
       {/* Table Footer Pagination */}
-      <footer className="border-t border-slate-200/80 dark:border-slate-800 px-6 py-3.5 bg-slate-50/50 dark:bg-zinc-900/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400" data-purpose="table-pagination">
+      <footer className="border-t border-slate-200/80 dark:border-white/[0.06] px-6 py-4 bg-slate-50/60 dark:bg-white/[0.02] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400" data-purpose="table-pagination">
         {/* Results Counter */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <span>
-            Showing <strong className="text-slate-800 dark:text-white font-semibold">{startIndex}</strong> to <strong className="text-slate-800 dark:text-white font-semibold">{endIndex}</strong> of <strong className="text-slate-800 dark:text-white font-semibold">{totalUsers}</strong> registered users
+            Showing <strong className="text-slate-900 dark:text-white font-extrabold">{startIndex}</strong> to <strong className="text-slate-900 dark:text-white font-extrabold">{endIndex}</strong> of <strong className="text-slate-900 dark:text-white font-extrabold">{totalUsers}</strong> registered users
           </span>
-          <span className="hidden md:inline text-slate-300 dark:text-zinc-700">|</span>
+          <span className="hidden md:inline text-slate-300 dark:text-white/20">|</span>
           <label className="hidden md:flex items-center gap-1.5">
-            <span>Show:</span>
+            <span className="font-medium">Show:</span>
             <select
               value={pageSize}
               onChange={(e) => {
                 setPageSize(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="text-xs py-1 pl-2.5 pr-7 border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-zinc-800 text-slate-700 dark:text-slate-200 shadow-2xs focus:ring-1 focus:ring-purple-500 focus:border-purple-500 cursor-pointer"
+              className="text-xs py-1.5 pl-3 pr-8 border border-slate-200/90 dark:border-white/[0.08] rounded-xl bg-white dark:bg-[#080D1A] text-slate-700 dark:text-slate-200 shadow-xs focus:ring-1 focus:ring-purple-500 focus:border-purple-500 cursor-pointer outline-none"
             >
               <option value={10}>10 per page</option>
               <option value={25}>25 per page</option>
@@ -417,9 +428,9 @@ export function AdminUsersTable({
             type="button"
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={safeCurrentPage === 1}
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-zinc-800 text-slate-700 dark:text-slate-200 disabled:text-slate-400 dark:disabled:text-zinc-600 disabled:cursor-not-allowed text-xs font-medium shadow-2xs hover:bg-slate-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-white/[0.04] text-slate-700 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-semibold shadow-xs hover:border-purple-500/40 transition-all cursor-pointer active:scale-95"
           >
-            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path d="M15.75 19.5L8.25 12l7.5-7.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             <span>Previous</span>
@@ -430,10 +441,10 @@ export function AdminUsersTable({
               key={page}
               type="button"
               onClick={() => setCurrentPage(page)}
-              className={`px-3 py-1.5 rounded-lg font-semibold text-xs shadow-2xs transition-colors cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl font-bold text-xs shadow-xs transition-all cursor-pointer active:scale-95 ${
                 safeCurrentPage === page
-                  ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
-                  : 'bg-white dark:bg-zinc-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-zinc-700 border border-slate-200 dark:border-slate-700'
+                  ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                  : 'bg-white dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.08] border border-slate-200/90 dark:border-white/[0.08]'
               }`}
             >
               {page}
@@ -444,10 +455,10 @@ export function AdminUsersTable({
             type="button"
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={safeCurrentPage === totalPages || totalPages === 0}
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-zinc-800 text-slate-700 dark:text-slate-200 disabled:text-slate-400 dark:disabled:text-zinc-600 disabled:cursor-not-allowed text-xs font-medium shadow-2xs hover:bg-slate-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-white/[0.04] text-slate-700 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-semibold shadow-xs hover:border-purple-500/40 transition-all cursor-pointer active:scale-95"
           >
             <span>Next</span>
-            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>

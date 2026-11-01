@@ -198,45 +198,49 @@ export function AdminHostsTable({
 }) {
   return (
     <>
-      <div className="hidden md:block w-full rounded-2xl bg-white dark:bg-black border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+      <div className="hidden md:block w-full overflow-hidden">
         <table className="w-full text-left border-collapse table-fixed text-xs">
           <thead>
-            <tr className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800 select-none">
-              <th className="py-3 px-3 w-[5%] text-center border-r border-slate-200 dark:border-slate-800 text-slate-400 font-bold">
+            <tr className="bg-slate-50/80 dark:bg-white/[0.02] text-slate-500 dark:text-slate-400 border-b border-slate-200/80 dark:border-white/[0.06] font-bold text-[10.5px] uppercase tracking-wider select-none">
+              <th className="py-3.5 px-3 w-[5%] text-center border-r border-slate-200/70 dark:border-white/[0.06] text-slate-400 font-bold">
                 #
               </th>
-              <th className="py-3 px-3 w-[20%] border-r border-slate-200 dark:border-slate-800 font-bold">
+              <th className="py-3.5 px-3.5 w-[20%] border-r border-slate-200/70 dark:border-white/[0.06] font-bold">
                 Host & Contact
               </th>
-              <th className="py-3 px-3 w-[20%] border-r border-slate-200 dark:border-slate-800 font-bold">
+              <th className="py-3.5 px-3.5 w-[22%] border-r border-slate-200/70 dark:border-white/[0.06] font-bold">
                 Property & Location
               </th>
-              <th className="py-3 px-3 w-[35%] border-r border-slate-200 dark:border-slate-800 font-bold text-center">
+              <th className="py-3.5 px-3 w-[33%] border-r border-slate-200/70 dark:border-white/[0.06] font-bold text-center">
                 Rooms & Rates
               </th>
-              <th className="py-3 px-3 w-[10%] border-r border-slate-200 dark:border-slate-800 font-bold text-center">
+              <th className="py-3.5 px-3 w-[10%] border-r border-slate-200/70 dark:border-white/[0.06] font-bold text-center">
                 Status & Date
               </th>
-              <th className="py-3 px-3 w-[10%] text-center font-bold">
+              <th className="py-3.5 px-3 w-[10%] text-center font-bold">
                 Actions
               </th>
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 font-normal">
+          <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04] font-normal">
             {loading && hosts.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-12 text-center text-slate-400 font-normal">
-                  <div className="flex items-center justify-center gap-2">
-                    <span className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                    <span>Loading hosts from database...</span>
+                <td colSpan={6} className="py-16 text-center text-slate-400 font-normal">
+                  <div className="flex items-center justify-center gap-2.5">
+                    <span className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">Loading hosts from database...</span>
                   </div>
                 </td>
               </tr>
             ) : hosts.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-12 text-center text-slate-400 font-normal">
-                  No hosts found in database
+                <td colSpan={6} className="py-16 text-center text-slate-400 font-normal">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <span className="text-2xl">🏡</span>
+                    <span className="font-extrabold text-sm text-slate-700 dark:text-slate-300">No Hosts Found</span>
+                    <span className="text-xs text-slate-400">No registered properties or host accounts exist matching your query.</span>
+                  </div>
                 </td>
               </tr>
             ) : (
