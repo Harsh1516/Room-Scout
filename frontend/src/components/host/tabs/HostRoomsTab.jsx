@@ -111,7 +111,7 @@ export function HostRoomsTab({
                 />
               )}
               <span className="material-symbols-outlined text-[15px]">person_add</span>
-              <span>+ Add Guest</span>
+              <span>Add Guest</span>
             </button>
           </div>
         </div>
