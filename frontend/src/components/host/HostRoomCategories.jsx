@@ -715,7 +715,7 @@ export default function HostRoomCategories({
                           e.stopPropagation();
                           setConfirmDeleteCatIdx(index);
                         }}
-                        className={`${compact ? 'w-5 h-5' : 'w-6 h-6'} rounded-lg flex items-center justify-center text-white/80 hover:text-rose-200 transition-colors cursor-pointer text-xs font-bold`}
+                        className={`${compact ? 'w-5 h-5' : 'w-6 h-6'} rounded-lg flex items-center justify-center text-white/80 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/15 transition-colors cursor-pointer text-xs font-bold`}
                         title="Remove category"
                       >
                         <span className={`material-symbols-outlined ${compact ? 'text-[14px]' : 'text-[16px]'} leading-none flex items-center justify-center`}>close</span>
