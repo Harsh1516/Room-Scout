@@ -41,9 +41,9 @@ export function HostBookingForm({
 
   return (
     <section className="w-full flex flex-col rounded-[26px] overflow-hidden transition-all bg-white dark:bg-[#0c1825] border border-[#54ACBF]/40 dark:border-[#54ACBF]/40 shadow-sm shadow-[#023859]/30 select-none relative text-white">
-      {/* Header: Centered Simple Text */}
-      <div className="px-4 sm:px-5 py-3 min-h-[60px] border-b border-[#54ACBF]/30 dark:border-[#54ACBF]/30 bg-[#023859] dark:bg-[#023859] text-white relative z-10 flex items-center justify-center">
-        <h3 className="text-white font-extrabold tracking-tight text-base sm:text-lg lg:text-[18px] leading-normal text-center">
+      {/* Header: Centered Simple Text (Pic 2 Liquid Glass Theme in Light Mode, Luna Dark in Dark Mode) */}
+      <div className="px-4 sm:px-5 py-3 min-h-[60px] border-b border-[#54ACBF]/35 dark:border-[#54ACBF]/30 bg-gradient-to-r from-[#A7EBF2] via-[#90D1E8] to-[#7CBFD2] dark:from-[#023859] dark:to-[#023859] dark:bg-[#023859] text-[#011C40] dark:text-white shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.75)] dark:shadow-none relative z-10 flex items-center justify-center">
+        <h3 className="text-[#011C40] dark:text-white font-extrabold tracking-tight text-base sm:text-lg lg:text-[18px] leading-normal text-center">
           {isExpiredRequest ? 'Request Expired' : isUserRequestSelection ? 'Review Request' : 'Add Details'}
         </h3>
       </div>

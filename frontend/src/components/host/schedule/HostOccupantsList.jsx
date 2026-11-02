@@ -94,15 +94,15 @@ export function HostOccupantsList({
 
   return (
     <section className="w-full flex flex-col rounded-[26px] overflow-hidden transition-all bg-white dark:bg-[#0c1825] border border-[#54ACBF]/40 dark:border-[#54ACBF]/40 shadow-sm shadow-[#023859]/30 select-none relative text-white">
-      {/* Header: Exact match to Mid Tab (HostScheduleCalendar) Header bg-[#023859] */}
-      <div className="px-4 sm:px-5 py-3 min-h-[60px] border-b border-[#54ACBF]/30 dark:border-[#54ACBF]/30 bg-[#023859] dark:bg-[#023859] text-white relative z-10 flex items-center justify-between gap-3">
-        <h3 className="text-white truncate font-extrabold tracking-tight text-base sm:text-lg lg:text-[18px] leading-normal">
+      {/* Header: Exact match to Mid Tab (HostScheduleCalendar) Header (Pic 2 Liquid Glass Theme in Light Mode, Luna Dark in Dark Mode) */}
+      <div className="px-4 sm:px-5 py-3 min-h-[60px] border-b border-[#54ACBF]/35 dark:border-[#54ACBF]/30 bg-gradient-to-r from-[#A7EBF2] via-[#90D1E8] to-[#7CBFD2] dark:from-[#023859] dark:to-[#023859] dark:bg-[#023859] text-[#011C40] dark:text-white shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.75)] dark:shadow-none relative z-10 flex items-center justify-between gap-3">
+        <h3 className="text-[#011C40] dark:text-white truncate font-extrabold tracking-tight text-base sm:text-lg lg:text-[18px] leading-normal">
           Occupants
         </h3>
 
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <span
-              className="h-6 px-2.5 text-[11px] rounded-full bg-white/20 border border-white/30 text-white font-bold shadow-2xs select-none flex items-center justify-center leading-normal backdrop-blur-xs"
+              className="h-6 px-2.5 text-[11px] rounded-full bg-white/70 dark:bg-white/20 border border-white/80 dark:border-white/30 text-[#011C40] dark:text-white font-bold shadow-2xs select-none flex items-center justify-center leading-normal backdrop-blur-xs"
               title={`${roomOccupantsList.length} active occupant${roomOccupantsList.length === 1 ? '' : 's'} in ${cleanRoomDisplay || 'this room'}`}
             >
               {roomOccupantsList.length} Active
@@ -113,7 +113,7 @@ export function HostOccupantsList({
                 <button
                   type="button"
                   onClick={handleScrollUp}
-                  className="w-6 h-6 rounded-lg flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  className="w-6 h-6 rounded-lg flex items-center justify-center text-[#023859] hover:text-[#011C40] hover:bg-white/40 dark:text-white/90 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer"
                   title="Scroll up"
                 >
                   <span className="material-symbols-outlined text-[18px] leading-none">keyboard_arrow_up</span>
@@ -121,7 +121,7 @@ export function HostOccupantsList({
                 <button
                   type="button"
                   onClick={handleScrollDown}
-                  className="w-6 h-6 rounded-lg flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  className="w-6 h-6 rounded-lg flex items-center justify-center text-[#023859] hover:text-[#011C40] hover:bg-white/40 dark:text-white/90 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer"
                   title="Scroll down"
                 >
                   <span className="material-symbols-outlined text-[18px] leading-none">keyboard_arrow_down</span>

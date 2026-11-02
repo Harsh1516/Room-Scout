@@ -634,12 +634,12 @@ export default function HostRoomCategories({
                     ? 'bg-white dark:bg-[#0c1825]'
                     : isCategoryDirty
                     ? 'bg-orange-50/20 dark:bg-orange-950/15'
-                    : 'bg-[#023859] dark:bg-[#023859]'
+                    : 'bg-gradient-to-r from-[#A7EBF2] via-[#90D1E8] to-[#7CBFD2] dark:from-[#023859] dark:to-[#023859] dark:bg-[#023859] shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.75)] dark:shadow-none'
                 } ${
                   isCategoryDirty
                     ? 'border-2 border-orange-500 dark:border-orange-500 ring-2 ring-orange-500/25 shadow-lg shadow-orange-500/15'
                     : 'border border-[#54ACBF]/40 dark:border-[#54ACBF]/40 shadow-sm shadow-[#023859]/30'
-                } ${!isExpanded ? 'cursor-pointer hover:bg-[#012d47] dark:hover:bg-[#012d47] hover:border-[#54ACBF]/70 dark:hover:border-[#54ACBF]/70' : ''}`}
+                } ${!isExpanded ? 'cursor-pointer hover:opacity-95 dark:hover:bg-[#012d47] hover:border-[#54ACBF]/70 dark:hover:border-[#54ACBF]/70' : ''}`}
               >
                 {/* Card Header (Accessible Toggle Trigger) */}
                 <div
@@ -654,25 +654,25 @@ export default function HostRoomCategories({
                     isExpanded
                       ? isCategoryDirty
                         ? 'border-b border-orange-500/30'
-                        : 'border-b border-[#54ACBF]/30 dark:border-[#54ACBF]/30'
+                        : 'border-b border-[#54ACBF]/35 dark:border-[#54ACBF]/30'
                       : ''
                   } ${
                     isExpanded
                       ? isCategoryDirty
                         ? 'bg-orange-50/20 dark:bg-orange-950/15'
-                        : 'bg-[#023859] dark:bg-[#023859] text-white'
+                        : 'bg-gradient-to-r from-[#A7EBF2] via-[#90D1E8] to-[#7CBFD2] dark:from-[#023859] dark:to-[#023859] dark:bg-[#023859] text-[#011C40] dark:text-white shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.75)] dark:shadow-none'
                       : isCategoryDirty
                       ? 'hover:bg-orange-100/30 dark:hover:bg-orange-900/25'
-                      : 'hover:bg-[#012d47] dark:hover:bg-[#012d47]'
+                      : 'hover:opacity-95 dark:hover:bg-[#012d47]'
                   } flex items-center justify-between select-none cursor-pointer transition-colors`}
                 >
                     <div className="flex items-center gap-2 min-w-0">
-                      <h2 className={`${compact ? 'text-[13.5px] sm:text-[14px]' : 'text-[15px] sm:text-[16px]'} text-white truncate font-extrabold tracking-tight leading-normal pb-0.5`}>
+                      <h2 className={`${compact ? 'text-[13.5px] sm:text-[14px]' : 'text-[15px] sm:text-[16px]'} text-[#011C40] dark:text-white truncate font-extrabold tracking-tight leading-normal pb-0.5`}>
                         {rate.type || 'Unnamed Category'}
                       </h2>
 
                       {!isExpanded && rate.price && (
-                        <span className={`${compact ? 'text-[11px]' : 'text-xs'} font-bold text-[#A7EBF2] shrink-0 leading-normal pb-0.5`}>
+                        <span className={`${compact ? 'text-[11px]' : 'text-xs'} font-bold text-[#023859]/80 dark:text-[#A7EBF2] shrink-0 leading-normal pb-0.5`}>
                           • ₹{rawPrice}{rate.rateUnit || '/night'}
                         </span>
                       )}
@@ -686,7 +686,7 @@ export default function HostRoomCategories({
                       )}
 
                       <span
-                        className={`${compact ? 'h-5.5 px-2 text-[10px]' : 'h-6 px-2.5 text-[11px]'} rounded-full bg-white/20 border border-white/30 text-white font-bold shadow-2xs select-none flex items-center justify-center leading-normal backdrop-blur-xs`}
+                        className={`${compact ? 'h-5.5 px-2 text-[10px]' : 'h-6 px-2.5 text-[11px]'} rounded-full bg-white/70 dark:bg-white/20 border border-white/80 dark:border-white/30 text-[#011C40] dark:text-white font-bold shadow-2xs select-none flex items-center justify-center leading-normal backdrop-blur-xs`}
                         title={`${stats.availableCount} of ${stats.totalCount} rooms are available today`}
                       >
                         {stats.availableCount}/{stats.totalCount} Avail
@@ -696,7 +696,7 @@ export default function HostRoomCategories({
                         type="button"
                         animate={{ rotate: isExpanded ? 180 : 0 }}
                         transition={{ type: 'spring', stiffness: 320, damping: 30, mass: 0.8 }}
-                        className={`${compact ? 'w-5 h-5' : 'w-6 h-6'} rounded-lg flex items-center justify-center text-white/90 hover:text-white transition-colors cursor-pointer`}
+                        className={`${compact ? 'w-5 h-5' : 'w-6 h-6'} rounded-lg flex items-center justify-center text-[#023859]/80 hover:text-[#011C40] dark:text-white/90 dark:hover:text-white transition-colors cursor-pointer`}
                         title={isExpanded ? 'Collapse category' : 'Expand category'}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -715,7 +715,7 @@ export default function HostRoomCategories({
                           e.stopPropagation();
                           setConfirmDeleteCatIdx(index);
                         }}
-                        className={`${compact ? 'w-5 h-5' : 'w-6 h-6'} rounded-lg flex items-center justify-center text-white/80 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/15 transition-colors cursor-pointer text-xs font-bold`}
+                        className={`${compact ? 'w-5 h-5' : 'w-6 h-6'} rounded-lg flex items-center justify-center text-[#023859]/70 hover:text-red-500 dark:text-white/80 dark:hover:text-red-400 hover:bg-red-500/15 transition-colors cursor-pointer text-xs font-bold`}
                         title="Remove category"
                       >
                         <span className={`material-symbols-outlined ${compact ? 'text-[14px]' : 'text-[16px]'} leading-none flex items-center justify-center`}>close</span>

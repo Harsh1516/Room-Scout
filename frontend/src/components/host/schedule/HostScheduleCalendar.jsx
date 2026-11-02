@@ -407,20 +407,20 @@ export function HostScheduleCalendar({
       ref={calendarCardRef}
       className="w-full flex flex-col rounded-[26px] overflow-hidden transition-all bg-white dark:bg-[#0c1825] border border-[#54ACBF]/40 dark:border-[#54ACBF]/40 shadow-sm shadow-[#023859]/30 select-none relative text-white"
     >
-      {/* Room Detail Banner (Matching Pic 1 Category Header bg-[#023859]) */}
-      <div className="px-4 sm:px-5 py-3 border-b border-[#54ACBF]/30 dark:border-[#54ACBF]/30 bg-[#023859] dark:bg-[#023859] text-white relative z-10">
+      {/* Room Detail Banner (Pic 2 Liquid Glass Theme in Light Mode, Luna Dark in Dark Mode) */}
+      <div className="px-4 sm:px-5 py-3 border-b border-[#54ACBF]/35 dark:border-[#54ACBF]/30 bg-gradient-to-r from-[#A7EBF2] via-[#90D1E8] to-[#7CBFD2] dark:from-[#023859] dark:to-[#023859] dark:bg-[#023859] text-[#011C40] dark:text-white shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.75)] dark:shadow-none relative z-10">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-white truncate font-extrabold tracking-tight text-base sm:text-lg lg:text-[18px] leading-normal pb-0.5">
+              <h3 className="text-[#011C40] dark:text-white truncate font-extrabold tracking-tight text-base sm:text-lg lg:text-[18px] leading-normal pb-0.5">
                 {roomDisplay}
               </h3>
-              <span className="h-6 px-2.5 text-[11px] rounded-full bg-white/20 border border-white/30 text-white font-bold shadow-2xs select-none flex items-center justify-center leading-normal backdrop-blur-xs">
+              <span className="h-6 px-2.5 text-[11px] rounded-full bg-white/70 dark:bg-white/20 border border-white/80 dark:border-white/30 text-[#011C40] dark:text-white font-bold shadow-2xs select-none flex items-center justify-center leading-normal backdrop-blur-xs">
                 {roomTypeDisplay}
               </span>
             </div>
             {!reservationDetails && !hideCheckInOutTimes && (
-              <p className="text-[11px] text-[#A7EBF2]/80 mt-0.5 font-medium leading-normal">
+              <p className="text-[11px] text-[#023859]/75 dark:text-[#A7EBF2]/80 mt-0.5 font-medium leading-normal">
                 {isMonthly
                   ? 'Check-in: 1st of Month (12:00 AM) • Check-out: End of Month (11:59 PM)'
                   : 'Check-in: 12:00 PM • Check-out: 11:59 AM'}
@@ -435,17 +435,17 @@ export function HostScheduleCalendar({
                 if (parts.length === 2) {
                   return (
                     <div className="flex items-baseline justify-end">
-                      <span className="text-xl sm:text-2xl font-black text-white tracking-tight leading-none">
+                      <span className="text-xl sm:text-2xl font-black text-[#011C40] dark:text-white tracking-tight leading-none">
                         {parts[0]}
                       </span>
-                      <span className="text-xs sm:text-sm font-bold text-[#A7EBF2] ml-0.5">
+                      <span className="text-xs sm:text-sm font-bold text-[#023859]/75 dark:text-[#A7EBF2] ml-0.5">
                         /{parts[1]}
                       </span>
                     </div>
                   );
                 }
                 return (
-                  <span className="text-xl sm:text-2xl font-black text-white tracking-tight leading-none">
+                  <span className="text-xl sm:text-2xl font-black text-[#011C40] dark:text-white tracking-tight leading-none">
                     {priceDisplay}
                   </span>
                 );
