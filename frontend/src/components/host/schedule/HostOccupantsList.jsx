@@ -351,7 +351,7 @@ export function HostOccupantsList({
                 <button
                   type="button"
                   onClick={onAddGuestClick}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#c0c1ff] hover:bg-[#d5d4ff] text-[#07006c] text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-[#011C40] border border-slate-200/80 dark:border-transparent text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
                 >
                   <span className="material-symbols-outlined text-[15px]">person_add</span>
                   <span>Add Guest</span>
@@ -362,29 +362,20 @@ export function HostOccupantsList({
         </div>
       </div>
 
-      {/* Footer Status Bar & Add Guest Button matching Column 1 footer */}
-      <div className="pt-2 sm:pt-2.5 pb-2.5 sm:pb-3 px-4 sm:px-5 border-t border-slate-100 dark:border-[#1a2d42]/60 bg-white dark:bg-[#0c1825] flex items-center justify-between text-xs relative z-10">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <span className="material-symbols-outlined text-[18px] text-[#00e599] shrink-0 leading-none flex items-center justify-center">
-            check_circle
-          </span>
-          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate leading-normal pb-0.5">
-            {roomOccupantsList.length} resident{roomOccupantsList.length === 1 ? '' : 's'} registered
-          </span>
-        </div>
-
-        {onAddGuestClick && (
+      {/* Footer: + Add Guest Button in Solid White Color */}
+      {onAddGuestClick && (
+        <div className="pt-2 sm:pt-2.5 pb-2.5 sm:pb-3 px-4 sm:px-5 border-t border-slate-100 dark:border-[#1a2d42]/60 bg-white dark:bg-[#0c1825] flex items-center relative z-10">
           <button
             type="button"
             onClick={onAddGuestClick}
-            className="h-8 px-3.5 rounded-xl text-xs gap-1.5 font-bold transition-all flex items-center cursor-pointer shadow-xs leading-none shrink-0 border border-[#54ACBF]/40 bg-white/80 dark:bg-[#023859]/60 hover:bg-[#54ACBF]/15 dark:hover:bg-[#023859] text-[#023859] dark:text-[#A7EBF2] active:scale-95"
+            className="w-full h-8.5 px-4 rounded-xl text-xs gap-1.5 font-bold transition-all flex items-center justify-center cursor-pointer shadow-xs leading-none bg-white hover:bg-slate-100 text-[#011C40] border border-slate-200/80 dark:border-transparent active:scale-95"
             title="Add a new guest to this room"
           >
-            <span className="material-symbols-outlined text-[15px] leading-none shrink-0">person_add</span>
+            <span className="material-symbols-outlined text-[16px] leading-none shrink-0 font-bold">person_add</span>
             <span>Add Guest</span>
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </section>
   );
 }
