@@ -95,30 +95,12 @@ export function HostOccupantsList({
   return (
     <section className="w-full flex flex-col rounded-[26px] overflow-hidden transition-all bg-white dark:bg-[#0c1825] border border-[#54ACBF]/40 dark:border-[#54ACBF]/40 shadow-sm shadow-[#023859]/30 select-none relative text-white">
       {/* Header: Exact match to Mid Tab (HostScheduleCalendar) Header bg-[#023859] */}
-      <div className="px-4 sm:px-5 py-3 border-b border-[#54ACBF]/30 dark:border-[#54ACBF]/30 bg-[#023859] dark:bg-[#023859] text-white relative z-10">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white shrink-0 shadow-2xs">
-              <span className="material-symbols-outlined text-[19px] sm:text-[21px] text-white">group</span>
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-white truncate font-extrabold tracking-tight text-base sm:text-lg lg:text-[18px] leading-normal pb-0.5">
-                  Occupants
-                </h3>
-                {cleanRoomDisplay && (
-                  <span className="h-6 px-2.5 text-[11px] rounded-full bg-white/20 border border-white/30 text-white font-bold shadow-2xs select-none flex items-center justify-center leading-normal backdrop-blur-xs">
-                    {cleanRoomDisplay}
-                  </span>
-                )}
-              </div>
-              <p className="text-[11px] text-[#A7EBF2]/80 mt-0.5 font-medium leading-normal truncate">
-                Active Room Residents Roster
-              </p>
-            </div>
-          </div>
+      <div className="px-4 sm:px-5 py-3 min-h-[60px] border-b border-[#54ACBF]/30 dark:border-[#54ACBF]/30 bg-[#023859] dark:bg-[#023859] text-white relative z-10 flex items-center justify-between gap-3">
+        <h3 className="text-white truncate font-extrabold tracking-tight text-base sm:text-lg lg:text-[18px] leading-normal">
+          Occupants
+        </h3>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <span
               className="h-6 px-2.5 text-[11px] rounded-full bg-white/20 border border-white/30 text-white font-bold shadow-2xs select-none flex items-center justify-center leading-normal backdrop-blur-xs"
               title={`${roomOccupantsList.length} active occupant${roomOccupantsList.length === 1 ? '' : 's'} in ${cleanRoomDisplay || 'this room'}`}
@@ -146,7 +128,6 @@ export function HostOccupantsList({
                 </button>
               </div>
             )}
-          </div>
         </div>
       </div>
 

@@ -410,27 +410,22 @@ export function HostScheduleCalendar({
       {/* Room Detail Banner (Matching Pic 1 Category Header bg-[#023859]) */}
       <div className="px-4 sm:px-5 py-3 border-b border-[#54ACBF]/30 dark:border-[#54ACBF]/30 bg-[#023859] dark:bg-[#023859] text-white relative z-10">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white shrink-0 shadow-2xs">
-              <span className="material-symbols-outlined text-[19px] sm:text-[21px] text-white">calendar_today</span>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-white truncate font-extrabold tracking-tight text-base sm:text-lg lg:text-[18px] leading-normal pb-0.5">
+                {roomDisplay}
+              </h3>
+              <span className="h-6 px-2.5 text-[11px] rounded-full bg-white/20 border border-white/30 text-white font-bold shadow-2xs select-none flex items-center justify-center leading-normal backdrop-blur-xs">
+                {roomTypeDisplay}
+              </span>
             </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-white truncate font-extrabold tracking-tight text-base sm:text-lg lg:text-[18px] leading-normal pb-0.5">
-                  {roomDisplay}
-                </h3>
-                <span className="h-6 px-2.5 text-[11px] rounded-full bg-white/20 border border-white/30 text-white font-bold shadow-2xs select-none flex items-center justify-center leading-normal backdrop-blur-xs">
-                  {roomTypeDisplay}
-                </span>
-              </div>
-              {!reservationDetails && !hideCheckInOutTimes && (
-                <p className="text-[11px] text-[#A7EBF2]/80 mt-0.5 font-medium leading-normal">
-                  {isMonthly
-                    ? 'Check-in: 1st of Month (12:00 AM) • Check-out: End of Month (11:59 PM)'
-                    : 'Check-in: 12:00 PM • Check-out: 11:59 AM'}
-                </p>
-              )}
-            </div>
+            {!reservationDetails && !hideCheckInOutTimes && (
+              <p className="text-[11px] text-[#A7EBF2]/80 mt-0.5 font-medium leading-normal">
+                {isMonthly
+                  ? 'Check-in: 1st of Month (12:00 AM) • Check-out: End of Month (11:59 PM)'
+                  : 'Check-in: 12:00 PM • Check-out: 11:59 AM'}
+              </p>
+            )}
           </div>
 
           {priceDisplay && (

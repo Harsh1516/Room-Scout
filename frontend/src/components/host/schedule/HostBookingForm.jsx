@@ -199,7 +199,7 @@ export function HostBookingForm({
                       </span>
                     )}
                     <span className="text-[10px] font-medium font-mono px-2 py-0.5 rounded-md bg-white dark:bg-[#0c1825] text-slate-600 dark:text-[#A7EBF2] border border-slate-200 dark:border-[#1f3045]">
-                      Max: {maxAllowedPersons} {maxAllowedPersons === 1 ? 'person' : 'persons'} (Capacity: {roomCapacity})
+                      Max: {maxAllowedPersons} {maxAllowedPersons === 1 ? 'person' : 'persons'}
                     </span>
                   </div>
                 </div>
@@ -343,7 +343,7 @@ export function HostBookingForm({
                 className={`flex-1 h-8.5 px-4 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${
                   isExpiredRequest
                     ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                    : 'bg-[#c0c1ff] hover:bg-[#d5d4ff] text-[#07006c] cursor-pointer'
+                    : 'bg-white hover:bg-slate-100 text-[#011C40] border border-slate-200/80 dark:border-transparent font-bold cursor-pointer shadow-xs'
                 }`}
               >
                 {isUpdatingSlot && (
