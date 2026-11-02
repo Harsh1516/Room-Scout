@@ -470,7 +470,7 @@ export function PropertyPhotosTab({
                 type="button"
                 disabled={isSaving || isProcessingImage}
                 onClick={handleSave}
-                className={`px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] text-xs font-medium transition-all cursor-pointer shadow-md shadow-[#54ACBF]/20 flex items-center gap-1 active:scale-95 ${
+                className={`px-3.5 py-1.5 rounded-xl bg-white hover:bg-white/90 text-[#011C40] text-xs font-semibold transition-all cursor-pointer shadow-md flex items-center gap-1 active:scale-95 ${
                   isSaving || isProcessingImage ? 'opacity-70 cursor-wait' : ''
                 }`}
               >
@@ -504,7 +504,7 @@ export function PropertyPhotosTab({
                   onDrop={(e) => isEditing && handleDrop(e, iIdx)}
                   onDragEnd={handleDragEnd}
                   onClick={() => !isEditing && setPreviewImage(imgUrl)}
-                  className={`group relative rounded-2xl overflow-hidden bg-slate-900 transition-colors duration-150 flex flex-col justify-between shadow-xs ${
+                  className={`group relative rounded-2xl overflow-hidden isolate bg-slate-900 transition-colors duration-150 flex flex-col justify-between shadow-xs [mask-image:radial-gradient(white,black)] [-webkit-mask-image:-webkit-radial-gradient(white,black)] ${
                     isEditing
                       ? 'cursor-grab active:cursor-grabbing border-2'
                       : 'cursor-pointer border'
@@ -517,21 +517,21 @@ export function PropertyPhotosTab({
                       ? 'border-emerald-400/80 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
                       : 'border-white/15 hover:border-white/40'
                   }`}
-                  style={{ minHeight: isEditing ? '200px' : '150px' }}
+                  style={{ minHeight: isEditing ? '200px' : '144px' }}
                 >
                   {/* Image Container */}
-                  <div className="relative w-full h-36 overflow-hidden bg-slate-950">
+                  <div className={`relative w-full flex-1 min-h-[144px] overflow-hidden bg-slate-950 ${isEditing ? 'rounded-t-[14px]' : 'rounded-[15px]'}`}>
                     <img
                       src={imgUrl}
                       alt={`Property ${iIdx + 1}`}
                       loading="lazy"
                       decoding="async"
-                      className="w-full h-full object-cover pointer-events-none"
+                      className={`w-full h-full object-cover pointer-events-none ${isEditing ? 'rounded-t-[14px]' : 'rounded-[15px]'}`}
                     />
 
                     {/* Non-editing hover overlay */}
                     {!isEditing && (
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-[15px]">
                         <span className="px-3 py-1 rounded-full bg-white/20 border border-white/40 text-white text-xs font-medium backdrop-blur-md">
                           View Full
                         </span>
@@ -571,7 +571,7 @@ export function PropertyPhotosTab({
 
                   {/* Edit Controls Toolbar */}
                   {isEditing && (
-                    <div className="p-2.5 bg-slate-900/90 backdrop-blur-md border-t border-white/10 flex items-center gap-2">
+                    <div className="p-2.5 bg-slate-900 border-t border-white/10 flex items-center gap-2 rounded-b-[14px]">
                       <button
                         type="button"
                         onClick={(e) => {
@@ -638,7 +638,7 @@ export function PropertyPhotosTab({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] text-xs font-medium transition-all cursor-pointer shadow-md shadow-[#54ACBF]/20 active:scale-95"
+                className="px-4 py-2 rounded-xl bg-white hover:bg-white/90 text-[#011C40] text-xs font-semibold transition-all cursor-pointer shadow-md active:scale-95"
               >
                 + Upload First Photo
               </button>

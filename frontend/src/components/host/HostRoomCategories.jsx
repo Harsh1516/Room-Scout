@@ -634,12 +634,12 @@ export default function HostRoomCategories({
                     ? 'bg-white dark:bg-[#0c1825]'
                     : isCategoryDirty
                     ? 'bg-orange-50/20 dark:bg-orange-950/15'
-                    : 'bg-purple-600 dark:bg-purple-600'
+                    : 'bg-[#023859] dark:bg-[#023859]'
                 } ${
                   isCategoryDirty
                     ? 'border-2 border-orange-500 dark:border-orange-500 ring-2 ring-orange-500/25 shadow-lg shadow-orange-500/15'
-                    : 'border border-purple-500/80 dark:border-purple-400/50 shadow-sm shadow-purple-600/20'
-                } ${!isExpanded ? 'cursor-pointer hover:bg-purple-700 dark:hover:bg-purple-700 hover:border-purple-400 dark:hover:border-purple-300' : ''}`}
+                    : 'border border-[#54ACBF]/40 dark:border-[#54ACBF]/40 shadow-sm shadow-[#023859]/30'
+                } ${!isExpanded ? 'cursor-pointer hover:bg-[#012d47] dark:hover:bg-[#012d47] hover:border-[#54ACBF]/70 dark:hover:border-[#54ACBF]/70' : ''}`}
               >
                 {/* Card Header (Accessible Toggle Trigger) */}
                 <div
@@ -654,16 +654,16 @@ export default function HostRoomCategories({
                     isExpanded
                       ? isCategoryDirty
                         ? 'border-b border-orange-500/30'
-                        : 'border-b border-purple-500/30 dark:border-purple-700/50'
+                        : 'border-b border-[#54ACBF]/30 dark:border-[#54ACBF]/30'
                       : ''
                   } ${
                     isExpanded
                       ? isCategoryDirty
                         ? 'bg-orange-50/20 dark:bg-orange-950/15'
-                        : 'bg-purple-600 dark:bg-purple-600 text-white'
+                        : 'bg-[#023859] dark:bg-[#023859] text-white'
                       : isCategoryDirty
                       ? 'hover:bg-orange-100/30 dark:hover:bg-orange-900/25'
-                      : 'hover:bg-purple-700 dark:hover:bg-purple-700'
+                      : 'hover:bg-[#012d47] dark:hover:bg-[#012d47]'
                   } flex items-center justify-between select-none cursor-pointer transition-colors`}
                 >
                     <div className="flex items-center gap-2 min-w-0">
@@ -672,7 +672,7 @@ export default function HostRoomCategories({
                       </h2>
 
                       {!isExpanded && rate.price && (
-                        <span className={`${compact ? 'text-[11px]' : 'text-xs'} font-bold text-purple-100 shrink-0 leading-normal pb-0.5`}>
+                        <span className={`${compact ? 'text-[11px]' : 'text-xs'} font-bold text-[#A7EBF2] shrink-0 leading-normal pb-0.5`}>
                           • ₹{rawPrice}{rate.rateUnit || '/night'}
                         </span>
                       )}
@@ -959,7 +959,7 @@ export default function HostRoomCategories({
         </div>
         ) : (
           <div className="flex flex-col items-center justify-center min-h-[200px] sm:min-h-[320px] rounded-2xl sm:rounded-3xl border border-dashed border-slate-300 dark:border-outline-variant/60 bg-white/70 dark:bg-surface-container-low/60 backdrop-blur-sm text-center p-5 sm:p-8 space-y-3 sm:space-y-4 shadow-xs">
-            <span className="material-symbols-outlined text-[36px] text-purple-600 dark:text-primary mx-auto">bedroom_parent</span>
+            <span className="material-symbols-outlined text-[36px] text-[#54ACBF] dark:text-[#A7EBF2] mx-auto">bedroom_parent</span>
             <div className="space-y-1">
               <p className="text-sm font-semibold text-slate-800 dark:text-on-surface">No Room Categories Yet</p>
               <p className="text-xs text-slate-500 dark:text-on-surface-variant max-w-xs mx-auto">
@@ -969,7 +969,7 @@ export default function HostRoomCategories({
             <button
               type="button"
               onClick={onAddCategory}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition-all cursor-pointer shadow-sm shadow-purple-600/20 active:scale-95"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#023859] hover:bg-[#012d47] text-white text-xs font-bold transition-all cursor-pointer shadow-sm shadow-[#023859]/20 active:scale-95"
             >
               <span className="material-symbols-outlined text-[16px]">add</span>
               <span>Add Room Type</span>

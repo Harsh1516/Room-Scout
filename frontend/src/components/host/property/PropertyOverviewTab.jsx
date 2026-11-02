@@ -95,7 +95,7 @@ export function PropertyOverviewTab({
                 type="button"
                 disabled={isSaving || !formData.propertyName.trim()}
                 onClick={handleSave}
-                className={`px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] text-xs font-medium transition-all cursor-pointer shadow-md shadow-[#54ACBF]/20 flex items-center gap-1 active:scale-95 ${
+                className={`px-3.5 py-1.5 rounded-xl bg-white hover:bg-white/90 text-[#011C40] text-xs font-semibold transition-all cursor-pointer shadow-md flex items-center gap-1 active:scale-95 ${
                   isSaving || !formData.propertyName.trim() ? 'opacity-70 cursor-wait' : ''
                 }`}
               >

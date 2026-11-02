@@ -120,7 +120,7 @@ export function PropertyLocationTab({
                 type="button"
                 disabled={isSaving}
                 onClick={handleSave}
-                className={`px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] text-xs font-medium transition-all cursor-pointer shadow-md shadow-[#54ACBF]/20 flex items-center gap-1 active:scale-95 ${
+                className={`px-3.5 py-1.5 rounded-xl bg-white hover:bg-white/90 text-[#011C40] text-xs font-semibold transition-all cursor-pointer shadow-md flex items-center gap-1 active:scale-95 ${
                   isSaving ? 'opacity-70 cursor-wait' : ''
                 }`}
               >
@@ -330,10 +330,10 @@ export function PropertyLocationTab({
                     href={`https://www.google.com/maps?q=${hostProperty.latitude},${hostProperty.longitude}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-3.5 py-1.5 rounded-xl border border-[#54ACBF]/30 dark:border-[#26658C]/60 bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] text-[#023859] dark:text-[#A7EBF2] text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs active:scale-95 backdrop-blur-sm"
+                    className="group px-3.5 py-1.5 rounded-xl border border-[#54ACBF]/30 dark:border-[#26658C]/60 bg-white/80 hover:bg-blue-600 hover:border-blue-500 hover:text-white dark:bg-[#023859]/60 dark:hover:bg-blue-600 dark:hover:border-blue-400 dark:hover:text-white text-[#023859] dark:text-[#A7EBF2] text-xs font-medium transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-2xs hover:shadow-md hover:shadow-blue-500/25 active:scale-95 backdrop-blur-sm"
                   >
                     <span>Open Maps</span>
-                    <ExternalIcon className="w-3.5 h-3.5 text-[#54ACBF] dark:text-[#A7EBF2]" />
+                    <ExternalIcon className="w-3.5 h-3.5 text-[#54ACBF] dark:text-[#A7EBF2] group-hover:text-white transition-colors duration-200" />
                   </a>
                 </div>
               ) : null}

@@ -1473,7 +1473,7 @@ export default function HostWeeklySlotSchedule({
 
   return (
     <div className="w-full flex flex-col justify-center my-auto">
-      <div className="grid grid-cols-1 xl:grid-cols-8 gap-gutter-desktop items-start xl:items-center">
+      <div className="grid grid-cols-1 xl:grid-cols-8 gap-gutter-desktop items-start xl:items-start">
         <motion.div layout="position" transition={{ layout: { duration: 0.36, ease: [0.25, 1, 0.5, 1] } }} className="xl:col-span-5 w-full flex flex-col justify-center items-center my-auto min-h-0">
           <HostScheduleCalendar
             isMonthly={isMonthly}

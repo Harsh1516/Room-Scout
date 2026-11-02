@@ -249,12 +249,12 @@ export function PropertyDetailsSection({
               </div>
             </div>
 
-            {/* Actions Row */}
-            <div className="flex items-center gap-2 pt-1 border-t border-[#54ACBF]/20 relative z-10">
+            {/* Actions Row (50/50 equal width split) */}
+            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#54ACBF]/20 relative z-10 w-full">
               <button
                 type="button"
                 onClick={handleOpenPublicUrl}
-                className="flex-1 h-9 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-[#A7EBF2] flex items-center justify-center gap-1.5 border border-[#54ACBF]/30 shadow-2xs transition-all cursor-pointer"
+                className="w-full h-9 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-[#A7EBF2] flex items-center justify-center gap-1.5 border border-[#54ACBF]/30 shadow-2xs transition-all cursor-pointer"
               >
                 <span className="text-xs font-normal">Public URL</span>
                 <span className="material-symbols-outlined text-[15px] text-[#A7EBF2]">north_east</span>
@@ -263,7 +263,7 @@ export function PropertyDetailsSection({
               <button
                 type="button"
                 onClick={handleShare}
-                className="h-9 px-3.5 shrink-0 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-[#A7EBF2] flex items-center justify-center gap-1.5 border border-[#54ACBF]/30 shadow-2xs transition-all cursor-pointer"
+                className="w-full h-9 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-[#A7EBF2] flex items-center justify-center gap-1.5 border border-[#54ACBF]/30 shadow-2xs transition-all cursor-pointer"
                 title="Share listing link"
               >
                 <span className="material-symbols-outlined text-[16px] text-[#A7EBF2]">share</span>

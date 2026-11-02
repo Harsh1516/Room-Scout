@@ -193,7 +193,7 @@ export function HostPaymentSettingsSection({ hostProperty }) {
               <button
                 type="submit"
                 disabled={isSaving || !isValidVpa || !payeeName.trim()}
-                className="w-full py-3.5 rounded-2xl font-bold text-xs sm:text-sm bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] font-extrabold shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-2xl font-bold text-xs sm:text-sm bg-white hover:bg-white/90 text-[#011C40] font-extrabold shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
               >
                 {isSaving ? (
                   <>

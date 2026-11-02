@@ -112,7 +112,7 @@ export function PropertyRulesTab({
                 type="button"
                 disabled={isSaving}
                 onClick={handleSave}
-                className={`px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] text-xs font-medium transition-all cursor-pointer shadow-md shadow-[#54ACBF]/20 flex items-center gap-1 active:scale-95 ${
+                className={`px-3.5 py-1.5 rounded-xl bg-white hover:bg-white/90 text-[#011C40] text-xs font-semibold transition-all cursor-pointer shadow-md flex items-center gap-1 active:scale-95 ${
                   isSaving ? 'opacity-70 cursor-wait' : ''
                 }`}
               >
@@ -169,7 +169,7 @@ export function PropertyRulesTab({
               <button
                 type="submit"
                 disabled={!newRuleInput.trim()}
-                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] text-xs font-medium transition-all cursor-pointer disabled:opacity-40 flex items-center gap-1.5 shadow-md shadow-[#54ACBF]/25 shrink-0 active:scale-95"
+                className="px-4 py-2.5 rounded-xl bg-white hover:bg-white/90 text-[#011C40] text-xs font-semibold transition-all cursor-pointer disabled:opacity-40 flex items-center gap-1.5 shadow-md shrink-0 active:scale-95"
               >
                 <PlusIcon className="w-3.5 h-3.5" />
                 <span>Add</span>

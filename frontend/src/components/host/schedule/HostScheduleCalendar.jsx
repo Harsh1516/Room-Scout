@@ -405,26 +405,26 @@ export function HostScheduleCalendar({
   return (
     <div
       ref={calendarCardRef}
-      className="w-full flex flex-col rounded-[26px] bg-white dark:bg-[#0c1825] border border-slate-200/90 dark:border-[#1f3045] shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] overflow-hidden select-none"
+      className="w-full flex flex-col rounded-[26px] overflow-hidden transition-all bg-white dark:bg-[#0c1825] border border-[#54ACBF]/40 dark:border-[#54ACBF]/40 shadow-sm shadow-[#023859]/30 select-none relative text-white"
     >
-      {/* Room Detail Banner */}
-      <div className="px-4 sm:px-5 pt-3 sm:pt-3.5 pb-2.5 sm:pb-3 border-b border-[#238cd6] dark:border-[#1d7bc0] bg-[#2e9dea] dark:bg-[#2e9dea] text-white">
+      {/* Room Detail Banner (Matching Pic 1 Category Header bg-[#023859]) */}
+      <div className="px-4 sm:px-5 py-3 border-b border-[#54ACBF]/30 dark:border-[#54ACBF]/30 bg-[#023859] dark:bg-[#023859] text-white relative z-10">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9.5 h-9.5 sm:w-10 sm:h-10 flex items-center justify-center text-white shrink-0">
-              <span className="material-symbols-outlined text-[22px] sm:text-[24px]">calendar_today</span>
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white shrink-0 shadow-2xs">
+              <span className="material-symbols-outlined text-[19px] sm:text-[21px] text-white">calendar_today</span>
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-white font-black tracking-tight text-lg sm:text-[21px]">
+                <h3 className="text-white truncate font-extrabold tracking-tight text-base sm:text-lg lg:text-[18px] leading-normal pb-0.5">
                   {roomDisplay}
                 </h3>
-                <span className="px-2.5 py-0.5 rounded-lg bg-white/20 text-white border border-white/30 text-[11px] font-bold">
+                <span className="h-6 px-2.5 text-[11px] rounded-full bg-white/20 border border-white/30 text-white font-bold shadow-2xs select-none flex items-center justify-center leading-normal backdrop-blur-xs">
                   {roomTypeDisplay}
                 </span>
               </div>
               {!reservationDetails && !hideCheckInOutTimes && (
-                <p className="text-[11px] text-sky-50 mt-0.5 font-medium">
+                <p className="text-[11px] text-[#A7EBF2]/80 mt-0.5 font-medium leading-normal">
                   {isMonthly
                     ? 'Check-in: 1st of Month (12:00 AM) • Check-out: End of Month (11:59 PM)'
                     : 'Check-in: 12:00 PM • Check-out: 11:59 AM'}
@@ -443,7 +443,7 @@ export function HostScheduleCalendar({
                       <span className="text-xl sm:text-2xl font-black text-white tracking-tight leading-none">
                         {parts[0]}
                       </span>
-                      <span className="text-xs sm:text-sm font-bold text-white/85 ml-0.5">
+                      <span className="text-xs sm:text-sm font-bold text-[#A7EBF2] ml-0.5">
                         /{parts[1]}
                       </span>
                     </div>
@@ -623,40 +623,40 @@ export function HostScheduleCalendar({
               }}
               className="overflow-hidden"
             >
-              <div className="rounded-xl sm:rounded-2xl p-2.5 sm:p-3 border border-amber-300/90 dark:border-amber-700/60 bg-amber-50/90 dark:bg-amber-950/40 shadow-xs space-y-1.5 mt-0.5">
+              <div className="rounded-xl sm:rounded-2xl p-2.5 sm:p-3 border border-[#54ACBF]/30 dark:border-[#26658C]/50 bg-white/5 dark:bg-[#023859]/30 backdrop-blur-md shadow-xs space-y-1.5 mt-0.5">
                 <div className="flex items-center justify-between gap-1.5 sm:gap-2 w-full text-xs">
                   <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-                    <span className="font-extrabold text-[11px] sm:text-[13.5px] text-amber-950 dark:text-amber-100">
+                    <span className="font-semibold text-[11px] sm:text-[13.5px] text-white">
                       {reservationDetails.checkInDate}
                     </span>
-                    <span className="font-bold text-[8.5px] sm:text-[9.5px] px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-100/90 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 border border-amber-300/80 dark:border-amber-700/60">
+                    <span className="font-normal text-[8.5px] sm:text-[9.5px] px-1.5 sm:px-2 py-0.5 rounded-full bg-white/10 text-[#A7EBF2] border border-[#54ACBF]/30">
                       {reservationDetails.checkInTime}
                     </span>
                   </div>
 
                   <div className="flex-1 flex items-center justify-center relative mx-1 sm:mx-2 min-w-[24px]">
-                    <div className="w-full border-t border-dashed border-amber-300/80 dark:border-amber-700/60" />
-                    <span className="absolute px-1 sm:px-1.5 py-0.5 bg-white dark:bg-amber-900 text-[8.5px] sm:text-[9px] font-bold text-amber-800 dark:text-amber-300 uppercase rounded-full border border-amber-300/70 dark:border-amber-700/50 tracking-wider shadow-2xs">
+                    <div className="w-full border-t border-dashed border-[#54ACBF]/30" />
+                    <span className="absolute px-1.5 py-0.5 bg-[#023859] text-[8.5px] sm:text-[9px] font-medium text-[#A7EBF2] uppercase rounded-full border border-[#54ACBF]/40 tracking-wider shadow-2xs">
                       TO
                     </span>
                   </div>
 
                   <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 justify-end">
-                    <span className="font-extrabold text-[11px] sm:text-[13.5px] text-amber-950 dark:text-amber-100">
+                    <span className="font-semibold text-[11px] sm:text-[13.5px] text-white">
                       {reservationDetails.checkOutDate}
                     </span>
-                    <span className="font-bold text-[8.5px] sm:text-[9.5px] px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-100/90 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 border border-amber-300/80 dark:border-amber-700/60">
+                    <span className="font-normal text-[8.5px] sm:text-[9.5px] px-1.5 sm:px-2 py-0.5 rounded-full bg-white/10 text-[#A7EBF2] border border-[#54ACBF]/30">
                       {reservationDetails.checkOutTime}
                     </span>
                   </div>
                 </div>
 
                 {reservationDetails.unitPrice > 0 && (
-                  <div className="pt-1.5 border-t border-amber-200/90 dark:border-amber-800/60 flex items-center justify-between text-xs">
-                    <span className="font-bold text-amber-900/80 dark:text-amber-200/80 text-[11px]">
+                  <div className="pt-1.5 border-t border-[#54ACBF]/20 flex items-center justify-between text-xs">
+                    <span className="font-normal text-[#A7EBF2]/80 text-[11px]">
                       {reservationDetails.priceBreakdown}
                     </span>
-                    <span className="text-base sm:text-lg font-black text-amber-700 dark:text-amber-400 tracking-tight">
+                    <span className="text-base sm:text-lg font-semibold text-[#A7EBF2] tracking-tight">
                       ₹{reservationDetails.totalPrice.toLocaleString('en-IN')}
                     </span>
                   </div>
@@ -736,10 +736,10 @@ export function HostScheduleCalendar({
 
         {/* Month Card Header & Subtitle */}
         <div className="flex items-center justify-between pt-0.5">
-          <span className="text-xs sm:text-[13px] font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+          <span className="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
             <span>{isMonthly ? 'Month Card (12 Months)' : 'Month Card'}</span>
             {!hideMonthCardExtras && isUserRequestSelection && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-code-sm text-[9.5px] font-bold bg-purple-100 text-purple-700 dark:bg-primary/20 dark:text-primary border border-purple-300 dark:border-primary/30">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-code-sm text-[9.5px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-300 dark:border-purple-600/50">
                 <span className="material-symbols-outlined text-[11px]">lock</span>
                 Display-Only
               </span>
@@ -749,9 +749,9 @@ export function HostScheduleCalendar({
             <span className={`text-[11px] sm:text-xs ${
               sortedSelected.length > 0
                 ? isUserRequestSelection
-                  ? 'text-purple-600 dark:text-primary font-bold'
-                  : 'text-emerald-800 dark:text-emerald-400 font-bold'
-                : 'text-slate-400 dark:text-slate-400 font-medium'
+                  ? 'text-purple-600 dark:text-purple-300 font-bold'
+                  : 'text-emerald-600 dark:text-[#00e599] font-bold'
+                : 'text-slate-400 dark:text-slate-500 font-medium'
             }`}>
               {isUserRequestSelection
                 ? isMonthly
@@ -771,7 +771,7 @@ export function HostScheduleCalendar({
       {/* Schedule Matrix */}
       {isMonthly ? (
         <div className="space-y-4">
-          <div className="p-3 sm:p-4 rounded-3xl bg-white dark:bg-zinc-900/40 backdrop-blur-md border border-slate-200/80 dark:border-zinc-800/80 shadow-2xs">
+          <div className="p-3 sm:p-4 rounded-2xl sm:rounded-3xl bg-slate-50/50 dark:bg-[#071320] border border-slate-200/80 dark:border-[#1a2d42] shadow-2xs">
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2">
               {(() => {
                 const roomCapacity = Math.max(
@@ -857,21 +857,21 @@ export function HostScheduleCalendar({
                             : 'animate-booked-slot-flash border-2 font-extrabold shadow-md cursor-pointer'
                           : isFullyBooked
                           ? isOnlineBooking
-                            ? 'bg-purple-600 dark:bg-purple-600 border-2 border-purple-500 text-white cursor-pointer hover:bg-purple-500 shadow-xs'
-                            : 'bg-rose-50/75 dark:bg-rose-950/30 border-2 border-rose-400 dark:border-rose-600/80 text-rose-950 dark:text-rose-100 cursor-pointer hover:border-rose-500 shadow-xs'
+                            ? 'bg-purple-600 border-2 border-purple-500 text-white cursor-pointer hover:bg-purple-500 shadow-xs'
+                            : 'bg-rose-50 dark:bg-[#1a0a0f] border-2 border-rose-500 dark:border-rose-600/70 text-rose-700 dark:text-rose-100 cursor-pointer hover:border-rose-400 shadow-xs'
                           : isLocked
-                          ? 'bg-slate-100/50 dark:bg-zinc-900/60 border border-dashed border-amber-300 dark:border-amber-700/50 text-slate-400 dark:text-zinc-500 cursor-not-allowed opacity-60'
+                          ? 'bg-slate-100/50 dark:bg-[#071320] border border-dashed border-slate-300 dark:border-[#1f3045] text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-60'
                           : isSelected
                           ? isUserRequestSelection
                             ? 'animate-slot-flash border-2 font-extrabold shadow-md cursor-default pointer-events-none'
-                            : 'bg-emerald-50 dark:bg-sky-950/40 border-2 border-emerald-500 dark:border-sky-400 text-emerald-950 dark:text-sky-100 font-semibold shadow-xs cursor-pointer hover:border-emerald-600'
+                            : 'bg-slate-50 dark:bg-[#122438] border-2 border-[#c0c1ff] shadow-room-open-selected z-10 cursor-pointer'
                           : isPartiallyBooked
-                          ? 'bg-amber-50/80 dark:bg-amber-950/30 border-2 border-amber-300 dark:border-amber-700/60 text-amber-950 dark:text-amber-100 font-bold hover:border-amber-400 cursor-pointer'
+                          ? 'bg-amber-50/80 dark:bg-[#1c1200] border-2 border-amber-400 dark:border-amber-500/70 text-amber-900 dark:text-amber-100 font-bold hover:border-amber-400 cursor-pointer'
                           : isUserRequestSelection
-                          ? 'bg-white/50 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-zinc-700/50 text-slate-400 dark:text-zinc-500 cursor-not-allowed pointer-events-none'
+                          ? 'bg-white/50 dark:bg-[#0c1825]/60 border border-slate-200 dark:border-[#1f3045] text-slate-400 dark:text-slate-500 cursor-not-allowed pointer-events-none'
                           : isCurrentMonth
-                          ? 'bg-white dark:bg-zinc-800/90 border-2 border-[#006C4A] text-slate-900 dark:text-white font-bold hover:bg-slate-50 dark:hover:bg-zinc-800 cursor-pointer'
-                          : 'bg-white dark:bg-zinc-800/60 border border-slate-200 dark:border-zinc-700/70 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-800 dark:text-zinc-200 cursor-pointer'
+                          ? 'bg-white dark:bg-[#0c1825] border-2 border-[#00e599] text-slate-900 dark:text-white font-bold hover:bg-slate-50 dark:hover:bg-[#0e1e2e] cursor-pointer shadow-xs'
+                          : 'bg-slate-50/70 dark:bg-[#0c1825] border border-slate-200/80 dark:border-[#1f3045] hover:border-slate-300 dark:hover:border-[#2f4663] hover:bg-slate-100/50 dark:hover:bg-[#0e1e2e] text-slate-800 dark:text-zinc-200 cursor-pointer'
                       }`}
                     >
                       <span
@@ -888,22 +888,22 @@ export function HostScheduleCalendar({
                             ? 'Click to view occupants list'
                             : undefined
                         }
-                        className={`text-[9.5px] font-semibold px-2 py-0.5 rounded-full tracking-wide truncate max-w-[110px] ${
+                        className={`text-[9.5px] font-bold px-2 py-0.5 rounded-full tracking-wide truncate max-w-[110px] ${
                         isFullyBooked
                           ? isOnlineBooking
                             ? 'bg-purple-700 text-white border border-purple-500'
-                            : 'bg-rose-100/90 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200 border border-rose-200 dark:border-rose-800/70'
+                            : 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-500/50'
                           : isLocked
-                          ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300'
+                          ? 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                           : isSelected
                           ? isUserRequestSelection
                             ? 'animate-badge-flash font-bold border'
-                            : 'bg-emerald-100 dark:bg-sky-900/60 text-emerald-800 dark:text-sky-200 border border-emerald-300 dark:border-sky-700 font-semibold'
+                            : 'bg-[#c0c1ff] text-[#07006c] font-black shadow-2xs'
                           : isPartiallyBooked
-                          ? 'bg-amber-200/80 dark:bg-amber-900/60 text-amber-900 dark:text-amber-100 hover:ring-1 hover:ring-amber-400 cursor-pointer'
+                          ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-500/50'
                           : isCurrentMonth
-                          ? 'bg-emerald-50 dark:bg-emerald-950/20 text-[#006C4A] dark:text-emerald-400'
-                          : 'bg-slate-100 dark:bg-zinc-700/50 text-slate-600 dark:text-zinc-400'
+                          ? 'bg-[#00e599]/20 text-[#006C4A] dark:text-[#00e599] border border-[#00e599]/40 font-bold'
+                          : 'bg-white dark:bg-[#071320] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-[#1a2d42]'
                       }`}>
                         {isFullyBooked
                           ? (roomCapacity > 1 ? `${roomCapacity}/${roomCapacity} Booked` : (primaryOccupant?.userName ? primaryOccupant.userName.split(' ')[0] : 'Booked'))
@@ -917,9 +917,15 @@ export function HostScheduleCalendar({
                       </span>
 
                       <div className="my-1 flex items-baseline justify-center gap-1.5 whitespace-nowrap">
-                        <span className="text-xs sm:text-[13.5px] font-bold leading-tight tracking-tight">{m.monthShort}</span>
+                        <span className={`text-xs sm:text-[13.5px] font-black leading-tight tracking-tight ${
+                          isSelected && !isUserRequestSelection
+                            ? 'text-[#5254cf] dark:text-[#c0c1ff]'
+                            : 'text-slate-900 dark:text-white'
+                        }`}>{m.monthShort}</span>
                         <span className={`text-[11px] sm:text-xs font-medium leading-tight ${
-                          isUserRequestSelection && isSelected ? 'opacity-90' : 'text-slate-500 dark:text-zinc-400'
+                          isSelected && !isUserRequestSelection
+                            ? 'text-[#5254cf]/80 dark:text-[#c0c1ff]/80'
+                            : 'text-slate-400 dark:text-slate-400'
                         }`}>{m.year}</span>
                       </div>
 
@@ -935,8 +941,8 @@ export function HostScheduleCalendar({
                         }
                         vacantColor={
                           isSelected && !isPartiallyBooked && !isFullyBooked
-                            ? 'text-emerald-700/80 dark:text-sky-300/80'
-                            : 'text-slate-400 dark:text-zinc-500'
+                            ? 'text-[#5254cf] dark:text-[#c0c1ff]'
+                            : 'text-slate-400 dark:text-slate-500'
                         }
                         customTitle={`${occupiedCount} of ${roomCapacity} slot${roomCapacity > 1 ? 's' : ''} occupied in ${m.monthShort} ${m.year} (solid = booked, outline = available)`}
                       />
@@ -963,17 +969,17 @@ export function HostScheduleCalendar({
                     {isCurrent && (
                       <motion.span
                         layoutId="activeMonthSchedulePill"
-                        className="absolute inset-0 rounded-full bg-[#00e599] shadow-xs shadow-[#00e599]/20 z-0"
+                        className="absolute inset-0 rounded-full bg-[#c0c1ff] shadow-xs shadow-[#c0c1ff]/30 z-0"
                         transition={{ type: 'spring', stiffness: 420, damping: 32 }}
                       />
                     )}
                     {!isCurrent && (
-                      <span className="absolute inset-0 rounded-full bg-slate-50 dark:bg-[#0c1825] border border-slate-200 dark:border-slate-700/60 z-0" />
+                      <span className="absolute inset-0 rounded-full bg-slate-100 dark:bg-[#071320] border border-slate-200/80 dark:border-[#1a2d42] z-0" />
                     )}
                     <span className={`relative z-10 transition-colors ${
                       isCurrent
-                        ? 'text-[#071320] font-bold'
-                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-semibold'
+                        ? 'text-[#07006c] font-black'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-bold'
                     }`}>
                       {group.monthYear}
                     </span>
@@ -983,8 +989,8 @@ export function HostScheduleCalendar({
             </div>
           )}
 
-          <div className="flex flex-col rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-[#142334] bg-white dark:bg-[#071320] shadow-2xs p-3 sm:p-3.5">
-            <div className="grid grid-cols-7 text-center text-[10.5px] sm:text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider pb-2 select-none">
+          <div className="flex flex-col rounded-2xl sm:rounded-3xl border border-[#54ACBF]/20 dark:border-[#26658C]/40 bg-white/70 dark:bg-[#011C40]/50 backdrop-blur-xl shadow-[0_4px_24px_rgba(2,56,89,0.04)] dark:shadow-[0_8px_32px_rgba(1,28,64,0.4)] p-3 sm:p-3.5">
+            <div className="grid grid-cols-7 text-center text-[10.5px] sm:text-[11px] font-medium text-[#011C40] dark:text-[#A7EBF2]/80 uppercase tracking-wider pb-2 select-none">
               {WEEKDAYS.map((wd) => (
                 <span key={wd}>{wd}</span>
               ))}
@@ -1103,13 +1109,13 @@ export function HostScheduleCalendar({
                             let capsuleTrack = 'mx-auto w-9 h-9 sm:w-9.5 sm:h-9.5 rounded-full';
                             if (isBooked || isUserReqSelected) {
                               if ((hasPrevInRow || wrapsFromPrevRow) && (hasNextInRow || wrapsToNextRow)) {
-                                capsuleTrack = 'w-full h-9 sm:h-9.5 rounded-none border-y-2 border-[#38BDF8] dark:border-primary border-l border-[#BAE6FD] dark:border-l-primary/30';
+                                capsuleTrack = 'w-full h-9 sm:h-9.5 rounded-none border-y-2 border-[#54ACBF] border-l border-[#54ACBF]/40';
                               } else if ((hasPrevInRow || wrapsFromPrevRow) && !hasNextInRow) {
-                                capsuleTrack = 'w-full h-9 sm:h-9.5 rounded-r-full rounded-l-none border-y-2 border-r-2 border-[#38BDF8] dark:border-primary border-l border-[#BAE6FD] dark:border-l-primary/30';
+                                capsuleTrack = 'w-full h-9 sm:h-9.5 rounded-r-full rounded-l-none border-y-2 border-r-2 border-[#54ACBF] border-l border-[#54ACBF]/40';
                               } else if (!hasPrevInRow && (hasNextInRow || wrapsToNextRow)) {
-                                capsuleTrack = 'w-full h-9 sm:h-9.5 rounded-l-full rounded-r-none border-y-2 border-l-2 border-[#38BDF8] dark:border-primary';
+                                capsuleTrack = 'w-full h-9 sm:h-9.5 rounded-l-full rounded-r-none border-y-2 border-l-2 border-[#54ACBF]';
                               } else {
-                                capsuleTrack = 'w-9 h-9 sm:w-9.5 sm:h-9.5 rounded-full mx-auto border-2 border-[#38BDF8] dark:border-primary';
+                                capsuleTrack = 'w-9 h-9 sm:w-9.5 sm:h-9.5 rounded-full mx-auto border-2 border-[#54ACBF]';
                               }
                             }
 
@@ -1118,7 +1124,7 @@ export function HostScheduleCalendar({
                                 ? 'animate-slot-flash bg-[#E0F2FE] dark:bg-primary/30 text-slate-900 dark:text-on-surface border-[#38BDF8] dark:border-primary font-bold shadow-md'
                                 : 'animate-booked-slot-flash bg-[#E0F2FE] dark:bg-primary/30 text-slate-900 dark:text-on-surface border-[#38BDF8] dark:border-primary font-bold shadow-md'
                               : isBooked
-                              ? 'bg-[#E0F2FE] dark:bg-primary/20 text-slate-900 dark:text-on-surface font-bold'
+                              ? 'bg-[#54ACBF]/20 text-[#A7EBF2] font-semibold'
                               : isUserReqSelected
                               ? 'animate-slot-flash bg-[#E0F2FE] dark:bg-primary/30 text-slate-900 dark:text-on-surface border-[#38BDF8] dark:border-primary shadow-md'
                               : '';
@@ -1144,24 +1150,24 @@ export function HostScheduleCalendar({
                                     isBooked
                                       ? `${capsuleBg} cursor-pointer hover:brightness-105 active:scale-[0.98]`
                                       : isLocked
-                                      ? 'border border-dashed border-slate-300 dark:border-slate-700/60 text-slate-400 dark:text-slate-600 cursor-not-allowed rounded-full font-normal'
+                                      ? 'border border-dashed border-[#54ACBF]/20 text-[#A7EBF2]/40 cursor-not-allowed rounded-full font-normal'
                                       : isUserReqSelected
                                       ? `${capsuleBg} font-extrabold cursor-default pointer-events-none`
                                       : isUserRequestSelection
                                       ? isToday
-                                        ? 'border-2 border-[#c0c1ff] dark:border-[#c0c1ff] text-slate-900 dark:text-white cursor-pointer font-bold bg-transparent rounded-full'
-                                        : 'text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors cursor-pointer rounded-full'
+                                        ? 'border-2 border-[#c0c1ff] text-slate-900 dark:text-white cursor-pointer font-bold bg-transparent rounded-full'
+                                        : 'text-[#A7EBF2] flex items-center justify-center font-normal hover:bg-white/10 transition-colors cursor-pointer rounded-full'
                                       : isSelected
-                                      ? 'bg-[#00e599] text-[#071320] font-black cursor-pointer shadow-md shadow-[#00e599]/20 rounded-full'
+                                      ? 'bg-[#c0c1ff] text-[#07006c] font-black cursor-pointer shadow-md shadow-[#c0c1ff]/30 rounded-full'
                                       : isToday
-                                      ? 'border-2 border-[#c0c1ff] dark:border-[#c0c1ff] text-slate-900 dark:text-white cursor-pointer font-bold bg-transparent rounded-full'
-                                      : 'text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors cursor-pointer rounded-full'
+                                      ? 'border-2 border-[#54ACBF] text-white cursor-pointer font-semibold bg-transparent rounded-full'
+                                      : 'text-white flex items-center justify-center font-normal hover:bg-white/10 transition-colors cursor-pointer rounded-full'
                                   }`}
                                 >
                                   <span>{slot.dayNum}</span>
                                   {isCheckInDay ? (
                                     <span
-                                      className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 z-10 px-2 py-0.5 rounded-full bg-[#E0F2FE] dark:bg-surface-container-high/90 border border-[#7DD3FC] dark:border-primary/50 text-[#0369A1] dark:text-primary font-mono text-[9.5px] leading-none font-bold whitespace-nowrap shadow-xs"
+                                      className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 z-10 px-2 py-0.5 rounded-full bg-[#01224d] border border-[#54ACBF]/50 text-[#A7EBF2] font-mono text-[9.5px] leading-none font-bold whitespace-nowrap shadow-xs"
                                       title={slotGuest?.userName || slotGuest?.guestName || ''}
                                     >
                                       {guestName}

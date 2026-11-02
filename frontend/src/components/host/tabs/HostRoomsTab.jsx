@@ -63,30 +63,30 @@ export function HostRoomsTab({
             <button
               type="button"
               onClick={handleAddNewRoomTypeRow}
-              className="group flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] hover:brightness-105 text-[#011C40] border border-[#54ACBF]/50 text-xs font-extrabold transition-all shadow-md shadow-[#54ACBF]/20 cursor-pointer active:scale-95 shrink-0"
+              className="group flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl bg-[#011C40] hover:bg-[#01224d] text-white border border-[#54ACBF]/40 hover:border-[#54ACBF]/70 text-xs font-bold transition-all shadow-[0_4px_16px_rgba(1,28,64,0.4)] cursor-pointer active:scale-95 shrink-0"
             >
-              <span className="material-symbols-outlined text-[18px] text-white group-hover:rotate-90 transition-transform">add</span>
-              <span>Add Room Type</span>
+              <span className="material-symbols-outlined text-[18px] text-[#A7EBF2] group-hover:rotate-90 group-hover:text-white transition-all">add</span>
+              <span className="text-white group-hover:text-[#A7EBF2] transition-colors">Add Room Type</span>
             </button>
           </div>
 
           {/* Occupants / Add Guest console switch */}
-          <div className="flex items-center gap-1 p-1 rounded-full bg-slate-100/90 dark:bg-surface-container-high border border-slate-200/80 dark:border-outline-variant/30 shadow-inner relative self-start sm:self-auto shrink-0 max-w-full overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-1 p-1 rounded-full bg-[#023859] border border-[#54ACBF]/40 shadow-sm shadow-[#023859]/30 relative self-start sm:self-auto shrink-0 max-w-full overflow-x-auto no-scrollbar backdrop-blur-md">
             <button
               type="button"
               onClick={() => setActiveRightPanelTab('occupants')}
-              className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-colors cursor-pointer z-10 ${
+              className={`relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs transition-colors cursor-pointer z-10 ${
                 activeRightPanelTab !== 'guest'
-                  ? 'text-slate-900 dark:text-white'
-                  : 'text-slate-600 dark:text-on-surface-variant hover:text-slate-900 dark:hover:text-on-surface'
+                  ? 'text-[#011C40] font-black'
+                  : 'text-[#A7EBF2]/80 hover:text-white font-medium'
               }`}
               title="View active room occupants"
             >
               {activeRightPanelTab !== 'guest' && (
                 <motion.div
                   layoutId="occupantSwitchIndicator"
-                  className="absolute inset-0 rounded-full bg-white dark:bg-surface-container-highest shadow-xs border border-slate-200/70 dark:border-transparent -z-10 pointer-events-none"
-                  transition={{ type: 'spring', stiffness: 450, damping: 32, mass: 0.8 }}
+                  className="absolute inset-0 rounded-full bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] shadow-[0_2px_12px_rgba(84,172,191,0.35)] -z-10 pointer-events-none"
+                  transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.8 }}
                 />
               )}
               <span className="material-symbols-outlined text-[15px]">group</span>
@@ -96,18 +96,18 @@ export function HostRoomsTab({
             <button
               type="button"
               onClick={() => setActiveRightPanelTab('guest')}
-              className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-colors cursor-pointer z-10 ${
+              className={`relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs transition-colors cursor-pointer z-10 ${
                 activeRightPanelTab === 'guest'
-                  ? 'text-[#071320] font-black'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-[#00c984]'
+                  ? 'text-[#011C40] font-black'
+                  : 'text-[#A7EBF2]/80 hover:text-white font-medium'
               }`}
               title="Add new guest"
             >
               {activeRightPanelTab === 'guest' && (
                 <motion.div
                   layoutId="occupantSwitchIndicator"
-                  className="absolute inset-0 rounded-full bg-[#00e599] shadow-xs shadow-[#00e599]/25 -z-10 pointer-events-none"
-                  transition={{ type: 'spring', stiffness: 450, damping: 32, mass: 0.8 }}
+                  className="absolute inset-0 rounded-full bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] shadow-[0_2px_12px_rgba(84,172,191,0.35)] -z-10 pointer-events-none"
+                  transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.8 }}
                 />
               )}
               <span className="material-symbols-outlined text-[15px]">person_add</span>
