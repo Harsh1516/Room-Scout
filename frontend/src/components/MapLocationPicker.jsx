@@ -155,19 +155,19 @@ export function MapLocationPicker({
 
       marker.on('dragend', (e) => {
         const { lat, lng } = e.target.getLatLng();
-        const fixedLat = parseFloat(lat.toFixed(6));
-        const fixedLng = parseFloat(lng.toFixed(6));
-        if (onLocationChange) onLocationChange(fixedLat, fixedLng);
-        reverseGeocode(fixedLat, fixedLng);
+        const preciseLat = Number(lat);
+        const preciseLng = Number(lng);
+        if (onLocationChange) onLocationChange(preciseLat, preciseLng);
+        reverseGeocode(preciseLat, preciseLng);
       });
 
       map.on('click', (e) => {
         const { lat, lng } = e.latlng;
-        const fixedLat = parseFloat(lat.toFixed(6));
-        const fixedLng = parseFloat(lng.toFixed(6));
-        marker.setLatLng([fixedLat, fixedLng]);
-        if (onLocationChange) onLocationChange(fixedLat, fixedLng);
-        reverseGeocode(fixedLat, fixedLng);
+        const preciseLat = Number(lat);
+        const preciseLng = Number(lng);
+        marker.setLatLng([preciseLat, preciseLng]);
+        if (onLocationChange) onLocationChange(preciseLat, preciseLng);
+        reverseGeocode(preciseLat, preciseLng);
       });
 
       // Keep Leaflet tiles crisp & fully drawn on dynamic container resize

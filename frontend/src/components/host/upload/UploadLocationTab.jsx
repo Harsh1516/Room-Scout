@@ -127,9 +127,16 @@ export function UploadLocationTab({
                 Pin Location on Map
               </span>
             </div>
-            <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-200/70 dark:border-emerald-800/60">
-              Interactive Leaflet
-            </span>
+            <div className="flex items-center gap-1.5">
+              {formData.latitude && formData.longitude && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-[10px] sm:text-[11px] font-mono text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700">
+                  {formData.latitude}, {formData.longitude}
+                </span>
+              )}
+              <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-200/70 dark:border-emerald-800/60">
+                Interactive Leaflet
+              </span>
+            </div>
           </div>
 
           <div className="w-full flex-1 relative min-h-[300px] sm:min-h-[360px]">
@@ -272,7 +279,7 @@ export function UploadLocationTab({
           {/* Auto-detected address preview summary (Airbnb style metadata) */}
           <div className="p-3 rounded-xl bg-slate-50 dark:bg-zinc-800/50 border border-slate-200/80 dark:border-zinc-700/80 flex items-start gap-2.5">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-            <div className="min-w-0 text-xs text-slate-600 dark:text-zinc-300">
+            <div className="min-w-0 text-xs text-slate-600 dark:text-zinc-300 flex-1">
               <span className="font-semibold text-slate-800 dark:text-zinc-200 block">
                 Detected Location
               </span>
@@ -280,6 +287,11 @@ export function UploadLocationTab({
                 {[formData.roadArea, formData.city, formData.state].filter(Boolean).join(', ') || 'No address specified yet'}
                 {formData.pincode ? ` - ${formData.pincode}` : ''}
               </span>
+              {formData.latitude && formData.longitude && (
+                <div className="mt-1 text-[11px] font-mono text-emerald-700 dark:text-emerald-400 font-medium select-all">
+                  Coords: {formData.latitude}, {formData.longitude}
+                </div>
+              )}
             </div>
           </div>
         </section>

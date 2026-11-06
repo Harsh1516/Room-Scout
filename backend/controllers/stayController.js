@@ -600,7 +600,7 @@ export const resolveMapLink = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Only verified Google Maps URLs are permitted' });
     }
 
-    let targetUrl = trimmed;
+    let targetUrl = cleanUrl;
     if (hostname.includes('goo.gl')) {
       try {
         const redirectRes = await fetch(cleanUrl, {
@@ -622,6 +622,11 @@ export const resolveMapLink = async (req, res) => {
     let placeName = '';
     let addressHint = {};
 
+    let decodedUrl = targetUrl;
+    try {
+      decodedUrl = decodeURIComponent(targetUrl);
+    } catch {}
+
     // 1. Exact POI / Marker coordinates in protobuf data (!3d<lat> and !4d<lng>)
     const lat3d = targetUrl.match(/!3d(-?\d+\.\d+)/);
     const lng4d = targetUrl.match(/!4d(-?\d+\.\d+)/);
@@ -632,10 +637,12 @@ export const resolveMapLink = async (req, res) => {
 
     // 2. Query search / pin marker (?q=lat,lng or ?query=lat,lng or ?ll=lat,lng)
     if (lat === null || lng === null) {
-      const queryMatch = targetUrl.match(/[?&](?:q|query|ll)=(-?\d+\.\d+),(-?\d+\.\d+)/);
+      const queryMatch =
+        decodedUrl.match(/[?&](?:q|query|ll)=(?:loc:)?(-?\d+(?:\.\d+)?)[,+\s]+(-?\d+(?:\.\d+)?)/i) ||
+        targetUrl.match(/[?&](?:q|query|ll)=(-?\d+\.\d+),(-?\d+\.\d+)/);
       if (queryMatch) {
-        lat = parseFloat(queryMatch[1]);
-        lng = parseFloat(queryMatch[2]);
+        lat = Number(queryMatch[1]);
+        lng = Number(queryMatch[2]);
       }
     }
 
@@ -747,8 +754,8 @@ export const resolveMapLink = async (req, res) => {
             const items = await geoRes.json();
             if (Array.isArray(items) && items.length > 0) {
               const first = items[0];
-              lat = parseFloat(Number(first.lat).toFixed(6));
-              lng = parseFloat(Number(first.lon).toFixed(6));
+              lat = Number(first.lat);
+              lng = Number(first.lon);
               const addr = first.address || {};
               addressHint = {
                 roadArea: nameParts[0] || addr.suburb || addr.neighbourhood || addr.road || '',
@@ -769,8 +776,8 @@ export const resolveMapLink = async (req, res) => {
     if (lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng)) {
       return res.json({
         success: true,
-        latitude: parseFloat(lat.toFixed(6)),
-        longitude: parseFloat(lng.toFixed(6)),
+        latitude: Number(lat),
+        longitude: Number(lng),
         placeName: placeName ? placeName.trim() : undefined,
         ...addressHint,
       });

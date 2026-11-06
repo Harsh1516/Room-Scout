@@ -661,8 +661,8 @@ export function HostUploadPage() {
         return;
       }
 
-      const fixedLat = parseFloat(Number(lat).toFixed(6));
-      const fixedLng = parseFloat(Number(lng).toFixed(6));
+      const fixedLat = Number(lat);
+      const fixedLng = Number(lng);
 
       setFormData((prev) => ({
         ...prev,

@@ -7,8 +7,8 @@
 
 export async function fetchAddressFromCoords(lat, lng, options = {}) {
   const { rawUrl = '', detectedPlace = '' } = options;
-  const fixedLat = parseFloat(Number(lat).toFixed(6));
-  const fixedLng = parseFloat(Number(lng).toFixed(6));
+  const fixedLat = Number(lat);
+  const fixedLng = Number(lng);
 
   if (isNaN(fixedLat) || isNaN(fixedLng)) {
     return null;
@@ -202,6 +202,18 @@ export function parseGoogleMapsUrl(rawUrl) {
   let lng = null;
   let detectedPlace = '';
 
+  // 0. Direct coordinates input (e.g. "29.2981512, 79.6317825" or "29.2981512 79.6317825")
+  const rawCoordMatch = trimmed.match(/^(-?\d+(?:\.\d+)?)[,\s]+(-?\d+(?:\.\d+)?)$/);
+  if (rawCoordMatch) {
+    lat = Number(rawCoordMatch[1]);
+    lng = Number(rawCoordMatch[2]);
+  }
+
+  let decoded = trimmed;
+  try {
+    decoded = decodeURIComponent(trimmed);
+  } catch {}
+
   // 1. Exact POI / Marker coordinates in protobuf data (!3d<lat> and !4d<lng>)
   const lat3d = trimmed.match(/!3d(-?\d+\.\d+)/);
   const lng4d = trimmed.match(/!4d(-?\d+\.\d+)/);
@@ -212,10 +224,12 @@ export function parseGoogleMapsUrl(rawUrl) {
 
   // 2. Query search / pin marker (?q=lat,lng or ?query=lat,lng or ?ll=lat,lng)
   if (lat === null || lng === null) {
-    const queryMatch = trimmed.match(/[?&](?:q|query|ll)=(-?\d+\.\d+),(-?\d+\.\d+)/);
+    const queryMatch =
+      decoded.match(/[?&](?:q|query|ll)=(?:loc:)?(-?\d+(?:\.\d+)?)[,+\s]+(-?\d+(?:\.\d+)?)/i) ||
+      trimmed.match(/[?&](?:q|query|ll)=(-?\d+\.\d+),(-?\d+\.\d+)/);
     if (queryMatch) {
-      lat = parseFloat(queryMatch[1]);
-      lng = parseFloat(queryMatch[2]);
+      lat = Number(queryMatch[1]);
+      lng = Number(queryMatch[2]);
     }
   }
 
@@ -272,8 +286,8 @@ export function parseGoogleMapsUrl(rawUrl) {
   }
 
   return {
-    latitude: parseFloat(lat.toFixed(6)),
-    longitude: parseFloat(lng.toFixed(6)),
+    latitude: Number(lat),
+    longitude: Number(lng),
     detectedPlace: detectedPlace ? detectedPlace.trim() : '',
   };
 }
