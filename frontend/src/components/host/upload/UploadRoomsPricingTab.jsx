@@ -1,16 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FileText, BedDouble, Plus, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import HostRoomCategories from '../HostRoomCategories';
 import { ErrorBoundary } from '../../common/ErrorBoundary';
-
-const PROMPT_CHIPS = [
-  'Quiet study environment',
-  'Walking distance to metro & campus',
-  'Attached washroom & balcony',
-  'Daily housekeeping included',
-  'High-speed Wi-Fi & backup',
-];
 
 export function UploadRoomsPricingTab({
   formData,
@@ -33,14 +25,6 @@ export function UploadRoomsPricingTab({
   onUpdateRoomCapacity,
 }) {
   const descLength = (formData.description || '').length;
-
-  const appendPromptChip = (chip) => {
-    const current = formData.description || '';
-    if (current.includes(chip)) return;
-    const separator = current.trim().length > 0 ? (current.trim().endsWith('.') ? ' ' : '. ') : '';
-    const updated = `${current.trim()}${separator}${chip}`.slice(0, maxDescriptionChars);
-    setFormData({ ...formData, description: updated });
-  };
 
   return (
     <motion.div
@@ -159,75 +143,6 @@ export function UploadRoomsPricingTab({
             {fieldErrors.description && (
               <p className="text-xs text-rose-300 font-medium pl-1">{fieldErrors.description}</p>
             )}
-          </div>
-
-          {/* Quick Idea Chips */}
-          <div className="space-y-1.5 pt-1">
-            <span className="text-xs font-semibold text-purple-300/70 flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-amber-400" />
-              <span>Tap to append highlights:</span>
-            </span>
-            <div className="flex flex-wrap gap-1.5">
-              {PROMPT_CHIPS.map((chip) => (
-                <button
-                  key={chip}
-                  type="button"
-                  onClick={() => appendPromptChip(chip)}
-                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/25 text-xs font-medium text-purple-100 hover:text-white border border-white/15 hover:border-white/25 transition-colors cursor-pointer"
-                >
-                  + {chip}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Listing Summary Checklist */}
-          <div className="pt-3 border-t border-purple-300/20 space-y-2">
-            <h4 className="text-sm font-black text-white">
-              Listing Readiness Check
-            </h4>
-            <div className="space-y-1.5 text-sm text-purple-200/80">
-              <div className="flex items-center gap-2">
-                <CheckCircle2
-                  className={`w-4 h-4 shrink-0 ${
-                    formData.propertyName ? 'text-emerald-400' : 'text-purple-300/30'
-                  }`}
-                />
-                <span className={formData.propertyName ? 'text-white font-medium' : ''}>
-                  Property identity &amp; address
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2
-                  className={`w-4 h-4 shrink-0 ${
-                    (formData.facilities || []).length > 0 ? 'text-emerald-400' : 'text-purple-300/30'
-                  }`}
-                />
-                <span className={(formData.facilities || []).length > 0 ? 'text-white font-medium' : ''}>
-                  {(formData.facilities || []).length} amenities &amp; rules specified
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2
-                  className={`w-4 h-4 shrink-0 ${
-                    (formData.images || []).length > 0 ? 'text-emerald-400' : 'text-purple-300/30'
-                  }`}
-                />
-                <span className={(formData.images || []).length > 0 ? 'text-white font-medium' : ''}>
-                  {(formData.images || []).length} showcase photos uploaded
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2
-                  className={`w-4 h-4 shrink-0 ${
-                    (formData.roomRates || []).length > 0 ? 'text-emerald-400' : 'text-purple-300/30'
-                  }`}
-                />
-                <span className={(formData.roomRates || []).length > 0 ? 'text-white font-medium' : ''}>
-                  {(formData.roomRates || []).length} room type(s) configured
-                </span>
-              </div>
-            </div>
           </div>
         </section>
       </div>

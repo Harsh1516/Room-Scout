@@ -73,24 +73,21 @@ export function UploadBasicsTab({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
       transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-      className="max-w-3xl w-full mx-auto space-y-5 sm:space-y-6"
+      className="w-full space-y-5 sm:space-y-6"
     >
-      {/* ── CARD 1: Host Contact Information (Airbnb-style structured card) ── */}
-      <section className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-5 sm:p-7 shadow-lg shadow-black/5 dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]">
-        <div className="pb-4 sm:pb-5 border-b border-slate-100 dark:border-zinc-800/80 text-center relative">
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+      {/* ── CARD 1: Host Contact Information ── */}
+      <section className="bg-[#5a1060] rounded-2xl sm:rounded-3xl border border-purple-300/20 p-5 sm:p-7 shadow-lg shadow-black/20">
+        <div className="pb-3 sm:pb-4 border-b border-purple-300/20 text-center relative">
+          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
             Host Details
           </h2>
-          <p className="text-sm sm:text-base text-slate-600 dark:text-zinc-400 mt-1">
-            Your primary contact info for guest communication and verified bookings
-          </p>
 
           {formData.email && (
             <span
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700/60 absolute right-0 top-0"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-white/10 text-purple-100 border border-white/15 absolute right-0 top-0"
               title={formData.email}
             >
-              <Mail className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <Mail className="w-4 h-4 text-purple-300" />
               <span className="truncate max-w-[200px]">{formData.email}</span>
             </span>
           )}
@@ -99,11 +96,8 @@ export function UploadBasicsTab({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 pt-4 sm:pt-5">
           {/* Host Full Name */}
           <div className="space-y-1.5">
-            <label className="block text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-zinc-300">
-              Host Name <span className="text-rose-500">*</span>
-            </label>
             <div className="relative flex items-center">
-              <span className="absolute left-3.5 text-slate-400 dark:text-zinc-500 pointer-events-none">
+              <span className="absolute left-3.5 text-purple-300 pointer-events-none">
                 <User className="w-5 h-5" />
               </span>
               <input
@@ -121,28 +115,25 @@ export function UploadBasicsTab({
                     });
                   }
                 }}
-                placeholder="e.g. Rahul Sharma"
-                className={`w-full h-12 sm:h-13 pl-11 pr-4 rounded-xl bg-slate-50/70 dark:bg-zinc-800/40 border text-base sm:text-lg text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none transition-all ${
+                placeholder="Host Name *"
+                className={`w-full h-12 sm:h-13 pl-11 pr-4 rounded-xl bg-white/10 border text-base sm:text-lg text-white placeholder:text-purple-200/60 focus:outline-none transition-all ${
                   fieldErrors.name
-                    ? 'border-rose-500 focus:border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/30'
-                    : 'border-slate-200 dark:border-zinc-700/80 focus:border-[#006C4A] focus:ring-2 focus:ring-[#006C4A]/15 focus:bg-white dark:focus:bg-zinc-900'
+                    ? 'border-rose-400/60 focus:border-rose-400/60 ring-2 ring-rose-500/20 bg-rose-500/10'
+                    : 'border-white/15 focus:border-purple-300/60 focus:ring-2 focus:ring-purple-300/15'
                 }`}
               />
             </div>
             {fieldErrors.name && (
-              <p className="text-xs sm:text-sm text-rose-500 font-medium pl-1">{fieldErrors.name}</p>
+              <p className="text-xs sm:text-sm text-rose-300 font-medium pl-1">{fieldErrors.name}</p>
             )}
           </div>
 
           {/* Host Mobile Number */}
           <div className="space-y-1.5">
-            <label className="block text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-zinc-300">
-              Mobile Number <span className="text-rose-500">*</span>
-            </label>
             <div className="relative flex items-center">
-              <div className="absolute left-3 flex items-center gap-1.5 text-slate-500 dark:text-zinc-400 pointer-events-none">
+              <div className="absolute left-3 flex items-center gap-1.5 text-purple-300 pointer-events-none">
                 <Phone className="w-4 h-4" />
-                <span className="text-xs sm:text-sm font-bold text-slate-700 dark:text-zinc-300 border-r border-slate-300 dark:border-zinc-700 pr-2">
+                <span className="text-xs sm:text-sm font-bold text-purple-200 border-r border-purple-300/30 pr-2">
                   +91
                 </span>
               </div>
@@ -162,43 +153,32 @@ export function UploadBasicsTab({
                     });
                   }
                 }}
-                placeholder="9876543210"
-                className={`w-full h-12 sm:h-13 pl-19 pr-4 rounded-xl bg-slate-50/70 dark:bg-zinc-800/40 border text-base sm:text-lg text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none transition-all ${
+                placeholder="Mobile Number *"
+                className={`w-full h-12 sm:h-13 pl-19 pr-4 rounded-xl bg-white/10 border text-base sm:text-lg text-white placeholder:text-purple-200/60 focus:outline-none transition-all ${
                   fieldErrors.phone
-                    ? 'border-rose-500 focus:border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/30'
-                    : 'border-slate-200 dark:border-zinc-700/80 focus:border-[#006C4A] focus:ring-2 focus:ring-[#006C4A]/15 focus:bg-white dark:focus:bg-zinc-900'
+                    ? 'border-rose-400/60 focus:border-rose-400/60 ring-2 ring-rose-500/20 bg-rose-500/10'
+                    : 'border-white/15 focus:border-purple-300/60 focus:ring-2 focus:ring-purple-300/15'
                 }`}
               />
             </div>
             {fieldErrors.phone && (
-              <p className="text-xs sm:text-sm text-rose-500 font-medium pl-1">{fieldErrors.phone}</p>
+              <p className="text-xs sm:text-sm text-rose-300 font-medium pl-1">{fieldErrors.phone}</p>
             )}
           </div>
         </div>
       </section>
 
-      {/* ── CARD 2: Property Identity & Type (Airbnb-style selection cards) ── */}
-      <section className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-5 sm:p-7 shadow-lg shadow-black/5 dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)] space-y-6">
+      {/* ── CARD 2: Property Identity & Type ── */}
+      <section className="bg-[#5a1060] rounded-2xl sm:rounded-3xl border border-purple-300/20 p-5 sm:p-7 shadow-lg shadow-black/20 space-y-6">
         {/* Section Header */}
-        <div className="pb-4 sm:pb-5 border-b border-slate-100 dark:border-zinc-800/80 text-center">
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+        <div className="pb-3 sm:pb-4 border-b border-purple-300/20 text-center">
+          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
             Property Overview
           </h2>
-          <p className="text-sm sm:text-base text-slate-600 dark:text-zinc-400 mt-1">
-            Choose how your place is categorized so the right guests discover it
-          </p>
         </div>
 
         {/* Property Name Input */}
         <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <label className="block text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-zinc-300">
-              Property Name <span className="text-rose-500">*</span>
-            </label>
-            <span className="text-xs text-slate-400 dark:text-zinc-500">
-              Catchy, descriptive title
-            </span>
-          </div>
           <input
             type="text"
             required
@@ -214,22 +194,22 @@ export function UploadBasicsTab({
                 });
               }
             }}
-            placeholder="e.g. Royal Mountain View PG & Co-Living"
-            className={`w-full h-12 sm:h-13 px-4 rounded-xl bg-slate-50/70 dark:bg-zinc-800/40 border text-base sm:text-lg text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none transition-all ${
+            placeholder="Property Name *"
+            className={`w-full h-12 sm:h-13 px-4 rounded-xl bg-white/10 border text-base sm:text-lg text-white placeholder:text-purple-200/60 focus:outline-none transition-all ${
               fieldErrors.propertyName
-                ? 'border-rose-500 focus:border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/30'
-                : 'border-slate-200 dark:border-zinc-700/80 focus:border-[#006C4A] focus:ring-2 focus:ring-[#006C4A]/15 focus:bg-white dark:focus:bg-zinc-900'
+                ? 'border-rose-400/60 focus:border-rose-400/60 ring-2 ring-rose-500/20 bg-rose-500/10'
+                : 'border-white/15 focus:border-purple-300/60 focus:ring-2 focus:ring-purple-300/15'
             }`}
           />
           {fieldErrors.propertyName && (
-            <p className="text-xs sm:text-sm text-rose-500 font-medium pl-1">{fieldErrors.propertyName}</p>
+            <p className="text-xs sm:text-sm text-rose-300 font-medium pl-1">{fieldErrors.propertyName}</p>
           )}
         </div>
 
-        {/* Property Type Grid (Square fields of PG, Hostel, Flat - Icon + Label only) */}
+        {/* Property Type Grid */}
         <div className="space-y-2">
-          <label className="block text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-zinc-300">
-            Property Category <span className="text-rose-500">*</span>
+          <label className="block text-xs sm:text-sm font-bold uppercase tracking-wider text-purple-200">
+            Property Category <span className="text-rose-300">*</span>
           </label>
           <div className="grid grid-cols-3 gap-3 sm:gap-4">
             {PROPERTY_TYPES.map((pt) => {
@@ -243,21 +223,21 @@ export function UploadBasicsTab({
                   onClick={() => setFormData({ ...formData, propertyType: pt.label })}
                   className={`group relative aspect-square p-3 sm:p-5 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center gap-2 select-none active:scale-95 ${
                     isSelected
-                      ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-2 border-[#006C4A] dark:border-emerald-500 shadow-sm'
-                      : 'bg-slate-50/60 dark:bg-zinc-800/40 hover:bg-slate-100/80 dark:hover:bg-zinc-800/80 border-slate-200 dark:border-zinc-700/80'
+                      ? 'bg-white/20 border-2 border-white/60 shadow-sm'
+                      : 'bg-white/10 border-white/15 hover:bg-white/20'
                   }`}
                 >
                   <span
                     className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center transition-colors ${
                       isSelected
-                        ? 'bg-[#006C4A] text-white shadow-xs'
-                        : 'bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/80 dark:border-zinc-700'
+                        ? 'bg-white text-[#3d0c40] shadow-xs'
+                        : 'bg-white/10 text-white border border-white/20'
                     }`}
                   >
                     <IconComp className="w-6 h-6 sm:w-7 sm:h-7" />
                   </span>
 
-                  <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                  <span className="text-sm sm:text-base font-black text-white">
                     {pt.label}
                   </span>
                 </button>
@@ -266,10 +246,10 @@ export function UploadBasicsTab({
           </div>
         </div>
 
-        {/* Available For Gender Preference (Square fields - Icon + Label only) */}
+        {/* Available For Gender Preference */}
         <div className="space-y-2">
-          <label className="block text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-zinc-300">
-            Available For (Gender Policy) <span className="text-rose-500">*</span>
+          <label className="block text-xs sm:text-sm font-bold uppercase tracking-wider text-purple-200">
+            Available For (Gender Policy) <span className="text-rose-300">*</span>
           </label>
           <div className="grid grid-cols-3 gap-3 sm:gap-4">
             {GENDER_OPTIONS.map((g) => {
@@ -286,21 +266,21 @@ export function UploadBasicsTab({
                   onClick={() => setFormData({ ...formData, genderType: g.value })}
                   className={`group relative aspect-square p-3 sm:p-5 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center gap-2 select-none active:scale-95 ${
                     isSelected
-                      ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-2 border-[#006C4A] dark:border-emerald-500 shadow-sm'
-                      : 'bg-slate-50/60 dark:bg-zinc-800/40 hover:bg-slate-100/80 dark:hover:bg-zinc-800/80 border-slate-200 dark:border-zinc-700/80'
+                      ? 'bg-white/20 border-2 border-white/60 shadow-sm'
+                      : 'bg-white/10 border-white/15 hover:bg-white/20'
                   }`}
                 >
                   <span
                     className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center transition-colors ${
                       isSelected
-                        ? 'bg-[#006C4A] text-white shadow-xs'
-                        : 'bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/80 dark:border-zinc-700'
+                        ? 'bg-white text-[#3d0c40] shadow-xs'
+                        : 'bg-white/10 text-white border border-white/20'
                     }`}
                   >
                     {g.icon}
                   </span>
 
-                  <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                  <span className="text-sm sm:text-base font-black text-white">
                     {g.label}
                   </span>
                 </button>

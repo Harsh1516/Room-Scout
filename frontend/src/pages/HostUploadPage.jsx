@@ -1531,6 +1531,15 @@ export function HostUploadPage() {
   // Allow a logged-in guest to become a host; backend converts the account role on submit.
   // (No hard block here — the upload flow handles the conversion.)
 
+  const STEP_THEME = {
+    1: { mainBg: '#3d0c40', shadow: 'rgba(61,12,64,0.4)', footerBg: 'rgba(61,12,64,0.95)', footerBorder: 'rgba(167,139,250,0.2)', progressTrack: 'rgba(88,28,135,0.6)', backText: 'text-purple-200 hover:text-white', centerText: 'text-purple-200/80' },
+    2: { mainBg: '#0d2b5c', shadow: 'rgba(13,43,92,0.4)', footerBg: 'rgba(13,43,92,0.95)', footerBorder: 'rgba(147,197,253,0.2)', progressTrack: 'rgba(30,58,138,0.6)', backText: 'text-blue-200 hover:text-white', centerText: 'text-blue-200/80' },
+    3: { mainBg: '#0a3d5e', shadow: 'rgba(10,61,94,0.4)', footerBg: 'rgba(10,61,94,0.95)', footerBorder: 'rgba(103,232,249,0.2)', progressTrack: 'rgba(14,116,144,0.6)', backText: 'text-cyan-200 hover:text-white', centerText: 'text-cyan-200/80' },
+    4: { mainBg: '#0f2d60', shadow: 'rgba(15,45,96,0.4)', footerBg: 'rgba(15,45,96,0.95)', footerBorder: 'rgba(147,197,253,0.2)', progressTrack: 'rgba(30,64,175,0.6)', backText: 'text-blue-200 hover:text-white', centerText: 'text-blue-200/80' },
+    5: { mainBg: '#3d0c40', shadow: 'rgba(61,12,64,0.4)', footerBg: 'rgba(61,12,64,0.95)', footerBorder: 'rgba(167,139,250,0.2)', progressTrack: 'rgba(88,28,135,0.6)', backText: 'text-purple-200 hover:text-white', centerText: 'text-purple-200/80' },
+  };
+  const stepTheme = STEP_THEME[activeStep] || STEP_THEME[1];
+
   const currentStepConfig = WIZARD_STEPS.find((s) => s.id === activeStep) || WIZARD_STEPS[0];
 
   return (
@@ -1714,8 +1723,7 @@ export function HostUploadPage() {
       </AnimatePresence>
 
       {/* ── Fixed Step Editorial Header (Airbnb-style bold & calm typography with smooth tab transition) ── */}
-      {activeStep !== 5 && (
-      <section className="w-full shrink-0 px-4 sm:px-6 lg:px-8 pt-5 sm:pt-8 pb-3 sm:pb-4 select-none">
+      <section className="w-full shrink-0 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-3 sm:pb-4 select-none">
         <AnimatePresence mode="wait">
           <motion.div
             key={`step-heading-${activeStep}`}
@@ -1723,35 +1731,26 @@ export function HostUploadPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="max-w-4xl mx-auto text-center space-y-2"
+            className="max-w-4xl mx-auto text-center space-y-1 sm:space-y-2"
           >
             {/* Main Step Headline - Large & Balanced for Mobile */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
               {currentStepConfig.sub || currentStepConfig.title}
             </h1>
 
             {/* Step Subtitle / Description - Easy to Read on Mobile */}
-            <p className="text-sm sm:text-base md:text-lg text-slate-600 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed font-medium">
+            <p className="text-xs sm:text-sm md:text-base text-slate-600 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed font-medium">
               {currentStepConfig.desc}
             </p>
           </motion.div>
         </AnimatePresence>
       </section>
-      )}
 
       {/* ── Main Viewport-Fitted Canvas (Natural Smooth Scroll, Generous Bottom Padding) ── */}
-      <main className={`flex-1 w-full relative z-10 ${
-        activeStep === 5
-          ? 'bg-[#3d0c40] rounded-t-[2.5rem] sm:rounded-t-[3rem] px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-32 sm:pb-36 shadow-[0_-8px_40px_rgba(61,12,64,0.4)]'
-          : 'max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-4 pb-32 sm:pb-36'
-      }`}>
-        {activeStep === 5 && (
-          <div className="max-w-6xl mx-auto mb-6 sm:mb-8 text-center">
-            <p className="text-purple-200/70 text-xs sm:text-sm font-semibold uppercase tracking-widest mb-1">Step 5 of 5</p>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">Rooms, Pricing &amp; Review</h2>
-            <p className="text-purple-200/80 text-sm sm:text-base mt-1 font-medium">Configure your room rates and room cards, then review before publishing live.</p>
-          </div>
-        )}
+      <main
+        className="flex-1 w-full relative z-10 rounded-t-[2.5rem] sm:rounded-t-[3rem] px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-32 sm:pb-36"
+        style={{ backgroundColor: stepTheme.mainBg, boxShadow: `0 -8px 40px ${stepTheme.shadow}` }}
+      >
         <ErrorBoundary>
           <AnimatePresence mode="wait">
             {activeStep === 1 && (
@@ -1847,13 +1846,12 @@ export function HostUploadPage() {
       </main>
 
       {/* ── Fixed Bottom Progression Bar (Airbnb visual reference: screenshots 1 & 2) ── */}
-      <footer className={`fixed bottom-0 inset-x-0 z-40 backdrop-blur-md ${
-        activeStep === 5
-          ? 'bg-[#3d0c40]/95 border-t border-purple-400/20 shadow-[0_-4px_25px_rgba(61,12,64,0.4)]'
-          : 'bg-[#f8f9fa]/95 dark:bg-[#0b0c10]/95 border-t border-slate-200/60 dark:border-zinc-800/60 shadow-[0_-4px_25px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_25px_rgba(255,255,255,0.02)]'
-      }`}>
+      <footer
+        className="fixed bottom-0 inset-x-0 z-40 backdrop-blur-md"
+        style={{ backgroundColor: stepTheme.footerBg, borderTop: `1px solid ${stepTheme.footerBorder}`, boxShadow: `0 -4px 25px ${stepTheme.shadow}` }}
+      >
         {/* Hairline Continuous Progress Indicator Line */}
-        <div className={`w-full h-1 relative overflow-hidden ${activeStep === 5 ? 'bg-purple-900/60' : 'bg-slate-100 dark:bg-zinc-800'}`}>
+        <div className="w-full h-1 relative overflow-hidden" style={{ backgroundColor: stepTheme.progressTrack }}>
           <motion.div
             className="h-full bg-gradient-to-r from-[#006C4A] to-teal-500 rounded-r-full transition-all duration-300"
             style={{ width: `${(activeStep / WIZARD_STEPS.length) * 100}%` }}
@@ -1870,11 +1868,7 @@ export function HostUploadPage() {
                   setFieldErrors({});
                   setActiveStep((prev) => Math.max(1, prev - 1));
                 }}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl font-extrabold text-sm sm:text-base underline underline-offset-4 cursor-pointer active:scale-95 transition-all ${
-                  activeStep === 5
-                    ? 'text-purple-200 hover:text-white'
-                    : 'text-slate-800 dark:text-zinc-200 hover:text-black dark:hover:text-white'
-                }`}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl font-extrabold text-sm sm:text-base underline underline-offset-4 cursor-pointer active:scale-95 transition-all ${stepTheme.backText}`}
               >
                 <ChevronLeft className="w-5 h-5" />
                 <span>Back</span>
@@ -1890,7 +1884,7 @@ export function HostUploadPage() {
 
           {/* Center Info: Step overview badge (Desktop only) */}
           <div className="hidden md:flex items-center gap-2">
-            <span className={`text-sm font-bold ${activeStep === 5 ? 'text-purple-200/80' : 'text-slate-500 dark:text-zinc-400'}`}>
+            <span className={`text-sm font-bold ${stepTheme.centerText}`}>
               {currentStepConfig.title}
             </span>
           </div>
