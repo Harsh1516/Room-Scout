@@ -1570,17 +1570,12 @@ export function HostUploadPage() {
             />
           </div>
 
-          {/* Mobile Center Step Count: Text Only */}
-          <button
-            type="button"
-            onClick={() => setMobileNavOpen(true)}
-            className="md:hidden text-center cursor-pointer active:opacity-60 transition-opacity select-none py-1.5 px-2"
-            aria-label="Toggle vertical steps navigation menu"
-          >
+          {/* Mobile Center Step Count: Text Only (Non-clickable) */}
+          <div className="md:hidden text-center select-none py-1.5 px-2">
             <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-wider uppercase">
               Step {activeStep} of {WIZARD_STEPS.length}
             </span>
-          </button>
+          </div>
         </div>
 
         {/* Right Action: Theme Toggle + User Avatar */}
