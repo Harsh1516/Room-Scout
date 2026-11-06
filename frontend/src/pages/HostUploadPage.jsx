@@ -1714,6 +1714,7 @@ export function HostUploadPage() {
       </AnimatePresence>
 
       {/* ── Fixed Step Editorial Header (Airbnb-style bold & calm typography with smooth tab transition) ── */}
+      {activeStep !== 5 && (
       <section className="w-full shrink-0 px-4 sm:px-6 lg:px-8 pt-5 sm:pt-8 pb-3 sm:pb-4 select-none">
         <AnimatePresence mode="wait">
           <motion.div
@@ -1736,9 +1737,21 @@ export function HostUploadPage() {
           </motion.div>
         </AnimatePresence>
       </section>
+      )}
 
       {/* ── Main Viewport-Fitted Canvas (Natural Smooth Scroll, Generous Bottom Padding) ── */}
-      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-4 pb-32 sm:pb-36 relative z-10">
+      <main className={`flex-1 w-full relative z-10 ${
+        activeStep === 5
+          ? 'bg-[#3d0c40] rounded-t-[2.5rem] sm:rounded-t-[3rem] px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-32 sm:pb-36 shadow-[0_-8px_40px_rgba(61,12,64,0.4)]'
+          : 'max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-4 pb-32 sm:pb-36'
+      }`}>
+        {activeStep === 5 && (
+          <div className="max-w-6xl mx-auto mb-6 sm:mb-8 text-center">
+            <p className="text-purple-200/70 text-xs sm:text-sm font-semibold uppercase tracking-widest mb-1">Step 5 of 5</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">Rooms, Pricing &amp; Review</h2>
+            <p className="text-purple-200/80 text-sm sm:text-base mt-1 font-medium">Configure your room rates and room cards, then review before publishing live.</p>
+          </div>
+        )}
         <ErrorBoundary>
           <AnimatePresence mode="wait">
             {activeStep === 1 && (
@@ -1804,6 +1817,7 @@ export function HostUploadPage() {
             )}
 
             {activeStep === 5 && (
+              <div className="max-w-6xl mx-auto">
               <Suspense fallback={<TabFallback />}>
                 <UploadRoomsPricingTab
                   formData={formData}
@@ -1826,15 +1840,20 @@ export function HostUploadPage() {
                   onUpdateRoomCapacity={handleUpdateRoomCapacity}
                 />
               </Suspense>
+              </div>
             )}
           </AnimatePresence>
         </ErrorBoundary>
       </main>
 
       {/* ── Fixed Bottom Progression Bar (Airbnb visual reference: screenshots 1 & 2) ── */}
-      <footer className="fixed bottom-0 inset-x-0 z-40 bg-[#f8f9fa]/95 dark:bg-[#0b0c10]/95 backdrop-blur-md border-t border-slate-200/60 dark:border-zinc-800/60 shadow-[0_-4px_25px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_25px_rgba(255,255,255,0.02)]">
+      <footer className={`fixed bottom-0 inset-x-0 z-40 backdrop-blur-md ${
+        activeStep === 5
+          ? 'bg-[#3d0c40]/95 border-t border-purple-400/20 shadow-[0_-4px_25px_rgba(61,12,64,0.4)]'
+          : 'bg-[#f8f9fa]/95 dark:bg-[#0b0c10]/95 border-t border-slate-200/60 dark:border-zinc-800/60 shadow-[0_-4px_25px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_25px_rgba(255,255,255,0.02)]'
+      }`}>
         {/* Hairline Continuous Progress Indicator Line */}
-        <div className="w-full h-1 bg-slate-100 dark:bg-zinc-800 relative overflow-hidden">
+        <div className={`w-full h-1 relative overflow-hidden ${activeStep === 5 ? 'bg-purple-900/60' : 'bg-slate-100 dark:bg-zinc-800'}`}>
           <motion.div
             className="h-full bg-gradient-to-r from-[#006C4A] to-teal-500 rounded-r-full transition-all duration-300"
             style={{ width: `${(activeStep / WIZARD_STEPS.length) * 100}%` }}
@@ -1851,7 +1870,11 @@ export function HostUploadPage() {
                   setFieldErrors({});
                   setActiveStep((prev) => Math.max(1, prev - 1));
                 }}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-800 dark:text-zinc-200 hover:text-black dark:hover:text-white font-extrabold text-sm sm:text-base underline underline-offset-4 cursor-pointer active:scale-95 transition-all"
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl font-extrabold text-sm sm:text-base underline underline-offset-4 cursor-pointer active:scale-95 transition-all ${
+                  activeStep === 5
+                    ? 'text-purple-200 hover:text-white'
+                    : 'text-slate-800 dark:text-zinc-200 hover:text-black dark:hover:text-white'
+                }`}
               >
                 <ChevronLeft className="w-5 h-5" />
                 <span>Back</span>
@@ -1867,7 +1890,7 @@ export function HostUploadPage() {
 
           {/* Center Info: Step overview badge (Desktop only) */}
           <div className="hidden md:flex items-center gap-2">
-            <span className="text-sm font-bold text-slate-500 dark:text-zinc-400">
+            <span className={`text-sm font-bold ${activeStep === 5 ? 'text-purple-200/80' : 'text-slate-500 dark:text-zinc-400'}`}>
               {currentStepConfig.title}
             </span>
           </div>
