@@ -38,7 +38,7 @@ export function UploadLocationTab({
       {/* ── CARD 1: Google Maps Fast Import Unified Capsule ── */}
       {setGoogleMapsUrl && (
         <section className="rounded-2xl sm:rounded-full border shadow-lg transition-colors
-          max-md:bg-[#143d7a] max-md:border-blue-300/20 max-md:p-3 max-md:shadow-black/20
+          max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:p-3 max-md:shadow-black/20
           md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:p-2 md:sm:p-2.5 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
         >
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5">
@@ -67,7 +67,7 @@ export function UploadLocationTab({
                 }}
                 placeholder="Paste Google Maps link (e.g. https://maps.app.goo.gl/...)"
                 className="w-full h-12 sm:h-13 px-4 rounded-xl sm:rounded-full border text-sm sm:text-base focus:outline-none transition-all
-                  max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-blue-200/60 max-md:focus:border-blue-300/60 max-md:focus:ring-2 max-md:focus:ring-blue-300/15
+                  max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
                   md:bg-slate-50/80 md:dark:bg-zinc-800/50 md:border-slate-200/90 md:dark:border-zinc-700/80 md:text-slate-900 md:dark:text-white md:placeholder:text-slate-400 md:dark:placeholder:text-zinc-500 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15"
               />
               {googleMapsUrl && (
@@ -119,7 +119,7 @@ export function UploadLocationTab({
           </div>
 
           <section className="flex-1 rounded-2xl sm:rounded-3xl border shadow-lg overflow-hidden flex flex-col min-h-[340px] sm:min-h-[400px] transition-colors
-            max-md:bg-[#143d7a] max-md:border-blue-300/20 max-md:p-2 max-md:shadow-black/20
+            max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:p-2 max-md:shadow-black/20
             md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
           >
             {/* Desktop-Only Heading Inside Card */}
@@ -154,7 +154,7 @@ export function UploadLocationTab({
           </div>
 
           <section className="flex-1 rounded-2xl sm:rounded-3xl border shadow-lg flex flex-col justify-between space-y-4 transition-colors
-            max-md:bg-[#143d7a] max-md:border-blue-300/20 max-md:p-4 max-md:shadow-black/20
+            max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:p-4 max-md:shadow-black/20
             md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:p-5 md:sm:p-6 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
           >
             <div>
@@ -182,10 +182,10 @@ export function UploadLocationTab({
                     onChange={(e) => setFormData({ ...formData, roadArea: e.target.value })}
                     placeholder="Street / Area / Colony *"
                     className={`w-full h-12 sm:h-13 px-3.5 rounded-xl border text-sm sm:text-base focus:outline-none transition-all
-                      max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-blue-200/60 max-md:focus:border-blue-300/60 max-md:focus:ring-2 max-md:focus:ring-blue-300/15
+                      max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
                       md:bg-slate-50/70 md:dark:bg-zinc-800/40 md:border-slate-200 md:dark:border-zinc-700/80 md:text-slate-900 md:dark:text-white md:placeholder:text-slate-400 md:dark:placeholder:text-zinc-500 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 ${
                       fieldErrors.roadArea
-                        ? 'border-rose-400/60 focus:border-rose-400/60 ring-2 ring-rose-500/20 bg-rose-500/10'
+                        ? 'border-rose-400/60 focus:border-rose-400/60 ring-2 ring-rose-500/20 bg-rose-50/10'
                         : ''
                     }`}
                   />
@@ -208,10 +208,10 @@ export function UploadLocationTab({
                       onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                       placeholder="City *"
                       className={`w-full h-12 sm:h-13 px-3.5 rounded-xl border text-sm sm:text-base focus:outline-none transition-all
-                        max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-blue-200/60 max-md:focus:border-blue-300/60 max-md:focus:ring-2 max-md:focus:ring-blue-300/15
+                        max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
                         md:bg-slate-50/70 md:dark:bg-zinc-800/40 md:border-slate-200 md:dark:border-zinc-700/80 md:text-slate-900 md:dark:text-white md:placeholder:text-slate-400 md:dark:placeholder:text-zinc-500 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 ${
                         fieldErrors.city
-                          ? 'border-rose-400/60 focus:border-rose-400/60 ring-2 ring-rose-500/20 bg-rose-500/10'
+                          ? 'border-rose-400/60 focus:border-rose-400/60 ring-2 ring-rose-500/20 bg-rose-50/10'
                           : ''
                       }`}
                     />
@@ -232,10 +232,10 @@ export function UploadLocationTab({
                       onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                       placeholder="State *"
                       className={`w-full h-12 sm:h-13 px-3.5 rounded-xl border text-sm sm:text-base focus:outline-none transition-all
-                        max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-blue-200/60 max-md:focus:border-blue-300/60 max-md:focus:ring-2 max-md:focus:ring-blue-300/15
+                        max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
                         md:bg-slate-50/70 md:dark:bg-zinc-800/40 md:border-slate-200 md:dark:border-zinc-700/80 md:text-slate-900 md:dark:text-white md:placeholder:text-slate-400 md:dark:placeholder:text-zinc-500 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 ${
                         fieldErrors.state
-                          ? 'border-rose-400/60 focus:border-rose-400/60 ring-2 ring-rose-500/20 bg-rose-500/10'
+                          ? 'border-rose-400/60 focus:border-rose-400/60 ring-2 ring-rose-500/20 bg-rose-50/10'
                           : ''
                       }`}
                     />
@@ -259,10 +259,10 @@ export function UploadLocationTab({
                       onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
                       placeholder="PIN Code *"
                       className={`w-full h-12 sm:h-13 px-3.5 rounded-xl border text-sm sm:text-base focus:outline-none transition-all
-                        max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-blue-200/60 max-md:focus:border-blue-300/60 max-md:focus:ring-2 max-md:focus:ring-blue-300/15
+                        max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
                         md:bg-slate-50/70 md:dark:bg-zinc-800/40 md:border-slate-200 md:dark:border-zinc-700/80 md:text-slate-900 md:dark:text-white md:placeholder:text-slate-400 md:dark:placeholder:text-zinc-500 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 ${
                         fieldErrors.pincode
-                          ? 'border-rose-400/60 focus:border-rose-400/60 ring-2 ring-rose-500/20 bg-rose-500/10'
+                          ? 'border-rose-400/60 focus:border-rose-400/60 ring-2 ring-rose-500/20 bg-rose-50/10'
                           : ''
                       }`}
                     />
@@ -281,7 +281,7 @@ export function UploadLocationTab({
                       disabled
                       value="India"
                       className="w-full h-12 sm:h-13 px-3.5 rounded-xl border text-sm sm:text-base font-medium cursor-not-allowed transition-all
-                        max-md:bg-white/5 max-md:border-white/10 max-md:text-blue-200/70
+                        max-md:bg-white/5 max-md:border-white/10 max-md:text-purple-200/70
                         md:bg-slate-100 md:dark:bg-zinc-800 md:border-slate-200 md:dark:border-zinc-700 md:text-slate-500 md:dark:text-zinc-400"
                     />
                   </div>

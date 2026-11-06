@@ -144,9 +144,9 @@ export function UploadPerksRulesTab({
           </h2>
         </div>
 
-        {/* Card Body: Ocean Teal on Mobile, Clean White/Dark on Desktop */}
+        {/* Card Body: Purple on Mobile, Clean White/Dark on Desktop */}
         <section className="rounded-2xl sm:rounded-3xl border shadow-lg space-y-4 sm:space-y-5 transition-colors
-          max-md:bg-[#10455e] max-md:border-teal-300/20 max-md:p-4 max-md:shadow-black/20
+          max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:p-4 max-md:shadow-black/20
           md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:p-5 md:sm:p-7 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
         >
           {/* Desktop-Only Heading Inside Card */}
@@ -181,16 +181,16 @@ export function UploadPerksRulesTab({
                     onClick={() => toggleFacility(amenity.name)}
                     className={`group p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border text-left transition-all duration-200 cursor-pointer flex items-center justify-between gap-2 min-h-[50px] sm:min-h-[52px] ${
                       isSelected
-                        ? 'max-md:bg-teal-500/25 max-md:border-2 max-md:border-teal-300 max-md:text-white max-md:shadow-xs md:bg-emerald-50/70 md:dark:bg-emerald-950/30 md:border-2 md:border-[#006C4A] md:dark:border-emerald-500 md:shadow-2xs'
-                        : 'max-md:bg-white/10 max-md:border-white/15 max-md:text-teal-100 max-md:hover:bg-white/15 md:bg-slate-50/60 md:dark:bg-zinc-800/40 md:hover:bg-slate-100 md:dark:hover:bg-zinc-800 md:border-slate-200 md:dark:border-zinc-700/80'
+                        ? 'max-md:bg-purple-500/25 max-md:border-2 max-md:border-purple-300 max-md:text-white max-md:shadow-xs md:bg-emerald-50/70 md:dark:bg-emerald-950/30 md:border-2 md:border-[#006C4A] md:dark:border-emerald-500 md:shadow-2xs'
+                        : 'max-md:bg-white/10 max-md:border-white/15 max-md:text-purple-100 max-md:hover:bg-white/15 md:bg-slate-50/60 md:dark:bg-zinc-800/40 md:hover:bg-slate-100 md:dark:hover:bg-zinc-800 md:border-slate-200 md:dark:border-zinc-700/80'
                     }`}
                   >
                     <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
                       <span
                         className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
                           isSelected
-                            ? 'max-md:bg-teal-300 max-md:text-slate-950 md:bg-[#006C4A] md:text-white'
-                            : 'max-md:bg-white/15 max-md:text-teal-200 md:bg-white md:dark:bg-zinc-800 md:text-slate-600 md:dark:text-zinc-400 md:border md:border-slate-200/80 md:dark:border-zinc-700'
+                            ? 'max-md:bg-purple-300 max-md:text-slate-950 md:bg-[#006C4A] md:text-white'
+                            : 'max-md:bg-white/15 max-md:text-purple-200 md:bg-white md:dark:bg-zinc-800 md:text-slate-600 md:dark:text-zinc-400 md:border md:border-slate-200/80 md:dark:border-zinc-700'
                         }`}
                       >
                         <IconComp className="w-4 h-4" />
@@ -199,7 +199,7 @@ export function UploadPerksRulesTab({
                         className={`text-xs font-medium truncate ${
                           isSelected
                             ? 'max-md:text-white max-md:font-bold md:text-[#006C4A] md:dark:text-emerald-300 md:font-bold'
-                            : 'max-md:text-teal-100 md:text-slate-800 md:dark:text-zinc-200'
+                            : 'max-md:text-purple-100 md:text-slate-800 md:dark:text-zinc-200'
                         }`}
                       >
                         {amenity.name}
@@ -207,7 +207,7 @@ export function UploadPerksRulesTab({
                     </div>
 
                     {isSelected && (
-                      <span className="w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0 shadow-2xs max-md:bg-teal-300 max-md:text-slate-950 md:bg-[#006C4A] md:text-white">
+                      <span className="w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0 shadow-2xs max-md:bg-purple-300 max-md:text-slate-950 md:bg-[#006C4A] md:text-white">
                         <Check className="w-3 h-3 stroke-[3]" />
                       </span>
                     )}
@@ -235,14 +235,14 @@ export function UploadPerksRulesTab({
                 }}
                 placeholder="Add custom facility / amenity..."
                 className="flex-1 h-11 sm:h-12 px-4 rounded-xl border text-xs sm:text-sm focus:outline-none transition-all
-                  max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-teal-200/60 max-md:focus:border-teal-300/60 max-md:focus:ring-2 max-md:focus:ring-teal-300/15
+                  max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
                   md:bg-slate-50/70 md:dark:bg-zinc-800/40 md:border-slate-200 md:dark:border-zinc-700/80 md:text-slate-900 md:dark:text-white md:placeholder:text-slate-400 md:dark:placeholder:text-zinc-500 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15"
               />
               <button
                 type="button"
                 onClick={onAddFacility}
                 className="h-11 sm:h-12 px-5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 shadow-xs active:scale-98
-                  max-md:bg-teal-300 max-md:hover:bg-teal-200 max-md:text-slate-950
+                  max-md:bg-purple-300 max-md:hover:bg-purple-200 max-md:text-slate-950
                   md:bg-slate-900 md:hover:bg-black md:dark:bg-white md:dark:hover:bg-slate-100 md:text-white md:dark:text-slate-900"
               >
                 <Plus className="w-4 h-4" />
@@ -253,8 +253,8 @@ export function UploadPerksRulesTab({
 
           {/* Active Selected Amenities Chips List */}
           {activeFacilities.length > 0 && (
-            <div className="space-y-2 pt-2 border-t max-md:border-teal-300/20 md:border-slate-100 md:dark:border-zinc-800/80">
-              <span className="text-xs font-semibold max-md:text-teal-200 md:text-slate-500 md:dark:text-zinc-400">
+            <div className="space-y-2 pt-2 border-t max-md:border-purple-300/20 md:border-slate-100 md:dark:border-zinc-800/80">
+              <span className="text-xs font-semibold max-md:text-purple-200 md:text-slate-500 md:dark:text-zinc-400">
                 Active amenities ({activeFacilities.length}):
               </span>
               <div className="flex flex-wrap gap-2">
@@ -265,13 +265,13 @@ export function UploadPerksRulesTab({
                       max-md:bg-white/15 max-md:border-white/20 max-md:text-white
                       md:bg-slate-100 md:dark:bg-zinc-800 md:border-slate-200 md:dark:border-zinc-700/70 md:text-slate-800 md:dark:text-zinc-200"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full max-md:bg-teal-300 md:bg-emerald-500" />
+                    <span className="w-1.5 h-1.5 rounded-full max-md:bg-purple-300 md:bg-emerald-500" />
                     <span>{fac}</span>
                     <button
                       type="button"
                       onClick={(e) => onRemoveFacility(fac, e)}
                       className="w-4 h-4 rounded-full flex items-center justify-center transition-colors ml-0.5 cursor-pointer
-                        max-md:text-teal-200 max-md:hover:bg-white/20 max-md:hover:text-rose-300
+                        max-md:text-purple-200 max-md:hover:bg-white/20 max-md:hover:text-rose-300
                         md:hover:bg-slate-200 md:dark:hover:bg-zinc-700 md:text-slate-400 md:hover:text-rose-500"
                       title={`Remove ${fac}`}
                     >
@@ -294,9 +294,9 @@ export function UploadPerksRulesTab({
           </h2>
         </div>
 
-        {/* Card Body: Ocean Teal on Mobile, Clean White/Dark on Desktop */}
+        {/* Card Body: Purple on Mobile, Clean White/Dark on Desktop */}
         <section className="rounded-2xl sm:rounded-3xl border shadow-lg space-y-4 sm:space-y-5 transition-colors
-          max-md:bg-[#10455e] max-md:border-teal-300/20 max-md:p-4 max-md:shadow-black/20
+          max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:p-4 max-md:shadow-black/20
           md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:p-5 md:sm:p-7 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
         >
           {/* Desktop-Only Heading Inside Card */}
@@ -307,9 +307,7 @@ export function UploadPerksRulesTab({
             <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-0.5">
               Clear guidelines help set expectations and ensure comfortable co-living
             </p>
-            <span className="hidden sm:inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80 absolute right-0 top-0">
-              {activeRules.length} Rules Set
-            </span>
+            <span className="hidden sm:inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80 absolute right-0 top-0">{activeRules.length} Rules Set</span>
           </div>
 
           {/* Quick-Pick Popular Rules Grid */}
@@ -331,16 +329,16 @@ export function UploadPerksRulesTab({
                     onClick={() => toggleRule(rule.text)}
                     className={`group p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border text-left transition-all duration-200 cursor-pointer flex items-center justify-between gap-2 min-h-[50px] sm:min-h-[52px] ${
                       isSelected
-                        ? 'max-md:bg-teal-500/25 max-md:border-2 max-md:border-teal-300 max-md:text-white max-md:shadow-xs md:bg-indigo-50/70 md:dark:bg-indigo-950/30 md:border-2 md:border-indigo-600 md:dark:border-indigo-500 md:shadow-2xs'
-                        : 'max-md:bg-white/10 max-md:border-white/15 max-md:text-teal-100 max-md:hover:bg-white/15 md:bg-slate-50/60 md:dark:bg-zinc-800/40 md:hover:bg-slate-100 md:dark:hover:bg-zinc-800 md:border-slate-200 md:dark:border-zinc-700/80'
+                        ? 'max-md:bg-purple-500/25 max-md:border-2 max-md:border-purple-300 max-md:text-white max-md:shadow-xs md:bg-indigo-50/70 md:dark:bg-indigo-950/30 md:border-2 md:border-indigo-600 md:dark:border-indigo-500 md:shadow-2xs'
+                        : 'max-md:bg-white/10 max-md:border-white/15 max-md:text-purple-100 max-md:hover:bg-white/15 md:bg-slate-50/60 md:dark:bg-zinc-800/40 md:hover:bg-slate-100 md:dark:hover:bg-zinc-800 md:border-slate-200 md:dark:border-zinc-700/80'
                     }`}
                   >
                     <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
                       <span
                         className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
                           isSelected
-                            ? 'max-md:bg-teal-300 max-md:text-slate-950 md:bg-indigo-600 md:text-white'
-                            : 'max-md:bg-white/15 max-md:text-teal-200 md:bg-white md:dark:bg-zinc-800 md:text-slate-600 md:dark:text-zinc-400 md:border md:border-slate-200/80 md:dark:border-zinc-700'
+                            ? 'max-md:bg-purple-300 max-md:text-slate-950 md:bg-indigo-600 md:text-white'
+                            : 'max-md:bg-white/15 max-md:text-purple-200 md:bg-white md:dark:bg-zinc-800 md:text-slate-600 md:dark:text-zinc-400 md:border md:border-slate-200/80 md:dark:border-zinc-700'
                         }`}
                       >
                         <IconComp className="w-4 h-4" />
@@ -349,7 +347,7 @@ export function UploadPerksRulesTab({
                         className={`text-xs font-medium truncate ${
                           isSelected
                             ? 'max-md:text-white max-md:font-bold md:text-indigo-700 md:dark:text-indigo-300 md:font-bold'
-                            : 'max-md:text-teal-100 md:text-slate-800 md:dark:text-zinc-200'
+                            : 'max-md:text-purple-100 md:text-slate-800 md:dark:text-zinc-200'
                         }`}
                       >
                         {rule.text}
@@ -357,7 +355,7 @@ export function UploadPerksRulesTab({
                     </div>
 
                     {isSelected && (
-                      <span className="w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0 shadow-2xs max-md:bg-teal-300 max-md:text-slate-950 md:bg-indigo-600 md:text-white">
+                      <span className="w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0 shadow-2xs max-md:bg-purple-300 max-md:text-slate-950 md:bg-indigo-600 md:text-white">
                         <Check className="w-3 h-3 stroke-[3]" />
                       </span>
                     )}
@@ -385,14 +383,14 @@ export function UploadPerksRulesTab({
                 }}
                 placeholder="Add custom house rule..."
                 className="flex-1 h-11 sm:h-12 px-4 rounded-xl border text-xs sm:text-sm focus:outline-none transition-all
-                  max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-teal-200/60 max-md:focus:border-teal-300/60 max-md:focus:ring-2 max-md:focus:ring-teal-300/15
+                  max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
                   md:bg-slate-50/70 md:dark:bg-zinc-800/40 md:border-slate-200 md:dark:border-zinc-700/80 md:text-slate-900 md:dark:text-white md:placeholder:text-slate-400 md:dark:placeholder:text-zinc-500 md:focus:border-indigo-500 md:focus:ring-2 md:focus:ring-indigo-500/15"
               />
               <button
                 type="button"
                 onClick={onAddRule}
                 className="h-11 sm:h-12 px-5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 shadow-xs active:scale-98
-                  max-md:bg-teal-300 max-md:hover:bg-teal-200 max-md:text-slate-950
+                  max-md:bg-purple-300 max-md:hover:bg-purple-200 max-md:text-slate-950
                   md:bg-slate-900 md:hover:bg-black md:dark:bg-white md:dark:hover:bg-slate-100 md:text-white md:dark:text-slate-900"
               >
                 <Plus className="w-4 h-4" />
@@ -403,8 +401,8 @@ export function UploadPerksRulesTab({
 
           {/* Active Rules List */}
           {activeRules.length > 0 && (
-            <div className="space-y-2 pt-2 border-t max-md:border-teal-300/20 md:border-slate-100 md:dark:border-zinc-800/80">
-              <span className="text-xs font-semibold max-md:text-teal-200 md:text-slate-500 md:dark:text-zinc-400">
+            <div className="space-y-2 pt-2 border-t max-md:border-purple-300/20 md:border-slate-100 md:dark:border-zinc-800/80">
+              <span className="text-xs font-semibold max-md:text-purple-200 md:text-slate-500 md:dark:text-zinc-400">
                 Active house rules ({activeRules.length}):
               </span>
               <div className="flex flex-wrap gap-2">
@@ -415,13 +413,13 @@ export function UploadPerksRulesTab({
                       max-md:bg-white/15 max-md:border-white/20 max-md:text-white
                       md:bg-slate-100 md:dark:bg-zinc-800 md:border-slate-200 md:dark:border-zinc-700/70 md:text-slate-800 md:dark:text-zinc-200"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full max-md:bg-teal-300 md:bg-indigo-500" />
+                    <span className="w-1.5 h-1.5 rounded-full max-md:bg-purple-300 md:bg-indigo-500" />
                     <span>{rule}</span>
                     <button
                       type="button"
                       onClick={(e) => onRemoveRule(idx, e)}
                       className="w-4 h-4 rounded-full flex items-center justify-center transition-colors ml-0.5 cursor-pointer
-                        max-md:text-teal-200 max-md:hover:bg-white/20 max-md:hover:text-rose-300
+                        max-md:text-purple-200 max-md:hover:bg-white/20 max-md:hover:text-rose-300
                         md:hover:bg-slate-200 md:dark:hover:bg-zinc-700 md:text-slate-400 md:hover:text-rose-500"
                       title={`Remove ${rule}`}
                     >
