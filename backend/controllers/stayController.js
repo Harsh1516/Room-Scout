@@ -577,9 +577,12 @@ export const resolveMapLink = async (req, res) => {
     }
 
     const trimmed = url.trim();
+    // Extract URL from input text (mobile apps may prepend place name before the link)
+    const urlExtractMatch = trimmed.match(/https?:\/\/[^\s]+/i);
+    const cleanUrl = urlExtractMatch ? urlExtractMatch[0] : trimmed;
     let parsedUrl;
     try {
-      parsedUrl = new URL(trimmed);
+      parsedUrl = new URL(cleanUrl);
     } catch {
       return res.status(400).json({ success: false, message: 'Invalid URL format' });
     }
@@ -600,7 +603,7 @@ export const resolveMapLink = async (req, res) => {
     let targetUrl = trimmed;
     if (hostname.includes('goo.gl')) {
       try {
-        const redirectRes = await fetch(trimmed, {
+        const redirectRes = await fetch(cleanUrl, {
           method: 'GET',
           redirect: 'follow',
           headers: {
@@ -608,7 +611,7 @@ export const resolveMapLink = async (req, res) => {
               'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           },
         });
-        targetUrl = redirectRes.url || trimmed;
+        targetUrl = redirectRes.url || cleanUrl;
       } catch (redirectErr) {
         console.warn('Google Maps redirect error:', redirectErr.message);
       }
@@ -617,6 +620,7 @@ export const resolveMapLink = async (req, res) => {
     let lat = null;
     let lng = null;
     let placeName = '';
+    let addressHint = {};
 
     // 1. Exact POI / Marker coordinates in protobuf data (!3d<lat> and !4d<lng>)
     const lat3d = targetUrl.match(/!3d(-?\d+\.\d+)/);
@@ -650,7 +654,7 @@ export const resolveMapLink = async (req, res) => {
     const atLng = atMatch ? parseFloat(atMatch[2]) : null;
 
     // 4. Place name extraction and Plus Code / Open Location Code decoding
-    const placeMatch = targetUrl.match(/\/maps\/place\/([^/@]+)/);
+    const placeMatch = targetUrl.match(/\/maps\/place\/([^/@?]+)/) || targetUrl.match(/[?&]q=([^&]+)/);
     if (placeMatch && placeMatch[1]) {
       try {
         placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
@@ -700,10 +704,65 @@ export const resolveMapLink = async (req, res) => {
     }
 
     // 5. Fallback to viewport center (@lat,lng) ONLY if no specific pin, POI, or Plus Code exists
+    //    Skip viewport center for /place/ URLs because @lat,lng is the viewport, not the pin
     if (lat === null || lng === null) {
-      if (atLat !== null && atLng !== null) {
+      if (atLat !== null && atLng !== null && !targetUrl.includes('/maps/place/')) {
         lat = atLat;
         lng = atLng;
+      }
+    }
+
+    // 6. Progressive Geocoding for Place Name (mobile Google Maps share links)
+    //    Mobile share links resolve to /maps/place/<name> without embedded coordinates.
+    //    We geocode the extracted place name via Nominatim as a reliable fallback.
+    if ((lat === null || lng === null) && placeName) {
+      const nameParts = placeName.split(',').map((p) => p.trim()).filter(Boolean);
+
+      // Deduplicate: remove parts that are substrings of an earlier part
+      const uniqueParts = nameParts.filter(
+        (p, i) => !nameParts.some((o, j) => j < i && o.toLowerCase().includes(p.toLowerCase()))
+      );
+
+      const candidateQueries = [];
+      if (uniqueParts.length > 0) candidateQueries.push(uniqueParts.join(', '));
+      candidateQueries.push(placeName); // full name
+      if (nameParts.length >= 2) candidateQueries.push(nameParts.slice(-2).join(', '));
+      if (nameParts.length >= 3) candidateQueries.push(nameParts.slice(-3).join(', '));
+
+      // Indian PIN codes are reliable Nominatim identifiers
+      const pinMatch = placeName.match(/\b([1-9][0-9]{5})\b/);
+      if (pinMatch) {
+        if (nameParts.length >= 2)
+          candidateQueries.push(`${nameParts[nameParts.length - 2]}, ${pinMatch[1]}`);
+        candidateQueries.push(`${pinMatch[1]}, India`);
+      }
+
+      for (const q of candidateQueries) {
+        try {
+          const geoRes = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&addressdetails=1&limit=1`,
+            { headers: { 'User-Agent': 'RoomScout-Property-Locator/1.0 (contact@roomscout.in)' } }
+          );
+          if (geoRes.ok) {
+            const items = await geoRes.json();
+            if (Array.isArray(items) && items.length > 0) {
+              const first = items[0];
+              lat = parseFloat(Number(first.lat).toFixed(6));
+              lng = parseFloat(Number(first.lon).toFixed(6));
+              const addr = first.address || {};
+              addressHint = {
+                roadArea: nameParts[0] || addr.suburb || addr.neighbourhood || addr.road || '',
+                city: addr.city || addr.town || addr.village || addr.county || '',
+                state: addr.state || '',
+                pincode: addr.postcode || pinMatch?.[1] || '',
+              };
+              console.log(`[resolveMapLink] Geocoded "${q}" → ${lat},${lng}`);
+              break;
+            }
+          }
+        } catch (geoErr) {
+          console.warn(`[resolveMapLink] Geocoding "${q}" failed:`, geoErr.message);
+        }
       }
     }
 
@@ -713,6 +772,7 @@ export const resolveMapLink = async (req, res) => {
         latitude: parseFloat(lat.toFixed(6)),
         longitude: parseFloat(lng.toFixed(6)),
         placeName: placeName ? placeName.trim() : undefined,
+        ...addressHint,
       });
     }
 

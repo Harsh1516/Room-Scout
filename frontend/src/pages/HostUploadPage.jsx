@@ -640,6 +640,16 @@ export function HostUploadPage() {
             lat = res.latitude;
             lng = res.longitude;
             if (res.placeName) detectedPlace = res.placeName;
+            // Auto-fill address fields returned by progressive geocoding fallback
+            if (res.roadArea || res.city || res.state || res.pincode) {
+              setFormData((prev) => ({
+                ...prev,
+                roadArea: res.roadArea || prev.roadArea,
+                city: res.city || prev.city,
+                state: res.state || prev.state,
+                pincode: res.pincode || prev.pincode,
+              }));
+            }
           }
         } catch (apiErr) {
           console.warn('Backend link resolve note:', apiErr);
