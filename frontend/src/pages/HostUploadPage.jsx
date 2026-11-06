@@ -404,6 +404,35 @@ export function HostUploadPage() {
         if (!merged.email && user?.email) merged.email = user.email;
         if (!merged.phone && user?.phone) merged.phone = user.phone;
 
+        // Ensure no legacy pre-added default facilities or rules exist in the draft
+        const legacyDefaultAmenities = [
+          'attached bathroom', 'high-speed wi-fi', 'wifi', 'power backup',
+          'air conditioning', 'hot water / geyser', 'geyser / hot water',
+          'free parking', 'lift access', 'cctv security', 'cctv 24x7 security',
+          'home-cooked meals', 'washing machine', 'study table & chair',
+          'daily housekeeping', 'ro drinking water', 'attached washroom',
+        ];
+        const legacyDefaultRules = [
+          'visitors allowed till 8:00 pm', 'gate closes at 10:30 pm',
+          'strictly no smoking', 'quiet hours: 10:00 pm - 7:00 am',
+          'valid govt id required at check-in', 'keep shared spaces clean',
+        ];
+        if (Array.isArray(merged.facilities)) {
+          merged.facilities = merged.facilities.filter(
+            (f) => !legacyDefaultAmenities.includes(String(f).toLowerCase().trim())
+          );
+        }
+        if (Array.isArray(merged.amenities)) {
+          merged.amenities = merged.amenities.filter(
+            (f) => !legacyDefaultAmenities.includes(String(f).toLowerCase().trim())
+          );
+        }
+        if (Array.isArray(merged.rules)) {
+          merged.rules = merged.rules.filter(
+            (r) => !legacyDefaultRules.includes(String(r).toLowerCase().trim())
+          );
+        }
+
         if (Array.isArray(merged.rooms) || Array.isArray(merged.roomRates)) {
           const { rates: hydratedRates, rooms: hydratedRooms } = reconcileRoomsWithRates(
             merged.rooms,
@@ -430,6 +459,50 @@ export function HostUploadPage() {
   });
 
   const hasLoadedExistingRef = useRef(false);
+
+  // Clear any legacy pre-added default facilities or rules on mount
+  useEffect(() => {
+    setFormData((prev) => {
+      const legacyDefaultAmenities = [
+        'attached bathroom', 'high-speed wi-fi', 'wifi', 'power backup',
+        'air conditioning', 'hot water / geyser', 'geyser / hot water',
+        'free parking', 'lift access', 'cctv security', 'cctv 24x7 security',
+        'home-cooked meals', 'washing machine', 'study table & chair',
+        'daily housekeeping', 'ro drinking water', 'attached washroom',
+      ];
+      const legacyDefaultRules = [
+        'visitors allowed till 8:00 pm', 'gate closes at 10:30 pm',
+        'strictly no smoking', 'quiet hours: 10:00 pm - 7:00 am',
+        'valid govt id required at check-in', 'keep shared spaces clean',
+      ];
+
+      const currentFac = prev.facilities || prev.amenities || [];
+      const currentRules = prev.rules || [];
+
+      const hasLegacyFac = currentFac.some((f) =>
+        legacyDefaultAmenities.includes(String(f).toLowerCase().trim())
+      );
+      const hasLegacyRules = currentRules.some((r) =>
+        legacyDefaultRules.includes(String(r).toLowerCase().trim())
+      );
+
+      if (hasLegacyFac || hasLegacyRules) {
+        const cleanFac = currentFac.filter(
+          (f) => !legacyDefaultAmenities.includes(String(f).toLowerCase().trim())
+        );
+        const cleanRules = currentRules.filter(
+          (r) => !legacyDefaultRules.includes(String(r).toLowerCase().trim())
+        );
+        return {
+          ...prev,
+          facilities: cleanFac,
+          amenities: cleanFac,
+          rules: cleanRules,
+        };
+      }
+      return prev;
+    });
+  }, []);
 
   // Synchronously auto-save draft whenever user enters any details or advances steps
   useEffect(() => {
