@@ -404,32 +404,36 @@ export function HostUploadPage() {
         if (!merged.email && user?.email) merged.email = user.email;
         if (!merged.phone && user?.phone) merged.phone = user.phone;
 
-        // Ensure no legacy pre-added default facilities or rules exist in the draft
-        const legacyDefaultAmenities = [
+        // Ensure no legacy or auto-attached facilities or rules exist in the draft
+        const autoAttachedAmenities = [
+          'refrigerator', 'balcony / terrace', 'two-wheeler parking', 'gym / fitness',
           'attached bathroom', 'high-speed wi-fi', 'wifi', 'power backup',
           'air conditioning', 'hot water / geyser', 'geyser / hot water',
           'free parking', 'lift access', 'cctv security', 'cctv 24x7 security',
           'home-cooked meals', 'washing machine', 'study table & chair',
           'daily housekeeping', 'ro drinking water', 'attached washroom',
         ];
-        const legacyDefaultRules = [
-          'visitors allowed till 8:00 pm', 'gate closes at 10:30 pm',
-          'strictly no smoking', 'quiet hours: 10:00 pm - 7:00 am',
+        const autoAttachedRules = [
+          'xyz', 'no smoking inside premises', 'visitor registration mandatory at security desk',
+          'gate closes at 11:00 pm', 'gate closes at 10:30 pm', 'no alcohol / substances permitted',
+          'switch off lights & ac when leaving the room', 'quiet hours after 10:00 pm',
+          'quiet hours: 10:00 pm - 7:00 am', 'guests not allowed overnight without prior approval',
+          'clean room and washroom regularly', 'valid government id required at check-in',
           'valid govt id required at check-in', 'keep shared spaces clean',
         ];
         if (Array.isArray(merged.facilities)) {
           merged.facilities = merged.facilities.filter(
-            (f) => !legacyDefaultAmenities.includes(String(f).toLowerCase().trim())
+            (f) => !autoAttachedAmenities.includes(String(f).toLowerCase().trim())
           );
         }
         if (Array.isArray(merged.amenities)) {
           merged.amenities = merged.amenities.filter(
-            (f) => !legacyDefaultAmenities.includes(String(f).toLowerCase().trim())
+            (f) => !autoAttachedAmenities.includes(String(f).toLowerCase().trim())
           );
         }
         if (Array.isArray(merged.rules)) {
           merged.rules = merged.rules.filter(
-            (r) => !legacyDefaultRules.includes(String(r).toLowerCase().trim())
+            (r) => !autoAttachedRules.includes(String(r).toLowerCase().trim())
           );
         }
 
@@ -460,38 +464,42 @@ export function HostUploadPage() {
 
   const hasLoadedExistingRef = useRef(false);
 
-  // Clear any legacy pre-added default facilities or rules on mount
+  // Clear any auto-attached facilities or rules on mount so user starts with a clean slate
   useEffect(() => {
     setFormData((prev) => {
-      const legacyDefaultAmenities = [
+      const autoAttachedAmenities = [
+        'refrigerator', 'balcony / terrace', 'two-wheeler parking', 'gym / fitness',
         'attached bathroom', 'high-speed wi-fi', 'wifi', 'power backup',
         'air conditioning', 'hot water / geyser', 'geyser / hot water',
         'free parking', 'lift access', 'cctv security', 'cctv 24x7 security',
         'home-cooked meals', 'washing machine', 'study table & chair',
         'daily housekeeping', 'ro drinking water', 'attached washroom',
       ];
-      const legacyDefaultRules = [
-        'visitors allowed till 8:00 pm', 'gate closes at 10:30 pm',
-        'strictly no smoking', 'quiet hours: 10:00 pm - 7:00 am',
+      const autoAttachedRules = [
+        'xyz', 'no smoking inside premises', 'visitor registration mandatory at security desk',
+        'gate closes at 11:00 pm', 'gate closes at 10:30 pm', 'no alcohol / substances permitted',
+        'switch off lights & ac when leaving the room', 'quiet hours after 10:00 pm',
+        'quiet hours: 10:00 pm - 7:00 am', 'guests not allowed overnight without prior approval',
+        'clean room and washroom regularly', 'valid government id required at check-in',
         'valid govt id required at check-in', 'keep shared spaces clean',
       ];
 
       const currentFac = prev.facilities || prev.amenities || [];
       const currentRules = prev.rules || [];
 
-      const hasLegacyFac = currentFac.some((f) =>
-        legacyDefaultAmenities.includes(String(f).toLowerCase().trim())
+      const hasAutoFac = currentFac.some((f) =>
+        autoAttachedAmenities.includes(String(f).toLowerCase().trim())
       );
-      const hasLegacyRules = currentRules.some((r) =>
-        legacyDefaultRules.includes(String(r).toLowerCase().trim())
+      const hasAutoRules = currentRules.some((r) =>
+        autoAttachedRules.includes(String(r).toLowerCase().trim())
       );
 
-      if (hasLegacyFac || hasLegacyRules) {
+      if (hasAutoFac || hasAutoRules) {
         const cleanFac = currentFac.filter(
-          (f) => !legacyDefaultAmenities.includes(String(f).toLowerCase().trim())
+          (f) => !autoAttachedAmenities.includes(String(f).toLowerCase().trim())
         );
         const cleanRules = currentRules.filter(
-          (r) => !legacyDefaultRules.includes(String(r).toLowerCase().trim())
+          (r) => !autoAttachedRules.includes(String(r).toLowerCase().trim())
         );
         return {
           ...prev,
@@ -595,16 +603,12 @@ export function HostUploadPage() {
             .slice(0, MAX_PHOTOS);
 
           setFormData((prev) => {
-            const prevRules = (Array.isArray(prev.rules) && prev.rules.length > 0) ? prev.rules : [];
-            const propRules = (Array.isArray(prop.rules) && prop.rules.length > 0) ? prop.rules : [];
-            const mergedRules = prevRules.length > 0 ? prevRules : propRules;
+            // Keep only user-manually entered rules and facilities, do not auto-attach from backend prop
+            const mergedRules = Array.isArray(prev.rules) ? prev.rules : [];
+            const mergedFacilities = Array.isArray(prev.facilities) ? prev.facilities : [];
 
             const prevImages = (Array.isArray(prev.images) && prev.images.length > 0) ? prev.images : [];
             const mergedImages = prevImages.length > 0 ? prevImages : cleanExistingImages;
-
-            const prevFacilities = (Array.isArray(prev.facilities) && prev.facilities.length > 0 && prev.facilities !== DEFAULT_HOST_FORM_DATA.facilities) ? prev.facilities : [];
-            const propFacilities = (Array.isArray(prop.facilities) && prop.facilities.length > 0) ? prop.facilities : [];
-            const mergedFacilities = prevFacilities.length > 0 ? prevFacilities : (propFacilities.length > 0 ? propFacilities : prev.facilities);
 
             const prevRooms = (Array.isArray(prev.rooms) && prev.rooms.length > 0) ? prev.rooms : [];
             const mergedRooms = prevRooms.length > 0 ? prevRooms : loadedRooms;
