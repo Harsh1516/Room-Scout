@@ -1564,18 +1564,12 @@ export function HostUploadPage() {
             />
           </div>
 
-          {/* Mobile Center Step Count: Tap to switch or open drawer */}
-          <button
-            type="button"
-            onClick={() => setMobileNavOpen(true)}
-            className="md:hidden flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-white cursor-pointer select-none active:scale-95 transition-all shadow-2xs"
-            title="Tap to view all steps"
-          >
-            <span className="text-xs sm:text-sm font-black tracking-wider uppercase">
+          {/* Mobile Center Step Count: Text Only (Non-clickable) */}
+          <div className="md:hidden text-center select-none py-1.5 px-2">
+            <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-wider uppercase">
               Step {activeStep} of {WIZARD_STEPS.length}
             </span>
-            <ChevronRight className="w-3.5 h-3.5 rotate-90 text-slate-500" />
-          </button>
+          </div>
         </div>
 
         {/* Right Action: Theme Toggle + User Avatar */}
