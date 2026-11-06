@@ -583,9 +583,18 @@ export function HostUploadPage() {
   }, [user?.email, user?.name, user?.phone]);
 
   const showToast = (msg, type = 'info') => {
-    if (type === 'error' || msg.toLowerCase().includes('error') || msg.toLowerCase().includes('correct') || msg.toLowerCase().includes('must') || msg.toLowerCase().includes('required')) {
-      toast.error(msg);
-    } else if (type === 'success' || msg.toLowerCase().includes('success') || msg.toLowerCase().includes('⭐')) {
+    // Suppress error toasts on upload form as each error is already highlighted inline with the fields
+    if (
+      type === 'error' ||
+      msg.toLowerCase().includes('error') ||
+      msg.toLowerCase().includes('correct') ||
+      msg.toLowerCase().includes('must') ||
+      msg.toLowerCase().includes('required') ||
+      msg.toLowerCase().includes('please')
+    ) {
+      return;
+    }
+    if (type === 'success' || msg.toLowerCase().includes('success') || msg.toLowerCase().includes('⭐')) {
       toast.success(msg);
     } else {
       toast.info(msg);
@@ -1231,40 +1240,31 @@ export function HostUploadPage() {
   };
 
   // Step Validation & Forward Progression
-  const validateStep = (stepNumber, showToasts = true) => {
+  const validateStep = (stepNumber) => {
     if (stepNumber === 1) {
       const cleanHostPhone = (formData.phone || '').trim().replace(/\D/g, '');
       const raw10Phone = cleanHostPhone.length === 12 && cleanHostPhone.startsWith('91') ? cleanHostPhone.slice(2) : cleanHostPhone;
 
       if (!formData.name || formData.name.trim().length < 2) {
-        if (showToasts) {
-          setFieldErrors((prev) => ({ ...prev, name: 'Host name is required (min 2 characters).' }));
-          showToast('Please fill Host details first (Host name is required).', 'error');
-        }
+        setFieldErrors((prev) => ({ ...prev, name: 'Host name is required (min 2 characters).' }));
         return false;
       }
 
       if (!raw10Phone || raw10Phone.length < 10) {
-        if (showToasts) {
-          setFieldErrors((prev) => ({ ...prev, phone: 'Host contact number must be at least 10 digits.' }));
-          showToast('Please fill Host details first (Contact phone number is required).', 'error');
-        }
+        setFieldErrors((prev) => ({ ...prev, phone: 'Host contact number must be at least 10 digits.' }));
         return false;
       }
 
       if (!formData.propertyName || formData.propertyName.trim().length < 3) {
-        if (showToasts) {
-          setFieldErrors((prev) => ({ ...prev, propertyName: 'Property name must be at least 3 characters long.' }));
-          showToast('Please provide a valid property name (min 3 chars).', 'error');
-        }
+        setFieldErrors((prev) => ({ ...prev, propertyName: 'Property name must be at least 3 characters long.' }));
         return false;
       }
       if (!formData.propertyType) {
-        if (showToasts) showToast('Please select a property type (e.g. PG, Hostel, Hotel, etc.).', 'error');
+        setFieldErrors((prev) => ({ ...prev, propertyType: 'Please select a property category (e.g. PG, Hotel, Flat).' }));
         return false;
       }
       if (!formData.genderType) {
-        if (showToasts) showToast('Please select who this stay is available for.', 'error');
+        setFieldErrors((prev) => ({ ...prev, genderType: 'Please select who this stay is available for.' }));
         return false;
       }
       return true;
@@ -1278,10 +1278,7 @@ export function HostUploadPage() {
       if (!formData.pincode || formData.pincode.trim().length < 4) errors.pincode = 'Valid PIN code is required.';
 
       if (Object.keys(errors).length > 0) {
-        if (showToasts) {
-          setFieldErrors((prev) => ({ ...prev, ...errors }));
-          showToast('Please fill in the required address fields (Street, City, State, PIN code).', 'error');
-        }
+        setFieldErrors((prev) => ({ ...prev, ...errors }));
         return false;
       }
       return true;
@@ -1290,11 +1287,11 @@ export function HostUploadPage() {
     if (stepNumber === 3) {
       const facilities = (formData.facilities && formData.facilities.length > 0) ? formData.facilities : formData.amenities;
       if (!facilities || facilities.length === 0) {
-        if (showToasts) showToast('Please add at least 1 facility/amenity before continuing.', 'error');
+        setFieldErrors((prev) => ({ ...prev, facilities: 'Please select at least 1 facility/amenity.' }));
         return false;
       }
       if (!formData.rules || formData.rules.length === 0) {
-        if (showToasts) showToast('Please add at least 1 house rule before continuing.', 'error');
+        setFieldErrors((prev) => ({ ...prev, rules: 'Please select at least 1 house rule.' }));
         return false;
       }
       return true;
@@ -1302,7 +1299,7 @@ export function HostUploadPage() {
 
     if (stepNumber === 4) {
       if (!formData.images || formData.images.length === 0) {
-        if (showToasts) showToast('Please upload at least 1 showcase photo of your property.', 'error');
+        setFieldErrors((prev) => ({ ...prev, images: 'Please upload at least 1 showcase photo.' }));
         return false;
       }
       return true;
@@ -1310,20 +1307,17 @@ export function HostUploadPage() {
 
     if (stepNumber === 5) {
       if (!formData.description || formData.description.trim().length < 10) {
-        if (showToasts) {
-          setFieldErrors((prev) => ({ ...prev, description: 'Description must be at least 10 characters long.' }));
-          showToast('Please enter a property description (min 10 characters).', 'error');
-        }
+        setFieldErrors((prev) => ({ ...prev, description: 'Description must be at least 10 characters long.' }));
         return false;
       }
       const validRates = (formData.roomRates || []).filter((r) => (r.type || '').trim());
       if (validRates.length === 0) {
-        if (showToasts) showToast('Please configure at least 1 room category before continuing.', 'error');
+        setFieldErrors((prev) => ({ ...prev, roomRates: 'Please configure at least 1 room category.' }));
         return false;
       }
       const validRooms = (formData.rooms || []).filter((rm) => (rm.roomNumber || '').trim());
       if (validRooms.length === 0) {
-        if (showToasts) showToast('Please add at least 1 room card before completing registration.', 'error');
+        setFieldErrors((prev) => ({ ...prev, rooms: 'Please add at least 1 room card.' }));
         return false;
       }
       return true;
@@ -1334,7 +1328,7 @@ export function HostUploadPage() {
 
   const handleNextStep = () => {
     setFieldErrors({});
-    const isValid = validateStep(activeStep, true);
+    const isValid = validateStep(activeStep);
     if (!isValid) return;
 
     if (activeStep < 5) {
@@ -1372,7 +1366,7 @@ export function HostUploadPage() {
 
     // Verify all 5 steps are completely filled before submitting
     for (let s = 1; s <= 5; s++) {
-      if (!validateStep(s, true)) {
+      if (!validateStep(s)) {
         setActiveStep(s);
         return;
       }
