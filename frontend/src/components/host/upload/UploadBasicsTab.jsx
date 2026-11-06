@@ -77,8 +77,8 @@ export function UploadBasicsTab({
     >
       {/* ── CARD 1: Host Contact Information ── */}
       <div className="space-y-2.5 sm:space-y-3">
-        <div className="flex items-center justify-between px-1">
-          <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
+        <div className="flex flex-col items-center justify-center text-center gap-1.5 px-1">
+          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
             Host Details
           </h2>
 
@@ -88,7 +88,7 @@ export function UploadBasicsTab({
               title={formData.email}
             >
               <Mail className="w-3.5 h-3.5 text-purple-300" />
-              <span className="truncate max-w-[180px] sm:max-w-[220px]">{formData.email}</span>
+              <span className="truncate max-w-[260px]">{formData.email}</span>
             </span>
           )}
         </div>
@@ -172,8 +172,8 @@ export function UploadBasicsTab({
 
       {/* ── CARD 2: Property Identity & Type ── */}
       <div className="space-y-2.5 sm:space-y-3 pt-2">
-        <div className="px-1">
-          <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
+        <div className="text-center px-1">
+          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
             Property Overview
           </h2>
         </div>
