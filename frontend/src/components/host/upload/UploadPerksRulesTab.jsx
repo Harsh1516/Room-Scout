@@ -1,51 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import {
-  Wifi,
-  Bath,
-  Zap,
-  Wind,
-  Flame,
-  Car,
-  ShieldCheck,
-  Utensils,
-  BookOpen,
-  Shirt,
-  Sparkles,
-  Check,
-  Plus,
-  X,
-  Clock,
-  CigaretteOff,
-  Users,
-  VolumeX,
-  FileCheck,
-  Building,
-} from 'lucide-react';
-
-const POPULAR_AMENITIES = [
-  { name: 'High-Speed Wi-Fi', icon: Wifi },
-  { name: 'Attached Bathroom', icon: Bath },
-  { name: 'Power Backup', icon: Zap },
-  { name: 'Air Conditioning', icon: Wind },
-  { name: 'Hot Water / Geyser', icon: Flame },
-  { name: 'Free Parking', icon: Car },
-  { name: 'Lift Access', icon: Building },
-  { name: 'CCTV Security', icon: ShieldCheck },
-  { name: 'Home-Cooked Meals', icon: Utensils },
-  { name: 'Washing Machine', icon: Shirt },
-  { name: 'Study Table & Chair', icon: BookOpen },
-  { name: 'Daily Housekeeping', icon: Sparkles },
-];
-
-const POPULAR_RULES = [
-  { text: 'Visitors allowed till 8:00 PM', icon: Users },
-  { text: 'Gate closes at 10:30 PM', icon: Clock },
-  { text: 'Strictly No Smoking', icon: CigaretteOff },
-  { text: 'Quiet Hours: 10:00 PM - 7:00 AM', icon: VolumeX },
-  { text: 'Valid Govt ID required at check-in', icon: FileCheck },
-  { text: 'Keep shared spaces clean', icon: Sparkles },
-];
+import { Plus, X } from 'lucide-react';
 
 export function UploadPerksRulesTab({
   formData,
@@ -62,70 +17,6 @@ export function UploadPerksRulesTab({
   const activeFacilities = formData.facilities || formData.amenities || [];
   const activeRules = formData.rules || [];
 
-  const toggleFacility = (facilityName) => {
-    const isPresent = activeFacilities.some(
-      (f) => f.toLowerCase() === facilityName.toLowerCase()
-    );
-
-    if (isPresent) {
-      if (typeof onRemoveFacility === 'function') {
-        const exact = activeFacilities.find(
-          (f) => f.toLowerCase() === facilityName.toLowerCase()
-        );
-        onRemoveFacility(exact || facilityName);
-      } else if (setFormData) {
-        const updated = activeFacilities.filter(
-          (f) => f.toLowerCase() !== facilityName.toLowerCase()
-        );
-        setFormData((prev) => ({
-          ...prev,
-          facilities: updated,
-          amenities: updated,
-        }));
-      }
-    } else {
-      if (setFormData) {
-        const updated = [...activeFacilities, facilityName];
-        setFormData((prev) => ({
-          ...prev,
-          facilities: updated,
-          amenities: updated,
-        }));
-      } else if (setNewFacilityInput && onAddFacility) {
-        setNewFacilityInput(facilityName);
-        setTimeout(() => onAddFacility(), 50);
-      }
-    }
-  };
-
-  const toggleRule = (ruleText) => {
-    const isPresent = activeRules.some(
-      (r) => r.toLowerCase() === ruleText.toLowerCase()
-    );
-
-    if (isPresent) {
-      const idx = activeRules.findIndex(
-        (r) => r.toLowerCase() === ruleText.toLowerCase()
-      );
-      if (idx !== -1 && typeof onRemoveRule === 'function') {
-        onRemoveRule(idx);
-      } else if (setFormData) {
-        const updated = activeRules.filter((_, i) => i !== idx);
-        setFormData((prev) => ({ ...prev, rules: updated }));
-      }
-    } else {
-      if (setFormData) {
-        setFormData((prev) => ({
-          ...prev,
-          rules: [...(prev.rules || []), ruleText],
-        }));
-      } else if (setNewRuleInput && onAddRule) {
-        setNewRuleInput(ruleText);
-        setTimeout(() => onAddRule(), 50);
-      }
-    }
-  };
-
   return (
     <motion.div
       key="step-3"
@@ -135,7 +26,7 @@ export function UploadPerksRulesTab({
       transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
       className="max-w-5xl w-full mx-auto space-y-5 sm:space-y-6"
     >
-      {/* ── CARD 1: What this place offers ── */}
+      {/* ── CARD 1: What this place offers (Facilities & Amenities) ── */}
       <div className="space-y-2.5 sm:space-y-3">
         {/* Mobile-Only Heading (Outside, Centered) */}
         <div className="md:hidden text-center px-1 mb-2">
@@ -155,72 +46,17 @@ export function UploadPerksRulesTab({
               What this place offers
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-0.5">
-              Select popular amenities or add custom conveniences for your residents
+              Add the facilities and conveniences available for your residents
             </p>
             <span className="hidden sm:inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 absolute right-0 top-0">
-              {activeFacilities.length} Selected
+              {activeFacilities.length} Added
             </span>
           </div>
 
-          {/* Quick-Pick Popular Amenities Grid */}
-          <div className="space-y-2">
-            <label className="hidden md:block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-zinc-400">
-              Popular Amenities (Tap to Toggle)
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
-              {POPULAR_AMENITIES.map((amenity) => {
-                const isSelected = activeFacilities.some(
-                  (f) => f.toLowerCase() === amenity.name.toLowerCase()
-                );
-                const IconComp = amenity.icon;
-
-                return (
-                  <button
-                    key={amenity.name}
-                    type="button"
-                    onClick={() => toggleFacility(amenity.name)}
-                    className={`group p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border text-left transition-all duration-200 cursor-pointer flex items-center justify-between gap-2 min-h-[50px] sm:min-h-[52px] ${
-                      isSelected
-                        ? 'max-md:bg-purple-500/25 max-md:border-2 max-md:border-purple-300 max-md:text-white max-md:shadow-xs md:bg-emerald-50/70 md:dark:bg-emerald-950/30 md:border-2 md:border-[#006C4A] md:dark:border-emerald-500 md:shadow-2xs'
-                        : 'max-md:bg-white/10 max-md:border-white/15 max-md:text-purple-100 max-md:hover:bg-white/15 md:bg-slate-50/60 md:dark:bg-zinc-800/40 md:hover:bg-slate-100 md:dark:hover:bg-zinc-800 md:border-slate-200 md:dark:border-zinc-700/80'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-                      <span
-                        className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                          isSelected
-                            ? 'max-md:bg-purple-300 max-md:text-slate-950 md:bg-[#006C4A] md:text-white'
-                            : 'max-md:bg-white/15 max-md:text-purple-200 md:bg-white md:dark:bg-zinc-800 md:text-slate-600 md:dark:text-zinc-400 md:border md:border-slate-200/80 md:dark:border-zinc-700'
-                        }`}
-                      >
-                        <IconComp className="w-4 h-4" />
-                      </span>
-                      <span
-                        className={`text-xs font-medium truncate ${
-                          isSelected
-                            ? 'max-md:text-white max-md:font-bold md:text-[#006C4A] md:dark:text-emerald-300 md:font-bold'
-                            : 'max-md:text-purple-100 md:text-slate-800 md:dark:text-zinc-200'
-                        }`}
-                      >
-                        {amenity.name}
-                      </span>
-                    </div>
-
-                    {isSelected && (
-                      <span className="w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0 shadow-2xs max-md:bg-purple-300 max-md:text-slate-950 md:bg-[#006C4A] md:text-white">
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Add Custom Amenity Field */}
-          <div className="pt-1">
+          {/* Add Facility Input Field + Add Button */}
+          <div>
             <label className="hidden md:block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-zinc-400 mb-1.5">
-              Add Custom Facility / Amenity
+              Add Facility / Amenity
             </label>
             <div className="flex items-center gap-2">
               <input
@@ -233,7 +69,7 @@ export function UploadPerksRulesTab({
                     onAddFacility();
                   }
                 }}
-                placeholder="Add custom facility / amenity..."
+                placeholder="e.g. High-Speed Wi-Fi, Attached Bathroom, Power Backup..."
                 className="flex-1 h-11 sm:h-12 px-4 rounded-xl border text-xs sm:text-sm focus:outline-none transition-all
                   max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
                   md:bg-slate-50/70 md:dark:bg-zinc-800/40 md:border-slate-200 md:dark:border-zinc-700/80 md:text-slate-900 md:dark:text-white md:placeholder:text-slate-400 md:dark:placeholder:text-zinc-500 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15"
@@ -243,7 +79,7 @@ export function UploadPerksRulesTab({
                 onClick={onAddFacility}
                 className="h-11 sm:h-12 px-5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 shadow-xs active:scale-98
                   max-md:bg-purple-300 max-md:hover:bg-purple-200 max-md:text-slate-950
-                  md:bg-slate-900 md:hover:bg-black md:dark:bg-white md:dark:hover:bg-slate-100 md:text-white md:dark:text-slate-900"
+                  md:bg-[#006C4A] md:hover:bg-[#005a3e] md:text-white"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add</span>
@@ -251,11 +87,11 @@ export function UploadPerksRulesTab({
             </div>
           </div>
 
-          {/* Active Selected Amenities Chips List */}
+          {/* Active Added Amenities Chips List */}
           {activeFacilities.length > 0 && (
             <div className="space-y-2 pt-2 border-t max-md:border-purple-300/20 md:border-slate-100 md:dark:border-zinc-800/80">
               <span className="text-xs font-semibold max-md:text-purple-200 md:text-slate-500 md:dark:text-zinc-400">
-                Active amenities ({activeFacilities.length}):
+                Added amenities ({activeFacilities.length}):
               </span>
               <div className="flex flex-wrap gap-2">
                 {activeFacilities.map((fac, idx) => (
@@ -305,70 +141,17 @@ export function UploadPerksRulesTab({
               House Rules & Policies
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-0.5">
-              Clear guidelines help set expectations and ensure comfortable co-living
+              Establish house guidelines and expectations for residents
             </p>
-            <span className="hidden sm:inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80 absolute right-0 top-0">{activeRules.length} Rules Set</span>
+            <span className="hidden sm:inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80 absolute right-0 top-0">
+              {activeRules.length} Rules Added
+            </span>
           </div>
 
-          {/* Quick-Pick Popular Rules Grid */}
-          <div className="space-y-2">
-            <label className="hidden md:block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-zinc-400">
-              Common Rules (Tap to Toggle)
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
-              {POPULAR_RULES.map((rule) => {
-                const isSelected = activeRules.some(
-                  (r) => r.toLowerCase() === rule.text.toLowerCase()
-                );
-                const IconComp = rule.icon;
-
-                return (
-                  <button
-                    key={rule.text}
-                    type="button"
-                    onClick={() => toggleRule(rule.text)}
-                    className={`group p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border text-left transition-all duration-200 cursor-pointer flex items-center justify-between gap-2 min-h-[50px] sm:min-h-[52px] ${
-                      isSelected
-                        ? 'max-md:bg-purple-500/25 max-md:border-2 max-md:border-purple-300 max-md:text-white max-md:shadow-xs md:bg-indigo-50/70 md:dark:bg-indigo-950/30 md:border-2 md:border-indigo-600 md:dark:border-indigo-500 md:shadow-2xs'
-                        : 'max-md:bg-white/10 max-md:border-white/15 max-md:text-purple-100 max-md:hover:bg-white/15 md:bg-slate-50/60 md:dark:bg-zinc-800/40 md:hover:bg-slate-100 md:dark:hover:bg-zinc-800 md:border-slate-200 md:dark:border-zinc-700/80'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-                      <span
-                        className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                          isSelected
-                            ? 'max-md:bg-purple-300 max-md:text-slate-950 md:bg-indigo-600 md:text-white'
-                            : 'max-md:bg-white/15 max-md:text-purple-200 md:bg-white md:dark:bg-zinc-800 md:text-slate-600 md:dark:text-zinc-400 md:border md:border-slate-200/80 md:dark:border-zinc-700'
-                        }`}
-                      >
-                        <IconComp className="w-4 h-4" />
-                      </span>
-                      <span
-                        className={`text-xs font-medium truncate ${
-                          isSelected
-                            ? 'max-md:text-white max-md:font-bold md:text-indigo-700 md:dark:text-indigo-300 md:font-bold'
-                            : 'max-md:text-purple-100 md:text-slate-800 md:dark:text-zinc-200'
-                        }`}
-                      >
-                        {rule.text}
-                      </span>
-                    </div>
-
-                    {isSelected && (
-                      <span className="w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0 shadow-2xs max-md:bg-purple-300 max-md:text-slate-950 md:bg-indigo-600 md:text-white">
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Add Custom Rule Input */}
-          <div className="pt-1">
+          {/* Add House Rule Input Field + Add Button */}
+          <div>
             <label className="hidden md:block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-zinc-400 mb-1.5">
-              Add Custom House Rule
+              Add House Rule
             </label>
             <div className="flex items-center gap-2">
               <input
@@ -381,17 +164,17 @@ export function UploadPerksRulesTab({
                     onAddRule();
                   }
                 }}
-                placeholder="Add custom house rule..."
+                placeholder="e.g. Gate closes at 10:30 PM, Strictly No Smoking, Keep shared spaces clean..."
                 className="flex-1 h-11 sm:h-12 px-4 rounded-xl border text-xs sm:text-sm focus:outline-none transition-all
                   max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
-                  md:bg-slate-50/70 md:dark:bg-zinc-800/40 md:border-slate-200 md:dark:border-zinc-700/80 md:text-slate-900 md:dark:text-white md:placeholder:text-slate-400 md:dark:placeholder:text-zinc-500 md:focus:border-indigo-500 md:focus:ring-2 md:focus:ring-indigo-500/15"
+                  md:bg-slate-50/70 md:dark:bg-zinc-800/40 md:border-slate-200 md:dark:border-zinc-700/80 md:text-slate-900 md:dark:text-white md:placeholder:text-slate-400 md:dark:placeholder:text-zinc-500 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15"
               />
               <button
                 type="button"
                 onClick={onAddRule}
                 className="h-11 sm:h-12 px-5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 shadow-xs active:scale-98
                   max-md:bg-purple-300 max-md:hover:bg-purple-200 max-md:text-slate-950
-                  md:bg-slate-900 md:hover:bg-black md:dark:bg-white md:dark:hover:bg-slate-100 md:text-white md:dark:text-slate-900"
+                  md:bg-[#006C4A] md:hover:bg-[#005a3e] md:text-white"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add</span>
@@ -399,11 +182,11 @@ export function UploadPerksRulesTab({
             </div>
           </div>
 
-          {/* Active Rules List */}
+          {/* Active Added Rules Chips List */}
           {activeRules.length > 0 && (
             <div className="space-y-2 pt-2 border-t max-md:border-purple-300/20 md:border-slate-100 md:dark:border-zinc-800/80">
               <span className="text-xs font-semibold max-md:text-purple-200 md:text-slate-500 md:dark:text-zinc-400">
-                Active house rules ({activeRules.length}):
+                Added house rules ({activeRules.length}):
               </span>
               <div className="flex flex-wrap gap-2">
                 {activeRules.map((rule, idx) => (
