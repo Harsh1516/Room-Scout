@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Plus, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 export function UploadPerksRulesTab({
   formData,
@@ -8,15 +8,10 @@ export function UploadPerksRulesTab({
   newFacilityInput,
   setNewFacilityInput,
   onAddFacility,
-  onRemoveFacility,
   newRuleInput,
   setNewRuleInput,
   onAddRule,
-  onRemoveRule,
 }) {
-  const activeFacilities = formData.facilities || formData.amenities || [];
-  const activeRules = formData.rules || [];
-
   return (
     <motion.div
       key="step-3"
@@ -41,16 +36,13 @@ export function UploadPerksRulesTab({
           md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:p-5 md:sm:p-7 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
         >
           {/* Desktop-Only Heading Inside Card */}
-          <div className="hidden md:block pb-4 border-b border-slate-100 dark:border-zinc-800/80 text-center relative">
+          <div className="hidden md:block pb-4 border-b border-slate-100 dark:border-zinc-800/80 text-center">
             <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               What this place offers
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-0.5">
               Add the facilities and conveniences available for your residents
             </p>
-            <span className="hidden sm:inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 absolute right-0 top-0">
-              {activeFacilities.length} Added
-            </span>
           </div>
 
           {/* Add Facility Input Field + Add Button */}
@@ -86,38 +78,6 @@ export function UploadPerksRulesTab({
               </button>
             </div>
           </div>
-
-          {/* Active Added Amenities Chips List */}
-          {activeFacilities.length > 0 && (
-            <div className="space-y-2 pt-2 border-t max-md:border-purple-300/20 md:border-slate-100 md:dark:border-zinc-800/80">
-              <span className="text-xs font-semibold max-md:text-purple-200 md:text-slate-500 md:dark:text-zinc-400">
-                Added amenities ({activeFacilities.length}):
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {activeFacilities.map((fac, idx) => (
-                  <span
-                    key={idx}
-                    className="px-3 py-1.5 rounded-full border text-xs font-medium flex items-center gap-1.5 shadow-2xs transition-colors
-                      max-md:bg-white/15 max-md:border-white/20 max-md:text-white
-                      md:bg-slate-100 md:dark:bg-zinc-800 md:border-slate-200 md:dark:border-zinc-700/70 md:text-slate-800 md:dark:text-zinc-200"
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full max-md:bg-purple-300 md:bg-emerald-500" />
-                    <span>{fac}</span>
-                    <button
-                      type="button"
-                      onClick={(e) => onRemoveFacility(fac, e)}
-                      className="w-4 h-4 rounded-full flex items-center justify-center transition-colors ml-0.5 cursor-pointer
-                        max-md:text-purple-200 max-md:hover:bg-white/20 max-md:hover:text-rose-300
-                        md:hover:bg-slate-200 md:dark:hover:bg-zinc-700 md:text-slate-400 md:hover:text-rose-500"
-                      title={`Remove ${fac}`}
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
         </section>
       </div>
 
@@ -136,16 +96,13 @@ export function UploadPerksRulesTab({
           md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:p-5 md:sm:p-7 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
         >
           {/* Desktop-Only Heading Inside Card */}
-          <div className="hidden md:block pb-4 border-b border-slate-100 dark:border-zinc-800/80 text-center relative">
+          <div className="hidden md:block pb-4 border-b border-slate-100 dark:border-zinc-800/80 text-center">
             <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               House Rules & Policies
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-0.5">
               Establish house guidelines and expectations for residents
             </p>
-            <span className="hidden sm:inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80 absolute right-0 top-0">
-              {activeRules.length} Rules Added
-            </span>
           </div>
 
           {/* Add House Rule Input Field + Add Button */}
@@ -181,38 +138,6 @@ export function UploadPerksRulesTab({
               </button>
             </div>
           </div>
-
-          {/* Active Added Rules Chips List */}
-          {activeRules.length > 0 && (
-            <div className="space-y-2 pt-2 border-t max-md:border-purple-300/20 md:border-slate-100 md:dark:border-zinc-800/80">
-              <span className="text-xs font-semibold max-md:text-purple-200 md:text-slate-500 md:dark:text-zinc-400">
-                Added house rules ({activeRules.length}):
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {activeRules.map((rule, idx) => (
-                  <span
-                    key={idx}
-                    className="px-3 py-1.5 rounded-full border text-xs font-medium flex items-center gap-1.5 shadow-2xs transition-colors
-                      max-md:bg-white/15 max-md:border-white/20 max-md:text-white
-                      md:bg-slate-100 md:dark:bg-zinc-800 md:border-slate-200 md:dark:border-zinc-700/70 md:text-slate-800 md:dark:text-zinc-200"
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full max-md:bg-purple-300 md:bg-indigo-500" />
-                    <span>{rule}</span>
-                    <button
-                      type="button"
-                      onClick={(e) => onRemoveRule(idx, e)}
-                      className="w-4 h-4 rounded-full flex items-center justify-center transition-colors ml-0.5 cursor-pointer
-                        max-md:text-purple-200 max-md:hover:bg-white/20 max-md:hover:text-rose-300
-                        md:hover:bg-slate-200 md:dark:hover:bg-zinc-700 md:text-slate-400 md:hover:text-rose-500"
-                      title={`Remove ${rule}`}
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
         </section>
       </div>
     </motion.div>
