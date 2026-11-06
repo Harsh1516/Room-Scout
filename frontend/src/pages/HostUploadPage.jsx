@@ -1733,6 +1733,8 @@ export function HostUploadPage() {
             ? 'max-md:bg-[#3d0c40] max-md:rounded-t-[2.5rem] max-md:shadow-[0_-8px_40px_rgba(61,12,64,0.4)]'
             : activeStep === 2
             ? 'max-md:bg-[#0c2340] max-md:rounded-t-[2.5rem] max-md:shadow-[0_-8px_40px_rgba(12,35,64,0.4)]'
+            : activeStep === 3
+            ? 'max-md:bg-[#082c3d] max-md:rounded-t-[2.5rem] max-md:shadow-[0_-8px_40px_rgba(8,44,61,0.4)]'
             : ''
         } max-md:px-4 max-md:py-6 max-md:pb-32 md:max-w-6xl md:mx-auto md:px-4 md:sm:px-6 md:lg:px-8 md:py-2 md:sm:py-4 md:pb-32 md:sm:pb-36`}
       >
@@ -1837,6 +1839,8 @@ export function HostUploadPage() {
             ? 'max-md:bg-[#3d0c40]/95 max-md:border-t max-md:border-purple-400/20 max-md:shadow-[0_-4px_25px_rgba(61,12,64,0.4)]'
             : activeStep === 2
             ? 'max-md:bg-[#0c2340]/95 max-md:border-t max-md:border-blue-400/20 max-md:shadow-[0_-4px_25px_rgba(12,35,64,0.4)]'
+            : activeStep === 3
+            ? 'max-md:bg-[#082c3d]/95 max-md:border-t max-md:border-teal-400/20 max-md:shadow-[0_-4px_25px_rgba(8,44,61,0.4)]'
             : 'max-md:bg-[#f8f9fa]/95 max-md:dark:bg-[#0b0c10]/95 max-md:border-t max-md:border-slate-200/60 max-md:dark:border-zinc-800/60'
         } md:bg-[#f8f9fa]/95 md:dark:bg-[#0b0c10]/95 md:border-t md:border-slate-200/60 md:dark:border-zinc-800/60 shadow-[0_-4px_25px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_25px_rgba(255,255,255,0.02)]`}
       >
@@ -1846,6 +1850,8 @@ export function HostUploadPage() {
             ? 'max-md:bg-purple-900/60'
             : activeStep === 2
             ? 'max-md:bg-blue-900/60'
+            : activeStep === 3
+            ? 'max-md:bg-teal-900/60'
             : 'max-md:bg-slate-100 max-md:dark:bg-zinc-800'
         } md:bg-slate-100 md:dark:bg-zinc-800`}>
           <motion.div
@@ -1869,6 +1875,8 @@ export function HostUploadPage() {
                     ? 'max-md:text-purple-200 max-md:hover:text-white'
                     : activeStep === 2
                     ? 'max-md:text-blue-200 max-md:hover:text-white'
+                    : activeStep === 3
+                    ? 'max-md:text-teal-200 max-md:hover:text-white'
                     : 'max-md:text-slate-800 max-md:dark:text-zinc-200'
                 } md:text-slate-800 md:dark:text-zinc-200 md:hover:text-black md:dark:hover:text-white`}
               >
