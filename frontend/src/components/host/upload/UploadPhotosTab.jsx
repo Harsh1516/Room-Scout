@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { X, Star, UploadCloud, CheckCircle2 } from 'lucide-react';
 
@@ -11,19 +11,19 @@ const getSafeImgSrc = (src) => {
   return s;
 };
 
-// Calculate exact byte size of base64 data URL
+// Calculate exact byte size of base64 data URL without heavy regex
 const getBase64ByteSize = (dataUrl) => {
   if (!dataUrl || typeof dataUrl !== 'string') return 0;
   let b64 = dataUrl;
   if (dataUrl.startsWith('data:') || dataUrl.startsWith('image/')) {
     const commaIdx = dataUrl.indexOf(',');
-    b64 = commaIdx !== -1 ? dataUrl.substring(commaIdx + 1) : dataUrl;
+    b64 = commaIdx !== -1 ? dataUrl.slice(commaIdx + 1) : dataUrl;
   } else if (!dataUrl.startsWith('http') && !dataUrl.startsWith('/') && dataUrl.length > 200) {
     b64 = dataUrl;
   } else {
     return 0;
   }
-  const padding = (b64.match(/=+$/) || [''])[0].length;
+  const padding = b64.endsWith('==') ? 2 : b64.endsWith('=') ? 1 : 0;
   return Math.max(0, Math.floor((b64.length * 3) / 4) - padding);
 };
 
@@ -35,41 +35,21 @@ const formatMemorySize = (bytes) => {
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 };
 
-// Resolve byte size of an image URL
-const resolveImageByteSize = async (url) => {
-  if (!url || typeof url !== 'string') return 0;
-
-  if (url.startsWith('data:') || url.startsWith('image/')) {
-    const size = getBase64ByteSize(url);
-    if (size > 0) return size;
+// Fast synchronous image size estimator (zero network calls, zero state loops)
+const getImageSize = (imgUrl) => {
+  if (!imgUrl || typeof imgUrl !== 'string') return 0;
+  if (imgUrl.startsWith('data:') || imgUrl.startsWith('image/')) {
+    return getBase64ByteSize(imgUrl);
   }
-
   try {
-    const entries = window.performance?.getEntriesByName?.(url) || [];
+    const entries = window.performance?.getEntriesByName?.(imgUrl) || [];
     const entry = entries[entries.length - 1];
     if (entry) {
       const perfSize = entry.encodedBodySize || entry.transferSize || entry.decodedBodySize;
       if (perfSize > 0) return perfSize;
     }
   } catch {}
-
-  try {
-    const headRes = await fetch(url, { method: 'HEAD' });
-    const cl = headRes.headers?.get('content-length');
-    if (cl && parseInt(cl, 10) > 0) {
-      return parseInt(cl, 10);
-    }
-  } catch {}
-
-  try {
-    const getRes = await fetch(url);
-    const blob = await getRes.blob();
-    if (blob && blob.size > 0) {
-      return blob.size;
-    }
-  } catch {}
-
-  return 150 * 1024;
+  return 180 * 1024;
 };
 
 export function UploadPhotosTab({
@@ -87,56 +67,9 @@ export function UploadPhotosTab({
   onPhotoDrop,
   maxPhotos = 5,
 }) {
-  const [imageSizes, setImageSizes] = useState({});
-
-  useEffect(() => {
-    let isCancelled = false;
-    (formData.images || []).forEach(async (url) => {
-      if (!url || typeof url !== 'string') return;
-      if (url.startsWith('data:') || url.startsWith('image/')) {
-        const size = getBase64ByteSize(url);
-        if (size > 0 && !isCancelled) {
-          setImageSizes((prev) => (prev[url] === size ? prev : { ...prev, [url]: size }));
-        }
-        return;
-      }
-      if (imageSizes[url] && imageSizes[url] > 0) return;
-      const size = await resolveImageByteSize(url);
-      if (!isCancelled && size > 0) {
-        setImageSizes((prev) => (prev[url] === size ? prev : { ...prev, [url]: size }));
-      }
-    });
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [formData.images, imageSizes]);
-
-  const getImageSize = useCallback(
-    (imgUrl) => {
-      if (!imgUrl || typeof imgUrl !== 'string') return 0;
-      if (imgUrl.startsWith('data:') || imgUrl.startsWith('image/')) {
-        return getBase64ByteSize(imgUrl);
-      }
-      if (imageSizes[imgUrl] && imageSizes[imgUrl] > 0) {
-        return imageSizes[imgUrl];
-      }
-      try {
-        const entries = window.performance?.getEntriesByName?.(imgUrl) || [];
-        const entry = entries[entries.length - 1];
-        if (entry) {
-          const perfSize = entry.encodedBodySize || entry.transferSize || entry.decodedBodySize;
-          if (perfSize > 0) return perfSize;
-        }
-      } catch {}
-      return 150 * 1024;
-    },
-    [imageSizes]
-  );
-
   const totalMemoryBytes = useMemo(() => {
     return (formData.images || []).reduce((acc, imgUrl) => acc + getImageSize(imgUrl), 0);
-  }, [formData.images, getImageSize]);
+  }, [formData.images]);
 
   const totalMemoryFormatted = useMemo(() => {
     return formatMemorySize(totalMemoryBytes);
