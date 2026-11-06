@@ -162,24 +162,24 @@ export function UploadPhotosTab({
         className="hidden"
       />
 
-      {/* ── CARD 1: Gallery Manager ── */}
-      <section className="bg-[#163c78] rounded-2xl sm:rounded-3xl border border-blue-300/20 p-5 sm:p-7 shadow-lg shadow-black/20 space-y-5">
+      {/* ── CARD 1: Gallery Manager Header & Grid (Airbnb visual reference: screenshot 2) ── */}
+      <section className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-5 sm:p-7 shadow-lg shadow-black/5 dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)] space-y-5">
         {/* Gallery Header */}
-        <div className="pb-4 border-b border-blue-300/20 text-center relative">
-          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+        <div className="pb-4 border-b border-slate-100 dark:border-zinc-800/80 text-center relative">
+          <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             Property Showcase Gallery
           </h2>
-          <p className="text-sm text-blue-200/80 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1">
             Add up to {maxPhotos} high quality photos. The first photo will be your main listing cover.
           </p>
 
           <div className="hidden sm:flex items-center gap-2 absolute right-0 top-0">
             {formData.images?.length > 0 && (
-              <span className="px-3 py-1 rounded-full text-xs font-mono font-semibold bg-white/10 text-blue-100 border border-white/15">
+              <span className="px-3 py-1 rounded-full text-xs font-mono font-semibold bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700/60">
                 {totalMemoryFormatted}
               </span>
             )}
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white/10 text-blue-100 border border-white/15">
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80">
               {formData.images?.length || 0} / {maxPhotos} Photos
             </span>
           </div>
@@ -284,17 +284,17 @@ export function UploadPhotosTab({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className={`rounded-2xl border-2 border-dashed border-blue-300/30 aspect-[16/10] w-full flex flex-col items-center justify-center p-5 text-center bg-white/5 hover:bg-white/10 hover:border-blue-300/60 cursor-pointer transition-all duration-200 group ${
+              className={`rounded-2xl border-2 border-dashed border-slate-300 dark:border-zinc-700/80 aspect-[16/10] w-full flex flex-col items-center justify-center p-5 text-center bg-slate-50/50 dark:bg-zinc-800/30 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/20 hover:border-[#006C4A] dark:hover:border-emerald-500 cursor-pointer transition-all duration-200 group ${
                 formData.images?.length === 0 ? 'sm:col-span-2 lg:col-span-3 aspect-[16/8]' : ''
               }`}
             >
-              <div className="w-12 h-12 rounded-2xl bg-white/10 group-hover:bg-white/20 flex items-center justify-center text-blue-200 group-hover:text-white group-hover:scale-110 transition-all mb-2 shadow-2xs">
+              <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-zinc-800 group-hover:bg-[#006C4A] flex items-center justify-center text-slate-500 dark:text-zinc-400 group-hover:text-white group-hover:scale-110 transition-all mb-2 shadow-2xs">
                 <UploadCloud className="w-6 h-6" />
               </div>
-              <span className="text-sm font-bold text-blue-100 group-hover:text-white transition-colors">
+              <span className="text-sm font-bold text-slate-800 dark:text-zinc-200 group-hover:text-[#006C4A] dark:group-hover:text-emerald-400 transition-colors">
                 {formData.images?.length === 0 ? 'Upload Photos from Device' : 'Add Another Photo'}
               </span>
-              <span className="text-xs text-blue-200/60 mt-0.5">
+              <span className="text-xs text-slate-400 dark:text-zinc-500 mt-0.5">
                 PNG, JPG or WebP • 16:9 widescreen recommended
               </span>
             </button>
@@ -302,21 +302,21 @@ export function UploadPhotosTab({
         </div>
 
         {/* Helpful Tips Banner */}
-        <div className="p-3.5 rounded-xl bg-white/8 border border-blue-300/20 flex items-start gap-2.5">
-          <Info className="w-4 h-4 text-blue-300 shrink-0 mt-0.5" />
-          <p className="text-sm text-blue-100/80 leading-relaxed">
-            <strong className="text-white">Airbnb Host Tip:</strong> Properties with at least 5 bright, clear photos showing the bedroom, study area, and washroom receive up to 3x more guest booking requests.
+        <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/80 dark:border-zinc-800 flex items-start gap-2.5">
+          <Info className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+          <p className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed">
+            <strong className="text-slate-800 dark:text-zinc-200">Airbnb Host Tip:</strong> Properties with at least 5 bright, clear photos showing the bedroom, study area, and washroom receive up to 3x more guest booking requests.
           </p>
         </div>
       </section>
 
       {/* ── CARD 2: Video Walkthrough Tour (Optional) ── */}
-      <section className="bg-[#163c78] rounded-2xl sm:rounded-3xl border border-blue-300/20 p-5 sm:p-6 shadow-lg shadow-black/20 space-y-3">
-        <div className="pb-3 border-b border-blue-300/20 text-center relative">
-          <h3 className="text-xl sm:text-2xl font-black text-white">
+      <section className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-5 sm:p-6 shadow-lg shadow-black/5 dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)] space-y-3">
+        <div className="pb-3 border-b border-slate-100 dark:border-zinc-800/80 text-center relative">
+          <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
             Virtual Tour / Video Link (Optional)
           </h3>
-          <p className="text-sm text-blue-200/80 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
             Instagram Reel or YouTube video walkthrough
           </p>
 
@@ -341,7 +341,7 @@ export function UploadPhotosTab({
           value={formData.instagramVideoUrl || ''}
           onChange={(e) => setFormData({ ...formData, instagramVideoUrl: e.target.value })}
           placeholder="https://www.instagram.com/reel/... or https://www.youtube.com/watch?v=..."
-          className="w-full h-11 sm:h-12 px-4 rounded-xl bg-white/10 border border-white/15 text-sm text-white placeholder:text-blue-300/50 focus:outline-none focus:border-blue-300/60 focus:ring-2 focus:ring-blue-300/15 transition-all"
+          className="w-full h-11 sm:h-12 px-4 rounded-xl bg-slate-50/70 dark:bg-zinc-800/40 border border-slate-200 dark:border-zinc-700/80 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/15 transition-all"
         />
       </section>
     </motion.div>
