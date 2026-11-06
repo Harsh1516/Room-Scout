@@ -1,19 +1,7 @@
-import React, { lazy, Suspense } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { ExternalLink, Download, CheckCircle2 } from 'lucide-react';
-
-const MapLocationPicker = lazy(() =>
-  import('../../MapLocationPicker').then((m) => ({ default: m.MapLocationPicker || m.default }))
-);
-
-function MapPickerSkeleton() {
-  return (
-    <div className="w-full h-full min-h-[300px] rounded-2xl bg-slate-100 dark:bg-zinc-800 animate-pulse border border-slate-200 dark:border-zinc-700 flex flex-col items-center justify-center gap-3">
-      <div className="w-8 h-8 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin" />
-      <span className="text-xs font-medium text-slate-500 dark:text-zinc-400">Loading Map Engine...</span>
-    </div>
-  );
-}
+import { MapLocationPicker } from '../../MapLocationPicker';
 
 export function UploadLocationTab({
   formData,
@@ -130,16 +118,14 @@ export function UploadLocationTab({
             </div>
 
             <div className="w-full flex-1 relative min-h-[300px] sm:min-h-[360px] rounded-xl overflow-hidden">
-              <Suspense fallback={<MapPickerSkeleton />}>
-                <MapLocationPicker
-                  latitude={formData.latitude}
-                  longitude={formData.longitude}
-                  onLocationChange={onMapLocationChange}
-                  onAddressDetected={onAddressDetected}
-                  defaultCity={formData.city}
-                  defaultState={formData.state}
-                />
-              </Suspense>
+              <MapLocationPicker
+                latitude={formData.latitude}
+                longitude={formData.longitude}
+                onLocationChange={onMapLocationChange}
+                onAddressDetected={onAddressDetected}
+                defaultCity={formData.city}
+                defaultState={formData.state}
+              />
             </div>
           </section>
         </div>

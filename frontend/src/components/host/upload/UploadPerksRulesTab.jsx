@@ -14,8 +14,8 @@ export function UploadPerksRulesTab({
   onAddRule,
   onRemoveRule,
 }) {
-  const activeFacilities = formData.facilities || formData.amenities || [];
-  const activeRules = formData.rules || [];
+  const activeFacilities = formData?.facilities || formData?.amenities || [];
+  const activeRules = formData?.rules || [];
 
   return (
     <motion.div

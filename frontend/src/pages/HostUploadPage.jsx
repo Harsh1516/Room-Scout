@@ -14,29 +14,10 @@ import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { fetchAddressFromCoords, parseGoogleMapsUrl } from '../utils/geoUtils';
 import { isRoomMatchingCategory } from '../utils/dateUtils';
 
-const UploadLocationTab = lazy(() =>
-  import('../components/host/upload/UploadLocationTab').then((m) => ({ default: m.UploadLocationTab || m.default }))
-);
-const UploadPerksRulesTab = lazy(() =>
-  import('../components/host/upload/UploadPerksRulesTab').then((m) => ({ default: m.UploadPerksRulesTab || m.default }))
-);
-const UploadPhotosTab = lazy(() =>
-  import('../components/host/upload/UploadPhotosTab').then((m) => ({ default: m.UploadPhotosTab || m.default }))
-);
-const UploadRoomsPricingTab = lazy(() =>
-  import('../components/host/upload/UploadRoomsPricingTab').then((m) => ({ default: m.UploadRoomsPricingTab || m.default }))
-);
-
-function TabFallback() {
-  return (
-    <div className="w-full min-h-[400px] rounded-3xl bg-slate-100/60 dark:bg-zinc-900/60 animate-pulse border border-slate-200 dark:border-zinc-800 flex flex-col items-center justify-center gap-3">
-      <div className="w-8 h-8 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin" />
-      <span className="text-xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-        Loading Step Content...
-      </span>
-    </div>
-  );
-}
+import { UploadLocationTab } from '../components/host/upload/UploadLocationTab';
+import { UploadPerksRulesTab } from '../components/host/upload/UploadPerksRulesTab';
+import { UploadPhotosTab } from '../components/host/upload/UploadPhotosTab';
+import { UploadRoomsPricingTab } from '../components/host/upload/UploadRoomsPricingTab';
 
 const MAX_PHOTOS = 5;
 const MAX_DESCRIPTION_CHARS = 200;
@@ -1317,31 +1298,41 @@ export function HostUploadPage() {
   };
 
   // Step Validation & Forward Progression
-  const validateStep = (stepNumber) => {
+  const validateStep = (stepNumber, shouldSetErrors = true) => {
     if (stepNumber === 1) {
       const cleanHostPhone = (formData.phone || '').trim().replace(/\D/g, '');
       const raw10Phone = cleanHostPhone.length === 12 && cleanHostPhone.startsWith('91') ? cleanHostPhone.slice(2) : cleanHostPhone;
 
       if (!formData.name || formData.name.trim().length < 2) {
-        setFieldErrors((prev) => ({ ...prev, name: 'Host name is required (min 2 characters).' }));
+        if (shouldSetErrors) {
+          setFieldErrors((prev) => ({ ...prev, name: 'Host name is required (min 2 characters).' }));
+        }
         return false;
       }
 
       if (!raw10Phone || raw10Phone.length < 10) {
-        setFieldErrors((prev) => ({ ...prev, phone: 'Host contact number must be at least 10 digits.' }));
+        if (shouldSetErrors) {
+          setFieldErrors((prev) => ({ ...prev, phone: 'Host contact number must be at least 10 digits.' }));
+        }
         return false;
       }
 
       if (!formData.propertyName || formData.propertyName.trim().length < 3) {
-        setFieldErrors((prev) => ({ ...prev, propertyName: 'Property name must be at least 3 characters long.' }));
+        if (shouldSetErrors) {
+          setFieldErrors((prev) => ({ ...prev, propertyName: 'Property name must be at least 3 characters long.' }));
+        }
         return false;
       }
       if (!formData.propertyType) {
-        setFieldErrors((prev) => ({ ...prev, propertyType: 'Please select a property category (e.g. PG, Hotel, Flat).' }));
+        if (shouldSetErrors) {
+          setFieldErrors((prev) => ({ ...prev, propertyType: 'Please select a property category (e.g. PG, Hotel, Flat).' }));
+        }
         return false;
       }
       if (!formData.genderType) {
-        setFieldErrors((prev) => ({ ...prev, genderType: 'Please select who this stay is available for.' }));
+        if (shouldSetErrors) {
+          setFieldErrors((prev) => ({ ...prev, genderType: 'Please select who this stay is available for.' }));
+        }
         return false;
       }
       return true;
@@ -1355,7 +1346,9 @@ export function HostUploadPage() {
       if (!formData.pincode || formData.pincode.trim().length < 4) errors.pincode = 'Valid PIN code is required.';
 
       if (Object.keys(errors).length > 0) {
-        setFieldErrors((prev) => ({ ...prev, ...errors }));
+        if (shouldSetErrors) {
+          setFieldErrors((prev) => ({ ...prev, ...errors }));
+        }
         return false;
       }
       return true;
@@ -1364,11 +1357,15 @@ export function HostUploadPage() {
     if (stepNumber === 3) {
       const facilities = (formData.facilities && formData.facilities.length > 0) ? formData.facilities : formData.amenities;
       if (!facilities || facilities.length === 0) {
-        setFieldErrors((prev) => ({ ...prev, facilities: 'Please select at least 1 facility/amenity.' }));
+        if (shouldSetErrors) {
+          setFieldErrors((prev) => ({ ...prev, facilities: 'Please select at least 1 facility/amenity.' }));
+        }
         return false;
       }
       if (!formData.rules || formData.rules.length === 0) {
-        setFieldErrors((prev) => ({ ...prev, rules: 'Please select at least 1 house rule.' }));
+        if (shouldSetErrors) {
+          setFieldErrors((prev) => ({ ...prev, rules: 'Please select at least 1 house rule.' }));
+        }
         return false;
       }
       return true;
@@ -1376,7 +1373,9 @@ export function HostUploadPage() {
 
     if (stepNumber === 4) {
       if (!formData.images || formData.images.length === 0) {
-        setFieldErrors((prev) => ({ ...prev, images: 'Please upload at least 1 showcase photo.' }));
+        if (shouldSetErrors) {
+          setFieldErrors((prev) => ({ ...prev, images: 'Please upload at least 1 showcase photo.' }));
+        }
         return false;
       }
       return true;
@@ -1384,17 +1383,23 @@ export function HostUploadPage() {
 
     if (stepNumber === 5) {
       if (!formData.description || formData.description.trim().length < 10) {
-        setFieldErrors((prev) => ({ ...prev, description: 'Description must be at least 10 characters long.' }));
+        if (shouldSetErrors) {
+          setFieldErrors((prev) => ({ ...prev, description: 'Description must be at least 10 characters long.' }));
+        }
         return false;
       }
       const validRates = (formData.roomRates || []).filter((r) => (r.type || '').trim());
       if (validRates.length === 0) {
-        setFieldErrors((prev) => ({ ...prev, roomRates: 'Please configure at least 1 room category.' }));
+        if (shouldSetErrors) {
+          setFieldErrors((prev) => ({ ...prev, roomRates: 'Please configure at least 1 room category.' }));
+        }
         return false;
       }
       const validRooms = (formData.rooms || []).filter((rm) => (rm.roomNumber || '').trim());
       if (validRooms.length === 0) {
-        setFieldErrors((prev) => ({ ...prev, rooms: 'Please add at least 1 room card.' }));
+        if (shouldSetErrors) {
+          setFieldErrors((prev) => ({ ...prev, rooms: 'Please add at least 1 room card.' }));
+        }
         return false;
       }
       return true;
@@ -1405,7 +1410,7 @@ export function HostUploadPage() {
 
   const handleNextStep = () => {
     setFieldErrors({});
-    const isValid = validateStep(activeStep);
+    const isValid = validateStep(activeStep, true);
     if (!isValid) return;
 
     if (activeStep < 5) {
@@ -1638,12 +1643,18 @@ export function HostUploadPage() {
             />
           </div>
 
-          {/* Mobile Center Step Count: Text Only (Non-clickable) */}
-          <div className="md:hidden text-center select-none py-1.5 px-2">
-            <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-wider uppercase">
+          {/* Mobile Center Step Count: Tap to switch or open drawer */}
+          <button
+            type="button"
+            onClick={() => setMobileNavOpen(true)}
+            className="md:hidden flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-white cursor-pointer select-none active:scale-95 transition-all shadow-2xs"
+            title="Tap to view all steps"
+          >
+            <span className="text-xs sm:text-sm font-black tracking-wider uppercase">
               Step {activeStep} of {WIZARD_STEPS.length}
             </span>
-          </div>
+            <ChevronRight className="w-3.5 h-3.5 rotate-90 text-slate-500" />
+          </button>
         </div>
 
         {/* Right Action: Theme Toggle + User Avatar */}
@@ -1819,61 +1830,54 @@ export function HostUploadPage() {
             )}
 
             {activeStep === 2 && (
-              <Suspense fallback={<TabFallback />}>
-                <UploadLocationTab
-                  formData={formData}
-                  setFormData={setFormData}
-                  fieldErrors={fieldErrors}
-                  onMapLocationChange={handleMapLocationChange}
-                  onAddressDetected={handleAddressDetected}
-                  googleMapsUrl={googleMapsUrl}
-                  setGoogleMapsUrl={setGoogleMapsUrl}
-                  handleImportGoogleMaps={handleImportGoogleMaps}
-                  isImportingGMap={isImportingGMap}
-                />
-              </Suspense>
+              <UploadLocationTab
+                formData={formData}
+                setFormData={setFormData}
+                fieldErrors={fieldErrors}
+                onMapLocationChange={handleMapLocationChange}
+                onAddressDetected={handleAddressDetected}
+                googleMapsUrl={googleMapsUrl}
+                setGoogleMapsUrl={setGoogleMapsUrl}
+                handleImportGoogleMaps={handleImportGoogleMaps}
+                isImportingGMap={isImportingGMap}
+              />
             )}
 
             {activeStep === 3 && (
-              <Suspense fallback={<TabFallback />}>
-                <UploadPerksRulesTab
-                  formData={formData}
-                  setFormData={setFormData}
-                  newFacilityInput={newFacilityInput}
-                  setNewFacilityInput={setNewFacilityInput}
-                  onAddFacility={handleAddFacility}
-                  onRemoveFacility={handleRemoveFacility}
-                  newRuleInput={newRuleInput}
-                  setNewRuleInput={setNewRuleInput}
-                  onAddRule={handleAddRule}
-                  onRemoveRule={handleRemoveRule}
-                />
-              </Suspense>
+              <UploadPerksRulesTab
+                formData={formData}
+                setFormData={setFormData}
+                newFacilityInput={newFacilityInput}
+                setNewFacilityInput={setNewFacilityInput}
+                onAddFacility={handleAddFacility}
+                onRemoveFacility={handleRemoveFacility}
+                newRuleInput={newRuleInput}
+                setNewRuleInput={setNewRuleInput}
+                onAddRule={handleAddRule}
+                onRemoveRule={handleRemoveRule}
+              />
             )}
 
             {activeStep === 4 && (
-              <Suspense fallback={<TabFallback />}>
-                <UploadPhotosTab
-                  formData={formData}
-                  setFormData={setFormData}
-                  fileInputRef={fileInputRef}
-                  onFileUpload={handleFileUpload}
-                  onRemovePhoto={handleRemovePhoto}
-                  onSetCoverPhoto={handleSetCoverPhoto}
-                  draggedPhotoIndex={draggedPhotoIndex}
-                  dragOverIndex={dragOverIndex}
-                  onPhotoDragStart={handlePhotoDragStart}
-                  onPhotoDragOver={handlePhotoDragOver}
-                  onPhotoDragLeave={handlePhotoDragLeave}
-                  onPhotoDrop={handlePhotoDrop}
-                  maxPhotos={MAX_PHOTOS}
-                />
-              </Suspense>
+              <UploadPhotosTab
+                formData={formData}
+                setFormData={setFormData}
+                fileInputRef={fileInputRef}
+                onFileUpload={handleFileUpload}
+                onRemovePhoto={handleRemovePhoto}
+                onSetCoverPhoto={handleSetCoverPhoto}
+                draggedPhotoIndex={draggedPhotoIndex}
+                dragOverIndex={dragOverIndex}
+                onPhotoDragStart={handlePhotoDragStart}
+                onPhotoDragOver={handlePhotoDragOver}
+                onPhotoDragLeave={handlePhotoDragLeave}
+                onPhotoDrop={handlePhotoDrop}
+                maxPhotos={MAX_PHOTOS}
+              />
             )}
 
             {activeStep === 5 && (
               <div className="max-w-6xl mx-auto">
-              <Suspense fallback={<TabFallback />}>
                 <UploadRoomsPricingTab
                   formData={formData}
                   setFormData={setFormData}
@@ -1894,7 +1898,6 @@ export function HostUploadPage() {
                   onUpdateRoomNumber={handleUpdateRoomNumber}
                   onUpdateRoomCapacity={handleUpdateRoomCapacity}
                 />
-              </Suspense>
               </div>
             )}
           </AnimatePresence>
