@@ -76,25 +76,18 @@ export function UploadBasicsTab({
       className="max-w-3xl w-full mx-auto space-y-5 sm:space-y-6"
     >
       {/* ── CARD 1: Host Contact Information (Airbnb-style structured card) ── */}
-      <section className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-5 sm:p-7 shadow-xs">
-        <div className="flex items-start justify-between gap-3 pb-4 sm:pb-5 border-b border-slate-100 dark:border-zinc-800/80">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/70 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                <User className="w-4 h-4" />
-              </span>
-              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
-                Host Details
-              </h2>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1 pl-9">
-              Your primary contact info for guest communication and verified bookings
-            </p>
-          </div>
+      <section className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-5 sm:p-7 shadow-lg shadow-black/5 dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]">
+        <div className="pb-4 sm:pb-5 border-b border-slate-100 dark:border-zinc-800/80 text-center relative">
+          <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Host Details
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1">
+            Your primary contact info for guest communication and verified bookings
+          </p>
 
           {formData.email && (
             <span
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700/60 shrink-0"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700/60 absolute right-0 top-0"
               title={formData.email}
             >
               <Mail className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
@@ -185,18 +178,13 @@ export function UploadBasicsTab({
       </section>
 
       {/* ── CARD 2: Property Identity & Type (Airbnb-style selection cards) ── */}
-      <section className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-5 sm:p-7 shadow-xs space-y-6">
+      <section className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-5 sm:p-7 shadow-lg shadow-black/5 dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)] space-y-6">
         {/* Section Header */}
-        <div className="pb-4 sm:pb-5 border-b border-slate-100 dark:border-zinc-800/80">
-          <div className="flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/70 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
-              <Sparkles className="w-4 h-4" />
-            </span>
-            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
-              Property Overview
-            </h2>
-          </div>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1 pl-9">
+        <div className="pb-4 sm:pb-5 border-b border-slate-100 dark:border-zinc-800/80 text-center">
+          <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Property Overview
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1">
             Choose how your place is categorized so the right guests discover it
           </p>
         </div>
@@ -238,12 +226,12 @@ export function UploadBasicsTab({
           )}
         </div>
 
-        {/* Property Type Grid (Airbnb-style large selectable cards) */}
+        {/* Property Type Grid (Square fields of PG, Hostel, Flat - Icon + Label only) */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-zinc-400">
             Property Category <span className="text-rose-500">*</span>
           </label>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
             {PROPERTY_TYPES.map((pt) => {
               const isSelected = formData.propertyType === pt.label;
               const IconComp = pt.icon;
@@ -253,50 +241,37 @@ export function UploadBasicsTab({
                   key={pt.label}
                   type="button"
                   onClick={() => setFormData({ ...formData, propertyType: pt.label })}
-                  className={`group relative p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between min-h-[96px] sm:min-h-[110px] ${
+                  className={`group relative aspect-square p-2.5 sm:p-4 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center gap-2 select-none active:scale-95 ${
                     isSelected
-                      ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-2 border-[#006C4A] dark:border-emerald-500 shadow-sm'
-                      : 'bg-slate-50/60 dark:bg-zinc-800/40 hover:bg-slate-100/80 dark:hover:bg-zinc-800/80 border-slate-200 dark:border-zinc-700/80 hover:border-slate-300 dark:hover:border-zinc-600'
+                      ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-2 border-[#006C4A] dark:border-emerald-500 shadow-sm'
+                      : 'bg-slate-50/60 dark:bg-zinc-800/40 hover:bg-slate-100/80 dark:hover:bg-zinc-800/80 border-slate-200 dark:border-zinc-700/80'
                   }`}
                 >
-                  <div className="flex items-center justify-between w-full">
-                    <span
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
-                        isSelected
-                          ? 'bg-[#006C4A] text-white shadow-xs'
-                          : 'bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 border border-slate-200/80 dark:border-zinc-700'
-                      }`}
-                    >
-                      <IconComp className="w-5 h-5" />
-                    </span>
+                  <span
+                    className={`w-11 h-11 sm:w-13 sm:h-13 rounded-2xl flex items-center justify-center transition-colors ${
+                      isSelected
+                        ? 'bg-[#006C4A] text-white shadow-xs'
+                        : 'bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/80 dark:border-zinc-700'
+                    }`}
+                  >
+                    <IconComp className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </span>
 
-                    {isSelected && (
-                      <span className="w-5 h-5 rounded-full bg-[#006C4A] text-white flex items-center justify-center shadow-xs">
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="mt-2.5">
-                    <div className="text-sm font-bold text-slate-900 dark:text-white">
-                      {pt.label}
-                    </div>
-                    <div className="text-xs text-slate-500 dark:text-zinc-400 leading-snug mt-0.5">
-                      {pt.desc}
-                    </div>
-                  </div>
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    {pt.label}
+                  </span>
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Available For Gender Preference */}
+        {/* Available For Gender Preference (Square fields - Icon + Label only) */}
         <div className="space-y-2">
           <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-zinc-400">
             Available For (Gender Policy) <span className="text-rose-500">*</span>
           </label>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
             {GENDER_OPTIONS.map((g) => {
               const isSelected =
                 formData.genderType === g.value ||
@@ -309,37 +284,25 @@ export function UploadBasicsTab({
                   key={g.value}
                   type="button"
                   onClick={() => setFormData({ ...formData, genderType: g.value })}
-                  className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex items-center justify-between gap-3 ${
+                  className={`group relative aspect-square p-2.5 sm:p-4 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center gap-2 select-none active:scale-95 ${
                     isSelected
-                      ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-2 border-[#006C4A] dark:border-emerald-500 shadow-sm'
-                      : 'bg-slate-50/60 dark:bg-zinc-800/40 hover:bg-slate-100/80 dark:hover:bg-zinc-800/80 border-slate-200 dark:border-zinc-700/80 hover:border-slate-300 dark:hover:border-zinc-600'
+                      ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-2 border-[#006C4A] dark:border-emerald-500 shadow-sm'
+                      : 'bg-slate-50/60 dark:bg-zinc-800/40 hover:bg-slate-100/80 dark:hover:bg-zinc-800/80 border-slate-200 dark:border-zinc-700/80'
                   }`}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span
-                      className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                        isSelected
-                          ? 'bg-[#006C4A] text-white shadow-xs'
-                          : 'bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 border border-slate-200/80 dark:border-zinc-700'
-                      }`}
-                    >
-                      {g.icon}
-                    </span>
-                    <div className="min-w-0">
-                      <div className="text-sm font-bold text-slate-900 dark:text-white truncate">
-                        {g.label}
-                      </div>
-                      <div className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
-                        {g.sub}
-                      </div>
-                    </div>
-                  </div>
+                  <span
+                    className={`w-11 h-11 sm:w-13 sm:h-13 rounded-2xl flex items-center justify-center transition-colors ${
+                      isSelected
+                        ? 'bg-[#006C4A] text-white shadow-xs'
+                        : 'bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/80 dark:border-zinc-700'
+                    }`}
+                  >
+                    {g.icon}
+                  </span>
 
-                  {isSelected && (
-                    <span className="w-5 h-5 rounded-full bg-[#006C4A] text-white flex items-center justify-center shrink-0 shadow-xs">
-                      <Check className="w-3 h-3 stroke-[3]" />
-                    </span>
-                  )}
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    {g.label}
+                  </span>
                 </button>
               );
             })}

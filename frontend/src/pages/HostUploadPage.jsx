@@ -1534,10 +1534,10 @@ export function HostUploadPage() {
   const currentStepConfig = WIZARD_STEPS.find((s) => s.id === activeStep) || WIZARD_STEPS[0];
 
   return (
-    <div className="bg-slate-50/50 dark:bg-black text-slate-800 dark:text-zinc-100 host-page-scope font-body-md antialiased min-h-screen flex flex-col justify-between relative selection:bg-[#006C4A] selection:text-white transition-colors duration-300">
+    <div className="bg-[#f8f9fa] dark:bg-[#0b0c10] text-slate-800 dark:text-zinc-100 host-page-scope font-body-md antialiased min-h-screen flex flex-col justify-between relative selection:bg-[#006C4A] selection:text-white transition-colors duration-300">
 
-      {/* ── Top Header Navigation Bar (Airbnb-style host listing header) ── */}
-      <header className="sticky top-0 z-40 w-full bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-b border-slate-200/90 dark:border-zinc-800/90 h-16 sm:h-20 px-3 sm:px-6 lg:px-8 flex items-center justify-between select-none">
+      {/* ── Top Header Navigation Bar (Single seamless background with page body) ── */}
+      <header className="sticky top-0 z-40 w-full bg-[#f8f9fa] dark:bg-[#0b0c10] border-b-0 h-16 sm:h-20 px-3 sm:px-6 lg:px-8 flex items-center justify-between select-none">
         {/* Left Action: Return to Dashboard */}
         <div className="flex items-center gap-2 sm:gap-3">
           <button
@@ -1546,7 +1546,7 @@ export function HostUploadPage() {
               saveDraftToStorage(formData, activeStep, googleMapsUrl, user);
               navigate('/host/dashboard');
             }}
-            className="flex items-center justify-center gap-2 h-10 sm:h-11 px-3.5 sm:px-4 rounded-full border border-slate-200 dark:border-zinc-700/80 bg-slate-50/70 dark:bg-zinc-900/70 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 font-semibold text-xs sm:text-sm cursor-pointer active:scale-95 transition-all shadow-2xs shrink-0"
+            className="flex items-center justify-center gap-2 h-10 sm:h-11 px-3.5 sm:px-4 rounded-full border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/80 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 font-semibold text-xs sm:text-sm cursor-pointer active:scale-95 transition-all shadow-xs shrink-0"
             title="Save draft and return to dashboard"
           >
             <ArrowLeft className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-slate-600 dark:text-zinc-300" />
@@ -1555,7 +1555,7 @@ export function HostUploadPage() {
           </button>
         </div>
 
-        {/* Center: Desktop Stepper Tabs (md+) & Mobile Center Step Count Indicator */}
+        {/* Center: Desktop Stepper Tabs (md+) & Mobile Center Step Count Text-Only */}
         <div className="flex items-center justify-center min-w-0">
           {/* Desktop Stepper Navigation Tabs (Centered) */}
           <div className="hidden md:flex items-center">
@@ -1567,18 +1567,16 @@ export function HostUploadPage() {
             />
           </div>
 
-          {/* Mobile Center Step Count Button (Shifted from body top to navbar center) */}
+          {/* Mobile Center Step Count: Text Only */}
           <button
             type="button"
             onClick={() => setMobileNavOpen(true)}
-            className="md:hidden flex items-center gap-1.5 h-10 px-3.5 rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-300/70 dark:border-emerald-800/70 text-[#006C4A] dark:text-emerald-400 font-bold text-xs uppercase tracking-wider cursor-pointer active:scale-95 transition-all shadow-2xs"
+            className="md:hidden text-center cursor-pointer active:opacity-60 transition-opacity select-none py-1.5 px-2"
             aria-label="Toggle vertical steps navigation menu"
           >
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-            <span className="truncate max-w-[150px] xs:max-w-[200px]">
-              Step {activeStep} of {WIZARD_STEPS.length} · {currentStepConfig.shortTitle}
+            <span className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-zinc-200 tracking-wider uppercase">
+              Step {activeStep} of {WIZARD_STEPS.length}
             </span>
-            <ChevronRight className="w-3.5 h-3.5 rotate-90 shrink-0 text-emerald-600 dark:text-emerald-400" />
           </button>
         </div>
 
@@ -1715,19 +1713,28 @@ export function HostUploadPage() {
         )}
       </AnimatePresence>
 
-      {/* ── Fixed Step Editorial Header (Airbnb-style bold & calm typography) ── */}
+      {/* ── Fixed Step Editorial Header (Airbnb-style bold & calm typography with smooth tab transition) ── */}
       <section className="w-full shrink-0 px-4 sm:px-6 lg:px-8 pt-5 sm:pt-8 pb-3 sm:pb-4 select-none">
-        <div className="max-w-4xl mx-auto text-center space-y-1.5">
-          {/* Main Step Headline */}
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            {currentStepConfig.sub || currentStepConfig.title}
-          </h1>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`step-heading-${activeStep}`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="max-w-4xl mx-auto text-center space-y-1.5"
+          >
+            {/* Main Step Headline */}
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+              {currentStepConfig.sub || currentStepConfig.title}
+            </h1>
 
-          {/* Step Subtitle / Description */}
-          <p className="text-xs sm:text-sm md:text-base text-slate-500 dark:text-zinc-400 max-w-xl mx-auto leading-relaxed">
-            {currentStepConfig.desc}
-          </p>
-        </div>
+            {/* Step Subtitle / Description */}
+            <p className="text-xs sm:text-sm md:text-base text-slate-500 dark:text-zinc-400 max-w-xl mx-auto leading-relaxed">
+              {currentStepConfig.desc}
+            </p>
+          </motion.div>
+        </AnimatePresence>
       </section>
 
       {/* ── Main Viewport-Fitted Canvas (Natural Smooth Scroll, Generous Bottom Padding) ── */}
@@ -1825,7 +1832,7 @@ export function HostUploadPage() {
       </main>
 
       {/* ── Fixed Bottom Progression Bar (Airbnb visual reference: screenshots 1 & 2) ── */}
-      <footer className="fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-t border-slate-200/90 dark:border-zinc-800 shadow-[0_-4px_25px_rgba(0,0,0,0.06)]">
+      <footer className="fixed bottom-0 inset-x-0 z-40 bg-[#f8f9fa]/95 dark:bg-[#0b0c10]/95 backdrop-blur-md border-t border-slate-200/60 dark:border-zinc-800/60 shadow-[0_-4px_25px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_25px_rgba(255,255,255,0.02)]">
         {/* Hairline Continuous Progress Indicator Line */}
         <div className="w-full h-1 bg-slate-100 dark:bg-zinc-800 relative overflow-hidden">
           <motion.div

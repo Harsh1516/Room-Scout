@@ -136,17 +136,15 @@ export function UploadPerksRulesTab({
       className="max-w-5xl w-full mx-auto space-y-6"
     >
       {/* ── CARD 1: What this place offers (Airbnb visual reference: screenshot 1) ── */}
-      <section className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-5 sm:p-7 shadow-xs space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-100 dark:border-zinc-800/80">
-          <div>
-            <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight">
-              What this place offers
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-0.5">
-              Select popular amenities or add custom conveniences for your residents
-            </p>
-          </div>
-          <span className="self-start sm:self-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 shrink-0">
+      <section className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-5 sm:p-7 shadow-lg shadow-black/5 dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)] space-y-5">
+        <div className="pb-4 border-b border-slate-100 dark:border-zinc-800/80 text-center relative">
+          <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            What this place offers
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-0.5">
+            Select popular amenities or add custom conveniences for your residents
+          </p>
+          <span className="hidden sm:inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 absolute right-0 top-0">
             {activeFacilities.length} Selected
           </span>
         </div>
@@ -266,17 +264,15 @@ export function UploadPerksRulesTab({
       </section>
 
       {/* ── CARD 2: House Rules & Guidelines (Airbnb-style policy card) ── */}
-      <section className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-5 sm:p-7 shadow-xs space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-100 dark:border-zinc-800/80">
-          <div>
-            <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight">
-              House Rules & Policies
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-0.5">
-              Clear guidelines help set expectations and ensure comfortable co-living
-            </p>
-          </div>
-          <span className="self-start sm:self-center px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80 shrink-0">
+      <section className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-5 sm:p-7 shadow-lg shadow-black/5 dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)] space-y-5">
+        <div className="pb-4 border-b border-slate-100 dark:border-zinc-800/80 text-center relative">
+          <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            House Rules & Policies
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-0.5">
+            Clear guidelines help set expectations and ensure comfortable co-living
+          </p>
+          <span className="hidden sm:inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80 absolute right-0 top-0">
             {activeRules.length} Rules Set
           </span>
         </div>

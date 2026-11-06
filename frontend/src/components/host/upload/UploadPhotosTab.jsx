@@ -163,24 +163,17 @@ export function UploadPhotosTab({
       />
 
       {/* ── CARD 1: Gallery Manager Header & Grid (Airbnb visual reference: screenshot 2) ── */}
-      <section className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-5 sm:p-7 shadow-xs space-y-5">
+      <section className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-5 sm:p-7 shadow-lg shadow-black/5 dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)] space-y-5">
         {/* Gallery Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-zinc-800/80">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/70 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                <Camera className="w-4 h-4" />
-              </span>
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight">
-                Property Showcase Gallery
-              </h2>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1 pl-9">
-              Add up to {maxPhotos} high quality photos. The first photo will be your main listing cover.
-            </p>
-          </div>
+        <div className="pb-4 border-b border-slate-100 dark:border-zinc-800/80 text-center relative">
+          <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Property Showcase Gallery
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1">
+            Add up to {maxPhotos} high quality photos. The first photo will be your main listing cover.
+          </p>
 
-          <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+          <div className="hidden sm:flex items-center gap-2 absolute right-0 top-0">
             {formData.images?.length > 0 && (
               <span className="px-3 py-1 rounded-full text-xs font-mono font-semibold bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700/60">
                 {totalMemoryFormatted}
@@ -318,21 +311,14 @@ export function UploadPhotosTab({
       </section>
 
       {/* ── CARD 2: Video Walkthrough Tour (Optional) ── */}
-      <section className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-5 sm:p-6 shadow-xs space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-pink-50 dark:bg-pink-950/50 text-pink-600 dark:text-pink-400 flex items-center justify-center shrink-0">
-              <Video className="w-4 h-4" />
-            </span>
-            <div>
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                Virtual Tour / Video Link (Optional)
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-zinc-400">
-                Instagram Reel or YouTube video walkthrough
-              </p>
-            </div>
-          </div>
+      <section className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-5 sm:p-6 shadow-lg shadow-black/5 dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)] space-y-3">
+        <div className="pb-3 border-b border-slate-100 dark:border-zinc-800/80 text-center relative">
+          <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+            Virtual Tour / Video Link (Optional)
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+            Instagram Reel or YouTube video walkthrough
+          </p>
 
           {formData.instagramVideoUrl && (
             <a
@@ -343,7 +329,7 @@ export function UploadPhotosTab({
               }
               target="_blank"
               rel="noreferrer"
-              className="px-3 py-1 rounded-lg bg-pink-600 hover:bg-pink-700 text-white text-xs font-semibold transition-colors flex items-center gap-1 shadow-xs"
+              className="hidden sm:inline-flex px-3 py-1 rounded-lg bg-pink-600 hover:bg-pink-700 text-white text-xs font-semibold transition-colors items-center gap-1 shadow-xs absolute right-0 top-0"
             >
               <span>Test Link ↗</span>
             </a>

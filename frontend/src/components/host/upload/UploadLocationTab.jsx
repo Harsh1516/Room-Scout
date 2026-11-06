@@ -35,33 +35,19 @@ export function UploadLocationTab({
       transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
       className="max-w-5xl w-full mx-auto space-y-5 sm:space-y-6"
     >
-      {/* ── CARD 1: Google Maps Fast Import Pill / Card ── */}
+      {/* ── CARD 1: Google Maps Fast Import Unified Capsule ── */}
       {setGoogleMapsUrl && (
-        <section className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-4 sm:p-5 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 mb-3 border-b border-slate-100 dark:border-zinc-800/80">
-            <div className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-md bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                <Compass className="w-3.5 h-3.5" />
-              </span>
-              <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                Quick Import with Google Maps
-              </span>
-            </div>
-            <span className="text-[11px] text-slate-500 dark:text-zinc-400">
-              Paste your stay link to auto-fill coordinates and address
-            </span>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
+        <section className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-full border border-slate-200/90 dark:border-zinc-800 p-2 sm:p-2.5 shadow-lg shadow-black/5 dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5">
             {/* Open Google Maps Button - Blue Color & Touch Friendly */}
             <a
               href="https://www.google.com/maps"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 h-12 sm:h-13 px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs sm:text-sm font-bold shadow-xs active:scale-98 transition-all shrink-0 cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 h-11 sm:h-12 px-4 rounded-xl sm:rounded-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs sm:text-sm font-bold shadow-xs active:scale-95 transition-all shrink-0 cursor-pointer"
             >
               <ExternalLink className="w-4 h-4 text-white" />
-              <span>Open Google Maps</span>
+              <span>Google Maps</span>
             </a>
 
             {/* URL Input - Large, Touch-Friendly */}
@@ -76,14 +62,14 @@ export function UploadLocationTab({
                     handleImportGoogleMaps?.();
                   }
                 }}
-                placeholder="Paste link (e.g. https://maps.app.goo.gl/...)"
-                className="w-full h-12 sm:h-13 px-4 rounded-xl bg-slate-50/70 dark:bg-zinc-800/40 border border-slate-200 dark:border-zinc-700/80 text-xs sm:text-sm md:text-base text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-[#006C4A] focus:ring-2 focus:ring-[#006C4A]/15 transition-all"
+                placeholder="Paste Google Maps link (e.g. https://maps.app.goo.gl/...)"
+                className="w-full h-11 sm:h-12 px-4 rounded-xl sm:rounded-full bg-slate-50/80 dark:bg-zinc-800/50 border border-slate-200/90 dark:border-zinc-700/80 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-[#006C4A] focus:ring-2 focus:ring-[#006C4A]/15 transition-all"
               />
               {googleMapsUrl && (
                 <button
                   type="button"
                   onClick={() => setGoogleMapsUrl('')}
-                  className="absolute right-3 w-6 h-6 rounded-full bg-slate-200 dark:bg-zinc-700 text-slate-600 dark:text-zinc-300 text-xs flex items-center justify-center hover:bg-slate-300 dark:hover:bg-zinc-600 cursor-pointer"
+                  className="absolute right-3 w-5 h-5 rounded-full bg-slate-200 dark:bg-zinc-700 text-slate-600 dark:text-zinc-300 text-xs flex items-center justify-center hover:bg-slate-300 dark:hover:bg-zinc-600 cursor-pointer"
                   title="Clear"
                 >
                   ✕
@@ -91,12 +77,12 @@ export function UploadLocationTab({
               )}
             </div>
 
-            {/* Import Button - Large, Touch-Friendly */}
+            {/* Import Button - Touch-Friendly */}
             <button
               type="button"
               onClick={handleImportGoogleMaps}
               disabled={isImportingGMap || !googleMapsUrl?.trim()}
-              className="h-12 sm:h-13 px-5 sm:px-6 py-3 rounded-xl bg-[#006C4A] hover:bg-[#005a3e] active:bg-[#004d35] text-white text-xs sm:text-sm md:text-base font-bold shadow-xs active:scale-98 transition-all shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="h-11 sm:h-12 px-5 sm:px-6 rounded-xl sm:rounded-full bg-[#006C4A] hover:bg-[#005a3e] active:bg-[#004d35] text-white text-xs sm:text-sm font-bold shadow-xs active:scale-95 transition-all shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isImportingGMap ? (
                 <>
@@ -105,8 +91,8 @@ export function UploadLocationTab({
                 </>
               ) : (
                 <>
-                  <Download className="w-4.5 h-4.5" />
-                  <span>Import Details</span>
+                  <Download className="w-4 h-4" />
+                  <span>Import Location</span>
                 </>
               )}
             </button>
@@ -117,26 +103,11 @@ export function UploadLocationTab({
       {/* ── CARD 2: Two-Column Map & Address Layout ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-stretch">
         {/* LEFT: Satellite / Interactive Map (7 cols on lg) */}
-        <section className="lg:col-span-7 bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 overflow-hidden shadow-xs flex flex-col min-h-[340px] sm:min-h-[400px]">
-          <div className="px-4 py-3 border-b border-slate-100 dark:border-zinc-800/80 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                <Navigation className="w-3.5 h-3.5" />
-              </span>
-              <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                Pin Location on Map
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              {formData.latitude && formData.longitude && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-[10px] sm:text-[11px] font-mono text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700">
-                  {formData.latitude}, {formData.longitude}
-                </span>
-              )}
-              <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-200/70 dark:border-emerald-800/60">
-                Interactive Leaflet
-              </span>
-            </div>
+        <section className="lg:col-span-7 bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 overflow-hidden shadow-lg shadow-black/5 dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)] flex flex-col min-h-[340px] sm:min-h-[400px]">
+          <div className="px-4 py-3 sm:py-3.5 border-b border-slate-100 dark:border-zinc-800/80 text-center">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+              Pin Location on Map
+            </h3>
           </div>
 
           <div className="w-full flex-1 relative min-h-[300px] sm:min-h-[360px]">
@@ -154,20 +125,15 @@ export function UploadLocationTab({
         </section>
 
         {/* RIGHT: Address Input Form (5 cols on lg) */}
-        <section className="lg:col-span-5 bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4">
+        <section className="lg:col-span-5 bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-5 sm:p-6 shadow-lg shadow-black/5 dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)] flex flex-col justify-between space-y-4">
           <div>
-            <div className="flex items-center gap-2 pb-3 mb-4 border-b border-slate-100 dark:border-zinc-800/80">
-              <span className="w-6 h-6 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                <MapPin className="w-3.5 h-3.5" />
-              </span>
-              <div>
-                <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                  Address Details
-                </h3>
-                <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-                  Verify or edit the street address
-                </p>
-              </div>
+            <div className="pb-3 mb-4 border-b border-slate-100 dark:border-zinc-800/80 text-center">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+                Address Details
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+                Verify or edit the street address
+              </p>
             </div>
 
             <div className="space-y-3.5">

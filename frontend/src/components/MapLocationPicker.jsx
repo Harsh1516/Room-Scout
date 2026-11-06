@@ -224,8 +224,8 @@ export function MapLocationPicker({
           <span>Click map or drag pin to pinpoint</span>
         </div>
 
-        {/* Top Right Satellite & Street Switcher */}
-        <div className="absolute top-2 right-2 z-[400] bg-slate-950/85 backdrop-blur-md p-0.5 rounded-lg shadow-md border border-slate-800 flex items-center gap-0.5">
+        {/* Top Right Satellite & Street Switcher (Balanced Touch Size) */}
+        <div className="absolute top-2.5 right-2.5 z-[400] bg-slate-950/90 backdrop-blur-md p-1 rounded-xl shadow-lg border border-slate-800/80 flex items-center gap-1">
           {Object.entries(MAP_MODES).map(([key, item]) => (
             <button
               key={key}
@@ -235,14 +235,14 @@ export function MapLocationPicker({
                 e.stopPropagation();
                 setMapMode(key);
               }}
-              className={`px-2 py-0.5 rounded-md text-[11px] font-normal transition-all cursor-pointer flex items-center gap-1 ${
+              className={`h-9 sm:h-10 px-3 sm:px-3.5 rounded-lg text-xs sm:text-sm font-semibold transition-all cursor-pointer flex items-center gap-1.5 select-none active:scale-95 ${
                 mapMode === key
-                  ? 'bg-emerald-600 text-white shadow-xs font-medium'
+                  ? 'bg-emerald-600 text-white shadow-xs font-bold'
                   : 'text-slate-300 hover:text-white hover:bg-white/10'
               }`}
             >
               {item.icon}
-              <span className="hidden sm:inline">{item.label}</span>
+              <span>{key === 'satellite' ? 'Satellite' : 'Street'}</span>
             </button>
           ))}
         </div>
