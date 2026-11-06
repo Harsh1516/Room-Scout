@@ -150,6 +150,8 @@ const saveDraftToStorage = (formData, activeStep, googleMapsUrl, user) => {
       (formData.images && formData.images.length > 0) ||
       (formData.rooms && formData.rooms.length > 0) ||
       (formData.roomRates && formData.roomRates.length > 0) ||
+      (formData.facilities && formData.facilities.length > 0) ||
+      (formData.amenities && formData.amenities.length > 0) ||
       (formData.rules && formData.rules.length > 0) ||
       googleMapsUrl ||
       activeStep > 1
@@ -385,39 +387,6 @@ export function HostUploadPage() {
         if (!merged.email && user?.email) merged.email = user.email;
         if (!merged.phone && user?.phone) merged.phone = user.phone;
 
-        // Ensure no legacy or auto-attached facilities or rules exist in the draft
-        const autoAttachedAmenities = [
-          'refrigerator', 'balcony / terrace', 'two-wheeler parking', 'gym / fitness',
-          'attached bathroom', 'high-speed wi-fi', 'wifi', 'power backup',
-          'air conditioning', 'hot water / geyser', 'geyser / hot water',
-          'free parking', 'lift access', 'cctv security', 'cctv 24x7 security',
-          'home-cooked meals', 'washing machine', 'study table & chair',
-          'daily housekeeping', 'ro drinking water', 'attached washroom',
-        ];
-        const autoAttachedRules = [
-          'xyz', 'no smoking inside premises', 'visitor registration mandatory at security desk',
-          'gate closes at 11:00 pm', 'gate closes at 10:30 pm', 'no alcohol / substances permitted',
-          'switch off lights & ac when leaving the room', 'quiet hours after 10:00 pm',
-          'quiet hours: 10:00 pm - 7:00 am', 'guests not allowed overnight without prior approval',
-          'clean room and washroom regularly', 'valid government id required at check-in',
-          'valid govt id required at check-in', 'keep shared spaces clean',
-        ];
-        if (Array.isArray(merged.facilities)) {
-          merged.facilities = merged.facilities.filter(
-            (f) => !autoAttachedAmenities.includes(String(f).toLowerCase().trim())
-          );
-        }
-        if (Array.isArray(merged.amenities)) {
-          merged.amenities = merged.amenities.filter(
-            (f) => !autoAttachedAmenities.includes(String(f).toLowerCase().trim())
-          );
-        }
-        if (Array.isArray(merged.rules)) {
-          merged.rules = merged.rules.filter(
-            (r) => !autoAttachedRules.includes(String(r).toLowerCase().trim())
-          );
-        }
-
         if (Array.isArray(merged.rooms) || Array.isArray(merged.roomRates)) {
           const { rates: hydratedRates, rooms: hydratedRooms } = reconcileRoomsWithRates(
             merged.rooms,
@@ -444,54 +413,6 @@ export function HostUploadPage() {
   });
 
   const hasLoadedExistingRef = useRef(false);
-
-  // Clear any auto-attached facilities or rules on mount so user starts with a clean slate
-  useEffect(() => {
-    setFormData((prev) => {
-      const autoAttachedAmenities = [
-        'refrigerator', 'balcony / terrace', 'two-wheeler parking', 'gym / fitness',
-        'attached bathroom', 'high-speed wi-fi', 'wifi', 'power backup',
-        'air conditioning', 'hot water / geyser', 'geyser / hot water',
-        'free parking', 'lift access', 'cctv security', 'cctv 24x7 security',
-        'home-cooked meals', 'washing machine', 'study table & chair',
-        'daily housekeeping', 'ro drinking water', 'attached washroom',
-      ];
-      const autoAttachedRules = [
-        'xyz', 'no smoking inside premises', 'visitor registration mandatory at security desk',
-        'gate closes at 11:00 pm', 'gate closes at 10:30 pm', 'no alcohol / substances permitted',
-        'switch off lights & ac when leaving the room', 'quiet hours after 10:00 pm',
-        'quiet hours: 10:00 pm - 7:00 am', 'guests not allowed overnight without prior approval',
-        'clean room and washroom regularly', 'valid government id required at check-in',
-        'valid govt id required at check-in', 'keep shared spaces clean',
-      ];
-
-      const currentFac = prev.facilities || prev.amenities || [];
-      const currentRules = prev.rules || [];
-
-      const hasAutoFac = currentFac.some((f) =>
-        autoAttachedAmenities.includes(String(f).toLowerCase().trim())
-      );
-      const hasAutoRules = currentRules.some((r) =>
-        autoAttachedRules.includes(String(r).toLowerCase().trim())
-      );
-
-      if (hasAutoFac || hasAutoRules) {
-        const cleanFac = currentFac.filter(
-          (f) => !autoAttachedAmenities.includes(String(f).toLowerCase().trim())
-        );
-        const cleanRules = currentRules.filter(
-          (r) => !autoAttachedRules.includes(String(r).toLowerCase().trim())
-        );
-        return {
-          ...prev,
-          facilities: cleanFac,
-          amenities: cleanFac,
-          rules: cleanRules,
-        };
-      }
-      return prev;
-    });
-  }, []);
 
   // Synchronously auto-save draft whenever user enters any details or advances steps
   useEffect(() => {
