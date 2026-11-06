@@ -1538,7 +1538,7 @@ export function HostUploadPage() {
 
       {/* ── Top Header Navigation Bar (Airbnb-style host listing header) ── */}
       <header className="sticky top-0 z-40 w-full bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-b border-slate-200/90 dark:border-zinc-800/90 h-16 sm:h-20 px-3 sm:px-6 lg:px-8 flex items-center justify-between select-none">
-        {/* Left Action: Return to Dashboard + Brand Identity */}
+        {/* Left Action: Return to Dashboard */}
         <div className="flex items-center gap-2 sm:gap-3">
           <button
             type="button"
@@ -1546,39 +1546,44 @@ export function HostUploadPage() {
               saveDraftToStorage(formData, activeStep, googleMapsUrl, user);
               navigate('/host/dashboard');
             }}
-            className="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full border border-slate-200 dark:border-zinc-700/80 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 font-semibold text-xs sm:text-sm cursor-pointer active:scale-95 transition-all"
+            className="flex items-center justify-center gap-2 h-10 sm:h-11 px-3.5 sm:px-4 rounded-full border border-slate-200 dark:border-zinc-700/80 bg-slate-50/70 dark:bg-zinc-900/70 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 font-semibold text-xs sm:text-sm cursor-pointer active:scale-95 transition-all shadow-2xs shrink-0"
             title="Save draft and return to dashboard"
           >
-            <ArrowLeft className="w-4 h-4 text-slate-600 dark:text-zinc-300" />
+            <ArrowLeft className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-slate-600 dark:text-zinc-300" />
             <span className="hidden sm:inline">Exit to Dashboard</span>
-            <span className="sm:hidden">Exit</span>
+            <span className="sm:hidden font-medium">Exit</span>
           </button>
+        </div>
 
-          {/* Mobile Step Selector Pill Button */}
+        {/* Center: Desktop Stepper Tabs (md+) & Mobile Center Step Count Indicator */}
+        <div className="flex items-center justify-center min-w-0">
+          {/* Desktop Stepper Navigation Tabs (Centered) */}
+          <div className="hidden md:flex items-center">
+            <HostUploadTabs
+              steps={WIZARD_STEPS}
+              activeStep={activeStep}
+              onSelectStep={handleSelectStep}
+              isStepCompleted={(stepId) => validateStep(stepId, false)}
+            />
+          </div>
+
+          {/* Mobile Center Step Count Button (Shifted from body top to navbar center) */}
           <button
             type="button"
             onClick={() => setMobileNavOpen(true)}
-            className="md:hidden flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300/60 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 font-bold text-xs cursor-pointer active:scale-95 transition-all"
+            className="md:hidden flex items-center gap-1.5 h-10 px-3.5 rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-300/70 dark:border-emerald-800/70 text-[#006C4A] dark:text-emerald-400 font-bold text-xs uppercase tracking-wider cursor-pointer active:scale-95 transition-all shadow-2xs"
             aria-label="Toggle vertical steps navigation menu"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Step {activeStep} of 5</span>
-            <ChevronRight className="w-3.5 h-3.5 rotate-90" />
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className="truncate max-w-[150px] xs:max-w-[200px]">
+              Step {activeStep} of {WIZARD_STEPS.length} · {currentStepConfig.shortTitle}
+            </span>
+            <ChevronRight className="w-3.5 h-3.5 rotate-90 shrink-0 text-emerald-600 dark:text-emerald-400" />
           </button>
         </div>
 
-        {/* Desktop Stepper Navigation Tabs (Centered) */}
-        <div className="hidden md:flex items-center">
-          <HostUploadTabs
-            steps={WIZARD_STEPS}
-            activeStep={activeStep}
-            onSelectStep={handleSelectStep}
-            isStepCompleted={(stepId) => validateStep(stepId, false)}
-          />
-        </div>
-
-        {/* Right Action: Save & Exit + Theme Toggle + User Avatar */}
-        <div className="flex items-center gap-2 sm:gap-2.5">
+        {/* Right Action: Theme Toggle + User Avatar */}
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
           <ThemeTogglePill />
           <div className="relative flex items-center justify-center">
             <Login />
@@ -1711,14 +1716,8 @@ export function HostUploadPage() {
       </AnimatePresence>
 
       {/* ── Fixed Step Editorial Header (Airbnb-style bold & calm typography) ── */}
-      <section className="w-full shrink-0 px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-3 sm:pb-4 select-none">
+      <section className="w-full shrink-0 px-4 sm:px-6 lg:px-8 pt-5 sm:pt-8 pb-3 sm:pb-4 select-none">
         <div className="max-w-4xl mx-auto text-center space-y-1.5">
-          {/* Step Pill */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/80 text-[#006C4A] dark:text-emerald-400 text-xs font-bold uppercase tracking-wider shadow-2xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Step {activeStep} of {WIZARD_STEPS.length} · {currentStepConfig.shortTitle}</span>
-          </div>
-
           {/* Main Step Headline */}
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             {currentStepConfig.sub || currentStepConfig.title}

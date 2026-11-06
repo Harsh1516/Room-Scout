@@ -17,7 +17,7 @@ export function ThemeTogglePill({ className = '' }) {
       onClick={() => toggleTheme()}
       aria-label={isDark ? 'Switch to Light mode' : 'Switch to Dark mode'}
       title={isDark ? 'Switch to Light mode' : 'Switch to Dark mode'}
-      className={`apple-liquid-nav relative w-8 h-8 sm:w-9 sm:h-9 rounded-full text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/15 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0 ${className}`}
+      className={`apple-liquid-nav relative w-9.5 h-9.5 sm:w-10 sm:h-10 rounded-full text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/15 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0 ${className}`}
     >
       {/* Dynamic Ambient Aura Behind Icon */}
       <div

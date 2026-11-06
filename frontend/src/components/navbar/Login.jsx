@@ -103,7 +103,7 @@ export function Login({ onLoginClick }) {
       <button
         type="button"
         onClick={handleLoginClick}
-        className="apple-liquid-nav border border-slate-200/80 dark:border-white/15 text-slate-900 dark:text-white font-semibold text-xs tracking-wider px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-xs transition-none cursor-pointer flex items-center gap-2 select-none active:scale-95 focus:outline-none focus:ring-0"
+        className="apple-liquid-nav border border-slate-200/80 dark:border-white/15 text-slate-900 dark:text-white font-semibold text-xs tracking-wider h-9.5 sm:h-10 px-3.5 sm:px-4 rounded-full shadow-xs transition-none cursor-pointer flex items-center gap-2 select-none active:scale-95 focus:outline-none focus:ring-0"
       >
         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
         <span>LOGIN</span>
@@ -121,7 +121,7 @@ export function Login({ onLoginClick }) {
         <button
           type="button"
           onClick={() => setDropdownOpen((prev) => !prev)}
-          className={`relative w-8 h-8 sm:w-9 sm:h-9 rounded-full text-white font-bold text-[11px] sm:text-xs shadow-xs border border-slate-200/80 dark:border-white/20 transition-none flex items-center justify-center cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 touch-manipulation bg-linear-to-tr from-indigo-600/90 via-blue-600/90 to-cyan-500/90`}
+          className={`relative w-9.5 h-9.5 sm:w-10 sm:h-10 rounded-full text-white font-bold text-xs sm:text-sm shadow-xs border border-slate-200/80 dark:border-white/20 transition-none flex items-center justify-center cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 touch-manipulation bg-linear-to-tr from-indigo-600/90 via-blue-600/90 to-cyan-500/90`}
           title={`Logged in as ${user.name}`}
           aria-label="User profile menu"
         >
