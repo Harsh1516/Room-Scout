@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Camera, ImagePlus, Video, X, Star, UploadCloud, Info, CheckCircle2 } from 'lucide-react';
+import { X, Star, UploadCloud, CheckCircle2 } from 'lucide-react';
 
 const getSafeImgSrc = (src) => {
   if (!src) return '';
@@ -197,8 +197,8 @@ export function UploadPhotosTab({
             </div>
           </div>
 
-          {/* Photo Grid: Spotlight Cover + Secondary Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          {/* Photo Grid: Mobile 1 top full width + 2 bottom small + 2 bottom small */}
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3.5 md:gap-4">
             {(formData.images || []).map((imgUrl, i) => {
               const isCover = i === 0;
               const isBeingDragged = draggedPhotoIndex === i;
@@ -213,12 +213,12 @@ export function UploadPhotosTab({
                   onDragOver={(e) => onPhotoDragOver?.(e, i)}
                   onDragLeave={(e) => onPhotoDragLeave?.(e, i)}
                   onDrop={(e) => onPhotoDrop?.(e, i)}
-                  className={`relative rounded-2xl overflow-hidden aspect-[16/10] sm:aspect-[16/10] w-full group/card bg-slate-900 shadow-xs cursor-grab active:cursor-grabbing transition-all select-none border-2 ${
+                  className={`relative rounded-xl sm:rounded-2xl overflow-hidden w-full group/card bg-slate-900 shadow-xs cursor-grab active:cursor-grabbing transition-all select-none border-2 ${
                     isCover
-                      ? 'border-[#006C4A] dark:border-emerald-500 ring-2 ring-[#006C4A]/20 sm:col-span-2 lg:col-span-2 aspect-[16/9]'
-                      : isDragTarget
-                      ? 'border-emerald-400 scale-[1.02] shadow-lg ring-2 ring-emerald-400/40'
-                      : 'border-slate-200 dark:border-zinc-800 hover:border-slate-400 dark:hover:border-zinc-600'
+                      ? 'col-span-2 aspect-[16/9] border-[#006C4A] dark:border-emerald-500 ring-2 ring-[#006C4A]/20 lg:col-span-2'
+                      : 'col-span-1 max-md:aspect-square md:aspect-[16/10] border-slate-200 dark:border-zinc-800 hover:border-slate-400 dark:hover:border-zinc-600'
+                  } ${
+                    isDragTarget ? 'border-emerald-400 scale-[1.02] shadow-lg ring-2 ring-emerald-400/40' : ''
                   } ${isBeingDragged ? 'opacity-40 scale-95' : 'opacity-100'}`}
                 >
                   <img
@@ -233,20 +233,20 @@ export function UploadPhotosTab({
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/50 pointer-events-none" />
 
                   {/* Top Action Bar */}
-                  <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10 pointer-events-none">
+                  <div className="absolute top-2 left-2 right-2 sm:top-3 sm:left-3 sm:right-3 flex items-center justify-between z-10 pointer-events-none">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       {isCover ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#006C4A] text-white text-xs font-bold tracking-wide shadow-sm">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-[#006C4A] text-white text-[10px] sm:text-xs font-bold tracking-wide shadow-sm">
                           <Star className="w-3 h-3 fill-current text-amber-300" />
                           <span>Cover Photo</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/60 text-white text-xs font-medium backdrop-blur-md border border-white/20">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-black/60 text-white text-[10px] sm:text-xs font-medium backdrop-blur-md border border-white/20">
                           <span>Photo {i + 1}</span>
                         </span>
                       )}
 
-                      {size > 0 && (
+                      {size > 0 && isCover && (
                         <span className="hidden min-[400px]:inline-flex items-center px-2 py-0.5 rounded-full bg-black/60 text-emerald-300 text-[10px] font-mono font-medium backdrop-blur-md border border-emerald-400/30">
                           {formatMemorySize(size)}
                         </span>
@@ -257,29 +257,29 @@ export function UploadPhotosTab({
                     <button
                       type="button"
                       onClick={(e) => onRemovePhoto(imgUrl, e)}
-                      className="pointer-events-auto w-7 h-7 rounded-full bg-black/60 hover:bg-rose-600 text-white backdrop-blur-md border border-white/25 hover:border-rose-400 flex items-center justify-center transition-all shadow-sm cursor-pointer active:scale-90"
+                      className="pointer-events-auto w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-black/60 hover:bg-rose-600 text-white backdrop-blur-md border border-white/25 hover:border-rose-400 flex items-center justify-center transition-all shadow-sm cursor-pointer active:scale-90"
                       title="Remove photo"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <X className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     </button>
                   </div>
 
                   {/* Bottom Action Bar */}
-                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between z-10 pointer-events-none">
+                  <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3 flex items-center justify-between z-10 pointer-events-none">
                     {!isCover ? (
                       <button
                         type="button"
                         onClick={(e) => onSetCoverPhoto(imgUrl, e)}
-                        className="pointer-events-auto px-3 py-1 rounded-full bg-black/60 hover:bg-[#006C4A] text-white text-xs font-semibold backdrop-blur-md border border-white/20 flex items-center gap-1.5 transition-all shadow-sm cursor-pointer active:scale-95"
+                        className="pointer-events-auto px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-black/60 hover:bg-[#006C4A] text-white text-[10px] sm:text-xs font-semibold backdrop-blur-md border border-white/20 flex items-center gap-1 transition-all shadow-sm cursor-pointer active:scale-95"
                         title="Set as main cover photo"
                       >
-                        <Star className="w-3 h-3 text-amber-300" />
+                        <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-300" />
                         <span>Make Cover</span>
                       </button>
                     ) : (
-                      <span className="text-xs font-semibold text-emerald-300 flex items-center gap-1 drop-shadow-sm">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Shown first to guests</span>
+                      <span className="text-[10px] sm:text-xs font-semibold text-emerald-300 flex items-center gap-1 drop-shadow-sm">
+                        <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                        <span>Shown first</span>
                       </span>
                     )}
 
@@ -296,43 +296,34 @@ export function UploadPhotosTab({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className={`rounded-2xl border-2 border-dashed aspect-[16/10] w-full flex flex-col items-center justify-center p-5 text-center cursor-pointer transition-all duration-200 group
+                className={`rounded-xl sm:rounded-2xl border-2 border-dashed w-full flex flex-col items-center justify-center p-3 sm:p-5 text-center cursor-pointer transition-all duration-200 group
                   max-md:bg-white/10 max-md:border-purple-300/30 max-md:hover:bg-white/15
                   md:bg-slate-50/50 md:dark:bg-zinc-800/30 md:border-slate-300 md:dark:border-zinc-700/80 md:hover:bg-emerald-50/30 md:dark:hover:bg-emerald-950/20 md:hover:border-[#006C4A] md:dark:hover:border-emerald-500 ${
-                  formData.images?.length === 0 ? 'sm:col-span-2 lg:col-span-3 aspect-[16/8]' : ''
+                  formData.images?.length === 0
+                    ? 'col-span-2 aspect-[16/9] md:sm:col-span-2 md:lg:col-span-3 md:aspect-[16/8]'
+                    : 'col-span-1 max-md:aspect-square md:aspect-[16/10]'
                 }`}
               >
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all mb-2 shadow-2xs group-hover:scale-110
+                <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all mb-1 sm:mb-2 shadow-2xs group-hover:scale-110
                   max-md:bg-white/15 max-md:text-purple-200
                   md:bg-slate-100 md:dark:bg-zinc-800 md:group-hover:bg-[#006C4A] md:text-slate-500 md:dark:text-zinc-400 md:group-hover:text-white"
                 >
-                  <UploadCloud className="w-6 h-6" />
+                  <UploadCloud className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
-                <span className="text-sm font-bold transition-colors
+                <span className="text-xs sm:text-sm font-bold transition-colors leading-tight
                   max-md:text-white
                   md:text-slate-800 md:dark:text-zinc-200 md:group-hover:text-[#006C4A] md:dark:group-hover:text-emerald-400"
                 >
-                  {formData.images?.length === 0 ? 'Upload Photos from Device' : 'Add Another Photo'}
+                  {formData.images?.length === 0 ? 'Upload Photos from Device' : 'Add Photo'}
                 </span>
-                <span className="text-xs mt-0.5
+                <span className="text-[10px] sm:text-xs mt-0.5 line-clamp-1
                   max-md:text-purple-200/70
                   md:text-slate-400 md:dark:text-zinc-500"
                 >
-                  PNG, JPG or WebP • 16:9 widescreen recommended
+                  PNG, JPG or WebP
                 </span>
               </button>
             )}
-          </div>
-
-          {/* Helpful Tips Banner */}
-          <div className="p-3.5 rounded-xl border flex items-start gap-2.5 transition-colors
-            max-md:bg-white/10 max-md:border-purple-300/20
-            md:bg-slate-50 md:dark:bg-zinc-800/40 md:border-slate-200/80 md:dark:border-zinc-800"
-          >
-            <Info className="w-4 h-4 text-emerald-400 md:text-emerald-600 md:dark:text-emerald-400 shrink-0 mt-0.5" />
-            <p className="text-xs leading-relaxed max-md:text-purple-100 md:text-slate-600 md:dark:text-zinc-400">
-              <strong className="max-md:text-white md:text-slate-800 md:dark:text-zinc-200">Airbnb Host Tip:</strong> Properties with at least 5 bright, clear photos showing the bedroom, study area, and washroom receive up to 3x more guest booking requests.
-            </p>
           </div>
         </section>
       </div>
