@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { Navigation, Plus, Minus, Layers, MapPin } from 'lucide-react';
 import { fetchAddressFromCoords } from '../utils/geoUtils';
 
 // Fix Leaflet's default icon path issues in bundlers (Client-only / SSR Safe)
@@ -13,28 +14,33 @@ if (typeof window !== 'undefined' && L?.Icon?.Default) {
   });
 }
 
-// Custom Precision SVG Pin Icon with exact pixel-anchored needle tip
+// Modern Precision Pin with dynamic anchor & shadow
 const createCustomPin = () => {
   return L.divIcon({
     className: 'custom-map-pin',
-    html: `<div style="width:30px;height:40px;display:flex;align-items:center;justify-content:center;cursor:grab;">
-      <svg width="30" height="40" viewBox="0 0 30 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));">
-        <path d="M15 0C6.71573 0 0 6.71573 0 15C0 26.25 15 40 15 40C15 40 30 26.25 30 15C30 6.71573 23.2843 0 15 0Z" fill="url(#pinGrd)" stroke="#ffffff" stroke-width="2"/>
-        <circle cx="15" cy="15" r="5" fill="#ffffff"/>
-        <defs>
-          <linearGradient id="pinGrd" x1="0" y1="0" x2="30" y2="40" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#059669"/>
-            <stop offset="1" stop-color="#10b981"/>
-          </linearGradient>
-        </defs>
-      </svg>
-    </div>`,
-    iconSize: [30, 40],
-    iconAnchor: [15, 40],
-    popupAnchor: [0, -40],
+    html: `
+      <div style="position:relative;width:40px;height:48px;display:flex;align-items:center;justify-content:center;cursor:grab;">
+        <span style="position:absolute;bottom:0px;width:14px;height:7px;background:rgba(0,0,0,0.35);border-radius:50%;filter:blur(2px);"></span>
+        <svg width="36" height="46" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 6px 12px rgba(0,0,0,0.45));">
+          <path d="M18 0C8.05887 0 0 8.05887 0 18C0 31.5 18 46 18 46C18 46 36 31.5 36 18C36 8.05887 27.9411 0 18 0Z" fill="url(#pinGrd)" stroke="#ffffff" stroke-width="2.5"/>
+          <circle cx="18" cy="18" r="7" fill="#ffffff"/>
+          <circle cx="18" cy="18" r="4" fill="#006C4A"/>
+          <defs>
+            <linearGradient id="pinGrd" x1="0" y1="0" x2="36" y2="46" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#006C4A"/>
+              <stop offset="1" stop-color="#10b981"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+    `,
+    iconSize: [40, 48],
+    iconAnchor: [20, 46],
+    popupAnchor: [0, -44],
   });
 };
 
+// Modern High-Resolution Maps with Crisp Hybrid Satellite & Clean Street Vector Cartography
 const MAP_MODES = {
   satellite: {
     label: 'Satellite View',
@@ -45,9 +51,10 @@ const MAP_MODES = {
         <path d="M11.5 3a17 17 0 0 0 0 18M12.5 3a17 17 0 0 1 0 18" />
       </svg>
     ),
-    base: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    overlay: 'https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-    attribution: 'Tiles &copy; Esri &mdash; Satellite Imagery',
+    base: 'https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+    subdomains: ['0', '1', '2', '3'],
+    maxZoom: 21,
+    attribution: 'Google Maps',
   },
   street: {
     label: 'Street Map',
@@ -58,9 +65,10 @@ const MAP_MODES = {
         <line x1="16" y1="6" x2="16" y2="22" />
       </svg>
     ),
-    base: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    overlay: null,
-    attribution: '&copy; OpenStreetMap contributors',
+    base: 'https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
+    subdomains: ['0', '1', '2', '3'],
+    maxZoom: 21,
+    attribution: 'Google Maps',
   },
 };
 
@@ -112,17 +120,11 @@ export function MapLocationPicker({
     const config = MAP_MODES[mode] || MAP_MODES.satellite;
 
     const baseLayer = L.tileLayer(config.base, {
-      maxZoom: 19,
-      attribution: config.attribution,
+      subdomains: config.subdomains || ['0', '1', '2', '3'],
+      maxZoom: config.maxZoom || 21,
+      maxNativeZoom: 20,
     }).addTo(map);
     baseLayerRef.current = baseLayer;
-
-    if (config.overlay) {
-      const overlayLayer = L.tileLayer(config.overlay, {
-        maxZoom: 19,
-      }).addTo(map);
-      overlayLayerRef.current = overlayLayer;
-    }
   };
 
   // Initialize Leaflet Map
@@ -136,13 +138,14 @@ export function MapLocationPicker({
 
       const map = L.map(mapContainerRef.current, {
         center: [initialLat, initialLng],
-        zoom: 16,
+        zoom: 17,
+        maxZoom: 21,
+        minZoom: 4,
         zoomControl: false,
+        attributionControl: false,
       });
 
-      L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-      // Apply initial satellite tile layer
+      // Apply initial modern satellite tile layer
       applyTileLayer(mapMode, map);
 
       // Add Draggable Marker
@@ -151,7 +154,16 @@ export function MapLocationPicker({
         draggable: true,
       }).addTo(map);
 
-      marker.bindPopup('<b>Property Spot</b><br><span style="font-size:11px;color:#666">Drag pin to exact roof or building.</span>');
+      marker.bindPopup(`
+        <div style="font-family:system-ui,-apple-system,sans-serif;min-width:140px;padding:2px 0;">
+          <div style="font-weight:800;font-size:13px;color:#0f172a;display:flex;align-items:center;gap:4px;">
+            📍 Exact Spot
+          </div>
+          <div style="font-size:11px;color:#64748b;margin-top:2px;">
+            Drag pin to exact roof or entrance.
+          </div>
+        </div>
+      `);
 
       marker.on('dragend', (e) => {
         const { lat, lng } = e.target.getLatLng();
@@ -212,20 +224,30 @@ export function MapLocationPicker({
     }
   }, [latitude, longitude]);
 
+  // Handler to center view on pin
+  const handleRecenter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (markerRef.current && mapInstanceRef.current) {
+      const pos = markerRef.current.getLatLng();
+      mapInstanceRef.current.flyTo(pos, 17, { duration: 0.6 });
+    }
+  };
+
   return (
     <div className="w-full h-full">
-      {/* Interactive Map Container with Floating Satellite & Street Switcher */}
-      <div className="relative w-full h-full overflow-hidden z-0">
+      {/* Modern Interactive Map Container */}
+      <div className="relative w-full h-full overflow-hidden z-0 select-none">
         <div ref={mapContainerRef} className="w-full h-full" />
 
-        {/* Top Left Instructions Badge */}
-        <div className="absolute top-2 left-2 z-[400] bg-slate-950/85 backdrop-blur-md text-white px-2.5 py-1 rounded-lg text-[10px] font-normal shadow-md border border-slate-800 flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Click map or drag pin to pinpoint</span>
+        {/* Top Left Instructions Badge - Modern Glassmorphism */}
+        <div className="absolute top-2.5 left-2.5 z-[400] bg-slate-950/80 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[11px] font-semibold shadow-lg border border-white/15 flex items-center gap-2 pointer-events-none">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span>Click map or drag pin</span>
         </div>
 
-        {/* Top Right Satellite & Street Switcher (Balanced Touch Size) */}
-        <div className="absolute top-2.5 right-2.5 z-[400] bg-slate-950/90 backdrop-blur-md p-1 rounded-xl shadow-lg border border-slate-800/80 flex items-center gap-1">
+        {/* Top Right Satellite & Street Switcher (Sleek Glass Segmented Control) */}
+        <div className="absolute top-2.5 right-2.5 z-[400] bg-slate-950/85 backdrop-blur-md p-1 rounded-full shadow-xl border border-white/15 flex items-center gap-1">
           {Object.entries(MAP_MODES).map(([key, item]) => (
             <button
               key={key}
@@ -235,9 +257,9 @@ export function MapLocationPicker({
                 e.stopPropagation();
                 setMapMode(key);
               }}
-              className={`h-9 sm:h-10 px-3 sm:px-3.5 rounded-lg text-xs sm:text-sm font-semibold transition-all cursor-pointer flex items-center gap-1.5 select-none active:scale-95 ${
+              className={`h-8 sm:h-9 px-3 sm:px-3.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 select-none active:scale-95 ${
                 mapMode === key
-                  ? 'bg-emerald-600 text-white shadow-xs font-bold'
+                  ? 'bg-[#006C4A] text-white shadow-md'
                   : 'text-slate-300 hover:text-white hover:bg-white/10'
               }`}
             >
@@ -245,6 +267,54 @@ export function MapLocationPicker({
               <span>{key === 'satellite' ? 'Satellite' : 'Street'}</span>
             </button>
           ))}
+        </div>
+
+        {/* Bottom Right Floating Modern Map Controls (Zoom + Recenter) */}
+        <div className="absolute bottom-3 right-3 z-[400] flex flex-col gap-1.5">
+          {/* Recenter Pin Button */}
+          <button
+            type="button"
+            onClick={handleRecenter}
+            title="Recenter on Pin"
+            aria-label="Recenter on Pin"
+            className="w-9 h-9 rounded-xl bg-slate-950/85 hover:bg-slate-900 active:scale-95 text-emerald-400 backdrop-blur-md border border-white/15 shadow-xl flex items-center justify-center transition-all cursor-pointer"
+          >
+            <Navigation className="w-4 h-4 fill-emerald-400/20" />
+          </button>
+
+          {/* Zoom In */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              mapInstanceRef.current?.zoomIn();
+            }}
+            title="Zoom In"
+            aria-label="Zoom in"
+            className="w-9 h-9 rounded-xl bg-slate-950/85 hover:bg-slate-900 active:scale-95 text-white backdrop-blur-md border border-white/15 shadow-xl flex items-center justify-center transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+
+          {/* Zoom Out */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              mapInstanceRef.current?.zoomOut();
+            }}
+            title="Zoom Out"
+            aria-label="Zoom out"
+            className="w-9 h-9 rounded-xl bg-slate-950/85 hover:bg-slate-900 active:scale-95 text-white backdrop-blur-md border border-white/15 shadow-xl flex items-center justify-center transition-all cursor-pointer"
+          >
+            <Minus className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Subtle Bottom Left Modern Badge */}
+        <div className="absolute bottom-2.5 left-2.5 z-[400] text-[10px] text-white/80 bg-slate-950/70 backdrop-blur-xs px-2.5 py-1 rounded-md border border-white/10 font-medium pointer-events-none shadow-sm flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          <span>Google Maps Engine</span>
         </div>
       </div>
     </div>
