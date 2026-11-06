@@ -1537,7 +1537,7 @@ export function HostUploadPage() {
     <div className="bg-[#f8f9fa] dark:bg-[#0b0c10] text-slate-800 dark:text-zinc-100 host-page-scope font-body-md antialiased min-h-screen flex flex-col justify-between relative selection:bg-[#006C4A] selection:text-white transition-colors duration-300">
 
       {/* ── Top Header Navigation Bar (Single seamless background with page body) ── */}
-      <header className="sticky top-0 z-40 w-full bg-[#f8f9fa] dark:bg-[#0b0c10] border-b-0 h-16 sm:h-20 px-3 sm:px-6 lg:px-8 flex items-center justify-between select-none">
+      <header className="sticky top-0 z-40 w-full bg-[#f8f9fa] dark:bg-[#0b0c10] border-b-0 h-18 sm:h-20 px-3 sm:px-6 lg:px-8 flex items-center justify-between select-none">
         {/* Left Action: Return to Dashboard */}
         <div className="flex items-center gap-2 sm:gap-3">
           <button
@@ -1546,12 +1546,12 @@ export function HostUploadPage() {
               saveDraftToStorage(formData, activeStep, googleMapsUrl, user);
               navigate('/host/dashboard');
             }}
-            className="flex items-center justify-center gap-2 h-10 sm:h-11 px-3.5 sm:px-4 rounded-full border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/80 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 font-semibold text-xs sm:text-sm cursor-pointer active:scale-95 transition-all shadow-xs shrink-0"
+            className="flex items-center justify-center gap-2 h-11 sm:h-12 px-4 sm:px-5 rounded-full border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/80 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-800 dark:text-zinc-100 font-bold text-sm sm:text-base cursor-pointer active:scale-95 transition-all shadow-xs shrink-0"
             title="Save draft and return to dashboard"
           >
-            <ArrowLeft className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-slate-600 dark:text-zinc-300" />
+            <ArrowLeft className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-slate-700 dark:text-zinc-200" />
             <span className="hidden sm:inline">Exit to Dashboard</span>
-            <span className="sm:hidden font-medium">Exit</span>
+            <span className="sm:hidden font-bold">Exit</span>
           </button>
         </div>
 
@@ -1574,14 +1574,14 @@ export function HostUploadPage() {
             className="md:hidden text-center cursor-pointer active:opacity-60 transition-opacity select-none py-1.5 px-2"
             aria-label="Toggle vertical steps navigation menu"
           >
-            <span className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-zinc-200 tracking-wider uppercase">
+            <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-wider uppercase">
               Step {activeStep} of {WIZARD_STEPS.length}
             </span>
           </button>
         </div>
 
         {/* Right Action: Theme Toggle + User Avatar */}
-        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
           <ThemeTogglePill />
           <div className="relative flex items-center justify-center">
             <Login />
@@ -1722,15 +1722,15 @@ export function HostUploadPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="max-w-4xl mx-auto text-center space-y-1.5"
+            className="max-w-4xl mx-auto text-center space-y-2"
           >
-            {/* Main Step Headline */}
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            {/* Main Step Headline - Large & Balanced for Mobile */}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
               {currentStepConfig.sub || currentStepConfig.title}
             </h1>
 
-            {/* Step Subtitle / Description */}
-            <p className="text-xs sm:text-sm md:text-base text-slate-500 dark:text-zinc-400 max-w-xl mx-auto leading-relaxed">
+            {/* Step Subtitle / Description - Easy to Read on Mobile */}
+            <p className="text-sm sm:text-base md:text-lg text-slate-600 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed font-medium">
               {currentStepConfig.desc}
             </p>
           </motion.div>
@@ -1841,7 +1841,7 @@ export function HostUploadPage() {
           />
         </div>
 
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-18 sm:h-20 flex items-center justify-between">
           {/* Left Action: Back Button or Auto-save Draft Status */}
           <div className="flex items-center">
             {activeStep > 1 ? (
@@ -1851,13 +1851,13 @@ export function HostUploadPage() {
                   setFieldErrors({});
                   setActiveStep((prev) => Math.max(1, prev - 1));
                 }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-slate-700 dark:text-zinc-300 hover:text-black dark:hover:text-white font-bold text-xs sm:text-sm underline underline-offset-4 cursor-pointer active:scale-95 transition-all"
+                className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-800 dark:text-zinc-200 hover:text-black dark:hover:text-white font-extrabold text-sm sm:text-base underline underline-offset-4 cursor-pointer active:scale-95 transition-all"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-5 h-5" />
                 <span>Back</span>
               </button>
             ) : (
-              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-zinc-400 font-medium pl-1">
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium pl-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="hidden sm:inline">Draft auto-saved securely</span>
                 <span className="sm:hidden">Draft saved</span>
@@ -1867,7 +1867,7 @@ export function HostUploadPage() {
 
           {/* Center Info: Step overview badge (Desktop only) */}
           <div className="hidden md:flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-500 dark:text-zinc-400">
+            <span className="text-sm font-bold text-slate-500 dark:text-zinc-400">
               {currentStepConfig.title}
             </span>
           </div>
@@ -1878,32 +1878,32 @@ export function HostUploadPage() {
               <button
                 type="button"
                 onClick={handleNextStep}
-                className="h-11 sm:h-12 px-7 sm:px-9 rounded-full bg-[#006C4A] hover:bg-[#005a3e] text-white font-bold text-xs sm:text-sm shadow-sm shadow-[#006C4A]/30 flex items-center gap-2 cursor-pointer active:scale-95 transition-all"
+                className="h-12 sm:h-13 px-8 sm:px-10 rounded-full bg-[#006C4A] hover:bg-[#005a3e] active:bg-[#004d35] text-white font-extrabold text-sm sm:text-base shadow-sm shadow-[#006C4A]/30 flex items-center gap-2 cursor-pointer active:scale-95 transition-all"
               >
                 <span>Continue</span>
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-5 h-5" />
               </button>
             ) : (
               <button
                 type="button"
                 disabled={isSubmitting}
                 onClick={handleSubmit}
-                className="h-11 sm:h-12 px-7 sm:px-10 rounded-full bg-[#006C4A] hover:bg-[#005a3e] text-white font-extrabold text-xs sm:text-sm shadow-md shadow-[#006C4A]/30 flex items-center gap-2 cursor-pointer disabled:opacity-50 active:scale-95 transition-all"
+                className="h-12 sm:h-13 px-8 sm:px-11 rounded-full bg-[#006C4A] hover:bg-[#005a3e] active:bg-[#004d35] text-white font-extrabold text-sm sm:text-base shadow-md shadow-[#006C4A]/30 flex items-center gap-2 cursor-pointer disabled:opacity-50 active:scale-95 transition-all"
               >
                 {isSubmitting ? (
                   <>
-                    <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                    <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
                     <span>Saving...</span>
                   </>
                 ) : isEditing ? (
                   <>
-                    <Check className="w-4 h-4 stroke-[3]" />
-                    <span>Update Property Details</span>
+                    <Check className="w-5 h-5 stroke-[3]" />
+                    <span>Update Listing</span>
                   </>
                 ) : (
                   <>
-                    <Check className="w-4 h-4 stroke-[3]" />
-                    <span>Publish Listing Live</span>
+                    <Check className="w-5 h-5 stroke-[3]" />
+                    <span>Publish Listing</span>
                   </>
                 )}
               </button>

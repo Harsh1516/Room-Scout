@@ -17,7 +17,7 @@ export function ThemeTogglePill({ className = '' }) {
       onClick={() => toggleTheme()}
       aria-label={isDark ? 'Switch to Light mode' : 'Switch to Dark mode'}
       title={isDark ? 'Switch to Light mode' : 'Switch to Dark mode'}
-      className={`apple-liquid-nav relative w-9.5 h-9.5 sm:w-10 sm:h-10 rounded-full text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/15 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0 ${className}`}
+      className={`apple-liquid-nav relative w-11 h-11 sm:w-11.5 sm:h-11.5 rounded-full text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/15 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0 ${className}`}
     >
       {/* Dynamic Ambient Aura Behind Icon */}
       <div
@@ -37,7 +37,7 @@ export function ThemeTogglePill({ className = '' }) {
             transition={{ duration: 0.18, ease: 'easeOut' }}
             className="relative z-10 flex items-center justify-center text-cyan-400"
           >
-            <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4 drop-shadow-[0_0_6px_rgba(34,211,238,0.7)]" strokeWidth={2} />
+            <Moon className="w-4.5 h-4.5 sm:w-5 sm:h-5 drop-shadow-[0_0_6px_rgba(34,211,238,0.7)]" strokeWidth={2} />
           </motion.div>
         ) : (
           <motion.div
@@ -48,7 +48,7 @@ export function ThemeTogglePill({ className = '' }) {
             transition={{ duration: 0.18, ease: 'easeOut' }}
             className="relative z-10 flex items-center justify-center text-amber-500"
           >
-            <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)]" strokeWidth={2} />
+            <Sun className="w-4.5 h-4.5 sm:w-5 sm:h-5 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)]" strokeWidth={2} />
           </motion.div>
         )}
       </AnimatePresence>

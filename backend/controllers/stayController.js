@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+﻿import mongoose from 'mongoose';
 import { v2 as cloudinary } from 'cloudinary';
 import { Stay, computeLowestStartingPrice } from '../models/Stay.js';
 import { Host } from '../models/Host.js';
@@ -730,25 +730,46 @@ export const resolveMapLink = async (req, res) => {
         (p, i) => !nameParts.some((o, j) => j < i && o.toLowerCase().includes(p.toLowerCase()))
       );
 
+      // Indian PIN codes are reliable Nominatim identifiers
+      const pinMatch = placeName.match(/\b([1-9][0-9]{5})\b/);
+
+      // Build candidate queries — simpler/location-specific first for Nominatim reliability
       const candidateQueries = [];
-      if (uniqueParts.length > 0) candidateQueries.push(uniqueParts.join(', '));
-      candidateQueries.push(placeName); // full name
+
+      // Best bets: last 2-3 location parts (locality + state/PIN)
       if (nameParts.length >= 2) candidateQueries.push(nameParts.slice(-2).join(', '));
       if (nameParts.length >= 3) candidateQueries.push(nameParts.slice(-3).join(', '));
 
-      // Indian PIN codes are reliable Nominatim identifiers
-      const pinMatch = placeName.match(/\b([1-9][0-9]{5})\b/);
+      // PIN-code based queries (most reliable for India)
       if (pinMatch) {
         if (nameParts.length >= 2)
           candidateQueries.push(`${nameParts[nameParts.length - 2]}, ${pinMatch[1]}`);
         candidateQueries.push(`${pinMatch[1]}, India`);
       }
 
-      for (const q of candidateQueries) {
+      // Deduplicated unique parts
+      if (uniqueParts.length > 0) candidateQueries.push(uniqueParts.join(', '));
+
+      // Full place name as final fallback
+      candidateQueries.push(placeName);
+
+      // Remove duplicate queries
+      const seenQueries = new Set();
+      const finalQueries = candidateQueries.filter((q) => {
+        if (seenQueries.has(q)) return false;
+        seenQueries.add(q);
+        return true;
+      });
+
+      for (const q of finalQueries) {
         try {
+          const ccParam = pinMatch ? `&countrycodes=in` : ``;
           const geoRes = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&addressdetails=1&limit=1`,
-            { headers: { 'User-Agent': 'RoomScout-Property-Locator/1.0 (contact@roomscout.in)' } }
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&addressdetails=1&limit=1${ccParam}`,
+            {
+              headers: { 'User-Agent': 'RoomScout-Property-Locator/1.0 (contact@roomscout.in)' },
+              signal: AbortSignal.timeout(8000),
+            }
           );
           if (geoRes.ok) {
             const items = await geoRes.json();
@@ -758,12 +779,12 @@ export const resolveMapLink = async (req, res) => {
               lng = Number(first.lon);
               const addr = first.address || {};
               addressHint = {
-                roadArea: nameParts[0] || addr.suburb || addr.neighbourhood || addr.road || '',
-                city: addr.city || addr.town || addr.village || addr.county || '',
-                state: addr.state || '',
-                pincode: addr.postcode || pinMatch?.[1] || '',
+                roadArea: nameParts[0] || addr.suburb || addr.neighbourhood || addr.road || ``,
+                city: addr.city || addr.town || addr.village || addr.county || ``,
+                state: addr.state || ``,
+                pincode: addr.postcode || pinMatch?.[1] || ``,
               };
-              console.log(`[resolveMapLink] Geocoded "${q}" → ${lat},${lng}`);
+              console.log(`[resolveMapLink] Geocoded "${q}" -> ${lat},${lng}`);
               break;
             }
           }
@@ -908,7 +929,7 @@ export const resetStayRevenue = async (req, res, next) => {
 
     return res.json({
       success: true,
-      message: restoreAllTime ? 'All-time revenue counter restored.' : 'Revenue counter set to ₹0 successfully.',
+      message: restoreAllTime ? 'All-time revenue counter restored.' : 'Revenue counter set to â‚¹0 successfully.',
       revenueResetSettings: stay.revenueResetSettings,
     });
   } catch (error) {
