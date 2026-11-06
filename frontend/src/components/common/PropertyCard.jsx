@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useWishlist } from '../../context/WishlistContext';
 import { getStayPricing } from '../../utils/priceUtils';
 
@@ -8,7 +8,7 @@ import { getStayPricing } from '../../utils/priceUtils';
  * featuring a warm cushion hover effect, media box with Property Type & Rating badges,
  * wishlist toggle, location, title, amenities chips, pricing, and action buttons.
  */
-export function PropertyCard({
+export const PropertyCard = memo(function PropertyCard({
   stay,
   onStayClick,
   onBookClick,
@@ -70,6 +70,8 @@ export function PropertyCard({
           <img
             src={displayImage}
             alt={stay.title || stay.propertyName || 'Property'}
+            loading="lazy"
+            decoding="async"
             className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:brightness-[1.03] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
           />
 
@@ -196,6 +198,6 @@ export function PropertyCard({
       </div>
     </div>
   );
-}
+});
 
 export default PropertyCard;

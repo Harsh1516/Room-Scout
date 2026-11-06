@@ -159,7 +159,7 @@ export function CoastalVillaBackground() {
 
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.src = '/coastal_villa_black_sand.jpg';
+    img.src = '/coastal_villa_black_sand.webp';
     img.onload = () => {
       if (isDestroyed) return;
       imageWidth = img.naturalWidth || 1024;
@@ -250,7 +250,7 @@ export function CoastalVillaBackground() {
     <div
       className="fixed inset-0 w-full h-full pointer-events-none z-0 overflow-hidden select-none"
       style={{
-        backgroundImage: "url('/coastal_villa_black_sand.jpg')",
+        backgroundImage: "url('/coastal_villa_black_sand.webp')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}

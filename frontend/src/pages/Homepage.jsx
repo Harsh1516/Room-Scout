@@ -3,18 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { HeroSection } from '../components/homepage/HeroSection';
 import { RecentlyAdded } from '../components/homepage/RecentlyAdded';
 import { LeftPropertiesPanel } from '../components/homepage/LeftPropertiesPanel';
-import { HostRevenueCalculator } from '../components/homepage/HostRevenueCalculator';
 import { HomepageFooter } from '../components/homepage/HomepageFooter';
 
-export function Homepage({ setCategoryFilter, onStayClick, onBookClick }) {
+export function Homepage({ setCategoryFilter, onStayClick, onBookClick, onSelectUpload }) {
   const navigate = useNavigate();
 
   const handleSelectCategory = (catId) => {
     let catName = 'All';
-    if (catId === 'pg-hostels') catName = 'PG';
+    if (catId === 'pg') catName = 'PG';
+    else if (catId === 'pg') catName = 'PG';
     else if (catId === 'flats') catName = 'Flat';
     else if (catId === 'hotels') catName = 'Hotel';
-    else if (catId === 'villas' || catId === 'resorts') catName = 'Stays & Villas';
 
     if (setCategoryFilter) setCategoryFilter(catName);
     navigate('/search');
@@ -68,15 +67,12 @@ export function Homepage({ setCategoryFilter, onStayClick, onBookClick }) {
         className="relative z-10"
       >
         {/* 1. Clean Modern Hero Section (Above the fold) */}
-        <HeroSection />
+        <HeroSection onSelectUpload={onSelectUpload} />
 
         {/* 2. Recently Added Verified Listings (Above the fold) */}
         <RecentlyAdded onStayClick={onStayClick} onBookClick={onBookClick} />
 
-        {/* 3. Interactive Host Revenue & Zero-Brokerage Savings Calculator */}
-        <HostRevenueCalculator />
-
-        {/* 4. Minimalist Footer */}
+        {/* 3. Minimalist Footer */}
         <HomepageFooter />
       </motion.div>
     </main>

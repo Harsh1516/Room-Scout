@@ -80,9 +80,7 @@ export function RecentlyAdded({ onStayClick, onBookClick }) {
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 sm:mb-8 gap-3 sm:gap-4 w-full">
         <div>
-          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 bg-slate-900/10 dark:bg-white/12 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full border border-slate-900/15 dark:border-white/25 backdrop-blur-2xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.2)]">
-            Fresh Stays
-          </span>
+          
           <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-slate-950 dark:text-white mt-1.5 sm:mt-2 tracking-tight drop-shadow-sm dark:drop-shadow-[0_8px_30px_rgba(0,0,0,0.9)]">
             Recently Added Listings
           </h2>

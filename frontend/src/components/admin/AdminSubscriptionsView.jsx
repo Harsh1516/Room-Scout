@@ -115,7 +115,7 @@ export function AdminSubscriptionsView({
 
   // Filter & Search for the Subscriptions directory table
   const filteredRequests = useMemo(() => {
-    return requests.filter((r) => {
+    let result = requests.filter((r) => {
       // Status filter
       if (subFilter !== 'ALL' && r.status !== subFilter) {
         return false;
@@ -139,7 +139,21 @@ export function AdminSubscriptionsView({
       }
       return true;
     });
-  }, [requests, subFilter, searchQuery]);
+
+    if (isSorted && hasMatched && extractedUtrs.length > 0) {
+      const extractedSet = new Set(
+        extractedUtrs.map((e) => (typeof e === 'string' ? e : e.utr))
+      );
+      result = [...result].sort((a, b) => {
+        const aMatch = extractedSet.has(a.transactionRef) ? 1 : 0;
+        const bMatch = extractedSet.has(b.transactionRef) ? 1 : 0;
+        if (bMatch !== aMatch) return bMatch - aMatch;
+        return 0;
+      });
+    }
+
+    return result;
+  }, [requests, subFilter, searchQuery, isSorted, hasMatched, extractedUtrs]);
 
   // Copy UTR helper
   const handleCopyUtr = (utr) => {
@@ -300,9 +314,9 @@ export function AdminSubscriptionsView({
             toast.warning('No 12-digit UTR numbers were found in this PDF.');
           } else {
             setExtractedUtrs(res.entries);
-            setHasMatched(true);
+            setHasMatched(false);
             setIsSorted(false);
-            toast.success(`✓ Extracted ${res.entries.length} UTR numbers from ${attachedFile.name}!`);
+            toast.success(`✓ Extracted ${res.entries.length} UTR numbers from ${attachedFile.name}! Click "Match" to verify.`);
           }
         } else {
           toast.error(res?.message || 'Could not parse PDF statement.');
@@ -339,9 +353,9 @@ export function AdminSubscriptionsView({
           });
 
           setExtractedUtrs(entries);
-          setHasMatched(true);
+          setHasMatched(false);
           setIsSorted(false);
-          toast.success(`✓ Extracted ${entries.length} 12-digit UTR numbers from ${attachedFile.name}!`);
+          toast.success(`✓ Extracted ${entries.length} 12-digit UTR numbers from ${attachedFile.name}! Click "Match" to verify.`);
         }
       }
     } catch (err) {
@@ -376,8 +390,32 @@ export function AdminSubscriptionsView({
       toast.info('Click "Match" before sorting.');
       return;
     }
-    setIsSorted(true);
-    toast.success('✓ Sorted: All matched UTRs moved to top!');
+    setIsSorted((prev) => {
+      const next = !prev;
+      if (next) {
+        toast.success('✓ Sorted: All matched UTRs moved to top!');
+      } else {
+        toast.info('Sorting reset to default submission order.');
+      }
+      return next;
+    });
+  };
+
+  // ── PROGRESSIVE 3-IN-1 ACTION: Extract -> Match -> Sort ──
+  const actionStage = useMemo(() => {
+    if (extractedUtrs.length === 0) return 'extract';
+    if (!hasMatched) return 'match';
+    return 'sort';
+  }, [extractedUtrs.length, hasMatched]);
+
+  const handleSequentialAction = async () => {
+    if (actionStage === 'extract') {
+      await handleExtractUtrs();
+    } else if (actionStage === 'match') {
+      handleMatchUtrs();
+    } else if (actionStage === 'sort') {
+      handleSortMatched();
+    }
   };
 
   // Compute Reconciliation Items
@@ -565,149 +603,110 @@ export function AdminSubscriptionsView({
     }
   };
 
+  const statCards = [
+    {
+      key: 'PENDING',
+      label: 'Pending UTRs',
+      count: counts.pending || 0,
+      subText: 'Awaiting verification',
+      dotColor: 'bg-amber-400',
+      iconColor: 'text-amber-500 dark:text-amber-400 bg-amber-500/10 border-amber-500/20',
+      title: 'Filter table by Pending',
+      icon: (
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+      ),
+    },
+    {
+      key: 'VERIFIED',
+      label: 'Verified Plans',
+      count: counts.verified || 0,
+      subText: 'Active live stays',
+      dotColor: 'bg-emerald-400',
+      iconColor: 'text-emerald-500 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+      title: 'Filter table by Verified',
+      icon: (
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          <polyline points="9 12 11 14 15 10" />
+        </svg>
+      ),
+    },
+    {
+      key: 'REJECTED',
+      label: 'Rejected',
+      count: counts.rejected || 0,
+      subText: 'Failed / invalid UTRs',
+      dotColor: 'bg-rose-400',
+      iconColor: 'text-rose-500 dark:text-rose-400 bg-rose-500/10 border-rose-500/20',
+      title: 'Filter table by Rejected',
+      icon: (
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="15" y1="9" x2="9" y2="15" />
+          <line x1="9" y1="9" x2="15" y2="15" />
+        </svg>
+      ),
+    },
+    {
+      key: 'ALL',
+      label: 'All Submissions',
+      count: counts.total || 0,
+      subText: 'Total requests',
+      dotColor: 'bg-purple-400',
+      iconColor: 'text-purple-500 dark:text-purple-400 bg-purple-500/10 border-purple-500/20',
+      title: 'Show All requests',
+      icon: (
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <polygon points="12 2 2 7 12 12 22 7 12 2" />
+          <polyline points="2 17 12 22 22 17" />
+          <polyline points="2 12 12 17 22 12" />
+        </svg>
+      ),
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-6">
-      {/* ── TOP METRIC STAT CARDS (Clean Normal Typography like Google) ── */}
+      {/* ── TOP METRIC STAT CARDS (Simple, Premium, Minimal) ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        {/* Pending Requests */}
-        <div
-          onClick={() => setSubFilter('PENDING')}
-          className={`relative overflow-hidden rounded-3xl p-5 border backdrop-blur-2xl transition-all duration-300 group cursor-pointer select-none ${
-            subFilter === 'PENDING'
-              ? 'bg-gradient-to-b from-amber-500/15 via-amber-500/5 to-slate-900/60 dark:to-[#0B0F1D]/80 border-amber-500/50 shadow-[0_0_25px_rgba(245,158,11,0.18)] ring-1 ring-amber-500/30'
-              : 'bg-white/70 dark:bg-[#0B0F1D]/80 border-slate-200/80 dark:border-white/[0.08] hover:border-amber-500/40 hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)]'
-          }`}
-          title="Filter table by Pending"
-        >
-          {/* Top light refraction highlight */}
-          <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-amber-400/30 to-transparent" />
-          {/* Ambient corner glow */}
-          <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-amber-500/20 blur-2xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
-
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-normal text-amber-500 dark:text-amber-400">
-              Pending UTRs
-            </span>
-            <div className="w-7 h-7 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500">
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
+        {statCards.map((card) => {
+          const isActive = subFilter === card.key;
+          return (
+            <div
+              key={card.key}
+              onClick={() => setSubFilter(card.key)}
+              className={`relative overflow-hidden rounded-2xl p-4 sm:p-5 border backdrop-blur-xl transition-all duration-200 group cursor-pointer select-none ${
+                isActive
+                  ? 'bg-purple-50/50 dark:bg-purple-950/20 border-purple-500/50 dark:border-purple-400/40 ring-1 ring-purple-500/20 dark:ring-purple-400/20 shadow-xs'
+                  : 'bg-white/70 dark:bg-[#0B0F19]/70 border-slate-200/80 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/15 hover:bg-slate-50/50 dark:hover:bg-white/[0.02]'
+              }`}
+              title={card.title}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
+                  {card.label}
+                </span>
+                <div className={`w-7 h-7 rounded-xl border flex items-center justify-center shrink-0 ${card.iconColor}`}>
+                  {card.icon}
+                </div>
+              </div>
+              <div className="text-2xl sm:text-3xl font-normal text-slate-900 dark:text-white mt-2">
+                {card.count}
+              </div>
+              <div className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-400 dark:text-slate-500 font-normal">
+                <span className={`w-1.5 h-1.5 rounded-full ${card.dotColor}`} />
+                <span>{card.subText}</span>
+              </div>
             </div>
-          </div>
-          <div className="text-3xl sm:text-4xl font-normal text-slate-900 dark:text-white mt-2">
-            {counts.pending || 0}
-          </div>
-          <div className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-500 dark:text-slate-400 font-normal">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
-            <span>Awaiting verification</span>
-          </div>
-        </div>
-
-        {/* Verified Active */}
-        <div
-          onClick={() => setSubFilter('VERIFIED')}
-          className={`relative overflow-hidden rounded-3xl p-5 border backdrop-blur-2xl transition-all duration-300 group cursor-pointer select-none ${
-            subFilter === 'VERIFIED'
-              ? 'bg-gradient-to-b from-emerald-500/15 via-emerald-500/5 to-slate-900/60 dark:to-[#0B0F1D]/80 border-emerald-500/50 shadow-[0_0_25px_rgba(16,185,129,0.18)] ring-1 ring-emerald-500/30'
-              : 'bg-white/70 dark:bg-[#0B0F1D]/80 border-slate-200/80 dark:border-white/[0.08] hover:border-emerald-500/40 hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)]'
-          }`}
-          title="Filter table by Verified"
-        >
-          <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent" />
-          <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-emerald-500/20 blur-2xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
-
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-normal text-emerald-500 dark:text-emerald-400">
-              Verified Plans
-            </span>
-            <div className="w-7 h-7 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-500">
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                <polyline points="9 12 11 14 15 10" />
-              </svg>
-            </div>
-          </div>
-          <div className="text-3xl sm:text-4xl font-normal text-slate-900 dark:text-white mt-2">
-            {counts.verified || 0}
-          </div>
-          <div className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-500 dark:text-slate-400 font-normal">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            <span>Active live stays</span>
-          </div>
-        </div>
-
-        {/* Rejected */}
-        <div
-          onClick={() => setSubFilter('REJECTED')}
-          className={`relative overflow-hidden rounded-3xl p-5 border backdrop-blur-2xl transition-all duration-300 group cursor-pointer select-none ${
-            subFilter === 'REJECTED'
-              ? 'bg-gradient-to-b from-rose-500/15 via-rose-500/5 to-slate-900/60 dark:to-[#0B0F1D]/80 border-rose-500/50 shadow-[0_0_25px_rgba(244,63,94,0.18)] ring-1 ring-rose-500/30'
-              : 'bg-white/70 dark:bg-[#0B0F1D]/80 border-slate-200/80 dark:border-white/[0.08] hover:border-rose-500/40 hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)]'
-          }`}
-          title="Filter table by Rejected"
-        >
-          <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-rose-400/30 to-transparent" />
-          <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-rose-500/20 blur-2xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
-
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-normal text-rose-500 dark:text-rose-400">
-              Rejected
-            </span>
-            <div className="w-7 h-7 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-500">
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="15" y1="9" x2="9" y2="15" />
-                <line x1="9" y1="9" x2="15" y2="15" />
-              </svg>
-            </div>
-          </div>
-          <div className="text-3xl sm:text-4xl font-normal text-slate-900 dark:text-white mt-2">
-            {counts.rejected || 0}
-          </div>
-          <div className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-500 dark:text-slate-400 font-normal">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
-            <span>Failed / invalid UTRs</span>
-          </div>
-        </div>
-
-        {/* Total Volume */}
-        <div
-          onClick={() => setSubFilter('ALL')}
-          className={`relative overflow-hidden rounded-3xl p-5 border backdrop-blur-2xl transition-all duration-300 group cursor-pointer select-none ${
-            subFilter === 'ALL'
-              ? 'bg-gradient-to-b from-purple-500/15 via-indigo-500/5 to-slate-900/60 dark:to-[#0B0F1D]/80 border-purple-500/50 shadow-[0_0_25px_rgba(168,85,247,0.18)] ring-1 ring-purple-500/30'
-              : 'bg-white/70 dark:bg-[#0B0F1D]/80 border-slate-200/80 dark:border-white/[0.08] hover:border-purple-500/40 hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)]'
-          }`}
-          title="Show All requests"
-        >
-          <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-purple-400/30 to-transparent" />
-          <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-purple-500/20 blur-2xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
-
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-normal text-purple-400 dark:text-purple-300">
-              All Submissions
-            </span>
-            <div className="w-7 h-7 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polygon points="12 2 2 7 12 12 22 7 12 2" />
-                <polyline points="2 17 12 22 22 17" />
-                <polyline points="2 12 12 17 22 12" />
-              </svg>
-            </div>
-          </div>
-          <div className="text-3xl sm:text-4xl font-normal text-slate-900 dark:text-white mt-2">
-            {counts.total || 0}
-          </div>
-          <div className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-500 dark:text-slate-400 font-normal">
-            <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-            <span>Total requests</span>
-          </div>
-        </div>
+          );
+        })}
       </div>
 
-      {/* ── TOOLBAR: STATEMENT ATTACHMENT & RECONCILIATION ACTIONS (Normal Weight Clean Text) ── */}
-      <div className="p-2 sm:p-2.5 rounded-2xl bg-white/70 dark:bg-[#0B0F1D]/90 backdrop-blur-2xl border border-slate-200/80 dark:border-white/[0.08] shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+      {/* ── TOOLBAR: STATEMENT ATTACHMENT & PROGRESSIVE ACTION BUTTON ── */}
+      <div className="p-2 sm:p-2.5 rounded-2xl bg-white/70 dark:bg-[#0B0F19]/90 backdrop-blur-2xl border border-slate-200/80 dark:border-white/[0.08] shadow-xs flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
         {/* File Attachment & Actions Cluster */}
         <div className="flex flex-wrap items-center gap-2">
           <input
@@ -723,16 +722,16 @@ export function AdminSubscriptionsView({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="px-3.5 py-1.5 rounded-xl text-xs font-normal border border-slate-300 dark:border-white/10 bg-white/80 dark:bg-white/[0.04] text-slate-800 dark:text-slate-200 hover:border-purple-500/60 hover:text-purple-400 hover:bg-purple-500/5 flex items-center gap-2 shadow-xs cursor-pointer transition-all active:scale-95"
+              className="px-3.5 py-1.5 rounded-xl text-xs font-normal border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 hover:border-purple-500/50 hover:text-purple-500 flex items-center gap-2 shadow-xs cursor-pointer transition-all active:scale-95"
               title="Attach credit bank statement (.csv, .pdf) containing 12-digit UTR numbers"
             >
-              <svg className="w-4 h-4 text-purple-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg className="w-4 h-4 text-purple-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
               </svg>
               <span>Attach Statement (.csv, .pdf)</span>
             </button>
           ) : (
-            <div className="flex items-center gap-2.5 bg-gradient-to-r from-purple-500/15 to-indigo-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 px-3.5 py-1.5 rounded-xl text-xs font-normal shadow-xs">
+            <div className="flex items-center gap-2.5 bg-purple-500/10 border border-purple-500/25 text-purple-700 dark:text-purple-300 px-3.5 py-1.5 rounded-xl text-xs font-normal shadow-xs">
               <span className="truncate max-w-[140px] sm:max-w-[200px]" title={attachedFile.name}>
                 📄 {attachedFile.name}
               </span>
@@ -747,77 +746,80 @@ export function AdminSubscriptionsView({
             </div>
           )}
 
-          {/* 2. Extract Button */}
+          {/* 2. Unified Progressive Action Button: Extract -> Match -> Sort */}
           <button
             type="button"
-            disabled={!attachedFile || isExtracting}
-            onClick={handleExtractUtrs}
-            className="px-3.5 py-1.5 rounded-xl text-xs font-normal bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-40 text-white flex items-center gap-2 shadow-[0_2px_12px_rgba(99,102,241,0.25)] transition-all cursor-pointer disabled:cursor-not-allowed active:scale-95"
-            title="Extract all 12-digit UTR numbers from attached statement"
+            disabled={actionStage === 'extract' && (!attachedFile || isExtracting)}
+            onClick={handleSequentialAction}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-normal flex items-center gap-2 transition-all cursor-pointer active:scale-95 shadow-xs ${
+              actionStage === 'extract'
+                ? attachedFile && !isExtracting
+                  ? 'bg-purple-600 hover:bg-purple-500 text-white'
+                  : 'bg-slate-100 dark:bg-white/[0.04] text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-white/10 cursor-not-allowed'
+                : actionStage === 'match'
+                ? 'bg-purple-600 hover:bg-purple-500 text-white'
+                : isSorted
+                ? 'bg-purple-600/15 text-purple-600 dark:text-purple-300 border border-purple-500/30 hover:bg-purple-600/25'
+                : 'bg-purple-600 hover:bg-purple-500 text-white'
+            }`}
+            title={
+              actionStage === 'extract'
+                ? !attachedFile
+                  ? 'Attach a bank statement (.csv, .pdf) first to extract UTRs'
+                  : 'Extract 12-digit UTR numbers from attached statement'
+                : actionStage === 'match'
+                ? `Match ${extractedUtrs.length} extracted statement UTRs against host submissions`
+                : isSorted
+                ? 'Sorting active (Matched requests on top). Click to reset order.'
+                : 'Sort matched requests to top of list'
+            }
           >
-            {isExtracting ? (
-              <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            {actionStage === 'extract' ? (
+              <>
+                {isExtracting ? (
+                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+                ) : (
+                  <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                  </svg>
+                )}
+                <span>{isExtracting ? 'Extracting...' : 'Extract'}</span>
+              </>
+            ) : actionStage === 'match' ? (
+              <>
+                <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M22 12h-4M6 12H2M12 6V2M12 22v-4" />
+                </svg>
+                <span>Match</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-white/20 text-white font-mono leading-tight">
+                  {extractedUtrs.length}
+                </span>
+              </>
             ) : (
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-              </svg>
+              <>
+                <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <polyline points="19 12 12 19 5 12" />
+                </svg>
+                <span>{isSorted ? 'Sorted ✓' : 'Sort'}</span>
+              </>
             )}
-            <span>Extract {extractedUtrs.length > 0 ? `(${extractedUtrs.length})` : ''}</span>
           </button>
 
-          {/* 3. Match Button */}
-          {extractedUtrs.length > 0 && (
-            <button
-              type="button"
-              onClick={handleMatchUtrs}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-normal border flex items-center gap-2 shadow-xs transition-all cursor-pointer active:scale-95 ${
-                hasMatched
-                  ? 'bg-purple-600/20 text-purple-300 border-purple-500/40 ring-1 ring-purple-500/20'
-                  : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white border-transparent shadow-[0_2px_12px_rgba(168,85,247,0.25)]'
-              }`}
-              title="Match extracted bank UTRs with host submitted 12-digit numbers"
-            >
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M22 12h-4M6 12H2M12 6V2M12 22v-4" />
-              </svg>
-              <span>Match</span>
-            </button>
-          )}
-
-          {/* 4. Sort Button */}
-          {hasMatched && (
-            <button
-              type="button"
-              onClick={handleSortMatched}
-              className={`px-3 py-1.5 rounded-xl text-xs font-normal border flex items-center gap-2 shadow-xs transition-all cursor-pointer active:scale-95 ${
-                isSorted
-                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 ring-1 ring-amber-500/20'
-                  : 'bg-slate-100 dark:bg-white/[0.04] text-slate-800 dark:text-slate-200 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
-              }`}
-              title="Sort: Matched UTRs moved to top of list, non-matched placed at end"
-            >
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <polyline points="19 12 12 19 5 12" />
-              </svg>
-              <span>Sort</span>
-            </button>
-          )}
-
-          {/* 5. Allow Verified Button (Only where amount matches plan price) */}
+          {/* Bulk Resolution Buttons (Only visible when matches are present) */}
           {hasMatched && validPricePendingMatches.length > 0 && (
             <button
               type="button"
               onClick={handleAllowVerifiedMatched}
               disabled={isBulkVerifying || isBulkRejecting}
-              className="px-4 py-1.5 rounded-xl text-xs font-normal bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.35)] flex items-center gap-2 transition-all cursor-pointer active:scale-95 animate-pulse"
+              className="px-3.5 py-1.5 rounded-xl text-xs font-normal bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
               title="Verify and grant access to hosts with matching payment"
             >
               {isBulkVerifying ? (
-                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
               ) : (
-                <svg className="w-3.5 h-3.5 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <svg className="w-3.5 h-3.5 stroke-[2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               )}
@@ -825,19 +827,18 @@ export function AdminSubscriptionsView({
             </button>
           )}
 
-          {/* 6. Reject Underpaid Button (Automatically reject tampered / underpaid payments) */}
           {hasMatched && underpaidPendingMatches.length > 0 && (
             <button
               type="button"
               onClick={handleRejectUnderpaidMatched}
               disabled={isBulkVerifying || isBulkRejecting}
-              className="px-3.5 py-1.5 rounded-xl text-xs font-normal bg-rose-600/90 hover:bg-rose-500 text-white shadow-xs flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+              className="px-3.5 py-1.5 rounded-xl text-xs font-normal bg-rose-600 hover:bg-rose-500 text-white shadow-xs flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
               title="Reject all submissions where credited amount does not match required plan price"
             >
               {isBulkRejecting ? (
-                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
               ) : (
-                <svg className="w-3.5 h-3.5 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <svg className="w-3.5 h-3.5 stroke-[2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
@@ -846,7 +847,6 @@ export function AdminSubscriptionsView({
             </button>
           )}
 
-          {/* 7. Auto-Resolve (When both verified and underpaid exist) */}
           {hasMatched && validPricePendingMatches.length > 0 && underpaidPendingMatches.length > 0 && (
             <button
               type="button"
@@ -885,7 +885,7 @@ export function AdminSubscriptionsView({
           <button
             type="button"
             onClick={() => setIsManualModalOpen(true)}
-            className="px-3.5 py-1.5 rounded-xl text-xs font-normal bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-[0_0_20px_rgba(147,51,234,0.35)] flex items-center gap-2 shrink-0 active:scale-95 transition-all cursor-pointer"
+            className="px-3.5 py-1.5 rounded-xl text-xs font-normal bg-purple-600 hover:bg-purple-500 text-white shadow-xs flex items-center gap-2 shrink-0 active:scale-95 transition-all cursor-pointer"
           >
             <svg className="w-3.5 h-3.5 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <line x1="12" y1="5" x2="12" y2="19" />
@@ -909,27 +909,27 @@ export function AdminSubscriptionsView({
 
       {/* ── STATEMENT RECONCILIATION COMPARISON BOARD (Visible when statement is extracted) ── */}
       {extractedUtrs.length > 0 && (
-        <div className="rounded-3xl border border-purple-500/40 bg-slate-900/90 backdrop-blur-xl p-5 shadow-2xl flex flex-col gap-4 animate-in fade-in slide-in-from-top-2">
+        <div className="rounded-3xl border border-slate-200/90 dark:border-white/[0.08] bg-white/90 dark:bg-[#0B0F19]/90 backdrop-blur-2xl p-5 shadow-sm flex flex-col gap-4 animate-in fade-in slide-in-from-top-2">
           {/* Reconciliation Header & Actions */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200/80 dark:border-white/10 pb-3">
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-purple-400 animate-pulse" />
-                <h3 className="font-normal text-white text-sm sm:text-base flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+                <h3 className="font-normal text-slate-900 dark:text-white text-sm sm:text-base flex items-center gap-2">
                   <span>Statement reconciliation match board</span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-normal">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/20 font-normal">
                     {extractedUtrs.length} UTRs extracted
                   </span>
                 </h3>
               </div>
-              <p className="text-xs text-slate-300 mt-1 font-normal">
-                Statement: <span className="text-white font-medium">{attachedFile?.name}</span>.
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-normal">
+                Statement: <span className="text-slate-800 dark:text-white font-medium">{attachedFile?.name}</span>.
                 {hasMatched ? (
                   <>
-                    {' '}Matched <span className="text-emerald-400 font-medium">{matchedCount}</span> host request{matchedCount !== 1 ? 's' : ''} (
-                    <span className="text-amber-400 font-medium">{matchedPendingRequests.length}</span> pending verification
+                    {' '}Matched <span className="text-emerald-600 dark:text-emerald-400 font-medium">{matchedCount}</span> host request{matchedCount !== 1 ? 's' : ''} (
+                    <span className="text-amber-600 dark:text-amber-400 font-medium">{matchedPendingRequests.length}</span> pending verification
                     {underpaidPendingMatches.length > 0 ? (
-                      <span className="text-rose-400 font-medium"> — {underpaidPendingMatches.length} underpaid</span>
+                      <span className="text-rose-600 dark:text-rose-400 font-medium"> — {underpaidPendingMatches.length} underpaid</span>
                     ) : null}
                     ).
                   </>
@@ -945,7 +945,7 @@ export function AdminSubscriptionsView({
                   type="button"
                   onClick={handleAllowVerifiedMatched}
                   disabled={isBulkVerifying || isBulkRejecting}
-                  className="px-3.5 py-1.5 rounded-xl text-xs font-normal bg-emerald-600 hover:bg-emerald-500 text-white shadow-md active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-normal bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
                   title="Verify matching amount hosts"
                 >
                   <svg className="w-3.5 h-3.5 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -959,7 +959,7 @@ export function AdminSubscriptionsView({
                   type="button"
                   onClick={handleRejectUnderpaidMatched}
                   disabled={isBulkVerifying || isBulkRejecting}
-                  className="px-3 py-1.5 rounded-xl text-xs font-normal bg-rose-600/90 hover:bg-rose-500 text-white shadow-xs active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-xl text-xs font-normal bg-rose-600 hover:bg-rose-500 text-white shadow-xs active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
                   title="Reject underpaid hosts"
                 >
                   <svg className="w-3.5 h-3.5 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -972,7 +972,7 @@ export function AdminSubscriptionsView({
               <button
                 type="button"
                 onClick={handleClearAttachedFile}
-                className="px-3 py-1.5 rounded-xl text-xs font-normal text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer"
+                className="px-3 py-1.5 rounded-xl text-xs font-normal text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 transition-colors cursor-pointer"
               >
                 Close board
               </button>
@@ -1375,30 +1375,24 @@ export function AdminSubscriptionsView({
             <span className="text-xs font-normal text-slate-600 dark:text-slate-300">Loading subscription requests...</span>
           </div>
         ) : filteredRequests.length === 0 ? (
-          <div className="py-16 px-6 text-center flex flex-col items-center justify-center relative overflow-hidden">
-            {/* Background ambient radial glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-purple-600/10 dark:bg-purple-600/[0.07] blur-3xl rounded-full pointer-events-none" />
-
-            {/* Floating Glowing Icon */}
-            <div className="relative mb-4 group">
-              <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 opacity-30 blur-md group-hover:opacity-60 transition duration-500" />
-              <div className="relative w-16 h-16 rounded-2xl bg-white dark:bg-[#10162A] border border-purple-500/30 flex items-center justify-center text-purple-500 dark:text-purple-400 shadow-xl">
-                <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                  <line x1="16" y1="13" x2="8" y2="13" />
-                  <line x1="16" y1="17" x2="8" y2="17" />
-                  <polyline points="10 9 9 9 8 9" />
-                </svg>
-              </div>
+          <div className="py-16 px-6 text-center flex flex-col items-center justify-center">
+            {/* Minimal Icon Box */}
+            <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] flex items-center justify-center text-slate-500 dark:text-slate-400 mb-3 shadow-xs">
+              <svg className="w-7 h-7 stroke-[1.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10 9 9 9 8 9" />
+              </svg>
             </div>
 
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 dark:bg-purple-500/15 border border-purple-500/25 text-purple-700 dark:text-purple-300 text-xs font-normal mb-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping" />
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-400 text-xs font-normal mb-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
               <span>Live verification pipeline</span>
             </div>
 
-            <h4 className="text-base sm:text-lg font-normal text-slate-900 dark:text-white">
+            <h4 className="text-base font-normal text-slate-900 dark:text-white">
               No subscription requests found
             </h4>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mt-1 leading-relaxed font-normal">
@@ -1412,14 +1406,14 @@ export function AdminSubscriptionsView({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-3.5 py-1.5 rounded-xl text-xs font-normal bg-white dark:bg-white/[0.05] border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:border-purple-500/50 hover:text-purple-400 transition-all cursor-pointer shadow-xs active:scale-95"
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-normal bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-purple-500/40 hover:text-purple-500 transition-all cursor-pointer shadow-xs active:scale-95"
                 >
                   Attach bank statement
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsManualModalOpen(true)}
-                  className="px-3.5 py-1.5 rounded-xl text-xs font-normal bg-purple-600 hover:bg-purple-500 text-white shadow-md shadow-purple-600/25 transition-all cursor-pointer active:scale-95"
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-normal bg-purple-600 hover:bg-purple-500 text-white shadow-xs transition-all cursor-pointer active:scale-95"
                 >
                   + Grant plan manually
                 </button>

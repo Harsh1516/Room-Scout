@@ -1,6 +1,11 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { calculateExpirationDate, buildPlatformUpiUri, formatValidityDate } from '../controllers/subscriptionController.js';
+import {
+  calculateExpirationDate,
+  buildPlatformUpiUri,
+  formatValidityDate,
+  calculateSubscriptionPlans,
+} from '../controllers/subscriptionController.js';
 
 describe('Host Subscription System Tests', () => {
   describe('UPI URI Generator for Platform Plans', () => {
@@ -128,6 +133,97 @@ describe('Host Subscription System Tests', () => {
       assert.ok(sorted[0].matchedRequest !== null);
       assert.ok(sorted[1].matchedRequest === null);
       assert.ok(sorted[2].matchedRequest === null);
+    });
+  });
+
+  describe('Dynamic Room-Based Pricing & Discounts Matrix', () => {
+    it('should calculate correct plans for PG with 10 rooms (10rs/room/mo, 100/mo, 285 3-mo, 540 6-mo)', () => {
+      const result = calculateSubscriptionPlans({
+        propertyType: 'PG',
+        roomCount: 10,
+      });
+
+      assert.strictEqual(result.propertyType, 'PG');
+      assert.strictEqual(result.roomCount, 10);
+      assert.strictEqual(result.ratePerRoom, 10);
+      assert.strictEqual(result.monthlyBase, 100);
+
+      const [monthly, quarterly, halfYearly] = result.plans;
+
+      // 1 Month: 10 * 10 = 100 (0% discount)
+      assert.strictEqual(monthly.code, 'monthly');
+      assert.strictEqual(monthly.price, 100);
+      assert.strictEqual(monthly.durationMonths, 1);
+      assert.strictEqual(monthly.discountPercent, 0);
+
+      // 3 Months: 100 * 3 = 300 - 5% = 285
+      assert.strictEqual(quarterly.code, 'quarterly');
+      assert.strictEqual(quarterly.price, 285);
+      assert.strictEqual(quarterly.durationMonths, 3);
+      assert.strictEqual(quarterly.discountPercent, 5);
+
+      // 6 Months: 100 * 6 = 600 - 10% = 540
+      assert.strictEqual(halfYearly.code, 'halfYearly');
+      assert.strictEqual(halfYearly.price, 540);
+      assert.strictEqual(halfYearly.durationMonths, 6);
+      assert.strictEqual(halfYearly.discountPercent, 10);
+    });
+
+    it('should calculate correct plans for Hotel with 10 rooms (50rs/room/mo, 500/mo, 1425 3-mo, 2700 6-mo)', () => {
+      const result = calculateSubscriptionPlans({
+        propertyType: 'Hotel',
+        roomCount: 10,
+      });
+
+      assert.strictEqual(result.propertyType, 'Hotel');
+      assert.strictEqual(result.roomCount, 10);
+      assert.strictEqual(result.ratePerRoom, 50);
+      assert.strictEqual(result.monthlyBase, 500);
+
+      const [monthly, quarterly, halfYearly] = result.plans;
+
+      // 1 Month: 10 * 50 = 500
+      assert.strictEqual(monthly.price, 500);
+
+      // 3 Months: 500 * 3 = 1500 - 5% = 1425
+      assert.strictEqual(quarterly.price, 1425);
+
+      // 6 Months: 500 * 6 = 3000 - 10% = 2700
+      assert.strictEqual(halfYearly.price, 2700);
+    });
+
+    it('should calculate correct plans with custom admin rates and custom discounts', () => {
+      const customRates = {
+        PG: 12,
+        Hotel: 60,
+        Hostel: 20,
+        Villa: 45,
+        Resort: 55,
+        Flat: 30,
+      };
+      const customDiscounts = {
+        quarterly: 8,
+        halfYearly: 15,
+      };
+
+      const result = calculateSubscriptionPlans({
+        propertyType: 'Hostel',
+        roomCount: 5,
+        propertyPricing: customRates,
+        discounts: customDiscounts,
+      });
+
+      // 5 rooms * 20 = 100/mo
+      assert.strictEqual(result.ratePerRoom, 20);
+      assert.strictEqual(result.monthlyBase, 100);
+
+      const [monthly, quarterly, halfYearly] = result.plans;
+      // 1 mo = 100
+      assert.strictEqual(monthly.price, 100);
+      // 3 mo = 300 - 8% = 276
+      assert.strictEqual(quarterly.price, 276);
+      // 6 mo = 600 - 15% = 510
+      assert.strictEqual(halfYearly.price, 510);
     });
   });
 });

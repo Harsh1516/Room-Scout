@@ -9,12 +9,10 @@ export function WhatControl({
   onClose,
 }) {
   const ALL_TYPES = [
-    { id: 'PG', label: 'PG / Co-Living', matchTypes: ['pg'] },
-    { id: 'Hostel', label: 'Student Hostel', matchTypes: ['hostel'] },
-    { id: 'Flat', label: 'Flat & Apartment', matchTypes: ['flat', 'apartment'] },
-    { id: 'Hotel', label: 'Hotel & Suites', matchTypes: ['hotel'] },
-    { id: 'Villa', label: 'Luxury Villa', matchTypes: ['villa'] },
-    { id: 'Resort', label: 'Nature Resort', matchTypes: ['resort'] },
+    { id: 'PG', label: 'PG', matchTypes: ['pg'] },
+    { id: 'Flat', label: 'Flat', matchTypes: ['flat', 'apartment'] },
+    { id: 'Hotel', label: 'Hotel', matchTypes: ['hotel'] },
+
   ];
 
   // Initialize with ALL_TYPES to prevent empty flash during initial API load
@@ -37,7 +35,7 @@ export function WhatControl({
           const filtered = ALL_TYPES.filter((t) =>
             t.matchTypes.some((m) => availableTypes.has(m))
           );
-          setActiveTypes(filtered.length > 0 ? filtered : ALL_TYPES);
+          setActiveTypes(ALL_TYPES);
         }
       } catch (err) {
         console.error('Error fetching what control types:', err);

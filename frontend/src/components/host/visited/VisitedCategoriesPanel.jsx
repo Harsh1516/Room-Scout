@@ -130,18 +130,13 @@ export function VisitedCategoriesPanel({
                   onClick={() => onSelectCategory(catGroup.type)}
                   className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-slate-50 dark:hover:bg-[#162033] transition-colors cursor-pointer"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-xl bg-[#DAE2FD]/60 dark:bg-[#162238] border border-slate-200/60 dark:border-[#223554] flex items-center justify-center text-[#3525CD] dark:text-[#818CF8] flex-shrink-0 shadow-sm">
-                      <Building2 className="w-5 h-5" />
+                  <div className="min-w-0">
+                    <div className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                      {catGroup.type}
                     </div>
-                    <div className="min-w-0">
-                      <div className="text-sm font-bold text-slate-900 dark:text-white truncate">
-                        {catGroup.type}
-                      </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                        {catGroup.rooms.length > 0 ? `${catGroup.rooms.length} Active Room Units` : 'Pavilion & Units'}
-                      </p>
-                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                      {catGroup.rooms.length > 0 ? `${catGroup.rooms.length} Active Room Units` : 'Pavilion & Units'}
+                    </p>
                   </div>
 
                   <div className="flex items-center gap-2 flex-shrink-0">

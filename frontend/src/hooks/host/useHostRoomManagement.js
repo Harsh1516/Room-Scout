@@ -288,11 +288,11 @@ export function useHostRoomManagement({
     if (!updatedHost) return;
     try {
       const targetEmail = (
+        user?.email ||
         updatedHost.email ||
         updatedHost.hostEmail ||
         hostProperty?.email ||
         hostProperty?.hostEmail ||
-        user?.email ||
         ''
       ).trim().toLowerCase();
 

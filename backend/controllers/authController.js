@@ -86,8 +86,17 @@ export const registerUser = async (req, res, next) => {
       });
     }
 
-    // 1. HOST REGISTRATION -> strictly in Host collection
+    // 1. HOST REGISTRATION -> create unified User account + linked Host profile (Phase 1)
     if (cleanRole === 'host') {
+      const userDoc = await User.create({
+        name: name.trim(),
+        email: cleanEmail,
+        password,
+        phone: phone ? phone.trim() : '',
+        role: 'host',
+        avatar,
+      });
+
       const hostDoc = await Host.create({
         name: name.trim(),
         email: cleanEmail,
@@ -96,7 +105,11 @@ export const registerUser = async (req, res, next) => {
         role: 'host',
         avatar,
         status: 'Pending Approval',
+        accountId: userDoc._id,
       });
+
+      userDoc.hostId = hostDoc._id;
+      await userDoc.save();
 
       const token = await hostDoc.generateToken();
       setAuthCookie(res, token);
@@ -170,7 +183,24 @@ export const loginUser = async (req, res, next) => {
             message: 'This email belongs to a Student/Guest account. Guests must log in through the Search tab only.',
           });
         }
-        return res.status(404).json({ message: 'Host account not found. Please register as a Host through the Upload tab.' });
+        return res.status(404).json({ message: 'Account not Found. Register First.' });
+      }
+
+      // Phase 1 linking: connect host to an existing user account if present
+      if (!host.accountId) {
+        try {
+          const linkedUser = await User.findOne({ email: cleanEmail });
+          if (linkedUser) {
+            host.accountId = linkedUser._id;
+            await host.save();
+            if (!linkedUser.hostId) {
+              linkedUser.hostId = host._id;
+              await linkedUser.save();
+            }
+          }
+        } catch (linkErr) {
+          console.warn('Host/User link on login failed:', linkErr.message);
+        }
       }
 
       if (!host.password) {
@@ -184,6 +214,15 @@ export const loginUser = async (req, res, next) => {
         return res.status(401).json({ message: 'Invalid password' });
       }
 
+      // Determine if this host already has a property listing
+      let hasProperty = false;
+      try {
+        const stayExists = await Stay.findOne({ hostId: host._id }).select('_id').lean();
+        hasProperty = Boolean(stayExists);
+      } catch {
+        hasProperty = false;
+      }
+
       token = await host.generateToken();
       authenticatedAccount = {
         _id: host._id.toString(),
@@ -194,6 +233,7 @@ export const loginUser = async (req, res, next) => {
         avatar: host.avatar || 'HO',
         role: 'host',
         status: host.status,
+        hasProperty,
         hasPassword: true,
       };
     } else if (targetRole === 'user') {
@@ -205,7 +245,7 @@ export const loginUser = async (req, res, next) => {
             message: 'This email belongs to a Property Host account. Hosts must log in through the Upload tab only.',
           });
         }
-        return res.status(404).json({ message: 'User account not found. Please register as a Guest through the Search tab.' });
+        return res.status(404).json({ message: 'Account not Found. Register First.' });
       }
 
       if (!user.password) {
@@ -240,7 +280,7 @@ export const loginUser = async (req, res, next) => {
       }
 
       if (!account) {
-        return res.status(404).json({ message: 'Account not found. Please register first.' });
+        return res.status(404).json({ message: 'Account not Found. Register First.' });
       }
 
       if (!account.password) {

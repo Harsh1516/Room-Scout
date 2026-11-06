@@ -81,18 +81,6 @@ export function Right({ onLoginClick }) {
         {/* 3. Theme Mode Toggle Button */}
         <ThemeTogglePill />
 
-        {/* 4. Host Portal Switcher Button (visible on user/explore views) */}
-        {isHost && !location.pathname.startsWith('/host') && (
-          <button
-            type="button"
-            onClick={() => navigate('/host/dashboard')}
-            className="apple-liquid-nav hidden lg:inline-flex items-center h-8 sm:h-9 gap-1.5 px-3.5 py-1 sm:py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 text-xs font-bold transition-all shadow-xs cursor-pointer select-none active:scale-95 shrink-0"
-            title="Switch back to Host Dashboard"
-          >
-            <span>🏡</span>
-            <span>Host Dashboard</span>
-          </button>
-        )}
 
         {/* 5. Profile / Login Button */}
         <Login onLoginClick={onLoginClick} />
@@ -151,21 +139,6 @@ export function Right({ onLoginClick }) {
               transition={{ duration: 0.15, ease: "easeOut" }}
               className="md:hidden absolute top-14 right-0 z-50 flex flex-col items-center gap-3 py-4 px-2.5 rounded-[2.5rem] bg-white/98 dark:bg-slate-900/98 border border-slate-200/80 dark:border-slate-800 shadow-xl backdrop-blur-xl"
             >
-              {/* 1. Host Dashboard Switcher (if host) */}
-              {isHost && !location.pathname.startsWith('/host') && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigate('/host/dashboard');
-                    setMobileMenuOpen(false);
-                  }}
-                  className="apple-liquid-nav relative w-10 h-10 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 text-base shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0"
-                  title="Switch to Host Dashboard"
-                  aria-label="Host Dashboard"
-                >
-                  <span className="text-base leading-none">🏡</span>
-                </button>
-              )}
 
               {/* 2. Saved Wishlist Button */}
               <button

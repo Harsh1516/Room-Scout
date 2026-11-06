@@ -521,51 +521,38 @@ export function VisitedRequestsView({
                       }}
                       className="w-full px-3.5 py-3 flex items-center justify-between text-left cursor-pointer group select-none hover:bg-slate-50/70 dark:hover:bg-white/[0.03] transition-colors"
                     >
-                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <div className="min-w-0 flex-1">
                         <div
-                          className={`w-8.5 h-8.5 rounded-xl text-white shadow-sm flex items-center justify-center shrink-0 ${
+                          className={`text-xs sm:text-[13px] font-extrabold text-slate-800 dark:text-white leading-tight transition-colors ${
                             subTab === 'checkout'
-                              ? 'bg-sky-600 dark:bg-sky-500 shadow-sky-500/25'
+                              ? 'group-hover:text-sky-600 dark:group-hover:text-sky-400'
                               : subTab === 'checkin'
-                              ? 'bg-emerald-600 dark:bg-emerald-500 shadow-emerald-500/25'
-                              : 'bg-orange-600 dark:bg-orange-500 shadow-orange-500/25'
+                              ? 'group-hover:text-emerald-600 dark:group-hover:text-emerald-400'
+                              : 'group-hover:text-orange-600 dark:group-hover:text-orange-400'
                           }`}
                         >
-                          <Building2 className="w-4 h-4 text-white" />
+                          {catGroup.type}
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <div
-                            className={`text-xs sm:text-[13px] font-extrabold text-slate-800 dark:text-white leading-tight transition-colors ${
-                              subTab === 'checkout'
-                                ? 'group-hover:text-sky-600 dark:group-hover:text-sky-400'
-                                : subTab === 'checkin'
-                                ? 'group-hover:text-emerald-600 dark:group-hover:text-emerald-400'
-                                : 'group-hover:text-orange-600 dark:group-hover:text-orange-400'
+                        <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate flex items-center gap-1.5 mt-0.5">
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                              catTotalRequests > 0
+                                ? subTab === 'checkout'
+                                  ? 'bg-sky-500'
+                                  : subTab === 'checkin'
+                                  ? 'bg-emerald-500'
+                                  : 'bg-orange-500'
+                                : 'bg-slate-400'
                             }`}
-                          >
-                            {catGroup.type}
-                          </div>
-                          <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate flex items-center gap-1.5 mt-0.5">
-                            <span
-                              className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                                catTotalRequests > 0
-                                  ? subTab === 'checkout'
-                                    ? 'bg-sky-500'
-                                    : subTab === 'checkin'
-                                    ? 'bg-emerald-500'
-                                    : 'bg-orange-500'
-                                  : 'bg-slate-400'
-                              }`}
-                            />
-                            <span>
-                              {catTotalRequests}{' '}
-                              {subTab === 'checkout'
-                                ? catTotalRequests === 1 ? 'Departure' : 'Departures'
-                                : subTab === 'checkin'
-                                ? catTotalRequests === 1 ? 'Check-in' : 'Check-ins'
-                                : catTotalRequests === 1 ? 'Request' : 'Requests'}
-                            </span>
-                          </div>
+                          />
+                          <span>
+                            {catTotalRequests}{' '}
+                            {subTab === 'checkout'
+                              ? catTotalRequests === 1 ? 'Departure' : 'Departures'
+                              : subTab === 'checkin'
+                              ? catTotalRequests === 1 ? 'Check-in' : 'Check-ins'
+                              : catTotalRequests === 1 ? 'Request' : 'Requests'}
+                          </span>
                         </div>
                       </div>
 

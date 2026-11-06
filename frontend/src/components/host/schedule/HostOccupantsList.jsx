@@ -93,16 +93,16 @@ export function HostOccupantsList({
   };
 
   return (
-    <section className="w-full flex flex-col rounded-[26px] overflow-hidden transition-all bg-white dark:bg-[#0c1825] border border-[#54ACBF]/40 dark:border-[#54ACBF]/40 shadow-sm shadow-[#023859]/30 select-none relative text-white">
+    <section className="w-full flex flex-col rounded-[26px] overflow-hidden transition-all bg-white dark:bg-black border border-slate-200/90 dark:border-zinc-800 shadow-sm select-none relative text-slate-900 dark:text-white">
       {/* Header: Exact match to Mid Tab (HostScheduleCalendar) Header (Pic 2 Liquid Glass Theme in Light Mode, Luna Dark in Dark Mode) */}
-      <div className="px-4 sm:px-5 py-3 min-h-[60px] border-b border-[#54ACBF]/35 dark:border-[#54ACBF]/30 bg-gradient-to-r from-[#A7EBF2] via-[#90D1E8] to-[#7CBFD2] dark:from-[#023859] dark:to-[#023859] dark:bg-[#023859] text-[#011C40] dark:text-white shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.75)] dark:shadow-none relative z-10 flex items-center justify-between gap-3">
-        <h3 className="text-[#011C40] dark:text-white truncate font-extrabold tracking-tight text-base sm:text-lg lg:text-[18px] leading-normal">
+      <div className="px-4 sm:px-5 py-3 min-h-[60px] border-b border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-black text-slate-900 dark:text-white relative z-10 flex items-center justify-between gap-3">
+        <h3 className="text-slate-900 dark:text-white truncate font-extrabold tracking-tight text-base sm:text-lg lg:text-[18px] leading-normal">
           Occupants
         </h3>
 
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <span
-              className="h-6 px-2.5 text-[11px] rounded-full bg-white/70 dark:bg-white/20 border border-white/80 dark:border-white/30 text-[#011C40] dark:text-white font-bold shadow-2xs select-none flex items-center justify-center leading-normal backdrop-blur-xs"
+              className="h-6 px-2.5 text-[11px] rounded-full bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 font-bold shadow-2xs select-none flex items-center justify-center leading-normal backdrop-blur-xs"
               title={`${roomOccupantsList.length} active occupant${roomOccupantsList.length === 1 ? '' : 's'} in ${cleanRoomDisplay || 'this room'}`}
             >
               {roomOccupantsList.length} Active
@@ -113,7 +113,7 @@ export function HostOccupantsList({
                 <button
                   type="button"
                   onClick={handleScrollUp}
-                  className="w-6 h-6 rounded-lg flex items-center justify-center text-[#023859] hover:text-[#011C40] hover:bg-white/40 dark:text-white/90 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer"
+                  className="w-6 h-6 rounded-lg flex items-center justify-center text-purple-600 dark:text-purple-400 hover:text-slate-900 hover:bg-white/40 dark:text-white/90 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer"
                   title="Scroll up"
                 >
                   <span className="material-symbols-outlined text-[18px] leading-none">keyboard_arrow_up</span>
@@ -121,7 +121,7 @@ export function HostOccupantsList({
                 <button
                   type="button"
                   onClick={handleScrollDown}
-                  className="w-6 h-6 rounded-lg flex items-center justify-center text-[#023859] hover:text-[#011C40] hover:bg-white/40 dark:text-white/90 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer"
+                  className="w-6 h-6 rounded-lg flex items-center justify-center text-purple-600 dark:text-purple-400 hover:text-slate-900 hover:bg-white/40 dark:text-white/90 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer"
                   title="Scroll down"
                 >
                   <span className="material-symbols-outlined text-[18px] leading-none">keyboard_arrow_down</span>
@@ -132,19 +132,7 @@ export function HostOccupantsList({
       </div>
 
       {/* Content Area matching Mid Tab's padding and layout */}
-      <div className="px-4 sm:px-5 pb-3.5 sm:pb-4 pt-2.5 sm:pt-3 flex flex-col gap-2.5 flex-1 min-h-0 relative z-10 bg-white dark:bg-[#0c1825]">
-        {/* Section Subheader: Matching Month Card Header */}
-        <div className="flex items-center justify-between pt-0.5">
-          <span className="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
-            <span>Residents List</span>
-          </span>
-          <span className="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 font-medium">
-            {roomOccupantsList.length > 0
-              ? `${roomOccupantsList.length} Active Resident${roomOccupantsList.length === 1 ? '' : 's'}`
-              : 'Roster empty'}
-          </span>
-        </div>
-
+      <div className="px-4 sm:px-5 pb-3.5 sm:pb-4 pt-3.5 sm:pt-4 flex flex-col gap-2.5 flex-1 min-h-0 relative z-10 bg-white dark:bg-[#0c1825]">
         {/* Inner Box: Exactly matching Mid Tab's inner container bg-slate-50/50 dark:bg-[#071320] border-slate-200/80 dark:border-[#1a2d42] */}
         <div className="p-3 sm:p-3.5 rounded-2xl sm:rounded-3xl bg-slate-50/50 dark:bg-[#071320] border border-slate-200/80 dark:border-[#1a2d42] shadow-2xs flex-1 flex flex-col min-h-0 justify-center">
           {roomOccupantsList.length > 0 ? (
@@ -208,7 +196,7 @@ export function HostOccupantsList({
                             className={`w-7.5 h-7.5 rounded-full flex items-center justify-center text-[10.5px] font-black shrink-0 transition-all shadow-2xs ${
                               isSelected
                                 ? 'bg-[#c0c1ff] text-[#07006c]'
-                                : 'bg-slate-200/80 dark:bg-[#023859] border border-slate-300 dark:border-[#54ACBF]/40 text-slate-700 dark:text-[#A7EBF2]'
+                                : 'bg-slate-200/80 dark:bg-purple-600 border border-slate-300 dark:border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200'
                             }`}
                           >
                             {(occupant.name || 'G').slice(0, 2).toUpperCase()}
@@ -270,7 +258,7 @@ export function HostOccupantsList({
                                 setConfirmAction(null);
                                 if (typeof setConfirmDeleteId === 'function') setConfirmDeleteId(null);
                               }}
-                              className="h-7 px-3 rounded-lg bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 border border-slate-200 dark:border-[#54ACBF]/35 text-slate-700 dark:text-[#A7EBF2] text-[10.5px] font-bold cursor-pointer transition-colors flex items-center justify-center active:scale-95 leading-none"
+                              className="h-7 px-3 rounded-lg bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 border border-slate-200 dark:border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 text-[10.5px] font-bold cursor-pointer transition-colors flex items-center justify-center active:scale-95 leading-none"
                             >
                               Cancel
                             </button>
@@ -351,7 +339,7 @@ export function HostOccupantsList({
                 <button
                   type="button"
                   onClick={onAddGuestClick}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-[#011C40] border border-slate-200/80 dark:border-transparent text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-900 border border-slate-200/80 dark:border-transparent text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
                 >
                   <span className="material-symbols-outlined text-[15px]">person_add</span>
                   <span>Add Guest</span>
@@ -368,7 +356,7 @@ export function HostOccupantsList({
           <button
             type="button"
             onClick={onAddGuestClick}
-            className="w-full h-8.5 px-4 rounded-xl text-xs gap-1.5 font-bold transition-all flex items-center justify-center cursor-pointer shadow-xs leading-none bg-white hover:bg-slate-100 text-[#011C40] border border-slate-200/80 dark:border-transparent active:scale-95"
+            className="w-full h-8.5 px-4 rounded-xl text-xs gap-1.5 font-bold transition-all flex items-center justify-center cursor-pointer shadow-xs leading-none bg-white hover:bg-slate-100 text-slate-900 border border-slate-200/80 dark:border-transparent active:scale-95"
             title="Add a new guest to this room"
           >
             <span className="material-symbols-outlined text-[16px] leading-none shrink-0 font-bold">person_add</span>

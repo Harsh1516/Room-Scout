@@ -6,22 +6,41 @@ const API_BASE_URL =
     ? 'https://room-scout-backend.onrender.com/api'
     : 'http://localhost:5000/api');
 
+// In-flight request deduplication registry for simultaneous GET calls
+const inFlightRequests = new Map();
+
 async function request(endpoint, options = {}) {
-  const token = localStorage.getItem('roomscout_token') || localStorage.getItem('stayhub_jwt_token');
-  const adminKey = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('roomscout_admin_key') : null;
+  const method = (options.method || 'GET').toUpperCase();
+  const isGet = method === 'GET';
+  const dedupeKey = isGet && !options.skipDedupe ? `${method}:${endpoint}` : null;
 
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(adminKey ? { 'x-admin-key': adminKey } : {}),
-    ...options.headers,
-  };
+  if (dedupeKey && inFlightRequests.has(dedupeKey)) {
+    return inFlightRequests.get(dedupeKey);
+  }
 
-  const config = {
-    credentials: 'include',
-    ...options,
-    headers,
-  };
+  const executeRequest = async () => {
+    const token = localStorage.getItem('roomscout_token') || localStorage.getItem('stayhub_jwt_token');
+    const adminKey = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('roomscout_admin_key') : null;
+
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(adminKey ? { 'x-admin-key': adminKey } : {}),
+      ...options.headers,
+    };
+
+    // Prevent hanging requests with a 15-second timeout signal
+    const timeoutSignal =
+      typeof AbortSignal !== 'undefined' && AbortSignal.timeout
+        ? AbortSignal.timeout(15000)
+        : undefined;
+
+    const config = {
+      credentials: 'include',
+      ...options,
+      headers,
+      signal: options.signal || timeoutSignal,
+    };
 
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
@@ -77,10 +96,31 @@ async function request(endpoint, options = {}) {
     }
 
     return data;
-  } catch (error) {
-    console.error(`API Error [${endpoint}]:`, error.message);
-    throw error;
+    } catch (error) {
+      if (
+        (error.name === 'TypeError' && error.message && error.message.toLowerCase().includes('fetch')) ||
+        error.message?.includes('NetworkError') ||
+        error.message?.includes('Failed to fetch')
+      ) {
+        const friendlyError = new Error('Cannot connect to server. Please verify the backend is running on port 5000.');
+        friendlyError.status = 503;
+        throw friendlyError;
+      }
+      console.error(`API Error [${endpoint}]:`, error.message);
+      throw error;
+    }
+  };
+
+  const reqPromise = executeRequest();
+
+  if (dedupeKey) {
+    inFlightRequests.set(dedupeKey, reqPromise);
+    reqPromise.finally(() => {
+      inFlightRequests.delete(dedupeKey);
+    });
   }
+
+  return reqPromise;
 }
 
 export const authAPI = {
@@ -351,7 +391,10 @@ export const wishlistAPI = {
 };
 
 export const subscriptionsAPI = {
-  getPlans: () => request('/subscriptions/plans'),
+  getPlans: (params = {}) => {
+    const q = new URLSearchParams(params).toString();
+    return request(`/subscriptions/plans${q ? `?${q}` : ''}`);
+  },
 
   getMySubscription: () => request('/subscriptions/my-subscription'),
 
@@ -384,6 +427,12 @@ export const adminAPI = {
     request('/enter/hosts', {
       method: 'POST',
       body: JSON.stringify(hostData),
+    }),
+
+  bulkApproveHosts: (hostIds) =>
+    request('/enter/hosts/bulk-approve', {
+      method: 'PUT',
+      body: JSON.stringify({ hostIds }),
     }),
 
   approveHost: (id) =>

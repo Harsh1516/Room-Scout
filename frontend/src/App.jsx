@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useStaySearch } from './hooks/useStaySearch';
 import { Navbar } from './components/Navbar';
 import { WishlistProvider, useWishlist } from './context/WishlistContext';
@@ -10,7 +10,6 @@ import { ScrollToTop } from './components/ScrollToTop';
 import { ToastProvider, toast } from './context/ToastContext';
 import { FloatingThemeToggle } from './components/common/FloatingThemeToggle';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
-import AOS from 'aos';
 
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { GoogleOAuthProvider } from '@react-oauth/google';
@@ -20,7 +19,6 @@ const GOOGLE_CLIENT_ID =
   '206140766993-caova3o2u7mf54osrklq1d31p3ktq9v2.apps.googleusercontent.com';
 
 // Dynamic Lazy-Loaded Page Chunks
-const LandingPage = lazy(() => import('./components/LandingPage').then((m) => ({ default: m.LandingPage })));
 const Homepage = lazy(() => import('./pages/Homepage').then((m) => ({ default: m.Homepage || m.default })));
 const SearchResultsPage = lazy(() => import('./pages/SearchResultsPage').then((m) => ({ default: m.SearchResultsPage })));
 const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage })));
@@ -84,7 +82,28 @@ function AppContent() {
   const [loginRole, setLoginRole] = useState('user');
   const [loginPromptMessage, setLoginPromptMessage] = useState('');
   const [pendingAction, setPendingAction] = useState(null);
+  const [leftPanelOpen, setLeftPanelOpen] = useState(false);
 
+  useEffect(() => {
+    const handler = (e) => setLeftPanelOpen(Boolean(e?.detail?.open));
+    window.addEventListener('leftpanel:toggle', handler);
+    return () => window.removeEventListener('leftpanel:toggle', handler);
+  }, []);
+  // "Ready to Switch to Host" slide-to-confirm modal state
+  const [showHostSwitchModal, setShowHostSwitchModal] = useState(false);
+  const [hostSwitchKnobX, setHostSwitchKnobX] = useState(0);
+  const [hostSwitchDragging, setHostSwitchDragging] = useState(false);
+  const hostSwitchSliderRef = useRef(null);
+
+  const handleSelectUpload = () => {
+    setHostSwitchKnobX(0);
+    setShowHostSwitchModal(true);
+  };
+
+  const confirmHostSwitch = () => {
+    setShowHostSwitchModal(false);
+    proceedToHostUpload();
+  };
   const [selectedStayForDetail, setSelectedStayForDetail] = useState(null);
   const [selectedStayForBooking, setSelectedStayForBooking] = useState(null);
 
@@ -99,6 +118,73 @@ function AppContent() {
     if (isLoginOpen) setHasLoadedLogin(true);
   }, [isLoginOpen]);
 
+  // Drag handling for the host-switch slide-to-confirm control
+  useEffect(() => {
+    if (!hostSwitchDragging) return;
+
+    const handleMove = (e) => {
+      const slider = hostSwitchSliderRef.current;
+      if (!slider) return;
+      const rect = slider.getBoundingClientRect();
+      const maxX = rect.width - 48;
+      const x = e.clientX - rect.left - 24;
+      setHostSwitchKnobX(Math.max(0, Math.min(maxX, x)));
+    };
+
+    const handleUp = () => {
+      const slider = hostSwitchSliderRef.current;
+      if (!slider) {
+        setHostSwitchDragging(false);
+        return;
+      }
+      const rect = slider.getBoundingClientRect();
+      const maxX = rect.width - 48;
+      setHostSwitchDragging(false);
+      if (hostSwitchKnobX > maxX * 0.8) {
+        confirmHostSwitch();
+      } else {
+        setHostSwitchKnobX(0);
+      }
+    };
+
+    const handleTouchMove = (e) => {
+      const touch = e.touches?.[0];
+      if (!touch) return;
+      const slider = hostSwitchSliderRef.current;
+      if (!slider) return;
+      const rect = slider.getBoundingClientRect();
+      const maxX = rect.width - 48;
+      const x = touch.clientX - rect.left - 24;
+      setHostSwitchKnobX(Math.max(0, Math.min(maxX, x)));
+    };
+
+    const handleTouchEnd = () => {
+      const slider = hostSwitchSliderRef.current;
+      if (!slider) {
+        setHostSwitchDragging(false);
+        return;
+      }
+      const rect = slider.getBoundingClientRect();
+      const maxX = rect.width - 48;
+      setHostSwitchDragging(false);
+      if (hostSwitchKnobX > maxX * 0.8) {
+        confirmHostSwitch();
+      } else {
+        setHostSwitchKnobX(0);
+      }
+    };
+
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+    window.addEventListener('touchmove', handleTouchMove);
+    window.addEventListener('touchend', handleTouchEnd);
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [hostSwitchDragging, hostSwitchKnobX]);
   useEffect(() => {
     if (selectedStayForDetail) setHasLoadedPropertyModal(true);
   }, [selectedStayForDetail]);
@@ -143,7 +229,7 @@ function AppContent() {
 
       if (pendingAction === 'host-upload') {
         // Only redirect if the authenticated user has host privileges
-        if (user?.role !== 'host' && user?.role !== 'admin') return;
+        // Allow any authenticated account to become a host
 
         setIsLoginOpen(false);
         try {
@@ -156,9 +242,6 @@ function AppContent() {
         } catch {
           navigate('/host/dashboard');
         }
-      } else if (pendingAction === 'explore') {
-        setIsLoginOpen(false);
-        navigate('/explore');
       }
       setPendingAction(null);
     }
@@ -194,7 +277,7 @@ function AppContent() {
   }, [navigate]);
 
   // Handler for Tab 1: Upload Your Property Online (HOST ONLY)
-  const handleSelectUpload = () => {
+  const proceedToHostUpload = () => {
     if (!isAuthenticated) {
       setLoginRole('host');
       setLoginPromptMessage('');
@@ -203,9 +286,12 @@ function AppContent() {
       return;
     }
 
-    if (user?.role !== 'host' && user?.role !== 'admin') {
+    // Allow any logged-in account (including guests) to start hosting;
+    // backend converts the account role to host on property submission.
+    if (!isAuthenticated) {
       setLoginRole('host');
-      setLoginPromptMessage('You are currently signed in as a Guest. Please log in with your Host account to list properties.');
+      setLoginPromptMessage('');
+      setPendingAction('host-upload');
       setIsLoginOpen(true);
       return;
     }
@@ -222,16 +308,8 @@ function AppContent() {
   };
 
   // Handler for Tab 2: Search Rooms Near You (Explore Stays)
+  // No login required to browse — login is only prompted when booking
   const handleSelectSearch = () => {
-    if (!isAuthenticated) {
-      setLoginRole('user');
-      setLoginPromptMessage('');
-      setPendingAction('explore');
-      setIsLoginOpen(true);
-      return;
-    }
-
-    // All authenticated users (Hosts, Guests, Admins) can freely browse and explore stays
     navigate('/explore');
   };
 
@@ -293,24 +371,21 @@ function AppContent() {
     if (newBooking) addBooking(newBooking);
   };
 
-  useEffect(() => {
-    AOS.refresh();
-  }, [location.pathname]);
-
   const normalizedPath = location.pathname.replace(/\/+$/, '') || '/';
   const shouldShowNavbar = normalizedPath === '/explore' || normalizedPath === '/search';
 
-  const isHostPage = location.pathname.startsWith('/host') || location.pathname.startsWith('/account');
+  const isHostPage = location.pathname.startsWith('/host');
 
   return (
-    <div className={`min-h-screen ${isHostPage ? 'host-page-scope font-body-md selection:bg-custom-btn-primary selection:text-white bg-white dark:bg-slate-950' : (normalizedPath === '/' || normalizedPath === '/explore' ? 'bg-white dark:bg-black' : 'bg-slate-100 dark:bg-slate-950')} text-slate-900 dark:text-slate-100`}>
+    <div className={`min-h-screen ${isHostPage ? 'host-page-scope font-body-md selection:bg-custom-btn-primary selection:text-white bg-white dark:bg-slate-950' : (normalizedPath === '/' || normalizedPath === '/explore' || normalizedPath === '/account' ? 'bg-white dark:bg-black' : 'bg-slate-100 dark:bg-slate-950')} text-slate-900 dark:text-slate-100`}>
       <ScrollToTop />
-      {shouldShowNavbar && (
+      {shouldShowNavbar && !leftPanelOpen && (
         <Navbar
           onSearchSubmit={onSearch}
           onLoginClick={() => handleOpenLoginModal('user', '')}
           onOpenBookings={() => setIsBookingsOpen(true)}
           bookingsCount={bookings.length}
+          onSelectUpload={handleSelectUpload}
         />
       )}
 
@@ -318,47 +393,39 @@ function AppContent() {
         <Routes>
           <Route
             path="/"
-            element={
-              <LandingPage
-                onSelectUpload={handleSelectUpload}
-                onSelectSearch={handleSelectSearch}
-              />
-            }
+            element={<Navigate to="/explore" replace />}
           />
           <Route
             path="/explore"
             element={
-              <ProtectedRoute>
-                <Homepage
-                  setCategoryFilter={setCategoryFilter}
-                  onStayClick={handleOpenDetail}
-                  onBookClick={handleOpenBooking}
-                />
-              </ProtectedRoute>
+              <Homepage
+                setCategoryFilter={setCategoryFilter}
+                onStayClick={handleOpenDetail}
+                onBookClick={handleOpenBooking}
+                onSelectUpload={handleSelectUpload}
+              />
             }
           />
           <Route
             path="/search"
             element={
-              <ProtectedRoute>
-                <SearchResultsPage
-                  stays={paginatedStays}
-                  allFilteredStays={filteredStays}
-                  pagination={pagination}
-                  isLoading={isLoadingStays}
-                  isBackgroundRefreshing={isBackgroundRefreshing}
-                  filters={filters}
-                  setCategoryFilter={setCategoryFilter}
-                  setGenderFilter={setGenderFilter}
-                  setSortOrder={setSortOrder}
-                  setMinRating={setMinRating}
-                  setPriceRange={setPriceRange}
-                  toggleAmenity={toggleAmenity}
-                  resetFilters={resetFilters}
-                  onStayClick={handleOpenDetail}
-                  onBookClick={handleOpenBooking}
-                />
-              </ProtectedRoute>
+              <SearchResultsPage
+                stays={paginatedStays}
+                allFilteredStays={filteredStays}
+                pagination={pagination}
+                isLoading={isLoadingStays}
+                isBackgroundRefreshing={isBackgroundRefreshing}
+                filters={filters}
+                setCategoryFilter={setCategoryFilter}
+                setGenderFilter={setGenderFilter}
+                setSortOrder={setSortOrder}
+                setMinRating={setMinRating}
+                setPriceRange={setPriceRange}
+                toggleAmenity={toggleAmenity}
+                resetFilters={resetFilters}
+                onStayClick={handleOpenDetail}
+                onBookClick={handleOpenBooking}
+              />
             }
           />
           <Route
@@ -509,6 +576,51 @@ function AppContent() {
             onStayClick={handleOpenDetail}
           />
         </Suspense>
+      )}
+
+      {/* Ready to Switch to Host - slide-to-confirm modal */}
+      {showHostSwitchModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md">
+          <div className="w-full max-w-md rounded-3xl border border-white/15 bg-slate-900/95 p-6 shadow-2xl">
+            <h2 className="text-xl font-semibold text-white">Ready to Switch to Host</h2>
+            <p className="mt-2 text-sm text-slate-300">
+              Slide the control to the right to confirm you are ready to become a host and continue to property upload.
+            </p>
+
+            <div
+              ref={hostSwitchSliderRef}
+              className="relative mt-6 h-14 w-full rounded-full border border-white/15 bg-slate-950/80 overflow-hidden select-none"
+            >
+              {/* White fill that follows the knob */}
+              <div
+                className="absolute top-0 left-0 h-full bg-white/25 transition-[width] duration-75"
+                style={{ width: `${Math.min(hostSwitchKnobX + 48, hostSwitchSliderRef.current?.getBoundingClientRect().width || 0)}px` }}
+              />
+              <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold tracking-wide text-slate-500">
+                SLIDE TO CONFIRM
+              </div>
+              <div
+                onMouseDown={() => setHostSwitchDragging(true)}
+                onTouchStart={() => setHostSwitchDragging(true)}
+                className="absolute top-1 left-0 h-12 w-12 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 flex items-center justify-center cursor-grab active:cursor-grabbing shadow-lg"
+                style={{ transform: `translateX(${hostSwitchKnobX}px)` }}
+              >
+                <span className="text-white text-lg">›</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowHostSwitchModal(false);
+                setHostSwitchKnobX(0);
+              }}
+              className="mt-4 w-full rounded-xl border border-white/10 bg-white/5 py-2.5 text-sm text-slate-300 hover:bg-white/10"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Global Floating Theme Toggle (Single source of truth across complete website) */}

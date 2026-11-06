@@ -260,8 +260,9 @@ bookingSchema.virtual('userPhone').get(function () { return this.phone; });
 bookingSchema.virtual('guestPhone').get(function () { return this.phone; });
 bookingSchema.virtual('guestAadhar').get(function () { return this.aadharNumber; });
 
-// Compound Indexes for fast conflict resolution & schedule checking
-bookingSchema.index({ stayId: 1, roomNumber: 1, checkIn: 1, checkOut: 1 });
+// ESR-compliant compound indexes for fast conflict resolution & schedule checking
+bookingSchema.index({ stayId: 1, roomNumber: 1, status: 1, checkIn: 1, checkOut: 1 });
+bookingSchema.index({ stayId: 1, status: 1, checkIn: 1, checkOut: 1 });
 bookingSchema.index({ hostId: 1, status: 1, createdAt: -1 });
 bookingSchema.index({ userId: 1, createdAt: -1 });
 bookingSchema.index({ 'upiPayment.transactionRef': 1 }, { sparse: true });

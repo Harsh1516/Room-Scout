@@ -6,7 +6,7 @@ const REVIEW_TABS = [
   { id: 'all', label: 'All Reviews (10,000+)' },
   { id: 'tech', label: '💻 Remote Tech & Founders' },
   { id: 'students', label: '🎓 Students & Co-Living' },
-  { id: 'vacation', label: '🏔️ Vacationers & Villas' },
+  { id: 'vacation', label: '🏔️ Vacationers & Hotels' },
 ];
 
 const REVIEWS = [

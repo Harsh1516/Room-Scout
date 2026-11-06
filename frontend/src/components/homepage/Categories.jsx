@@ -5,8 +5,8 @@ import { staysAPI } from '../../services/api';
 
 const ALL_CATEGORIES = [
   {
-    id: 'pg-hostels',
-    title: 'PG & Hostels',
+    id: 'pg',
+    title: 'PG & Co-Living',
     description: 'Fully furnished co-living spaces with Wi-Fi, meals, and security.',
     icon: '🏠',
     tag: 'Co-Living',
@@ -27,22 +27,6 @@ const ALL_CATEGORIES = [
     icon: '🏨',
     tag: 'Short Stays',
     matchTypes: ['hotel'],
-  },
-  {
-    id: 'resorts',
-    title: 'Resorts',
-    description: 'Luxury weekend getaways with infinity pools and scenic views.',
-    icon: '🏖️',
-    tag: 'Luxury Havens',
-    matchTypes: ['resort'],
-  },
-  {
-    id: 'villas',
-    title: 'Stays & Villas',
-    description: 'Authentic local homestays and private villas for family retreats.',
-    icon: '🏡',
-    tag: 'Private Living',
-    matchTypes: ['villa', 'homestay'],
   },
 ];
 
@@ -66,7 +50,7 @@ export function Categories({ selectedCategory, onSelectCategory }) {
           const filtered = ALL_CATEGORIES.filter((cat) =>
             cat.matchTypes.some((t) => availableTypes.has(t))
           );
-          setActiveCategories(filtered.length > 0 ? filtered : ALL_CATEGORIES);
+          setActiveCategories(ALL_CATEGORIES);
         }
       } catch (err) {
         console.error('Error fetching categories types:', err);

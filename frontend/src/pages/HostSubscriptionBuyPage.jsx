@@ -168,16 +168,21 @@ export function HostSubscriptionBuyPage() {
   const loadPlans = async (silent = Boolean(initialPlansData)) => {
     try {
       if (!silent) setLoading(true);
-      const [plansRes, mySubRes] = await Promise.all([
-        subscriptionsAPI.getPlans().catch((err) => {
-          console.warn('Failed to load plans:', err);
-          return null;
-        }),
-        subscriptionsAPI.getMySubscription().catch((err) => {
-          console.warn('Failed to load my subscription:', err);
-          return null;
-        }),
-      ]);
+      const mySubRes = await subscriptionsAPI.getMySubscription().catch((err) => {
+        console.warn('Failed to load my subscription:', err);
+        return null;
+      });
+
+      const hostPropType = mySubRes?.stay?.propertyType || mySubRes?.stay?.type || null;
+      const hostRooms = mySubRes?.stay?.totalRooms || (mySubRes?.stay?.rooms ? mySubRes.stay.rooms.length : null);
+      const queryParams = {};
+      if (hostPropType) queryParams.propertyType = hostPropType;
+      if (hostRooms) queryParams.rooms = hostRooms;
+
+      const plansRes = await subscriptionsAPI.getPlans(queryParams).catch((err) => {
+        console.warn('Failed to load plans:', err);
+        return null;
+      });
 
       if (plansRes && plansRes.success) {
         setPlansData(plansRes);
@@ -351,16 +356,16 @@ export function HostSubscriptionBuyPage() {
       {/* ── Top Header Navigation Bar (Matching Host Dashboard) ── */}
       <header className="relative w-full h-14 sm:h-16 pointer-events-none select-none z-50 font-body-md host-font-scope antialiased">
         {/* ── 1. LEFT FLOATING ISLAND: BACK BUTTON (Exact match to Host Dashboard) ── */}
-        <div className="fixed top-3.5 left-3 sm:top-5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none">
+        <div className="fixed top-3.5 left-2.5 sm:top-5 sm:left-6 z-50 flex items-center gap-1.5 sm:gap-2 pointer-events-auto select-none">
           <button
             type="button"
             onClick={handleBack}
             data-no-hover="true"
-            className="apple-liquid-nav flex items-center justify-center h-8 sm:h-9 px-3 py-1 sm:px-3.5 sm:py-1.5 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 dark:border-white/15 shadow-xs cursor-pointer text-slate-800 dark:text-slate-200 font-semibold text-xs sm:text-sm select-none active:scale-95 transition-transform shrink-0"
+            className="apple-liquid-nav flex items-center justify-center px-3 py-1.5 sm:px-4 sm:py-2 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 dark:border-white/15 shadow-xs cursor-pointer text-slate-800 dark:text-slate-200 font-semibold text-xs sm:text-sm select-none active:scale-95 transition-transform shrink-0"
             title="Return to Subscription Status"
           >
             <svg
-              className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 dark:text-slate-300 stroke-[2]"
+              className="w-4 h-4 text-slate-600 dark:text-slate-300 stroke-[2.5]"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -370,7 +375,7 @@ export function HostSubscriptionBuyPage() {
               <line x1="19" y1="12" x2="5" y2="12" />
               <polyline points="12 19 5 12 12 5" />
             </svg>
-            <span>Back</span>
+            <span className="hidden min-[380px]:inline">Back</span>
           </button>
         </div>
       </header>
@@ -385,6 +390,27 @@ export function HostSubscriptionBuyPage() {
               <h2 className="text-xl sm:text-2xl font-normal text-white">Choose Next Plan</h2>
             </div>
 
+            {/* Dynamic Property & Room Pricing Context Banner */}
+            {plansData && (
+              <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-purple-950/20 border border-purple-500/20 text-xs shadow-sm">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-white font-normal">
+                    {plansData.propertyType || 'PG'} Accommodation
+                  </span>
+                  <span className="text-purple-300 font-normal">
+                    • {plansData.roomCount || 1} Room{(plansData.roomCount || 1) > 1 ? 's' : ''}
+                  </span>
+                  <span className="text-slate-400 font-normal">
+                    (@ ₹{plansData.ratePerRoom || 10}/room/month)
+                  </span>
+                </div>
+                <div className="text-purple-300 font-normal bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">
+                  Base Monthly: ₹{(plansData.monthlyBase || (plansData.roomCount || 1) * (plansData.ratePerRoom || 10)).toLocaleString('en-IN')}/mo
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {(plansData?.plans || [
                 { code: 'monthly', label: '1 Month', durationMonths: 1, price: 250 },
@@ -395,6 +421,15 @@ export function HostSubscriptionBuyPage() {
                 .map((plan) => {
                 const isSelected = selectedPlanCode === plan.code;
                 const perMonth = Math.round(Number(plan.price) / Number(plan.durationMonths || 1));
+                const fallbackDiscountPct =
+                  Number(plan.discountPercent) ||
+                  (plan.durationMonths === 3 ? 5 : plan.durationMonths === 6 ? 10 : 0);
+                const originalTotal =
+                  plan.originalPrice ||
+                  (fallbackDiscountPct > 0
+                    ? Math.round(Number(plan.price) / (1 - fallbackDiscountPct / 100))
+                    : plan.price);
+                const hasDiscount = originalTotal > Number(plan.price);
 
                 return (
                   <button
@@ -407,22 +442,41 @@ export function HostSubscriptionBuyPage() {
                         : 'bg-slate-900/60 border-white/10 hover:border-white/20 hover:bg-slate-900/80'
                     }`}
                   >
-                    {/* Selected checkmark pill */}
+                    {/* Selected checkmark pill & discount badge */}
                     <div className="flex items-center justify-between w-full">
-                      <span
-                        className={`text-xs font-normal px-2.5 py-0.5 rounded-full ${
-                          isSelected
-                            ? 'bg-purple-500 text-white'
-                            : 'bg-slate-800 text-slate-400 group-hover:text-slate-200'
-                        }`}
-                      >
-                        {plan.durationMonths === 6
-                          ? 'Popular'
-                          : `${plan.durationMonths} Mo`}
-                      </span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span
+                          className={`text-xs font-normal px-2.5 py-0.5 rounded-full ${
+                            isSelected
+                              ? 'bg-purple-500 text-white'
+                              : 'bg-slate-800 text-slate-400 group-hover:text-slate-200'
+                          }`}
+                        >
+                          {plan.durationMonths === 1 ? '1 Month' : `${plan.durationMonths} Months`}
+                        </span>
+                        {(() => {
+                          const discountPct =
+                            Number(plan.discountPercent) ||
+                            (plan.originalPrice && Number(plan.originalPrice) > Number(plan.price)
+                              ? Math.round((1 - Number(plan.price) / Number(plan.originalPrice)) * 100)
+                              : 0);
+                          if (!discountPct || discountPct <= 0) return null;
+                          return (
+                            <span
+                              className={`text-[10px] font-normal px-2 py-0.5 rounded-full border ${
+                                plan.durationMonths === 6
+                                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                                  : 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+                              }`}
+                            >
+                              {discountPct}% OFF
+                            </span>
+                          );
+                        })()}
+                      </div>
 
                       <div
-                        className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
+                        className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all shrink-0 ${
                           isSelected
                             ? 'border-purple-400 bg-purple-500 text-white'
                             : 'border-slate-600 bg-slate-800'
@@ -441,13 +495,21 @@ export function HostSubscriptionBuyPage() {
                       <h3 className="font-normal text-lg text-white group-hover:text-purple-300 transition-colors">
                         {plan.label}
                       </h3>
-                      <div className="flex items-baseline gap-1">
+                      <div className="flex items-baseline gap-2">
                         <span className="text-3xl font-normal text-white">₹{Number(plan.price).toLocaleString('en-IN')}</span>
+                        {hasDiscount && (
+                          <span className="text-sm text-slate-500 line-through font-normal">
+                            ₹{Number(originalTotal).toLocaleString('en-IN')}
+                          </span>
+                        )}
                         <span className="text-xs text-slate-400 font-normal">total</span>
                       </div>
-                      <span className="text-[11px] text-purple-300/80 font-normal">
-                        ₹{perMonth}/month
-                      </span>
+                      <div className="flex items-center justify-between text-[11px] text-purple-300/80 font-normal">
+                        <span>₹{perMonth}/month</span>
+                        {hasDiscount && (
+                          <span className="text-emerald-400">Save ₹{originalTotal - Number(plan.price)}</span>
+                        )}
+                      </div>
                     </div>
                   </button>
                 );
@@ -890,6 +952,11 @@ export function HostSubscriptionBuyPage() {
                 <span className="text-xs text-slate-400 font-normal">
                   {selectedPlan.durationMonths} Month{selectedPlan.durationMonths > 1 ? 's' : ''} Validity
                 </span>
+                {plansData?.roomCount && (
+                  <span className="text-[11px] text-slate-400 font-normal">
+                    {plansData.propertyType || 'PG'} • {plansData.roomCount} room{plansData.roomCount > 1 ? 's' : ''} @ ₹{plansData.ratePerRoom}/rm/mo
+                  </span>
+                )}
                 <span className="text-xs text-purple-300 font-normal mt-1">
                   Starting: {startOption === 'NEXT' ? `Next Month (1st ${monthDetails.nextMonthName} ${monthDetails.nextYear})` : `This Month (${monthDetails.currentMonthName})`}
                 </span>

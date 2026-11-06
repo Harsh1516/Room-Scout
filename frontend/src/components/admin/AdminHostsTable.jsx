@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { HostRoomsDropdown } from './HostRoomsDropdown';
 
 export const AdminHostRow = React.memo(function AdminHostRow({
@@ -12,21 +12,35 @@ export const AdminHostRow = React.memo(function AdminHostRow({
   isDeleting,
   confirmDelete,
   setConfirmDeleteHostId,
+  isSelected = false,
+  onToggleSelect,
 }) {
   const hostId = host._id;
   const formattedDateTime = formatDateTime(host.createdAt || host.joinedDate);
   const isApproved = host.status === 'Approved';
-  const hasRooms = Array.isArray(host.rooms) && host.rooms.length > 0;
-  const hasCategories = Array.isArray(host.roomRates) && host.roomRates.length > 0;
-  const canApprove = hasRooms && hasCategories;
 
   const hasPropertyDetails = Boolean(host.propertyName && host.propertyName !== 'Host Property' && host.location);
 
   return (
-    <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
-      {/* 1. # */}
-      <td className="py-3 px-3 text-center border-r border-slate-100 dark:border-slate-800/80 text-slate-400 font-mono text-[11px] align-middle">
-        {index + 1}
+    <tr
+      className={`transition-colors ${
+        isSelected
+          ? 'bg-purple-500/10 dark:bg-purple-500/15 border-b border-purple-500/20'
+          : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/40'
+      }`}
+    >
+      {/* 1. Multi-select checkbox & # */}
+      <td className="py-3 px-3 text-center border-r border-slate-100 dark:border-slate-800/80 text-slate-400 font-mono text-[11px] align-middle select-none">
+        <div className="flex items-center justify-center gap-2">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => onToggleSelect?.(hostId)}
+            className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-purple-600 focus:ring-purple-500/30 cursor-pointer accent-purple-600 transition-transform active:scale-95"
+            aria-label={`Select ${host.name}`}
+          />
+          <span>{index + 1}</span>
+        </div>
       </td>
 
       {/* 2. Host & Contact */}
@@ -130,23 +144,12 @@ export const AdminHostRow = React.memo(function AdminHostRow({
           {!isApproved && (
             <button
               type="button"
-              onClick={() => {
-                if (!canApprove) return;
-                onApproveHost(hostId, host.name);
-              }}
-              disabled={isApproving || !canApprove}
-              className={`px-2.5 py-1 text-xs rounded-md transition-all font-medium border ${
-                canApprove
-                  ? 'text-amber-700 dark:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 cursor-pointer'
-                  : 'text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 cursor-not-allowed opacity-60'
-              }`}
-              title={
-                canApprove
-                  ? `Approve host property for ${host.name}`
-                  : 'Cannot approve: Host must add at least 1 room card inside a room category'
-              }
+              onClick={() => onApproveHost(hostId, host.name)}
+              disabled={isApproving}
+              className="px-2.5 py-1 text-xs rounded-md transition-all font-medium border text-amber-700 dark:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 cursor-pointer active:scale-95 disabled:opacity-50"
+              title={`Approve host property for ${host.name}`}
             >
-              {isApproving ? 'Approving...' : canApprove ? 'Approve' : 'No Rooms'}
+              {isApproving ? 'Approving...' : 'Approve'}
             </button>
           )}
 
@@ -195,15 +198,55 @@ export function AdminHostsTable({
   deletingHostId,
   confirmDeleteHostId,
   setConfirmDeleteHostId,
+  selectedHostIds = [],
+  onToggleSelectHost,
+  onSelectAllHosts,
+  onClearSelection,
+  onBulkApprove,
+  isBulkApproving = false,
 }) {
+  const visibleHostIds = hosts.map((h) => h._id).filter(Boolean);
+  const allVisibleSelected = visibleHostIds.length > 0 && visibleHostIds.every((id) => selectedHostIds.includes(id));
+  const someVisibleSelected = visibleHostIds.some((id) => selectedHostIds.includes(id));
+
+  const headerCheckboxRef = useRef(null);
+
+  useEffect(() => {
+    if (headerCheckboxRef.current) {
+      headerCheckboxRef.current.indeterminate = someVisibleSelected && !allVisibleSelected;
+    }
+  }, [someVisibleSelected, allVisibleSelected]);
+
+  const handleMasterCheckboxChange = () => {
+    if (allVisibleSelected) {
+      const remaining = selectedHostIds.filter((id) => !visibleHostIds.includes(id));
+      onSelectAllHosts?.(remaining);
+    } else {
+      const merged = Array.from(new Set([...selectedHostIds, ...visibleHostIds]));
+      onSelectAllHosts?.(merged);
+    }
+  };
+
   return (
     <>
       <div className="hidden md:block w-full overflow-hidden">
         <table className="w-full text-left border-collapse table-fixed text-xs">
           <thead>
             <tr className="bg-slate-50/80 dark:bg-white/[0.02] text-slate-500 dark:text-slate-400 border-b border-slate-200/80 dark:border-white/[0.06] font-normal text-xs select-none">
-              <th className="py-3.5 px-3 w-[5%] text-center border-r border-slate-200/70 dark:border-white/[0.06] text-slate-400 font-normal">
-                #
+              <th className="py-3.5 px-3 w-[6.5%] text-center border-r border-slate-200/70 dark:border-white/[0.06] text-slate-400 font-normal">
+                <div className="flex items-center justify-center gap-2">
+                  <input
+                    ref={headerCheckboxRef}
+                    type="checkbox"
+                    checked={allVisibleSelected}
+                    onChange={handleMasterCheckboxChange}
+                    disabled={hosts.length === 0}
+                    className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-purple-600 focus:ring-purple-500/30 cursor-pointer accent-purple-600 transition-transform active:scale-95 disabled:opacity-40"
+                    title={allVisibleSelected ? 'Deselect all visible hosts' : 'Select all visible hosts'}
+                    aria-label="Select all visible hosts"
+                  />
+                  <span>#</span>
+                </div>
               </th>
               <th className="py-3.5 px-3.5 w-[20%] border-r border-slate-200/70 dark:border-white/[0.06] font-normal">
                 Host & contact
@@ -211,7 +254,7 @@ export function AdminHostsTable({
               <th className="py-3.5 px-3.5 w-[22%] border-r border-slate-200/70 dark:border-white/[0.06] font-normal">
                 Property & location
               </th>
-              <th className="py-3.5 px-3 w-[33%] border-r border-slate-200/70 dark:border-white/[0.06] font-normal text-center">
+              <th className="py-3.5 px-3 w-[31.5%] border-r border-slate-200/70 dark:border-white/[0.06] font-normal text-center">
                 Rooms & rates
               </th>
               <th className="py-3.5 px-3 w-[10%] border-r border-slate-200/70 dark:border-white/[0.06] font-normal text-center">
@@ -259,6 +302,8 @@ export function AdminHostsTable({
                     isDeleting={deletingHostId === hostId}
                     confirmDelete={confirmDeleteHostId === hostId}
                     setConfirmDeleteHostId={setConfirmDeleteHostId}
+                    isSelected={selectedHostIds.includes(hostId)}
+                    onToggleSelect={onToggleSelectHost}
                   />
                 );
               })
@@ -276,18 +321,33 @@ export function AdminHostsTable({
         ) : (
           hosts.map((host, idx) => {
             const hostId = host._id;
-            const isPending = host.status === 'Pending Approval';
+            const isPending = host.status === 'Pending Approval' || host.status !== 'Approved';
             const hasPropertyDetails = Boolean(host.propertyName && host.propertyName !== 'Host Property' && host.location);
+            const isSelected = selectedHostIds.includes(hostId);
 
             return (
               <div
                 key={hostId || host.email || idx}
-                className="p-4 rounded-xl bg-white dark:bg-black border border-slate-200 dark:border-slate-800 shadow-xs space-y-3"
+                className={`p-4 rounded-xl border shadow-xs space-y-3 transition-colors ${
+                  isSelected
+                    ? 'bg-purple-500/10 dark:bg-purple-950/30 border-purple-400/40'
+                    : 'bg-white dark:bg-black border-slate-200 dark:border-slate-800'
+                }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-normal text-slate-900 dark:text-white">
-                    #{idx + 1} {host.name}
-                  </span>
+                  <div className="flex items-center gap-2.5">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => onToggleSelectHost?.(hostId)}
+                      className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-purple-600 focus:ring-purple-500/30 cursor-pointer accent-purple-600"
+                      aria-label={`Select ${host.name}`}
+                    />
+                    <span className="text-xs font-normal text-slate-900 dark:text-white">
+                      #{idx + 1} {host.name}
+                    </span>
+                  </div>
+
                   <span
                     className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-normal border ${
                       isPending
@@ -320,7 +380,7 @@ export function AdminHostsTable({
                   <HostRoomsDropdown host={host} />
                 </div>
 
-                <div className="flex items-center justify-end gap-2 pt-1">
+                <div className="flex items-center justify-end gap-2 pt-1 flex-wrap">
                   <button
                     type="button"
                     onClick={() => onOpenHostPortal(host)}
@@ -331,6 +391,18 @@ export function AdminHostsTable({
                       <path d="M5 12h14M13 5l7 7-7 7" />
                     </svg>
                   </button>
+
+                  {isPending && (
+                    <button
+                      type="button"
+                      onClick={() => onApproveHost(hostId, host.name)}
+                      disabled={approvingHostId === hostId}
+                      className="px-3 py-1.5 text-xs text-amber-700 dark:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-md font-medium cursor-pointer disabled:opacity-50"
+                    >
+                      {approvingHostId === hostId ? 'Approving...' : 'Approve'}
+                    </button>
+                  )}
+
                   <button
                     type="button"
                     onClick={() => onDeleteHost(hostId, host.name)}

@@ -39,7 +39,63 @@ function resolveAadhar(payload = {}) {
   ).replace(/\D/g, '');
 }
 
-async function findRoomOverlap({ stayId, roomNumber, checkIn, checkOut, excludeId }) {
+// In-memory concurrency mutex to serialize simultaneous booking attempts on the exact same room
+const activeRoomLocks = new Map();
+
+/**
+ * Acquires a temporary lock on a specific room to eliminate Time-of-Check to Time-of-Use (TOCTOU) race conditions.
+ */
+export async function acquireRoomLock(stayId, roomNumber, maxWaitMs = 5000) {
+  const lockKey = `${String(stayId).trim()}_${String(roomNumber).trim()}`;
+  const startTime = Date.now();
+
+  while (activeRoomLocks.has(lockKey)) {
+    if (Date.now() - startTime > maxWaitMs) {
+      const err = new Error(`Room ${roomNumber} is currently processing another reservation. Please retry in a few seconds.`);
+      err.statusCode = 409;
+      throw err;
+    }
+    await new Promise((res) => setTimeout(res, 50));
+  }
+
+  activeRoomLocks.set(lockKey, Date.now());
+
+  return () => {
+    activeRoomLocks.delete(lockKey);
+  };
+}
+
+/**
+ * Executes an operation inside a MongoDB transaction when supported (MongoDB Atlas replica set),
+ * with graceful fallback for standalone development environments.
+ */
+export async function executeWithTransaction(actionFn) {
+  let session = null;
+  try {
+    session = await mongoose.startSession();
+    session.startTransaction();
+  } catch (err) {
+    // Standalone mongod instances without replica sets
+    session = null;
+  }
+
+  if (!session) {
+    return await actionFn(null);
+  }
+
+  try {
+    const result = await actionFn(session);
+    await session.commitTransaction();
+    return result;
+  } catch (txErr) {
+    await session.abortTransaction();
+    throw txErr;
+  } finally {
+    session.endSession();
+  }
+}
+
+async function findRoomOverlap({ stayId, roomNumber, checkIn, checkOut, excludeId, session = null }) {
   await autoExpireBookings({ stayId });
   const query = {
     stayId,
@@ -51,7 +107,9 @@ async function findRoomOverlap({ stayId, roomNumber, checkIn, checkOut, excludeI
   if (excludeId && mongoose.Types.ObjectId.isValid(excludeId)) {
     query._id = { $ne: excludeId };
   }
-  return Booking.findOne(query).select('_id bookingReferenceId checkIn checkOut fullName status').lean();
+  let q = Booking.findOne(query).select('_id bookingReferenceId checkIn checkOut fullName status');
+  if (session) q = q.session(session);
+  return q.lean();
 }
 
 /**
@@ -393,15 +451,6 @@ export const createBooking = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Valid check-in and check-out dates are required.' });
     }
 
-    const overlap = await findRoomOverlap({ stayId: stay._id, roomNumber, checkIn, checkOut });
-    if (overlap) {
-      return res.status(409).json({
-        success: false,
-        message: `Room ${roomNumber} is already booked for those dates.`,
-        conflictingBookingId: overlap.bookingReferenceId,
-      });
-    }
-
     // Guard against duplicate pending requests by the SAME guest/user for the same room & overlapping dates
     const currentUserId = actorId(req);
     const cleanPhone = String(body.phone || body.guestPhone || '').replace(/\D/g, '').slice(-10);
@@ -419,17 +468,6 @@ export const createBooking = async (req, res, next) => {
         ...(cleanEmail ? [{ email: cleanEmail }] : []),
       ],
     };
-
-    if (userDuplicateQuery.$or.length > 0) {
-      const existingUserPending = await Booking.findOne(userDuplicateQuery).select('_id bookingReferenceId').lean();
-      if (existingUserPending) {
-        return res.status(400).json({
-          success: false,
-          message: 'You already have a pending booking request for this room on these dates. Please wait for host approval.',
-          existingBookingId: existingUserPending.bookingReferenceId,
-        });
-      }
-    }
 
     const paymentMethodRaw = String(body.paymentMethod || 'UPI').toUpperCase();
     const isPayOnArrival = paymentMethodRaw === 'PAY_ON_ARRIVAL' || paymentMethodRaw === 'OFFLINE' || paymentMethodRaw === 'CASH';
@@ -473,7 +511,7 @@ export const createBooking = async (req, res, next) => {
       }
     }
 
-    const newBooking = await Booking.create({
+    const bookingPayload = {
       stayId: stay._id,
       hostId: stay.hostId,
       userId: actorId(req) || null,
@@ -539,36 +577,94 @@ export const createBooking = async (req, res, next) => {
       status: 'PENDING',
       paymentStatus: isPayOnArrival ? 'PENDING' : 'UNPAID',
       paymentMethod: isPayOnArrival ? 'PAY_ON_ARRIVAL' : 'UPI',
-    });
+    };
 
-    await Payment.create({
-      bookingId: newBooking._id,
-      bookingReferenceId: newBooking.bookingReferenceId,
-      stayId: newBooking.stayId,
-      hostId: newBooking.hostId,
-      userId: newBooking.userId || null,
-      amount: newBooking.totalAmount,
-      recipientUpiId: recipientUpi,
-      paymentMethod: isPayOnArrival ? 'OFFLINE' : 'UPI',
-      paymentStatus: 'PENDING',
-      verificationStatus: 'UNSUBMITTED',
-      transactionId: `TXN-PEND-${newBooking._id.toString().slice(-8)}`,
-    });
+    // Concurrency Protection: Serialize simultaneous booking requests targeting the same room
+    let releaseLock;
+    try {
+      releaseLock = await acquireRoomLock(stay._id, roomNumber);
+    } catch (lErr) {
+      return res.status(409).json({
+        success: false,
+        message: lErr.message || `Room ${roomNumber} is currently processing another reservation. Please retry.`,
+      });
+    }
 
-    // Send automated WhatsApp confirmation to guest for received booking request
-    sendWhatsAppNotification(newBooking, 'BOOKING_PENDING', {
-      stayTitle: stay.title,
-      location: stay.location,
-      durationDisplay: newBooking.durationDisplay || timings.durationDisplay,
-    }).catch((err) => {
-      console.warn('[WhatsApp Warning] Could not send booking pending alert:', err.message);
-    });
+    try {
+      const newBooking = await executeWithTransaction(async (session) => {
+        // Atomic overlap check inside transaction & room lock
+        const overlap = await findRoomOverlap({ stayId: stay._id, roomNumber, checkIn, checkOut, session });
+        if (overlap) {
+          const err = new Error(`Room ${roomNumber} is already booked for those dates.`);
+          err.statusCode = 409;
+          err.conflictingBookingId = overlap.bookingReferenceId;
+          throw err;
+        }
 
-    return res.status(201).json({
-      success: true,
-      message: 'Booking created successfully',
-      booking: newBooking,
-    });
+        // Duplicate pending request check by same guest inside transaction & room lock
+        if (userDuplicateQuery.$or.length > 0) {
+          let uQ = Booking.findOne(userDuplicateQuery).select('_id bookingReferenceId');
+          if (session) uQ = uQ.session(session);
+          const existingUserPending = await uQ.lean();
+          if (existingUserPending) {
+            const err = new Error('You already have a pending booking request for this room on these dates. Please wait for host approval.');
+            err.statusCode = 400;
+            err.existingBookingId = existingUserPending.bookingReferenceId;
+            throw err;
+          }
+        }
+
+        const [createdBooking] = await Booking.create([bookingPayload], { session });
+
+        await Payment.create(
+          [
+            {
+              bookingId: createdBooking._id,
+              bookingReferenceId: createdBooking.bookingReferenceId,
+              stayId: createdBooking.stayId,
+              hostId: createdBooking.hostId,
+              userId: createdBooking.userId || null,
+              amount: createdBooking.totalAmount,
+              recipientUpiId: recipientUpi,
+              paymentMethod: isPayOnArrival ? 'OFFLINE' : 'UPI',
+              paymentStatus: 'PENDING',
+              verificationStatus: 'UNSUBMITTED',
+              transactionId: `TXN-PEND-${createdBooking._id.toString().slice(-8)}`,
+            },
+          ],
+          { session }
+        );
+
+        return createdBooking;
+      });
+
+      // Send automated WhatsApp confirmation to guest for received booking request
+      sendWhatsAppNotification(newBooking, 'BOOKING_PENDING', {
+        stayTitle: stay.title,
+        location: stay.location,
+        durationDisplay: newBooking.durationDisplay || timings.durationDisplay,
+      }).catch((err) => {
+        console.warn('[WhatsApp Warning] Could not send booking pending alert:', err.message);
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: 'Booking created successfully',
+        booking: newBooking,
+      });
+    } catch (atomicErr) {
+      if (atomicErr.statusCode) {
+        return res.status(atomicErr.statusCode).json({
+          success: false,
+          message: atomicErr.message,
+          ...(atomicErr.conflictingBookingId ? { conflictingBookingId: atomicErr.conflictingBookingId } : {}),
+          ...(atomicErr.existingBookingId ? { existingBookingId: atomicErr.existingBookingId } : {}),
+        });
+      }
+      throw atomicErr;
+    } finally {
+      if (releaseLock) releaseLock();
+    }
   } catch (error) {
     console.error('Create booking error:', error);
     return next(error);
@@ -1140,19 +1236,30 @@ export const updateBookingStatus = async (req, res, next) => {
         });
       }
 
-      // Guard: Ensure room is not already booked by another confirmed reservation
-      const confirmedOverlap = await findRoomOverlap({
-        stayId: booking.stayId,
-        roomNumber: booking.roomNumber,
-        checkIn: booking.checkIn,
-        checkOut: booking.checkOut,
-        excludeId: booking._id,
-      });
-      if (confirmedOverlap) {
-        return res.status(409).json({
-          success: false,
-          message: `Cannot approve: Room ${booking.roomNumber} is already booked for these dates (Booking: ${confirmedOverlap.bookingReferenceId}).`,
+      // Guard: Ensure room is not already booked by another confirmed reservation (serialized with concurrency lock)
+      let releaseApprovalLock;
+      try {
+        releaseApprovalLock = await acquireRoomLock(booking.stayId, booking.roomNumber);
+        const confirmedOverlap = await findRoomOverlap({
+          stayId: booking.stayId,
+          roomNumber: booking.roomNumber,
+          checkIn: booking.checkIn,
+          checkOut: booking.checkOut,
+          excludeId: booking._id,
         });
+        if (confirmedOverlap) {
+          return res.status(409).json({
+            success: false,
+            message: `Cannot approve: Room ${booking.roomNumber} is already booked for these dates (Booking: ${confirmedOverlap.bookingReferenceId}).`,
+          });
+        }
+      } catch (lockErr) {
+        if (lockErr.statusCode) {
+          return res.status(lockErr.statusCode).json({ success: false, message: lockErr.message });
+        }
+        throw lockErr;
+      } finally {
+        if (releaseApprovalLock) releaseApprovalLock();
       }
     }
 

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { authAPI } from '../services/api';
+import { clearAllHostCaches } from '../hooks/host/useHostDashboardData';
 
 const AuthContext = createContext();
 
@@ -174,6 +175,7 @@ export function AuthProvider({ children }) {
       } else {
         localStorage.removeItem('roomscout_user');
         setUser(null);
+        clearAllHostCaches();
       }
     } catch (e) {
       console.error('Failed to sync auth state:', e);
@@ -217,6 +219,7 @@ export function AuthProvider({ children }) {
       const storedToken = localStorage.getItem('roomscout_token');
       if (!storedToken) {
         setUser(null);
+        clearAllHostCaches();
         setLoading(false);
         return;
       }

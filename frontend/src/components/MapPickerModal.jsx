@@ -147,20 +147,17 @@ export function MapPickerModal({ isOpen, onClose, onSelectLocation }) {
     <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="fixed inset-0" onClick={onClose} />
 
-      {/* Compact & Lightweight Modal Container */}
-      <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 z-10 animate-in fade-in zoom-in-95 duration-150">
+      {/* Compact & Lightweight Modal Container with balanced brown theme */}
+      <div className="relative w-full max-w-lg bg-[#fbf7f4] dark:bg-[#1f1612] text-[#2e1b10] dark:text-[#f5eae3] rounded-2xl shadow-2xl overflow-hidden border border-[#e2d2c5] dark:border-[#3d2b22] z-10 animate-in fade-in zoom-in-95 duration-150">
         {/* Compact Modal Header */}
-        <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-slate-50/70 dark:bg-slate-900/70">
-          <div className="flex items-center gap-2">
-            <span className="text-base">📍</span>
-            <h2 className="text-sm font-black text-slate-900 dark:text-white">
-              Choose Location
-            </h2>
-          </div>
+        <div className="relative px-4 py-3 border-b border-[#ebdcd0] dark:border-[#33231b] flex items-center justify-center bg-[#f4ece5] dark:bg-[#19110e]">
+          <h2 className="text-sm font-black text-[#2e1b10] dark:text-[#f5eae3] text-center">
+            Choose Location
+          </h2>
 
           <button
             onClick={onClose}
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors text-xs font-bold cursor-pointer"
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-[#7d5740] hover:text-[#2e1b10] dark:text-[#ab8f7f] dark:hover:text-white hover:bg-[#ebdcd0] dark:hover:bg-[#2c1e18] transition-colors text-xs font-bold cursor-pointer"
           >
             ✕
           </button>
@@ -179,8 +176,8 @@ export function MapPickerModal({ isOpen, onClose, onSelectLocation }) {
                   onClick={() => handleSelectHotspot(city)}
                   className={`px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all border shrink-0 cursor-pointer active:scale-95 ${
                     isSelected
-                      ? 'bg-cyan-600 text-white border-cyan-600 shadow-xs'
-                      : 'bg-slate-100 dark:bg-slate-800/80 border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-cyan-500/50'
+                      ? 'bg-[#824a25] text-white border-[#824a25] dark:bg-[#9c5a30] dark:border-[#9c5a30] shadow-xs'
+                      : 'bg-[#f0e4db] dark:bg-[#2a1d17] border-[#ddcbbe] dark:border-[#443025] text-[#54331e] dark:text-[#d6c1b3] hover:border-[#824a25]/60 dark:hover:border-[#9c5a30]/60'
                   }`}
                 >
                   {city.name}
@@ -190,12 +187,12 @@ export function MapPickerModal({ isOpen, onClose, onSelectLocation }) {
           </div>
 
           {/* Interactive Map View */}
-          <div className="relative w-full h-56 sm:h-60 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-inner bg-slate-100 dark:bg-slate-800">
+          <div className="relative w-full h-56 sm:h-60 rounded-xl overflow-hidden border border-[#e2d2c5] dark:border-[#3d2b22] shadow-inner bg-[#f0e4db] dark:bg-[#261b16]">
             <div id="interactive-picker-map" className="w-full h-full z-0" />
 
             {/* Extracted City Overlay Badge */}
-            <div className="absolute top-2.5 left-2.5 z-10 bg-slate-950/85 text-white backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/15 shadow-md flex items-center gap-2 max-w-[80%]">
-              <div className="w-2 h-2 rounded-full bg-cyan-400 animate-ping shrink-0" />
+            <div className="absolute top-2.5 left-2.5 z-10 bg-[#1f1612]/90 text-white backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/15 shadow-md flex items-center gap-2 max-w-[80%]">
+              <div className="w-2 h-2 rounded-full bg-[#e08b52] animate-ping shrink-0" />
               <span className="font-bold text-xs text-white truncate">
                 {isGeocoding ? 'Detecting...' : extractedCity}
               </span>
@@ -204,23 +201,23 @@ export function MapPickerModal({ isOpen, onClose, onSelectLocation }) {
         </div>
 
         {/* Modal Footer */}
-        <div className="p-3 px-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
-          <div className="text-xs text-slate-500 dark:text-slate-400">
-            Location: <span className="font-bold text-cyan-600 dark:text-cyan-400">{extractedCity}</span>
+        <div className="p-3 px-4 border-t border-[#ebdcd0] dark:border-[#33231b] bg-[#f4ece5]/90 dark:bg-[#19110e]/90 flex items-center justify-between">
+          <div className="text-xs text-[#7d5740] dark:text-[#ab8f7f]">
+            Location: <span className="font-bold text-[#824a25] dark:text-[#e08b52]">{extractedCity}</span>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-3 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+              className="px-3 py-1.5 text-xs font-semibold text-[#7d5740] hover:text-[#2e1b10] dark:text-[#ab8f7f] dark:hover:text-white cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={() => handleApply()}
-              className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs shadow-sm cursor-pointer active:scale-95 transition-all"
+              className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-[#824a25] to-[#69391b] hover:from-[#94552b] hover:to-[#784220] dark:from-[#9c5a30] dark:to-[#7d4420] dark:hover:from-[#ad6638] dark:hover:to-[#8c4e26] text-white font-bold text-xs shadow-sm cursor-pointer active:scale-95 transition-all"
             >
               Confirm Location
             </button>

@@ -36,7 +36,7 @@ const HostPaymentSettingsSection = lazy(() =>
 function DashboardSkeletonLoader() {
   return (
     <div className="w-full min-h-[320px] rounded-2xl bg-white/60 dark:bg-zinc-900/60 animate-pulse border border-slate-200 dark:border-zinc-800 flex flex-col items-center justify-center gap-3 p-8">
-      <div className="w-8 h-8 rounded-full border-2 border-[#54ACBF]/20 border-t-[#54ACBF] animate-spin" />
+      <div className="w-8 h-8 rounded-full border-2 border-slate-200 dark:border-white/10 border-t-[#9333ea] animate-spin" />
       <span className="text-xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500">
         Loading Panel Content...
       </span>
@@ -262,11 +262,7 @@ export function HostDashboardPage() {
 
   return (
     <div
-      style={{
-        background: 'radial-gradient(circle at 18% 12%, #54ACBF 0%, #3B85A2 24%, #26658C 50%, #023859 76%, #011C40 100%)',
-        backgroundAttachment: 'fixed',
-      }}
-      className={`min-h-screen w-full flex flex-col host-page-scope font-body-md antialiased text-slate-800 dark:text-on-surface selection:bg-[#54ACBF] selection:text-[#011C40] relative transition-colors duration-300 ${
+      className={`min-h-screen w-full flex flex-col host-page-scope font-body-md antialiased text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-[#06080F] selection:bg-purple-500 selection:text-white relative transition-colors duration-200 ${
         activeTab === 'users' || activeTab === 'room' ? 'lg:h-screen lg:max-h-screen lg:overflow-hidden' : ''
       }`}
     >
@@ -308,7 +304,7 @@ export function HostDashboardPage() {
 
       {/* Main Tab Workspace */}
       <main
-        className={`w-full flex-1 relative bg-transparent text-slate-800 dark:text-on-surface font-body-md antialiased flex flex-col selection:bg-[#54ACBF] selection:text-[#011C40] ${
+        className={`w-full flex-1 relative bg-transparent text-slate-800 dark:text-on-surface font-body-md antialiased flex flex-col selection:bg-[#a855f7] selection:text-slate-900 dark:text-white ${
           activeTab === 'users' || activeTab === 'room' || activeTab === 'property'
             ? 'lg:h-[calc(100vh-4.75rem)] lg:overflow-hidden lg:min-h-0'
             : 'min-h-[calc(100vh-4rem)] overflow-x-hidden'
@@ -325,7 +321,7 @@ export function HostDashboardPage() {
                 initial="enter"
                 animate="center"
                 exit="exit"
-                className="w-full flex-1 h-full min-h-0 flex flex-col px-3 sm:px-6 pt-2 sm:pt-2.5 pb-24 sm:pb-28 lg:pb-2.5 max-w-[1600px] mx-auto overflow-hidden relative"
+                className="w-full flex-1 h-full min-h-0 flex flex-col px-3 sm:px-6 pt-8 sm:pt-10 pb-24 sm:pb-28 lg:pb-10 max-w-[1600px] mx-auto overflow-visible relative"
               >
                 <ErrorBoundary>
                   <Suspense fallback={<DashboardSkeletonLoader />}>

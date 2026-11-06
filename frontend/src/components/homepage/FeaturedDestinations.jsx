@@ -32,7 +32,7 @@ const DESTINATION_HUBS = [
     staysCount: '580+ Stays',
     avgPrice: '₹4,500/nt',
     weather: '28°C Tropical',
-    tag: 'Beachfront Villas',
+    tag: 'Beachfront Hotels',
     description: 'Private infinity pools, beachfront balconies, and sunset digital nomad hubs.',
   },
   {
@@ -155,6 +155,8 @@ export function FeaturedDestinations() {
                   <img
                     src={hub.image}
                     alt={hub.name}
+                    loading="lazy"
+                    decoding="async"
                     className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:brightness-[1.03] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
                   />
 

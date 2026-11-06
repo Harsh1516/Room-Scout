@@ -6,7 +6,8 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { authAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
-import { Login } from '../components/navbar/Login';
+import { Left } from '../components/navbar/Left';
+import { Right } from '../components/navbar/Right';
 
 // Helper to extract raw 10-digit phone number without +91 prefix
 const extractRawPhoneNumber = (phoneStr = '') => {
@@ -307,76 +308,76 @@ export function AccountPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 host-page-scope host-font-scope font-body-md antialiased pb-8 sm:pb-12">
-      {/* TOP NAVBAR (Matches Property Upload Layout) */}
-      <header className="sticky top-0 z-40 backdrop-blur-md bg-white/90 dark:bg-zinc-950/90 border-b border-slate-200 dark:border-zinc-800 transition-colors">
-        <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-15 flex items-center justify-between gap-1.5 sm:gap-4 relative">
-          {/* Left: Back Button */}
-          <div className="flex items-center gap-2 z-10 shrink-0">
-            <button
-              type="button"
-              onClick={() => {
-                if (window.history.state && window.history.state.idx > 0) {
-                  navigate(-1);
-                } else {
-                  navigate('/host/dashboard');
-                }
-              }}
-              className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-300 dark:border-zinc-800 bg-white dark:bg-zinc-900/80 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 text-xs font-manrope font-bold tracking-tight transition-colors cursor-pointer active:scale-[0.98] shadow-2xs"
-              title="Back"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <line x1="19" y1="12" x2="5" y2="12" />
-                <polyline points="12 19 5 12 12 5" />
-              </svg>
-              <span className="hidden min-[380px]:inline">Back</span>
-            </button>
-          </div>
+    <div className="min-h-screen bg-slate-50/60 dark:bg-black text-slate-900 dark:text-slate-100 transition-colors duration-300 font-body-md antialiased pb-8 sm:pb-12">
+      {/* ── TOP FLOATING NAVIGATION CAPSULES (MATCHING USER DASHBOARD / EXPLORE NAVBAR STYLE) ── */}
+      <header className="relative w-full pointer-events-none select-none z-50">
+        {/* 1. Left Island: Back button */}
+        <Left
+          showBrand={false}
+          showBadge={false}
+          showBack={true}
+          fallbackUrl={isHost ? '/host/dashboard' : '/explore'}
+        />
 
-          {/* Center: Navigation Tabs Capsule Console */}
-          <div className="sm:absolute sm:left-1/2 sm:-translate-x-1/2 flex items-center gap-0.5 sm:gap-1 p-0.5 sm:p-1 rounded-full bg-slate-100/90 dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800 shadow-2xs z-10 select-none overflow-x-auto no-scrollbar max-w-[calc(100vw-120px)] sm:max-w-none">
+        {/* 2. Center Island: Floating Liquid Glass Segmented Tabs */}
+        <div className="fixed top-3.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center pointer-events-auto max-w-[calc(100vw-110px)] sm:max-w-none">
+          <nav className="apple-liquid-nav relative flex items-center h-8 sm:h-9 p-0.5 sm:p-1 rounded-full border border-slate-200/80 dark:border-white/15 shadow-sm select-none">
             {/* Tab 1: Profile Details */}
             <button
               type="button"
               onClick={() => setActiveTab('details')}
-              className={`py-1 sm:py-1.5 px-2 sm:px-3.5 rounded-full text-[11px] sm:text-xs md:text-[13px] font-manrope font-bold tracking-tight cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 select-none active:scale-95 focus:outline-none whitespace-nowrap transition-colors shrink-0 ${
+              className={`relative z-10 h-full py-0 px-2 sm:px-3 md:px-3.5 rounded-full text-[11px] sm:text-xs md:text-[13px] font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 select-none shrink-0 ${
                 activeTab === 'details'
-                  ? 'bg-emerald-600 dark:bg-emerald-500 text-white dark:text-zinc-950 shadow-xs'
-                  : 'text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
+                  ? 'text-white dark:text-slate-950 font-bold'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium'
               }`}
             >
               <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
-              <span className="truncate">Profile<span className="hidden sm:inline"> Details</span></span>
+              <span>Profile<span className="hidden sm:inline"> Details</span></span>
+              {activeTab === 'details' && (
+                <motion.div
+                  layoutId="accountTabActivePill"
+                  className="absolute inset-0 bg-slate-950 dark:bg-white rounded-full -z-10 shadow-xs"
+                  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                />
+              )}
             </button>
 
             {/* Tab 2: Password */}
             <button
               type="button"
               onClick={() => setActiveTab('password')}
-              className={`py-1 sm:py-1.5 px-2 sm:px-3.5 rounded-full text-[11px] sm:text-xs md:text-[13px] font-manrope font-bold tracking-tight cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 select-none active:scale-95 focus:outline-none whitespace-nowrap transition-colors shrink-0 ${
+              className={`relative z-10 h-full py-0 px-2 sm:px-3 md:px-3.5 rounded-full text-[11px] sm:text-xs md:text-[13px] font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 select-none shrink-0 ${
                 activeTab === 'password'
-                  ? 'bg-emerald-600 dark:bg-emerald-500 text-white dark:text-zinc-950 shadow-xs'
-                  : 'text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
+                  ? 'text-white dark:text-slate-950 font-bold'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium'
               }`}
             >
               <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
-              <span className="truncate">Password</span>
+              <span>Password</span>
+              {activeTab === 'password' && (
+                <motion.div
+                  layoutId="accountTabActivePill"
+                  className="absolute inset-0 bg-slate-950 dark:bg-white rounded-full -z-10 shadow-xs"
+                  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                />
+              )}
             </button>
 
             {/* Tab 3: Delete Account */}
             <button
               type="button"
               onClick={() => setActiveTab('delete')}
-              className={`py-1 sm:py-1.5 px-2 sm:px-3.5 rounded-full text-[11px] sm:text-xs md:text-[13px] font-manrope font-bold tracking-tight cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 select-none active:scale-95 focus:outline-none whitespace-nowrap transition-colors shrink-0 ${
+              className={`relative z-10 h-full py-0 px-2 sm:px-3 md:px-3.5 rounded-full text-[11px] sm:text-xs md:text-[13px] font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 select-none shrink-0 ${
                 activeTab === 'delete'
-                  ? 'bg-rose-600 text-white shadow-xs'
-                  : 'text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300'
+                  ? 'text-white font-bold'
+                  : 'text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 font-medium'
               }`}
             >
               <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -384,19 +385,24 @@ export function AccountPage() {
                 <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
                 <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
               </svg>
-              <span className="truncate">Delete<span className="hidden sm:inline"> Account</span></span>
+              <span>Delete<span className="hidden sm:inline"> Account</span></span>
+              {activeTab === 'delete' && (
+                <motion.div
+                  layoutId="accountTabActivePill"
+                  className="absolute inset-0 bg-rose-600 rounded-full -z-10 shadow-xs"
+                  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                />
+              )}
             </button>
-          </div>
-
-          {/* Right: Avatar / Login Dropdown */}
-          <div className="flex items-center gap-2 shrink-0 z-10">
-            <Login />
-          </div>
+          </nav>
         </div>
+
+        {/* 3. Right Island: Actions (Wishlist + Booked Places + Theme Toggle + Login/Profile with Mobile Hamburger) */}
+        <Right />
       </header>
 
       {/* Main Container */}
-      <main className="max-w-3xl mx-auto px-3 sm:px-6 py-3 sm:py-7">
+      <main className="max-w-3xl mx-auto px-3 sm:px-6 pt-18 sm:pt-22 lg:pt-26 pb-12 sm:pb-16 min-h-[calc(100vh-4rem)]">
 
         {/* TAB 1: PROFILE DETAILS */}
         {activeTab === 'details' && (

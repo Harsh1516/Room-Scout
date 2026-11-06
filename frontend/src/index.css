@@ -271,6 +271,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
+  scrollbar-gutter: stable;
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
@@ -337,8 +338,8 @@ input:autofill,
 input:autofill:hover,
 input:autofill:focus,
 input:autofill:active {
-  -webkit-box-shadow: 0 0 0 1000px #e2e8f0 inset !important;
-  box-shadow: 0 0 0 1000px #e2e8f0 inset !important;
+  -webkit-box-shadow: 0 0 0 1000px #f1f5f9 inset !important;
+  box-shadow: 0 0 0 1000px #f1f5f9 inset !important;
   -webkit-text-fill-color: #0f172a !important;
   color: #0f172a !important;
   caret-color: #0f172a !important;
@@ -361,15 +362,33 @@ input:autofill:active {
   transition: background-color 500000s ease-in-out 0s;
 }
 
-/* Hardened Dark Mode Input Field Protection - Guarantees inputs never flash white when focused or autofilled */
+/* Hardened Input Field Protection - Guarantees inputs maintain exact same background and border across all states */
+.login-input-container {
+  background-color: rgba(241, 245, 249, 0.9) !important;
+  border-color: rgba(226, 232, 240, 0.9) !important;
+}
+.login-input-container:hover {
+  background-color: rgba(241, 245, 249, 1) !important;
+}
+.login-input-container:focus-within {
+  background-color: rgba(241, 245, 249, 0.9) !important;
+  border-color: rgba(226, 232, 240, 0.9) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 .dark .login-input-container {
   background-color: rgba(39, 39, 42, 0.85) !important;
+  border-color: rgba(63, 63, 70, 0.8) !important;
 }
 .dark .login-input-container:hover {
   background-color: rgba(39, 39, 42, 0.95) !important;
 }
 .dark .login-input-container:focus-within {
-  background-color: rgba(24, 24, 27, 0.98) !important;
+  background-color: rgba(39, 39, 42, 0.85) !important;
+  border-color: rgba(63, 63, 70, 0.8) !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* Responsive Root Typography & Element Scaling for Ultra-Compact Mobile/Split-Screen Ratio */
@@ -478,7 +497,6 @@ input:autofill:active {
   background-color: #ffffff !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  opacity: 1 !important;
   border: 1px solid #e2e8f0 !important;
   box-shadow: 
     0 25px 50px -12px rgba(0, 0, 0, 0.25),
@@ -487,16 +505,15 @@ input:autofill:active {
 }
 
 .dark .apple-profile-dropdown {
-  background: #ffffff !important;
-  background-color: #ffffff !important;
+  background: #0f1117 !important;
+  background-color: #0f1117 !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  opacity: 1 !important;
-  border: 1px solid #e2e8f0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
   box-shadow: 
-    0 25px 50px -12px rgba(0, 0, 0, 0.25),
-    0 0 0 1px rgba(0, 0, 0, 0.05),
-    0 4px 16px rgba(0, 0, 0, 0.06) !important;
+    0 25px 50px -12px rgba(0, 0, 0, 0.75),
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 4px 16px rgba(0, 0, 0, 0.4) !important;
 }
 
 /* Cyan Status Glow Dot */
@@ -569,10 +586,11 @@ input:autofill:active {
     -webkit-backdrop-filter: none !important;
   }
   .dark .apple-profile-dropdown {
-    background: #ffffff !important;
-    background-color: #ffffff !important;
+    background: #0f1117 !important;
+    background-color: #0f1117 !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
   }
 
   .console-clear-capsule {

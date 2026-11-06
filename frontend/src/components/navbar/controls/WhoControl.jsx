@@ -1,7 +1,7 @@
 const OCCUPANCY_OPTIONS = [
-  { id: 'Boys', label: 'Boys only', desc: 'Gents hostel / PG' },
-  { id: 'Girls', label: 'Girls only', desc: 'Ladies hostel / PG' },
-  { id: 'Both', label: 'Both', desc: 'Co-ed / Unisex stays' },
+  { id: 'Male', label: 'Male', desc: 'Male only stays / PG' },
+  { id: 'Female', label: 'Female', desc: 'Female only stays / PG' },
+  { id: 'Both', label: 'Both', desc: 'All welcome / Co-living' },
 ];
 
 export function WhoControl({
@@ -79,9 +79,9 @@ export function WhoControl({
               const isSelected =
                 currentVal === o.label.toLowerCase() ||
                 currentVal === o.id.toLowerCase() ||
-                (currentVal.startsWith('boys') && o.id === 'Boys') ||
-                (currentVal.startsWith('girls') && o.id === 'Girls') ||
-                (currentVal.startsWith('both') && o.id === 'Both');
+                (o.id === 'Male' && (currentVal.startsWith('male') || currentVal.startsWith('boys'))) ||
+                (o.id === 'Female' && (currentVal.startsWith('female') || currentVal.startsWith('girls'))) ||
+                (o.id === 'Both' && (currentVal.startsWith('both') || currentVal.startsWith('unisex')));
 
               return (
                 <button

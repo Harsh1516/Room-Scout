@@ -285,6 +285,10 @@ export function useStaySearch() {
         stayGender === filters.gender.toLowerCase() ||
         stayGender === 'both' ||
         stayGender === 'unisex' ||
+        (filters.gender.toLowerCase() === 'male' && (stayGender === 'boys' || stayGender === 'male')) ||
+        (filters.gender.toLowerCase() === 'female' && (stayGender === 'girls' || stayGender === 'female')) ||
+        (filters.gender.toLowerCase() === 'boys' && (stayGender === 'boys' || stayGender === 'male')) ||
+        (filters.gender.toLowerCase() === 'girls' && (stayGender === 'girls' || stayGender === 'female')) ||
         stayTitle.includes(filters.gender.toLowerCase()) ||
         allTags.some((t) => t.toLowerCase().includes(filters.gender.toLowerCase()));
 

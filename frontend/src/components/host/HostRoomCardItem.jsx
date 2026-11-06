@@ -47,14 +47,14 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
             ? 'bg-gradient-to-b from-[#ca8100] via-[#854f00] to-[#261400] text-white border-2 border-amber-400 dark:border-amber-400 shadow-room-booked-selected z-10'
             : 'bg-gradient-to-b from-[#a36800]/80 via-[#633c00]/80 to-[#1f1100]/90 text-white/95 border border-amber-700/40 dark:border-amber-600/30 shadow-xs opacity-90 hover:opacity-100'
           : isCardSelected
-          ? 'bg-slate-50 dark:bg-[#122438] border-2 border-[#c0c1ff] shadow-room-open-selected z-10'
-          : 'bg-slate-50/70 dark:bg-[#0c1825] border border-slate-200/80 dark:border-[#1f3045] hover:border-slate-300 dark:hover:border-[#2f4663]'
+          ? 'bg-white dark:bg-zinc-800 border-2 border-[#c0c1ff] shadow-room-open-selected z-10'
+          : 'bg-white/70 dark:bg-zinc-800/90 border border-slate-200 dark:border-zinc-700 hover:border-slate-300 dark:hover:border-zinc-600'
       }`}
     >
       {/* Delete Confirmation Overlay */}
       {confirmDelete ? (
         <div
-          className="absolute inset-0 z-30 rounded-2xl bg-white/95 dark:bg-[#0c1825]/95 p-2 flex flex-col items-center justify-between text-center select-none border border-rose-300 dark:border-rose-500/50 backdrop-blur-sm"
+          className="absolute inset-0 z-30 rounded-2xl bg-white/95 dark:bg-zinc-800/95 p-2 flex flex-col items-center justify-between text-center select-none border border-rose-300 dark:border-rose-500/50 backdrop-blur-sm"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="pt-1.5 flex flex-col items-center">
@@ -75,7 +75,7 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
                 e.stopPropagation();
                 setConfirmDelete(false);
               }}
-              className="flex-1 py-1.5 px-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-semibold transition-all cursor-pointer text-center truncate disabled:opacity-50 leading-none border border-slate-200 dark:border-slate-700 active:scale-95"
+              className="flex-1 py-1.5 px-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-700 dark:hover:bg-zinc-600 text-slate-700 dark:text-slate-200 text-[10px] font-semibold transition-all cursor-pointer text-center truncate disabled:opacity-50 leading-none border border-slate-200 dark:border-zinc-600 active:scale-95"
             >
               Cancel
             </button>
@@ -123,7 +123,7 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
           className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors cursor-pointer ${
             isBookedToday
               ? 'text-amber-200/80 hover:text-white hover:bg-white/10'
-              : 'text-slate-400 hover:text-rose-500 dark:text-slate-400 dark:hover:text-rose-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/60'
+              : 'text-slate-400 hover:text-rose-500 dark:text-slate-400 dark:hover:text-rose-400 hover:bg-slate-200/50 dark:hover:bg-zinc-700/60'
           }`}
           title="Remove room"
         >
@@ -176,7 +176,7 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
         className={`${compact ? 'h-5.5 px-1.5 rounded-lg' : 'h-7 px-2 rounded-xl'} w-full flex items-center justify-between text-xs ${
           isBookedToday
             ? 'bg-black/35 border border-white/15 dark:border-white/10 backdrop-blur-xs'
-            : 'bg-white dark:bg-[#071320] border border-slate-200/70 dark:border-[#1a2d42] shadow-2xs'
+            : 'bg-slate-50/90 dark:bg-zinc-900/80 border border-slate-200/80 dark:border-zinc-700/80 shadow-2xs'
         }`}
         onClick={(e) => e.stopPropagation()}
       >
@@ -197,7 +197,7 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
               onStepCapacity?.(cardId, cIdx, card, -1);
             }}
             className={`w-4.5 h-4.5 flex items-center justify-center rounded cursor-pointer select-none transition-colors leading-none ${
-              isBookedToday ? 'text-amber-200 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-slate-700 dark:hover:text-[#c0c1ff] hover:bg-slate-100 dark:hover:bg-slate-800'
+              isBookedToday ? 'text-amber-200 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-slate-700 dark:hover:text-[#c0c1ff] hover:bg-slate-100 dark:hover:bg-zinc-700'
             } disabled:opacity-30 disabled:cursor-not-allowed`}
             title="Decrease capacity"
           >
@@ -218,7 +218,7 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
               onStepCapacity?.(cardId, cIdx, card, 1);
             }}
             className={`w-4.5 h-4.5 flex items-center justify-center rounded cursor-pointer select-none transition-colors leading-none ${
-              isBookedToday ? 'text-amber-200 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-slate-700 dark:hover:text-[#c0c1ff] hover:bg-slate-100 dark:hover:bg-slate-800'
+              isBookedToday ? 'text-amber-200 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-slate-700 dark:hover:text-[#c0c1ff] hover:bg-slate-100 dark:hover:bg-zinc-700'
             } disabled:opacity-30 disabled:cursor-not-allowed`}
             title="Increase capacity"
           >

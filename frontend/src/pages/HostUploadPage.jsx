@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { z } from 'zod';
+import { ArrowLeft, ChevronLeft, ChevronRight, Check, Plus, Home, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { adminAPI, staysAPI } from '../services/api';
 import { Login } from '../components/navbar/Login';
@@ -38,7 +39,7 @@ function TabFallback() {
 }
 
 const MAX_PHOTOS = 5;
-const MAX_DESCRIPTION_CHARS = 100;
+const MAX_DESCRIPTION_CHARS = 200;
 
 
 
@@ -90,8 +91,8 @@ const hostPropertySchema = z.object({
   email: z.string().trim().email('Please enter a valid host email address'),
   phone: z.string().trim().min(10, 'Please fill Host details first (Contact number must be at least 10 digits)'),
   propertyName: z.string().trim().min(3, 'Property name must be at least 3 characters'),
-  propertyType: z.enum(['PG', 'Hostel', 'Hotel', 'Villa', 'Resort', 'Flat']),
-  genderType: z.enum(['Boys', 'Girls', 'Both', 'Family']),
+  propertyType: z.enum(['PG', 'Hotel', 'Flat']),
+  genderType: z.enum(['Boys', 'Girls', 'Both', 'Family', 'Male', 'Female']),
   roadArea: z.string().trim().min(2, 'Road name / area / colony is required'),
   pincode: z.string().trim().min(4, 'Valid pincode is required'),
   city: z.string().trim().min(2, 'City is required'),
@@ -291,17 +292,10 @@ export function HostUploadPage() {
 
   // Stepper state (1 to 5) initialized from draft or navigation state
   const [activeStep, setActiveStep] = useState(() => {
-    try {
-      const draft = loadDraftFromStorage(user);
-      if (draft?.activeStep && Number(draft.activeStep) >= 1 && Number(draft.activeStep) <= 5) {
-        return Number(draft.activeStep);
-      }
-    } catch {
-      /* ignore */
-    }
     if (location.state?.initialStep && Number(location.state.initialStep) >= 1 && Number(location.state.initialStep) <= 5) {
       return Number(location.state.initialStep);
     }
+    // Always start the upload wizard on the first (Basics) step
     return 1;
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -725,6 +719,42 @@ export function HostUploadPage() {
     });
   };
 
+  const validate16x9Ratio = (file) => {
+    return new Promise((resolve) => {
+      if (!file || !file.type.startsWith('image/')) {
+        resolve({ valid: false, message: 'Please select a valid image file.' });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const width = img.naturalWidth || img.width;
+          const height = img.naturalHeight || img.height;
+          if (!width || !height) {
+            resolve({ valid: false, message: 'Unable to detect image dimensions.' });
+            return;
+          }
+          const ratio = width / height;
+          const targetRatio = 16 / 9;
+          const is16x9 = Math.abs(ratio - targetRatio) <= 0.06;
+          if (!is16x9) {
+            resolve({
+              valid: false,
+              message: 'Photos must be in 16:9 only',
+            });
+          } else {
+            resolve({ valid: true });
+          }
+        };
+        img.onerror = () => resolve({ valid: false, message: `Failed to read image "${file.name}".` });
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve({ valid: false, message: `Failed to read file "${file.name}".` });
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleFileUpload = async (e) => {
     e?.preventDefault?.();
     e?.stopPropagation?.();
@@ -740,6 +770,11 @@ export function HostUploadPage() {
     const filesToUpload = files.slice(0, remainingSlots);
 
     for (const file of filesToUpload) {
+      const validation = await validate16x9Ratio(file);
+      if (!validation.valid) {
+        showToast(validation.message, 'error');
+        continue;
+      }
       try {
         const compressedDataUrl = await compressImage(file);
         setFormData((prev) => {
@@ -1468,11 +1503,7 @@ export function HostUploadPage() {
             phone: formattedHostPhone || user.phone,
           });
         }
-        showToast(
-          isAlreadyApproved
-            ? '✅ Property details updated successfully!'
-            : '✅ Property upload submitted for one-time admin approval! Navigating to your Host Dashboard...'
-        );
+        showToast('Property Saved');
         setTimeout(() => {
           navigate('/host/dashboard', { state: { updatedHost: res.host || formData } });
         }, 1200);
@@ -1487,78 +1518,47 @@ export function HostUploadPage() {
     }
   };
 
-  // Role Guard
-  if (user && user.role === 'user') {
-    return (
-      <div className="h-screen max-h-screen bg-[#fafbfc] dark:bg-[#090b10] flex items-center justify-center p-4">
-        <div className="max-w-md w-full p-6 sm:p-8 rounded-3xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-emerald-200/80 dark:border-emerald-800/60 text-center shadow-2xl">
-          <svg className="w-10 h-10 text-amber-500 mx-auto mb-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-2">Host Account Required</h2>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 mb-6 font-medium">
-            You are currently signed in as a Guest ({user.email}). Guest accounts cannot list properties.
-          </p>
-          <button
-            type="button"
-            onClick={() => navigate('/explore')}
-            className="w-full py-3 px-4 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-md"
-          >
-            Return to Explore
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Allow a logged-in guest to become a host; backend converts the account role on submit.
+  // (No hard block here — the upload flow handles the conversion.)
 
   const currentStepConfig = WIZARD_STEPS.find((s) => s.id === activeStep) || WIZARD_STEPS[0];
 
   return (
-    <div className="bg-white dark:bg-black text-slate-800 dark:text-zinc-100 host-page-scope font-body-md antialiased h-screen max-h-screen flex flex-col justify-start overflow-hidden relative select-none selection:bg-custom-btn-primary selection:text-white transition-colors duration-300">
+    <div className="bg-slate-50/50 dark:bg-black text-slate-800 dark:text-zinc-100 host-page-scope font-body-md antialiased min-h-screen flex flex-col justify-between relative selection:bg-[#006C4A] selection:text-white transition-colors duration-300">
 
-      {/* ── Top Header Navigation Bar (Matching User Side Floating Liquid Glass Capsules) ── */}
-      <header className="relative w-full h-14 sm:h-16 pointer-events-none select-none z-50 font-body-md host-font-scope antialiased">
-        {/* Left Action: Return to Host Dashboard + Mobile Steps Drawer Button */}
-        <div className="fixed top-3 left-2.5 sm:top-5 sm:left-6 z-50 flex items-center gap-1.5 sm:gap-2 pointer-events-auto select-none">
+      {/* ── Top Header Navigation Bar (Airbnb-style host listing header) ── */}
+      <header className="sticky top-0 z-40 w-full bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-b border-slate-200/90 dark:border-zinc-800/90 h-16 sm:h-20 px-3 sm:px-6 lg:px-8 flex items-center justify-between select-none">
+        {/* Left Action: Return to Dashboard + Brand Identity */}
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             type="button"
-            onClick={() => navigate('/host/dashboard')}
-            data-no-hover="true"
-            className="apple-liquid-nav flex items-center justify-center px-3 py-1.5 sm:px-4 sm:py-2 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 dark:border-white/15 shadow-xs cursor-pointer text-slate-800 dark:text-slate-200 font-semibold text-xs sm:text-sm select-none active:scale-95 transition-transform"
-            title="Return to Host Dashboard"
+            onClick={() => {
+              saveDraftToStorage(formData, activeStep, googleMapsUrl, user);
+              navigate('/host/dashboard');
+            }}
+            className="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full border border-slate-200 dark:border-zinc-700/80 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 font-semibold text-xs sm:text-sm cursor-pointer active:scale-95 transition-all"
+            title="Save draft and return to dashboard"
           >
-            <svg
-              className="w-4 h-4 text-slate-600 dark:text-slate-300 stroke-[2.5]"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="19" y1="12" x2="5" y2="12" />
-              <polyline points="12 19 5 12 12 5" />
-            </svg>
-            <span className="hidden min-[380px]:inline">Back</span>
+            <ArrowLeft className="w-4 h-4 text-slate-600 dark:text-zinc-300" />
+            <span className="hidden sm:inline">Exit to Dashboard</span>
+            <span className="sm:hidden">Exit</span>
           </button>
 
-          {/* Left Panel Vertical Navbar Switch Option for Mobile Resolutions */}
+          {/* Mobile Step Selector Pill Button */}
           <button
             type="button"
             onClick={() => setMobileNavOpen(true)}
-            className="md:hidden apple-liquid-nav flex items-center justify-center px-2.5 py-1.5 gap-1.5 rounded-full border border-emerald-500/30 dark:border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-950/40 shadow-xs cursor-pointer text-emerald-700 dark:text-emerald-300 font-bold text-xs select-none active:scale-95 transition-transform"
-            title="Open Steps Navigation Menu"
-            aria-label="Toggle vertical navigation menu"
+            className="md:hidden flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300/60 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 font-bold text-xs cursor-pointer active:scale-95 transition-all"
+            aria-label="Toggle vertical steps navigation menu"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Step {activeStep}/5</span>
-            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
+            <span>Step {activeStep} of 5</span>
+            <ChevronRight className="w-3.5 h-3.5 rotate-90" />
           </button>
         </div>
 
-        {/* Stepper Navigation Tabs (Absolute Centered on Desktop) */}
-        <div className="hidden md:flex fixed top-3.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 items-center pointer-events-auto select-none">
+        {/* Desktop Stepper Navigation Tabs (Centered) */}
+        <div className="hidden md:flex items-center">
           <HostUploadTabs
             steps={WIZARD_STEPS}
             activeStep={activeStep}
@@ -1567,8 +1567,8 @@ export function HostUploadPage() {
           />
         </div>
 
-        {/* Right Action: Theme Toggle + Profile Avatar */}
-        <div className="fixed top-3 right-2.5 sm:top-5 sm:right-6 z-50 flex items-center gap-1.5 sm:gap-2.5 pointer-events-auto">
+        {/* Right Action: Save & Exit + Theme Toggle + User Avatar */}
+        <div className="flex items-center gap-2 sm:gap-2.5">
           <ThemeTogglePill />
           <div className="relative flex items-center justify-center">
             <Login />
@@ -1601,10 +1601,12 @@ export function HostUploadPage() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg shrink-0">📋</span>
+                    <span className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+                      RS
+                    </span>
                     <div>
                       <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-tight">
-                        Property Steps
+                        Upload Steps
                       </h3>
                       <p className="text-[11px] text-slate-500 dark:text-zinc-400">
                         Step {activeStep} of {WIZARD_STEPS.length}
@@ -1617,10 +1619,7 @@ export function HostUploadPage() {
                     className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-zinc-900 hover:bg-slate-200 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-300 flex items-center justify-center cursor-pointer transition-colors"
                     aria-label="Close steps menu"
                   >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
 
@@ -1638,25 +1637,23 @@ export function HostUploadPage() {
                           handleSelectStep(step.id);
                           setMobileNavOpen(false);
                         }}
-                        className={`w-full text-left p-2.5 sm:p-3 rounded-2xl flex items-center gap-3 transition-all cursor-pointer ${
+                        className={`w-full text-left p-3 rounded-2xl flex items-center gap-3 transition-all cursor-pointer ${
                           isActive
-                            ? 'bg-emerald-500/10 dark:bg-emerald-950/40 border border-emerald-500/30 text-emerald-950 dark:text-white shadow-xs'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/30 text-emerald-950 dark:text-white shadow-xs font-bold'
                             : 'hover:bg-slate-100/70 dark:hover:bg-zinc-900/60 border border-transparent text-slate-700 dark:text-zinc-300'
                         }`}
                       >
                         <div
-                          className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
+                          className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
                             isActive
-                              ? 'bg-[#006C4A] text-white shadow-sm shadow-[#006C4A]/30'
+                              ? 'bg-[#006C4A] text-white shadow-xs'
                               : isCompleted
                               ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300/40'
                               : 'bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400'
                           }`}
                         >
                           {isCompleted && !isActive ? (
-                            <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
                           ) : (
                             step.id
                           )}
@@ -1664,16 +1661,16 @@ export function HostUploadPage() {
 
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between gap-1">
-                            <span className={`text-xs font-bold truncate ${isActive ? 'text-emerald-900 dark:text-emerald-300' : 'text-slate-800 dark:text-zinc-200'}`}>
+                            <span className={`text-xs truncate ${isActive ? 'text-[#006C4A] dark:text-emerald-300 font-bold' : 'text-slate-800 dark:text-zinc-200'}`}>
                               {step.shortTitle || step.title}
                             </span>
                             {isActive && (
-                              <span className="text-[9.5px] uppercase tracking-wider font-extrabold text-emerald-600 dark:text-emerald-400">
-                                Active
+                              <span className="text-[9.5px] uppercase tracking-wider font-extrabold text-[#006C4A] dark:text-emerald-400">
+                                Current
                               </span>
                             )}
                           </div>
-                          <p className="text-[10px] text-slate-500 dark:text-zinc-400 truncate mt-0.5">
+                          <p className="text-[11px] text-slate-500 dark:text-zinc-400 truncate mt-0.5">
                             {step.sub}
                           </p>
                         </div>
@@ -1685,15 +1682,15 @@ export function HostUploadPage() {
 
               {/* Drawer Footer Progression */}
               <div className="pt-3 border-t border-slate-100 dark:border-zinc-800 space-y-2">
-                <div className="flex items-center justify-between text-[11px] font-semibold text-slate-600 dark:text-zinc-400">
+                <div className="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-zinc-400">
                   <span>Overall Progress</span>
-                  <span className="font-mono-data font-bold text-emerald-600 dark:text-emerald-400">
+                  <span className="font-mono-data font-bold text-[#006C4A] dark:text-emerald-400">
                     {Math.round(((activeStep - 1) / (WIZARD_STEPS.length - 1)) * 100)}%
                   </span>
                 </div>
                 <div className="w-full h-1.5 bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+                    className="h-full bg-[#006C4A] rounded-full transition-all duration-300"
                     style={{ width: `${((activeStep - 1) / (WIZARD_STEPS.length - 1)) * 100}%` }}
                   />
                 </div>
@@ -1703,133 +1700,29 @@ export function HostUploadPage() {
         )}
       </AnimatePresence>
 
-      {/* ── Fixed Step Editorial Header (Strictly Centered & Balanced Below Navbar) ── */}
-      <section className="w-full shrink-0 px-3 sm:px-6 lg:px-8 select-none z-20 transition-all pt-3.5 sm:pt-5 pb-1 sm:pb-2">
-        <div className="max-w-6xl mx-auto flex items-center justify-between relative">
-          {/* Left Slot: Add Room Type button on Step 5 (Moved Upward into Header Row) */}
-          <div className="w-44 hidden sm:flex items-center justify-start z-10">
-            {activeStep === 5 && (
-              <button
-                type="button"
-                onClick={handleAddNewCategory}
-                className="group flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#006C4A] hover:bg-[#005a3e] text-white border border-[#005a3e]/60 text-xs font-bold transition-all shadow-sm shadow-[#006C4A]/25 cursor-pointer active:scale-95"
-                title="Add a new room type"
-              >
-                <span className="material-symbols-outlined text-[17px] text-white group-hover:rotate-90 transition-transform">add</span>
-                <span>Add Room Type</span>
-              </button>
-            )}
+      {/* ── Fixed Step Editorial Header (Airbnb-style bold & calm typography) ── */}
+      <section className="w-full shrink-0 px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-3 sm:pb-4 select-none">
+        <div className="max-w-4xl mx-auto text-center space-y-1.5">
+          {/* Step Pill */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/80 text-[#006C4A] dark:text-emerald-400 text-xs font-bold uppercase tracking-wider shadow-2xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Step {activeStep} of {WIZARD_STEPS.length} · {currentStepConfig.shortTitle}</span>
           </div>
 
-          {/* Centered Step Editorial Header */}
-          <div className="flex flex-col items-center max-w-xl mx-auto text-center flex-1">
-            {/* Animated Step Badge */}
-            <div className="flex items-center justify-center mb-0.5">
-              <span className="text-[9.5px] sm:text-[10px] font-mono-data font-bold uppercase tracking-wider text-emerald-300 bg-emerald-950/80 px-2 sm:px-2.5 py-0.5 rounded-full border border-emerald-700/60 inline-flex items-center gap-1.5 shadow-sm backdrop-blur-md">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span>Host Onboarding · Step</span>
-                <span className="relative inline-block overflow-hidden h-[15px] w-3 font-extrabold text-center">
-                  <AnimatePresence mode="popLayout" initial={false}>
-                    <motion.span
-                      key={activeStep}
-                      initial={{ y: 14, opacity: 0, filter: 'blur(2px)' }}
-                      animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
-                      exit={{ y: -14, opacity: 0, filter: 'blur(2px)' }}
-                      transition={{ type: 'spring', stiffness: 450, damping: 26 }}
-                      className="absolute inset-0 flex items-center justify-center"
-                    >
-                      {activeStep}
-                    </motion.span>
-                  </AnimatePresence>
-                </span>
-              </span>
-            </div>
+          {/* Main Step Headline */}
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            {currentStepConfig.sub || currentStepConfig.title}
+          </h1>
 
-            {/* Morphing Staggered Words Title */}
-            <div className="min-h-[28px] sm:min-h-[36px] flex items-center justify-center">
-              <AnimatePresence mode="wait">
-                <motion.h1
-                  key={`sub-title-${activeStep}`}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  variants={{
-                    hidden: { opacity: 0 },
-                    visible: {
-                      opacity: 1,
-                      transition: {
-                        staggerChildren: 0.035,
-                        delayChildren: 0.02,
-                      },
-                    },
-                    exit: {
-                      opacity: 0,
-                      transition: {
-                        staggerChildren: 0.02,
-                        staggerDirection: -1,
-                      },
-                    },
-                  }}
-                  className="font-h2 text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center justify-center flex-wrap gap-x-1.5 sm:gap-x-2 gap-y-0.5"
-                >
-                  {currentStepConfig.sub.split(' ').map((word, idx) => (
-                    <motion.span
-                      key={`${activeStep}-${idx}-${word}`}
-                      variants={{
-                        hidden: { opacity: 0, y: 12, filter: 'blur(6px)', scale: 0.94 },
-                        visible: {
-                          opacity: 1,
-                          y: 0,
-                          filter: 'blur(0px)',
-                          scale: 1,
-                          transition: {
-                            type: 'spring',
-                            stiffness: 400,
-                            damping: 25,
-                          },
-                        },
-                        exit: {
-                          opacity: 0,
-                          y: -10,
-                          filter: 'blur(4px)',
-                          scale: 0.96,
-                          transition: { duration: 0.14, ease: 'easeIn' },
-                        },
-                      }}
-                      className="inline-block"
-                    >
-                      {word}
-                    </motion.span>
-                  ))}
-                </motion.h1>
-              </AnimatePresence>
-            </div>
-
-            {/* Smooth Subheading Description */}
-            <div className="h-4 sm:h-5 flex items-center justify-center mt-0.5">
-              <AnimatePresence mode="wait">
-                <motion.p
-                  key={`desc-${activeStep}`}
-                  initial={{ opacity: 0, y: 6, filter: 'blur(4px)' }}
-                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                  exit={{ opacity: 0, y: -6, filter: 'blur(4px)' }}
-                  transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                  className="font-body-md text-[11px] sm:text-xs md:text-sm text-slate-600 dark:text-zinc-400 font-normal px-2 sm:px-4"
-                >
-                  {currentStepConfig.desc}
-                </motion.p>
-              </AnimatePresence>
-            </div>
-          </div>
-
-          {/* Right Spacer for symmetrical balance */}
-          <div className="w-44 hidden sm:block" />
+          {/* Step Subtitle / Description */}
+          <p className="text-xs sm:text-sm md:text-base text-slate-500 dark:text-zinc-400 max-w-xl mx-auto leading-relaxed">
+            {currentStepConfig.desc}
+          </p>
         </div>
       </section>
 
-      {/* ── Main Viewport-Fitted Canvas (Smooth Overflow Scroll, Clear Bottom Padding for Sticky Progression Bar) ── */}
-      <main className="flex-1 min-h-0 w-full max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-1 sm:py-1.5 pb-5 sm:pb-7 flex flex-col justify-start relative z-10 overflow-y-auto custom-scrollbar">
-        {/* Step Content Container with Viewport Elevation (Component Level Architecture) */}
+      {/* ── Main Viewport-Fitted Canvas (Natural Smooth Scroll, Generous Bottom Padding) ── */}
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-4 pb-32 sm:pb-36 relative z-10">
         <ErrorBoundary>
           <AnimatePresence mode="wait">
             {activeStep === 1 && (
@@ -1861,6 +1754,7 @@ export function HostUploadPage() {
               <Suspense fallback={<TabFallback />}>
                 <UploadPerksRulesTab
                   formData={formData}
+                  setFormData={setFormData}
                   newFacilityInput={newFacilityInput}
                   setNewFacilityInput={setNewFacilityInput}
                   onAddFacility={handleAddFacility}
@@ -1921,47 +1815,84 @@ export function HostUploadPage() {
         </ErrorBoundary>
       </main>
 
-      {/* ── Fixed Bottom Progression Bar (Scoped Width, Upper Rounded Corners, Matching Tab Borders) ── */}
-      <footer className="sticky bottom-0 z-50 w-full shrink-0 flex justify-center pointer-events-none pb-0">
-        <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex justify-center pointer-events-none">
+      {/* ── Fixed Bottom Progression Bar (Airbnb visual reference: screenshots 1 & 2) ── */}
+      <footer className="fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-t border-slate-200/90 dark:border-zinc-800 shadow-[0_-4px_25px_rgba(0,0,0,0.06)]">
+        {/* Hairline Continuous Progress Indicator Line */}
+        <div className="w-full h-1 bg-slate-100 dark:bg-zinc-800 relative overflow-hidden">
           <motion.div
-            initial={{ y: 90, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{
-              duration: 0.7,
-              ease: [0.16, 1, 0.3, 1],
-              delay: 0.12,
-            }}
-            className="pointer-events-auto w-full bg-[#006C4A] dark:bg-[#005439] backdrop-blur-xl border-t border-x border-[#005439] dark:border-emerald-800/60 rounded-t-xl sm:rounded-t-2xl shadow-[0_-6px_30px_rgba(0,108,74,0.3)] h-12 sm:h-13 px-4 sm:px-6 flex items-center justify-center transition-all"
-          >
-            <div className="flex items-center justify-center">
-              {activeStep < 5 ? (
-                <button
-                  type="button"
-                  onClick={handleNextStep}
-                  className="px-7 sm:px-8 py-2 rounded-full bg-white text-[#006C4A] hover:bg-emerald-50 text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer shadow-md hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  <span>Continue</span>
-                  <span>→</span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  disabled={isSubmitting}
-                  onClick={handleSubmit}
-                  className="px-8 sm:px-10 py-2.5 rounded-full bg-white hover:bg-emerald-50 text-[#006C4A] font-extrabold text-xs sm:text-sm shadow-md shadow-black/10 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2 hover:scale-[1.02]"
-                >
-                  <span>
-                    {isSubmitting
-                      ? 'Saving to Database...'
-                      : isEditing
-                      ? 'Update Property Details'
-                      : 'Request Upload ✓'}
-                  </span>
-                </button>
-              )}
-            </div>
-          </motion.div>
+            className="h-full bg-gradient-to-r from-[#006C4A] to-teal-500 rounded-r-full transition-all duration-300"
+            style={{ width: `${(activeStep / WIZARD_STEPS.length) * 100}%` }}
+          />
+        </div>
+
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+          {/* Left Action: Back Button or Auto-save Draft Status */}
+          <div className="flex items-center">
+            {activeStep > 1 ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setFieldErrors({});
+                  setActiveStep((prev) => Math.max(1, prev - 1));
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-slate-700 dark:text-zinc-300 hover:text-black dark:hover:text-white font-bold text-xs sm:text-sm underline underline-offset-4 cursor-pointer active:scale-95 transition-all"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span>Back</span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-zinc-400 font-medium pl-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="hidden sm:inline">Draft auto-saved securely</span>
+                <span className="sm:hidden">Draft saved</span>
+              </div>
+            )}
+          </div>
+
+          {/* Center Info: Step overview badge (Desktop only) */}
+          <div className="hidden md:flex items-center gap-2">
+            <span className="text-xs font-semibold text-slate-500 dark:text-zinc-400">
+              {currentStepConfig.title}
+            </span>
+          </div>
+
+          {/* Right Action: Next / Publish Button (Airbnb-inspired high-contrast pill button) */}
+          <div className="flex items-center">
+            {activeStep < 5 ? (
+              <button
+                type="button"
+                onClick={handleNextStep}
+                className="h-11 sm:h-12 px-7 sm:px-9 rounded-full bg-[#006C4A] hover:bg-[#005a3e] text-white font-bold text-xs sm:text-sm shadow-sm shadow-[#006C4A]/30 flex items-center gap-2 cursor-pointer active:scale-95 transition-all"
+              >
+                <span>Continue</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={handleSubmit}
+                className="h-11 sm:h-12 px-7 sm:px-10 rounded-full bg-[#006C4A] hover:bg-[#005a3e] text-white font-extrabold text-xs sm:text-sm shadow-md shadow-[#006C4A]/30 flex items-center gap-2 cursor-pointer disabled:opacity-50 active:scale-95 transition-all"
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : isEditing ? (
+                  <>
+                    <Check className="w-4 h-4 stroke-[3]" />
+                    <span>Update Property Details</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4 stroke-[3]" />
+                    <span>Publish Listing Live</span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
       </footer>
     </div>

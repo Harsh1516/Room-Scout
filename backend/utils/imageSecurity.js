@@ -269,7 +269,12 @@ export async function uploadSecureImage(imageInput, folder = 'roomscout/stays') 
     }
 
     if (!env.CLOUDINARY_CLOUD_NAME || !env.CLOUDINARY_API_KEY) {
-      console.warn('[Cloudinary] Cloudinary credentials not configured; keeping local Base64 string.');
+      // Prohibit persisting large Base64 images into MongoDB to prevent Atlas RAM exhaustion
+      if (process.env.NODE_ENV === 'production' || trimmed.length > 50000) {
+        console.error('[Cloudinary Error] Cloudinary credentials missing. Persisting raw Base64 images into MongoDB is prohibited for performance and scalability.');
+        throw new Error('Image cloud storage service is not configured. Direct Base64 database storage is disabled to prevent memory and database bloat.');
+      }
+      console.warn('[Cloudinary Warning] Cloudinary credentials not configured; allowing small local Base64 string for development only.');
       return trimmed;
     }
 

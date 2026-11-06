@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { adminAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { toast } from '../context/ToastContext';
@@ -40,7 +40,6 @@ const saveStoredAdminSubscriptions = (list, counts) => {
 
 export function AdminPage() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { user, updateUserSession } = useAuth();
 
   const [isAdminAuthorized, setIsAdminAuthorized] = useState(() => {
@@ -50,43 +49,50 @@ export function AdminPage() {
   const [passkeyError, setPasskeyError] = useState('');
   const [isVerifyingKey, setIsVerifyingKey] = useState(false);
 
-  // Tab persistence: sync tab with URL query parameter & localStorage so refreshing stays on the tab
-  const urlTab = searchParams.get('tab');
-  const storedTab = typeof window !== 'undefined' ? localStorage.getItem('stayhub_admin_active_tab') : null;
-  const initialTab = ['users', 'hosts', 'subscriptions', 'upi'].includes(urlTab)
-    ? urlTab
-    : ['users', 'hosts', 'subscriptions', 'upi'].includes(storedTab)
-    ? storedTab
-    : 'users';
-
-  const [activeTab, setActiveTabState] = useState(initialTab);
+  // Tab persistence: sync tab with URL query parameter & localStorage without router re-renders
+  const [activeTab, setActiveTabState] = useState(() => {
+    const urlTab = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tab') : null;
+    const storedTab = typeof window !== 'undefined' ? localStorage.getItem('stayhub_admin_active_tab') : null;
+    return ['users', 'hosts', 'subscriptions', 'upi'].includes(urlTab)
+      ? urlTab
+      : ['users', 'hosts', 'subscriptions', 'upi'].includes(storedTab)
+      ? storedTab
+      : 'users';
+  });
 
   const setActiveTab = useCallback((newTab) => {
     setActiveTabState(newTab);
     try {
       localStorage.setItem('stayhub_admin_active_tab', newTab);
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        next.set('tab', newTab);
-        return next;
-      }, { replace: false });
+      const url = new URL(window.location.href);
+      if (url.searchParams.get('tab') !== newTab) {
+        url.searchParams.set('tab', newTab);
+        window.history.replaceState(null, '', url.pathname + url.search);
+      }
     } catch (e) {
       console.warn('Failed to persist admin tab:', e);
     }
-  }, [setSearchParams]);
+  }, []);
 
-  // Sync tab if URL changes (e.g. browser back/forward buttons) without reloading
+  // Sync tab if user presses browser back/forward buttons
   useEffect(() => {
-    const paramTab = searchParams.get('tab');
-    if (paramTab && ['users', 'hosts', 'subscriptions', 'upi'].includes(paramTab) && paramTab !== activeTab) {
-      setActiveTabState(paramTab);
-      localStorage.setItem('stayhub_admin_active_tab', paramTab);
-    }
-  }, [searchParams, activeTab]);
+    const handlePopState = () => {
+      const currentParam = new URLSearchParams(window.location.search).get('tab');
+      if (currentParam && ['users', 'hosts', 'subscriptions', 'upi'].includes(currentParam)) {
+        setActiveTabState(currentParam);
+        localStorage.setItem('stayhub_admin_active_tab', currentParam);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
   const [userSubTab, setUserSubTab] = useState('online'); // 'online' | 'offline' | 'all'
 
   const [users, setUsers] = useState([]);
   const [hosts, setHosts] = useState([]);
+  const [hostStatusFilter, setHostStatusFilter] = useState('all'); // 'all' | 'approved' | 'pending'
+  const [selectedHostIds, setSelectedHostIds] = useState([]);
+  const [isBulkApproving, setIsBulkApproving] = useState(false);
   const [subscriptions, setSubscriptions] = useState(getStoredAdminSubscriptions);
   const [subscriptionCounts, setSubscriptionCounts] = useState(getStoredAdminSubCounts);
   const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
@@ -257,12 +263,21 @@ export function AdminPage() {
       const res = await adminAPI.impersonate({
         email: targetHost.email,
         role: 'host',
+        id: targetHost._id,
         _id: targetHost._id,
       });
       if (res?.token && res?.user) {
+        if (typeof window !== 'undefined' && window.sessionStorage) {
+          window.sessionStorage.removeItem('roomscout_host_active_tab');
+        }
         updateUserSession(res.user, res.token);
         toast.success(`Admin accessed Host Portal: ${res.user.name}`);
-        navigate('/host/dashboard');
+        navigate('/host/dashboard', {
+          state: {
+            updatedHost: targetHost,
+            targetEmail: targetHost.email,
+          },
+        });
         return;
       }
     } catch (err) {
@@ -270,16 +285,27 @@ export function AdminPage() {
     }
 
     const fallbackHost = {
-      __id: targetHost._id,
+      _id: targetHost._id,
+      id: targetHost._id,
       name: targetHost.name,
       email: targetHost.email,
       phone: targetHost.phone,
       avatar: targetHost.avatar || targetHost.name?.slice(0, 2).toUpperCase(),
       role: 'host',
+      status: targetHost.status,
+      isApproved: targetHost.status === 'Approved',
     };
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      window.sessionStorage.removeItem('roomscout_host_active_tab');
+    }
     updateUserSession(fallbackHost, 'admin_impersonate_token');
     toast.success(`Admin accessed Host Portal: ${targetHost.name}`);
-    navigate('/host/dashboard');
+    navigate('/host/dashboard', {
+      state: {
+        updatedHost: targetHost,
+        targetEmail: targetHost.email,
+      },
+    });
   };
 
   const showToast = (msg, type = 'info') => {
@@ -326,6 +352,60 @@ export function AdminPage() {
       showToast(`Error approving host: ${err.message}`);
     } finally {
       setApprovingHostId(null);
+    }
+  };
+
+  const handleToggleSelectHost = (hostId) => {
+    setSelectedHostIds((prev) =>
+      prev.includes(hostId) ? prev.filter((id) => id !== hostId) : [...prev, hostId]
+    );
+  };
+
+  const handleSelectAllHosts = (hostIdsToSelect) => {
+    setSelectedHostIds(hostIdsToSelect);
+  };
+
+  const handleClearHostSelection = () => {
+    setSelectedHostIds([]);
+  };
+
+  const handleBulkApproveHosts = async () => {
+    if (selectedHostIds.length === 0) {
+      toast.info('Please select at least one host to approve.');
+      return;
+    }
+
+    const pendingSelectedIds = selectedHostIds.filter((id) => {
+      const host = hosts.find((h) => String(h._id) === String(id));
+      return host && host.status !== 'Approved';
+    });
+
+    const idsToApprove = pendingSelectedIds.length > 0 ? pendingSelectedIds : selectedHostIds;
+
+    try {
+      setIsBulkApproving(true);
+      try {
+        await adminAPI.bulkApproveHosts(idsToApprove);
+      } catch (err) {
+        // Fallback to individual requests if needed
+        await Promise.all(idsToApprove.map((id) => adminAPI.approveHost(id)));
+      }
+
+      setHosts((prev) =>
+        prev.map((h) =>
+          idsToApprove.map(String).includes(String(h._id))
+            ? { ...h, status: 'Approved', isApproved: true }
+            : h
+        )
+      );
+      setSelectedHostIds([]);
+      broadcastUpdate();
+      toast.success(`Successfully approved ${idsToApprove.length} property host${idsToApprove.length === 1 ? '' : 's'}!`);
+    } catch (err) {
+      console.error('Failed to bulk approve hosts:', err);
+      toast.error(`Error approving hosts: ${err.message || 'Something went wrong'}`);
+    } finally {
+      setIsBulkApproving(false);
     }
   };
 
@@ -463,20 +543,32 @@ export function AdminPage() {
     });
   }, [onlineUsersList, offlineUsersList, users, userSubTab, searchQuery, sortBy]);
 
-  const filteredHosts = useMemo(() => {
-    const q = searchQuery.toLowerCase();
-    const filtered = hosts.filter(
-      (h) =>
-        h.name?.toLowerCase().includes(q) ||
-        h.email?.toLowerCase().includes(q) ||
-        h.phone?.toLowerCase().includes(q) ||
-        h.propertyName?.toLowerCase().includes(q) ||
-        h.propertyType?.toLowerCase().includes(q) ||
-        h.location?.toLowerCase().includes(q) ||
-        h.status?.toLowerCase().includes(q)
-    );
+  const approvedHostsCount = useMemo(() => hosts.filter((h) => h.status === 'Approved').length, [hosts]);
+  const pendingHostsCount = useMemo(() => hosts.filter((h) => h.status !== 'Approved').length, [hosts]);
 
-    return [...filtered].sort((a, b) => {
+  const filteredHosts = useMemo(() => {
+    let list = hosts;
+    if (hostStatusFilter === 'approved') {
+      list = list.filter((h) => h.status === 'Approved');
+    } else if (hostStatusFilter === 'pending') {
+      list = list.filter((h) => h.status !== 'Approved');
+    }
+
+    const q = searchQuery.toLowerCase().trim();
+    if (q) {
+      list = list.filter(
+        (h) =>
+          h.name?.toLowerCase().includes(q) ||
+          h.email?.toLowerCase().includes(q) ||
+          h.phone?.toLowerCase().includes(q) ||
+          h.propertyName?.toLowerCase().includes(q) ||
+          h.propertyType?.toLowerCase().includes(q) ||
+          h.location?.toLowerCase().includes(q) ||
+          h.status?.toLowerCase().includes(q)
+      );
+    }
+
+    return [...list].sort((a, b) => {
       if (sortBy === 'newest') {
         return new Date(b.createdAt || b.joinedDate || 0) - new Date(a.createdAt || a.joinedDate || 0);
       }
@@ -491,7 +583,7 @@ export function AdminPage() {
       }
       return 0;
     });
-  }, [hosts, searchQuery, sortBy]);
+  }, [hosts, hostStatusFilter, searchQuery, sortBy]);
 
   const handleExportCSV = (dataList, filename = 'roomscout-users.csv') => {
     if (!dataList || dataList.length === 0) {
@@ -666,165 +758,167 @@ export function AdminPage() {
 
         {/* 2. CENTER: Segmented Admin Console Capsule (Users / Hosts / Subscriptions / UPI) */}
         <div className="fixed top-3.5 sm:top-5 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[calc(100vw-96px)] sm:max-w-none flex justify-center select-none">
-          <nav className="apple-liquid-nav relative flex items-center p-1 sm:p-1.5 rounded-full border border-slate-200/80 dark:border-white/[0.1] bg-white/70 dark:bg-[#0B0F19]/85 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
-            {/* Users Tab */}
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab('users');
-                setSearchQuery('');
-              }}
-              className={`relative px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none transition-colors duration-150 ${
-                activeTab === 'users'
-                  ? 'text-slate-900 dark:text-white font-medium'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white font-normal'
-              }`}
-            >
-              {activeTab === 'users' && (
-                <motion.div
-                  layoutId="admin-nav-pill-indicator"
-                  className="absolute inset-0 rounded-full bg-white dark:bg-zinc-800 shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)] border border-slate-200/80 dark:border-white/15"
-                  transition={{
-                    type: 'spring',
-                    stiffness: 450,
-                    damping: 32,
-                    mass: 0.8,
-                  }}
-                />
-              )}
-              <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'users' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400 dark:text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <span className="relative z-10 tracking-tight font-normal">Users</span>
-              <span
-                className={`relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-normal leading-none transition-colors ${
+          <LayoutGroup id="admin-segmented-nav-capsule">
+            <nav className="apple-liquid-nav relative flex items-center p-1 sm:p-1.5 rounded-full border border-slate-200/80 dark:border-white/[0.1] bg-white/70 dark:bg-[#0B0F19]/85 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+              {/* Users Tab */}
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('users');
+                  setSearchQuery('');
+                }}
+                className={`relative z-10 px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none font-normal transition-colors duration-150 ${
                   activeTab === 'users'
-                    ? 'bg-purple-500/15 text-purple-700 dark:text-purple-300'
-                    : 'bg-slate-200/80 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400'
+                    ? 'text-slate-900 dark:text-white'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white'
                 }`}
               >
-                {users.length}
-              </span>
-            </button>
-
-            {/* Hosts Tab */}
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab('hosts');
-                setSearchQuery('');
-              }}
-              className={`relative px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none transition-colors duration-150 ${
-                activeTab === 'hosts'
-                  ? 'text-slate-900 dark:text-white font-medium'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white font-normal'
-              }`}
-            >
-              {activeTab === 'hosts' && (
-                <motion.div
-                  layoutId="admin-nav-pill-indicator"
-                  className="absolute inset-0 rounded-full bg-white dark:bg-zinc-800 shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)] border border-slate-200/80 dark:border-white/15"
-                  transition={{
-                    type: 'spring',
-                    stiffness: 450,
-                    damping: 32,
-                    mass: 0.8,
-                  }}
-                />
-              )}
-              <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'hosts' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400 dark:text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <span className="relative z-10 tracking-tight font-normal">Hosts</span>
-              <span
-                className={`relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-normal leading-none transition-colors ${
-                  activeTab === 'hosts'
-                    ? 'bg-purple-500/15 text-purple-700 dark:text-purple-300'
-                    : 'bg-slate-200/80 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400'
-                }`}
-              >
-                {hosts.length}
-              </span>
-            </button>
-
-            {/* Subscriptions Tab */}
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab('subscriptions');
-                setSearchQuery('');
-              }}
-              className={`relative px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none transition-colors duration-150 ${
-                activeTab === 'subscriptions'
-                  ? 'text-slate-900 dark:text-white font-medium'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white font-normal'
-              }`}
-            >
-              {activeTab === 'subscriptions' && (
-                <motion.div
-                  layoutId="admin-nav-pill-indicator"
-                  className="absolute inset-0 rounded-full bg-white dark:bg-zinc-800 shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)] border border-slate-200/80 dark:border-white/15"
-                  transition={{
-                    type: 'spring',
-                    stiffness: 450,
-                    damping: 32,
-                    mass: 0.8,
-                  }}
-                />
-              )}
-              <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'subscriptions' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400 dark:text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-              </svg>
-              <span className="relative z-10 tracking-tight font-normal">Subscriptions</span>
-              {subscriptionCounts.pending > 0 ? (
-                <span className="relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-normal leading-none bg-amber-500 text-slate-950 animate-pulse">
-                  {subscriptionCounts.pending}
-                </span>
-              ) : (
+                {activeTab === 'users' && (
+                  <motion.div
+                    layoutId="admin-nav-pill-indicator"
+                    className="absolute inset-0 rounded-full bg-white dark:bg-zinc-800 shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)] border border-slate-200/80 dark:border-white/15 -z-10 pointer-events-none"
+                    transition={{
+                      type: 'spring',
+                      stiffness: 450,
+                      damping: 32,
+                      mass: 0.8,
+                    }}
+                  />
+                )}
+                <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'users' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400 dark:text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span className="relative z-10 tracking-tight font-normal">Users</span>
                 <span
                   className={`relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-normal leading-none transition-colors ${
-                    activeTab === 'subscriptions'
+                    activeTab === 'users'
                       ? 'bg-purple-500/15 text-purple-700 dark:text-purple-300'
                       : 'bg-slate-200/80 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400'
                   }`}
                 >
-                  {subscriptions.length}
+                  {users.length}
                 </span>
-              )}
-            </button>
+              </button>
 
-            {/* UPI Settings Tab (With layoutId spring pill) */}
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab('upi');
-                setSearchQuery('');
-              }}
-              className={`relative px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none transition-colors duration-150 ${
-                activeTab === 'upi'
-                  ? 'text-slate-900 dark:text-white font-medium'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white font-normal'
-              }`}
-            >
-              {activeTab === 'upi' && (
-                <motion.div
-                  layoutId="admin-nav-pill-indicator"
-                  className="absolute inset-0 rounded-full bg-white dark:bg-zinc-800 shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)] border border-slate-200/80 dark:border-white/15"
-                  transition={{
-                    type: 'spring',
-                    stiffness: 450,
-                    damping: 32,
-                    mass: 0.8,
-                  }}
-                />
-              )}
-              <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'upi' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400 dark:text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <rect x="2" y="5" width="20" height="14" rx="2" />
-                <line x1="2" y1="10" x2="22" y2="10" />
-              </svg>
-              <span className="relative z-10 tracking-tight font-normal">UPI Settings</span>
-            </button>
-          </nav>
+              {/* Hosts Tab */}
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('hosts');
+                  setSearchQuery('');
+                }}
+                className={`relative z-10 px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none font-normal transition-colors duration-150 ${
+                  activeTab === 'hosts'
+                    ? 'text-slate-900 dark:text-white'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white'
+                }`}
+              >
+                {activeTab === 'hosts' && (
+                  <motion.div
+                    layoutId="admin-nav-pill-indicator"
+                    className="absolute inset-0 rounded-full bg-white dark:bg-zinc-800 shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)] border border-slate-200/80 dark:border-white/15 -z-10 pointer-events-none"
+                    transition={{
+                      type: 'spring',
+                      stiffness: 450,
+                      damping: 32,
+                      mass: 0.8,
+                    }}
+                  />
+                )}
+                <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'hosts' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400 dark:text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span className="relative z-10 tracking-tight font-normal">Hosts</span>
+                <span
+                  className={`relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-normal leading-none transition-colors ${
+                    activeTab === 'hosts'
+                      ? 'bg-purple-500/15 text-purple-700 dark:text-purple-300'
+                      : 'bg-slate-200/80 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400'
+                  }`}
+                >
+                  {hosts.length}
+                </span>
+              </button>
+
+              {/* Subscriptions Tab */}
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('subscriptions');
+                  setSearchQuery('');
+                }}
+                className={`relative z-10 px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none font-normal transition-colors duration-150 ${
+                  activeTab === 'subscriptions'
+                    ? 'text-slate-900 dark:text-white'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white'
+                }`}
+              >
+                {activeTab === 'subscriptions' && (
+                  <motion.div
+                    layoutId="admin-nav-pill-indicator"
+                    className="absolute inset-0 rounded-full bg-white dark:bg-zinc-800 shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)] border border-slate-200/80 dark:border-white/15 -z-10 pointer-events-none"
+                    transition={{
+                      type: 'spring',
+                      stiffness: 450,
+                      damping: 32,
+                      mass: 0.8,
+                    }}
+                  />
+                )}
+                <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'subscriptions' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400 dark:text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+                <span className="relative z-10 tracking-tight font-normal">Subscriptions</span>
+                {subscriptionCounts.pending > 0 ? (
+                  <span className="relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-normal leading-none bg-amber-500 text-slate-950 animate-pulse">
+                    {subscriptionCounts.pending}
+                  </span>
+                ) : (
+                  <span
+                    className={`relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-normal leading-none transition-colors ${
+                      activeTab === 'subscriptions'
+                        ? 'bg-purple-500/15 text-purple-700 dark:text-purple-300'
+                        : 'bg-slate-200/80 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400'
+                    }`}
+                  >
+                    {subscriptions.length}
+                  </span>
+                )}
+              </button>
+
+              {/* UPI Settings Tab (With layoutId spring pill) */}
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('upi');
+                  setSearchQuery('');
+                }}
+                className={`relative z-10 px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none font-normal transition-colors duration-150 ${
+                  activeTab === 'upi'
+                    ? 'text-slate-900 dark:text-white'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white'
+                }`}
+              >
+                {activeTab === 'upi' && (
+                  <motion.div
+                    layoutId="admin-nav-pill-indicator"
+                    className="absolute inset-0 rounded-full bg-white dark:bg-zinc-800 shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)] border border-slate-200/80 dark:border-white/15 -z-10 pointer-events-none"
+                    transition={{
+                      type: 'spring',
+                      stiffness: 450,
+                      damping: 32,
+                      mass: 0.8,
+                    }}
+                  />
+                )}
+                <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'upi' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400 dark:text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <rect x="2" y="5" width="20" height="14" rx="2" />
+                  <line x1="2" y1="10" x2="22" y2="10" />
+                </svg>
+                <span className="relative z-10 tracking-tight font-normal">UPI Settings</span>
+              </button>
+            </nav>
+          </LayoutGroup>
         </div>
 
         {/* 3. RIGHT: Actions & Profile Cluster */}
@@ -865,11 +959,14 @@ export function AdminPage() {
 
       {/* BEGIN: MainContent */}
       <main className="flex-1 w-full mx-auto px-3 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-8 flex flex-col gap-5">
-        {activeTab === 'upi' && <PlatformPaymentSettingsPage />}
+        {/* 1. UPI Tab Panel */}
+        <div className={activeTab === 'upi' ? 'block w-full' : 'hidden'}>
+          <PlatformPaymentSettingsPage />
+        </div>
 
-        {activeTab === 'users' && (
-          <>
-            {/* BEGIN: FilterAndSearchToolbar */}
+        {/* 2. Users Tab Panel */}
+        <div className={activeTab === 'users' ? 'block space-y-5 w-full' : 'hidden'}>
+          {/* BEGIN: FilterAndSearchToolbar */}
             <section className="bg-white/80 dark:bg-[#0B0F1D]/85 rounded-3xl border border-slate-200/80 dark:border-white/[0.08] backdrop-blur-2xl shadow-xl p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4" data-purpose="toolbar">
               <div className="flex items-center flex-wrap gap-2">
                 {/* Online Users Button */}
@@ -1067,19 +1164,125 @@ export function AdminPage() {
               setConfirmDeleteUserId={setConfirmDeleteUserId}
             />
             {/* END: UsersTableContainer */}
-          </>
-        )}
+        </div>
 
-        {activeTab === 'hosts' && (
-          <div className="space-y-4 w-full">
+        {/* 3. Hosts Tab Panel */}
+        {/* 3. Hosts Tab Panel */}
+        <div className={activeTab === 'hosts' ? 'block space-y-4 w-full' : 'hidden'}>
             {/* Toolbar for Hosts */}
-            <section className="bg-white/80 dark:bg-[#0B0F1D]/85 rounded-3xl border border-slate-200/80 dark:border-white/[0.08] backdrop-blur-2xl shadow-xl p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-              <div className="text-xs text-slate-600 dark:text-slate-300 font-normal">
-                Showing <span className="text-slate-900 dark:text-white font-medium">{filteredHosts.length}</span> of <span className="text-slate-900 dark:text-white font-medium">{hosts.length}</span> property hosts
+            <section className="bg-white/80 dark:bg-[#0B0F1D]/85 rounded-3xl border border-slate-200/80 dark:border-white/[0.08] backdrop-blur-2xl shadow-xl p-3.5 sm:p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 relative overflow-hidden">
+              <div className="flex items-center gap-3">
+                <div className="text-xs text-slate-600 dark:text-slate-300 font-normal">
+                  Showing <span className="text-slate-900 dark:text-white font-medium">{filteredHosts.length}</span> of <span className="text-slate-900 dark:text-white font-medium">{hosts.length}</span> property hosts
+                </div>
+
+                {selectedHostIds.length > 0 && (
+                  <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30 animate-pulse">
+                    <span>{selectedHostIds.length} selected</span>
+                  </span>
+                )}
               </div>
 
-              <div className="flex items-center gap-2.5">
-                <div className="relative w-full sm:w-72 group">
+              {/* Center Filter Segment: All / Approved / Pending */}
+              <div className="flex items-center justify-center p-1 rounded-2xl bg-slate-100/90 dark:bg-white/[0.04] border border-slate-200/90 dark:border-white/[0.08] shadow-inner self-center">
+                <button
+                  type="button"
+                  onClick={() => setHostStatusFilter('all')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer select-none ${
+                    hostStatusFilter === 'all'
+                      ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <span>All</span>
+                  <span className={`px-1.5 py-0.2 text-[10.5px] rounded-md font-mono ${
+                    hostStatusFilter === 'all'
+                      ? 'bg-slate-100 dark:bg-zinc-700 text-slate-800 dark:text-zinc-200'
+                      : 'bg-slate-200/60 dark:bg-white/10 text-slate-500 dark:text-slate-400'
+                  }`}>
+                    {hosts.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setHostStatusFilter('approved')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer select-none ${
+                    hostStatusFilter === 'approved'
+                      ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 shadow-xs font-semibold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                  <span>Approved</span>
+                  <span className={`px-1.5 py-0.2 text-[10.5px] rounded-md font-mono ${
+                    hostStatusFilter === 'approved'
+                      ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold'
+                      : 'bg-slate-200/60 dark:bg-white/10 text-slate-500 dark:text-slate-400'
+                  }`}>
+                    {approvedHostsCount}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setHostStatusFilter('pending')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer select-none ${
+                    hostStatusFilter === 'pending'
+                      ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 shadow-xs font-semibold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0 animate-pulse" />
+                  <span>Pending</span>
+                  <span className={`px-1.5 py-0.2 text-[10.5px] rounded-md font-mono ${
+                    hostStatusFilter === 'pending'
+                      ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold'
+                      : 'bg-slate-200/60 dark:bg-white/10 text-slate-500 dark:text-slate-400'
+                  }`}>
+                    {pendingHostsCount}
+                  </span>
+                </button>
+              </div>
+
+              {/* Right: Multi-select Action (when selected) + Search + Export */}
+              <div className="flex items-center gap-2.5 flex-wrap justify-end">
+                {selectedHostIds.length > 0 && (
+                  <div className="flex items-center gap-1.5 animate-fadeIn">
+                    <button
+                      type="button"
+                      onClick={handleBulkApproveHosts}
+                      disabled={isBulkApproving}
+                      className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      title={`Approve all ${selectedHostIds.length} selected hosts`}
+                    >
+                      {isBulkApproving ? (
+                        <>
+                          <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>Approving...</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-3.5 h-3.5 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                          <span>Approve all ({selectedHostIds.length})</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleClearHostSelection}
+                      className="px-2 py-2 text-xs text-slate-500 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
+                      title="Clear selection"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
+
+                <div className="relative w-full sm:w-64 group">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-purple-500 transition-colors">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                       <circle cx="11" cy="11" r="8" />
@@ -1131,12 +1334,61 @@ export function AdminPage() {
                 deletingHostId={deletingHostId}
                 confirmDeleteHostId={confirmDeleteHostId}
                 setConfirmDeleteHostId={setConfirmDeleteHostId}
+                selectedHostIds={selectedHostIds}
+                onToggleSelectHost={handleToggleSelectHost}
+                onSelectAllHosts={handleSelectAllHosts}
+                onClearSelection={handleClearHostSelection}
+                onBulkApprove={handleBulkApproveHosts}
+                isBulkApproving={isBulkApproving}
               />
             </div>
-          </div>
-        )}
 
-        {activeTab === 'subscriptions' && (
+            {/* Floating Bulk Action Bar */}
+            <AnimatePresence>
+              {selectedHostIds.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 dark:bg-zinc-900/95 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700/80 dark:border-zinc-700/80 backdrop-blur-2xl flex items-center gap-4"
+                >
+                  <span className="text-xs font-medium">
+                    <span className="font-bold text-purple-400">{selectedHostIds.length}</span> host{selectedHostIds.length === 1 ? '' : 's'} selected
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleBulkApproveHosts}
+                    disabled={isBulkApproving}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/30 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    {isBulkApproving ? (
+                      <>
+                        <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Approving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-3.5 h-3.5 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        <span>Approve all ({selectedHostIds.length})</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleClearHostSelection}
+                    className="text-xs text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  >
+                    Deselect
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+        {/* 4. Subscriptions Tab Panel */}
+        <div className={activeTab === 'subscriptions' ? 'block w-full' : 'hidden'}>
           <AdminSubscriptionsView
             requests={subscriptions}
             counts={subscriptionCounts}
@@ -1152,7 +1404,7 @@ export function AdminPage() {
             hosts={hosts}
             formatDateTime={formatDateTime}
           />
-        )}
+        </div>
       </main>
       {/* END: MainContent */}
     </div>

@@ -121,37 +121,14 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  const validateSingleField = (field, value) => {
-    const dataToValidate = { ...formData, [field]: value };
-    const schema = isRegisterMode ? registerSchema : loginSchema;
-    const result = schema.safeParse(dataToValidate);
-
-    if (!result.success) {
-      const issue = result.error.issues.find((err) => err.path[0] === field);
-      if (issue) {
-        setFieldErrors((prev) => ({ ...prev, [field]: issue.message }));
-        return;
-      }
-    }
-    setFieldErrors((prev) => {
-      const next = { ...prev };
-      delete next[field];
-      return next;
-    });
-  };
-
   const validateForm = () => {
     const schema = isRegisterMode ? registerSchema : loginSchema;
     const result = schema.safeParse(formData);
 
     if (!result.success) {
-      const errors = {};
-      result.error.issues.forEach((issue) => {
-        if (issue.path[0]) {
-          errors[issue.path[0]] = issue.message;
-        }
-      });
-      setFieldErrors(errors);
+      const firstIssue = result.error.issues[0];
+      const errorMsg = firstIssue?.message || 'Please fill in all required fields.';
+      toast.error(errorMsg);
       return false;
     }
 
@@ -161,13 +138,6 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    if (fieldErrors[field]) {
-      setFieldErrors((prev) => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
-      });
-    }
     if (errorMessage) setErrorMessage('');
     if (successMessage) setSuccessMessage('');
   };
@@ -177,14 +147,9 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
     handleInputChange('name', lettersOnly);
   };
 
-  // Dynamic Theme-Aware Input Border Styling (Indigo for Guest, Emerald for Host, Rose for Error)
-  const getFieldBorderClass = (field) => {
-    if (fieldErrors[field]) {
-      return 'border-rose-400 dark:border-rose-500 ring-2 ring-rose-500/15 focus-within:border-rose-500 focus-within:ring-rose-500/25';
-    }
-    return accountType === 'host'
-      ? 'border-slate-200/90 dark:border-zinc-700/80 focus-within:border-emerald-500 dark:focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-500/20'
-      : 'border-slate-200/90 dark:border-zinc-700/80 focus-within:border-indigo-500 dark:focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/20';
+  // Unified Input Border Styling matching the clean, calm Email input field
+  const getFieldBorderClass = () => {
+    return 'border-slate-200/90 dark:border-zinc-700/80 focus-within:border-slate-300 dark:focus-within:border-zinc-600';
   };
 
   const handleSubmit = async (e) => {
@@ -228,7 +193,14 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
         requiredRole: accountType,
       });
       if (!res.success) {
-        const msg = res.message || 'Invalid email or password.';
+        let msg = res.message || 'Invalid email or password.';
+        if (
+          msg.toLowerCase().includes('account not found') ||
+          msg.toLowerCase().includes('register first') ||
+          msg.toLowerCase().includes('not registered')
+        ) {
+          msg = 'Account not Found. Register First.';
+        }
         setErrorMessage(msg);
         toast.error(msg);
         setIsSubmitting(false);
@@ -242,7 +214,16 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
       setIsSubmitting(false);
       onClose();
     } catch (err) {
-      const msg = err.message || 'Invalid Credentials';
+      let msg = err.message || 'Invalid Credentials';
+      if (
+        msg.toLowerCase().includes('account not found') ||
+        msg.toLowerCase().includes('register first') ||
+        msg.toLowerCase().includes('not registered')
+      ) {
+        msg = 'Account not Found. Register First.';
+      } else if (msg === 'Failed to fetch' || msg.includes('Failed to fetch')) {
+        msg = 'Server connection error. Please ensure the backend is running.';
+      }
       setErrorMessage(msg);
       toast.error(msg);
       setIsSubmitting(false);
@@ -264,7 +245,14 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
       });
 
       if (!res.success) {
-        const msg = res.message || 'Google sign-in failed.';
+        let msg = res.message || 'Google sign-in failed.';
+        if (
+          msg.toLowerCase().includes('account not found') ||
+          msg.toLowerCase().includes('register first') ||
+          msg.toLowerCase().includes('not registered')
+        ) {
+          msg = 'Account not Found. Register First.';
+        }
         setErrorMessage(msg);
         toast.error(msg);
         setIsSubmitting(false);
@@ -291,7 +279,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
   const handleForgotPasswordSubmit = async (e) => {
     e.preventDefault();
     if (!forgotEmail.trim()) {
-      setErrorMessage('Please enter your email address.');
+      toast.error('Please enter your email address.');
       return;
     }
 
@@ -475,11 +463,6 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
 
             {/* Modal Body */}
             <div className="px-5 py-5 sm:px-6 sm:py-5 relative z-10">
-              {promptMessage && (
-                <div className="mb-3 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 text-[11px] text-amber-800 dark:text-amber-200 font-medium leading-relaxed text-center">
-                  {promptMessage}
-                </div>
-              )}
               {/* Header Title & Tagline */}
               <div className="text-center mb-3 pt-0.5">
                 <h2 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">
@@ -514,26 +497,10 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                 </div>
               )}
 
-              {/* Error Notification Alert */}
-              {errorMessage && (
-                <div className="mb-2.5 p-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-[11px] font-semibold text-center flex items-center justify-center gap-1 flex-wrap">
-                  <span>{errorMessage}</span>
-                  {errorMessage.toLowerCase().includes('register first') && (
-                    <button
-                      type="button"
-                      onClick={() => switchMode(true)}
-                      className="underline hover:text-rose-700 dark:hover:text-rose-300 font-bold ml-1 cursor-pointer"
-                    >
-                      (Click to Register)
-                    </button>
-                  )}
-                </div>
-              )}
-
               {isForgotMode ? (
                 /* Forgot Password Form */
                 <form onSubmit={handleForgotPasswordSubmit} className="space-y-2.5">
-                  <div className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 dark:bg-zinc-800/80 focus-within:bg-white dark:focus-within:bg-zinc-900 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('forgotEmail')}`}>
+                  <div className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 dark:bg-zinc-800/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('forgotEmail')}`}>
                     <div className="pl-3 text-slate-500 dark:text-zinc-400">
                       <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
@@ -585,43 +552,36 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                       {isRegisterMode && (
                         <motion.div
                           key="field-name"
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
+                          initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                          animate={{ opacity: 1, height: 'auto', transitionEnd: { overflow: 'visible' } }}
+                          exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
                           transition={{
                             height: { duration: 0.22, ease: [0.16, 1, 0.3, 1] },
                             opacity: { duration: 0.16, ease: 'easeOut' },
                           }}
-                          className="overflow-hidden"
                         >
-                          <div className="pb-0.5">
-                            <div
-                              className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 dark:bg-zinc-800/80 focus-within:bg-white dark:focus-within:bg-zinc-900 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('name')}`}
-                            >
-                              <div className="pl-3 text-slate-500 dark:text-zinc-400">
-                                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path
-                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                  />
-                                </svg>
-                              </div>
-                              <input
-                                ref={firstInputRef}
-                                type="text"
-                                autoComplete="name"
-                                value={formData.name}
-                                onChange={(e) => handleNameChange(e.target.value)}
-                                onBlur={() => validateSingleField('name', formData.name)}
-                                placeholder="Full name"
-                                className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-zinc-400 focus:outline-none"
-                              />
+                          <div
+                            className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 dark:bg-zinc-800/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('name')}`}
+                          >
+                            <div className="pl-3 text-slate-500 dark:text-zinc-400">
+                              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path
+                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                />
+                              </svg>
                             </div>
-                            {fieldErrors.name && (
-                              <p className="mt-0.5 text-[11px] text-rose-500 font-medium pl-1 leading-none">{fieldErrors.name}</p>
-                            )}
+                            <input
+                              ref={firstInputRef}
+                              type="text"
+                              autoComplete="name"
+                              value={formData.name}
+                              onChange={(e) => handleNameChange(e.target.value)}
+                              placeholder="Full name"
+                              className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-zinc-400 focus:outline-none"
+                            />
                           </div>
                         </motion.div>
                       )}
@@ -630,7 +590,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                     {/* 2. Email Address (Always visible) */}
                     <div>
                       <div
-                        className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 dark:bg-zinc-800/80 focus-within:bg-white dark:focus-within:bg-zinc-900 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('email')}`}
+                        className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 dark:bg-zinc-800/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('email')}`}
                       >
                         <div className="pl-3 text-slate-500 dark:text-zinc-400">
                           <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -648,14 +608,10 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                           autoComplete="username email"
                           value={formData.email}
                           onChange={(e) => handleInputChange('email', e.target.value)}
-                          onBlur={() => validateSingleField('email', formData.email)}
                           placeholder="Email address"
                           className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-zinc-400 focus:outline-none"
                         />
                       </div>
-                      {fieldErrors.email && (
-                        <p className="mt-0.5 text-[11px] text-rose-500 font-medium pl-1 leading-none">{fieldErrors.email}</p>
-                      )}
                     </div>
 
                     {/* 3. Contact Phone (Animated Expand/Collapse for Register Mode Only) */}
@@ -663,42 +619,35 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                       {isRegisterMode && (
                         <motion.div
                           key="field-phone"
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
+                          initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                          animate={{ opacity: 1, height: 'auto', transitionEnd: { overflow: 'visible' } }}
+                          exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
                           transition={{
                             height: { duration: 0.22, ease: [0.16, 1, 0.3, 1] },
                             opacity: { duration: 0.16, ease: 'easeOut' },
                           }}
-                          className="overflow-hidden"
                         >
-                          <div className="pb-0.5">
-                            <div
-                              className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 dark:bg-zinc-800/80 focus-within:bg-white dark:focus-within:bg-zinc-900 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('phone')}`}
-                            >
-                              <span className="pl-3 pr-2 text-xs font-bold text-slate-600 dark:text-zinc-300 select-none shrink-0">
-                                +91
-                              </span>
-                              <div className="h-4 w-px bg-slate-300 dark:bg-zinc-600 mr-2 shrink-0" />
-                              <input
-                                type="tel"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                maxLength={10}
-                                value={formData.phone}
-                                onChange={(e) => {
-                                  const raw = e.target.value.replace(/\D/g, '');
-                                  const digits = raw.length > 10 && raw.startsWith('91') ? raw.slice(-10) : raw.slice(0, 10);
-                                  handleInputChange('phone', digits);
-                                }}
-                                onBlur={() => validateSingleField('phone', formData.phone)}
-                                placeholder="Mobile number"
-                                className="w-full bg-transparent pr-2.5 py-1 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-zinc-400 focus:outline-none"
-                              />
-                            </div>
-                            {fieldErrors.phone && (
-                              <p className="mt-0.5 text-[11px] text-rose-500 font-medium pl-1 leading-none">{fieldErrors.phone}</p>
-                            )}
+                          <div
+                            className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 dark:bg-zinc-800/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('phone')}`}
+                          >
+                            <span className="pl-3 pr-2 text-xs font-bold text-slate-600 dark:text-zinc-300 select-none shrink-0">
+                              +91
+                            </span>
+                            <div className="h-4 w-px bg-slate-300 dark:bg-zinc-600 mr-2 shrink-0" />
+                            <input
+                              type="tel"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              maxLength={10}
+                              value={formData.phone}
+                              onChange={(e) => {
+                                const raw = e.target.value.replace(/\D/g, '');
+                                const digits = raw.length > 10 && raw.startsWith('91') ? raw.slice(-10) : raw.slice(0, 10);
+                                handleInputChange('phone', digits);
+                              }}
+                              placeholder="Mobile number"
+                              className="w-full bg-transparent pr-2.5 py-1 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-zinc-400 focus:outline-none"
+                            />
                           </div>
                         </motion.div>
                       )}
@@ -707,7 +656,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                     {/* 4. Password Field (Always visible) */}
                     <div>
                       <div
-                        className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 dark:bg-zinc-800/80 focus-within:bg-white dark:focus-within:bg-zinc-900 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('password')}`}
+                        className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 dark:bg-zinc-800/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('password')}`}
                       >
                         <div className="pl-3 text-slate-500 dark:text-zinc-400">
                           <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -724,7 +673,6 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                           autoComplete={isRegisterMode ? 'new-password' : 'current-password'}
                           value={formData.password}
                           onChange={(e) => handleInputChange('password', e.target.value)}
-                          onBlur={() => validateSingleField('password', formData.password)}
                           placeholder="Password (min. 8 characters)"
                           className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-zinc-400 focus:outline-none"
                         />
@@ -756,9 +704,6 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                           )}
                         </button>
                       </div>
-                      {fieldErrors.password && (
-                        <p className="mt-0.5 text-[11px] text-rose-500 font-medium pl-1 leading-none">{fieldErrors.password}</p>
-                      )}
                     </div>
 
                     {/* 5. Confirm Password (Animated Expand/Collapse for Register Mode Only) */}
@@ -766,69 +711,62 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                       {isRegisterMode && (
                         <motion.div
                           key="field-confirm-password"
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
+                          initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                          animate={{ opacity: 1, height: 'auto', transitionEnd: { overflow: 'visible' } }}
+                          exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
                           transition={{
                             height: { duration: 0.22, ease: [0.16, 1, 0.3, 1] },
                             opacity: { duration: 0.16, ease: 'easeOut' },
                           }}
-                          className="overflow-hidden"
                         >
-                          <div className="pb-0.5">
-                            <div
-                              className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 dark:bg-zinc-800/80 focus-within:bg-white dark:focus-within:bg-zinc-900 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('confirmPassword')}`}
+                          <div
+                            className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 dark:bg-zinc-800/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('confirmPassword')}`}
+                          >
+                            <div className="pl-3 text-slate-500 dark:text-zinc-400">
+                              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path
+                                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                />
+                              </svg>
+                            </div>
+                            <input
+                              type={showConfirmPassword ? 'text' : 'password'}
+                              autoComplete="off"
+                              value={formData.confirmPassword}
+                              onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                              placeholder="Confirm password"
+                              className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-zinc-400 focus:outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                              className="pr-2.5 text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer"
                             >
-                              <div className="pl-3 text-slate-500 dark:text-zinc-400">
+                              {showConfirmPassword ? (
                                 <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path
-                                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                     strokeWidth="2"
+                                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"
                                   />
                                 </svg>
-                              </div>
-                              <input
-                                type={showConfirmPassword ? 'text' : 'password'}
-                                autoComplete="off"
-                                value={formData.confirmPassword}
-                                onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                                onBlur={() => validateSingleField('confirmPassword', formData.confirmPassword)}
-                                placeholder="Confirm password"
-                                className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-zinc-400 focus:outline-none"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
-                                className="pr-2.5 text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer"
-                              >
-                                {showConfirmPassword ? (
-                                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth="2"
-                                      d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"
-                                    />
-                                  </svg>
-                                ) : (
-                                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth="2"
-                                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                    />
-                                  </svg>
-                                )}
-                              </button>
-                            </div>
-                            {fieldErrors.confirmPassword && (
-                              <p className="mt-0.5 text-[11px] text-rose-500 font-medium pl-1 leading-none">{fieldErrors.confirmPassword}</p>
-                            )}
+                              ) : (
+                                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                  />
+                                </svg>
+                              )}
+                            </button>
                           </div>
                         </motion.div>
                       )}

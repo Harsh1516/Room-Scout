@@ -81,7 +81,7 @@ export function HostPaymentSettingsSection({ hostProperty }) {
   if (isLoading) {
     return (
       <div className="w-full h-96 flex flex-col items-center justify-center gap-3 text-slate-500">
-        <div className="w-8 h-8 border-3 border-[#54ACBF] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-3 border-purple-500 border-t-transparent rounded-full animate-spin" />
         <p className="text-sm font-medium">Loading UPI configuration...</p>
       </div>
     );
@@ -90,26 +90,26 @@ export function HostPaymentSettingsSection({ hostProperty }) {
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 pb-12 pt-2 px-3 sm:px-6">
       {/* Overview Banner */}
-      <div className="rounded-3xl p-6 bg-gradient-to-r from-[#54ACBF]/15 via-[#26658C]/10 to-[#011C40]/20 border border-[#54ACBF]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="rounded-3xl rounded-3xl border border-slate-200/80 dark:border-white/[0.08] bg-white/80 dark:bg-[#0B0F1D]/85 backdrop-blur-2xl shadow-xl p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#54ACBF] shadow-[0_0_8px_#54ACBF] animate-pulse" />
-            <span className="text-xs font-bold uppercase tracking-wider text-[#023859] dark:text-[#A7EBF2]">
+            <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)] animate-pulse" />
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
               Direct Host Payment Gateway
             </span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-[#011C40] dark:text-white mt-1">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white dark:text-white mt-1">
             Host UPI Account Configuration
           </h2>
-          <p className="text-xs sm:text-sm text-[#26658C] dark:text-[#A7EBF2]/80 mt-1 max-w-xl">
+          <p className="text-xs sm:text-sm text-purple-600 dark:text-purple-400/80 mt-1 max-w-xl">
             Configure your personal or property UPI VPA. Guests will scan a booking-specific QR code or use a direct UPI payment link to transfer 100% of the room fee directly to your bank account.
           </p>
         </div>
 
         <div className="shrink-0">
           {isConfigured && isValidVpa ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#54ACBF]/15 dark:bg-[#023859]/80 text-[#023859] dark:text-[#A7EBF2] border border-[#54ACBF]/30">
-              <svg className="w-4 h-4 text-[#54ACBF] dark:text-[#A7EBF2]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#a855f7]/15 dark:bg-purple-600/80 text-slate-900 dark:text-white border border-purple-500/30">
+              <svg className="w-4 h-4 text-purple-600 dark:text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
               Direct UPI Payments Active
@@ -130,10 +130,10 @@ export function HostPaymentSettingsSection({ hostProperty }) {
       {/* Main Settings Card */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Form: UPI VPA & Payee Display Name */}
-        <div className="lg:col-span-7 rounded-3xl bg-white/80 dark:bg-[#011C40]/80 backdrop-blur-xl border border-[#54ACBF]/20 dark:border-[#26658C]/40 p-6 shadow-sm space-y-5">
+        <div className="lg:col-span-7 rounded-3xl rounded-3xl border border-slate-200/80 dark:border-white/[0.08] bg-white/80 dark:bg-[#0B0F1D]/85 backdrop-blur-2xl shadow-xl p-6 shadow-sm space-y-5">
           <form onSubmit={handleSave} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-[#26658C] dark:text-[#A7EBF2]/80 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-bold text-purple-600 dark:text-purple-400/80 uppercase tracking-wider mb-1.5">
                 Host / Property UPI ID (VPA) *
               </label>
               <div className="relative">
@@ -172,7 +172,7 @@ export function HostPaymentSettingsSection({ hostProperty }) {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#26658C] dark:text-[#A7EBF2]/80 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-bold text-purple-600 dark:text-purple-400/80 uppercase tracking-wider mb-1.5">
                 Payee / Property Display Name *
               </label>
               <input
@@ -193,7 +193,7 @@ export function HostPaymentSettingsSection({ hostProperty }) {
               <button
                 type="submit"
                 disabled={isSaving || !isValidVpa || !payeeName.trim()}
-                className="w-full py-3.5 rounded-2xl font-bold text-xs sm:text-sm bg-white hover:bg-white/90 text-[#011C40] font-extrabold shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-2xl font-bold text-xs sm:text-sm bg-white hover:bg-white/90 text-slate-900 dark:text-white font-extrabold shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
               >
                 {isSaving ? (
                   <>
@@ -208,7 +208,7 @@ export function HostPaymentSettingsSection({ hostProperty }) {
           </form>
 
           {/* Operational Policy Notes */}
-          <div className="p-4 rounded-2xl bg-white/60 dark:bg-[#023859]/30 border border-[#54ACBF]/20 dark:border-[#26658C]/40 text-xs space-y-2 text-[#26658C] dark:text-[#A7EBF2]/80">
+          <div className="p-4 rounded-2xl bg-white/60 dark:bg-purple-600/30 border border-slate-200 dark:border-white/10 dark:border-[#9333ea]/40 text-xs space-y-2 text-purple-600 dark:text-purple-400/80">
             <h4 className="font-bold text-slate-800 dark:text-slate-200">How Direct UPI Payments Work:</h4>
             <ul className="list-disc pl-4 space-y-1 leading-relaxed text-[11px]">
               <li>Guests pay exact room prices directly into your account with <strong>0% platform or gateway fees</strong>.</li>
@@ -219,7 +219,7 @@ export function HostPaymentSettingsSection({ hostProperty }) {
         </div>
 
         {/* Right Preview: Generated Scannable QR Code */}
-        <div className="lg:col-span-5 rounded-3xl bg-white/80 dark:bg-[#011C40]/80 backdrop-blur-xl border border-[#54ACBF]/20 dark:border-[#26658C]/40 p-6 shadow-sm flex flex-col items-center justify-between text-center space-y-4">
+        <div className="lg:col-span-5 rounded-3xl rounded-3xl border border-slate-200/80 dark:border-white/[0.08] bg-white/80 dark:bg-[#0B0F1D]/85 backdrop-blur-2xl shadow-xl p-6 shadow-sm flex flex-col items-center justify-between text-center space-y-4">
           <div className="space-y-1">
             <h3 className="font-bold text-slate-900 dark:text-white text-sm">
               Property QR Code Preview

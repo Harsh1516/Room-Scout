@@ -10,102 +10,28 @@ import {
   ShieldCheck 
 } from 'lucide-react';
 
+const CONSOLE_THEME = {
+  cardBg: 'bg-[#E2E7FF]/70 hover:bg-[#E2E7FF]/90 dark:bg-[#111C2E] dark:hover:bg-[#142238] backdrop-blur-xl',
+  border: 'border-slate-200/80 hover:border-[#3525CD]/40 dark:border-[#1E2E48] dark:hover:border-[#374c70]',
+  shadow: 'shadow-[0_4px_20px_-4px_rgba(53,37,205,0.08),0_2px_6px_rgba(0,0,0,0.02)]',
+  avatarBg: 'bg-[#E2DFFF] text-[#3525CD] dark:bg-[#4F46E5] dark:text-white border border-[#3525CD]/20 dark:border-transparent',
+  roomBoxBg: 'bg-white dark:bg-[#162238] border border-slate-200/80 dark:border-[#1E2E48] shadow-xs',
+  accentText: 'text-[#3525CD] dark:text-[#818CF8]',
+  badgeWalkin: 'bg-[#E2DFFF] text-[#3525CD] dark:bg-white/20 dark:text-white border border-[#3525CD]/20 dark:border-white/10 font-bold',
+  badgeStatus: 'bg-[#E2DFFF] text-[#3525CD] dark:bg-white/20 dark:text-white border border-[#3525CD]/20 dark:border-white/10 font-bold',
+  primaryBtn: 'bg-transparent hover:bg-black hover:text-white dark:bg-transparent dark:hover:bg-white dark:hover:text-black text-black dark:text-white transition-all duration-500 ease-in-out hover:-translate-y-0.5 hover:shadow-md dark:hover:shadow-[0_4px_12px_rgba(255,255,255,0.15)] active:translate-y-0 active:scale-[0.98]',
+  secondaryBtn: 'bg-transparent hover:bg-black hover:text-white dark:bg-transparent dark:hover:bg-white dark:hover:text-black text-black dark:text-white transition-all duration-500 ease-in-out hover:-translate-y-0.5 hover:shadow-md dark:hover:shadow-[0_4px_12px_rgba(255,255,255,0.15)] active:translate-y-0 active:scale-[0.98]',
+  slotBtn: 'bg-[#E2DFFF]/70 hover:bg-[#E2DFFF] text-[#3525CD] dark:bg-white/10 dark:hover:bg-white/15 dark:text-[#C7D2FE] border border-[#c7d2fe]/60 dark:border-white/10',
+};
+
 const SOFT_PALETTES = [
-  {
-    name: 'orange',
-    cardBg: 'bg-[#FCA058] dark:bg-[#381602]',
-    border: 'border-orange-500/80 hover:border-orange-600 dark:border-orange-500/80 dark:hover:border-orange-400',
-    shadow: 'shadow-[0_8px_24px_-4px_rgba(234,88,12,0.25),0_2px_6px_rgba(0,0,0,0.06)]',
-    avatarBg: 'bg-gradient-to-tr from-[#EA580C] to-[#C2410C] text-white',
-    roomBoxBg: 'bg-white/95 dark:bg-[#251204] border border-orange-300/80 dark:border-orange-700/80 shadow-xs',
-    accentText: 'text-orange-900 dark:text-orange-300',
-    badgeWalkin: 'bg-white/60 dark:bg-orange-950/60 text-orange-950 dark:text-orange-200 border-orange-600/30 font-bold',
-    badgeStatus: 'bg-white/70 dark:bg-orange-950/70 text-orange-950 dark:text-orange-100 border-orange-600/40 font-bold',
-    primaryBtn: 'bg-gradient-to-r from-orange-500 via-orange-600 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white shadow-md shadow-orange-800/25 border border-orange-500/60',
-    secondaryBtn: 'bg-white hover:bg-orange-50/90 dark:bg-[#2C1405] dark:hover:bg-[#3D1D09] text-orange-800 dark:text-orange-300 border-2 border-orange-500/60 dark:border-orange-500/50 shadow-xs hover:shadow-sm font-bold',
-    slotBtn: 'bg-orange-600/15 hover:bg-orange-600/25 text-orange-950 dark:text-orange-200 border-orange-500/40 dark:border-orange-500/40 hover:border-orange-600/60',
-  },
-  {
-    name: 'mint',
-    cardBg: 'bg-[#6FE0A3] dark:bg-[#052e20]',
-    border: 'border-emerald-500/80 hover:border-emerald-600 dark:border-emerald-500/80 dark:hover:border-emerald-400',
-    shadow: 'shadow-[0_8px_24px_-4px_rgba(0,108,74,0.25),0_2px_6px_rgba(0,0,0,0.06)]',
-    avatarBg: 'bg-gradient-to-tr from-[#006C4A] to-[#009A6A] text-white',
-    roomBoxBg: 'bg-white/95 dark:bg-[#041d16] border border-emerald-300/80 dark:border-emerald-700/80 shadow-xs',
-    accentText: 'text-emerald-900 dark:text-emerald-300',
-    badgeWalkin: 'bg-white/60 dark:bg-emerald-950/60 text-emerald-950 dark:text-emerald-200 border-emerald-600/30 font-bold',
-    badgeStatus: 'bg-white/70 dark:bg-emerald-950/70 text-emerald-950 dark:text-emerald-100 border-emerald-600/40 font-bold',
-    primaryBtn: 'bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white shadow-md shadow-emerald-800/25 border border-emerald-500/60',
-    secondaryBtn: 'bg-white hover:bg-emerald-50/90 dark:bg-[#07241D] dark:hover:bg-[#0A3329] text-emerald-800 dark:text-emerald-300 border-2 border-emerald-500/60 dark:border-emerald-500/50 shadow-xs hover:shadow-sm font-bold',
-    slotBtn: 'bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-950 dark:text-emerald-200 border-emerald-500/40 dark:border-emerald-500/40 hover:border-emerald-600/60',
-  },
-  {
-    name: 'sky',
-    cardBg: 'bg-[#60C3FA] dark:bg-[#08294a]',
-    border: 'border-sky-500/80 hover:border-sky-600 dark:border-sky-500/80 dark:hover:border-sky-400',
-    shadow: 'shadow-[0_8px_24px_-4px_rgba(2,132,199,0.25),0_2px_6px_rgba(0,0,0,0.06)]',
-    avatarBg: 'bg-gradient-to-tr from-[#0284C7] to-[#2563EB] text-white',
-    roomBoxBg: 'bg-white/95 dark:bg-[#051c33] border border-sky-300/80 dark:border-sky-700/80 shadow-xs',
-    accentText: 'text-sky-900 dark:text-sky-300',
-    badgeWalkin: 'bg-white/60 dark:bg-sky-950/60 text-sky-950 dark:text-sky-200 border-sky-600/30 font-bold',
-    badgeStatus: 'bg-white/70 dark:bg-sky-950/70 text-sky-950 dark:text-sky-100 border-sky-600/40 font-bold',
-    primaryBtn: 'bg-gradient-to-r from-sky-600 via-blue-600 to-sky-700 hover:from-sky-700 hover:to-blue-800 text-white shadow-md shadow-sky-800/25 border border-sky-500/60',
-    secondaryBtn: 'bg-white hover:bg-sky-50/90 dark:bg-[#0A223B] dark:hover:bg-[#0F3155] text-sky-800 dark:text-sky-300 border-2 border-sky-500/60 dark:border-sky-500/50 shadow-xs hover:shadow-sm font-bold',
-    slotBtn: 'bg-sky-600/15 hover:bg-sky-600/25 text-sky-950 dark:text-sky-200 border-sky-500/40 dark:border-sky-500/40 hover:border-sky-600/60',
-  },
-  {
-    name: 'warmCream',
-    cardBg: 'bg-[#FCA058] dark:bg-[#381602]',
-    border: 'border-orange-500/80 hover:border-orange-600 dark:border-orange-500/80 dark:hover:border-orange-400',
-    shadow: 'shadow-[0_8px_24px_-4px_rgba(234,88,12,0.25),0_2px_6px_rgba(0,0,0,0.06)]',
-    avatarBg: 'bg-gradient-to-tr from-[#EA580C] to-[#C2410C] text-white',
-    roomBoxBg: 'bg-white/95 dark:bg-[#251204] border border-orange-300/80 dark:border-orange-700/80 shadow-xs',
-    accentText: 'text-orange-900 dark:text-orange-300',
-    badgeWalkin: 'bg-white/60 dark:bg-orange-950/60 text-orange-950 dark:text-orange-200 border-orange-600/30 font-bold',
-    badgeStatus: 'bg-white/70 dark:bg-orange-950/70 text-orange-950 dark:text-orange-100 border-orange-600/40 font-bold',
-    primaryBtn: 'bg-gradient-to-r from-orange-500 via-orange-600 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white shadow-md shadow-orange-800/25 border border-orange-500/60',
-    secondaryBtn: 'bg-white hover:bg-orange-50/90 dark:bg-[#2C1405] dark:hover:bg-[#3D1D09] text-orange-800 dark:text-orange-300 border-2 border-orange-500/60 dark:border-orange-500/50 shadow-xs hover:shadow-sm font-bold',
-    slotBtn: 'bg-orange-600/15 hover:bg-orange-600/25 text-orange-950 dark:text-orange-200 border-orange-500/40 dark:border-orange-500/40 hover:border-orange-600/60',
-  },
-  {
-    name: 'lavender',
-    cardBg: 'bg-[#EEDFFE] dark:bg-[#251347]',
-    border: 'border-purple-400/80 hover:border-purple-600 dark:border-purple-600/80 dark:hover:border-purple-400',
-    shadow: 'shadow-[0_8px_24px_-4px_rgba(126,34,206,0.18),0_2px_6px_rgba(0,0,0,0.06)]',
-    avatarBg: 'bg-gradient-to-tr from-[#7E22CE] to-[#6366F1] text-white',
-    roomBoxBg: 'bg-white/95 dark:bg-[#180b30] border border-purple-300/80 dark:border-purple-700/80 shadow-xs',
-    accentText: 'text-purple-800 dark:text-purple-300',
-    badgeWalkin: 'bg-purple-600/15 text-purple-950 dark:text-purple-200 border-purple-600/30 font-bold',
-    badgeStatus: 'bg-purple-600/20 text-purple-950 dark:text-purple-100 border-purple-600/40 font-bold',
-    primaryBtn: 'bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-700 hover:to-indigo-800 text-white shadow-md shadow-purple-800/25 border border-purple-500/60',
-    secondaryBtn: 'bg-white hover:bg-purple-50/90 dark:bg-[#1E1136] dark:hover:bg-[#2B184D] text-purple-800 dark:text-purple-300 border-2 border-purple-500/60 dark:border-purple-500/50 shadow-xs hover:shadow-sm font-bold',
-  },
-  {
-    name: 'rose',
-    cardBg: 'bg-[#FDD8E0] dark:bg-[#38111e]',
-    border: 'border-rose-400/80 hover:border-rose-600 dark:border-rose-600/80 dark:hover:border-rose-400',
-    shadow: 'shadow-[0_8px_24px_-4px_rgba(225,29,72,0.18),0_2px_6px_rgba(0,0,0,0.06)]',
-    avatarBg: 'bg-gradient-to-tr from-[#E11D48] to-[#BE123C] text-white',
-    roomBoxBg: 'bg-white/95 dark:bg-[#260913] border border-rose-300/80 dark:border-rose-700/80 shadow-xs',
-    accentText: 'text-rose-800 dark:text-rose-300',
-    badgeWalkin: 'bg-rose-600/15 text-rose-950 dark:text-rose-200 border-rose-600/30 font-bold',
-    badgeStatus: 'bg-rose-600/20 text-rose-950 dark:text-rose-100 border-rose-600/40 font-bold',
-    primaryBtn: 'bg-gradient-to-r from-rose-600 via-rose-700 to-pink-700 hover:from-rose-700 hover:to-pink-800 text-white shadow-md shadow-rose-800/25 border border-rose-500/60',
-    secondaryBtn: 'bg-white hover:bg-rose-50/90 dark:bg-[#2C0E18] dark:hover:bg-[#3D1422] text-rose-800 dark:text-rose-300 border-2 border-rose-500/60 dark:border-rose-500/50 shadow-xs hover:shadow-sm font-bold',
-  },
-  {
-    name: 'teal',
-    cardBg: 'bg-[#C6F5EE] dark:bg-[#072c27]',
-    border: 'border-teal-400/80 hover:border-teal-600 dark:border-teal-600/80 dark:hover:border-teal-400',
-    shadow: 'shadow-[0_8px_24px_-4px_rgba(13,148,136,0.18),0_2px_6px_rgba(0,0,0,0.06)]',
-    avatarBg: 'bg-gradient-to-tr from-[#0D9488] to-[#047857] text-white',
-    roomBoxBg: 'bg-white/95 dark:bg-[#041d1a] border border-teal-300/80 dark:border-teal-700/80 shadow-xs',
-    accentText: 'text-teal-800 dark:text-teal-300',
-    badgeWalkin: 'bg-teal-600/15 text-teal-950 dark:text-teal-200 border-teal-600/30 font-bold',
-    badgeStatus: 'bg-teal-600/20 text-teal-950 dark:text-teal-100 border-teal-600/40 font-bold',
-    primaryBtn: 'bg-gradient-to-r from-teal-600 via-emerald-700 to-teal-700 hover:from-teal-700 hover:to-emerald-800 text-white shadow-md shadow-teal-800/25 border border-teal-500/60',
-    secondaryBtn: 'bg-white hover:bg-teal-50/90 dark:bg-[#062421] dark:hover:bg-[#0A332F] text-teal-800 dark:text-teal-300 border-2 border-teal-500/60 dark:border-teal-500/50 shadow-xs hover:shadow-sm font-bold',
-  },
+  { name: 'orange', ...CONSOLE_THEME },
+  { name: 'mint', ...CONSOLE_THEME },
+  { name: 'sky', ...CONSOLE_THEME },
+  { name: 'warmCream', ...CONSOLE_THEME },
+  { name: 'lavender', ...CONSOLE_THEME },
+  { name: 'rose', ...CONSOLE_THEME },
+  { name: 'teal', ...CONSOLE_THEME },
 ];
 
 export const VisitedGuestCard = memo(function VisitedGuestCard({
@@ -218,7 +144,7 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
         onFocusCard ? 'cursor-pointer' : 'cursor-default'
       } ${palette.cardBg} ${palette.border} ${
         isFocused
-          ? 'shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] ring-2 ring-emerald-500/50'
+          ? 'shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] ring-2 ring-[#3525CD] dark:ring-[#4F46E5]'
           : palette.shadow
       }`}
     >
@@ -307,7 +233,7 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
                   </span>
                 ) : isCheckedIn ? (
                   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold border ${palette.badgeStatus}`}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 ring-2 ring-emerald-500/30" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#3525CD] dark:bg-[#818CF8] ring-2 ring-[#3525CD]/30 dark:ring-[#818CF8]/30" />
                     <span>Checked In</span>
                   </span>
                 ) : isCheckedOut ? (
@@ -378,7 +304,7 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
               <span className="text-[10px] sm:text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 shrink-0">
                 Entry Pass Code:
               </span>
-              <span className="font-mono text-xs sm:text-[12.5px] font-black tracking-widest text-emerald-800 dark:text-emerald-300 bg-emerald-500/15 dark:bg-emerald-500/25 px-2 py-0.5 rounded-md border border-emerald-500/30 select-all shrink-0">
+              <span className="font-mono text-xs sm:text-[12.5px] font-black tracking-widest text-[#3525CD] dark:text-[#C7D2FE] bg-[#E2DFFF] dark:bg-[#4F46E5]/25 px-2 py-0.5 rounded-md border border-[#3525CD]/20 dark:border-[#4F46E5]/40 select-all shrink-0">
                 {displayCheckInCode}
               </span>
             </div>
@@ -478,7 +404,7 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
               }}
               className={`group/slot inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-tight border transition-all duration-150 ease-out cursor-pointer select-none active:scale-[0.97] shadow-2xs ${
                 isSlotSelected
-                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-500/90 shadow-xs shadow-emerald-600/30'
+                  ? 'bg-[#3525CD] hover:bg-[#281ca5] text-white border-[#3525CD] dark:bg-[#4F46E5] dark:text-white shadow-xs shadow-indigo-600/30'
                   : (palette.slotBtn || 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300/80')
               }`}
               title={isSlotSelected ? 'Click to reset slot' : 'Click to view slot in calendar'}
@@ -502,24 +428,24 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
       </div>
 
       {/* ── Bottom Action Buttons Row ── */}
-      <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-1.5 pt-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+      <div className="flex items-center gap-1.5 pt-1.5 shrink-0 w-full" onClick={(e) => e.stopPropagation()}>
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             onOpenModal(guest);
           }}
-          className={`flex-1 min-h-[36px] py-1.5 px-2.5 rounded-xl text-[10.5px] sm:text-[11px] font-bold transition-all duration-150 ease-out cursor-pointer flex items-center justify-center gap-1 active:scale-[0.98] hover:brightness-105 shadow-sm whitespace-nowrap ${palette.primaryBtn}`}
+          className={`flex-1 min-w-0 min-h-[36px] py-1.5 px-2 rounded-xl text-[10.5px] sm:text-[11px] font-bold cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap ${palette.primaryBtn}`}
         >
           <Eye className="w-3 h-3 stroke-[2.2] shrink-0" />
-          <span>Pass / Details</span>
+          <span>Pass</span>
         </button>
 
         {cleanPhone && (
           <a
             href={`tel:+91${cleanPhone}`}
             onClick={(e) => e.stopPropagation()}
-            className={`min-h-[36px] py-1.5 px-3 rounded-xl text-[10.5px] sm:text-[11px] font-bold transition-all duration-150 ease-out cursor-pointer flex items-center justify-center gap-1 active:scale-[0.98] hover:brightness-95 dark:hover:brightness-110 whitespace-nowrap shrink-0 ${palette.secondaryBtn}`}
+            className={`flex-1 min-w-0 min-h-[36px] py-1.5 px-2 rounded-xl text-[10.5px] sm:text-[11px] font-bold cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap ${palette.secondaryBtn}`}
           >
             <Phone className="w-3 h-3 stroke-[2.2] shrink-0" />
             <span>Call</span>
@@ -535,7 +461,7 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
               e.stopPropagation();
               onApproveRequest(guest);
             }}
-            className="min-h-[36px] px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-[10.5px] sm:text-[11px] font-bold shadow-md shadow-amber-600/20 cursor-pointer active:scale-[0.98] transition-all duration-150 ease-out flex items-center gap-1 hover:brightness-105 whitespace-nowrap shrink-0"
+            className={`flex-1 min-w-0 min-h-[36px] py-1.5 px-2 rounded-xl text-[10.5px] sm:text-[11px] font-bold cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap ${palette.primaryBtn}`}
           >
             <Check className="w-3 h-3 stroke-[2.5]" />
             <span>{isLoading ? '...' : 'Approve'}</span>
@@ -545,7 +471,7 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
         {/* Requests: Awaiting Payment indicator when approved but guest hasn't submitted UPI ref yet */}
         {subTab === 'requests' && !isCheckedIn && isAwaitingPayment && guest.upiPayment?.verificationStatus !== 'PENDING_VERIFICATION' && (
           <span
-            className="min-h-[36px] px-2.5 py-1.5 rounded-xl bg-amber-500/10 dark:bg-amber-400/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-[10px] sm:text-[10.5px] font-semibold flex items-center gap-1.5 whitespace-nowrap shrink-0"
+            className="flex-1 min-w-0 min-h-[36px] px-2 py-1.5 rounded-xl bg-amber-500/10 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300 text-[10px] sm:text-[10.5px] font-semibold flex items-center justify-center gap-1.5 whitespace-nowrap"
             title="Waiting for guest to complete UPI payment"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
@@ -562,7 +488,7 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
               e.stopPropagation();
               onVerifyPayment(guest);
             }}
-            className="min-h-[36px] px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-[10.5px] sm:text-[11px] font-bold shadow-md shadow-indigo-600/20 cursor-pointer active:scale-[0.98] transition-all duration-150 ease-out flex items-center gap-1 hover:brightness-105 whitespace-nowrap shrink-0 animate-pulse"
+            className={`flex-1 min-w-0 min-h-[36px] py-1.5 px-2 rounded-xl text-[10.5px] sm:text-[11px] font-bold cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap ${palette.primaryBtn}`}
             title="Verify direct UPI bank credit"
           >
             <ShieldCheck className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -579,7 +505,7 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
               e.stopPropagation();
               onMarkCheckIn(guest);
             }}
-            className="min-h-[36px] px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-[10.5px] sm:text-[11px] font-bold shadow-md shadow-emerald-600/20 cursor-pointer active:scale-[0.98] transition-all duration-150 ease-out flex items-center gap-1 hover:brightness-105 whitespace-nowrap shrink-0"
+            className={`flex-1 min-w-0 min-h-[36px] py-1.5 px-2 rounded-xl text-[10.5px] sm:text-[11px] font-bold cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap ${palette.primaryBtn}`}
             title="Review verification details and check in guest"
           >
             <Key className="w-3 h-3 stroke-[2.5]" />
@@ -596,7 +522,7 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
               e.stopPropagation();
               onMarkCheckOut(guest);
             }}
-            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-[10.5px] sm:text-[11px] font-bold shadow-md shadow-indigo-600/20 cursor-pointer active:scale-[0.98] transition-all duration-150 ease-out flex items-center gap-1 hover:brightness-105 whitespace-nowrap shrink-0"
+            className={`flex-1 min-w-0 min-h-[36px] py-1.5 px-2 rounded-xl text-[10.5px] sm:text-[11px] font-bold cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap ${palette.primaryBtn}`}
           >
             <LogOut className="w-3 h-3 stroke-[2.5]" />
             <span>Check Out</span>

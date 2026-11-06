@@ -275,6 +275,10 @@ export function initWhatsAppClient() {
       console.error('❌ WhatsApp Web authentication failure:', err);
     });
 
+    client.on('error', (err) => {
+      console.error('⚠️ WhatsApp Web client error caught:', err?.message || err);
+    });
+
     client.on('disconnected', (reason) => {
       isClientReady = false;
       console.warn('⚠️ WhatsApp client disconnected:', reason);

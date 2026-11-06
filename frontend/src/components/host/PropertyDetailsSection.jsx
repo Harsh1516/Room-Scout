@@ -192,45 +192,47 @@ export function PropertyDetailsSection({
   };
 
   return (
-    <div className="flex flex-col w-full h-full min-h-0">
+    <div className="flex flex-col w-full h-full min-h-0 justify-center">
       {/* ── Two-Column Dashboard Workspace ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-5 items-stretch h-full min-h-0">
+      <div className="flex items-start justify-center w-full h-full min-h-0">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-5 items-start w-full max-w-full transition-all duration-300 ease-in-out">
         {/* Left Navigation Rail: Stepped Layered Cards */}
-        <aside className="lg:col-span-3 flex flex-col lg:self-start w-full shrink-0 relative">
-          {/* ── Upper Tab: Property Info (Slightly Lesser Width, Clearly Observable) ── */}
-          <div className="w-[calc(100%-18px)] sm:w-[calc(100%-22px)] mx-auto rounded-2xl sm:rounded-3xl border border-[#54ACBF]/35 dark:border-[#26658C]/60 shadow-[0_16px_36px_-10px_rgba(1,28,64,0.65),inset_0_1px_1px_0_rgba(167,235,242,0.25)] ring-1 ring-[#54ACBF]/20 overflow-hidden bg-gradient-to-b from-[#01224d] via-[#011C40] to-[#011C40] text-white flex flex-col gap-3 p-4 sm:p-5 pb-8 sm:pb-9 relative shrink-0 z-0">
+        <div className="lg:col-span-3 flex items-start justify-center h-full transition-all duration-300 ease-in-out">
+          <aside className="w-full flex flex-col shrink-0 relative mt-8 transition-all duration-300 ease-in-out">
+          {/* ── Upper Tab: Property Info (Styled like navbar capsule with black edit button in light theme) ── */}
+          <div className="w-[calc(100%-18px)] sm:w-[calc(100%-22px)] mx-auto rounded-t-2xl sm:rounded-t-3xl rounded-b-none border-x border-t border-slate-200/80 dark:border-zinc-700 shadow-[0_14px_36px_rgba(0,0,0,0.16)] dark:shadow-[0_16px_40px_rgba(255,255,255,0.12)] hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] bg-white/95 dark:bg-zinc-700/90 backdrop-blur-2xl text-slate-800 dark:text-zinc-100 flex flex-col gap-3 p-4 sm:p-5 pb-8 sm:pb-9 relative shrink-0 z-0">
             {/* Top Specular Rim Reflection for Upper Tab */}
-            <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#A7EBF2]/60 to-transparent pointer-events-none z-20" />
+            <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 dark:via-zinc-700/40 to-transparent pointer-events-none z-20" />
 
-            {/* Header: Place Name + Top-Right Edit Button */}
+            {/* Header: Place Name + Top-Right Edit Button (Solid black in light theme) */}
             <div className="flex items-center justify-between gap-2 relative z-10">
-              <h1 className="text-base sm:text-lg lg:text-xl font-medium text-white tracking-normal truncate flex-1 min-w-0">
+              <h1 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900 dark:text-white tracking-normal truncate flex-1 min-w-0">
                 {hostProperty?.propertyName || hostProperty?.title || '—'}
               </h1>
 
-              {/* Edit button: sleek Luna glass */}
+              {/* Edit button: solid black in light mode, glass in dark mode */}
               {onEditDetails && (
                 <button
                   type="button"
                   onClick={onEditDetails}
-                  className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 border border-[#54ACBF]/30 text-[#A7EBF2] text-xs font-normal flex items-center gap-1.5 cursor-pointer transition-all shadow-xs shrink-0"
+                  className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white border border-purple-500/30 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-md shadow-purple-600/20 active:scale-95 shrink-0"
                   title="Edit Listing Details"
                 >
-                  <PencilIcon className="w-3.5 h-3.5 text-[#A7EBF2]" />
+                  <PencilIcon className="w-3.5 h-3.5 text-white" />
                   <span>Edit</span>
                 </button>
               )}
             </div>
 
-            {/* Badges/Metadata in Luna Palette */}
+            {/* Badges/Metadata in Clean Palette */}
             <div className="flex flex-col gap-1.5 pt-0.5 text-xs relative z-10">
               <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 font-medium text-[#A7EBF2]/80">
-                  <span className="material-symbols-outlined text-[15px] text-[#54ACBF]">apartment</span>
+                <span className="flex items-center gap-1.5 font-semibold text-slate-800 dark:text-slate-100/80">
+                  <span className="material-symbols-outlined text-[15px] text-purple-600 dark:text-purple-400">apartment</span>
                   <span>{hostProperty?.propertyType || hostProperty?.category ? `${hostProperty.propertyType || hostProperty.category} Category` : '—'}</span>
                 </span>
-                <span className="flex items-center gap-1 font-medium text-[#A7EBF2]">
-                  <span className="material-symbols-outlined text-[14px] text-[#A7EBF2]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                <span className="flex items-center gap-1 font-bold text-slate-800 dark:text-slate-100">
+                  <span className="material-symbols-outlined text-[14px] text-amber-500 dark:text-slate-100" style={{ fontVariationSettings: "'FILL' 1" }}>
                     star
                   </span>
                   <span>
@@ -241,60 +243,44 @@ export function PropertyDetailsSection({
                 </span>
               </div>
 
-              <div className="flex items-center justify-between text-[#A7EBF2]/80">
-                <span className="flex items-center gap-1.5 font-normal text-[#A7EBF2]/80">
-                  <span className="material-symbols-outlined text-[15px] text-[#54ACBF]">group</span>
+              <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 dark:text-slate-100/80">
+                <span className="flex items-center gap-1.5 font-medium text-slate-500 dark:text-slate-400 dark:text-slate-100/80">
+                  <span className="material-symbols-outlined text-[15px] text-purple-600 dark:text-purple-400">group</span>
                   <span>For: {hostProperty?.genderType ? hostProperty.genderType.charAt(0).toUpperCase() + hostProperty.genderType.slice(1).toLowerCase() : '—'}</span>
                 </span>
               </div>
             </div>
 
             {/* Actions Row (50/50 equal width split) */}
-            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#54ACBF]/20 relative z-10 w-full">
+            <div className="grid grid-cols-2 gap-2 pt-1 relative z-10 w-full">
               <button
                 type="button"
                 onClick={handleOpenPublicUrl}
-                className="w-full h-9 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-[#A7EBF2] flex items-center justify-center gap-1.5 border border-[#54ACBF]/30 shadow-2xs transition-all cursor-pointer"
+                className="group relative overflow-hidden w-full h-9 rounded-xl bg-transparent hover:bg-sky-200 dark:hover:bg-zinc-900 active:scale-95 text-slate-800 dark:text-zinc-100 hover:text-sky-800 dark:hover:text-white flex items-center justify-center gap-1.5 border border-slate-300 dark:border-zinc-600 hover:border-sky-400 dark:hover:border-black shadow-2xs transition-all cursor-pointer font-medium"
               >
-                <span className="text-xs font-normal">Public URL</span>
-                <span className="material-symbols-outlined text-[15px] text-[#A7EBF2]">north_east</span>
+                <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-none group-hover:transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-black/20 dark:via-white/35 to-transparent pointer-events-none" />
+                <span className="text-xs font-medium">Public URL</span>
+                <span className="material-symbols-outlined text-[15px] text-purple-600 dark:text-purple-400">north_east</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleShare}
-                className="w-full h-9 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-[#A7EBF2] flex items-center justify-center gap-1.5 border border-[#54ACBF]/30 shadow-2xs transition-all cursor-pointer"
+                className="group relative overflow-hidden w-full h-9 rounded-xl bg-transparent hover:bg-sky-200 dark:hover:bg-zinc-900 active:scale-95 text-slate-800 dark:text-zinc-100 hover:text-sky-800 dark:hover:text-white flex items-center justify-center gap-1.5 border border-slate-300 dark:border-zinc-600 hover:border-sky-400 dark:hover:border-black shadow-2xs transition-all cursor-pointer font-medium"
                 title="Share listing link"
               >
-                <span className="material-symbols-outlined text-[16px] text-[#A7EBF2]">share</span>
-                <span className="text-xs font-normal">Share</span>
+                <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-none group-hover:transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-black/20 dark:via-white/35 to-transparent pointer-events-none" />
+                <span className="material-symbols-outlined text-[16px] text-purple-600 dark:text-purple-400">share</span>
+                <span className="text-xs font-medium">Share</span>
               </button>
             </div>
           </div>
 
-          {/* ── Lower Tab: Configuration Matrix / Tabs (Visibly Broader Full Width) ── */}
-          <div className="w-full flex flex-col p-4 sm:p-5 pb-5 bg-gradient-to-b from-[#02436a] to-[#023859] rounded-2xl sm:rounded-3xl rounded-t-[28px] sm:rounded-t-[32px] -mt-4 sm:-mt-5 border border-[#54ACBF]/40 shadow-[0_20px_50px_-12px_rgba(1,28,64,0.65),0_-8px_25px_rgba(1,28,64,0.55),inset_0_1px_1px_0_rgba(167,235,242,0.3)] transition-colors relative z-10">
-              {/* Header: Title + Dynamic Percentage + Micro Progress Bar */}
-              <div className="flex flex-col gap-2 pb-2.5 px-0.5 border-b border-[#54ACBF]/20 dark:border-[#26658C]/40 mb-2 shrink-0">
-                <div className="flex items-center justify-center py-0.5">
-                  <span className="text-xs font-medium tracking-widest text-[#A7EBF2] font-mono tabular-nums select-none">
-                    {completionPercentage}%
-                  </span>
-                </div>
-
-                {/* Minimal Luna Gradient Progress Bar with fluid liquid spring */}
-                <div className="w-full h-1.5 bg-[#023859]/10 dark:bg-[#023859]/50 rounded-full overflow-hidden">
-                  <motion.div
-                    className="h-full bg-gradient-to-r from-[#26658C] via-[#54ACBF] to-[#A7EBF2] rounded-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${completionPercentage}%` }}
-                    transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-                  />
-                </div>
-              </div>
-
+          {/* ── Lower Tab: Configuration Matrix / Tabs (Styled exactly like right tab in light theme) ── */}
+          <div className="w-full flex flex-col p-4 sm:p-5 pb-5 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl rounded-t-[28px] sm:rounded-t-[32px] -mt-4 sm:-mt-5 border-x border-b border-slate-200/80 dark:border-zinc-800 shadow-[0_14px_36px_rgba(0,0,0,0.16)] dark:shadow-[0_16px_40px_rgba(255,255,255,0.12)] hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] transition-colors relative z-10">
+              {/* Top specular rim removed to avoid visible line while hovering */}
               {/* Sub-Tabs Steps Navigation */}
-              <nav aria-label="Steps Navigation" className="flex flex-col gap-1.5 relative">
+              <nav aria-label="Steps Navigation" className="flex flex-col gap-1.5 relative z-10">
                 {sections.map((sec, idx) => {
                   const isActive = activeIndex === idx;
                   const isCompleted = sec.isComplete;
@@ -309,43 +295,44 @@ export function PropertyDetailsSection({
                       }}
                       whileTap={{ scale: 0.985 }}
                       transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                      className={`group relative flex items-center justify-between px-3 h-[42px] rounded-xl cursor-pointer text-left w-full select-none focus:outline-none transition-colors duration-200 ${
-                        !isActive ? 'hover:bg-[#011C40]/30' : ''
+                      className={`group relative overflow-hidden flex items-center justify-between px-3 h-[42px] rounded-xl cursor-pointer text-left w-full select-none focus:outline-none transition-all duration-150 ${
+                        isActive
+                          ? ''
+                          : 'bg-transparent hover:bg-white/70 dark:hover:bg-[#0B0F19]/80 hover:backdrop-blur-2xl hover:shadow-[0_0_20px_rgba(168,85,247,0.3)]'
                       }`}
                     >
-                      {/* Minimal, Simple Active Indicator */}
+                      <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-none group-hover:transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none z-0" />
+                      {/* Active Indicator: Solid White in light mode, deep navy in dark mode */}
                       {isActive && (
                         <motion.div
                           layoutId="activeSectionIndicator"
-                          className="absolute inset-0 rounded-xl bg-[#011C40] border border-[#54ACBF]/20 shadow-xs pointer-events-none z-0"
+                          className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 shadow-[0_2px_12px_rgba(147,51,234,0.35)] pointer-events-none z-0"
                           transition={{
                             type: 'spring',
-                            stiffness: 380,
-                            damping: 30,
-                            mass: 0.8,
+                            stiffness: 500,
+                            damping: 35,
+                            mass: 0.6,
                           }}
                         />
                       )}
 
                       {/* Left: Standalone Icon + Title */}
                       <div className="flex items-center gap-2.5 min-w-0 relative z-10">
-                        <motion.span
-                          animate={{
-                            color: isActive ? '#A7EBF2' : '#54ACBF',
-                          }}
-                          transition={{ duration: 0.15 }}
-                          className="material-symbols-outlined text-[17px] shrink-0"
+                        <span
+                          className={`material-symbols-outlined text-[17px] shrink-0 transition-colors duration-150 ${
+                            isActive ? 'text-white dark:text-white' : 'text-slate-500 dark:text-zinc-400 group-hover:text-slate-900 dark:group-hover:text-white'
+                          }`}
                         >
                           {sec.icon}
-                        </motion.span>
+                        </span>
 
                         {/* Text Column */}
                         <div className="flex min-w-0 items-center">
                           <span
-                            className={`text-xs truncate transition-all duration-200 ${
+                            className={`text-xs truncate transition-all duration-150 ${
                               isActive
-                                ? 'font-medium text-white tracking-normal'
-                                : 'font-normal text-[#A7EBF2]/80 group-hover:text-white'
+                                ? 'font-bold text-slate-900 dark:text-white tracking-normal'
+                                : 'font-semibold text-slate-700 dark:text-zinc-300 group-hover:text-slate-900 dark:group-hover:text-white'
                             }`}
                           >
                             {sec.title}
@@ -357,10 +344,10 @@ export function PropertyDetailsSection({
                       <div className="relative z-10 flex items-center gap-1.5 shrink-0 pl-2">
                         {sec.badge !== null && (
                           <span
-                            className={`px-2 py-0.5 rounded-md text-[9.5px] font-mono font-normal transition-all duration-200 ${
+                            className={`px-2 py-0.5 rounded-md text-[9.5px] font-mono transition-all duration-150 ${
                               isActive
-                                ? 'bg-[#011C40]/90 text-[#A7EBF2] border border-[#54ACBF]/25'
-                                : 'bg-[#011C40]/60 text-[#A7EBF2]/70 border border-[#54ACBF]/20'
+                                ? 'bg-purple-200/70 dark:bg-white/20 text-purple-900 dark:text-white border border-purple-300/60 dark:border-white/20 font-bold'
+                                : 'bg-white/60 group-hover:bg-white/80 dark:bg-zinc-800 text-slate-800 dark:text-zinc-300 border border-white/70 dark:border-zinc-700 font-bold'
                             }`}
                           >
                             {sec.badge}
@@ -382,8 +369,8 @@ export function PropertyDetailsSection({
                               }}
                               className={`material-symbols-outlined text-[15px] shrink-0 select-none ${
                                 isActive
-                                  ? 'text-[#A7EBF2]'
-                                  : 'text-[#54ACBF]/70 dark:text-[#A7EBF2]/60'
+                                  ? 'text-purple-700 dark:text-white'
+                                  : 'text-slate-500 dark:text-zinc-500'
                               }`}
                             >
                               check
@@ -397,24 +384,22 @@ export function PropertyDetailsSection({
               </nav>
             </div>
           </aside>
+        </div>
 
         {/* Main Content Panel (col-span-9 - Luna Glassmorphic Aesthetic) */}
-        <main className="lg:col-span-9 flex flex-col h-full min-h-0 overflow-y-auto no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden rounded-2xl sm:rounded-3xl relative overflow-hidden bg-gradient-to-b from-[#5db9cc] via-[#54ACBF] to-[#459aad] border border-[#A7EBF2]/60 shadow-[0_25px_60px_-12px_rgba(1,28,64,0.55),0_10px_25px_-5px_rgba(1,28,64,0.35),inset_0_1px_2px_0_rgba(255,255,255,0.45)] ring-1 ring-[#011C40]/10 p-4 sm:p-7 lg:p-8 pb-8 sm:pb-10 lg:pb-8 transition-colors">
+        <main className="lg:col-span-9 flex flex-col h-full min-h-0 overflow-y-auto scroll-smooth no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden rounded-2xl sm:rounded-3xl relative overflow-hidden bg-white/80 dark:bg-zinc-900/95 border border-slate-200/80 dark:border-zinc-800 shadow-[0_14px_36px_rgba(0,0,0,0.16)] dark:shadow-[0_16px_40px_rgba(255,255,255,0.12)] hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] p-4 sm:p-7 lg:p-8 pb-8 sm:pb-10 lg:pb-8 transition-all duration-300 ease-in-out">
           {/* Ambient Glass Reflections & Refractive Lighting in Luna cyan & deep navy */}
           <div
             aria-hidden="true"
             className="absolute inset-0 pointer-events-none select-none overflow-hidden rounded-2xl sm:rounded-3xl z-0"
           >
-            {/* Top Specular Rim Reflection */}
-            <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/70 to-transparent pointer-events-none z-20" />
-            {/* Corner Refraction Glows */}
-            <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#54ACBF]/20 blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-[#011C40]/25 blur-3xl pointer-events-none" />
+            {/* Top specular rim removed */}
+            {/* Corner Refraction Glows removed */}
             {/* Bottom Grounding Vignette */}
-            <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-[#011C40]/12 to-transparent pointer-events-none z-0" />
+            <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-purple-900/[0.04] dark:from-zinc-950/20 to-transparent pointer-events-none z-0" />
           </div>
 
-          <div className="flex flex-col flex-1 min-h-full justify-between gap-6 sm:gap-8 relative z-10">
+          <div className={`flex flex-col flex-1 min-h-full gap-6 sm:gap-8 relative z-10 ${currentSection.id === 'photos' ? 'justify-center' : 'justify-between'}`}>
             {/* 1. Centered Top Heading with fluid cross-fade */}
             <AnimatePresence mode="wait">
               <motion.div
@@ -425,11 +410,11 @@ export function PropertyDetailsSection({
                 transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                 className="flex flex-col items-center text-center justify-center pt-1 sm:pt-2 w-full"
               >
-                <h2 className="text-xl sm:text-2xl lg:text-3xl font-medium text-[#011C40] tracking-normal">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-medium text-slate-900 dark:text-white tracking-normal">
                   {currentSection.title}
                 </h2>
 
-                <p className="text-xs sm:text-sm text-[#011C40]/80 font-normal mt-1.5 max-w-xl text-center leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-normal mt-1.5 max-w-xl text-center leading-relaxed">
                   {currentSection.id === 'overview' && 'Start with the core identity, property type, and guest categorization.'}
                   {currentSection.id === 'description' && 'Add an editorial property description and key highlights for prospective residents.'}
                   {currentSection.id === 'location' && 'Pinpoint exact road access, city zone, postal code, and geolocation coordinates.'}
@@ -526,6 +511,7 @@ export function PropertyDetailsSection({
             </div>
           </div>
         </main>
+      </div>
       </div>
     </div>
   );

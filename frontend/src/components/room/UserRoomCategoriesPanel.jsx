@@ -95,8 +95,9 @@ function UserCategoryRoomCarousel({
     if (!el) return;
     const child = el.children[idx];
     if (child) {
-      const targetScroll = child.offsetLeft - el.offsetLeft;
-      el.scrollTo({ left: Math.max(0, targetScroll), behavior: 'smooth' });
+      const paddingLeft = parseFloat(window.getComputedStyle(el).paddingLeft) || 0;
+      const targetScroll = Math.max(0, child.offsetLeft - el.offsetLeft - paddingLeft);
+      el.scrollTo({ left: targetScroll, behavior: 'smooth' });
       setActiveDotIndex(idx);
       setTimeout(updateScrollState, 150);
     }
@@ -163,7 +164,7 @@ function UserCategoryRoomCarousel({
           <div
             ref={setScrollRef}
             onScroll={handleScroll}
-            className={`flex items-stretch gap-2.5 pt-1 pb-3 px-1 -mx-0.5 scroll-smooth no-scrollbar ${
+            className={`flex items-stretch gap-2.5 pt-6 pb-7 px-6 -mx-2 -mt-3 -mb-3.5 scroll-pl-6 scroll-pr-6 scroll-smooth overscroll-x-contain no-scrollbar ${
               matchingRooms.length > 3
                 ? 'overflow-x-auto snap-x snap-mandatory'
                 : 'overflow-visible'
@@ -212,8 +213,8 @@ function UserCategoryRoomCarousel({
                         ? 'bg-gradient-to-b from-[#ca8100] via-[#854f00] to-[#261400] text-white border-2 border-amber-400 dark:border-amber-400 shadow-room-booked-selected z-10'
                         : 'bg-gradient-to-b from-[#a36800]/80 via-[#633c00]/80 to-[#1f1100]/90 text-white/95 border border-amber-700/50 dark:border-amber-600/40 shadow-xs opacity-90 hover:opacity-100 hover:border-amber-500/70 hover:shadow-md hover:shadow-amber-950/20'
                       : isCardSelected
-                      ? 'bg-slate-50 dark:bg-[#122438] border-2 border-[#c0c1ff] shadow-room-open-selected ring-4 ring-indigo-100/80 dark:ring-indigo-900/40 z-10'
-                      : 'bg-slate-50/70 dark:bg-[#0c1825] border border-slate-200/80 dark:border-[#1f3045] hover:border-slate-300 dark:hover:border-[#2f4663]'
+                      ? 'bg-white dark:bg-zinc-800 border-2 border-[#c0c1ff] shadow-room-open-selected ring-4 ring-indigo-100/80 dark:ring-indigo-900/40 z-10'
+                      : 'bg-white/70 dark:bg-zinc-800/90 border border-slate-200 dark:border-zinc-700 hover:border-slate-300 dark:hover:border-zinc-600'
                   }`}
                 >
                   {/* Card Header Status & Room Free % */}
@@ -272,7 +273,7 @@ function UserCategoryRoomCarousel({
                     className={`h-7 px-2.5 rounded-xl w-full flex items-center justify-between text-xs ${
                       isBookedToday
                         ? 'bg-black/35 border border-white/15 dark:border-white/10 backdrop-blur-xs'
-                        : 'bg-white dark:bg-[#071320] border border-slate-200/70 dark:border-[#1a2d42] shadow-2xs'
+                        : 'bg-slate-50/90 dark:bg-zinc-900/80 border border-slate-200/80 dark:border-zinc-700/80 shadow-2xs'
                     }`}
                     onClick={(e) => e.stopPropagation()}
                   >
@@ -500,32 +501,32 @@ export function UserRoomCategoriesPanel({
             return (
               <div
                 key={rowKey}
-                className={`w-full flex flex-col rounded-[26px] overflow-hidden transition-all ${
+                className={`w-full flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden transition-all ${
                   isExpanded
-                    ? 'bg-white dark:bg-[#0c1825]'
-                    : 'bg-purple-600 dark:bg-purple-600'
+                    ? 'bg-white dark:bg-black'
+                    : 'bg-white dark:bg-black'
                 } ${
                   isExpanded
-                    ? 'border border-slate-300 dark:border-slate-700/80 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)]'
-                    : 'border border-purple-500/80 dark:border-purple-400/50 shadow-sm shadow-purple-600/20'
-                } ${!isExpanded ? 'cursor-pointer hover:bg-purple-700 dark:hover:bg-purple-700 hover:border-purple-400 dark:hover:border-purple-300' : ''}`}
+                    ? 'border border-slate-200/90 dark:border-zinc-800 shadow-xl'
+                    : 'border border-slate-200/90 dark:border-zinc-800 shadow-xl'
+                } ${!isExpanded ? 'cursor-pointer' : ''}`}
               >
-                {/* Card Header (Accessible Toggle Trigger) - Purple Capsule matching Host styling */}
+                {/* Card Header (Accessible Toggle Trigger) - Clean Neutral Tab */}
                 <div
                   onClick={(e) => handleToggleCategory(index, e)}
                   className={`px-4 sm:px-5 py-3 ${
                     isExpanded
-                      ? 'border-b border-purple-500/30 dark:border-purple-700/50 bg-purple-600 dark:bg-purple-600 text-white'
-                      : 'bg-purple-600 dark:bg-purple-600 text-white hover:bg-purple-700 dark:hover:bg-purple-700'
-                  } flex items-center justify-between select-none cursor-pointer transition-colors`}
+                      ? 'border-b border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-black text-slate-900 dark:text-white'
+                      : 'bg-white dark:bg-black text-slate-900 dark:text-white'
+                  } flex items-center justify-between select-none cursor-pointer`}
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <h2 className="text-[14px] sm:text-[16px] text-white truncate font-extrabold tracking-tight leading-normal pb-0.5">
+                    <h2 className="text-[14px] sm:text-[16px] text-slate-900 dark:text-white truncate font-extrabold tracking-tight leading-normal pb-0.5">
                       {rate.type || 'Unnamed Category'}
                     </h2>
 
                     {rate.price && (
-                      <span className="text-[11px] sm:text-xs font-bold text-purple-100 shrink-0 leading-normal pb-0.5">
+                      <span className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-zinc-400 shrink-0 leading-normal pb-0.5">
                         • ₹{rawPrice}{rate.rateUnit || '/night'}
                       </span>
                     )}
@@ -536,10 +537,10 @@ export function UserRoomCategoriesPanel({
                     <span
                       className={`h-6 px-2.5 sm:px-3 text-[11px] sm:text-xs rounded-full font-black tracking-wide shadow-2xs select-none flex items-center justify-center leading-normal backdrop-blur-xs transition-colors ${
                         stats.percentFree >= 50
-                          ? 'bg-emerald-400/25 border border-emerald-300/40 text-emerald-100'
+                          ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
                           : stats.percentFree > 0
-                          ? 'bg-amber-400/25 border border-amber-300/40 text-amber-100'
-                          : 'bg-rose-500/30 border border-rose-300/40 text-rose-100'
+                          ? 'bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400'
+                          : 'bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400'
                       }`}
                       title={`${stats.percentFree}% Free (${stats.totalUnbooked} of ${stats.totalPossible} ${isMonthly ? 'months' : 'days'} unbooked across all rooms in this category)`}
                     >
@@ -549,7 +550,7 @@ export function UserRoomCategoriesPanel({
 
                   <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                     <span
-                      className="h-6 px-2.5 text-[11px] rounded-full bg-white/20 border border-white/30 text-white font-bold shadow-2xs select-none flex items-center justify-center leading-normal backdrop-blur-xs"
+                      className="h-6 px-2.5 text-[11px] rounded-full bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 font-bold shadow-2xs select-none flex items-center justify-center leading-normal"
                       title={`${stats.availableCount} of ${stats.totalCount} rooms are available today`}
                     >
                       {stats.availableCount}/{stats.totalCount} Avail
@@ -559,7 +560,7 @@ export function UserRoomCategoriesPanel({
                       type="button"
                       animate={{ rotate: isExpanded ? 180 : 0 }}
                       transition={{ type: 'spring', stiffness: 320, damping: 30, mass: 0.8 }}
-                      className="w-6 h-6 rounded-lg flex items-center justify-center text-white/90 hover:text-white transition-colors cursor-pointer"
+                      className="w-6 h-6 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 dark:text-zinc-500 dark:hover:text-white transition-colors cursor-pointer"
                       title={isExpanded ? 'Collapse category' : 'Expand category'}
                       onClick={(e) => {
                         e.stopPropagation();

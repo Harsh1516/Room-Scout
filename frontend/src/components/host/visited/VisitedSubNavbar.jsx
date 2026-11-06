@@ -78,11 +78,10 @@ export function VisitedSubNavbar({
 
   return (
     <div className="w-full select-none pb-1">
-      {/* Top Command & Filter Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-0.5 pb-1 w-full">
-        {/* Top Left: Subtabs Capsule + Secondary Scope Filter (Below Back button) */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-          {/* Primary Sub-Tabs: Requests | Check-in | Check-out */}
+      {/* Top Command & Filter Bar: 3-Column Layout matching Left Tab (20%), Mid Tab (flex-1), and Right Tab */}
+      <div className="flex flex-col sm:flex-row sm:flex-wrap lg:flex-nowrap items-center justify-between gap-2.5 sm:gap-3 pt-0.5 pb-1 w-full">
+        {/* Left Column (Left Tab alignment): Primary Sub-Tabs (Requests | Check-in | Check-out) */}
+        <div className="w-full sm:w-auto lg:w-[20%] lg:min-w-0 shrink-0 flex items-center justify-center sm:justify-start">
           <div className="inline-flex items-center p-1 rounded-full bg-slate-100/90 dark:bg-[#111C2E] border border-slate-200/90 dark:border-[#1E2E48] shadow-xs relative">
             {subTabs.map((tab) => {
               const isActive = operationTab === tab.id;
@@ -94,7 +93,7 @@ export function VisitedSubNavbar({
                     setOperationTab(tab.id);
                     onResetFilter();
                   }}
-                  className={`relative px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors duration-150 flex items-center gap-1.5 cursor-pointer select-none active:scale-95 z-10 ${
+                  className={`relative px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors duration-150 flex items-center gap-1.5 cursor-pointer select-none active:scale-95 z-10 whitespace-nowrap ${
                     isActive
                       ? 'text-white dark:text-slate-950 font-bold'
                       : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
@@ -116,7 +115,7 @@ export function VisitedSubNavbar({
                   {tab.icon}
                   <span>{tab.label}</span>
                   <span
-                    className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold leading-none ${
+                    className={`min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-mono font-bold leading-none inline-flex items-center justify-center ${
                       isActive
                         ? 'bg-white/20 dark:bg-slate-900/20 text-white dark:text-slate-900'
                         : tab.badgeColor
@@ -128,8 +127,10 @@ export function VisitedSubNavbar({
               );
             })}
           </div>
+        </div>
 
-          {/* Secondary Scope Filter: Today / All Button on Check-in and Check-out tabs */}
+        {/* Mid Column (Mid Tab alignment): Secondary Scope Filter (Today / All Switch Button Centered in Mid Tab) */}
+        <div className="w-full sm:w-auto lg:flex-1 lg:min-w-0 flex items-center justify-center">
           {operationTab !== 'requests' && operationTab !== 'paid' && (
             <div className="inline-flex items-center p-1 rounded-full bg-[#E2E7FF]/70 dark:bg-[#111C2E] border border-slate-200/80 dark:border-[#1E2E48] shadow-inner">
               <button
@@ -138,7 +139,7 @@ export function VisitedSubNavbar({
                   setScope('today');
                   onResetFilter();
                 }}
-                className={`px-3 py-1 rounded-full text-xs transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-full text-xs transition-all duration-200 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                   scope === 'today'
                     ? 'bg-white dark:bg-[#4F46E5] text-[#3525CD] dark:text-white font-bold shadow-sm'
                     : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 font-medium'
@@ -146,7 +147,7 @@ export function VisitedSubNavbar({
               >
                 <span>Today</span>
                 <span
-                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                  className={`min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-bold inline-flex items-center justify-center leading-none ${
                     scope === 'today'
                       ? 'bg-[#E2DFFF] text-[#3525CD] dark:bg-white/20 dark:text-white'
                       : 'bg-slate-200/70 text-slate-600 dark:bg-[#162238] dark:text-slate-400 dark:border dark:border-[#223554]'
@@ -161,7 +162,7 @@ export function VisitedSubNavbar({
                   setScope('all');
                   onResetFilter();
                 }}
-                className={`px-3 py-1 rounded-full text-xs transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-full text-xs transition-all duration-200 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                   scope === 'all'
                     ? 'bg-white dark:bg-[#4F46E5] text-[#3525CD] dark:text-white font-bold shadow-sm'
                     : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 font-medium'
@@ -169,7 +170,7 @@ export function VisitedSubNavbar({
               >
                 <span>{allScopeLabel}</span>
                 <span
-                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                  className={`min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-bold inline-flex items-center justify-center leading-none ${
                     scope === 'all'
                       ? 'bg-[#E2DFFF] text-[#3525CD] dark:bg-white/20 dark:text-white'
                       : 'bg-slate-200/70 text-slate-600 dark:bg-[#162238] dark:text-slate-400 dark:border dark:border-[#223554]'
@@ -182,9 +183,9 @@ export function VisitedSubNavbar({
           )}
         </div>
 
-        {/* Top Right: Date Text shifted to the rightmost side without any background */}
-        <div className="flex items-center gap-3 self-end sm:self-auto ml-auto">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 py-1">
+        {/* Right Column (Right Tab alignment): Today Date Display */}
+        <div className="w-full sm:w-auto lg:w-[380px] xl:w-[410px] 2xl:w-[440px] shrink-0 flex items-center justify-center sm:justify-end">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 py-1 whitespace-nowrap">
             <Calendar className="w-3.5 h-3.5 text-[#3525CD] dark:text-[#818CF8]" />
             <span>Today: {todayFormatted}</span>
           </div>

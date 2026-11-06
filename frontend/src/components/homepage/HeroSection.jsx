@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { staysAPI } from '../../services/api';
 
-export function HeroSection() {
+export function HeroSection({ onSelectUpload }) {
   const navigate = useNavigate();
 
   const [stats, setStats] = useState(() => {
@@ -123,13 +123,13 @@ export function HeroSection() {
 
           {/* Subtitle with refined editorial cadence */}
           <p className="text-xs sm:text-base md:text-lg text-slate-600 dark:text-slate-300 max-w-xl font-normal leading-relaxed tracking-normal text-center lg:text-left">
-            Curated student PGs, serviced apartments, and serene homestays across India.
-            Book transparently directly with verified property owners—<span className="text-slate-900 dark:text-white font-semibold">zero middlemen, zero commissions</span>.
+            Curated student PGs, serviced flats, and serene homestays. Book transparently directly with verified property owners—<span className="text-slate-900 dark:text-white font-semibold">zero middlemen, zero commissions</span>.
           </p>
 
           {/* Quick CTA Action Cluster */}
           <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-4 pt-1 sm:pt-2">
-            {/* Primary Button */}
+
+            {/* Primary Button: Explore Stays */}
             <button
               type="button"
               onClick={() => navigate('/search')}
@@ -140,16 +140,17 @@ export function HeroSection() {
                   ? `Explore ${stats.staysCount.toLocaleString()} ${stats.staysCount === 1 ? 'Stay' : 'Stays'}`
                   : 'Explore Stays'}
               </span>
-              <svg 
-                className="w-4 h-4" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor" 
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
                 strokeWidth={2}
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
               </svg>
             </button>
+
           </div>
         </motion.div>
 
@@ -196,16 +197,6 @@ export function HeroSection() {
               </div>
               <div className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
                 Online Users Booked
-              </div>
-            </div>
-
-            {/* Card 4: Guest Satisfaction */}
-            <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white/70 dark:bg-white/[0.08] backdrop-blur-xl border border-slate-200/70 dark:border-white/15 hover:border-slate-300 dark:hover:border-white/25 shadow-xs transition-colors duration-150 flex flex-col items-center justify-center text-center">
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-amber-500 dark:text-amber-400 tracking-tight">
-                4.9★
-              </div>
-              <div className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
-                Guest Satisfaction
               </div>
             </div>
           </div>

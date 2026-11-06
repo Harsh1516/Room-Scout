@@ -62,8 +62,8 @@ export function SearchResultsPage({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isFiltersOpen, isMapModalOpen]);
 
-  const categories = ['All', 'PG', 'Hostel', 'Hotel', 'Villa', 'Resort', 'Flat'];
-  const genders = ['All', 'Boys', 'Girls', 'Unisex'];
+  const categories = ['All', 'PG', 'Hotel', 'Flat'];
+  const genders = ['All', 'Male', 'Female', 'Both'];
   const budgetPresets = [
     { label: 'All Budgets', min: null, max: null },
     { label: 'Under ₹3k', min: null, max: 3000 },
@@ -310,7 +310,11 @@ export function SearchResultsPage({
             </span>
             <div className="grid grid-cols-2 gap-2">
               {genders.map((gen) => {
-                const isGenActive = (filters.gender || 'All') === gen;
+                const isGenActive =
+                  (filters.gender || 'All') === gen ||
+                  (gen === 'Male' && filters.gender === 'Boys') ||
+                  (gen === 'Female' && filters.gender === 'Girls') ||
+                  (gen === 'Both' && (filters.gender === 'Unisex' || filters.gender === 'Both'));
                 return (
                   <button
                     key={gen}

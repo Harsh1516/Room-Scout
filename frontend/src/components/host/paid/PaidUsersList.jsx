@@ -808,7 +808,7 @@ export function PaidUsersList({
                   <Globe className="w-3.5 h-3.5" />
                   <span>Online</span>
                   <span
-                    className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold leading-none ${
+                    className={`min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-mono font-bold leading-none inline-flex items-center justify-center ${
                       sectionFilter === 'ONLINE'
                         ? 'bg-[#E2DFFF] text-[#3525CD] dark:bg-white/20 dark:text-white'
                         : 'bg-slate-200/70 text-slate-600 dark:bg-[#162238] dark:text-slate-400 dark:border dark:border-[#223554]'
@@ -856,7 +856,7 @@ export function PaidUsersList({
                   <Store className="w-3.5 h-3.5" />
                   <span>Offline</span>
                   <span
-                    className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold leading-none ${
+                    className={`min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-mono font-bold leading-none inline-flex items-center justify-center ${
                       sectionFilter === 'OFFLINE'
                         ? 'bg-teal-100 text-teal-800 dark:bg-white/20 dark:text-white'
                         : 'bg-slate-200/70 text-slate-600 dark:bg-[#162238] dark:text-slate-400 dark:border dark:border-[#223554]'

@@ -96,6 +96,12 @@ const hostSchema = new mongoose.Schema(
       baselineOnline: { type: Number, default: 0 },
       baselineOffline: { type: Number, default: 0 },
     },
+    accountId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+      index: true,
+    },
     subscription: {
       planCode: {
         type: String,

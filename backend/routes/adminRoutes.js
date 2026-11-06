@@ -6,6 +6,7 @@ import {
   getHostByEmail,
   createHost,
   approveHost,
+  bulkApproveHosts,
   rejectHost,
   getHostGuests,
   deleteHost,
@@ -49,6 +50,7 @@ router.route('/impersonate').post(adminLimiter, requireAdmin, validate(impersona
 router.route('/users').get(adminLimiter, requireAdmin, getUsers);
 router.route('/users/:id').delete(adminLimiter, requireAdmin, validate({ params: idParamSchema }), deleteUser);
 router.route('/stats').get(adminLimiter, requireAdmin, getStats);
+router.route('/hosts/bulk-approve').put(adminLimiter, requireAdmin, bulkApproveHosts);
 router.route('/hosts/:id/approve').put(adminLimiter, requireAdmin, validate({ params: idParamSchema }), approveHost);
 router.route('/hosts/:id/reject').put(adminLimiter, requireAdmin, validate({ params: idParamSchema }), rejectHost);
 router.route('/hosts/:id').delete(adminLimiter, requireAdmin, validate({ params: idParamSchema }), deleteHost);

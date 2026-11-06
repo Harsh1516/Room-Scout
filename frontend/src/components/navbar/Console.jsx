@@ -216,7 +216,7 @@ export function Console({
               transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
               style={{ willChange: 'width, opacity', transform: 'translate3d(0, 0, 0)' }}
               onClick={handleClearAndGoHome}
-              className="flex items-center gap-1 px-1.5 sm:px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/20 dark:hover:bg-rose-500/35 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-400/30 transition-all cursor-pointer shrink-0 overflow-hidden active:scale-95"
+              className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white border border-rose-500/80 shadow-xs transition-all cursor-pointer shrink-0 overflow-hidden active:scale-95"
               title="Reset all search filters"
             >
               <span>✕</span>

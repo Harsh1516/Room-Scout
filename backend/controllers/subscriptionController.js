@@ -61,11 +61,94 @@ export function extractDateFromLine(line) {
 
 import mongoose from 'mongoose';
 import QRCode from 'qrcode';
+import jwt from 'jsonwebtoken';
 import { Host } from '../models/Host.js';
 import { Stay } from '../models/Stay.js';
 import { PlatformPaymentSettings } from '../models/PlatformPaymentSettings.js';
 import { HostSubscriptionPayment } from '../models/HostSubscriptionPayment.js';
 import { uploadSecureImage } from '../utils/imageSecurity.js';
+
+// Helper: Calculate dynamic room-based subscription plans based on property type and room count
+export function calculateSubscriptionPlans({
+  propertyType = 'PG',
+  roomCount = 1,
+  propertyPricing = {},
+  discounts = {},
+} = {}) {
+  const normalizedType = String(propertyType || 'PG').trim();
+  const validRates = {
+    PG: 10,
+    Hotel: 50,
+    Hostel: 15,
+    Villa: 40,
+    Resort: 50,
+    Flat: 25,
+    ...(propertyPricing || {}),
+  };
+
+  // Find matching rate (case-insensitive fallback)
+  let rate = validRates[normalizedType];
+  if (rate === undefined || rate === null) {
+    const matchKey = Object.keys(validRates).find(
+      (k) => k.toLowerCase() === normalizedType.toLowerCase()
+    );
+    rate = matchKey ? validRates[matchKey] : validRates.PG ?? 10;
+  }
+  const cleanRate = Math.max(0, Number(rate) || 0);
+  const rooms = Math.max(1, Number(roomCount) || 1);
+
+  const monthlyBase = rooms * cleanRate;
+
+  const dQuarterly = Number(discounts?.quarterly !== undefined ? discounts.quarterly : 5);
+  const dHalfYearly = Number(discounts?.halfYearly !== undefined ? discounts.halfYearly : 10);
+
+  const price1Mo = monthlyBase;
+  const price3Mo = Math.round(monthlyBase * 3 * (1 - dQuarterly / 100));
+  const price6Mo = Math.round(monthlyBase * 6 * (1 - dHalfYearly / 100));
+
+  return {
+    propertyType: normalizedType,
+    roomCount: rooms,
+    ratePerRoom: cleanRate,
+    monthlyBase,
+    discounts: {
+      quarterly: dQuarterly,
+      halfYearly: dHalfYearly,
+    },
+    plans: [
+      {
+        code: 'monthly',
+        label: '1 Month',
+        durationMonths: 1,
+        price: price1Mo,
+        discountPercent: 0,
+        originalPrice: price1Mo,
+        perMonthPrice: price1Mo,
+        isActive: true,
+      },
+      {
+        code: 'quarterly',
+        label: '3 Months',
+        durationMonths: 3,
+        price: price3Mo,
+        discountPercent: dQuarterly,
+        originalPrice: monthlyBase * 3,
+        perMonthPrice: Math.round(price3Mo / 3),
+        isActive: true,
+      },
+      {
+        code: 'halfYearly',
+        label: '6 Months',
+        durationMonths: 6,
+        price: price6Mo,
+        discountPercent: dHalfYearly,
+        originalPrice: monthlyBase * 6,
+        perMonthPrice: Math.round(price6Mo / 6),
+        isActive: true,
+      },
+    ],
+  };
+}
 
 // Helper: Calculate expiration date adding months (30.44 days per month standard)
 export function calculateExpirationDate(startDate, durationMonths) {
@@ -131,6 +214,41 @@ export async function getSubscriptionPlans(req, res, next) {
       settings = settings.toObject();
     }
 
+    // Determine host propertyType and room count if available
+    let hostPropertyType = req.query?.propertyType ? String(req.query.propertyType).trim() : null;
+    let hostRoomCount = req.query?.rooms ? Number(req.query.rooms) : null;
+
+    if (!hostPropertyType || !hostRoomCount) {
+      try {
+        const authHeader = req.headers?.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          const token = authHeader.split(' ')[1];
+          const decoded = jwt.verify(token, process.env.JWT_SECRET || 'roomscout_secret_fallback');
+          if (decoded && decoded.id) {
+            const stay = await Stay.findOne({ hostId: decoded.id }).select('type rooms').lean();
+            if (stay) {
+              if (!hostPropertyType) hostPropertyType = stay.type || 'PG';
+              if (!hostRoomCount) {
+                hostRoomCount = Array.isArray(stay.rooms) && stay.rooms.length > 0 ? stay.rooms.length : 1;
+              }
+            }
+          }
+        }
+      } catch {
+        // public or unauthenticated request - continue with defaults
+      }
+    }
+
+    if (!hostPropertyType) hostPropertyType = 'PG';
+    if (!hostRoomCount || hostRoomCount < 1) hostRoomCount = 1;
+
+    const dynamicCalculation = calculateSubscriptionPlans({
+      propertyType: hostPropertyType,
+      roomCount: hostRoomCount,
+      propertyPricing: settings.propertyPricing,
+      discounts: settings.discounts,
+    });
+
     let qrCodeDataUrl = '';
     if (settings.upiId) {
       const upiUri = buildPlatformUpiUri({
@@ -150,17 +268,9 @@ export async function getSubscriptionPlans(req, res, next) {
       }
     }
 
-    const rawPlans = Array.isArray(settings.plans) && settings.plans.length > 0
-      ? settings.plans.filter((p) => p.isActive !== false && p.code !== 'yearly')
-      : [
-          { code: 'monthly', label: '1 Month', durationMonths: 1, price: 250, isActive: true },
-          { code: 'quarterly', label: '3 Months', durationMonths: 3, price: 675, isActive: true },
-          { code: 'halfYearly', label: '6 Months', durationMonths: 6, price: 1200, isActive: true },
-        ];
-
     // Generate dynamic QR code encoding the exact payable amount for each plan
     const plans = await Promise.all(
-      rawPlans.map(async (p) => {
+      dynamicCalculation.plans.map(async (p) => {
         const priceNum = Number(p.price) || 0;
         let planQr = '';
         let planUpiUri = '';
@@ -199,6 +309,12 @@ export async function getSubscriptionPlans(req, res, next) {
       qrCodeUrl: settings.qrCodeUrl || qrCodeDataUrl,
       qrCodeDataUrl: qrCodeDataUrl || settings.qrCodeUrl || '',
       paymentInstructions: settings.paymentInstructions || 'Scan QR, pay via UPI, and submit the 12-digit UTR reference number.',
+      propertyType: dynamicCalculation.propertyType,
+      roomCount: dynamicCalculation.roomCount,
+      ratePerRoom: dynamicCalculation.ratePerRoom,
+      monthlyBase: dynamicCalculation.monthlyBase,
+      propertyPricing: settings.propertyPricing || { PG: 10, Hotel: 50, Flat: 25 },
+      discounts: settings.discounts || { quarterly: 5, halfYearly: 10 },
       plans,
     });
   } catch (error) {
@@ -226,7 +342,7 @@ export async function getHostSubscriptionStatus(req, res, next) {
     }
 
     const stay = await Stay.findOne({ hostId: host._id })
-      .select('title propertyName location city images isPublished subscription roomRates rooms')
+      .select('title propertyName type location city images isPublished subscription roomRates rooms')
       .lean();
 
     // Check expiration and sync state
@@ -295,6 +411,8 @@ export async function getHostSubscriptionStatus(req, res, next) {
             location: stay.location || stay.city || '',
             image: stay.images?.[0] || '',
             isPublished: stay.isPublished,
+            propertyType: stay.type || 'PG',
+            totalRooms: Array.isArray(stay.rooms) && stay.rooms.length > 0 ? stay.rooms.length : 1,
           }
         : null,
       pendingPayment: pendingPayment || null,
@@ -389,7 +507,22 @@ export async function submitHostSubscriptionPayment(req, res, next) {
       });
     }
 
-    const planObj = settings?.plans?.find((p) => p.code === planCode);
+    // Find stay to get propertyType and room count
+    const stay = await Stay.findOne({ hostId: host._id }).select('_id type rooms').lean();
+    const propertyType = stay?.type || 'PG';
+    const totalRooms = Array.isArray(stay?.rooms) && stay.rooms.length > 0 ? stay.rooms.length : 1;
+
+    const dynamicCalculation = calculateSubscriptionPlans({
+      propertyType,
+      roomCount: totalRooms,
+      propertyPricing: settings.propertyPricing,
+      discounts: settings.discounts,
+    });
+
+    const planObj =
+      dynamicCalculation.plans.find((p) => p.code === planCode) ||
+      settings?.plans?.find((p) => p.code === planCode);
+
     if (!planObj || !planObj.price || Number(planObj.price) <= 0) {
       return res.status(400).json({
         success: false,
@@ -409,9 +542,6 @@ export async function submitHostSubscriptionPayment(req, res, next) {
         message: 'This 12-digit UPI reference number has already been submitted. Please check your transaction ID.',
       });
     }
-
-    // Find stay if any
-    const stay = await Stay.findOne({ hostId: host._id }).select('_id').lean();
 
     // Upload receipt image if provided
     let finalReceiptUrl = '';

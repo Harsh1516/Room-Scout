@@ -1,92 +1,30 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { User, Phone, Mail, Building, Building2, Home, Check, Sparkles } from 'lucide-react';
 
 export const PROPERTY_TYPES = [
   {
     label: 'PG',
-    desc: 'Paying Guest / Student stay',
-    icon: (
-      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2 4v16" />
-        <path d="M2 8h18a2 2 0 0 1 2 2v10" />
-        <path d="M2 17h20" />
-        <path d="M6 8v9" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Hostel',
-    desc: 'Dormitory & Shared wings',
-    icon: (
-      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 21h18" />
-        <path d="M5 21V7l8-4v18" />
-        <path d="M19 21V11l-6-4" />
-        <line x1="9" y1="9" x2="9" y2="9.01" />
-        <line x1="9" y1="13" x2="9" y2="13.01" />
-        <line x1="9" y1="17" x2="9" y2="17.01" />
-      </svg>
-    ),
+    desc: 'Paying Guest / Student co-living stay',
+    icon: Home,
   },
   {
     label: 'Hotel',
-    desc: 'Private hospitality suites',
-    icon: (
-      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M18 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Z" />
-        <polyline points="10 16 10 20 14 20 14 16" />
-        <line x1="8" y1="6" x2="8" y2="6.01" />
-        <line x1="16" y1="6" x2="16" y2="6.01" />
-        <line x1="8" y1="10" x2="8" y2="10.01" />
-        <line x1="16" y1="10" x2="16" y2="10.01" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Villa',
-    desc: 'Luxury detached residence',
-    icon: (
-      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-        <polyline points="9 22 9 12 15 12 15 22" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Resort',
-    desc: 'Leisure stay with grounds',
-    icon: (
-      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M13 8c0-2.76-2.46-5-5.5-5S2 5.24 2 8h11Z" />
-        <path d="M13 7.14A5.82 5.82 0 0 1 16.5 6c3.04 0 5.5 2.24 5.5 5h-9" />
-        <path d="M5.5 8v12" />
-        <path d="M18.5 11v9" />
-        <path d="M2 20h20" />
-      </svg>
-    ),
+    desc: 'Private hospitality suites & rooms',
+    icon: Building2,
   },
   {
     label: 'Flat',
-    desc: 'Independent apartment unit',
-    icon: (
-      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="4" y="2" width="16" height="20" rx="2" />
-        <line x1="9" y1="6" x2="9" y2="6.01" />
-        <line x1="15" y1="6" x2="15" y2="6.01" />
-        <line x1="9" y1="10" x2="9" y2="10.01" />
-        <line x1="15" y1="10" x2="15" y2="10.01" />
-        <line x1="9" y1="14" x2="9" y2="14.01" />
-        <line x1="15" y1="14" x2="15" y2="14.01" />
-        <path d="M10 22v-4h4v4" />
-      </svg>
-    ),
+    desc: 'Independent apartment or studio unit',
+    icon: Building,
   },
 ];
 
 export const GENDER_OPTIONS = [
   {
-    label: 'Boys Only',
-    value: 'Boys',
+    label: 'Male',
+    value: 'Male',
+    sub: 'Boys / Men only',
     icon: (
       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="10" cy="14" r="5" />
@@ -96,8 +34,9 @@ export const GENDER_OPTIONS = [
     ),
   },
   {
-    label: 'Girls Only',
-    value: 'Girls',
+    label: 'Female',
+    value: 'Female',
+    sub: 'Girls / Women only',
     icon: (
       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="10" r="5" />
@@ -107,24 +46,15 @@ export const GENDER_OPTIONS = [
     ),
   },
   {
-    label: 'Both / Unisex',
+    label: 'Both',
     value: 'Both',
+    sub: 'Co-ed / Families welcome',
     icon: (
       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
         <circle cx="9" cy="7" r="4" />
         <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
         <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Family',
-    value: 'Family',
-    icon: (
-      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-        <circle cx="12" cy="12" r="2" />
       </svg>
     ),
   },
@@ -139,81 +69,90 @@ export function UploadBasicsTab({
   return (
     <motion.div
       key="step-1"
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.2 }}
-      className="max-w-2xl w-full mx-auto bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-3.5 sm:p-4 shadow-xl space-y-2 sm:space-y-2.5 relative overflow-hidden group"
+      exit={{ opacity: 0, y: -12 }}
+      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+      className="max-w-3xl w-full mx-auto space-y-5 sm:space-y-6"
     >
-      {/* Host Details Section (Identity & Contact Information) */}
-      <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-50/90 dark:bg-zinc-800/50 border border-slate-200/80 dark:border-zinc-700/60 space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-            <div>
-              <h3 className="text-xs font-bold text-slate-800 dark:text-zinc-200">
-                Host Contact Details
-              </h3>
-              <p className="text-[10px] text-slate-500 dark:text-zinc-400">
-                Required for guest communication & automated WhatsApp alerts
-              </p>
+      {/* ── CARD 1: Host Contact Information (Airbnb-style structured card) ── */}
+      <section className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-5 sm:p-7 shadow-xs">
+        <div className="flex items-start justify-between gap-3 pb-4 sm:pb-5 border-b border-slate-100 dark:border-zinc-800/80">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/70 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <User className="w-4 h-4" />
+              </span>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+                Host Details
+              </h2>
             </div>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1 pl-9">
+              Your primary contact info for guest communication and verified bookings
+            </p>
           </div>
+
           {formData.email && (
-            <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100/70 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-300/40 truncate max-w-[200px]" title={formData.email}>
-              <svg className="w-3 h-3 shrink-0 text-emerald-600 dark:text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              <span className="truncate">{formData.email}</span>
+            <span
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700/60 shrink-0"
+              title={formData.email}
+            >
+              <Mail className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span className="truncate max-w-[200px]">{formData.email}</span>
             </span>
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 pt-4 sm:pt-5">
           {/* Host Full Name */}
-          <div className="space-y-0.5">
-            <label className="block text-[10.5px] font-bold text-slate-700 dark:text-zinc-300">
-              Host Name *
+          <div className="space-y-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-zinc-400">
+              Host Name <span className="text-rose-500">*</span>
             </label>
-            <input
-              type="text"
-              required
-              value={formData.name || ''}
-              onChange={(e) => {
-                const val = e.target.value;
-                setFormData({ ...formData, name: val });
-                if (fieldErrors.name && setFieldErrors && val.trim().length >= 2) {
-                  setFieldErrors((prev) => {
-                    const next = { ...prev };
-                    delete next.name;
-                    return next;
-                  });
-                }
-              }}
-              placeholder="e.g. Rahul Sharma"
-              className={`w-full px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-900 border text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none transition-colors ${
-                fieldErrors.name
-                  ? 'border-rose-500 focus:border-rose-500 ring-2 ring-rose-500/20'
-                  : 'border-slate-300 dark:border-zinc-700 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20'
-              }`}
-            />
+            <div className="relative flex items-center">
+              <span className="absolute left-3.5 text-slate-400 dark:text-zinc-500 pointer-events-none">
+                <User className="w-4 h-4" />
+              </span>
+              <input
+                type="text"
+                required
+                value={formData.name || ''}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFormData({ ...formData, name: val });
+                  if (fieldErrors.name && setFieldErrors && val.trim().length >= 2) {
+                    setFieldErrors((prev) => {
+                      const next = { ...prev };
+                      delete next.name;
+                      return next;
+                    });
+                  }
+                }}
+                placeholder="e.g. Rahul Sharma"
+                className={`w-full h-11 sm:h-12 pl-10 pr-3.5 rounded-xl bg-slate-50/70 dark:bg-zinc-800/40 border text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none transition-all ${
+                  fieldErrors.name
+                    ? 'border-rose-500 focus:border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/30'
+                    : 'border-slate-200 dark:border-zinc-700/80 focus:border-[#006C4A] focus:ring-2 focus:ring-[#006C4A]/15 focus:bg-white dark:focus:bg-zinc-900'
+                }`}
+              />
+            </div>
             {fieldErrors.name && (
-              <p className="text-[10px] text-rose-500 font-medium pl-1">{fieldErrors.name}</p>
+              <p className="text-xs text-rose-500 font-medium pl-1">{fieldErrors.name}</p>
             )}
           </div>
 
-          {/* Host Mobile Number with +91 */}
-          <div className="space-y-0.5">
-            <label className="block text-[10.5px] font-bold text-slate-700 dark:text-zinc-300">
-              Host Mobile Number *
+          {/* Host Mobile Number */}
+          <div className="space-y-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-zinc-400">
+              Mobile Number <span className="text-rose-500">*</span>
             </label>
             <div className="relative flex items-center">
-              <span className="absolute left-3 text-xs font-semibold text-slate-500 dark:text-zinc-400 select-none pointer-events-none">
-                +91
-              </span>
+              <div className="absolute left-3 flex items-center gap-1.5 text-slate-500 dark:text-zinc-400 pointer-events-none">
+                <Phone className="w-3.5 h-3.5" />
+                <span className="text-xs font-bold text-slate-600 dark:text-zinc-300 border-r border-slate-300 dark:border-zinc-700 pr-2">
+                  +91
+                </span>
+              </div>
               <input
                 type="tel"
                 maxLength={10}
@@ -231,26 +170,47 @@ export function UploadBasicsTab({
                   }
                 }}
                 placeholder="9876543210"
-                className={`w-full pl-11 pr-3 py-1.5 rounded-xl bg-white dark:bg-zinc-900 border text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none transition-colors ${
+                className={`w-full h-11 sm:h-12 pl-18 pr-3.5 rounded-xl bg-slate-50/70 dark:bg-zinc-800/40 border text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none transition-all ${
                   fieldErrors.phone
-                    ? 'border-rose-500 focus:border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/20'
-                    : 'border-slate-300 dark:border-zinc-700 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20'
+                    ? 'border-rose-500 focus:border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/30'
+                    : 'border-slate-200 dark:border-zinc-700/80 focus:border-[#006C4A] focus:ring-2 focus:ring-[#006C4A]/15 focus:bg-white dark:focus:bg-zinc-900'
                 }`}
               />
             </div>
             {fieldErrors.phone && (
-              <p className="text-[10px] text-rose-500 font-medium pl-1">{fieldErrors.phone}</p>
+              <p className="text-xs text-rose-500 font-medium pl-1">{fieldErrors.phone}</p>
             )}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Property Name Input (One line row: Label and input in the same horizontal row) */}
-      <div className="space-y-0.5">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2.5">
-          <label className="text-xs font-bold text-slate-800 dark:text-zinc-200 shrink-0 whitespace-nowrap">
-            Property Name *
-          </label>
+      {/* ── CARD 2: Property Identity & Type (Airbnb-style selection cards) ── */}
+      <section className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-zinc-800 p-5 sm:p-7 shadow-xs space-y-6">
+        {/* Section Header */}
+        <div className="pb-4 sm:pb-5 border-b border-slate-100 dark:border-zinc-800/80">
+          <div className="flex items-center gap-2">
+            <span className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/70 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <Sparkles className="w-4 h-4" />
+            </span>
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+              Property Overview
+            </h2>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1 pl-9">
+            Choose how your place is categorized so the right guests discover it
+          </p>
+        </div>
+
+        {/* Property Name Input */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-zinc-400">
+              Property Name <span className="text-rose-500">*</span>
+            </label>
+            <span className="text-[11px] text-slate-400 dark:text-zinc-500">
+              Catchy, descriptive title
+            </span>
+          </div>
           <input
             type="text"
             required
@@ -266,83 +226,126 @@ export function UploadBasicsTab({
                 });
               }
             }}
-            placeholder="e.g. Royal Mountain View PG & Homestay"
-            className={`w-full flex-1 px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100/90 dark:bg-zinc-800/90 border text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] focus:outline-none transition-colors ${
+            placeholder="e.g. Royal Mountain View PG & Co-Living"
+            className={`w-full h-11 sm:h-12 px-4 rounded-xl bg-slate-50/70 dark:bg-zinc-800/40 border text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none transition-all ${
               fieldErrors.propertyName
-                ? 'border-rose-500 focus:border-rose-500 ring-2 ring-rose-500/20'
-                : 'border-slate-300 dark:border-zinc-700 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20'
+                ? 'border-rose-500 focus:border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/30'
+                : 'border-slate-200 dark:border-zinc-700/80 focus:border-[#006C4A] focus:ring-2 focus:ring-[#006C4A]/15 focus:bg-white dark:focus:bg-zinc-900'
             }`}
           />
+          {fieldErrors.propertyName && (
+            <p className="text-xs text-rose-500 font-medium pl-1">{fieldErrors.propertyName}</p>
+          )}
         </div>
-        {fieldErrors.propertyName && (
-          <p className="text-[10px] text-rose-500 font-medium pl-1">{fieldErrors.propertyName}</p>
-        )}
-      </div>
 
-      {/* Property Type Grid with Vector Icons */}
-      <div className="space-y-1">
-        <label className="block text-xs font-bold text-slate-800 dark:text-zinc-200">
-          Property Type *
-        </label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {PROPERTY_TYPES.map((pt) => {
-            const isSelected = formData.propertyType === pt.label;
-            return (
-              <button
-                key={pt.label}
-                type="button"
-                onClick={() => setFormData({ ...formData, propertyType: pt.label })}
-                className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-2 ${
-                  isSelected
-                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white shadow-md scale-[1.01]'
-                    : 'bg-slate-100/80 dark:bg-zinc-800/60 hover:bg-slate-200/70 dark:hover:bg-zinc-800 text-slate-800 dark:text-zinc-200 border-slate-200 dark:border-zinc-700'
-                }`}
-              >
-                <div className={`shrink-0 transition-colors ${
-                  isSelected
-                    ? 'text-emerald-500 dark:text-emerald-600'
-                    : 'text-slate-600 dark:text-zinc-400'
-                }`}>
-                  {pt.icon}
-                </div>
-                <div className="min-w-0">
-                  <div className="text-[11.5px] font-bold truncate">{pt.label}</div>
-                  <div className={`text-[9.5px] truncate ${isSelected ? 'text-slate-300 dark:text-zinc-600' : 'text-slate-500 dark:text-zinc-400'}`}>
-                    {pt.desc}
+        {/* Property Type Grid (Airbnb-style large selectable cards) */}
+        <div className="space-y-2">
+          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-zinc-400">
+            Property Category <span className="text-rose-500">*</span>
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {PROPERTY_TYPES.map((pt) => {
+              const isSelected = formData.propertyType === pt.label;
+              const IconComp = pt.icon;
+
+              return (
+                <button
+                  key={pt.label}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, propertyType: pt.label })}
+                  className={`group relative p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between min-h-[96px] sm:min-h-[110px] ${
+                    isSelected
+                      ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-2 border-[#006C4A] dark:border-emerald-500 shadow-sm'
+                      : 'bg-slate-50/60 dark:bg-zinc-800/40 hover:bg-slate-100/80 dark:hover:bg-zinc-800/80 border-slate-200 dark:border-zinc-700/80 hover:border-slate-300 dark:hover:border-zinc-600'
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
+                        isSelected
+                          ? 'bg-[#006C4A] text-white shadow-xs'
+                          : 'bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 border border-slate-200/80 dark:border-zinc-700'
+                      }`}
+                    >
+                      <IconComp className="w-5 h-5" />
+                    </span>
+
+                    {isSelected && (
+                      <span className="w-5 h-5 rounded-full bg-[#006C4A] text-white flex items-center justify-center shadow-xs">
+                        <Check className="w-3 h-3 stroke-[3]" />
+                      </span>
+                    )}
                   </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
-      {/* Available For Gender Preference */}
-      <div className="space-y-1">
-        <label className="block text-xs font-bold text-slate-800 dark:text-zinc-200">
-          Available For *
-        </label>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {GENDER_OPTIONS.map((g) => {
-            const isSelected = formData.genderType === g.value;
-            return (
-              <button
-                key={g.value}
-                type="button"
-                onClick={() => setFormData({ ...formData, genderType: g.value })}
-                className={`py-1.5 px-2.5 rounded-xl border text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                  isSelected
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-600 shadow-md font-bold'
-                    : 'bg-slate-100/80 dark:bg-zinc-800/60 hover:bg-slate-200/70 dark:hover:bg-zinc-800 text-slate-800 dark:text-zinc-200 border-slate-200 dark:border-zinc-700 font-medium'
-                }`}
-              >
-                <span className={isSelected ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'}>{g.icon}</span>
-                <span className="text-xs">{g.label}</span>
-              </button>
-            );
-          })}
+                  <div className="mt-2.5">
+                    <div className="text-sm font-bold text-slate-900 dark:text-white">
+                      {pt.label}
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-zinc-400 leading-snug mt-0.5">
+                      {pt.desc}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+
+        {/* Available For Gender Preference */}
+        <div className="space-y-2">
+          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-zinc-400">
+            Available For (Gender Policy) <span className="text-rose-500">*</span>
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {GENDER_OPTIONS.map((g) => {
+              const isSelected =
+                formData.genderType === g.value ||
+                (g.value === 'Male' && formData.genderType === 'Boys') ||
+                (g.value === 'Female' && formData.genderType === 'Girls') ||
+                (g.value === 'Both' && (formData.genderType === 'Unisex' || formData.genderType === 'Family'));
+
+              return (
+                <button
+                  key={g.value}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, genderType: g.value })}
+                  className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex items-center justify-between gap-3 ${
+                    isSelected
+                      ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-2 border-[#006C4A] dark:border-emerald-500 shadow-sm'
+                      : 'bg-slate-50/60 dark:bg-zinc-800/40 hover:bg-slate-100/80 dark:hover:bg-zinc-800/80 border-slate-200 dark:border-zinc-700/80 hover:border-slate-300 dark:hover:border-zinc-600'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                        isSelected
+                          ? 'bg-[#006C4A] text-white shadow-xs'
+                          : 'bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 border border-slate-200/80 dark:border-zinc-700'
+                      }`}
+                    >
+                      {g.icon}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                        {g.label}
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
+                        {g.sub}
+                      </div>
+                    </div>
+                  </div>
+
+                  {isSelected && (
+                    <span className="w-5 h-5 rounded-full bg-[#006C4A] text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <Check className="w-3 h-3 stroke-[3]" />
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
     </motion.div>
   );
 }

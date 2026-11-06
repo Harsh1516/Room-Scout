@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { PencilIcon } from './PropertyIcons';
+import { PropertyTabHeaderActions } from './PropertyTabHeaderActions';
 
-const MAX_DESCRIPTION_CHARS = 100;
+const MAX_DESCRIPTION_CHARS = 200;
 const MIN_DESCRIPTION_CHARS = 10;
 
 export function PropertyDescriptionTab({
@@ -41,11 +42,11 @@ export function PropertyDescriptionTab({
 
   return (
     <div className="space-y-3.5">
-      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/70 dark:bg-[#011C40]/50 backdrop-blur-xl border border-[#54ACBF]/20 dark:border-[#26658C]/40 shadow-[0_4px_24px_rgba(2,56,89,0.04)] dark:shadow-[0_8px_32px_rgba(1,28,64,0.4)] space-y-4 relative overflow-hidden">
+      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/95 backdrop-blur-xl shadow-sm space-y-4 relative overflow-hidden">
         {/* Header Strip with Character Count and Limit */}
-        <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wider text-[#011C40] dark:text-[#A7EBF2] border-b border-[#54ACBF]/20 dark:border-[#26658C]/40 pb-3 flex-wrap gap-2 relative z-10">
+        <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wider text-slate-800 dark:text-zinc-200 border-b border-slate-100 dark:border-zinc-800 pb-3 flex-wrap gap-2 relative z-10">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#54ACBF] shadow-[0_0_8px_#54ACBF]" />
+            <span className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
             <span>Host Written Summary</span>
           </div>
 
@@ -55,50 +56,24 @@ export function PropertyDescriptionTab({
                 isBelowMin && isEditing
                   ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-400/40'
                   : isAtMax
-                  ? 'bg-[#54ACBF]/20 text-[#023859] dark:text-[#A7EBF2] border-[#54ACBF]/40'
-                  : 'bg-[#54ACBF]/15 dark:bg-[#023859]/80 text-[#023859] dark:text-[#A7EBF2] border border-[#54ACBF]/30'
+                  ? 'bg-purple-500/10 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-white/10'
+                  : 'bg-purple-500/10 dark:bg-zinc-800 text-slate-800 dark:text-zinc-300 border border-slate-200/80 dark:border-zinc-700'
               }`}
             >
               {localDesc.length} / {MAX_DESCRIPTION_CHARS} characters
             </span>
 
-            {!isEditing ? (
-              onStartEdit && (
-                <button
-                  type="button"
-                  onClick={onStartEdit}
-                  className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-[#023859] dark:text-[#A7EBF2] text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
-                >
-                  <PencilIcon className="w-3.5 h-3.5 text-[#54ACBF] dark:text-[#A7EBF2]" />
-                  <span>Edit</span>
-                </button>
-              )
-            ) : (
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  disabled={isSaving}
-                  onClick={() => {
-                    setLocalDesc((description || '').slice(0, MAX_DESCRIPTION_CHARS));
-                    if (onCancel) onCancel();
-                  }}
-                  className="px-3 py-1.5 rounded-xl border border-[#54ACBF]/30 dark:border-[#26658C]/50 bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] text-[#023859] dark:text-[#A7EBF2] text-xs font-medium transition-all cursor-pointer active:scale-95 disabled:opacity-50 backdrop-blur-sm"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  disabled={isSaving || isBelowMin}
-                  onClick={handleSave}
-                  className={`px-3.5 py-1.5 rounded-xl bg-white hover:bg-white/90 text-[#011C40] text-xs font-semibold transition-all cursor-pointer shadow-md flex items-center gap-1 active:scale-95 ${
-                    isSaving || isBelowMin ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-[14px]">check</span>
-                  <span>{isSaving ? 'Saving...' : 'Save'}</span>
-                </button>
-              </div>
-            )}
+            <PropertyTabHeaderActions
+              isEditing={isEditing}
+              isSaving={isSaving}
+              onStartEdit={onStartEdit}
+              onCancel={() => {
+                setLocalDesc((description || '').slice(0, MAX_DESCRIPTION_CHARS));
+                if (onCancel) onCancel();
+              }}
+              onSave={handleSave}
+              saveDisabled={isBelowMin}
+            />
           </div>
         </div>
 
@@ -110,13 +85,13 @@ export function PropertyDescriptionTab({
               value={localDesc}
               onChange={(e) => setLocalDesc(e.target.value.slice(0, MAX_DESCRIPTION_CHARS))}
               placeholder="Describe your property's ambiance, nearby landmarks, security features, student perks..."
-              className="w-full p-3.5 rounded-xl bg-white dark:bg-[#011C40] border border-[#54ACBF]/30 dark:border-[#26658C]/60 focus:border-[#54ACBF] focus:ring-1 focus:ring-[#54ACBF]/20 text-[#011C40] dark:text-white text-xs sm:text-sm outline-none transition-all resize-y min-h-[90px] placeholder:text-slate-400 dark:placeholder:text-[#A7EBF2]/40 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-md"
+              className="w-full p-3.5 rounded-xl bg-slate-100/90 dark:bg-zinc-800/90 border border-slate-300 dark:border-zinc-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 text-slate-900 dark:text-white text-xs sm:text-sm outline-none transition-all resize-y min-h-[90px] placeholder:text-slate-400 dark:placeholder:text-zinc-500 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-md"
             />
 
-            <div className="flex items-center justify-between gap-3 pt-1 border-t border-[#54ACBF]/20 dark:border-[#26658C]/40 flex-wrap">
+            <div className="flex items-center justify-between gap-3 pt-1 border-t border-slate-200/80 dark:border-zinc-800 flex-wrap">
               <span
                 className={`text-[11px] transition-colors ${
-                  isBelowMin ? 'text-amber-600 dark:text-amber-400 font-medium' : 'text-[#26658C] dark:text-[#A7EBF2]/80'
+                  isBelowMin ? 'text-amber-600 dark:text-amber-400 font-medium' : 'text-purple-600 dark:text-purple-400/80'
                 }`}
               >
                 {isBelowMin
@@ -126,24 +101,24 @@ export function PropertyDescriptionTab({
             </div>
           </div>
         ) : (
-          <div className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-[#023859]/30 backdrop-blur-md border border-[#54ACBF]/20 dark:border-[#26658C]/40 hover:border-[#54ACBF] dark:hover:border-[#54ACBF]/60 hover:bg-white dark:hover:bg-[#023859]/50 transition-all flex flex-col justify-between gap-3 shadow-2xs relative z-10">
+          <div className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 hover:border-purple-500/50 dark:hover:border-purple-500/40 hover:bg-white dark:hover:bg-zinc-800 transition-all flex flex-col justify-between gap-3 shadow-2xs relative z-10">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-[#26658C] dark:text-[#A7EBF2]/70 uppercase tracking-wider font-medium">
+              <span className="text-[10px] text-purple-600 dark:text-purple-400 uppercase tracking-wider font-medium">
                 Editorial Bio & Overview
               </span>
-              <span className="material-symbols-outlined text-[17px] text-[#54ACBF] dark:text-[#A7EBF2] shrink-0">description</span>
+              <span className="material-symbols-outlined text-[17px] text-purple-600 dark:text-purple-400 shrink-0">description</span>
             </div>
             <div>
-              <p className="text-xs sm:text-sm font-normal text-[#011C40] dark:text-white tracking-normal leading-relaxed whitespace-pre-wrap">
+              <p className="text-xs sm:text-sm font-normal text-slate-900 dark:text-white tracking-normal leading-relaxed whitespace-pre-wrap">
                 {description ? (
                   description
                 ) : (
-                  <span className="text-xs sm:text-sm font-normal text-[#26658C]/60 dark:text-[#A7EBF2]/50 italic">
+                  <span className="text-xs sm:text-sm font-normal text-purple-600 dark:text-purple-400/60 dark:text-slate-200/50 italic">
                     No description provided yet. Click &quot;Edit&quot; to write a description (max {MAX_DESCRIPTION_CHARS} characters).
                   </span>
                 )}
               </p>
-              <span className="text-[10.5px] text-[#26658C]/80 dark:text-[#A7EBF2]/60 block mt-1.5 font-normal">
+              <span className="text-[10.5px] text-slate-500 dark:text-zinc-400 block mt-1.5 font-normal">
                 {description ? `Public listing narrative (${description.length} characters)` : '—'}
               </span>
             </div>

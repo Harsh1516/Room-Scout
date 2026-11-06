@@ -163,7 +163,7 @@ export function ZenKoiWaterBackground() {
 
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.src = '/zen_koi_water_landscape.jpg';
+    img.src = '/zen_koi_water_landscape.webp';
     img.onload = () => {
       if (isDestroyed) return;
       imageWidth = img.naturalWidth || 1376;
@@ -256,7 +256,7 @@ export function ZenKoiWaterBackground() {
       ref={containerRef}
       className="fixed inset-0 w-full h-full pointer-events-none z-0 overflow-hidden select-none"
       style={{
-        backgroundImage: "url('/zen_koi_water_landscape.jpg')",
+        backgroundImage: "url('/zen_koi_water_landscape.webp')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}

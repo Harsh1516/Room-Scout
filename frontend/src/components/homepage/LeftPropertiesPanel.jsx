@@ -5,28 +5,18 @@ import { staysAPI } from '../../services/api';
 const ALL_CATEGORIES = [
   {
     id: 'hotels',
-    title: 'Hotels',
+    title: 'Hotel',
     matchTypes: ['hotel'],
   },
   {
     id: 'flats',
-    title: 'Flats & Apartments',
-    matchTypes: ['flat', 'apartment'],
+    title: 'Flat',
+    matchTypes: ['flat'],
   },
   {
-    id: 'pg-hostels',
-    title: 'PG & Hostels',
-    matchTypes: ['pg', 'hostel'],
-  },
-  {
-    id: 'villas',
-    title: 'Stays & Villas',
-    matchTypes: ['villa', 'homestay'],
-  },
-  {
-    id: 'resorts',
-    title: 'Resorts',
-    matchTypes: ['resort'],
+    id: 'pg',
+    title: 'PG',
+    matchTypes: ['pg'],
   },
 ];
 
@@ -54,32 +44,11 @@ function renderCategoryIcon(id) {
           <path d="M12 14h.01M16 14h.01M8 14h.01" />
         </svg>
       );
-    case 'pg-hostels':
+    case 'pg':
       return (
         <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
           <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
           <polyline points="9 22 9 12 15 12 15 22" />
-        </svg>
-      );
-    case 'villas':
-      return (
-        <svg className="w-5 h-5 text-amber-600 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 10 12 3l9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
-          <path d="M9 22v-7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v7" />
-        </svg>
-      );
-    case 'resorts':
-      return (
-        <svg className="w-5 h-5 text-teal-600 dark:text-teal-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2" />
-          <path d="M12 20v2" />
-          <path d="m4.93 4.93 1.41 1.41" />
-          <path d="m17.66 17.66 1.41 1.41" />
-          <path d="M2 12h2" />
-          <path d="M20 12h2" />
-          <path d="m6.34 17.66-1.41 1.41" />
-          <path d="m19.07 4.93-1.41 1.41" />
         </svg>
       );
     default:
@@ -95,6 +64,10 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeCategories, setActiveCategories] = useState(ALL_CATEGORIES);
   const [typeCounts, setTypeCounts] = useState({});
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('leftpanel:toggle', { detail: { open: isOpen } }));
+  }, [isOpen]);
 
   useEffect(() => {
     let mounted = true;
@@ -121,7 +94,7 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
           const filtered = ALL_CATEGORIES.filter((cat) =>
             cat.matchTypes.some((t) => availableTypes.has(t))
           );
-          setActiveCategories(filtered.length > 0 ? filtered : ALL_CATEGORIES);
+          setActiveCategories(ALL_CATEGORIES);
         }
       } catch (err) {
         console.error('Error fetching properties panel types:', err);
@@ -185,7 +158,7 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
               <path d="M10 10h4" />
             </svg>
             <span className="[writing-mode:vertical-lr] text-[11px] font-medium tracking-wider text-slate-700 dark:text-slate-300 uppercase rotate-180">
-              Properties
+              Stays
             </span>
             <span className="text-xs text-sky-600 dark:text-sky-400 font-medium">
               ›
@@ -221,14 +194,14 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
             <div className="pt-20 sm:pt-24 px-4 pb-3 border-b border-slate-200/70 dark:border-white/10 flex items-center justify-between gap-2 shrink-0">
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-sm font-medium text-slate-900 dark:text-white tracking-tight">
+                  <h2 className="text-[18px] font-medium text-slate-900 dark:text-white tracking-tight">
                     Properties
                   </h2>
-                  <span className="text-[10px] font-mono font-normal px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/15">
+                  <span className="text-[12px] font-mono font-normal px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/15">
                     {activeCategories.length} {activeCategories.length === 1 ? 'Type' : 'Types'}
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-normal mt-0.5">
+                <p className="text-[14px] text-slate-500 dark:text-slate-400 font-normal mt-0.5">
                   Added website listings & categories
                 </p>
               </div>
@@ -287,11 +260,11 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
                         e.stopPropagation();
                         if (onSelectCategory) onSelectCategory(cat.id);
                       }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 border border-slate-200/70 dark:border-white/15 text-slate-700 dark:text-slate-200 text-xs font-medium transition-colors duration-150 cursor-pointer active:scale-95 shrink-0 select-none"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 border border-blue-700 text-white text-xs font-medium transition-colors duration-150 cursor-pointer active:scale-95 shrink-0 select-none"
                     >
                       <span>Browse</span>
                       <svg
-                        className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400"
+                        className="w-3.5 h-3.5 text-white"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -307,12 +280,7 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
               })}
             </div>
 
-            {/* Bottom Footer Area */}
-            <div className="p-3 border-t border-slate-200/70 dark:border-white/10 text-center bg-white/40 dark:bg-slate-950/40">
-              <span className="text-[10px] font-mono font-normal text-slate-400 dark:text-slate-500">
-                0% Brokerage Direct Stays
-              </span>
-            </div>
+            
           </motion.aside>
         </>
       )}

@@ -54,7 +54,7 @@ const staySchema = new mongoose.Schema(
     },
     genderType: {
       type: String,
-      enum: ['Boys', 'Girls', 'Both', 'Unisex', 'Family'],
+      enum: ['Boys', 'Girls', 'Both', 'Unisex', 'Family', 'Male', 'Female'],
       default: 'Both',
     },
     description: {
@@ -72,6 +72,13 @@ const staySchema = new mongoose.Schema(
     address: { type: String, trim: true, default: '' },
     roadArea: { type: String, trim: true, default: '' },
     city: { type: String, required: true, trim: true, index: true },
+    city_normalized: {
+      type: String,
+      lowercase: true,
+      trim: true,
+      index: true,
+      default: '',
+    },
     state: { type: String, trim: true, default: '' },
     pincode: { type: String, trim: true, default: '' },
     locationGeo: {
@@ -236,6 +243,11 @@ staySchema.pre('save', function (next) {
     };
   }
 
+  // Keep city_normalized in sync
+  if (this.city) {
+    this.city_normalized = this.city.toLowerCase().trim();
+  }
+
   // Automatically sync root starting price and rateUnit from lowest room category / room
   const starting = computeLowestStartingPrice(this.roomRates, this.rooms, this.price, this.rateUnit);
   this.price = starting.price;
@@ -250,7 +262,13 @@ staySchema.pre('findOneAndUpdate', function (next) {
   if (!update) return next();
 
   const target = update.$set || update;
-  if (target.roomRates || target.rooms || target.price) {
+  if (target?.city) {
+    const normalized = target.city.toLowerCase().trim();
+    if (update.$set) update.$set.city_normalized = normalized;
+    else update.city_normalized = normalized;
+  }
+
+  if (target?.roomRates || target?.rooms || target?.price) {
     const starting = computeLowestStartingPrice(
       target.roomRates,
       target.rooms,
@@ -268,10 +286,38 @@ staySchema.pre('findOneAndUpdate', function (next) {
   next();
 });
 
-// Query Indexes
+// ESR-Compliant Query Indexes for MongoDB Atlas
 staySchema.index({ locationGeo: '2dsphere' });
-staySchema.index({ hostId: 1, isPublished: 1 });
-staySchema.index({ city: 1, type: 1, price: 1, rating: -1 });
-staySchema.index({ location: 'text', title: 'text', city: 'text' });
+staySchema.index({ hostId: 1, isPublished: 1, createdAt: -1 });
+
+// High-concurrency compound indexes following ESR (Equality -> Sort -> Range)
+staySchema.index({
+  isPublished: 1,
+  isApproved: 1,
+  'subscription.status': 1,
+  city_normalized: 1,
+  price: 1,
+  rating: -1,
+});
+
+staySchema.index({
+  isPublished: 1,
+  isApproved: 1,
+  'subscription.status': 1,
+  city: 1,
+  price: 1,
+  rating: -1,
+});
+
+staySchema.index({
+  isPublished: 1,
+  isApproved: 1,
+  'subscription.status': 1,
+  type: 1,
+  price: 1,
+  rating: -1,
+});
+
+staySchema.index({ location: 'text', title: 'text', city: 'text', description: 'text' });
 
 export const Stay = mongoose.model('Stay', staySchema);

@@ -7,7 +7,7 @@ import { Host } from '../models/Host.js';
 import { Booking } from '../models/Booking.js';
 import { Wishlist } from '../models/Wishlist.js';
 import { Payment } from '../models/Payment.js';
-import { generateToken, isAdminUser } from '../middleware/authMiddleware.js';
+import { generateToken, isAdminUser, adminKeyIsValid } from '../middleware/authMiddleware.js';
 import { uploadSecureImage } from '../utils/imageSecurity.js';
 import { isBookingRequestExpired } from './bookingController.js';
 
@@ -136,9 +136,8 @@ export const deleteUser = async (req, res, next) => {
 // @access  Public / Admin
 export const getHosts = async (req, res, next) => {
   try {
-    const adminKeyHeader = req.headers['x-admin-key'];
     const isAdmin =
-      (adminKeyHeader && process.env.ADMIN_KEY && adminKeyHeader.trim() === process.env.ADMIN_KEY.trim()) ||
+      adminKeyIsValid(req) ||
       (req.user && (req.user.role === 'admin' || req.user.isAdmin));
 
     const query = isAdmin ? {} : { status: 'Approved' };
@@ -214,7 +213,7 @@ export const getHostByEmail = async (req, res, next) => {
 
     // IDOR Guard: Caller must be admin or accessing their own host account
     const isAdmin =
-      (req.headers['x-admin-key'] && process.env.ADMIN_KEY && req.headers['x-admin-key'].trim() === process.env.ADMIN_KEY.trim()) ||
+      adminKeyIsValid(req) ||
       isAdminUser(req) ||
       req.isAdminKey;
 
@@ -272,7 +271,34 @@ export const getHostByEmail = async (req, res, next) => {
             availableRooms: stay.availableRooms || 0,
             property: stay,
           }
-        : {}),
+        : {
+            propertyName: '',
+            title: '',
+            propertyType: '',
+            type: '',
+            genderType: '',
+            location: '',
+            address: '',
+            roadArea: '',
+            city: '',
+            state: '',
+            pincode: '',
+            latitude: null,
+            longitude: null,
+            rooms: [],
+            roomRates: [],
+            facilities: [],
+            amenities: [],
+            rules: [],
+            images: [],
+            image: '',
+            instagramVideoUrl: '',
+            description: '',
+            rating: null,
+            totalRooms: 0,
+            availableRooms: 0,
+            property: null,
+          }),
     };
 
     return res.json({
@@ -331,7 +357,7 @@ export const createHost = async (req, res, next) => {
 
     // IDOR Guard: Non-admins cannot create or overwrite properties under another host's email
     const isAdmin =
-      (req.headers['x-admin-key'] && process.env.ADMIN_KEY && req.headers['x-admin-key'].trim() === process.env.ADMIN_KEY.trim()) ||
+      adminKeyIsValid(req) ||
       isAdminUser(req) ||
       req.isAdminKey;
 
@@ -391,10 +417,23 @@ export const createHost = async (req, res, next) => {
       if (host.name) {
         userUpdateFields.name = host.name;
       }
+      let linkedUser = null;
       if (req.user?._id) {
-        await User.findByIdAndUpdate(req.user._id, { $set: userUpdateFields });
+        linkedUser = await User.findByIdAndUpdate(req.user._id, { $set: userUpdateFields }, { new: true });
       } else if (cleanEmail) {
-        await User.findOneAndUpdate({ email: cleanEmail }, { $set: userUpdateFields });
+        linkedUser = await User.findOneAndUpdate({ email: cleanEmail }, { $set: userUpdateFields }, { new: true });
+      }
+
+      // Phase 1 linking: keep User and Host records connected for future unified-account migration
+      if (linkedUser && host) {
+        if (!host.accountId || String(host.accountId) !== String(linkedUser._id)) {
+          host.accountId = linkedUser._id;
+          await host.save();
+        }
+        if (!linkedUser.hostId || String(linkedUser.hostId) !== String(host._id)) {
+          linkedUser.hostId = host._id;
+          await linkedUser.save();
+        }
       }
     } catch (syncErr) {
       console.warn('Could not sync user profile with host details:', syncErr);
@@ -406,7 +445,12 @@ export const createHost = async (req, res, next) => {
     let processedImages = [];
     if (Array.isArray(images)) {
       if (images.length > 0) {
-        processedImages = await Promise.all(images.map((img) => uploadSecureImage(img, 'roomscout/properties')));
+        for (const img of images) {
+          if (img) {
+            const uploadedUrl = await uploadSecureImage(img, 'roomscout/properties');
+            if (uploadedUrl) processedImages.push(uploadedUrl);
+          }
+        }
       } else if (cleanPrimaryImage) {
         processedImages = [cleanPrimaryImage];
       }
@@ -530,6 +574,7 @@ export const createHost = async (req, res, next) => {
       address: resolvedAddress,
       roadArea: resolvedRoadArea,
       city: resolvedCity,
+      city_normalized: (resolvedCity || '').toLowerCase().trim(),
       state: resolvedState,
       pincode: resolvedPincode,
       latitude: parsedLat,
@@ -568,34 +613,34 @@ export const createHost = async (req, res, next) => {
       isApproved: host.status === 'Approved' || Boolean(host.isApproved),
       hasBeenApproved: Boolean(host.hasBeenApproved || host.status === 'Approved'),
       // Property / Stay fields
-      propertyName: updatedStay.title,
-      title: updatedStay.title,
-      propertyType: updatedStay.type,
-      type: updatedStay.type,
-      genderType: updatedStay.genderType,
-      location: updatedStay.location,
-      address: updatedStay.address,
-      roadArea: updatedStay.roadArea,
-      city: updatedStay.city,
-      state: updatedStay.state,
-      pincode: updatedStay.pincode,
-      latitude: updatedStay.latitude,
-      longitude: updatedStay.longitude,
-      price: `₹${Number(updatedStay.price).toLocaleString('en-IN')}`,
-      rawPrice: updatedStay.price,
-      rateUnit: updatedStay.rateUnit,
-      rating: updatedStay.rating,
-      facilities: updatedStay.facilities,
-      amenities: updatedStay.facilities,
-      rules: updatedStay.rules,
-      image: updatedStay.image,
-      images: updatedStay.images,
-      instagramVideoUrl: updatedStay.instagramVideoUrl,
-      description: updatedStay.description,
-      rooms: updatedStay.rooms,
-      roomRates: updatedStay.roomRates,
-      totalRooms: updatedStay.totalRooms,
-      availableRooms: updatedStay.availableRooms,
+      propertyName: updatedStay?.title || resolvedTitle,
+      title: updatedStay?.title || resolvedTitle,
+      propertyType: updatedStay?.type || resolvedType,
+      type: updatedStay?.type || resolvedType,
+      genderType: updatedStay?.genderType || resolvedGender,
+      location: updatedStay?.location || resolvedLocation,
+      address: updatedStay?.address || resolvedAddress,
+      roadArea: updatedStay?.roadArea || resolvedRoadArea,
+      city: updatedStay?.city || resolvedCity,
+      state: updatedStay?.state || resolvedState,
+      pincode: updatedStay?.pincode || resolvedPincode,
+      latitude: updatedStay?.latitude ?? parsedLat,
+      longitude: updatedStay?.longitude ?? parsedLng,
+      price: `₹${Number(updatedStay?.price ?? startingPricing.price).toLocaleString('en-IN')}`,
+      rawPrice: updatedStay?.price ?? startingPricing.price,
+      rateUnit: updatedStay?.rateUnit || startingPricing.rateUnit,
+      rating: updatedStay?.rating || 0,
+      facilities: updatedStay?.facilities || resolvedFacilities,
+      amenities: updatedStay?.facilities || resolvedFacilities,
+      rules: updatedStay?.rules || resolvedRules,
+      image: updatedStay?.image || resolvedPrimaryImage,
+      images: updatedStay?.images || processedImages,
+      instagramVideoUrl: updatedStay?.instagramVideoUrl || '',
+      description: updatedStay?.description || '',
+      rooms: updatedStay?.rooms || cleanedRooms,
+      roomRates: updatedStay?.roomRates || resolvedRoomRates,
+      totalRooms: updatedStay?.totalRooms ?? finalTotalRooms,
+      availableRooms: updatedStay?.availableRooms ?? finalAvailRooms,
       property: updatedStay,
     };
 
@@ -612,6 +657,55 @@ export const createHost = async (req, res, next) => {
 };
 
 // @desc    Approve host and stay record in database
+// @route   PUT /api/admin/hosts/bulk-approve
+// @access  Public / Admin
+export const bulkApproveHosts = async (req, res, next) => {
+  try {
+    const { hostIds } = req.body;
+    if (!Array.isArray(hostIds) || hostIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'Please provide hostIds array' });
+    }
+
+    const updatedHosts = [];
+    for (const id of hostIds) {
+      const host = await Host.findByIdAndUpdate(
+        id,
+        { $set: { status: 'Approved', isApproved: true, hasBeenApproved: true } },
+        { new: true }
+      );
+      if (host) {
+        const hasActiveSub = Boolean(
+          host.subscription?.status === 'ACTIVE' &&
+          host.subscription?.expiresAt &&
+          new Date(host.subscription.expiresAt) > new Date()
+        );
+
+        await Stay.findOneAndUpdate(
+          { hostId: host._id },
+          { 
+            $set: { 
+              isApproved: true, 
+              isPublished: hasActiveSub 
+            } 
+          },
+          { new: true }
+        );
+        updatedHosts.push(host);
+      }
+    }
+
+    return res.json({
+      success: true,
+      message: `Successfully approved ${updatedHosts.length} host${updatedHosts.length === 1 ? '' : 's'}!`,
+      count: updatedHosts.length,
+      hosts: updatedHosts,
+    });
+  } catch (error) {
+    console.error('Error bulk approving hosts:', error);
+    return next(error);
+  }
+};
+
 // @route   PUT /api/admin/hosts/:id/approve
 // @access  Public / Admin
 export const approveHost = async (req, res, next) => {
@@ -691,7 +785,7 @@ export const getHostGuests = async (req, res, next) => {
 
     // IDOR Guard: Verify caller is admin or querying their own guest roster
     const isAdmin =
-      (req.headers['x-admin-key'] && process.env.ADMIN_KEY && req.headers['x-admin-key'].trim() === process.env.ADMIN_KEY.trim()) ||
+      adminKeyIsValid(req) ||
       isAdminUser(req) ||
       req.isAdminKey;
 
@@ -851,15 +945,16 @@ export const getStats = async (req, res, next) => {
 // @access  Public / Admin
 export const impersonateAccount = async (req, res, next) => {
   try {
-    const { email, role, id } = req.body;
+    const { email, role, id, _id } = req.body;
     const cleanEmail = email ? email.toLowerCase().trim() : '';
     const isHost = role === 'host';
+    const targetId = id || _id;
 
     let targetAccount = null;
 
     if (isHost) {
-      targetAccount = id
-        ? await Host.findById(id)
+      targetAccount = targetId && mongoose.Types.ObjectId.isValid(targetId)
+        ? await Host.findById(targetId)
         : await Host.findOne({ email: cleanEmail });
 
       if (!targetAccount) return res.status(404).json({ message: 'Host not found' });
@@ -872,6 +967,7 @@ export const impersonateAccount = async (req, res, next) => {
         phone: targetAccount.phone,
         role: 'host',
         status: targetAccount.status,
+        isApproved: targetAccount.status === 'Approved' || Boolean(targetAccount.isApproved),
       };
 
       return res.json({
@@ -881,8 +977,8 @@ export const impersonateAccount = async (req, res, next) => {
       });
     }
 
-    targetAccount = id
-      ? await User.findById(id)
+    targetAccount = targetId && mongoose.Types.ObjectId.isValid(targetId)
+      ? await User.findById(targetId)
       : await User.findOne({ email: cleanEmail });
 
     if (!targetAccount) return res.status(404).json({ message: 'User not found' });

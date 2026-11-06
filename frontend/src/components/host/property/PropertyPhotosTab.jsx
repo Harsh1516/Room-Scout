@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from '../../../context/ToastContext';
 import {
   TrashIcon,
   ReplaceIcon,
@@ -8,6 +10,7 @@ import {
   PencilIcon,
   XMarkIcon,
 } from './PropertyIcons';
+import { PropertyTabHeaderActions } from './PropertyTabHeaderActions';
 
 const MAX_PHOTOS = 5;
 
@@ -121,6 +124,52 @@ const resolveImageByteSize = async (url) => {
   }
 
   return 280 * 1024;
+};
+
+// Validate strictly that photo aspect ratio is 16:9 (within reasonable tolerance)
+const validate16x9Ratio = (file) => {
+  return new Promise((resolve) => {
+    if (!file || !file.type.startsWith('image/')) {
+      resolve({ valid: false, message: 'Please select a valid image file.' });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const width = img.naturalWidth || img.width;
+        const height = img.naturalHeight || img.height;
+        if (!width || !height) {
+          resolve({ valid: false, message: 'Unable to detect image dimensions.' });
+          return;
+        }
+        const ratio = width / height;
+        const targetRatio = 16 / 9; // ~1.7777777778
+        // Allow ~3.5% tolerance (approx 1.71 to 1.84) to support standard 16:9 resolutions:
+        // 1920x1080, 1280x720, 1366x768 (1.7786), 1600x900, 2560x1440, 3840x2160, 854x480 (1.779)
+        // Strictly blocks 4:3 (1.33), 1:1 (1.0), 3:2 (1.50), 16:10 (1.60), and portrait ratios (< 1.0)
+        const is16x9 = Math.abs(ratio - targetRatio) <= 0.06;
+        if (!is16x9) {
+          resolve({
+            valid: false,
+            message: 'Photos must be in 16:9 only',
+            width,
+            height,
+          });
+        } else {
+          resolve({ valid: true, width, height });
+        }
+      };
+      img.onerror = () => {
+        resolve({ valid: false, message: 'Failed to read image file.' });
+      };
+      img.src = e.target.result;
+    };
+    reader.onerror = () => {
+      resolve({ valid: false, message: 'Failed to read file.' });
+    };
+    reader.readAsDataURL(file);
+  });
 };
 
 const compressImage = (file) => {
@@ -310,8 +359,21 @@ export function PropertyPhotosTab({
     const file = e.target.files?.[0];
     if (!file || replacingIdx === null) return;
 
+    // Strictly validate 16:9 aspect ratio
+    const validation = await validate16x9Ratio(file);
+    if (!validation.valid) {
+      setUploadNotice(validation.message);
+      toast.error(validation.message);
+      if (replaceFileInputRef.current) {
+        replaceFileInputRef.current.value = '';
+      }
+      setReplacingIdx(null);
+      return;
+    }
+
     try {
       setIsProcessingImage(true);
+      setUploadNotice('');
       const compressed = await compressImage(file);
       const size = getBase64ByteSize(compressed);
       if (size > 0) {
@@ -353,12 +415,26 @@ export function PropertyPhotosTab({
     if (!file) return;
 
     if (localImages.length >= MAX_PHOTOS) {
-      setUploadNotice(`Maximum limit of ${MAX_PHOTOS} photos reached.`);
+      const msg = `Maximum limit of ${MAX_PHOTOS} photos reached.`;
+      setUploadNotice(msg);
+      toast.error(msg);
+      return;
+    }
+
+    // Strictly validate 16:9 aspect ratio
+    const validation = await validate16x9Ratio(file);
+    if (!validation.valid) {
+      setUploadNotice(validation.message);
+      toast.error(validation.message);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       return;
     }
 
     try {
       setIsProcessingImage(true);
+      setUploadNotice('');
       setUploadNotice('');
       const compressed = await compressImage(file);
       const size = getBase64ByteSize(compressed);
@@ -414,7 +490,8 @@ export function PropertyPhotosTab({
   const isAtLimit = localImages.length >= MAX_PHOTOS;
 
   return (
-    <div className="space-y-5">
+    <>
+      <div className="space-y-5">
       {/* Hidden File Inputs */}
       <input
         ref={fileInputRef}
@@ -432,53 +509,36 @@ export function PropertyPhotosTab({
       />
 
       {/* Main Visual Gallery Card */}
-      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/70 dark:bg-[#011C40]/50 backdrop-blur-xl border border-[#54ACBF]/20 dark:border-[#26658C]/40 shadow-[0_4px_24px_rgba(2,56,89,0.04)] dark:shadow-[0_8px_32px_rgba(1,28,64,0.4)] space-y-4 relative overflow-hidden">
+      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/95 backdrop-blur-xl shadow-sm space-y-4 relative overflow-hidden">
         {/* Header Strip - Aligned with Address & Geography standard */}
-        <div className="flex items-center justify-between flex-wrap gap-2 border-b border-[#54ACBF]/20 dark:border-[#26658C]/40 pb-3 relative z-10">
-          <p className="text-xs font-medium uppercase tracking-wider text-[#011C40] dark:text-[#A7EBF2] flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#54ACBF] shadow-[0_0_8px_#54ACBF]" />
-            Visual Gallery & Walkthrough
+        <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-100 dark:border-zinc-800 pb-3 relative z-10">
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2 min-w-0">
+            <span className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)] shrink-0" />
+            <span className="truncate">Visual Gallery & Walkthrough</span>
           </p>
 
-          {!isEditing ? (
-            onStartEdit && (
-              <button
-                type="button"
-                onClick={onStartEdit}
-                className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-[#023859] dark:text-[#A7EBF2] text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm"
-              >
-                <PencilIcon className="w-3.5 h-3.5 text-[#54ACBF] dark:text-[#A7EBF2]" />
-                <span>Edit</span>
-              </button>
-            )
-          ) : (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                disabled={isSaving || isProcessingImage}
-                onClick={() => {
-                  setLocalImages(Array.isArray(images) ? images.slice(0, MAX_PHOTOS) : []);
-                  setLocalVideoUrl(videoUrl || '');
-                  setUploadNotice('');
-                  if (onCancel) onCancel();
-                }}
-                className="px-3 py-1.5 rounded-xl border border-[#54ACBF]/30 dark:border-[#26658C]/50 bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] text-[#023859] dark:text-[#A7EBF2] text-xs font-medium transition-all cursor-pointer active:scale-95 disabled:opacity-50 backdrop-blur-sm"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={isSaving || isProcessingImage}
-                onClick={handleSave}
-                className={`px-3.5 py-1.5 rounded-xl bg-white hover:bg-white/90 text-[#011C40] text-xs font-semibold transition-all cursor-pointer shadow-md flex items-center gap-1 active:scale-95 ${
-                  isSaving || isProcessingImage ? 'opacity-70 cursor-wait' : ''
-                }`}
-              >
-                <span className="material-symbols-outlined text-[14px]">check</span>
-                <span>{isProcessingImage ? 'Processing...' : isSaving ? 'Saving...' : 'Save Media'}</span>
-              </button>
-            </div>
-          )}
+          {/* Center Position: Total Size Indicator */}
+          <div className="flex items-center justify-center pointer-events-none order-last sm:order-none w-full sm:w-auto">
+            <span className="px-3 py-1 rounded-full bg-purple-500/10 dark:bg-zinc-800 border border-purple-500/25 dark:border-zinc-700 text-xs font-mono text-purple-700 dark:text-zinc-300 font-medium shadow-2xs flex items-center gap-1.5 backdrop-blur-md">
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+              <span>Total Size: {totalMemoryFormatted}</span>
+            </span>
+          </div>
+
+          <PropertyTabHeaderActions
+            isEditing={isEditing}
+            isSaving={isSaving || isProcessingImage}
+            onStartEdit={onStartEdit}
+            onCancel={() => {
+              setLocalImages(Array.isArray(images) ? images.slice(0, MAX_PHOTOS) : []);
+              setLocalVideoUrl(videoUrl || '');
+              setUploadNotice('');
+              if (onCancel) onCancel();
+            }}
+            onSave={handleSave}
+            saveLabel="Save Media"
+            savingLabel={isProcessingImage ? 'Processing...' : 'Saving...'}
+          />
         </div>
 
         {uploadNotice && (
@@ -506,8 +566,8 @@ export function PropertyPhotosTab({
                   onClick={() => !isEditing && setPreviewImage(imgUrl)}
                   className={`group relative rounded-2xl overflow-hidden isolate bg-slate-900 transition-colors duration-150 flex flex-col justify-between shadow-xs [mask-image:radial-gradient(white,black)] [-webkit-mask-image:-webkit-radial-gradient(white,black)] ${
                     isEditing
-                      ? 'cursor-grab active:cursor-grabbing border-2'
-                      : 'cursor-pointer border'
+                      ? 'cursor-grab active:cursor-grabbing border-2 w-full'
+                      : 'cursor-pointer border aspect-[16/9] w-full'
                   } ${
                     isDragging
                       ? 'opacity-40 border-emerald-400'
@@ -517,10 +577,9 @@ export function PropertyPhotosTab({
                       ? 'border-emerald-400/80 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
                       : 'border-white/15 hover:border-white/40'
                   }`}
-                  style={{ minHeight: isEditing ? '200px' : '144px' }}
                 >
                   {/* Image Container */}
-                  <div className={`relative w-full flex-1 min-h-[144px] overflow-hidden bg-slate-950 ${isEditing ? 'rounded-t-[14px]' : 'rounded-[15px]'}`}>
+                  <div className={`relative w-full aspect-[16/9] overflow-hidden bg-slate-950 shrink-0 ${isEditing ? 'rounded-t-[14px]' : 'rounded-[15px]'}`}>
                     <img
                       src={imgUrl}
                       alt={`Property ${iIdx + 1}`}
@@ -540,7 +599,7 @@ export function PropertyPhotosTab({
 
                     {/* Cover Photo Badge on 1st image */}
                     {isCover && (
-                      <span className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-gradient-to-r from-[#023859] to-[#26658C] text-[#A7EBF2] font-medium text-[10px] tracking-wider uppercase shadow-lg backdrop-blur-md flex items-center gap-1 z-10 border border-[#54ACBF]/50">
+                      <span className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-gradient-to-r from-[#7c3aed] to-[#9333ea] text-slate-100 font-medium text-[10px] tracking-wider uppercase shadow-lg backdrop-blur-md flex items-center gap-1 z-10 border border-slate-200 dark:border-white/10">
                         <span>★</span>
                         <span>Cover Photo</span>
                       </span>
@@ -603,42 +662,35 @@ export function PropertyPhotosTab({
               );
             })}
 
-            {/* Add Photo Card in Edit Mode */}
+            {/* Add Photo Card in Edit Mode (16:9 strictly matched) */}
             {isEditing && !isAtLimit && (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="rounded-2xl border-2 border-dashed border-[#54ACBF]/35 dark:border-[#26658C]/60 hover:border-[#54ACBF] p-4 flex flex-col items-center justify-center gap-2 bg-white/40 hover:bg-[#54ACBF]/10 dark:bg-[#023859]/20 dark:hover:bg-[#023859]/40 transition-all min-h-[200px] cursor-pointer group shadow-sm"
+                className="rounded-2xl border-2 border-dashed border-[#a855f7]/35 dark:border-zinc-700 hover:border-[#9333ea] p-3 flex flex-col items-center justify-center gap-1.5 bg-white/40 hover:bg-[#a855f7]/10 dark:bg-zinc-800/50 dark:hover:bg-zinc-800 transition-all cursor-pointer group shadow-sm w-full min-h-[140px] aspect-[16/9] sm:aspect-auto sm:h-full"
               >
-                <div className="w-10 h-10 rounded-full bg-[#54ACBF]/15 dark:bg-[#54ACBF]/20 group-hover:bg-[#54ACBF]/25 border border-[#54ACBF]/30 text-[#54ACBF] dark:text-[#A7EBF2] flex items-center justify-center transition-colors">
-                  <PlusIcon className="w-5 h-5" />
+                <div className="w-8 h-8 rounded-full bg-purple-500/10 dark:bg-zinc-800 group-hover:bg-[#a855f7]/25 border border-slate-200/80 dark:border-zinc-700 text-purple-600 dark:text-purple-400 flex items-center justify-center transition-colors shadow-2xs">
+                  <PlusIcon className="w-4 h-4" />
                 </div>
-                <div className="text-center">
-                  <p className="text-xs font-normal text-slate-800 dark:text-white">Upload Photo</p>
+                <div className="text-center px-1">
+                  <p className="text-xs font-medium text-slate-800 dark:text-white">Upload Photo</p>
                   <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-0.5">
-                    {MAX_PHOTOS - localImages.length} of {MAX_PHOTOS} remaining
+                    16:9 only • {MAX_PHOTOS - localImages.length} of {MAX_PHOTOS} remaining
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    fileInputRef.current?.click();
-                  }}
-                  className="mt-1 py-1.5 px-3 rounded-xl bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-[#023859] dark:text-[#A7EBF2] text-[11px] font-medium transition-all cursor-pointer shadow-2xs"
-                >
-                  Choose File
-                </button>
+                <span className="mt-0.5 py-1 px-2.5 rounded-xl bg-white/80 hover:bg-purple-500/10 dark:bg-zinc-800/90 dark:hover:bg-zinc-700/80 border border-slate-200/80 dark:border-zinc-700 text-slate-800 dark:text-zinc-200 text-[10.5px] font-medium transition-all shadow-2xs">
+                  Choose 16:9 File
+                </span>
               </div>
             )}
           </div>
         ) : (
-          <div className="p-8 text-center text-xs text-[#26658C]/80 dark:text-[#A7EBF2]/70 border border-dashed border-[#54ACBF]/30 dark:border-[#26658C]/50 rounded-2xl bg-white/40 dark:bg-[#023859]/20 space-y-3">
+          <div className="p-8 text-center text-xs text-slate-500 dark:text-zinc-400 border border-dashed border-slate-200/80 dark:border-zinc-700 rounded-2xl bg-white/40 dark:bg-zinc-800/50 space-y-3">
             <p>No photos uploaded yet.</p>
             {isEditing && (
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="px-4 py-2 rounded-xl bg-white hover:bg-white/90 text-[#011C40] text-xs font-semibold transition-all cursor-pointer shadow-md active:scale-95"
+                className="px-4 py-2 rounded-xl bg-white hover:bg-white/90 text-slate-900 dark:text-white text-xs font-semibold transition-all cursor-pointer shadow-md active:scale-95"
               >
                 + Upload First Photo
               </button>
@@ -648,18 +700,18 @@ export function PropertyPhotosTab({
 
         {/* Edit mode drag guidance tip */}
         {isEditing && (
-          <p className="text-xs text-[#26658C]/80 dark:text-[#A7EBF2]/70 pt-1 font-normal">
-            Tip: Simply drag photos left or right to reorder. The 1st photo on the top-left is automatically your listing&apos;s <span className="text-[#54ACBF] dark:text-[#A7EBF2] font-medium">Cover Photo</span>. Limit: {MAX_PHOTOS} photos maximum.
+          <p className="text-xs text-slate-500 dark:text-zinc-400 pt-1 font-normal">
+            Tip: Photos must be in <span className="font-semibold text-slate-900 dark:text-white">16:9 widescreen ratio</span> (e.g. 1920×1080, 1280×720). Drag photos left or right to reorder. The 1st photo on the top-left is automatically your listing&apos;s <span className="text-purple-600 dark:text-purple-400 font-medium">Cover Photo</span>. Limit: {MAX_PHOTOS} photos maximum.
           </p>
         )}
 
         {/* Video Tour Link Card - Aligned with Address & Geography standard */}
-        <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-[#023859]/30 backdrop-blur-md border border-[#54ACBF]/20 dark:border-[#26658C]/40 hover:border-[#54ACBF] dark:hover:border-[#54ACBF]/60 hover:bg-white dark:hover:bg-[#023859]/50 transition-all flex flex-col justify-between gap-2.5 shadow-2xs">
+        <div className="p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 hover:border-purple-500/50 dark:hover:border-purple-500/40 hover:bg-white dark:hover:bg-zinc-800 transition-all flex flex-col justify-between gap-2.5 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] text-[#26658C] dark:text-[#A7EBF2]/70 uppercase tracking-wider font-medium">
+            <span className="text-[10px] text-purple-600 dark:text-purple-400 uppercase tracking-wider font-medium">
               Video Tour Walkthrough
             </span>
-            <span className="material-symbols-outlined text-[17px] text-[#54ACBF] dark:text-[#A7EBF2] shrink-0">
+            <span className="material-symbols-outlined text-[17px] text-purple-600 dark:text-purple-400 shrink-0">
               videocam
             </span>
           </div>
@@ -667,10 +719,10 @@ export function PropertyPhotosTab({
           {!isEditing ? (
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-normal text-[#011C40] dark:text-white tracking-normal truncate select-all">
+                <p className="text-xs sm:text-sm font-normal text-slate-900 dark:text-white tracking-normal truncate select-all">
                   {localVideoUrl?.trim() || 'No walkthrough video linked yet'}
                 </p>
-                <span className="text-[10.5px] text-[#26658C]/80 dark:text-[#A7EBF2]/60 font-normal">
+                <span className="text-[10.5px] text-slate-500 dark:text-zinc-400 font-normal">
                   {localVideoUrl?.trim() ? 'Public walkthrough link' : 'YouTube video or Instagram Reel link to boost listing views'}
                 </span>
               </div>
@@ -680,7 +732,7 @@ export function PropertyPhotosTab({
                   href={formattedVideoUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-[#023859] dark:text-[#A7EBF2] text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm shrink-0 self-start sm:self-auto"
+                  className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-all shadow-md shadow-purple-600/20 active:scale-95 shrink-0 self-start sm:self-auto"
                 >
                   <span>Open Video</span>
                   <span className="material-symbols-outlined text-[13px]">open_in_new</span>
@@ -690,7 +742,7 @@ export function PropertyPhotosTab({
                   <button
                     type="button"
                     onClick={onStartEdit}
-                    className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-[#54ACBF]/15 dark:bg-[#023859]/60 dark:hover:bg-[#023859] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-[#023859] dark:text-[#A7EBF2] text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95 backdrop-blur-sm shrink-0 self-start sm:self-auto"
+                    className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-all shadow-md shadow-purple-600/20 active:scale-95 shrink-0 self-start sm:self-auto"
                   >
                     <span className="material-symbols-outlined text-[14px]">add</span>
                     <span>Add Video Link</span>
@@ -712,7 +764,7 @@ export function PropertyPhotosTab({
                     }
                   }}
                   placeholder="https://www.instagram.com/reel/... or https://www.youtube.com/watch?v=..."
-                  className="w-full pl-3.5 pr-20 py-2.5 rounded-xl bg-white dark:bg-[#011C40] border border-[#54ACBF]/30 dark:border-[#26658C]/60 text-xs sm:text-[13px] text-[#011C40] dark:text-white placeholder:text-slate-400 dark:placeholder:text-[#A7EBF2]/40 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] focus:outline-none focus:border-[#54ACBF] focus:ring-1 focus:ring-[#54ACBF]/20 transition-colors font-mono"
+                  className="w-full pl-3.5 pr-20 py-2.5 rounded-xl bg-slate-50/80 dark:bg-zinc-900/90 border border-slate-200/90 dark:border-zinc-700 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 shadow-inner transition-colors font-mono"
                 />
                 {localVideoUrl?.trim() && (
                   <button
@@ -726,7 +778,7 @@ export function PropertyPhotosTab({
                 )}
               </div>
               <div className="flex items-center justify-between flex-wrap gap-2">
-                <span className="text-[10.5px] text-[#26658C]/80 dark:text-[#A7EBF2]/60 font-normal">
+                <span className="text-[10.5px] text-slate-500 dark:text-zinc-400 font-normal">
                   Supports standard YouTube URLs, Shorts, and Instagram Reel links
                 </span>
                 {formattedVideoUrl && (
@@ -734,7 +786,7 @@ export function PropertyPhotosTab({
                     href={formattedVideoUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="px-2.5 py-1 rounded-lg bg-[#54ACBF]/15 hover:bg-[#54ACBF]/25 border border-[#54ACBF]/30 text-[#023859] dark:text-[#A7EBF2] text-[11px] font-medium flex items-center gap-1 transition-all"
+                    className="px-2.5 py-1 rounded-lg bg-purple-500/10 hover:bg-[#a855f7]/25 border border-slate-200/80 dark:border-zinc-700 text-slate-800 dark:text-zinc-200 text-[11px] font-medium flex items-center gap-1 transition-all"
                   >
                     <span>Test link</span>
                     <span className="material-symbols-outlined text-[12px]">open_in_new</span>
@@ -746,19 +798,19 @@ export function PropertyPhotosTab({
         </div>
 
         {/* Footer Strip - EXACT MATCH TO PIC 2'S FOOTER STRIP */}
-        <div className="pt-3 mt-3 border-t border-[#54ACBF]/20 dark:border-[#26658C]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div className="pt-3 mt-3 border-t border-slate-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium uppercase tracking-wider text-[#26658C] dark:text-[#A7EBF2]/80">
+            <span className="text-xs font-medium uppercase tracking-wider text-purple-600 dark:text-purple-400/80">
               Memory Occupied:
             </span>
-            <span className="px-2.5 py-0.5 rounded-full bg-[#54ACBF]/15 dark:bg-[#023859]/80 text-xs font-medium text-[#023859] dark:text-[#A7EBF2] border border-[#54ACBF]/30 shadow-2xs backdrop-blur-sm flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#54ACBF] shadow-[0_0_6px_#54ACBF]" />
+            <span className="px-2.5 py-0.5 rounded-full bg-purple-500/10 dark:bg-zinc-800 text-xs font-medium text-slate-800 dark:text-zinc-200 border border-slate-200/80 dark:border-zinc-700 shadow-2xs backdrop-blur-sm flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-600 shadow-[0_0_6px_#9333ea]" />
               <span>{localImages.length}/{MAX_PHOTOS} Photos • {totalMemoryFormatted}</span>
             </span>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-normal text-[#26658C]/70 dark:text-[#A7EBF2]/60">
+            <span className="text-xs font-normal text-purple-600 dark:text-purple-400/70 dark:text-slate-200/60">
               Click photo to inspect full size
             </span>
           </div>
@@ -766,40 +818,44 @@ export function PropertyPhotosTab({
       </div>
 
       {/* Lightbox Image Preview Modal */}
-      <AnimatePresence>
-        {previewImage && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setPreviewImage(null)}
-            className="fixed inset-0 z-50 bg-black/90 backdrop-blur-2xl flex items-center justify-center p-4 cursor-zoom-out"
-          >
+      {createPortal(
+        <AnimatePresence>
+          {previewImage && (
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative max-w-4xl max-h-[85vh] rounded-3xl overflow-hidden border border-white/50 bg-black shadow-2xl cursor-default"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setPreviewImage(null)}
+              className="fixed inset-0 z-[9999] bg-transparent flex items-center justify-center p-4 cursor-zoom-out"
             >
-              <img
-                src={previewImage}
-                alt="Enlarged property preview"
-                decoding="async"
-                className="w-full h-full max-h-[80vh] object-contain"
-              />
-              <button
-                type="button"
-                onClick={() => setPreviewImage(null)}
-                className="absolute top-4 right-4 px-4 py-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs font-medium border border-white/40 cursor-pointer shadow-lg backdrop-blur-md transition-all active:scale-95"
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className="relative max-w-4xl max-h-[85vh] mx-auto rounded-3xl overflow-hidden border border-white/50 bg-black shadow-2xl cursor-default flex items-center justify-center"
               >
-                ✕ Close
-              </button>
+                <img
+                  src={previewImage}
+                  alt="Enlarged property preview"
+                  decoding="async"
+                  className="w-full h-full max-h-[80vh] object-contain"
+                />
+                <button
+                  type="button"
+                  onClick={() => setPreviewImage(null)}
+                  className="absolute top-4 right-4 px-4 py-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs font-medium border border-white/40 cursor-pointer shadow-lg backdrop-blur-md transition-all active:scale-95"
+                >
+                  ✕ Close
+                </button>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
+  </>
   );
 }
 

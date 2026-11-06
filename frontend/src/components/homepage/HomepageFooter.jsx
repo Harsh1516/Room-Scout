@@ -22,10 +22,6 @@ export function HomepageFooter() {
             <p className="text-[11px] sm:text-sm md:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-lg font-medium">
               India's premier 3D-verified stay discovery network. Direct host connections, zero brokerage fees, and 100% physically inspected student PGs, hotels, and luxury villas.
             </p>
-            <div className="pt-0.5 sm:pt-2 text-[10px] sm:text-xs md:text-sm font-mono text-slate-500 dark:text-slate-400">
-              ⚡ Verified Stays • Zero Brokerage Fees
-            </div>
-
           </div>
 
           {/* 3 Link Columns Arranged in a ROW side-by-side */}
@@ -37,10 +33,8 @@ export function HomepageFooter() {
               </div>
               <ul className="space-y-1.5 sm:space-y-2.5 text-[9.5px] sm:text-xs md:text-sm font-medium text-slate-600 dark:text-slate-300">
                 <li onClick={() => navigate('/search')} className="hover:text-slate-950 dark:hover:text-white cursor-pointer transition-colors leading-tight truncate">Student PGs</li>
-                <li onClick={() => navigate('/search')} className="hover:text-slate-950 dark:hover:text-white cursor-pointer transition-colors leading-tight truncate">Flats & Apts</li>
+                <li onClick={() => navigate('/search')} className="hover:text-slate-950 dark:hover:text-white cursor-pointer transition-colors leading-tight truncate">Flats</li>
                 <li onClick={() => navigate('/search')} className="hover:text-slate-950 dark:hover:text-white cursor-pointer transition-colors leading-tight truncate">City Hotels</li>
-                <li onClick={() => navigate('/search')} className="hover:text-slate-950 dark:hover:text-white cursor-pointer transition-colors leading-tight truncate">Resorts</li>
-                <li onClick={() => navigate('/search')} className="hover:text-slate-950 dark:hover:text-white cursor-pointer transition-colors leading-tight truncate">Villas & Hostels</li>
               </ul>
             </div>
 

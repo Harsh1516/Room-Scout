@@ -29,41 +29,64 @@ export const DEFAULT_HOST_PROPERTY = {
   pincode: '',
 };
 
-// Module-level in-memory cache for ultra-fast, zero-flicker mounts & back-navigation
+// Strict Host-Scoped In-Memory Cache (Keyed STRICTLY by normalized host email)
 export const cachedHostPropertyMap = new Map();
 export const cachedGuestsMap = new Map();
 export const lastHostFetchTimeMap = new Map();
 
-export function getInitialHostProperty(userEmail, stateUpdatedHost) {
-  if (stateUpdatedHost && (stateUpdatedHost._id || stateUpdatedHost.propertyName)) {
-    return stateUpdatedHost;
-  }
-  const emailKey = userEmail ? userEmail.trim().toLowerCase() : '';
-  if (emailKey && cachedHostPropertyMap.has(emailKey)) {
-    return cachedHostPropertyMap.get(emailKey);
-  }
-  if (cachedHostPropertyMap.has('me')) {
-    return cachedHostPropertyMap.get('me');
-  }
-  for (const prop of cachedHostPropertyMap.values()) {
-    if (prop && (prop._id || prop.propertyName)) return prop;
-  }
+/**
+ * Clear all host caches from memory and sessionStorage across tenant switch/logout.
+ */
+export function clearAllHostCaches() {
+  cachedHostPropertyMap.clear();
+  cachedGuestsMap.clear();
+  lastHostFetchTimeMap.clear();
   if (typeof window !== 'undefined' && window.sessionStorage) {
     try {
-      if (emailKey) {
-        const raw = window.sessionStorage.getItem(`roomscout_cached_host_${emailKey}`);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (parsed && (parsed._id || parsed.propertyName)) {
-            cachedHostPropertyMap.set(emailKey, parsed);
-            return parsed;
-          }
+      const keysToRemove = [];
+      for (let i = 0; i < window.sessionStorage.length; i++) {
+        const key = window.sessionStorage.key(i);
+        if (key && (key.startsWith('roomscout_cached_host_') || key.startsWith('roomscout_cached_guests_'))) {
+          keysToRemove.push(key);
         }
       }
-      const rawFallback = window.sessionStorage.getItem('roomscout_cached_host_latest');
-      if (rawFallback) {
-        const parsed = JSON.parse(rawFallback);
-        if (parsed && (parsed._id || parsed.propertyName)) {
+      keysToRemove.forEach((k) => window.sessionStorage.removeItem(k));
+      window.sessionStorage.removeItem('roomscout_cached_host_latest');
+      window.sessionStorage.removeItem('roomscout_cached_guests_latest');
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+export function getInitialHostProperty(userEmail, stateUpdatedHost) {
+  const emailKey = userEmail ? userEmail.trim().toLowerCase() : '';
+
+  // 1. If explicit state was passed and strictly matches this host's email
+  if (
+    stateUpdatedHost &&
+    (!stateUpdatedHost.email || !emailKey || stateUpdatedHost.email.trim().toLowerCase() === emailKey) &&
+    (stateUpdatedHost._id || stateUpdatedHost.propertyName || stateUpdatedHost.name)
+  ) {
+    return stateUpdatedHost;
+  }
+
+  // 2. Look in strict in-memory map for THIS email only
+  if (emailKey && cachedHostPropertyMap.has(emailKey)) {
+    const cached = cachedHostPropertyMap.get(emailKey);
+    if (cached && (!cached.email || cached.email.trim().toLowerCase() === emailKey)) {
+      return cached;
+    }
+  }
+
+  // 3. Look in sessionStorage strictly for THIS email key
+  if (emailKey && typeof window !== 'undefined' && window.sessionStorage) {
+    try {
+      const raw = window.sessionStorage.getItem(`roomscout_cached_host_${emailKey}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && (!parsed.email || parsed.email.trim().toLowerCase() === emailKey)) {
+          cachedHostPropertyMap.set(emailKey, parsed);
           return parsed;
         }
       }
@@ -71,52 +94,54 @@ export function getInitialHostProperty(userEmail, stateUpdatedHost) {
       /* ignore */
     }
   }
-  return DEFAULT_HOST_PROPERTY;
+
+  // STRICT ISOLATION: Never fall back to another host's cached data!
+  return {
+    ...DEFAULT_HOST_PROPERTY,
+    email: emailKey,
+  };
 }
 
 export function getInitialGuests(userEmail) {
   const emailKey = userEmail ? userEmail.trim().toLowerCase() : '';
-  if (emailKey && cachedGuestsMap.has(emailKey)) {
-    return cachedGuestsMap.get(emailKey);
+  if (!emailKey) return [];
+
+  if (cachedGuestsMap.has(emailKey)) {
+    const cached = cachedGuestsMap.get(emailKey);
+    if (Array.isArray(cached)) return cached;
   }
-  if (cachedGuestsMap.has('me')) {
-    return cachedGuestsMap.get('me');
-  }
-  for (const gList of cachedGuestsMap.values()) {
-    if (Array.isArray(gList) && gList.length > 0) return gList;
-  }
+
   if (typeof window !== 'undefined' && window.sessionStorage) {
     try {
-      if (emailKey) {
-        const raw = window.sessionStorage.getItem(`roomscout_cached_guests_${emailKey}`);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) return parsed;
+      const raw = window.sessionStorage.getItem(`roomscout_cached_guests_${emailKey}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          cachedGuestsMap.set(emailKey, parsed);
+          return parsed;
         }
-      }
-      const rawLatest = window.sessionStorage.getItem('roomscout_cached_guests_latest');
-      if (rawLatest) {
-        const parsed = JSON.parse(rawLatest);
-        if (Array.isArray(parsed)) return parsed;
       }
     } catch {
       /* ignore */
     }
   }
+
+  // STRICT ISOLATION: Never fall back to another host's guest records
   return [];
 }
 
 export function saveHostPropertyToCache(email, data) {
-  if (!data || (!data._id && !data.propertyName)) return;
   const emailKey = email ? email.trim().toLowerCase() : '';
-  if (emailKey) cachedHostPropertyMap.set(emailKey, data);
-  cachedHostPropertyMap.set('me', data);
+  if (!emailKey || !data) return;
+
+  // Strict check: Data must match this email
+  const dataEmail = (data.email || data.hostEmail || '').trim().toLowerCase();
+  if (dataEmail && dataEmail !== emailKey) return;
+
+  cachedHostPropertyMap.set(emailKey, data);
   if (typeof window !== 'undefined' && window.sessionStorage) {
     try {
-      if (emailKey) {
-        window.sessionStorage.setItem(`roomscout_cached_host_${emailKey}`, JSON.stringify(data));
-      }
-      window.sessionStorage.setItem('roomscout_cached_host_latest', JSON.stringify(data));
+      window.sessionStorage.setItem(`roomscout_cached_host_${emailKey}`, JSON.stringify(data));
     } catch {
       /* ignore storage quota */
     }
@@ -124,16 +149,13 @@ export function saveHostPropertyToCache(email, data) {
 }
 
 export function saveGuestsToCache(email, data) {
-  if (!Array.isArray(data)) return;
   const emailKey = email ? email.trim().toLowerCase() : '';
-  if (emailKey) cachedGuestsMap.set(emailKey, data);
-  cachedGuestsMap.set('me', data);
+  if (!emailKey || !Array.isArray(data)) return;
+
+  cachedGuestsMap.set(emailKey, data);
   if (typeof window !== 'undefined' && window.sessionStorage) {
     try {
-      if (emailKey) {
-        window.sessionStorage.setItem(`roomscout_cached_guests_${emailKey}`, JSON.stringify(data));
-      }
-      window.sessionStorage.setItem('roomscout_cached_guests_latest', JSON.stringify(data));
+      window.sessionStorage.setItem(`roomscout_cached_guests_${emailKey}`, JSON.stringify(data));
     } catch {
       /* ignore storage quota */
     }
@@ -144,6 +166,7 @@ export function isHostPropertyEqual(prev, next) {
   if (!prev || !next) return false;
   if (prev === next) return true;
   if (prev._id !== next._id) return false;
+  if (prev.email !== next.email) return false;
   if (prev.status !== next.status || Boolean(prev.isApproved) !== Boolean(next.isApproved)) return false;
   if (prev.propertyName !== next.propertyName || prev.title !== next.title) return false;
   if (prev.propertyType !== next.propertyType || prev.genderType !== next.genderType) return false;
@@ -206,6 +229,9 @@ export function isHostPropertyEqual(prev, next) {
 }
 
 export function useHostDashboardData({ user, updateUserSession, locationState, activeTab, setActiveTab }) {
+  const currentEmail = user?.email ? user.email.trim().toLowerCase() : '';
+  const prevUserEmailRef = useRef(currentEmail);
+
   const [hostProperty, setHostProperty] = useState(() =>
     getInitialHostProperty(user?.email, locationState?.updatedHost)
   );
@@ -226,7 +252,7 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
 
   const refreshGuests = useCallback(async () => {
     try {
-      const targetEmail = latestHostPropertyRef.current?.email || hostProperty?.email || (user?.email ? user.email.trim().toLowerCase() : '');
+      const targetEmail = user?.email ? user.email.trim().toLowerCase() : (latestHostPropertyRef.current?.email || hostProperty?.email || '').trim().toLowerCase();
       if (!targetEmail) return;
 
       const guestsRes = await adminAPI.getHostGuests(targetEmail).catch(() => ({ guests: [] }));
@@ -257,23 +283,22 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
     if (hasUnsavedChangesRef.current) {
       return;
     }
+    const targetEmail = user?.email ? user.email.trim().toLowerCase() : '';
+    if (!targetEmail) return;
+
     try {
-      if (!latestHostPropertyRef.current || !latestHostPropertyRef.current._id) {
+      if (!latestHostPropertyRef.current || !latestHostPropertyRef.current._id || latestHostPropertyRef.current.email !== targetEmail) {
         setLoading(true);
       }
-      const targetEmail = user?.email ? user.email.trim().toLowerCase() : '';
-      if (targetEmail) {
-        lastHostFetchTimeMap.set(targetEmail, Date.now());
-      }
-      lastHostFetchTimeMap.set('me', Date.now());
+      lastHostFetchTimeMap.set(targetEmail, Date.now());
 
       const [staysData, hostByEmailRes, guestsRes] = await Promise.all([
         staysAPI.getHostProperties().catch((e) => {
           console.warn('staysAPI.getHostProperties error:', e);
           return [];
         }),
-        targetEmail ? adminAPI.getHostByEmail(targetEmail).catch(() => null) : null,
-        targetEmail ? adminAPI.getHostGuests(targetEmail).catch(() => ({ guests: [] })) : { guests: [] },
+        adminAPI.getHostByEmail(targetEmail).catch(() => null),
+        adminAPI.getHostGuests(targetEmail).catch(() => ({ guests: [] })),
       ]);
 
       if (Array.isArray(guestsRes?.guests)) {
@@ -295,8 +320,20 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
         });
       }
 
-      let foundHost = Array.isArray(staysData) && staysData.length > 0 ? staysData[0] : null;
-      if (!foundHost && hostByEmailRes?.hasProperty && hostByEmailRes?.host) {
+      // STRICT MULTI-TENANT FILTER: Stays must match targetEmail or user._id
+      const myStays = (Array.isArray(staysData) ? staysData : []).filter((s) => {
+        const stayEmail = (s.email || s.hostEmail || '').trim().toLowerCase();
+        const stayHostId = (s.hostId?._id || s.hostId || '').toString();
+        const myId = (user?._id || '').toString();
+        if (stayEmail && targetEmail && stayEmail === targetEmail) return true;
+        if (stayHostId && myId && stayHostId === myId) return true;
+        return false;
+      });
+
+      const hostMatchesTarget = hostByEmailRes?.host && (!hostByEmailRes.host.email || hostByEmailRes.host.email.trim().toLowerCase() === targetEmail);
+
+      let foundHost = myStays.length > 0 ? myStays[0] : null;
+      if (!foundHost && hostMatchesTarget) {
         foundHost = hostByEmailRes.host;
       }
 
@@ -304,7 +341,7 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
         const propId = foundHost._id || foundHost.email || 'default';
         const notifiedKey = `roomscout_approved_notified_${propId}`;
         const legacyNotifiedKey = `stayhub_approved_notified_${propId}`;
-        const isApproved = foundHost.status === 'Approved';
+        const isApproved = foundHost.status === 'Approved' || Boolean(foundHost.isApproved);
         const alreadyNotified =
           typeof window !== 'undefined' &&
           (localStorage.getItem(notifiedKey) === 'true' || localStorage.getItem(legacyNotifiedKey) === 'true');
@@ -353,7 +390,7 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
         savedRoomNumbersRef.current = initialSavedNumbers;
 
         setHostProperty((prev) => {
-          if (hasUnsavedChangesRef.current && latestHostPropertyRef.current) {
+          if (hasUnsavedChangesRef.current && latestHostPropertyRef.current && latestHostPropertyRef.current.email === targetEmail) {
             const merged = {
               ...latestHostPropertyRef.current,
               status: isApproved ? 'Approved' : (latestHostPropertyRef.current.status || 'Pending Approval'),
@@ -417,39 +454,46 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
             };
           });
 
+          const hasActualProperty = Boolean(
+            foundHost.propertyName ||
+            foundHost.title ||
+            foundHost.location ||
+            foundHost.city ||
+            (Array.isArray(foundHost.rooms) && foundHost.rooms.length > 0)
+          );
+
           const res = {
             ...foundHost,
-            _id: foundHost._id,
-            stayId: foundHost.stayId || foundHost._id,
-            hostId: foundHost.hostId?._id || foundHost.hostId || foundHost.host?._id || hostByEmailRes?.host?._id || null,
+            _id: foundHost._id || user?._id || '',
+            stayId: foundHost.stayId || (hasActualProperty ? foundHost._id : null),
+            hostId: foundHost.hostId?._id || foundHost.hostId || foundHost.host?._id || hostByEmailRes?.host?._id || user?._id || null,
             name: foundHost.name || foundHost.hostName || user?.name || '',
-            email: foundHost.email || foundHost.hostEmail || user?.email || '',
+            email: targetEmail,
             phone: foundHost.phone || user?.phone || '',
-            propertyName: foundHost.propertyName || foundHost.title || '',
-            title: foundHost.title || foundHost.propertyName || '',
-            propertyType: foundHost.propertyType || foundHost.type || '',
-            genderType: foundHost.genderType || '',
-            description: foundHost.description || '',
-            address: foundHost.address || foundHost.location || '',
-            location: foundHost.location || foundHost.address || '',
-            roadArea: foundHost.roadArea || '',
-            city: foundHost.city || '',
-            state: foundHost.state || '',
-            pincode: foundHost.pincode || '',
-            latitude: foundHost.latitude !== undefined && foundHost.latitude !== null && foundHost.latitude !== '' ? Number(foundHost.latitude) : null,
-            longitude: foundHost.longitude !== undefined && foundHost.longitude !== null && foundHost.longitude !== '' ? Number(foundHost.longitude) : null,
-            image: foundHost.image || (Array.isArray(foundHost.images) && foundHost.images[0]) || foundHost.property?.image || '',
-            images: Array.isArray(foundHost.images) && foundHost.images.length > 0
-              ? foundHost.images
-              : (Array.isArray(foundHost.property?.images) && foundHost.property.images.length > 0
-                ? foundHost.property.images
-                : (foundHost.image ? [foundHost.image] : [])),
-            instagramVideoUrl: foundHost.instagramVideoUrl || foundHost.property?.instagramVideoUrl || '',
-            facilities: Array.isArray(foundHost.facilities) ? foundHost.facilities : (Array.isArray(foundHost.amenities) ? foundHost.amenities : []),
-            amenities: Array.isArray(foundHost.facilities) ? foundHost.facilities : (Array.isArray(foundHost.amenities) ? foundHost.amenities : []),
-            rules: Array.isArray(foundHost.rules) ? foundHost.rules : [],
-            status: foundHost.status || 'Pending Approval',
-            rating: foundHost.rating ? Number(foundHost.rating) : null,
+            propertyName: hasActualProperty ? (foundHost.propertyName || foundHost.title || '') : '',
+            title: hasActualProperty ? (foundHost.title || foundHost.propertyName || '') : '',
+            propertyType: hasActualProperty ? (foundHost.propertyType || foundHost.type || '') : '',
+            genderType: hasActualProperty ? (foundHost.genderType || '') : '',
+            description: hasActualProperty ? (foundHost.description || '') : '',
+            address: hasActualProperty ? (foundHost.address || foundHost.location || '') : '',
+            location: hasActualProperty ? (foundHost.location || foundHost.address || '') : '',
+            roadArea: hasActualProperty ? (foundHost.roadArea || '') : '',
+            city: hasActualProperty ? (foundHost.city || '') : '',
+            state: hasActualProperty ? (foundHost.state || '') : '',
+            pincode: hasActualProperty ? (foundHost.pincode || '') : '',
+            latitude: hasActualProperty && foundHost.latitude !== undefined && foundHost.latitude !== null && foundHost.latitude !== '' ? Number(foundHost.latitude) : null,
+            longitude: hasActualProperty && foundHost.longitude !== undefined && foundHost.longitude !== null && foundHost.longitude !== '' ? Number(foundHost.longitude) : null,
+            image: hasActualProperty ? (foundHost.image || (Array.isArray(foundHost.images) && foundHost.images[0]) || '') : '',
+            images: hasActualProperty
+              ? (Array.isArray(foundHost.images) && foundHost.images.length > 0 ? foundHost.images : (foundHost.image ? [foundHost.image] : []))
+              : [],
+            instagramVideoUrl: hasActualProperty ? (foundHost.instagramVideoUrl || '') : '',
+            facilities: hasActualProperty ? (Array.isArray(foundHost.facilities) ? foundHost.facilities : (Array.isArray(foundHost.amenities) ? foundHost.amenities : [])) : [],
+            amenities: hasActualProperty ? (Array.isArray(foundHost.facilities) ? foundHost.facilities : (Array.isArray(foundHost.amenities) ? foundHost.amenities : [])) : [],
+            rules: hasActualProperty ? (Array.isArray(foundHost.rules) ? foundHost.rules : []) : [],
+            status: foundHost.status || user?.status || 'Pending Approval',
+            isApproved: isApproved,
+            rating: hasActualProperty && foundHost.rating ? Number(foundHost.rating) : null,
             roomRates: normalizedRates,
             rooms: finalRooms,
             totalRooms: finalRooms.length,
@@ -465,31 +509,97 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
           saveHostPropertyToCache(targetEmail, res);
           return res;
         });
+      } else {
+        // STRICT CLEAN STATE: Host exists but has NO property uploaded yet
+        const cleanEmptyHost = {
+          ...DEFAULT_HOST_PROPERTY,
+          _id: user?._id || hostByEmailRes?.host?._id || '',
+          id: user?._id || hostByEmailRes?.host?._id || '',
+          name: user?.name || hostByEmailRes?.host?.name || '',
+          email: targetEmail,
+          phone: user?.phone || hostByEmailRes?.host?.phone || '',
+          status: user?.status || hostByEmailRes?.host?.status || 'Pending Approval',
+          isApproved: user?.status === 'Approved' || hostByEmailRes?.host?.status === 'Approved' || Boolean(user?.isApproved),
+          propertyName: '',
+          title: '',
+          propertyType: '',
+          category: '',
+          genderType: '',
+          location: '',
+          address: '',
+          roadArea: '',
+          city: '',
+          state: '',
+          pincode: '',
+          latitude: null,
+          longitude: null,
+          rooms: [],
+          roomRates: [],
+          facilities: [],
+          rules: [],
+          images: [],
+          image: '',
+          description: '',
+          rating: null,
+          totalRooms: 0,
+          availableRooms: 0,
+        };
+
+        latestHostPropertyRef.current = cleanEmptyHost;
+        setHostProperty(cleanEmptyHost);
+        saveHostPropertyToCache(targetEmail, cleanEmptyHost);
+        setSavedRoomNumbers(new Set());
+        savedRoomNumbersRef.current = new Set();
+        setGuests([]);
       }
     } catch (err) {
       console.error('Error fetching host dashboard data:', err);
     } finally {
       setLoading(false);
     }
-  }, [user?.email, updateUserSession]);
+  }, [user?.email, user?._id, user?.name, user?.phone, user?.status, user?.isApproved, updateUserSession]);
+
+  // Detect Host Identity / Session Change: Immediately wipe any old host's state!
+  useEffect(() => {
+    if (prevUserEmailRef.current !== currentEmail) {
+      prevUserEmailRef.current = currentEmail;
+      hasUnsavedChangesRef.current = false;
+      prevStatusRef.current = null;
+      hasInitialFetchedRef.current = false;
+
+      const freshInitial = getInitialHostProperty(currentEmail, locationState?.updatedHost);
+      setHostProperty(freshInitial);
+      latestHostPropertyRef.current = freshInitial;
+
+      const freshGuests = getInitialGuests(currentEmail);
+      setGuests(freshGuests);
+      setSavedRoomNumbers(new Set());
+      savedRoomNumbersRef.current = new Set();
+
+      if (currentEmail) {
+        fetchHostData();
+      }
+    }
+  }, [currentEmail, locationState?.updatedHost, fetchHostData]);
 
   // Handle locationState updates and initial fetch
   useEffect(() => {
-    if (locationState?.updatedHost) {
+    if (locationState?.updatedHost && (!locationState.updatedHost.email || locationState.updatedHost.email.trim().toLowerCase() === currentEmail)) {
       setHostProperty(locationState.updatedHost);
-      saveHostPropertyToCache(user?.email, locationState.updatedHost);
+      saveHostPropertyToCache(currentEmail, locationState.updatedHost);
       setLoading(false);
     }
 
-    const emailKey = user?.email ? user.email.trim().toLowerCase() : '';
-    const lastFetch = (emailKey ? lastHostFetchTimeMap.get(emailKey) : 0) || lastHostFetchTimeMap.get('me') || 0;
-    const cached = emailKey ? cachedHostPropertyMap.get(emailKey) : cachedHostPropertyMap.get('me');
-    const isFresh = Boolean(cached?._id) && (Date.now() - lastFetch < 20000);
+    if (currentEmail) {
+      const lastFetch = lastHostFetchTimeMap.get(currentEmail) || 0;
+      const cached = cachedHostPropertyMap.get(currentEmail);
+      const isFresh = Boolean(cached?._id) && (Date.now() - lastFetch < 20000);
 
-    if (!isFresh) {
-      fetchHostData();
+      if (!isFresh) {
+        fetchHostData();
+      }
     }
-  }, [user?.email, user?._id, fetchHostData, locationState?.updatedHost]);
+  }, [currentEmail, user?._id, fetchHostData, locationState?.updatedHost]);
 
   // Tab Guard: If property is awaiting initial admin approval, lock navigation strictly to 'property' tab
   useEffect(() => {
@@ -510,14 +620,13 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
     prevActiveTabRef.current = activeTab;
   }, [activeTab, refreshGuests]);
 
-  // Sync event listeners: storage, custom events, focus, visibility, BroadcastChannel, 10s poll
+  // Sync event listeners: storage, custom events, focus, visibility, BroadcastChannel
   useEffect(() => {
     const handleStorage = (e) => {
       if (
         e.key === 'stayhub_admin_sync_ts' ||
         e.key === 'stayhub_host_approved_ts' ||
-        (e.key && e.key.startsWith('stayhub_')) ||
-        (e.key && e.key.startsWith('roomscout_'))
+        (e.key && (e.key.startsWith('stayhub_') || e.key.startsWith('roomscout_')))
       ) {
         fetchHostData();
       }
@@ -530,17 +639,24 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
     };
     window.addEventListener('stayhub_admin_sync', handleCustomSync);
     window.addEventListener('stayhub_slots_updated', handleCustomSync);
-    window.addEventListener('stayhub_rooms_updated', handleCustomSync);
-    window.addEventListener('stayhub_host_approved', handleCustomSync);
 
-    const FOCUS_THROTTLE_MS = 25000;
-    const targetEmail = user?.email ? user.email.trim().toLowerCase() : 'me';
+    let bc = null;
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        bc = new BroadcastChannel('stayhub_live_channel');
+        bc.onmessage = (event) => {
+          if (event.data?.sender === 'HostDashboard') return;
+          fetchHostData();
+        };
+      }
+    } catch {
+      /* ignore */
+    }
 
     const handleFocus = () => {
-      if (!document.hidden) {
-        const now = Date.now();
-        const lastFetch = (targetEmail !== 'me' ? lastHostFetchTimeMap.get(targetEmail) : 0) || lastHostFetchTimeMap.get('me') || 0;
-        if (now - lastFetch >= FOCUS_THROTTLE_MS) {
+      if (currentEmail) {
+        const last = lastHostFetchTimeMap.get(currentEmail) || 0;
+        if (Date.now() - last > 5000) {
           fetchHostData();
         }
       }
@@ -548,52 +664,30 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
     window.addEventListener('focus', handleFocus);
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        const now = Date.now();
-        const lastFetch = (targetEmail !== 'me' ? lastHostFetchTimeMap.get(targetEmail) : 0) || lastHostFetchTimeMap.get('me') || 0;
-        if (now - lastFetch >= FOCUS_THROTTLE_MS) {
+      if (document.visibilityState === 'visible' && currentEmail) {
+        const last = lastHostFetchTimeMap.get(currentEmail) || 0;
+        if (Date.now() - last > 5000) {
           fetchHostData();
         }
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    let bc = null;
-    if (typeof BroadcastChannel !== 'undefined') {
-      try {
-        bc = new BroadcastChannel('stayhub_live_channel');
-        bc.onmessage = (event) => {
-          if (event.data?.sender === 'HostDashboard') return;
-          if (['HOST_APPROVED', 'HOST_UPDATED', 'HOST_DELETED', 'ADMIN_SYNC'].includes(event.data?.type)) {
-            fetchHostData();
-          }
-        };
-      } catch (err) {
-        console.warn('BroadcastChannel error:', err);
-      }
-    }
-
-    const pollTimer = setInterval(() => {
-      if (document.hidden) return;
-      if (latestHostPropertyRef.current?.isApproved || latestHostPropertyRef.current?.status === 'Approved') {
-        refreshGuests();
-      } else {
-        fetchHostData();
-      }
-    }, 10000);
-
     return () => {
       window.removeEventListener('storage', handleStorage);
       window.removeEventListener('stayhub_admin_sync', handleCustomSync);
       window.removeEventListener('stayhub_slots_updated', handleCustomSync);
-      window.removeEventListener('stayhub_rooms_updated', handleCustomSync);
-      window.removeEventListener('stayhub_host_approved', handleCustomSync);
       window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      if (bc) bc.close();
-      if (pollTimer) clearInterval(pollTimer);
+      if (bc) {
+        try {
+          bc.close();
+        } catch {
+          /* ignore */
+        }
+      }
     };
-  }, [fetchHostData, refreshGuests, user?.email]);
+  }, [fetchHostData, currentEmail]);
 
   return {
     hostProperty,
@@ -601,7 +695,6 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
     guests,
     setGuests,
     loading,
-    setLoading,
     latestHostPropertyRef,
     hasUnsavedChangesRef,
     savedRoomNumbers,
@@ -611,4 +704,3 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
     refreshGuests,
   };
 }
-

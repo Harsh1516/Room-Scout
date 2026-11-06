@@ -43,14 +43,20 @@ export const getAllStays = async (req, res, next) => {
       const t = type.toLowerCase().trim();
       if (t === 'flat') {
         mongoFilter.type = { $in: ['PG', 'Flat', 'Apartment'] };
-      } else if (t === 'stays & villas') {
-        mongoFilter.type = { $in: ['Villa', 'Resort'] };
+      } else if (false) {
       } else {
         mongoFilter.type = { $regex: new RegExp(`^${t}$`, 'i') };
       }
     }
     if (gender && typeof gender === 'string' && gender !== 'All') {
-      mongoFilter.genderType = { $in: [gender, 'Both', 'Unisex'] };
+      const g = gender.trim().toLowerCase();
+      if (g === 'male' || g === 'boys') {
+        mongoFilter.genderType = { $in: ['Male', 'Boys', 'Both', 'Unisex'] };
+      } else if (g === 'female' || g === 'girls') {
+        mongoFilter.genderType = { $in: ['Female', 'Girls', 'Both', 'Unisex'] };
+      } else {
+        mongoFilter.genderType = { $in: [gender, 'Both', 'Unisex'] };
+      }
     }
     if (minPrice || maxPrice) {
       mongoFilter.price = {};
@@ -305,6 +311,7 @@ export const createStay = async (req, res, next) => {
       address: address || '',
       roadArea: roadArea || '',
       city: city ? city.trim() : '',
+      city_normalized: city ? city.trim().toLowerCase() : '',
       state: state ? state.trim() : '',
       pincode: pincode ? pincode.trim() : '',
       latitude: latNum,

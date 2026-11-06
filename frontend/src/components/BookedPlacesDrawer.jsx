@@ -215,7 +215,7 @@ export function BookedPlacesDrawer({ onLoginClick }) {
 
       {/* Drawer */}
       <div className="fixed inset-y-0 right-0 flex pl-0 sm:pl-10 max-w-full">
-        <div className="w-screen max-w-[calc(100vw-16px)] sm:max-w-sm flex flex-col bg-white dark:bg-[#0f1117] border-l border-slate-200 dark:border-white/[0.06] shadow-2xl">
+        <div className="w-80 sm:w-88 max-w-[85vw] flex flex-col bg-white dark:bg-[#0f1117] border-l border-slate-200 dark:border-white/[0.06] shadow-2xl">
 
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-white/[0.06]">

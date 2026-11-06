@@ -189,8 +189,9 @@ function CategoryRoomCarousel({
     if (!el) return;
     const child = el.children[idx];
     if (child) {
-      const targetScroll = child.offsetLeft - el.offsetLeft;
-      el.scrollTo({ left: Math.max(0, targetScroll), behavior: 'smooth' });
+      const paddingLeft = parseFloat(window.getComputedStyle(el).paddingLeft) || 0;
+      const targetScroll = Math.max(0, child.offsetLeft - el.offsetLeft - paddingLeft);
+      el.scrollTo({ left: targetScroll, behavior: 'smooth' });
       setActiveDotIndex(idx);
       setTimeout(updateScrollState, 150);
     }
@@ -249,7 +250,7 @@ function CategoryRoomCarousel({
 
   return (
     <div className={`flex flex-col ${compact ? 'pt-0.5 gap-1' : 'pt-1 gap-1.5'}`}>
-      <div className="flex items-center justify-between gap-2">
+      <div className="relative flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 min-w-0">
           <span className={`${compact ? 'text-[11px]' : 'text-xs'} font-extrabold text-slate-900 dark:text-on-surface tracking-tight truncate leading-none`}>
             Rooms ({matchingRooms.length})
@@ -262,9 +263,10 @@ function CategoryRoomCarousel({
           )}
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
-          {matchingRooms.length > 3 && (
-            <div className={`flex items-center gap-0.5 bg-slate-100 dark:bg-[#071320] ${compact ? 'rounded-lg p-0.5' : 'rounded-xl p-0.5'} border border-slate-200/80 dark:border-[#1a2d42]`}>
+        {/* Center: Left/Right Arrow Navigation with a gap inbetween < and > */}
+        {matchingRooms.length > 3 && (
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center z-10 pointer-events-auto">
+            <div className={`flex items-center gap-2 bg-slate-100 dark:bg-zinc-800 ${compact ? 'rounded-lg p-0.5 px-1' : 'rounded-xl p-0.5 px-1.5'} border border-slate-200/80 dark:border-zinc-700 shadow-2xs`}>
               <button
                 type="button"
                 onClick={handleScrollLeft}
@@ -284,8 +286,10 @@ function CategoryRoomCarousel({
                 <span className={`material-symbols-outlined ${compact ? 'text-[12px]' : 'text-[14px]'}`}>chevron_right</span>
               </button>
             </div>
-          )}
+          </div>
+        )}
 
+        <div className="flex items-center shrink-0">
           <button
             type="button"
             disabled={!isCategoryComplete}
@@ -299,7 +303,7 @@ function CategoryRoomCarousel({
             className={`${compact ? 'h-6.5 px-2.5 rounded-lg text-[11px]' : 'h-8 px-3 rounded-xl text-xs'} flex items-center gap-1 font-bold transition-all shadow-sm leading-none ${
               isCategoryComplete
                 ? 'bg-[#c0c1ff] hover:bg-[#d5d4ff] text-[#07006c] cursor-pointer'
-                : 'bg-slate-200 dark:bg-[#071320] text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-60 border border-slate-300 dark:border-[#1a2d42]'
+                : 'bg-slate-200 dark:bg-zinc-800 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-60 border border-slate-300 dark:border-zinc-700'
             }`}
             title={!isCategoryComplete ? disabledTooltip : `Add new room to ${rate.type || 'this category'}`}
           >
@@ -338,7 +342,7 @@ function CategoryRoomCarousel({
           <div
             ref={setScrollRef}
             onScroll={handleScroll}
-            className={`flex items-stretch ${compact ? 'gap-2 pt-1 pb-1.5 px-1 -mx-0.5 -mt-0.5 -mb-0.5' : 'gap-2.5 pt-3 pb-6 px-3 -mx-2 -mt-1.5 -mb-3'} scroll-smooth overscroll-x-contain no-scrollbar ${
+            className={`flex items-stretch ${compact ? 'gap-2 pt-6 pb-7 px-6 -mx-2 -mt-3 -mb-3.5 scroll-pl-6 scroll-pr-6' : 'gap-2.5 pt-6 pb-8 px-7 -mx-2 -mt-3 -mb-4 scroll-pl-7 scroll-pr-7'} scroll-smooth overscroll-x-contain no-scrollbar ${
               matchingRooms.length > 3
                 ? 'overflow-x-auto snap-x snap-mandatory'
                 : 'overflow-visible'
@@ -629,17 +633,17 @@ export default function HostRoomCategories({
             return (
               <div
                 key={rowKey}
-                className={`w-full flex flex-col rounded-[26px] overflow-hidden transition-all ${
+                className={`w-full flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden transition-all ${
                   isExpanded
-                    ? 'bg-white dark:bg-[#0c1825]'
+                    ? 'bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl'
                     : isCategoryDirty
                     ? 'bg-orange-50/20 dark:bg-orange-950/15'
-                    : 'bg-gradient-to-r from-[#A7EBF2] via-[#90D1E8] to-[#7CBFD2] dark:from-[#023859] dark:to-[#023859] dark:bg-[#023859] shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.75)] dark:shadow-none'
+                    : 'bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl'
                 } ${
                   isCategoryDirty
-                    ? 'border-2 border-orange-500 dark:border-orange-500 ring-2 ring-orange-500/25 shadow-lg shadow-orange-500/15'
-                    : 'border border-[#54ACBF]/40 dark:border-[#54ACBF]/40 shadow-sm shadow-[#023859]/30'
-                } ${!isExpanded ? 'cursor-pointer hover:opacity-95 dark:hover:bg-[#012d47] hover:border-[#54ACBF]/70 dark:hover:border-[#54ACBF]/70' : ''}`}
+                    ? 'border-2 border-orange-500 dark:border-orange-500 ring-2 ring-orange-500/25 shadow-xl shadow-orange-500/15'
+                    : 'border border-slate-200/90 dark:border-zinc-800 shadow-xl'
+                } ${!isExpanded ? 'cursor-pointer' : ''}`}
               >
                 {/* Card Header (Accessible Toggle Trigger) */}
                 <div
@@ -654,25 +658,21 @@ export default function HostRoomCategories({
                     isExpanded
                       ? isCategoryDirty
                         ? 'border-b border-orange-500/30'
-                        : 'border-b border-[#54ACBF]/35 dark:border-[#54ACBF]/30'
+                        : 'border-b border-slate-200/90 dark:border-zinc-800'
                       : ''
                   } ${
-                    isExpanded
-                      ? isCategoryDirty
-                        ? 'bg-orange-50/20 dark:bg-orange-950/15'
-                        : 'bg-gradient-to-r from-[#A7EBF2] via-[#90D1E8] to-[#7CBFD2] dark:from-[#023859] dark:to-[#023859] dark:bg-[#023859] text-[#011C40] dark:text-white shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.75)] dark:shadow-none'
-                      : isCategoryDirty
-                      ? 'hover:bg-orange-100/30 dark:hover:bg-orange-900/25'
-                      : 'hover:opacity-95 dark:hover:bg-[#012d47]'
-                  } flex items-center justify-between select-none cursor-pointer transition-colors`}
+                    isCategoryDirty
+                      ? 'bg-orange-50/20 dark:bg-orange-950/15'
+                      : 'bg-white/95 dark:bg-zinc-900/95 text-slate-900 dark:text-white'
+                  } flex items-center justify-between select-none cursor-pointer`}
                 >
                     <div className="flex items-center gap-2 min-w-0">
-                      <h2 className={`${compact ? 'text-[13.5px] sm:text-[14px]' : 'text-[15px] sm:text-[16px]'} text-[#011C40] dark:text-white truncate font-extrabold tracking-tight leading-normal pb-0.5`}>
+                      <h2 className={`${compact ? 'text-[13.5px] sm:text-[14px]' : 'text-[15px] sm:text-[16px]'} text-slate-900 dark:text-white truncate font-extrabold tracking-tight leading-normal pb-0.5`}>
                         {rate.type || 'Unnamed Category'}
                       </h2>
 
                       {!isExpanded && rate.price && (
-                        <span className={`${compact ? 'text-[11px]' : 'text-xs'} font-bold text-[#023859]/80 dark:text-[#A7EBF2] shrink-0 leading-normal pb-0.5`}>
+                        <span className={`${compact ? 'text-[11px]' : 'text-xs'} font-bold text-slate-500 dark:text-zinc-400 shrink-0 leading-normal pb-0.5`}>
                           • ₹{rawPrice}{rate.rateUnit || '/night'}
                         </span>
                       )}
@@ -686,7 +686,7 @@ export default function HostRoomCategories({
                       )}
 
                       <span
-                        className={`${compact ? 'h-5.5 px-2 text-[10px]' : 'h-6 px-2.5 text-[11px]'} rounded-full bg-white/70 dark:bg-white/20 border border-white/80 dark:border-white/30 text-[#011C40] dark:text-white font-bold shadow-2xs select-none flex items-center justify-center leading-normal backdrop-blur-xs`}
+                        className={`${compact ? 'h-5.5 px-2 text-[10px]' : 'h-6 px-2.5 text-[11px]'} rounded-full bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 font-bold shadow-2xs select-none flex items-center justify-center leading-normal`}
                         title={`${stats.availableCount} of ${stats.totalCount} rooms are available today`}
                       >
                         {stats.availableCount}/{stats.totalCount} Avail
@@ -696,7 +696,7 @@ export default function HostRoomCategories({
                         type="button"
                         animate={{ rotate: isExpanded ? 180 : 0 }}
                         transition={{ type: 'spring', stiffness: 320, damping: 30, mass: 0.8 }}
-                        className={`${compact ? 'w-5 h-5' : 'w-6 h-6'} rounded-lg flex items-center justify-center text-[#023859]/80 hover:text-[#011C40] dark:text-white/90 dark:hover:text-white transition-colors cursor-pointer`}
+                        className={`${compact ? 'w-5 h-5' : 'w-6 h-6'} rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 dark:text-zinc-500 dark:hover:text-white transition-colors cursor-pointer`}
                         title={isExpanded ? 'Collapse category' : 'Expand category'}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -715,7 +715,7 @@ export default function HostRoomCategories({
                           e.stopPropagation();
                           setConfirmDeleteCatIdx(index);
                         }}
-                        className={`${compact ? 'w-5 h-5' : 'w-6 h-6'} rounded-lg flex items-center justify-center text-[#023859]/70 hover:text-red-500 dark:text-white/80 dark:hover:text-red-400 hover:bg-red-500/15 transition-colors cursor-pointer text-xs font-bold`}
+                        className={`${compact ? 'w-5 h-5' : 'w-6 h-6'} rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 dark:text-zinc-500 dark:hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer text-xs font-bold`}
                         title="Remove category"
                       >
                         <span className={`material-symbols-outlined ${compact ? 'text-[14px]' : 'text-[16px]'} leading-none flex items-center justify-center`}>close</span>
@@ -759,11 +759,8 @@ export default function HostRoomCategories({
                                     onSelectCategoryIndex(index);
                                   }}
                                   placeholder="e.g. Deluxe Single Bed"
-                                  className={`w-full ${compact ? 'h-7.5 rounded-lg text-[11.5px] pl-3 pr-8' : 'h-9 sm:h-9.5 rounded-xl text-xs pl-3.5 pr-9'} backdrop-blur-md bg-white/70 dark:bg-[#06121e]/80 border border-slate-200 dark:border-white/15 font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-[#00e599]/60 dark:focus:bg-[#06121e] transition-all shadow-2xs placeholder-slate-400 dark:placeholder-slate-500`}
+                                  className={`w-full ${compact ? 'h-7.5 rounded-lg text-[11.5px] px-3' : 'h-9 sm:h-9.5 rounded-xl text-xs px-3.5'} backdrop-blur-md bg-white/70 dark:bg-zinc-800/90 border border-slate-200 dark:border-zinc-700 font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-[#00e599]/60 dark:focus:bg-zinc-800 transition-all shadow-2xs placeholder-slate-400 dark:placeholder-slate-500`}
                                 />
-                                <span className={`material-symbols-outlined absolute ${compact ? 'right-2.5 text-[16px]' : 'right-3 text-[18px]'} top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none select-none flex items-center justify-center`}>
-                                  hotel
-                                </span>
                               </div>
                             </div>
 
@@ -787,7 +784,7 @@ export default function HostRoomCategories({
                                       onSelectCategoryIndex(index);
                                     }}
                                     placeholder="0"
-                                    className={`w-full ${compact ? 'h-7.5 rounded-lg text-[11.5px] px-2' : 'h-9 sm:h-9.5 rounded-xl text-xs px-2.5'} backdrop-blur-md bg-white/70 dark:bg-[#06121e]/80 border border-slate-200 dark:border-white/15 text-center font-black text-emerald-800 dark:text-emerald-400 shadow-2xs focus:outline-none focus:border-emerald-600 transition-all flex items-center justify-center`}
+                                    className={`w-full ${compact ? 'h-7.5 rounded-lg text-[11.5px] px-2' : 'h-9 sm:h-9.5 rounded-xl text-xs px-2.5'} backdrop-blur-md bg-white/70 dark:bg-zinc-800/90 border border-slate-200 dark:border-zinc-700 text-center font-black text-emerald-800 dark:text-emerald-400 shadow-2xs focus:outline-none focus:border-emerald-600 transition-all flex items-center justify-center`}
                                   />
                                 </div>
                               </div>
@@ -814,7 +811,7 @@ export default function HostRoomCategories({
                                       e.stopPropagation();
                                       onSelectCategoryIndex(index);
                                     }}
-                                    className={`w-full ${compact ? 'h-7.5 rounded-lg text-[11.5px] pl-2.5 pr-6' : 'h-9 sm:h-9.5 rounded-xl text-xs pl-3 pr-7'} bg-slate-50/80 dark:bg-[#06121e] border border-slate-200 dark:border-[#1a2d42] font-semibold text-slate-800 dark:text-slate-200 shadow-2xs focus:outline-none focus:border-[#00e599]/60 transition-all appearance-none cursor-pointer`}
+                                    className={`w-full ${compact ? 'h-7.5 rounded-lg text-[11.5px] pl-2.5 pr-6' : 'h-9 sm:h-9.5 rounded-xl text-xs pl-3 pr-7'} bg-slate-50/80 dark:bg-zinc-800/90 border border-slate-200 dark:border-zinc-700 font-semibold text-slate-800 dark:text-slate-200 shadow-2xs focus:outline-none focus:border-[#00e599]/60 transition-all appearance-none cursor-pointer`}
                                   >
                                     <option value="/night">Per Night</option>
                                     <option value="/month">Per Month</option>
@@ -829,7 +826,7 @@ export default function HostRoomCategories({
                                 <label className={`${compact ? 'h-3.5 text-[9px]' : 'h-4 text-[10px]'} flex items-center font-bold text-slate-400 uppercase tracking-wider leading-none`}>
                                   CAPACITY
                                 </label>
-                                <div className={`w-full ${compact ? 'h-7.5 rounded-lg px-1.5' : 'h-9 sm:h-9.5 rounded-xl px-2'} flex items-center justify-between bg-slate-50/80 dark:bg-[#06121e] border border-slate-200 dark:border-[#1a2d42] shadow-2xs`}>
+                                <div className={`w-full ${compact ? 'h-7.5 rounded-lg px-1.5' : 'h-9 sm:h-9.5 rounded-xl px-2'} flex items-center justify-between bg-slate-50/80 dark:bg-zinc-800/90 border border-slate-200 dark:border-zinc-700 shadow-2xs`}>
                                   <button
                                     type="button"
                                     disabled={Number(rate.capacity || 1) <= 1}
@@ -896,7 +893,7 @@ export default function HostRoomCategories({
                           <div className={`${compact ? 'pt-1.5 mt-0 min-h-[28px]' : 'pt-2.5 mt-0.5 min-h-[36px]'} border-t flex items-center justify-between text-xs ${
                             isCategoryDirty
                               ? 'border-orange-500/30'
-                              : 'border-slate-100 dark:border-[#1a2d42]/60'
+                              : 'border-slate-100 dark:border-zinc-700/60'
                           }`}>
                             <div className="flex items-center gap-1.5 min-w-0">
                               {isCategoryDirty ? (
@@ -909,7 +906,7 @@ export default function HostRoomCategories({
                                   <span className={`material-symbols-outlined ${compact ? 'text-[15px]' : 'text-[18px]'} text-[#00e599] shrink-0 leading-none flex items-center justify-center`}>
                                     check_circle
                                   </span>
-                                  <span className={`${compact ? 'text-[10px]' : 'text-[11px]'} font-semibold truncate leading-normal pb-0.5`}>All changes saved to database</span>
+                                  <span className={`${compact ? 'text-[10px]' : 'text-[11px]'} font-semibold truncate leading-normal pb-0.5`}>All changes saved.</span>
                                 </div>
                               )}
                             </div>
@@ -921,31 +918,19 @@ export default function HostRoomCategories({
                                 e.stopPropagation();
                                 await handleUpdateCategoryClick(index);
                               }}
-                              className={`${compact ? 'h-6.5 px-2.5 rounded-lg text-[10.5px] gap-1' : 'h-8 px-3.5 rounded-xl text-xs gap-1.5'} font-bold transition-all flex items-center cursor-pointer shadow-xs leading-none shrink-0 ${
+                              className={`${compact ? 'h-6.5 px-3 rounded-lg text-[10.5px]' : 'h-8 px-4 rounded-xl text-xs'} font-bold transition-all flex items-center justify-center cursor-pointer shadow-xs leading-none shrink-0 ${
                                 isCategoryDirty
                                   ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-md shadow-orange-500/25 font-black active:scale-95'
-                                  : 'border border-slate-200 dark:border-[#233850] bg-white dark:bg-[#132233] hover:bg-slate-50 dark:hover:bg-[#1a2d42] text-slate-700 dark:text-slate-200'
+                                  : 'border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-700 text-slate-700 dark:text-slate-200'
                               }`}
                               title={isCategoryDirty ? 'Click to save all changes to database' : 'Update category details'}
                             >
                               {updatingCategoryIdx === index ? (
-                                <>
-                                  <svg className="animate-spin w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                  </svg>
-                                  <span className="leading-none">Saving...</span>
-                                </>
+                                <span className="leading-none">Saving...</span>
                               ) : recentlyUpdatedIdx === index ? (
-                                <>
-                                  <span className="material-symbols-outlined text-[13px] text-[#00e599] leading-none shrink-0">check</span>
-                                  <span className="text-[#00e599] leading-none">Saved ✓</span>
-                                </>
+                                <span className="text-[#00e599] leading-none">Saved ✓</span>
                               ) : (
-                                <>
-                                  <span className="material-symbols-outlined text-[13px] leading-none shrink-0 flex items-center justify-center">upload</span>
-                                  <span className="leading-none">Update</span>
-                                </>
+                                <span className="leading-none">Update</span>
                               )}
                             </button>
                           </div>
@@ -958,18 +943,18 @@ export default function HostRoomCategories({
             })}
         </div>
         ) : (
-          <div className="flex flex-col items-center justify-center min-h-[200px] sm:min-h-[320px] rounded-2xl sm:rounded-3xl border border-dashed border-slate-300 dark:border-outline-variant/60 bg-white/70 dark:bg-surface-container-low/60 backdrop-blur-sm text-center p-5 sm:p-8 space-y-3 sm:space-y-4 shadow-xs">
-            <span className="material-symbols-outlined text-[36px] text-[#54ACBF] dark:text-[#A7EBF2] mx-auto">bedroom_parent</span>
+          <div className="flex flex-col items-center justify-center min-h-[200px] sm:min-h-[320px] rounded-2xl sm:rounded-3xl border border-dashed border-slate-300 dark:border-outline-variant/60 bg-white/70 dark:bg-surface-container-low/60 backdrop-blur-sm text-center p-5 sm:p-8 space-y-3 sm:space-y-4 shadow-xl">
+            <span className="material-symbols-outlined text-[36px] text-slate-400 dark:text-zinc-500 mx-auto">bedroom_parent</span>
             <div className="space-y-1">
-              <p className="text-sm font-semibold text-slate-800 dark:text-on-surface">No Room Categories Yet</p>
-              <p className="text-xs text-slate-500 dark:text-on-surface-variant max-w-xs mx-auto">
+              <p className="text-sm font-semibold text-slate-800 dark:text-white">No Room Categories Yet</p>
+              <p className="text-xs text-slate-500 dark:text-zinc-400 max-w-xs mx-auto">
                 Click &quot;+ Add Room Type&quot; above or use the button below to create your first category.
               </p>
             </div>
             <button
               type="button"
               onClick={onAddCategory}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#023859] hover:bg-[#012d47] text-white text-xs font-bold transition-all cursor-pointer shadow-sm shadow-[#023859]/20 active:scale-95"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-black dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95"
             >
               <span className="material-symbols-outlined text-[16px]">add</span>
               <span>Add Room Type</span>

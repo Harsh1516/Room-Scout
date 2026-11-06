@@ -102,10 +102,10 @@ export function Center({ onSearchSubmit }) {
           query: selectedLocation || selectedType || '',
           location: selectedLocation,
           type: selectedType || 'All',
-          gender: selectedWho?.includes('Boys')
-            ? 'Boys'
-            : selectedWho?.includes('Girls')
-            ? 'Girls'
+          gender: (selectedWho?.includes('Boys') || selectedWho?.includes('Male'))
+            ? 'Male'
+            : (selectedWho?.includes('Girls') || selectedWho?.includes('Female'))
+            ? 'Female'
             : 'All',
           who: selectedWho,
         });

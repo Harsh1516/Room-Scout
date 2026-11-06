@@ -1,6 +1,7 @@
 import { rateLimit, ipKeyGenerator } from 'express-rate-limit';
 import Redis from 'ioredis';
 import { RedisStore } from 'rate-limit-redis';
+import { adminKeyIsValid } from './authMiddleware.js';
 
 /**
  * -----------------------------------------------------------------------------
@@ -307,9 +308,7 @@ export const adminLimiter = rateLimit({
   skipSuccessfulRequests: true, // Only failed/unauthorized attempts count against lockout threshold
   skip: (req) => {
     // 1. If valid master admin passkey header is provided, do not rate-limit admin operations
-    const adminKeyHeader = req.headers?.['x-admin-key'];
-    const validAdminKey = process.env.ADMIN_KEY;
-    if (validAdminKey && adminKeyHeader && adminKeyHeader.trim() === validAdminKey.trim()) {
+    if (adminKeyIsValid(req)) {
       return true;
     }
     // 2. In local development / loopback IP, never lock out the developer

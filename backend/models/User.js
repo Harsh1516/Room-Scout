@@ -54,6 +54,11 @@ const userSchema = new mongoose.Schema(
         ref: 'Booking',
       },
     ],
+  hostId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Host',
+    default: null,
+  },
   },
   {
     timestamps: true,

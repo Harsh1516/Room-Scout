@@ -121,13 +121,13 @@ export function WhereControl({
                 onOpenMapModal();
               }
             }}
-            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-cyan-50 dark:bg-cyan-950/40 border border-cyan-500/40 text-cyan-950 dark:text-cyan-200 transition-none cursor-pointer focus:outline-none focus:ring-0 active:scale-98"
+            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-[#f5ede7] dark:bg-[#2a1d17]/70 border border-[#ddcbbe] dark:border-[#443025] text-[#4a2e1d] dark:text-[#f5eae3] hover:bg-[#ede0d4] dark:hover:bg-[#34241d] transition-colors cursor-pointer focus:outline-none focus:ring-0 active:scale-98"
           >
             <div className="text-left">
               <div className="text-xs font-bold">Interactive Map Pin</div>
-              <div className="text-[10px] text-slate-500 dark:text-slate-400">Select area visually on map</div>
+              <div className="text-[10px] text-[#7d5740] dark:text-[#ab8f7f]">Select area visually on map</div>
             </div>
-            <span className="text-xs font-bold text-cyan-600 dark:text-cyan-400">→</span>
+            <span className="text-xs font-bold text-[#824a25] dark:text-[#e08b52]">→</span>
           </button>
         </div>
       )}

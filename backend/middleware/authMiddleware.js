@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 import { User } from '../models/User.js';
 import { Host } from '../models/Host.js';
 import { env } from '../config/env.js';
@@ -153,10 +154,26 @@ export async function requireHost(req, res, next) {
   });
 }
 
-function adminKeyIsValid(req) {
-  const adminKeyHeader = req.headers['x-admin-key'];
-  const validAdminKey = process.env.ADMIN_KEY;
-  return Boolean(validAdminKey && adminKeyHeader && adminKeyHeader.trim() === validAdminKey.trim());
+export function adminKeyIsValid(req) {
+  const adminKeyHeader = req.headers?.['x-admin-key'];
+  const validAdminKey = env.ADMIN_KEY || process.env.ADMIN_KEY;
+  if (!validAdminKey || !adminKeyHeader) return false;
+
+  const enteredKey = adminKeyHeader.trim();
+  const storedKey = validAdminKey.trim();
+
+  // If stored key is a Bcrypt hash ($2a$, $2b$, $2y$, $2x$)
+  if (/^\$2[abxy]\$\d+\$/.test(storedKey)) {
+    try {
+      return bcrypt.compareSync(enteredKey, storedKey);
+    } catch (err) {
+      console.error('[Admin Key Auth Error]:', err.message);
+      return false;
+    }
+  }
+
+  // Graceful fallback for legacy plaintext stored passkey
+  return enteredKey === storedKey;
 }
 
 // Require Admin Privileges (JWT admin role or master key header)

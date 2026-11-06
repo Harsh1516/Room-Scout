@@ -185,7 +185,7 @@ export function DataPage({ onStayClick, onBookClick }) {
     });
   }, [stays, searchQuery, selectedCategory, selectedGender, sortOrder]);
 
-  const categories = ['All', 'PG', 'Hostel', 'Flat', 'Hotel', 'Stays & Villas'];
+  const categories = ['All', 'PG', 'Flat', 'Hotel'];
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 font-sans">
