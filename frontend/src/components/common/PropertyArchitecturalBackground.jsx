@@ -9,7 +9,7 @@ export function PropertyArchitecturalBackground() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-0 overflow-hidden select-none bg-slate-50 dark:bg-[#06080F]"
+      className="pointer-events-none fixed inset-0 z-0 overflow-hidden select-none max-md:bg-[#3d0c40] bg-slate-50 dark:bg-[#06080F]"
     >
       {/* Top Center Radiant Glow */}
       <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[650px] sm:w-[900px] h-[450px] bg-gradient-to-b from-purple-600/15 via-indigo-600/10 to-transparent blur-3xl rounded-full" />

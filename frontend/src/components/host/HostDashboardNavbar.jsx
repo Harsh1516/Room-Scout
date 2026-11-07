@@ -323,8 +323,8 @@ export function HostDashboardNavbar({
       </div>
 
       {/* ── 4. MOBILE CENTER CAPSULE (Fixed at bottom on mobile screens) ── */}
-      <div className="md:hidden fixed bottom-4 sm:bottom-5 left-1/2 -translate-x-1/2 z-50 pointer-events-auto px-4 w-full max-w-[400px] flex justify-center select-none pb-[env(safe-area-inset-bottom,0px)]">
-        <nav className="apple-liquid-nav relative flex items-center p-1.5 rounded-full border border-slate-200/80 dark:border-white/[0.1] max-md:border-purple-300/20 bg-white/95 dark:bg-[#0B0F19]/95 max-md:bg-[#3d0c40]/95 shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.5)] max-md:shadow-[0_8px_30px_rgba(61,12,64,0.4)] backdrop-blur-2xl w-full gap-1">
+      <div className="md:hidden fixed bottom-0 inset-x-0 z-50 pointer-events-none flex justify-center px-4 pb-4 pt-8 bg-gradient-to-t from-[#3d0c40] via-[#3d0c40]/95 to-transparent select-none pb-[env(safe-area-inset-bottom,16px)]">
+        <nav className="pointer-events-auto relative flex items-center p-1.5 rounded-full border border-purple-300/30 bg-[#4a0d4f]/95 shadow-[0_8px_30px_rgba(61,12,64,0.6)] backdrop-blur-2xl w-full max-w-[400px] gap-1">
           <button
             type="button"
             onClick={() => handleSelectTab('property')}
