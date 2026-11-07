@@ -200,7 +200,7 @@ export function PropertyDetailsSection({
         <div className="lg:col-span-3 flex items-start justify-center h-full transition-all duration-300 ease-in-out">
           <aside className="w-full flex flex-col shrink-0 relative max-md:mt-0 mt-8 transition-all duration-300 ease-in-out">
           {/* ── Upper Tab: Property Info (Styled like navbar capsule with black edit button in light theme) ── */}
-          <div className="max-md:mx-3.5 max-md:mt-1 max-md:mb-2 max-md:w-auto max-md:rounded-2xl max-md:border max-md:border-slate-200/90 max-md:bg-white/85 max-md:backdrop-blur-xl max-md:shadow-sm max-md:p-4 md:w-[calc(100%-18px)] md:sm:w-[calc(100%-22px)] md:mx-auto md:rounded-t-2xl md:sm:rounded-t-3xl md:rounded-b-none md:border-x md:border-t md:border-slate-200/80 md:dark:border-zinc-700 md:shadow-[0_14px_36px_rgba(0,0,0,0.16)] md:dark:shadow-[0_16px_40px_rgba(255,255,255,0.12)] md:hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] md:dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] md:bg-white/95 md:dark:bg-zinc-700/90 backdrop-blur-2xl text-slate-800 dark:text-zinc-100 flex flex-col gap-3 p-4 sm:p-5 pb-8 sm:pb-9 relative shrink-0 z-0">
+          <div className="max-md:w-[300px] max-md:max-w-[calc(100vw-28px)] max-md:mx-auto max-md:mt-1 max-md:mb-2 max-md:rounded-2xl max-md:border max-md:border-purple-200/80 max-md:bg-white/90 max-md:backdrop-blur-xl max-md:shadow-sm max-md:p-4 md:w-[calc(100%-18px)] md:sm:w-[calc(100%-22px)] md:mx-auto md:rounded-t-2xl md:sm:rounded-t-3xl md:rounded-b-none md:border-x md:border-t md:border-slate-200/80 md:dark:border-zinc-700 md:shadow-[0_14px_36px_rgba(0,0,0,0.16)] md:dark:shadow-[0_16px_40px_rgba(255,255,255,0.12)] md:hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] md:dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] md:bg-white/95 md:dark:bg-zinc-700/90 backdrop-blur-2xl text-slate-800 dark:text-zinc-100 flex flex-col gap-3 p-4 sm:p-5 pb-8 sm:pb-9 relative shrink-0 z-0">
             {/* Top Specular Rim Reflection for Upper Tab */}
             <div className="max-md:hidden absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 max-md:via-purple-300/30 dark:via-zinc-700/40 to-transparent pointer-events-none z-20" />
 
@@ -294,7 +294,7 @@ export function PropertyDetailsSection({
           <div className="md:hidden w-full flex justify-center py-2.5 px-4 relative z-20 max-md:bg-white">
             <nav
               aria-label="Sub-Tabs Navigation"
-              className="flex items-center justify-center w-fit max-w-fit px-1.5 py-1.5 rounded-full bg-slate-100/90 backdrop-blur-2xl border border-slate-200/90 shadow-xs gap-2"
+              className="flex items-center justify-between w-[300px] max-w-[calc(100vw-28px)] px-2 py-1.5 rounded-full bg-purple-100/80 dark:bg-purple-950/50 backdrop-blur-2xl border border-purple-200/90 dark:border-purple-800/50 shadow-xs"
             >
               {sections.map((sec, idx) => {
                 const isActive = activeIndex === idx;
@@ -320,8 +320,8 @@ export function PropertyDetailsSection({
                     }}
                     className={`relative p-0 aspect-square rounded-full flex items-center justify-center select-none cursor-pointer shrink-0 grow-0 transition-all duration-200 ${
                       isActive
-                        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/30 scale-105 font-bold'
-                        : 'bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200/80 shadow-2xs'
+                        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/35 scale-105 font-bold'
+                        : 'bg-white/95 hover:bg-white text-purple-700 hover:text-purple-950 border border-purple-200/80 shadow-2xs'
                     }`}
                   >
                     <span
