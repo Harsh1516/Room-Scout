@@ -326,12 +326,14 @@ export function HostDashboardNavbar({
 
       {/* ── 4. MOBILE CENTER CAPSULE (Fixed at bottom on mobile screens) ── */}
       <div className="md:hidden fixed bottom-6 sm:bottom-8 inset-x-0 z-50 pointer-events-none flex justify-center px-4 select-none pb-[env(safe-area-inset-bottom,0px)]">
-        <nav className="pointer-events-auto relative flex items-center p-1.5 rounded-full border border-slate-200/90 bg-white dark:bg-[#0B0F19] shadow-[0_12px_36px_rgba(0,0,0,0.25)] backdrop-blur-2xl w-full max-w-[360px] gap-1">
+        <nav className="pointer-events-auto relative flex items-center p-1.5 rounded-full border border-slate-200/90 bg-white dark:bg-[#0B0F19] shadow-[0_12px_36px_rgba(0,0,0,0.25)] backdrop-blur-2xl w-full max-w-[390px] gap-1">
           <button
             type="button"
             onClick={() => handleSelectTab('property')}
-            className={`flex-1 justify-center min-h-[42px] py-2 px-2 rounded-full max-md:text-sm text-xs font-bold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
-              activeTab === 'property' ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            className={`flex-1 justify-center min-h-[46px] py-2.5 px-2 rounded-full text-[15px] sm:text-base font-extrabold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
+              activeTab === 'property'
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs'
+                : 'text-slate-700 dark:text-slate-300 hover:text-purple-700'
             }`}
           >
             <span>Property</span>
@@ -340,27 +342,45 @@ export function HostDashboardNavbar({
           <button
             type="button"
             onClick={() => handleSelectTab('room')}
-            className={`flex-1 justify-center min-h-[42px] py-2 px-2 rounded-full max-md:text-sm text-xs font-bold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
+            className={`flex-1 justify-center min-h-[46px] py-2.5 px-2 rounded-full text-[15px] sm:text-base font-extrabold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
               !isApproved
-                ? 'opacity-40 cursor-not-allowed text-slate-400'
-                : activeTab === 'room' ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                ? 'cursor-not-allowed text-slate-600 dark:text-slate-400'
+                : activeTab === 'room'
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs'
+                : 'text-slate-700 dark:text-slate-300 hover:text-purple-700'
             }`}
+            title={!isApproved ? 'Locked until Admin Approval' : 'Room Categories'}
           >
             <span>Rooms</span>
+            {!isApproved && (
+              <svg className="w-4 h-4 text-amber-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            )}
           </button>
 
           <button
             type="button"
             onClick={() => handleSelectTab('users')}
-            className={`flex-1 justify-center min-h-[42px] py-2 px-2 rounded-full max-md:text-sm text-xs font-bold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
+            className={`flex-1 justify-center min-h-[46px] py-2.5 px-2 rounded-full text-[15px] sm:text-base font-extrabold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
               !isApproved
-                ? 'opacity-40 cursor-not-allowed text-slate-400'
-                : activeTab === 'users' ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                ? 'cursor-not-allowed text-slate-600 dark:text-slate-400'
+                : activeTab === 'users'
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs'
+                : 'text-slate-700 dark:text-slate-300 hover:text-purple-700'
             }`}
+            title={!isApproved ? 'Locked until Admin Approval' : 'Tenant Management'}
           >
             <span>Users</span>
+            {!isApproved && (
+              <svg className="w-4 h-4 text-amber-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            )}
             {isApproved && todayCheckInsCount > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
                 {todayCheckInsCount}
               </span>
             )}
@@ -370,16 +390,18 @@ export function HostDashboardNavbar({
           <button
             type="button"
             onClick={() => handleSelectTab('payment')}
-            className={`flex-1 justify-center min-h-[42px] py-2 px-2 rounded-full max-md:text-sm text-xs font-bold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
+            className={`flex-1 justify-center min-h-[46px] py-2.5 px-2 rounded-full text-[15px] sm:text-base font-extrabold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
               !isApproved
-                ? 'opacity-40 cursor-not-allowed text-slate-400'
-                : activeTab === 'payment' ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                ? 'cursor-not-allowed text-slate-600 dark:text-slate-400'
+                : activeTab === 'payment'
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs'
+                : 'text-slate-700 dark:text-slate-300 hover:text-purple-700'
             }`}
             title={!isApproved ? 'Locked until Admin Approval' : 'Host Direct UPI & QR Configuration'}
           >
             <span>UPI</span>
             {!isApproved && (
-              <svg className="w-2.5 h-2.5 text-amber-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-4 h-4 text-amber-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>

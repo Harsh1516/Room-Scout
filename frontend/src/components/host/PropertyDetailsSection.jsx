@@ -331,12 +331,7 @@ export function PropertyDetailsSection({
                     >
                       {sec.icon}
                     </span>
-                    {sec.isComplete && !isActive && (
-                      <span
-                        className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white z-10"
-                        title="Completed"
-                      />
-                    )}
+                    
                   </motion.button>
                 );
               })}
