@@ -321,7 +321,7 @@ export function HostDashboardPage() {
                 initial="enter"
                 animate="center"
                 exit="exit"
-                className="w-full flex-1 h-full min-h-0 flex flex-col max-md:px-0 px-3 sm:px-6 max-md:pt-2 pt-8 sm:pt-10 max-md:pb-0 pb-24 sm:pb-28 lg:pb-10 max-w-[1600px] mx-auto overflow-visible relative"
+                className="w-full flex-1 h-full min-h-0 flex flex-col max-md:px-3 px-3 sm:px-6 max-md:pt-2 pt-8 sm:pt-10 max-md:pb-0 pb-24 sm:pb-28 lg:pb-10 max-w-[1600px] mx-auto overflow-visible relative"
               >
                 <ErrorBoundary>
                   <Suspense fallback={<DashboardSkeletonLoader />}>

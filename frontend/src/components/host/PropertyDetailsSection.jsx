@@ -200,7 +200,7 @@ export function PropertyDetailsSection({
         <div className="lg:col-span-3 flex items-start justify-center h-full transition-all duration-300 ease-in-out">
           <aside className="w-full flex flex-col shrink-0 relative max-md:mt-0 mt-8 transition-all duration-300 ease-in-out">
           {/* ── Upper Tab: Property Info (Styled like navbar capsule with black edit button in light theme) ── */}
-          <div className="max-md:w-full max-md:mx-0 max-md:rounded-t-[32px] max-md:rounded-b-none max-md:border-x-0 max-md:border-t max-md:border-purple-300/20 max-md:bg-[#3d0c40] max-md:shadow-[0_4px_25px_rgba(61,12,64,0.4)] max-md:p-4 max-md:pb-8 md:w-[calc(100%-18px)] md:sm:w-[calc(100%-22px)] md:mx-auto md:rounded-t-2xl md:sm:rounded-t-3xl md:rounded-b-none md:border-x md:border-t md:border-slate-200/80 md:dark:border-zinc-700 md:shadow-[0_14px_36px_rgba(0,0,0,0.16)] md:dark:shadow-[0_16px_40px_rgba(255,255,255,0.12)] md:hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] md:dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] md:bg-white/95 md:dark:bg-zinc-700/90 backdrop-blur-2xl text-slate-800 dark:text-zinc-100 flex flex-col gap-3 p-4 sm:p-5 pb-8 sm:pb-9 relative shrink-0 z-0">
+          <div className="max-md:w-full max-md:mx-0 max-md:rounded-2xl max-md:border max-md:border-purple-300/20 max-md:bg-[#4a0d4f] max-md:shadow-xl max-md:p-4 max-md:pb-4 md:w-[calc(100%-18px)] md:sm:w-[calc(100%-22px)] md:mx-auto md:rounded-t-2xl md:sm:rounded-t-3xl md:rounded-b-none md:border-x md:border-t md:border-slate-200/80 md:dark:border-zinc-700 md:shadow-[0_14px_36px_rgba(0,0,0,0.16)] md:dark:shadow-[0_16px_40px_rgba(255,255,255,0.12)] md:hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] md:dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] md:bg-white/95 md:dark:bg-zinc-700/90 backdrop-blur-2xl text-slate-800 dark:text-zinc-100 flex flex-col gap-3 p-4 sm:p-5 pb-8 sm:pb-9 relative shrink-0 z-0">
             {/* Top Specular Rim Reflection for Upper Tab */}
             <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 max-md:via-purple-300/30 dark:via-zinc-700/40 to-transparent pointer-events-none z-20" />
 
@@ -277,7 +277,52 @@ export function PropertyDetailsSection({
           </div>
 
           {/* ── Lower Tab: Configuration Matrix / Tabs (Styled exactly like right tab in light theme) ── */}
-          <div className="max-md:w-full max-md:mx-0 max-md:rounded-t-[32px] max-md:rounded-b-none max-md:-mt-5 max-md:border-x-0 max-md:border-t max-md:border-purple-300/20 max-md:bg-[#4a0d4f] max-md:shadow-[0_-8px_30px_rgba(61,12,64,0.4)] max-md:p-4 max-md:pb-7 w-full flex flex-col p-4 sm:p-5 pb-5 md:bg-white/95 md:dark:bg-zinc-900/95 backdrop-blur-2xl md:rounded-2xl md:sm:rounded-3xl md:rounded-t-[28px] md:sm:rounded-t-[32px] md:-mt-4 md:sm:-mt-5 md:border-x md:border-b md:border-slate-200/80 md:dark:border-zinc-800 shadow-[0_14px_36px_rgba(0,0,0,0.16)] dark:shadow-[0_16px_40px_rgba(255,255,255,0.12)] hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] transition-colors relative z-10">
+          {/* ── Mobile Horizontal Glass Capsule (Icons Only) ── */}
+          <div className="md:hidden w-full flex justify-center py-2.5 px-0.5 relative z-20">
+            <nav
+              aria-label="Sub-Tabs Navigation"
+              className="flex items-center justify-between w-full max-w-[390px] p-1.5 rounded-full bg-[#4a0d4f]/85 backdrop-blur-2xl border border-purple-300/30 shadow-[0_8px_32px_rgba(61,12,64,0.5),inset_0_1px_1px_rgba(255,255,255,0.15)] gap-1"
+            >
+              {sections.map((sec, idx) => {
+                const isActive = activeIndex === idx;
+                return (
+                  <motion.button
+                    key={sec.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveIndex(idx);
+                      setEditingSectionId(null);
+                    }}
+                    whileTap={{ scale: 0.88 }}
+                    title={sec.title}
+                    aria-label={sec.title}
+                    className={`relative w-10 h-10 min-w-[40px] rounded-full flex items-center justify-center select-none cursor-pointer shrink-0 transition-all duration-200 ${
+                      isActive
+                        ? 'bg-purple-300 text-slate-950 shadow-[0_0_16px_rgba(216,180,254,0.6)] font-bold scale-105 ring-2 ring-purple-300/70'
+                        : 'bg-white/10 hover:bg-white/20 text-purple-200/85 border border-purple-300/20 hover:text-white'
+                    }`}
+                  >
+                    <span
+                      className={`material-symbols-outlined text-[20px] transition-transform duration-200 ${
+                        isActive ? 'scale-110 font-bold' : ''
+                      }`}
+                    >
+                      {sec.icon}
+                    </span>
+                    {sec.isComplete && !isActive && (
+                      <span
+                        className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-400 ring-1 ring-[#4a0d4f]"
+                        title="Completed"
+                      />
+                    )}
+                  </motion.button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* ── Lower Tab: Configuration Matrix / Tabs (Desktop Only) ── */}
+          <div className="hidden md:flex flex-col p-4 sm:p-5 pb-5 md:bg-white/95 md:dark:bg-zinc-900/95 backdrop-blur-2xl md:rounded-2xl md:sm:rounded-3xl md:rounded-t-[28px] md:sm:rounded-t-[32px] md:-mt-4 md:sm:-mt-5 md:border-x md:border-b md:border-slate-200/80 md:dark:border-zinc-800 shadow-[0_14px_36px_rgba(0,0,0,0.16)] dark:shadow-[0_16px_40px_rgba(255,255,255,0.12)] hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] transition-colors relative z-10 w-full">
               {/* Top specular rim removed to avoid visible line while hovering */}
               {/* Sub-Tabs Steps Navigation */}
               <nav aria-label="Steps Navigation" className="flex flex-col gap-1.5 relative z-10">
@@ -387,7 +432,7 @@ export function PropertyDetailsSection({
         </div>
 
         {/* Main Content Panel (col-span-9 - Luna Glassmorphic Aesthetic) */}
-        <main className="lg:col-span-9 flex flex-col h-full min-h-0 overflow-y-auto scroll-smooth no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-md:w-full max-md:mx-0 max-md:rounded-t-[36px] max-md:rounded-b-none max-md:-mt-6 max-md:border-x-0 max-md:border-t max-md:border-purple-300/25 max-md:bg-[#3d0c40] max-md:shadow-[0_-12px_40px_rgba(61,12,64,0.5)] max-md:p-4 max-md:pb-36 max-md:min-h-screen max-md:z-20 md:rounded-2xl md:sm:rounded-3xl relative overflow-hidden md:bg-white/80 md:dark:bg-zinc-900/95 md:border md:border-slate-200/80 md:dark:border-zinc-800 shadow-[0_14px_36px_rgba(0,0,0,0.16)] dark:shadow-[0_16px_40px_rgba(255,255,255,0.12)] hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] p-4 sm:p-7 lg:p-8 pb-8 sm:pb-10 lg:pb-8 transition-all duration-300 ease-in-out">
+        <main className="lg:col-span-9 flex flex-col h-full min-h-0 overflow-y-auto scroll-smooth no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-md:w-full max-md:mx-0 max-md:rounded-2xl max-md:mt-0 max-md:border max-md:border-purple-300/25 max-md:bg-[#4a0d4f] max-md:shadow-xl max-md:p-4 max-md:pb-36 max-md:min-h-screen max-md:z-20 md:rounded-2xl md:sm:rounded-3xl relative overflow-hidden md:bg-white/80 md:dark:bg-zinc-900/95 md:border md:border-slate-200/80 md:dark:border-zinc-800 shadow-[0_14px_36px_rgba(0,0,0,0.16)] dark:shadow-[0_16px_40px_rgba(255,255,255,0.12)] hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] p-4 sm:p-7 lg:p-8 pb-8 sm:pb-10 lg:pb-8 transition-all duration-300 ease-in-out">
           {/* Ambient Glass Reflections & Refractive Lighting in Luna cyan & deep navy */}
           <div
             aria-hidden="true"
