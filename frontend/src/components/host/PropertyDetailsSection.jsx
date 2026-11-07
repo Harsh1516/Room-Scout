@@ -453,7 +453,7 @@ export function PropertyDetailsSection({
             <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-purple-900/[0.04] dark:from-zinc-950/20 to-transparent pointer-events-none z-0" />
           </div>
 
-          <div className={`flex flex-col flex-1 min-h-full gap-6 sm:gap-8 relative z-10 ${currentSection.id === 'photos' ? 'justify-center' : 'justify-between'}`}>
+          <div className={`flex flex-col flex-1 min-h-full max-md:justify-start max-md:gap-0 gap-6 sm:gap-8 relative z-10 ${currentSection.id === 'photos' ? 'justify-center' : 'justify-between'}`}>
             {/* 1. Centered Top Heading with fluid cross-fade */}
             <AnimatePresence mode="wait">
               <motion.div
@@ -462,7 +462,7 @@ export function PropertyDetailsSection({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                className="flex flex-col items-center text-center justify-center pt-1 sm:pt-2 w-full"
+                className="hidden md:flex flex-col items-center text-center justify-center pt-1 sm:pt-2 w-full"
               >
                 <h2 className="text-xl sm:text-2xl lg:text-3xl font-medium max-md:text-white text-slate-900 dark:text-white tracking-normal">
                   {currentSection.title}
@@ -480,7 +480,7 @@ export function PropertyDetailsSection({
             </AnimatePresence>
 
             {/* 2. Sub-Tab Card Component (positioned lower towards the bottom of the screen with gap) */}
-            <div className="w-full mt-auto pt-2">
+            <div className="w-full max-md:mt-0 max-md:pt-0 mt-auto pt-2">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={`tab-${currentSection.id}`}
