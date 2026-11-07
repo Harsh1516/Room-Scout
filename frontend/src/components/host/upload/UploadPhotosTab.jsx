@@ -113,17 +113,17 @@ export function UploadPhotosTab({
         {/* Card Body: Purple on Mobile, Clean White/Dark on Desktop */}
         <section className="rounded-2xl sm:rounded-3xl border shadow-lg space-y-4 sm:space-y-5 transition-colors
           max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:p-4 max-md:shadow-black/20
-          md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:p-4 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
+          md:bg-white md: md:border-slate-200/90 md: md:p-4 md:shadow-black/5 md:(255,255,255,0.04)]"
         >
           {/* Desktop-Only Gallery Header Inside Card */}
-          <div className="hidden md:block pb-2.5 border-b border-slate-100 dark:border-zinc-800/80 text-center relative">
-            <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight">
+          <div className="hidden md:block pb-2.5 border-b border-slate-100 text-center relative">
+            <h2 className="text-base font-black text-slate-900 tracking-tight">
               Property Showcase Gallery
             </h2>
 
             {/* 16:9 Photos Only Tab directly below title */}
             <div className="flex items-center justify-center mt-1">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold tracking-wide bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 shadow-2xs">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 16:9 photos only
               </span>
@@ -131,11 +131,11 @@ export function UploadPhotosTab({
 
             <div className="hidden sm:flex items-center gap-2 absolute right-0 top-1/2 -translate-y-1/2">
               {formData.images?.length > 0 && (
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700/60">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-100 text-slate-700 border border-slate-200">
                   {totalMemoryFormatted}
                 </span>
               )}
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
                 {formData.images?.length || 0} / {maxPhotos} Photos
               </span>
             </div>
@@ -159,8 +159,8 @@ export function UploadPhotosTab({
                   onDrop={(e) => onPhotoDrop?.(e, i)}
                   className={`relative rounded-xl sm:rounded-2xl overflow-hidden w-full group/card bg-slate-900 shadow-xs cursor-grab active:cursor-grabbing transition-all select-none border-2 ${
                     isCover
-                      ? 'col-span-2 aspect-[16/9] border-[#006C4A] dark:border-emerald-500 ring-2 ring-[#006C4A]/20 lg:col-span-2'
-                      : 'col-span-1 max-md:aspect-square md:aspect-[16/10] border-slate-200 dark:border-zinc-800 hover:border-slate-400 dark:hover:border-zinc-600'
+                      ? 'col-span-2 aspect-[16/9] border-[#006C4A] ring-2 ring-[#006C4A]/20 lg:col-span-2'
+                      : 'col-span-1 max-md:aspect-square md:aspect-[16/10] border-slate-200 hover:border-slate-400'
                   } ${
                     isDragTarget ? 'border-emerald-400 scale-[1.02] shadow-lg ring-2 ring-emerald-400/40' : ''
                   } ${isBeingDragged ? 'opacity-40 scale-95' : 'opacity-100'}`}
@@ -242,7 +242,7 @@ export function UploadPhotosTab({
                 onClick={() => fileInputRef.current?.click()}
                 className={`rounded-xl sm:rounded-2xl border-2 border-dashed w-full flex flex-col items-center justify-center p-3 sm:p-5 text-center cursor-pointer transition-all duration-200 group
                   max-md:bg-white/10 max-md:border-purple-300/30 max-md:hover:bg-white/15
-                  md:bg-slate-50/50 md:dark:bg-zinc-800/30 md:border-slate-300 md:dark:border-zinc-700/80 md:hover:bg-emerald-50/30 md:dark:hover:bg-emerald-950/20 md:hover:border-[#006C4A] md:dark:hover:border-emerald-500 ${
+                  md:bg-slate-50/50 md: md:border-slate-300 md: md:hover:bg-emerald-50/30 md: md:hover:border-[#006C4A] md: ${
                   formData.images?.length === 0
                     ? 'col-span-2 aspect-[16/9] md:sm:col-span-2 md:lg:col-span-3 md:aspect-[16/8]'
                     : 'col-span-1 max-md:aspect-square md:aspect-[16/10]'
@@ -250,19 +250,19 @@ export function UploadPhotosTab({
               >
                 <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all mb-1 sm:mb-2 shadow-2xs group-hover:scale-110
                   max-md:bg-white/15 max-md:text-purple-200
-                  md:bg-slate-100 md:dark:bg-zinc-800 md:group-hover:bg-[#006C4A] md:text-slate-500 md:dark:text-zinc-400 md:group-hover:text-white"
+                  md:bg-slate-100 md: md:group-hover:bg-[#006C4A] md:text-slate-500 md: md:group-hover:text-white"
                 >
                   <UploadCloud className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <span className="text-xs sm:text-sm font-bold transition-colors leading-tight
                   max-md:text-white
-                  md:text-slate-800 md:dark:text-zinc-200 md:group-hover:text-[#006C4A] md:dark:group-hover:text-emerald-400"
+                  md:text-slate-800 md: md:group-hover:text-[#006C4A] md:"
                 >
                   {formData.images?.length === 0 ? 'Upload Photos from Device' : 'Add Photo'}
                 </span>
                 <span className="text-[10px] sm:text-xs mt-0.5 line-clamp-1
                   max-md:text-purple-200/70
-                  md:text-slate-400 md:dark:text-zinc-500"
+                  md:text-slate-400 md:"
                 >
                   16:9 Aspect Ratio • PNG, JPG or WebP
                 </span>
@@ -284,14 +284,14 @@ export function UploadPhotosTab({
         {/* Card Body: Purple on Mobile, Clean White/Dark on Desktop */}
         <section className="rounded-2xl sm:rounded-3xl border shadow-lg space-y-3.5 transition-colors
           max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:p-4 max-md:shadow-black/20
-          md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:p-4 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
+          md:bg-white md: md:border-slate-200/90 md: md:p-4 md:shadow-black/5 md:(255,255,255,0.04)]"
         >
           {/* Desktop-Only Heading Inside Card */}
-          <div className="hidden md:block pb-2.5 border-b border-slate-100 dark:border-zinc-800/80 text-center relative">
-            <h3 className="text-base font-black text-slate-900 dark:text-white tracking-tight">
+          <div className="hidden md:block pb-2.5 border-b border-slate-100 text-center relative">
+            <h3 className="text-base font-black text-slate-900 tracking-tight">
               Virtual Tour / Video Link
             </h3>
-            <span className="text-[11px] font-medium text-slate-400 dark:text-zinc-500 block">
+            <span className="text-[11px] font-medium text-slate-400 block">
               Optional listing walkthrough
             </span>
 
@@ -319,7 +319,7 @@ export function UploadPhotosTab({
               placeholder="Instagram Reel or YouTube video walkthrough link..."
               className="w-full h-11 sm:h-12 md:h-10 px-4 md:px-3 rounded-xl border text-xs sm:text-sm md:text-xs focus:outline-none transition-all
                 max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
-                md:bg-slate-50/70 md:dark:bg-zinc-800/40 md:border-slate-200 md:dark:border-zinc-700/80 md:text-slate-900 md:dark:text-white md:placeholder:text-slate-400 md:dark:placeholder:text-zinc-500 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15"
+                md:bg-slate-50/70 md: md:border-slate-200 md: md:text-slate-900 md: md:placeholder:text-slate-400 md: md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15"
             />
           </div>
 

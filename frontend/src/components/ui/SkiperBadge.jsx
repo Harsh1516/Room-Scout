@@ -14,13 +14,13 @@ export function SkiperBadge({
 }) {
   const variantStyles = {
     emerald:
-      'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200/80 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300',
+      'bg-emerald-50 border-emerald-200/80 text-emerald-800',
     blue:
-      'bg-sky-50 dark:bg-sky-950/60 border-sky-200/80 dark:border-sky-800 text-sky-800 dark:text-sky-300',
+      'bg-sky-50 border-sky-200/80 text-sky-800',
     amber:
-      'bg-amber-50 dark:bg-amber-950/60 border-amber-200/80 dark:border-amber-800 text-amber-800 dark:text-amber-300',
+      'bg-amber-50 border-amber-200/80 text-amber-800',
     slate:
-      'bg-slate-100/90 dark:bg-zinc-800 border-slate-200/80 dark:border-zinc-700 text-slate-700 dark:text-zinc-300',
+      'bg-slate-100/90 border-slate-200/80 text-slate-700',
   };
 
   return (

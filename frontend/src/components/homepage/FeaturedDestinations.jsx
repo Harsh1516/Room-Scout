@@ -98,16 +98,16 @@ export function FeaturedDestinations() {
       {/* Header & Filter Tabs */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-6 sm:mb-8 gap-4 sm:gap-5 w-full">
         <div>
-          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 bg-slate-900/10 dark:bg-white/10 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full border border-slate-900/15 dark:border-white/20 backdrop-blur-xl">
+          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-800 bg-slate-900/10 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full border border-slate-900/15 backdrop-blur-xl">
             Prime Geographic Hubs
           </span>
-          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-slate-950 dark:text-white mt-1.5 sm:mt-2 tracking-tight drop-shadow-sm dark:drop-shadow-[0_8px_30px_rgba(0,0,0,0.9)]">
+          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-slate-950 mt-1.5 sm:mt-2 tracking-tight drop-shadow-sm(0,0,0,0.9)]">
             Explore Top Stay Destinations
           </h2>
         </div>
 
         {/* Clean Filter Tabs - Horizontal Scroll on Mobile, Balanced & Ultra-Compact */}
-        <div className="flex items-center gap-1 sm:gap-1.5 p-0.5 sm:p-1.5 rounded-lg sm:rounded-2xl bg-white/80 dark:bg-white/[0.08] border border-slate-200 dark:border-white/20 backdrop-blur-2xl shadow-xs overflow-x-auto no-scrollbar max-w-full">
+        <div className="flex items-center gap-1 sm:gap-1.5 p-0.5 sm:p-1.5 rounded-lg sm:rounded-2xl bg-white/80 border border-slate-200 backdrop-blur-2xl shadow-xs overflow-x-auto no-scrollbar max-w-full">
           {DESTINATION_TABS.map((tab) => {
             const isSelected = activeFilter === tab.id;
 
@@ -117,8 +117,8 @@ export function FeaturedDestinations() {
                 onClick={() => setActiveFilter(tab.id)}
                 className={`px-2 py-1 sm:px-4 sm:py-2 rounded-md sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all duration-200 cursor-pointer whitespace-nowrap shrink-0 select-none active:scale-95 ${
                   isSelected
-                    ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 shadow-sm'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/15 border border-transparent'
+                    ? 'bg-slate-950 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
                 }`}
               >
                 {tab.label}
@@ -144,13 +144,13 @@ export function FeaturedDestinations() {
             >
               {/* Warm Cushion on Hover (Warm cream in Light Mode, Frosted Glass in Dark Mode) */}
               <div
-                className="absolute rounded-xl sm:rounded-2xl bg-[#f8ebd8] dark:bg-white/[0.08] dark:border dark:border-white/20 dark:backdrop-blur-2xl shadow-[0_10px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.7),_0_0_24px_rgba(56,189,248,0.18),_inset_0_1px_2px_rgba(255,255,255,0.22)] pointer-events-none inset-0 opacity-0 scale-95 group-hover:-inset-1 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                className="absolute rounded-xl sm:rounded-2xl bg-[#f8ebd8] shadow-[0_10px_30px_rgba(0,0,0,0.06)](0,0,0,0.7),_0_0_24px_rgba(56,189,248,0.18),_inset_0_1px_2px_rgba(255,255,255,0.22)] pointer-events-none inset-0 opacity-0 scale-95 group-hover:-inset-1 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
               />
 
               {/* Foreground Content Stack */}
               <div className="relative z-10 flex flex-col h-full justify-between">
                 {/* 1. TOP SECTION: Balanced Widescreen Rounded Media Box */}
-                <div className="relative aspect-[16/11] sm:aspect-[16/10] w-full rounded-lg sm:rounded-xl overflow-hidden bg-slate-900 shadow-xs group-hover:shadow-md flex flex-col justify-between p-1.5 sm:p-2.5 border border-slate-200/60 dark:border-white/10 transition-all duration-350 ease-[cubic-bezier(0.16,1,0.3,1)]">
+                <div className="relative aspect-[16/11] sm:aspect-[16/10] w-full rounded-lg sm:rounded-xl overflow-hidden bg-slate-900 shadow-xs group-hover:shadow-md flex flex-col justify-between p-1.5 sm:p-2.5 border border-slate-200/60 transition-all duration-350 ease-[cubic-bezier(0.16,1,0.3,1)]">
                   {/* Background Image */}
                   <img
                     src={hub.image}
@@ -177,26 +177,26 @@ export function FeaturedDestinations() {
                 {/* 2. BOTTOM SECTION: Structured Information Section Sitting Below Photo */}
                 <div className="pt-1.5 sm:pt-2.5 pb-0.5 px-0.5 flex flex-col space-y-0.5 sm:space-y-1">
                   {/* Location / Tag Subtitle */}
-                  <span className="text-[8px] sm:text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
+                  <span className="text-[8px] sm:text-[10px] font-mono font-bold text-slate-500 uppercase tracking-wider truncate">
                     {hub.tag}
                   </span>
 
                   {/* Title */}
-                  <h3 className="text-[10px] sm:text-xs md:text-sm font-bold text-slate-950 dark:text-white line-clamp-1 group-hover:text-slate-900 dark:group-hover:text-sky-300 transition-colors leading-snug">
+                  <h3 className="text-[10px] sm:text-xs md:text-sm font-bold text-slate-950 line-clamp-1 group-hover:text-slate-900 transition-colors leading-snug">
                     {hub.name}
                   </h3>
 
-                  <p className="hidden lg:line-clamp-1 text-xs text-slate-500 dark:text-slate-400 font-normal pb-0.5">
+                  <p className="hidden lg:line-clamp-1 text-xs text-slate-500 font-normal pb-0.5">
                     {hub.description}
                   </p>
 
                   {/* Price and CTA */}
-                  <div className="flex items-center justify-between pt-1 sm:pt-1.5 border-t border-slate-200/80 dark:border-white/10 text-[9px] sm:text-xs font-bold">
-                    <span className="text-slate-500 dark:text-slate-400 font-normal truncate">
+                  <div className="flex items-center justify-between pt-1 sm:pt-1.5 border-t border-slate-200/80 text-[9px] sm:text-xs font-bold">
+                    <span className="text-slate-500 font-normal truncate">
                       <span className="hidden sm:inline">Avg </span>
-                      <strong className="text-slate-950 dark:text-white font-black">{hub.avgPrice}</strong>
+                      <strong className="text-slate-950 font-black">{hub.avgPrice}</strong>
                     </span>
-                    <span className="text-slate-900 dark:text-sky-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5 shrink-0">
+                    <span className="text-slate-900 group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5 shrink-0">
                       <span className="hidden sm:inline">Explore</span>
                       <span>→</span>
                     </span>

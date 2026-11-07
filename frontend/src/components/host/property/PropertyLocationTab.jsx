@@ -79,9 +79,9 @@ export function PropertyLocationTab({
 
   return (
     <div className="space-y-3.5">
-      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/95 backdrop-blur-xl shadow-sm space-y-4 relative overflow-hidden max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:rounded-2xl max-md:p-4 max-md:shadow-black/20">
-        <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-100 dark:border-zinc-800 max-md:border-white/10 pb-3 relative z-10">
-          <p className="text-xs font-medium uppercase tracking-wider max-md:text-white text-slate-800 dark:text-slate-200 flex items-center gap-2">
+      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white/70 backdrop-blur-xl shadow-sm space-y-4 relative overflow-hidden max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:rounded-2xl max-md:p-4 max-md:shadow-black/20">
+        <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-100 max-md:border-white/10 pb-3 relative z-10">
+          <p className="text-xs font-medium uppercase tracking-wider max-md:text-white text-slate-800 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full max-md:bg-purple-300 max-md:shadow-none bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
             Address & Geography
           </p>
@@ -108,8 +108,8 @@ export function PropertyLocationTab({
         {isEditing ? (
           <div className="space-y-4 relative z-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 space-y-1.5 shadow-2xs">
-                <label className="text-[10.5px] text-purple-600 dark:text-purple-400/80 font-medium block uppercase font-mono tracking-wider">
+              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 backdrop-blur-md border border-slate-200/80 space-y-1.5 shadow-2xs">
+                <label className="text-[10.5px] text-purple-600 font-medium block uppercase font-mono tracking-wider">
                   Full Address *
                 </label>
                 <input
@@ -117,12 +117,12 @@ export function PropertyLocationTab({
                   value={formData.address}
                   onChange={(e) => handleChange('address', e.target.value)}
                   placeholder="Street, landmark, building number"
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50/80 dark:bg-zinc-900/90 border border-slate-200/90 dark:border-zinc-700 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 shadow-inner transition-colors"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50/80 border border-slate-200/90 text-xs sm:text-[13px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 shadow-inner transition-colors"
                 />
               </div>
 
-              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 space-y-1.5 shadow-2xs">
-                <label className="text-[10.5px] text-purple-600 dark:text-purple-400/80 font-medium block uppercase font-mono tracking-wider">
+              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 backdrop-blur-md border border-slate-200/80 space-y-1.5 shadow-2xs">
+                <label className="text-[10.5px] text-purple-600 font-medium block uppercase font-mono tracking-wider">
                   Area / Road / Colony
                 </label>
                 <input
@@ -130,12 +130,12 @@ export function PropertyLocationTab({
                   value={formData.roadArea}
                   onChange={(e) => handleChange('roadArea', e.target.value)}
                   placeholder="Near Market, Main Road, etc."
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50/80 dark:bg-zinc-900/90 border border-slate-200/90 dark:border-zinc-700 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 shadow-inner transition-colors"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50/80 border border-slate-200/90 text-xs sm:text-[13px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 shadow-inner transition-colors"
                 />
               </div>
 
-              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 space-y-1.5 shadow-2xs">
-                <label className="text-[10.5px] text-purple-600 dark:text-purple-400/80 font-medium block uppercase font-mono tracking-wider">
+              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 backdrop-blur-md border border-slate-200/80 space-y-1.5 shadow-2xs">
+                <label className="text-[10.5px] text-purple-600 font-medium block uppercase font-mono tracking-wider">
                   City
                 </label>
                 <input
@@ -143,12 +143,12 @@ export function PropertyLocationTab({
                   value={formData.city}
                   onChange={(e) => handleChange('city', e.target.value)}
                   placeholder="e.g. Dehradun"
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50/80 dark:bg-zinc-900/90 border border-slate-200/90 dark:border-zinc-700 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 shadow-inner transition-colors"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50/80 border border-slate-200/90 text-xs sm:text-[13px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 shadow-inner transition-colors"
                 />
               </div>
 
-              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 space-y-1.5 shadow-2xs">
-                <label className="text-[10.5px] text-purple-600 dark:text-purple-400/80 font-medium block uppercase font-mono tracking-wider">
+              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 backdrop-blur-md border border-slate-200/80 space-y-1.5 shadow-2xs">
+                <label className="text-[10.5px] text-purple-600 font-medium block uppercase font-mono tracking-wider">
                   State
                 </label>
                 <input
@@ -156,12 +156,12 @@ export function PropertyLocationTab({
                   value={formData.state}
                   onChange={(e) => handleChange('state', e.target.value)}
                   placeholder="e.g. Uttarakhand"
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50/80 dark:bg-zinc-900/90 border border-slate-200/90 dark:border-zinc-700 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 shadow-inner transition-colors"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50/80 border border-slate-200/90 text-xs sm:text-[13px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 shadow-inner transition-colors"
                 />
               </div>
 
-              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 space-y-1.5 shadow-2xs">
-                <label className="text-[10.5px] text-purple-600 dark:text-purple-400/80 font-medium block uppercase font-mono tracking-wider">
+              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 backdrop-blur-md border border-slate-200/80 space-y-1.5 shadow-2xs">
+                <label className="text-[10.5px] text-purple-600 font-medium block uppercase font-mono tracking-wider">
                   Pincode
                 </label>
                 <input
@@ -169,12 +169,12 @@ export function PropertyLocationTab({
                   value={formData.pincode}
                   onChange={(e) => handleChange('pincode', e.target.value)}
                   placeholder="6-digit pincode"
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50/80 dark:bg-zinc-900/90 border border-slate-200/90 dark:border-zinc-700 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 shadow-inner transition-colors"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50/80 border border-slate-200/90 text-xs sm:text-[13px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 shadow-inner transition-colors"
                 />
               </div>
 
-              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 space-y-1.5 shadow-2xs">
-                <label className="text-[10.5px] text-purple-600 dark:text-purple-400/80 font-medium block uppercase font-mono tracking-wider">
+              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-white/80 backdrop-blur-md border border-slate-200/80 space-y-1.5 shadow-2xs">
+                <label className="text-[10.5px] text-purple-600 font-medium block uppercase font-mono tracking-wider">
                   Coordinates (Latitude & Longitude)
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -184,7 +184,7 @@ export function PropertyLocationTab({
                     value={formData.latitude}
                     onChange={(e) => handleChange('latitude', e.target.value)}
                     placeholder="Latitude"
-                    className="w-full px-3 py-2 rounded-xl bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-700 text-xs sm:text-[13px] text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 shadow-2xs"
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200/80 text-xs sm:text-[13px] text-slate-900 focus:outline-none focus:border-purple-500 shadow-2xs"
                   />
                   <input
                     type="number"
@@ -192,7 +192,7 @@ export function PropertyLocationTab({
                     value={formData.longitude}
                     onChange={(e) => handleChange('longitude', e.target.value)}
                     placeholder="Longitude"
-                    className="w-full px-3 py-2 rounded-xl bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-700 text-xs sm:text-[13px] text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 shadow-2xs"
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200/80 text-xs sm:text-[13px] text-slate-900 focus:outline-none focus:border-purple-500 shadow-2xs"
                   />
                 </div>
               </div>
@@ -202,72 +202,72 @@ export function PropertyLocationTab({
           <div className="relative z-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {/* 1. Full Address */}
-              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 hover:border-purple-500/50 dark:hover:border-purple-500/40 hover:bg-white dark:hover:bg-zinc-800 transition-all flex flex-col justify-between gap-2 shadow-xs">
+              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/80 backdrop-blur-md border border-slate-200/80 hover:border-purple-500/50 hover:bg-white transition-all flex flex-col justify-between gap-2 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-purple-600 dark:text-purple-400 uppercase tracking-wider font-medium">
+                  <span className="text-[10px] text-purple-600 uppercase tracking-wider font-medium">
                     Full Address
                   </span>
-                  <span className="material-symbols-outlined text-[17px] text-purple-600 dark:text-purple-400 shrink-0">location_on</span>
+                  <span className="material-symbols-outlined text-[17px] text-purple-600 shrink-0">location_on</span>
                 </div>
                 <div>
-                  <p className="text-xs sm:text-sm font-normal text-slate-900 dark:text-white tracking-normal leading-relaxed">
+                  <p className="text-xs sm:text-sm font-normal text-slate-900 tracking-normal leading-relaxed">
                     {hostProperty?.address || hostProperty?.location || '—'}
                   </p>
-                  <span className="text-[10.5px] text-slate-500 dark:text-zinc-400">
+                  <span className="text-[10.5px] text-slate-500">
                     Primary road & address
                   </span>
                 </div>
               </div>
 
               {/* 2. Area / Road / Colony */}
-              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 hover:border-purple-500/50 dark:hover:border-purple-500/40 hover:bg-white dark:hover:bg-zinc-800 transition-all flex flex-col justify-between gap-2 shadow-xs">
+              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/80 backdrop-blur-md border border-slate-200/80 hover:border-purple-500/50 hover:bg-white transition-all flex flex-col justify-between gap-2 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-purple-600 dark:text-purple-400 uppercase tracking-wider font-medium">
+                  <span className="text-[10px] text-purple-600 uppercase tracking-wider font-medium">
                     Area / Road / Colony
                   </span>
-                  <span className="material-symbols-outlined text-[17px] text-purple-600 dark:text-purple-400 shrink-0">signpost</span>
+                  <span className="material-symbols-outlined text-[17px] text-purple-600 shrink-0">signpost</span>
                 </div>
                 <div>
-                  <p className="text-xs sm:text-sm font-normal text-slate-900 dark:text-white tracking-normal leading-relaxed">
+                  <p className="text-xs sm:text-sm font-normal text-slate-900 tracking-normal leading-relaxed">
                     {hostProperty?.roadArea || '—'}
                   </p>
-                  <span className="text-[10.5px] text-slate-500 dark:text-zinc-400">
+                  <span className="text-[10.5px] text-slate-500">
                     Local neighborhood
                   </span>
                 </div>
               </div>
 
               {/* 3. City & State */}
-              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 hover:border-purple-500/50 dark:hover:border-purple-500/40 hover:bg-white dark:hover:bg-zinc-800 transition-all flex flex-col justify-between gap-2 shadow-xs">
+              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/80 backdrop-blur-md border border-slate-200/80 hover:border-purple-500/50 hover:bg-white transition-all flex flex-col justify-between gap-2 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-purple-600 dark:text-purple-400 uppercase tracking-wider font-medium">
+                  <span className="text-[10px] text-purple-600 uppercase tracking-wider font-medium">
                     City & State
                   </span>
-                  <span className="material-symbols-outlined text-[17px] text-purple-600 dark:text-purple-400 shrink-0">apartment</span>
+                  <span className="material-symbols-outlined text-[17px] text-purple-600 shrink-0">apartment</span>
                 </div>
                 <div>
-                  <p className="text-xs sm:text-sm font-normal text-slate-900 dark:text-white tracking-normal">
+                  <p className="text-xs sm:text-sm font-normal text-slate-900 tracking-normal">
                     {hostProperty?.city || '—'}{hostProperty?.state ? `, ${hostProperty.state}` : ''}
                   </p>
-                  <span className="text-[10.5px] text-slate-500 dark:text-zinc-400">
+                  <span className="text-[10.5px] text-slate-500">
                     Municipality & Region
                   </span>
                 </div>
               </div>
 
               {/* 4. Pincode */}
-              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 hover:border-purple-500/50 dark:hover:border-purple-500/40 hover:bg-white dark:hover:bg-zinc-800 transition-all flex flex-col justify-between gap-2 shadow-xs">
+              <div className="p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/80 backdrop-blur-md border border-slate-200/80 hover:border-purple-500/50 hover:bg-white transition-all flex flex-col justify-between gap-2 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-purple-600 dark:text-purple-400 uppercase tracking-wider font-medium">
+                  <span className="text-[10px] text-purple-600 uppercase tracking-wider font-medium">
                     Pincode
                   </span>
-                  <span className="material-symbols-outlined text-[17px] text-purple-600 dark:text-purple-400 shrink-0">pin_drop</span>
+                  <span className="material-symbols-outlined text-[17px] text-purple-600 shrink-0">pin_drop</span>
                 </div>
                 <div>
-                  <p className="text-xs sm:text-sm font-normal text-slate-900 dark:text-white tracking-normal">
+                  <p className="text-xs sm:text-sm font-normal text-slate-900 tracking-normal">
                     {hostProperty?.pincode || '—'}
                   </p>
-                  <span className="text-[10.5px] text-slate-500 dark:text-zinc-400">
+                  <span className="text-[10.5px] text-slate-500">
                     Postal routing zone
                   </span>
                 </div>
@@ -275,15 +275,15 @@ export function PropertyLocationTab({
             </div>
 
             {/* Coordinates and Actions */}
-            <div className="pt-3 mt-3 border-t border-slate-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="pt-3 mt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-medium uppercase tracking-wider text-purple-600 dark:text-purple-400/80">Coordinates:</span>
+                <span className="text-xs font-medium uppercase tracking-wider text-purple-600">Coordinates:</span>
                 {hostProperty?.latitude && hostProperty?.longitude ? (
-                  <span className="px-2.5 py-0.5 rounded-full bg-purple-500/10 dark:bg-zinc-800 text-xs font-medium text-slate-800 dark:text-zinc-200 border border-slate-200/80 dark:border-zinc-700 shadow-2xs backdrop-blur-sm">
+                  <span className="px-2.5 py-0.5 rounded-full bg-purple-500/10 text-xs font-medium text-slate-800 border border-slate-200/80 shadow-2xs backdrop-blur-sm">
                     {Number(hostProperty.latitude).toFixed(5)}, {Number(hostProperty.longitude).toFixed(5)}
                   </span>
                 ) : (
-                  <span className="text-xs font-normal text-purple-600 dark:text-purple-400/60 dark:text-slate-200/50">
+                  <span className="text-xs font-normal text-purple-600">
                     —
                   </span>
                 )}
@@ -294,9 +294,9 @@ export function PropertyLocationTab({
                   <button
                     type="button"
                     onClick={handleCopyCoordinates}
-                    className="px-3.5 py-1.5 rounded-xl border border-slate-200/80 dark:border-zinc-700 bg-white/80 hover:bg-purple-500/10 dark:bg-zinc-800/90 dark:hover:bg-zinc-700/80 text-slate-800 dark:text-zinc-200 text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs active:scale-95 backdrop-blur-sm"
+                    className="px-3.5 py-1.5 rounded-xl border border-slate-200/80 bg-white/80 hover:bg-purple-500/10 text-slate-800 text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs active:scale-95 backdrop-blur-sm"
                   >
-                    {copiedCoord ? <CheckIcon className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" /> : <CopyIcon className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />}
+                    {copiedCoord ? <CheckIcon className="w-3.5 h-3.5 text-purple-600" /> : <CopyIcon className="w-3.5 h-3.5 text-purple-600" />}
                     <span>{copiedCoord ? 'Copied' : 'Copy'}</span>
                   </button>
 
@@ -304,10 +304,10 @@ export function PropertyLocationTab({
                     href={`https://www.google.com/maps?q=${hostProperty.latitude},${hostProperty.longitude}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group px-3.5 py-1.5 rounded-xl border border-slate-200/80 dark:border-zinc-700 bg-white/80 hover:bg-blue-600 hover:border-blue-500 hover:text-white dark:bg-zinc-800/90 dark:hover:bg-blue-600 dark:hover:border-blue-400 dark:hover:text-white text-slate-800 dark:text-zinc-200 text-xs font-medium transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-2xs hover:shadow-md hover:shadow-blue-500/25 active:scale-95 backdrop-blur-sm"
+                    className="group px-3.5 py-1.5 rounded-xl border border-slate-200/80 bg-white/80 hover:bg-blue-600 hover:border-blue-500 hover:text-white text-slate-800 text-xs font-medium transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-2xs hover:shadow-md hover:shadow-blue-500/25 active:scale-95 backdrop-blur-sm"
                   >
                     <span>Open Maps</span>
-                    <ExternalIcon className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 group-hover:text-white transition-colors duration-200" />
+                    <ExternalIcon className="w-3.5 h-3.5 text-purple-600 group-hover:text-white transition-colors duration-200" />
                   </a>
                 </div>
               ) : null}

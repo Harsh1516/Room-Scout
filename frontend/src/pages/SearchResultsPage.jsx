@@ -11,9 +11,9 @@ const SearchInteractiveMap = lazy(() =>
 
 function MapSkeletonLoader() {
   return (
-    <div className="w-full h-full min-h-[360px] sm:min-h-[380px] rounded-3xl bg-slate-200/70 dark:bg-slate-800/70 animate-pulse border border-slate-300/40 dark:border-slate-700/40 flex flex-col items-center justify-center gap-3">
+    <div className="w-full h-full min-h-[360px] sm:min-h-[380px] rounded-3xl bg-slate-200/70 animate-pulse border border-slate-300/40 flex flex-col items-center justify-center gap-3">
       <div className="w-9 h-9 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin" />
-      <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+      <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
         Loading Interactive Map...
       </span>
     </div>
@@ -117,7 +117,7 @@ export function SearchResultsPage({
   };
 
   return (
-    <div className={`w-full ${viewMode === 'showcase' ? 'h-screen overflow-hidden pt-30 sm:pt-32 lg:pt-34 pb-2.5 sm:pb-3 px-6 sm:px-10 lg:px-12 xl:px-16 flex flex-col justify-between' : 'min-h-screen pt-28 sm:pt-30 pb-20 px-6 sm:px-10 lg:px-12 xl:px-16'} bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors`}>
+    <div className={`w-full ${viewMode === 'showcase' ? 'h-screen overflow-hidden pt-30 sm:pt-32 lg:pt-34 pb-2.5 sm:pb-3 px-6 sm:px-10 lg:px-12 xl:px-16 flex flex-col justify-between' : 'min-h-screen pt-28 sm:pt-30 pb-20 px-6 sm:px-10 lg:px-12 xl:px-16'} bg-slate-50 text-slate-900 transition-colors`}>
       {/* ── 1. Soft Backdrop Overlay when Filter Drawer is Open ── */}
       <AnimatePresence>
         {isFiltersOpen && (
@@ -127,7 +127,7 @@ export function SearchResultsPage({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.22 }}
             onClick={() => setIsFiltersOpen(false)}
-            className="fixed inset-0 bg-slate-950/40 dark:bg-black/60 backdrop-blur-xs z-50 cursor-pointer"
+            className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-50 cursor-pointer"
           />
         )}
       </AnimatePresence>
@@ -137,19 +137,19 @@ export function SearchResultsPage({
         initial={false}
         animate={{ x: isFiltersOpen ? '0%' : '-100%' }}
         transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-        className="fixed top-0 bottom-0 left-0 z-50 w-80 sm:w-96 max-w-[85vw] bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border-r border-slate-200 dark:border-slate-800 shadow-[10px_0_36px_rgba(0,0,0,0.14)] dark:shadow-[10px_0_40px_rgba(0,0,0,0.6)] flex flex-col justify-between select-none"
+        className="fixed top-0 bottom-0 left-0 z-50 w-80 sm:w-96 max-w-[85vw] bg-white/95 backdrop-blur-2xl border-r border-slate-200 shadow-[10px_0_36px_rgba(0,0,0,0.14)](0,0,0,0.6)] flex flex-col justify-between select-none"
       >
         {/* Ultra-Premium Minimal Toggle Handle at the Center of the Left Screen Border */}
         <button
           type="button"
           onClick={() => setIsFiltersOpen((prev) => !prev)}
-          className="absolute top-1/2 -translate-y-1/2 left-full flex flex-col items-center justify-center w-8 sm:w-9 h-22 sm:h-26 bg-gradient-to-b from-white/95 via-slate-50/95 to-slate-100/90 dark:from-slate-900/95 dark:via-slate-900/90 dark:to-slate-950/95 backdrop-blur-2xl border border-l-0 border-slate-300/80 dark:border-slate-700/80 hover:border-emerald-500/50 dark:hover:border-emerald-500/50 rounded-r-2xl shadow-[4px_0_24px_rgba(0,0,0,0.12)] hover:shadow-[6px_0_28px_rgba(16,185,129,0.22)] dark:shadow-[4px_0_30px_rgba(0,0,0,0.7)] dark:hover:shadow-[6px_0_32px_rgba(16,185,129,0.3)] text-slate-700 dark:text-slate-200 hover:text-emerald-500 dark:hover:text-emerald-400 transition-all duration-300 cursor-pointer group active:scale-95 select-none"
+          className="absolute top-1/2 -translate-y-1/2 left-full flex flex-col items-center justify-center w-8 sm:w-9 h-22 sm:h-26 bg-gradient-to-b from-white/95 via-slate-50/95 to-slate-100/90 backdrop-blur-2xl border border-l-0 border-slate-300/80 hover:border-emerald-500/50 rounded-r-2xl shadow-[4px_0_24px_rgba(0,0,0,0.12)] hover:shadow-[6px_0_28px_rgba(16,185,129,0.22)](0,0,0,0.7)](16,185,129,0.3)] text-slate-700 hover:text-emerald-500 transition-all duration-300 cursor-pointer group active:scale-95 select-none"
           title={isFiltersOpen ? 'Collapse Filters (<)' : 'Expand Filters (>)'}
           aria-label={isFiltersOpen ? 'Close filters' : 'Open filters'}
         >
           <div className="flex flex-col items-center justify-center gap-1.5 py-1">
             {/* Upper tactile micro-notch */}
-            <span className="w-1 h-2 rounded-full bg-slate-300 dark:bg-slate-700 group-hover:bg-emerald-500/70 transition-colors" />
+            <span className="w-1 h-2 rounded-full bg-slate-300 group-hover:bg-emerald-500/70 transition-colors" />
 
             {/* Ultra-Premium Precision Chevron (> when closed, rotates 180° to < when open) */}
             <motion.div
@@ -158,7 +158,7 @@ export function SearchResultsPage({
               className="w-5 h-5 flex items-center justify-center group-hover:translate-x-0.5 transition-transform"
             >
               <svg
-                className="w-4 h-4 text-slate-700 dark:text-slate-200 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors drop-shadow-xs"
+                className="w-4 h-4 text-slate-700 group-hover:text-emerald-500 transition-colors drop-shadow-xs"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -174,22 +174,22 @@ export function SearchResultsPage({
             {activeFiltersCount > 0 && !isFiltersOpen ? (
               <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.9)] animate-pulse" />
             ) : (
-              <span className="w-1 h-2 rounded-full bg-slate-300 dark:bg-slate-700 group-hover:bg-emerald-500/70 transition-colors" />
+              <span className="w-1 h-2 rounded-full bg-slate-300 group-hover:bg-emerald-500/70 transition-colors" />
             )}
           </div>
         </button>
 
         {/* Panel Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+        <div className="p-4 sm:p-5 border-b border-slate-200/80 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold">
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
               </svg>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-black text-slate-950 dark:text-white leading-tight">
+                <h2 className="text-base font-black text-slate-950 leading-tight">
                   Filters
                 </h2>
                 {activeFiltersCount > 0 && (
@@ -198,7 +198,7 @@ export function SearchResultsPage({
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+              <p className="text-[11px] text-slate-500 font-medium">
                 Refine your stay search
               </p>
             </div>
@@ -217,7 +217,7 @@ export function SearchResultsPage({
             <button
               type="button"
               onClick={() => setIsFiltersOpen(false)}
-              className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center text-sm font-bold transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-bold transition-colors cursor-pointer"
               title="Close Panel"
             >
               ✕
@@ -235,7 +235,7 @@ export function SearchResultsPage({
             <select
               value={filters.sortOrder || 'price-desc'}
               onChange={(e) => setSortOrder && setSortOrder(e.target.value)}
-              className="w-full p-2.5 text-xs font-bold rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+              className="w-full p-2.5 text-xs font-bold rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none cursor-pointer"
             >
               <option value="recent">Recently Added (Fresh)</option>
               <option value="price-asc">Price: Low to High</option>
@@ -245,7 +245,7 @@ export function SearchResultsPage({
             </select>
           </div>
 
-          <div className="h-px bg-slate-100 dark:bg-slate-800" />
+          <div className="h-px bg-slate-100" />
 
           {/* 1. Property Type */}
           <div className="space-y-2.5">
@@ -262,8 +262,8 @@ export function SearchResultsPage({
                     onClick={() => setCategoryFilter && setCategoryFilter(cat)}
                     className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-between border ${
                       isCurrentActive
-                        ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 border-slate-950 dark:border-white shadow-xs'
-                        : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600'
+                        ? 'bg-slate-950 text-white border-slate-950 shadow-xs'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
                     }`}
                   >
                     <span>{cat}</span>
@@ -274,7 +274,7 @@ export function SearchResultsPage({
             </div>
           </div>
 
-          <div className="h-px bg-slate-100 dark:bg-slate-800" />
+          <div className="h-px bg-slate-100" />
 
           {/* 2. Budget Presets */}
           <div className="space-y-2.5">
@@ -292,8 +292,8 @@ export function SearchResultsPage({
                     onClick={() => setPriceRange && setPriceRange(preset.min, preset.max)}
                     className={`w-full px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-between border ${
                       isActive
-                        ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 border-slate-950 dark:border-white font-bold shadow-xs'
-                        : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600'
+                        ? 'bg-slate-950 text-white border-slate-950 font-bold shadow-xs'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
                     }`}
                   >
                     <span>{preset.label}</span>
@@ -304,7 +304,7 @@ export function SearchResultsPage({
             </div>
           </div>
 
-          <div className="h-px bg-slate-100 dark:bg-slate-800" />
+          <div className="h-px bg-slate-100" />
 
           {/* 3. Gender / Accommodation */}
           <div className="space-y-2.5">
@@ -325,8 +325,8 @@ export function SearchResultsPage({
                     onClick={() => setGenderFilter && setGenderFilter(gen)}
                     className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-between border ${
                       isGenActive
-                        ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 border-slate-950 dark:border-white shadow-xs'
-                        : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600'
+                        ? 'bg-slate-950 text-white border-slate-950 shadow-xs'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
                     }`}
                   >
                     <span>{gen}</span>
@@ -337,7 +337,7 @@ export function SearchResultsPage({
             </div>
           </div>
 
-          <div className="h-px bg-slate-100 dark:bg-slate-800" />
+          <div className="h-px bg-slate-100" />
 
           {/* 4. Guest Rating */}
           <div className="space-y-2.5">
@@ -350,7 +350,7 @@ export function SearchResultsPage({
               className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-between border ${
                 filters.minRating >= 4.5
                   ? 'bg-amber-500 text-white border-amber-500 shadow-xs'
-                  : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600'
+                  : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
               }`}
             >
               <span className="flex items-center gap-1.5">
@@ -361,7 +361,7 @@ export function SearchResultsPage({
             </button>
           </div>
 
-          <div className="h-px bg-slate-100 dark:bg-slate-800" />
+          <div className="h-px bg-slate-100" />
 
           {/* 5. Amenities */}
           <div className="space-y-2.5">
@@ -379,7 +379,7 @@ export function SearchResultsPage({
                     className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all border cursor-pointer ${
                       isSelected
                         ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                        : 'bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300'
                     }`}
                   >
                     {isSelected ? '✓ ' : '+ '} {amenity}
@@ -391,14 +391,14 @@ export function SearchResultsPage({
         </div>
 
         {/* Panel Footer */}
-        <div className="p-4 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between gap-3">
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 truncate">
+        <div className="p-4 border-t border-slate-200/80 bg-slate-50/50 flex items-center justify-between gap-3">
+          <span className="text-xs font-semibold text-slate-500 truncate">
             {stays.length} {stays.length === 1 ? 'property' : 'properties'} found
           </span>
           <button
             type="button"
             onClick={() => setIsFiltersOpen(false)}
-            className="px-4 py-2 rounded-xl bg-slate-950 dark:bg-white text-white dark:text-slate-950 text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95"
+            className="px-4 py-2 rounded-xl bg-slate-950 text-white text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95"
           >
             Apply & View
           </button>
@@ -415,7 +415,7 @@ export function SearchResultsPage({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               onClick={() => setIsMapModalOpen(false)}
-              className="absolute inset-0 bg-slate-950/60 dark:bg-black/80 backdrop-blur-md cursor-pointer"
+              className="absolute inset-0 bg-slate-950/60 backdrop-blur-md cursor-pointer"
             />
 
             <motion.div
@@ -423,12 +423,12 @@ export function SearchResultsPage({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 16 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="relative w-full max-w-6xl h-[88vh] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden z-10"
+              className="relative w-full max-w-6xl h-[88vh] bg-white rounded-3xl border border-slate-200/80 shadow-2xl flex flex-col overflow-hidden z-10"
             >
               {/* Map Window Header */}
-              <div className="px-5 py-4 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-md shrink-0">
+              <div className="px-5 py-4 border-b border-slate-200/80 flex items-center justify-between bg-slate-50/90 backdrop-blur-md shrink-0">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-2xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center font-bold">
+                  <div className="w-9 h-9 rounded-2xl bg-cyan-500/10 text-cyan-600 flex items-center justify-center font-bold">
                     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" />
                       <line x1="9" y1="3" x2="9" y2="18" />
@@ -436,10 +436,10 @@ export function SearchResultsPage({
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-base font-extrabold text-slate-950 dark:text-white leading-tight">
+                    <h3 className="text-base font-extrabold text-slate-950 leading-tight">
                       Map Explorer
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    <p className="text-xs text-slate-500 font-medium">
                       Showing {stays.length} properties located on map
                     </p>
                   </div>
@@ -449,7 +449,7 @@ export function SearchResultsPage({
                   <button
                     type="button"
                     onClick={() => setIsMapModalOpen(false)}
-                    className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-sm transition-all cursor-pointer shadow-xs active:scale-95"
+                    className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm transition-all cursor-pointer shadow-xs active:scale-95"
                     title="Close Map Window"
                   >
                     ✕
@@ -481,10 +481,10 @@ export function SearchResultsPage({
         <div className="fixed top-16 sm:top-18 inset-x-0 z-30 pointer-events-none px-3 sm:px-10 lg:px-12 xl:px-16">
           <div className="w-full max-w-[1760px] mx-auto flex items-center justify-between">
             {/* Showcase / Grid View Mode Switcher with Dynamic Scroll Elevation */}
-            <div className={`pointer-events-auto inline-flex items-center p-1 rounded-2xl bg-white/95 dark:bg-slate-900/95 border transition-all duration-300 backdrop-blur-xl text-xs font-bold ${
+            <div className={`pointer-events-auto inline-flex items-center p-1 rounded-2xl bg-white/95 border transition-all duration-300 backdrop-blur-xl text-xs font-bold ${
               isScrolled
-                ? 'border-slate-300 dark:border-slate-700 shadow-xl dark:shadow-[0_10px_25px_rgba(0,0,0,0.5)]'
-                : 'border-slate-200/90 dark:border-slate-800 shadow-md'
+                ? 'border-slate-300 shadow-xl(0,0,0,0.5)]'
+                : 'border-slate-200/90 shadow-md'
             }`}>
               <button
                 type="button"
@@ -492,7 +492,7 @@ export function SearchResultsPage({
                 className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
                   viewMode === 'showcase'
                     ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm shadow-purple-500/25 font-bold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400'
+                    : 'text-slate-600 hover:text-purple-600'
                 }`}
               >
                 <span>✦ Showcase</span>
@@ -503,7 +503,7 @@ export function SearchResultsPage({
                 className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
                   viewMode === 'grid'
                     ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm shadow-purple-500/25 font-bold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400'
+                    : 'text-slate-600 hover:text-purple-600'
                 }`}
               >
                 <span>⊞ Grid</span>
@@ -513,11 +513,11 @@ export function SearchResultsPage({
             {/* Right Side: Slide Counter in Showcase, or Total Stays in Grid */}
             <div className="pointer-events-auto flex items-center pr-2">
               {viewMode === 'showcase' ? (
-                <span className="text-xl sm:text-2xl font-black tracking-wider text-slate-950 dark:text-white font-sans select-none drop-shadow-xs">
+                <span className="text-xl sm:text-2xl font-black tracking-wider text-slate-950 font-sans select-none drop-shadow-xs">
                   {showcaseIndex + 1}/{stays.length}
                 </span>
               ) : (
-                <span className="text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 bg-white/90 dark:bg-slate-900/90 px-3.5 py-1.5 rounded-xl border border-slate-200/80 dark:border-slate-800 backdrop-blur-md shadow-xs">
+                <span className="text-xs sm:text-sm font-bold text-slate-600 bg-white/90 px-3.5 py-1.5 rounded-xl border border-slate-200/80 backdrop-blur-md shadow-xs">
                   {stays.length} {stays.length === 1 ? 'Stay' : 'Stays'}
                 </span>
               )}
@@ -534,16 +534,16 @@ export function SearchResultsPage({
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <div
                 key={i}
-                className="h-64 sm:h-70 rounded-2xl bg-slate-200/80 dark:bg-slate-800/80 animate-pulse p-4 flex flex-col justify-between border border-slate-300/40 dark:border-slate-700/40"
+                className="h-64 sm:h-70 rounded-2xl bg-slate-200/80 animate-pulse p-4 flex flex-col justify-between border border-slate-300/40"
               >
                 <div className="flex justify-between">
-                  <div className="w-16 h-4 bg-slate-300 dark:bg-slate-700 rounded-full" />
-                  <div className="w-6 h-6 bg-slate-300 dark:bg-slate-700 rounded-full" />
+                  <div className="w-16 h-4 bg-slate-300 rounded-full" />
+                  <div className="w-6 h-6 bg-slate-300 rounded-full" />
                 </div>
                 <div className="space-y-2">
-                  <div className="w-20 h-2.5 bg-slate-300 dark:bg-slate-700 rounded-md" />
-                  <div className="w-36 h-4 bg-slate-300 dark:bg-slate-700 rounded-md" />
-                  <div className="w-full h-7 bg-slate-300 dark:bg-slate-700 rounded-xl" />
+                  <div className="w-20 h-2.5 bg-slate-300 rounded-md" />
+                  <div className="w-36 h-4 bg-slate-300 rounded-md" />
+                  <div className="w-full h-7 bg-slate-300 rounded-xl" />
                 </div>
               </div>
             ))}
@@ -597,11 +597,11 @@ export function SearchResultsPage({
 
         {/* Empty State */}
         {!isLoading && stays.length === 0 && (
-          <div className="text-center py-20 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-3xl space-y-3">
-            <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto text-2xl">
+          <div className="text-center py-20 bg-white border border-slate-200 rounded-3xl space-y-3">
+            <div className="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto text-2xl">
               🔍
             </div>
-            <p className="text-lg font-bold text-slate-700 dark:text-slate-200">
+            <p className="text-lg font-bold text-slate-700">
               No verified properties match your search criteria.
             </p>
             <p className="text-xs text-slate-400 max-w-sm mx-auto">
@@ -609,7 +609,7 @@ export function SearchResultsPage({
             </p>
             <button
               onClick={() => resetFilters && resetFilters()}
-              className="mt-2 px-5 py-2 rounded-xl bg-slate-950 dark:bg-white text-white dark:text-slate-950 text-xs font-bold transition-colors cursor-pointer"
+              className="mt-2 px-5 py-2 rounded-xl bg-slate-950 text-white text-xs font-bold transition-colors cursor-pointer"
             >
               Reset All Filters
             </button>
@@ -618,10 +618,10 @@ export function SearchResultsPage({
 
         {/* Numbered Pagination Controls */}
         {!isLoading && totalPages > 1 && (
-          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-200 dark:border-slate-800">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Page <strong className="text-slate-900 dark:text-white">{currentPage}</strong> of{' '}
-              <strong className="text-slate-900 dark:text-white">{totalPages}</strong> ({totalResults} total stays)
+          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-200">
+            <p className="text-xs text-slate-500">
+              Page <strong className="text-slate-900">{currentPage}</strong> of{' '}
+              <strong className="text-slate-900">{totalPages}</strong> ({totalResults} total stays)
             </p>
 
             <div className="flex items-center gap-1.5">
@@ -629,7 +629,7 @@ export function SearchResultsPage({
                 type="button"
                 disabled={currentPage <= 1}
                 onClick={() => handlePageChange(currentPage - 1)}
-                className="px-3.5 py-2 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-colors cursor-pointer"
+                className="px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 text-slate-800 transition-colors cursor-pointer"
               >
                 ← Prev
               </button>
@@ -641,8 +641,8 @@ export function SearchResultsPage({
                   onClick={() => handlePageChange(pageNum)}
                   className={`w-8 h-8 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     currentPage === pageNum
-                      ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 shadow-sm'
-                      : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                      ? 'bg-slate-950 text-white shadow-sm'
+                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
                   }`}
                 >
                   {pageNum}
@@ -653,7 +653,7 @@ export function SearchResultsPage({
                 type="button"
                 disabled={currentPage >= totalPages}
                 onClick={() => handlePageChange(currentPage + 1)}
-                className="px-3.5 py-2 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-colors cursor-pointer"
+                className="px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 text-slate-800 transition-colors cursor-pointer"
               >
                 Next →
               </button>
@@ -667,7 +667,7 @@ export function SearchResultsPage({
         <button
           type="button"
           onClick={() => setIsMapModalOpen(true)}
-          className="fixed bottom-3 sm:bottom-4 right-3 sm:right-4 z-40 h-8 sm:h-9 inline-flex items-center gap-1.5 px-3.5 sm:px-4 rounded-full bg-sky-500 hover:bg-sky-400 active:bg-sky-600 text-white text-xs font-bold shadow-md shadow-sky-500/25 hover:shadow-lg hover:shadow-sky-500/35 border border-sky-400 dark:border-sky-400 transition-all active:scale-95 cursor-pointer select-none"
+          className="fixed bottom-3 sm:bottom-4 right-3 sm:right-4 z-40 h-8 sm:h-9 inline-flex items-center gap-1.5 px-3.5 sm:px-4 rounded-full bg-sky-500 hover:bg-sky-400 active:bg-sky-600 text-white text-xs font-bold shadow-md shadow-sky-500/25 hover:shadow-lg hover:shadow-sky-500/35 border border-sky-400 transition-all active:scale-95 cursor-pointer select-none"
           title="Open Map View"
         >
           <svg className="w-3.5 h-3.5 text-white shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">

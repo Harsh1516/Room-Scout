@@ -14,7 +14,7 @@ function RollingStayTitle({
   title,
   stayId,
   direction = 1,
-  className = 'text-3xl sm:text-3.5xl md:text-4xl lg:text-4xl xl:text-5xl font-black uppercase tracking-tight text-stone-900 dark:text-slate-950 leading-[0.96] drop-shadow-sm break-words line-clamp-2',
+  className = 'text-3xl sm:text-3.5xl md:text-4xl lg:text-4xl xl:text-5xl font-black uppercase tracking-tight text-stone-900 leading-[0.96] drop-shadow-sm break-words line-clamp-2',
 }) {
   return (
     <div className="overflow-hidden relative w-full">
@@ -266,14 +266,14 @@ export function StayCinematicShowcase({
         <div className="relative z-20 w-full flex items-center justify-between pt-1 sm:pt-2 pb-2 shrink-0">
           {/* Showcase / Grid View Mode Switcher */}
           {onViewModeChange ? (
-            <div className="inline-flex items-center p-1 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 shadow-xs backdrop-blur-md text-xs font-bold">
+            <div className="inline-flex items-center p-1 rounded-2xl bg-white/90 border border-slate-200/90 shadow-xs backdrop-blur-md text-xs font-bold">
               <button
                 type="button"
                 onClick={() => onViewModeChange('showcase')}
                 className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
                   viewMode === 'showcase'
                     ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm shadow-purple-500/25 font-bold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400'
+                    : 'text-slate-600 hover:text-purple-600'
                 }`}
               >
                 <span>✦ Showcase</span>
@@ -284,7 +284,7 @@ export function StayCinematicShowcase({
                 className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
                   viewMode === 'grid'
                     ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm shadow-purple-500/25 font-bold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400'
+                    : 'text-slate-600 hover:text-purple-600'
                 }`}
               >
                 <span>⊞ Grid</span>
@@ -296,7 +296,7 @@ export function StayCinematicShowcase({
 
           {/* Slide Counter in Bold Black/White (e.g. 1/2) */}
           <div className="flex items-center pr-2">
-            <span className="text-xl sm:text-2xl font-black tracking-wider text-slate-950 dark:text-white font-sans select-none drop-shadow-xs">
+            <span className="text-xl sm:text-2xl font-black tracking-wider text-slate-950 font-sans select-none drop-shadow-xs">
               {activeIndex + 1}/{stays.length}
             </span>
           </div>
@@ -304,7 +304,7 @@ export function StayCinematicShowcase({
       )}
 
       {/* ── 2. MIDDLE SHOWCASE TAB: Purple Blue Mix Gradient ── */}
-      <div className="relative z-10 w-full flex-1 min-h-0 rounded-3xl sm:rounded-[32px] lg:rounded-[36px] bg-gradient-to-r from-purple-600 to-indigo-600 backdrop-blur-2xl border border-purple-400/40 dark:border-purple-500/30 shadow-[0_20px_60px_rgba(99,102,241,0.28)] flex flex-col lg:flex-row items-center justify-between px-4 sm:px-8 lg:pl-9 xl:pl-11 lg:pr-0 py-3 sm:py-3.5 lg:py-4 overflow-hidden my-auto mb-3.5 sm:mb-4 transition-colors duration-300">
+      <div className="relative z-10 w-full flex-1 min-h-0 rounded-3xl sm:rounded-[32px] lg:rounded-[36px] bg-gradient-to-r from-purple-600 to-indigo-600 backdrop-blur-2xl border border-purple-400/40 shadow-[0_20px_60px_rgba(99,102,241,0.28)] flex flex-col lg:flex-row items-center justify-between px-4 sm:px-8 lg:pl-9 xl:pl-11 lg:pr-0 py-3 sm:py-3.5 lg:py-4 overflow-hidden my-auto mb-3.5 sm:mb-4 transition-colors duration-300">
         
         {/* ── LEFT HALF: Stay Title, Facilities List, Price, Action CTAs ── */}
         <div className="w-full lg:w-[48%] xl:w-[46%] flex flex-col justify-center space-y-2 sm:space-y-2.5 lg:space-y-3 lg:pr-6 xl:pr-8 shrink-0 z-20">
@@ -343,7 +343,7 @@ export function StayCinematicShowcase({
           </div>
 
           {/* ── PRICING TAB: Premium Frosted Glassmorphism Card enclosing Lowest Price and Other Prices only ── */}
-          <div className="relative w-full rounded-2xl p-3 sm:p-3.5 lg:p-4 transition-colors duration-200 bg-white/15 dark:bg-white/20 backdrop-blur-xl border border-white/25 shadow-md">
+          <div className="relative w-full rounded-2xl p-3 sm:p-3.5 lg:p-4 transition-colors duration-200 bg-white/15 backdrop-blur-xl border border-white/25 shadow-md">
             <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-5">
               {/* Left Column: Lowest Price */}
               <div className="space-y-0.5 shrink-0">
@@ -513,7 +513,7 @@ export function StayCinematicShowcase({
                         className={`absolute top-3 right-3 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-90 pointer-events-auto ${
                           isThisSaved
                             ? 'bg-rose-500 text-white'
-                            : 'bg-white/90 text-slate-800 dark:bg-black/80 dark:text-white'
+                            : 'bg-white/90 text-slate-800'
                         }`}
                         title={isThisSaved ? 'Remove from Wishlist' : 'Save to Wishlist'}
                       >
@@ -580,7 +580,7 @@ export function StayCinematicShowcase({
               onClick={handlePrev}
               disabled={!canGoPrev}
               data-no-hover="true"
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-950 dark:bg-white text-white dark:text-slate-950 border border-slate-900 dark:border-white/20 shadow-md flex items-center justify-center transition-all ${
+              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-950 text-white border border-slate-900 shadow-md flex items-center justify-center transition-all ${
                 !canGoPrev
                   ? 'opacity-35 cursor-not-allowed'
                   : 'cursor-pointer active:scale-90'
@@ -599,7 +599,7 @@ export function StayCinematicShowcase({
               onClick={handleNext}
               disabled={!canGoNext}
               data-no-hover="true"
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-950 dark:bg-white text-white dark:text-slate-950 border border-slate-900 dark:border-white/20 shadow-md flex items-center justify-center transition-all ${
+              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-950 text-white border border-slate-900 shadow-md flex items-center justify-center transition-all ${
                 !canGoNext
                   ? 'opacity-35 cursor-not-allowed'
                   : 'cursor-pointer active:scale-90'

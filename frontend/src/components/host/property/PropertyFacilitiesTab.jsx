@@ -74,9 +74,9 @@ export function PropertyFacilitiesTab({
 
   return (
     <div className="space-y-3.5">
-      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/95 backdrop-blur-xl shadow-sm space-y-4 relative overflow-hidden max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:rounded-2xl max-md:p-4 max-md:shadow-black/20">
-        <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-100 dark:border-zinc-800 max-md:border-white/10 pb-3 relative z-10">
-          <p className="text-xs font-medium uppercase tracking-wider max-md:text-white text-slate-800 dark:text-slate-200 flex items-center gap-2">
+      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white/70 backdrop-blur-xl shadow-sm space-y-4 relative overflow-hidden max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:rounded-2xl max-md:p-4 max-md:shadow-black/20">
+        <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-100 max-md:border-white/10 pb-3 relative z-10">
+          <p className="text-xs font-medium uppercase tracking-wider max-md:text-white text-slate-800 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full max-md:bg-purple-300 max-md:shadow-none bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
             Active Amenities ({localFacilities.length})
           </p>
@@ -101,16 +101,16 @@ export function PropertyFacilitiesTab({
                 {localFacilities.map((facility, fIdx) => (
                   <div
                     key={fIdx}
-                    className="px-3 py-1.5 rounded-xl bg-white/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 text-slate-900 dark:text-white text-xs font-normal flex items-center gap-2 shadow-2xs group"
+                    className="px-3 py-1.5 rounded-xl bg-white/80 backdrop-blur-md border border-slate-200/80 text-slate-900 text-xs font-normal flex items-center gap-2 shadow-2xs group"
                   >
-                    <div className="w-4 h-4 rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                    <div className="w-4 h-4 rounded-md bg-purple-500/10 text-purple-600 flex items-center justify-center">
                       <CheckIcon className="w-2.5 h-2.5" />
                     </div>
                     <span>{facility}</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveFacility(fIdx)}
-                      className="p-0.5 rounded-md hover:bg-rose-500/20 text-purple-600 dark:text-purple-400/60 hover:text-rose-600 dark:hover:text-rose-300 cursor-pointer transition-colors"
+                      className="p-0.5 rounded-md hover:bg-rose-500/20 text-purple-600 hover:text-rose-600 cursor-pointer transition-colors"
                       title="Remove amenity"
                     >
                       <XMarkIcon className="w-3 h-3" />
@@ -119,17 +119,17 @@ export function PropertyFacilitiesTab({
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-purple-600 dark:text-purple-400 italic">No amenities added yet. Pick from presets below or enter custom.</p>
+              <p className="text-xs text-purple-600 italic">No amenities added yet. Pick from presets below or enter custom.</p>
             )}
 
             {/* Custom Input */}
-            <form onSubmit={handleAddCustomFacility} className="flex items-center gap-2 pt-3 border-t border-slate-100 dark:border-zinc-800">
+            <form onSubmit={handleAddCustomFacility} className="flex items-center gap-2 pt-3 border-t border-slate-100">
               <input
                 type="text"
                 value={newFacilityInput}
                 onChange={(e) => setNewFacilityInput(e.target.value)}
                 placeholder="Add custom facility (e.g. Lift / Elevator, Swimming Pool)..."
-                className="flex-1 px-4 py-2.5 rounded-xl bg-slate-50/80 dark:bg-zinc-800/90 border border-slate-200/90 dark:border-zinc-700 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 shadow-inner transition-colors backdrop-blur-md"
+                className="flex-1 px-4 py-2.5 rounded-xl bg-slate-50/80 border border-slate-200/90 text-xs sm:text-[13px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 shadow-inner transition-colors backdrop-blur-md"
               />
               <button
                 type="submit"
@@ -143,8 +143,8 @@ export function PropertyFacilitiesTab({
 
             {/* Quick Add Presets */}
             {availablePresets.length > 0 && (
-              <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-zinc-800">
-                <p className="text-[10.5px] uppercase tracking-wider text-purple-600 dark:text-purple-400/80 font-medium">
+              <div className="space-y-2 pt-3 border-t border-slate-100">
+                <p className="text-[10.5px] uppercase tracking-wider text-purple-600 font-medium">
                   Quick Add Common Amenities:
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -153,9 +153,9 @@ export function PropertyFacilitiesTab({
                       key={preset}
                       type="button"
                       onClick={() => handleAddPreset(preset)}
-                      className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-purple-500/10 dark:bg-zinc-800/90 dark:hover:bg-zinc-700/80 border border-slate-200/80 dark:border-zinc-700 text-xs font-normal text-slate-800 dark:text-zinc-200 cursor-pointer transition-all flex items-center gap-1.5 shadow-2xs active:scale-95 backdrop-blur-sm"
+                      className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-purple-500/10 border border-slate-200/80 text-xs font-normal text-slate-800 cursor-pointer transition-all flex items-center gap-1.5 shadow-2xs active:scale-95 backdrop-blur-sm"
                     >
-                      <span className="text-purple-600 dark:text-purple-400 font-medium">+</span>
+                      <span className="text-purple-600 font-medium">+</span>
                       <span>{preset}</span>
                     </button>
                   ))}
@@ -170,15 +170,15 @@ export function PropertyFacilitiesTab({
                 {facilities.map((facility, fIdx) => (
                   <div
                     key={fIdx}
-                    className="px-3.5 py-2.5 rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 hover:border-purple-500/50 dark:hover:border-purple-500/40 hover:bg-white dark:hover:bg-zinc-800 text-slate-900 dark:text-white text-xs sm:text-[13px] font-normal tracking-normal flex items-center gap-2 transition-all shadow-2xs hover:shadow-xs group"
+                    className="px-3.5 py-2.5 rounded-xl sm:rounded-2xl bg-slate-50/80 backdrop-blur-md border border-slate-200/80 hover:border-purple-500/50 hover:bg-white text-slate-900 text-xs sm:text-[13px] font-normal tracking-normal flex items-center gap-2 transition-all shadow-2xs hover:shadow-xs group"
                   >
-                    <CheckIcon className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 stroke-[2.2] shrink-0" />
+                    <CheckIcon className="w-3.5 h-3.5 text-purple-600 stroke-[2.2] shrink-0" />
                     <span className="truncate">{facility}</span>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="p-6 text-center text-xs text-purple-600 dark:text-purple-400 border border-dashed border-slate-200/80 dark:border-zinc-700 rounded-xl bg-white/40 dark:bg-zinc-800/50 backdrop-blur-sm">
+              <div className="p-6 text-center text-xs text-purple-600 border border-dashed border-slate-200/80 rounded-xl bg-white/40 backdrop-blur-sm">
                 No facilities listed. Click &quot;Edit&quot; to add amenities like Wi-Fi, AC, Attached Bath, etc.
               </div>
             )}

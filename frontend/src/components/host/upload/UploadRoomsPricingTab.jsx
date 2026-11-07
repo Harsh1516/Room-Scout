@@ -47,11 +47,11 @@ export function UploadRoomsPricingTab({
         {/* Card Body: Purple on Mobile, Clean White/Dark on Desktop */}
         <section className="rounded-2xl sm:rounded-3xl border shadow-lg transition-colors
           max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:p-4 max-md:shadow-black/20
-          md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:p-5 md:sm:p-5.5 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
+          md:bg-white md: md:border-slate-200/90 md: md:p-5 md:sm:p-5.5 md:shadow-black/5 md:(255,255,255,0.04)]"
         >
           {/* Desktop-Only Header Inside Card */}
-          <div className="hidden md:block pb-4 mb-4 border-b border-slate-100 dark:border-zinc-800/80 text-center relative">
-            <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          <div className="hidden md:block pb-4 mb-4 border-b border-slate-100 text-center relative">
+            <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
               Room Categories & Rates
             </h2>
             
@@ -123,11 +123,11 @@ export function UploadRoomsPricingTab({
         {/* Card Body: Purple on Mobile, Clean White/Dark on Desktop */}
         <section className="rounded-2xl sm:rounded-3xl border shadow-lg space-y-4 transition-colors
           max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:p-4 max-md:shadow-black/20
-          md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:p-5 md:sm:p-5.5 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
+          md:bg-white md: md:border-slate-200/90 md: md:p-5 md:sm:p-5.5 md:shadow-black/5 md:(255,255,255,0.04)]"
         >
           {/* Desktop-Only Heading Inside Card */}
-          <div className="hidden md:block pb-3 border-b border-slate-100 dark:border-zinc-800/80 text-center relative">
-            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+          <div className="hidden md:block pb-3 border-b border-slate-100 text-center relative">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
               Property Description
             </h3>
 
@@ -135,7 +135,7 @@ export function UploadRoomsPricingTab({
               className={`hidden sm:inline-flex px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold absolute right-0 top-0 ${
                 descLength >= maxDescriptionChars
                   ? 'bg-rose-500/10 text-rose-600 font-bold border border-rose-500/20'
-                  : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400'
+                  : 'bg-slate-100 text-slate-600'
               }`}
             >
               {descLength} / {maxDescriptionChars}
@@ -156,7 +156,7 @@ export function UploadRoomsPricingTab({
               placeholder="Describe your stay (e.g. Spacious and quiet stay with high-speed Wi-Fi, attached washrooms, and hygienic home-cooked meals)..."
               className={`w-full p-3.5 rounded-xl border text-xs sm:text-sm focus:outline-none transition-all resize-none leading-relaxed
                 max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
-                md:bg-slate-50/70 md:dark:bg-zinc-800/40 md:border-slate-200 md:dark:border-zinc-700/80 md:text-slate-900 md:dark:text-white md:placeholder:text-slate-400 md:dark:placeholder:text-zinc-500 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 ${
+                md:bg-slate-50/70 md: md:border-slate-200 md: md:text-slate-900 md: md:placeholder:text-slate-400 md: md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 ${
                 fieldErrors.description
                   ? 'border-rose-400/60 focus:border-rose-400/60 ring-2 ring-rose-500/20 bg-rose-500/10'
                   : ''

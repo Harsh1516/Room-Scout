@@ -5,9 +5,9 @@ import { ErrorBoundary } from '../../common/ErrorBoundary';
 
 function DashboardSkeletonLoader() {
   return (
-    <div className="w-full min-h-[320px] rounded-2xl bg-white/60 dark:bg-zinc-900/60 animate-pulse border border-slate-200 dark:border-zinc-800 flex flex-col items-center justify-center gap-3 p-8">
-      <div className="w-8 h-8 rounded-full border-2 border-slate-200 dark:border-white/10 border-t-[#9333ea] animate-spin" />
-      <span className="text-xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+    <div className="w-full min-h-[320px] rounded-2xl bg-white/60 animate-pulse border border-slate-200 flex flex-col items-center justify-center gap-3 p-8">
+      <div className="w-8 h-8 rounded-full border-2 border-slate-200 border-t-[#9333ea] animate-spin" />
+      <span className="text-xs font-mono uppercase tracking-wider text-slate-400">
         Loading Panel Content...
       </span>
     </div>
@@ -63,21 +63,21 @@ export function HostRoomsTab({
             <button
               type="button"
               onClick={handleAddNewRoomTypeRow}
-              className="group flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl bg-slate-900 hover:bg-black dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 border border-slate-800 dark:border-white/20 text-xs font-bold transition-all shadow-sm cursor-pointer active:scale-95 shrink-0"
+              className="group flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl bg-slate-900 hover:bg-black text-white border border-slate-800 text-xs font-bold transition-all shadow-sm cursor-pointer active:scale-95 shrink-0"
             >
-              <span className="material-symbols-outlined text-[18px] text-slate-100 dark:text-slate-900 group-hover:rotate-90 transition-all">add</span>
-              <span className="text-white dark:text-slate-900 transition-colors">Add Room Type</span>
+              <span className="material-symbols-outlined text-[18px] text-slate-100 group-hover:rotate-90 transition-all">add</span>
+              <span className="text-white transition-colors">Add Room Type</span>
             </button>
           </div>
 
           {/* Occupants / Add Guest console capsule */}
-          <div className="flex items-center gap-1 p-1 rounded-full bg-slate-900/90 dark:bg-black border border-slate-700/50 dark:border-zinc-800 shadow-inner relative self-start sm:self-auto shrink-0 max-w-full overflow-x-auto no-scrollbar backdrop-blur-md">
+          <div className="flex items-center gap-1 p-1 rounded-full bg-slate-900/90 border border-slate-700/50 shadow-inner relative self-start sm:self-auto shrink-0 max-w-full overflow-x-auto no-scrollbar backdrop-blur-md">
             <button
               type="button"
               onClick={() => setActiveRightPanelTab('occupants')}
               className={`relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-colors cursor-pointer z-10 ${
                 activeRightPanelTab !== 'guest'
-                  ? 'text-slate-900 dark:text-white'
+                  ? 'text-slate-900'
                   : 'text-slate-400 hover:text-white'
               }`}
               title="View active room occupants"
@@ -85,7 +85,7 @@ export function HostRoomsTab({
               {activeRightPanelTab !== 'guest' && (
                 <motion.div
                   layoutId="occupantSwitchIndicator"
-                  className="absolute inset-0 rounded-full bg-white dark:bg-zinc-800 shadow-sm -z-10 pointer-events-none"
+                  className="absolute inset-0 rounded-full bg-white shadow-sm -z-10 pointer-events-none"
                   transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.8 }}
                 />
               )}
@@ -98,7 +98,7 @@ export function HostRoomsTab({
               onClick={() => setActiveRightPanelTab('guest')}
               className={`relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-colors cursor-pointer z-10 ${
                 activeRightPanelTab === 'guest'
-                  ? 'text-slate-900 dark:text-white'
+                  ? 'text-slate-900'
                   : 'text-slate-400 hover:text-white'
               }`}
               title="Add new guest"
@@ -106,7 +106,7 @@ export function HostRoomsTab({
               {activeRightPanelTab === 'guest' && (
                 <motion.div
                   layoutId="occupantSwitchIndicator"
-                  className="absolute inset-0 rounded-full bg-white dark:bg-zinc-800 shadow-sm -z-10 pointer-events-none"
+                  className="absolute inset-0 rounded-full bg-white shadow-sm -z-10 pointer-events-none"
                   transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.8 }}
                 />
               )}
@@ -171,11 +171,11 @@ export function HostRoomsTab({
                   />
                 </Suspense>
               ) : (
-                <div className="hidden xl:flex flex-col items-center justify-center min-h-[320px] rounded-3xl border border-dashed border-slate-300 dark:border-outline-variant/60 bg-white/70 dark:bg-surface-container-low/60 backdrop-blur-sm text-center p-8 space-y-3 shadow-xs">
-                  <span className="material-symbols-outlined text-[32px] text-slate-400 dark:text-zinc-500 mx-auto">meeting_room</span>
+                <div className="hidden xl:flex flex-col items-center justify-center min-h-[320px] rounded-3xl border border-dashed border-slate-300 bg-white/70 backdrop-blur-sm text-center p-8 space-y-3 shadow-xs">
+                  <span className="material-symbols-outlined text-[32px] text-slate-400 mx-auto">meeting_room</span>
                   <div className="space-y-1">
-                    <p className="text-sm font-semibold text-slate-800 dark:text-on-surface">Select a room to view its schedule</p>
-                    <p className="text-xs text-slate-500 dark:text-on-surface-variant max-w-sm mx-auto">Pick any room card from the left panel to open the booking calendar and occupants roster.</p>
+                    <p className="text-sm font-semibold text-slate-800">Select a room to view its schedule</p>
+                    <p className="text-xs text-slate-500 max-w-sm mx-auto">Pick any room card from the left panel to open the booking calendar and occupants roster.</p>
                   </div>
                 </div>
               )}

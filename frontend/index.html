@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="light">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -15,13 +15,9 @@
     <script>
       (function() {
         try {
-          var theme = localStorage.getItem('room_scout_theme');
-          if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-          } else {
-            document.documentElement.classList.remove('dark');
-            document.documentElement.classList.add('light');
-          }
+          localStorage.removeItem('room_scout_theme');
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
         } catch (e) {}
       })();
     </script>

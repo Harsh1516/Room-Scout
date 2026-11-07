@@ -85,7 +85,7 @@ export function Console({
   return (
     <div ref={consoleRef} className="relative select-none">
       <nav
-        className="relative flex items-center p-0.5 sm:p-1.5 rounded-full console-clear-capsule shadow-lg border border-white/20 dark:border-white/10 select-none max-w-[calc(100vw-96px)] sm:max-w-none"
+        className="relative flex items-center p-0.5 sm:p-1.5 rounded-full console-clear-capsule shadow-lg border border-white/20 select-none max-w-[calc(100vw-96px)] sm:max-w-none"
         style={{ borderRadius: 9999 }}
       >
         {/* 1. Expandable 3-Segment Controls (What, Where, Who) */}

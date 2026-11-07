@@ -70,7 +70,7 @@ export function WhereControl({
         className={`flex items-center px-2 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold tracking-tight transition-all duration-150 cursor-pointer select-none active:scale-95 border focus:outline-none focus:ring-0 focus-visible:outline-none shadow-xs ${
           isLocationActive
             ? 'bg-cyan-600 text-white border-cyan-400 font-bold shadow-[0_0_12px_rgba(6,182,212,0.4)]'
-            : 'bg-slate-950 text-white hover:bg-slate-900 border-slate-800 dark:border-white/20'
+            : 'bg-slate-950 text-white hover:bg-slate-900 border-slate-800'
         }`}
         title="Select destination or map location"
       >
@@ -81,11 +81,11 @@ export function WhereControl({
       {isOpen && (
         <div
           onClick={(e) => e.stopPropagation()}
-          className="absolute top-full mt-2.5 sm:mt-3.5 left-1/2 -translate-x-1/2 w-72 sm:w-76 max-w-[calc(100vw-32px)] p-3 rounded-2xl apple-liquid-dropdown z-50 text-slate-900 dark:text-slate-100 space-y-2.5 animate-in fade-in duration-75"
+          className="absolute top-full mt-2.5 sm:mt-3.5 left-1/2 -translate-x-1/2 w-72 sm:w-76 max-w-[calc(100vw-32px)] p-3 rounded-2xl apple-liquid-dropdown z-50 text-slate-900 space-y-2.5 animate-in fade-in duration-75"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-1 border-b border-slate-100 dark:border-zinc-800 pb-1.5">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+          <div className="flex items-center justify-between px-1 border-b border-slate-100 pb-1.5">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500">
               Where to?
             </span>
             {isLocationActive && (
@@ -106,7 +106,7 @@ export function WhereControl({
               placeholder="Search city, area, or state..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-none"
+              className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-none"
               autoFocus
             />
           </form>
@@ -121,13 +121,13 @@ export function WhereControl({
                 onOpenMapModal();
               }
             }}
-            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-[#f5ede7] dark:bg-[#2a1d17]/70 border border-[#ddcbbe] dark:border-[#443025] text-[#4a2e1d] dark:text-[#f5eae3] hover:bg-[#ede0d4] dark:hover:bg-[#34241d] transition-colors cursor-pointer focus:outline-none focus:ring-0 active:scale-98"
+            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-[#f5ede7] border border-[#ddcbbe] text-[#4a2e1d] hover:bg-[#ede0d4] transition-colors cursor-pointer focus:outline-none focus:ring-0 active:scale-98"
           >
             <div className="text-left">
               <div className="text-xs font-bold">Interactive Map Pin</div>
-              <div className="text-[10px] text-[#7d5740] dark:text-[#ab8f7f]">Select area visually on map</div>
+              <div className="text-[10px] text-[#7d5740]">Select area visually on map</div>
             </div>
-            <span className="text-xs font-bold text-[#824a25] dark:text-[#e08b52]">→</span>
+            <span className="text-xs font-bold text-[#824a25]">→</span>
           </button>
         </div>
       )}

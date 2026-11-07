@@ -81,7 +81,7 @@ export function WhatControl({
         className={`flex items-center px-2 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold tracking-tight transition-all duration-150 cursor-pointer select-none active:scale-95 border focus:outline-none focus:ring-0 focus-visible:outline-none shadow-xs ${
           isTypeActive
             ? 'bg-cyan-600 text-white border-cyan-400 font-bold shadow-[0_0_12px_rgba(6,182,212,0.4)]'
-            : 'bg-slate-950 text-white hover:bg-slate-900 border-slate-800 dark:border-white/20'
+            : 'bg-slate-950 text-white hover:bg-slate-900 border-slate-800'
         }`}
         title="Filter by stay type"
       >
@@ -92,10 +92,10 @@ export function WhatControl({
       {isOpen && (
         <div
           onClick={(e) => e.stopPropagation()}
-          className="absolute top-full mt-2.5 sm:mt-3.5 left-1/2 -translate-x-1/2 w-64 max-w-[calc(100vw-32px)] p-2.5 rounded-2xl apple-liquid-dropdown z-50 text-slate-900 dark:text-slate-100 space-y-1.5 animate-in fade-in duration-75"
+          className="absolute top-full mt-2.5 sm:mt-3.5 left-1/2 -translate-x-1/2 w-64 max-w-[calc(100vw-32px)] p-2.5 rounded-2xl apple-liquid-dropdown z-50 text-slate-900 space-y-1.5 animate-in fade-in duration-75"
         >
-          <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100 dark:border-zinc-800 pb-2 mb-1">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100 pb-2 mb-1">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500">
               Stay Type
             </span>
             {isTypeActive && (
@@ -122,12 +122,12 @@ export function WhatControl({
                     onClick={() => handleSelect(t.id)}
                     className={`w-full flex items-center justify-between px-3 py-2.5 text-xs rounded-xl transition-none cursor-pointer text-left focus:outline-none focus:ring-0 active:scale-98 border ${
                       isSelected
-                        ? 'bg-cyan-50 dark:bg-cyan-950/40 border-cyan-500/50 text-cyan-900 dark:text-cyan-200 shadow-xs font-bold'
-                        : 'bg-slate-50 hover:bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 border-slate-200/80 dark:border-zinc-800 text-slate-800 dark:text-slate-200 font-medium'
+                        ? 'bg-cyan-50 border-cyan-500/50 text-cyan-900 shadow-xs font-bold'
+                        : 'bg-slate-50 hover:bg-slate-100 border-slate-200/80 text-slate-800 font-medium'
                     }`}
                   >
                     <span className="tracking-tight">{t.label}</span>
-                    {isSelected && <span className="text-xs font-bold text-cyan-600 dark:text-cyan-400">✓</span>}
+                    {isSelected && <span className="text-xs font-bold text-cyan-600">✓</span>}
                   </button>
                 );
               })

@@ -509,17 +509,17 @@ export function PropertyPhotosTab({
       />
 
       {/* Main Visual Gallery Card */}
-      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/95 backdrop-blur-xl shadow-sm space-y-4 relative overflow-hidden max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:rounded-2xl max-md:p-4 max-md:shadow-black/20">
+      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white/70 backdrop-blur-xl shadow-sm space-y-4 relative overflow-hidden max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:rounded-2xl max-md:p-4 max-md:shadow-black/20">
         {/* Header Strip - Aligned with Address & Geography standard */}
-        <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-100 dark:border-zinc-800 max-md:border-white/10 pb-3 relative z-10">
-          <p className="text-xs font-medium uppercase tracking-wider max-md:text-white text-slate-800 dark:text-slate-200 flex items-center gap-2 min-w-0">
+        <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-100 max-md:border-white/10 pb-3 relative z-10">
+          <p className="text-xs font-medium uppercase tracking-wider max-md:text-white text-slate-800 flex items-center gap-2 min-w-0">
             <span className="w-2 h-2 rounded-full max-md:bg-purple-300 max-md:shadow-none bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)] shrink-0" />
             <span className="truncate">Visual Gallery & Walkthrough</span>
           </p>
 
           {/* Center Position: Total Size Indicator */}
           <div className="flex items-center justify-center pointer-events-none order-last sm:order-none w-full sm:w-auto">
-            <span className="px-3 py-1 rounded-full bg-purple-500/10 dark:bg-zinc-800 border border-purple-500/25 dark:border-zinc-700 text-xs font-mono text-purple-700 dark:text-zinc-300 font-medium shadow-2xs flex items-center gap-1.5 backdrop-blur-md">
+            <span className="px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/25 text-xs font-mono text-purple-700 font-medium shadow-2xs flex items-center gap-1.5 backdrop-blur-md">
               <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
               <span>Total Size: {totalMemoryFormatted}</span>
             </span>
@@ -542,7 +542,7 @@ export function PropertyPhotosTab({
         </div>
 
         {uploadNotice && (
-          <p className="font-body-md text-xs text-amber-700 dark:text-amber-300 font-medium bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl px-3 py-1.5">
+          <p className="font-body-md text-xs text-amber-700 font-medium bg-amber-50 border border-amber-200 rounded-xl px-3 py-1.5">
             {uploadNotice}
           </p>
         )}
@@ -599,7 +599,7 @@ export function PropertyPhotosTab({
 
                     {/* Cover Photo Badge on 1st image */}
                     {isCover && (
-                      <span className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-gradient-to-r from-[#7c3aed] to-[#9333ea] text-slate-100 font-medium text-[10px] tracking-wider uppercase shadow-lg backdrop-blur-md flex items-center gap-1 z-10 border border-slate-200 dark:border-white/10">
+                      <span className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-gradient-to-r from-[#7c3aed] to-[#9333ea] text-slate-100 font-medium text-[10px] tracking-wider uppercase shadow-lg backdrop-blur-md flex items-center gap-1 z-10 border border-slate-200">
                         <span>★</span>
                         <span>Cover Photo</span>
                       </span>
@@ -666,31 +666,31 @@ export function PropertyPhotosTab({
             {isEditing && !isAtLimit && (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="rounded-2xl border-2 border-dashed border-[#a855f7]/35 dark:border-zinc-700 hover:border-[#9333ea] p-3 flex flex-col items-center justify-center gap-1.5 bg-white/40 hover:bg-[#a855f7]/10 dark:bg-zinc-800/50 dark:hover:bg-zinc-800 transition-all cursor-pointer group shadow-sm w-full min-h-[140px] aspect-[16/9] sm:aspect-auto sm:h-full"
+                className="rounded-2xl border-2 border-dashed border-[#a855f7]/35 hover:border-[#9333ea] p-3 flex flex-col items-center justify-center gap-1.5 bg-white/40 hover:bg-[#a855f7]/10 transition-all cursor-pointer group shadow-sm w-full min-h-[140px] aspect-[16/9] sm:aspect-auto sm:h-full"
               >
-                <div className="w-8 h-8 rounded-full bg-purple-500/10 dark:bg-zinc-800 group-hover:bg-[#a855f7]/25 border border-slate-200/80 dark:border-zinc-700 text-purple-600 dark:text-purple-400 flex items-center justify-center transition-colors shadow-2xs">
+                <div className="w-8 h-8 rounded-full bg-purple-500/10 group-hover:bg-[#a855f7]/25 border border-slate-200/80 text-purple-600 flex items-center justify-center transition-colors shadow-2xs">
                   <PlusIcon className="w-4 h-4" />
                 </div>
                 <div className="text-center px-1">
-                  <p className="text-xs font-medium text-slate-800 dark:text-white">Upload Photo</p>
-                  <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-0.5">
+                  <p className="text-xs font-medium text-slate-800">Upload Photo</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">
                     16:9 only • {MAX_PHOTOS - localImages.length} of {MAX_PHOTOS} remaining
                   </p>
                 </div>
-                <span className="mt-0.5 py-1 px-2.5 rounded-xl bg-white/80 hover:bg-purple-500/10 dark:bg-zinc-800/90 dark:hover:bg-zinc-700/80 border border-slate-200/80 dark:border-zinc-700 text-slate-800 dark:text-zinc-200 text-[10.5px] font-medium transition-all shadow-2xs">
+                <span className="mt-0.5 py-1 px-2.5 rounded-xl bg-white/80 hover:bg-purple-500/10 border border-slate-200/80 text-slate-800 text-[10.5px] font-medium transition-all shadow-2xs">
                   Choose 16:9 File
                 </span>
               </div>
             )}
           </div>
         ) : (
-          <div className="p-8 text-center text-xs text-slate-500 dark:text-zinc-400 border border-dashed border-slate-200/80 dark:border-zinc-700 rounded-2xl bg-white/40 dark:bg-zinc-800/50 space-y-3">
+          <div className="p-8 text-center text-xs text-slate-500 border border-dashed border-slate-200/80 rounded-2xl bg-white/40 space-y-3">
             <p>No photos uploaded yet.</p>
             {isEditing && (
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="px-4 py-2 rounded-xl bg-white hover:bg-white/90 text-slate-900 dark:text-white text-xs font-semibold transition-all cursor-pointer shadow-md active:scale-95"
+                className="px-4 py-2 rounded-xl bg-white hover:bg-white/90 text-slate-900 text-xs font-semibold transition-all cursor-pointer shadow-md active:scale-95"
               >
                 + Upload First Photo
               </button>
@@ -700,18 +700,18 @@ export function PropertyPhotosTab({
 
         {/* Edit mode drag guidance tip */}
         {isEditing && (
-          <p className="text-xs text-slate-500 dark:text-zinc-400 pt-1 font-normal">
-            Tip: Photos must be in <span className="font-semibold text-slate-900 dark:text-white">16:9 widescreen ratio</span> (e.g. 1920×1080, 1280×720). Drag photos left or right to reorder. The 1st photo on the top-left is automatically your listing&apos;s <span className="text-purple-600 dark:text-purple-400 font-medium">Cover Photo</span>. Limit: {MAX_PHOTOS} photos maximum.
+          <p className="text-xs text-slate-500 pt-1 font-normal">
+            Tip: Photos must be in <span className="font-semibold text-slate-900">16:9 widescreen ratio</span> (e.g. 1920×1080, 1280×720). Drag photos left or right to reorder. The 1st photo on the top-left is automatically your listing&apos;s <span className="text-purple-600 font-medium">Cover Photo</span>. Limit: {MAX_PHOTOS} photos maximum.
           </p>
         )}
 
         {/* Video Tour Link Card - Aligned with Address & Geography standard */}
-        <div className="p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 hover:border-purple-500/50 dark:hover:border-purple-500/40 hover:bg-white dark:hover:bg-zinc-800 transition-all flex flex-col justify-between gap-2.5 shadow-2xs">
+        <div className="p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/80 backdrop-blur-md border border-slate-200/80 hover:border-purple-500/50 hover:bg-white transition-all flex flex-col justify-between gap-2.5 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] text-purple-600 dark:text-purple-400 uppercase tracking-wider font-medium">
+            <span className="text-[10px] text-purple-600 uppercase tracking-wider font-medium">
               Video Tour Walkthrough
             </span>
-            <span className="material-symbols-outlined text-[17px] text-purple-600 dark:text-purple-400 shrink-0">
+            <span className="material-symbols-outlined text-[17px] text-purple-600 shrink-0">
               videocam
             </span>
           </div>
@@ -719,10 +719,10 @@ export function PropertyPhotosTab({
           {!isEditing ? (
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-normal text-slate-900 dark:text-white tracking-normal truncate select-all">
+                <p className="text-xs sm:text-sm font-normal text-slate-900 tracking-normal truncate select-all">
                   {localVideoUrl?.trim() || 'No walkthrough video linked yet'}
                 </p>
-                <span className="text-[10.5px] text-slate-500 dark:text-zinc-400 font-normal">
+                <span className="text-[10.5px] text-slate-500 font-normal">
                   {localVideoUrl?.trim() ? 'Public walkthrough link' : 'YouTube video or Instagram Reel link to boost listing views'}
                 </span>
               </div>
@@ -764,13 +764,13 @@ export function PropertyPhotosTab({
                     }
                   }}
                   placeholder="https://www.instagram.com/reel/... or https://www.youtube.com/watch?v=..."
-                  className="w-full pl-3.5 pr-20 py-2.5 rounded-xl bg-slate-50/80 dark:bg-zinc-900/90 border border-slate-200/90 dark:border-zinc-700 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 shadow-inner transition-colors font-mono"
+                  className="w-full pl-3.5 pr-20 py-2.5 rounded-xl bg-slate-50/80 border border-slate-200/90 text-xs sm:text-[13px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 shadow-inner transition-colors font-mono"
                 />
                 {localVideoUrl?.trim() && (
                   <button
                     type="button"
                     onClick={() => setLocalVideoUrl('')}
-                    className="absolute right-2.5 p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all cursor-pointer"
+                    className="absolute right-2.5 p-1 rounded-lg text-slate-400 hover:text-slate-700 transition-all cursor-pointer"
                     title="Clear video link"
                   >
                     <XMarkIcon className="w-3.5 h-3.5" />
@@ -778,7 +778,7 @@ export function PropertyPhotosTab({
                 )}
               </div>
               <div className="flex items-center justify-between flex-wrap gap-2">
-                <span className="text-[10.5px] text-slate-500 dark:text-zinc-400 font-normal">
+                <span className="text-[10.5px] text-slate-500 font-normal">
                   Supports standard YouTube URLs, Shorts, and Instagram Reel links
                 </span>
                 {formattedVideoUrl && (
@@ -786,7 +786,7 @@ export function PropertyPhotosTab({
                     href={formattedVideoUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="px-2.5 py-1 rounded-lg bg-purple-500/10 hover:bg-[#a855f7]/25 border border-slate-200/80 dark:border-zinc-700 text-slate-800 dark:text-zinc-200 text-[11px] font-medium flex items-center gap-1 transition-all"
+                    className="px-2.5 py-1 rounded-lg bg-purple-500/10 hover:bg-[#a855f7]/25 border border-slate-200/80 text-slate-800 text-[11px] font-medium flex items-center gap-1 transition-all"
                   >
                     <span>Test link</span>
                     <span className="material-symbols-outlined text-[12px]">open_in_new</span>
@@ -798,19 +798,19 @@ export function PropertyPhotosTab({
         </div>
 
         {/* Footer Strip - EXACT MATCH TO PIC 2'S FOOTER STRIP */}
-        <div className="pt-3 mt-3 border-t border-slate-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div className="pt-3 mt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium uppercase tracking-wider text-purple-600 dark:text-purple-400/80">
+            <span className="text-xs font-medium uppercase tracking-wider text-purple-600">
               Memory Occupied:
             </span>
-            <span className="px-2.5 py-0.5 rounded-full bg-purple-500/10 dark:bg-zinc-800 text-xs font-medium text-slate-800 dark:text-zinc-200 border border-slate-200/80 dark:border-zinc-700 shadow-2xs backdrop-blur-sm flex items-center gap-1.5">
+            <span className="px-2.5 py-0.5 rounded-full bg-purple-500/10 text-xs font-medium text-slate-800 border border-slate-200/80 shadow-2xs backdrop-blur-sm flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-purple-600 shadow-[0_0_6px_#9333ea]" />
               <span>{localImages.length}/{MAX_PHOTOS} Photos • {totalMemoryFormatted}</span>
             </span>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-normal text-purple-600 dark:text-purple-400/70 dark:text-slate-200/60">
+            <span className="text-xs font-normal text-purple-600">
               Click photo to inspect full size
             </span>
           </div>

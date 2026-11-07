@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
 import { authAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
 import { Left } from '../components/navbar/Left';
@@ -96,8 +95,7 @@ const passwordSetSchema = z
 export function AccountPage() {
   const navigate = useNavigate();
   const { user, isHost, updateUserSession, logout } = useAuth();
-  const { isDark } = useTheme();
-
+  
   // Top tabs: 'details' | 'password' | 'delete'
   const [activeTab, setActiveTab] = useState('details');
 
@@ -308,7 +306,7 @@ export function AccountPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/60 dark:bg-black text-slate-900 dark:text-slate-100 transition-colors duration-300 font-body-md antialiased pb-8 sm:pb-12">
+    <div className="min-h-screen bg-slate-50/60 text-slate-900 transition-colors duration-300 font-body-md antialiased pb-8 sm:pb-12">
       {/* ── TOP FLOATING NAVIGATION CAPSULES (MATCHING USER DASHBOARD / EXPLORE NAVBAR STYLE) ── */}
       <header className="relative w-full pointer-events-none select-none z-50">
         {/* 1. Left Island: Back button */}
@@ -321,15 +319,15 @@ export function AccountPage() {
 
         {/* 2. Center Island: Floating Liquid Glass Segmented Tabs */}
         <div className="fixed top-3.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center pointer-events-auto max-w-[calc(100vw-110px)] sm:max-w-none">
-          <nav className="apple-liquid-nav relative flex items-center h-8 sm:h-9 p-0.5 sm:p-1 rounded-full border border-slate-200/80 dark:border-white/15 shadow-sm select-none">
+          <nav className="apple-liquid-nav relative flex items-center h-8 sm:h-9 p-0.5 sm:p-1 rounded-full border border-slate-200/80 shadow-sm select-none">
             {/* Tab 1: Profile Details */}
             <button
               type="button"
               onClick={() => setActiveTab('details')}
               className={`relative z-10 h-full py-0 px-2 sm:px-3 md:px-3.5 rounded-full text-[11px] sm:text-xs md:text-[13px] font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 select-none shrink-0 ${
                 activeTab === 'details'
-                  ? 'text-white dark:text-slate-950 font-bold'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium'
+                  ? 'text-white font-bold'
+                  : 'text-slate-600 hover:text-slate-900 font-medium'
               }`}
             >
               <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -340,7 +338,7 @@ export function AccountPage() {
               {activeTab === 'details' && (
                 <motion.div
                   layoutId="accountTabActivePill"
-                  className="absolute inset-0 bg-slate-950 dark:bg-white rounded-full -z-10 shadow-xs"
+                  className="absolute inset-0 bg-slate-950 rounded-full -z-10 shadow-xs"
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
@@ -352,8 +350,8 @@ export function AccountPage() {
               onClick={() => setActiveTab('password')}
               className={`relative z-10 h-full py-0 px-2 sm:px-3 md:px-3.5 rounded-full text-[11px] sm:text-xs md:text-[13px] font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 select-none shrink-0 ${
                 activeTab === 'password'
-                  ? 'text-white dark:text-slate-950 font-bold'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium'
+                  ? 'text-white font-bold'
+                  : 'text-slate-600 hover:text-slate-900 font-medium'
               }`}
             >
               <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -364,7 +362,7 @@ export function AccountPage() {
               {activeTab === 'password' && (
                 <motion.div
                   layoutId="accountTabActivePill"
-                  className="absolute inset-0 bg-slate-950 dark:bg-white rounded-full -z-10 shadow-xs"
+                  className="absolute inset-0 bg-slate-950 rounded-full -z-10 shadow-xs"
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
@@ -377,7 +375,7 @@ export function AccountPage() {
               className={`relative z-10 h-full py-0 px-2 sm:px-3 md:px-3.5 rounded-full text-[11px] sm:text-xs md:text-[13px] font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 select-none shrink-0 ${
                 activeTab === 'delete'
                   ? 'text-white font-bold'
-                  : 'text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 font-medium'
+                  : 'text-rose-600 hover:text-rose-700 font-medium'
               }`}
             >
               <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -409,25 +407,25 @@ export function AccountPage() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-zinc-900 rounded-xl sm:rounded-3xl border border-slate-200 dark:border-zinc-800 p-3.5 sm:p-7 md:p-8 shadow-xs space-y-3.5 sm:space-y-6 transition-colors"
+            className="bg-white rounded-xl sm:rounded-3xl border border-slate-200 p-3.5 sm:p-7 md:p-8 shadow-xs space-y-3.5 sm:space-y-6 transition-colors"
           >
-            <div className="border-b border-slate-100 dark:border-zinc-800 pb-2.5 sm:pb-4 flex items-center justify-between gap-3">
+            <div className="border-b border-slate-100 pb-2.5 sm:pb-4 flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <h2 className="text-lg sm:text-2xl md:text-3xl font-manrope font-extrabold text-slate-900 dark:text-white tracking-tight">
+                <h2 className="text-lg sm:text-2xl md:text-3xl font-manrope font-extrabold text-slate-900 tracking-tight">
                   {isHost ? 'Host Profile Details' : 'Personal Profile Details'}
                 </h2>
-                <p className="text-[11px] sm:text-xs md:text-[13px] text-slate-500 dark:text-zinc-400 mt-0.5 sm:mt-1 font-normal leading-relaxed">
+                <p className="text-[11px] sm:text-xs md:text-[13px] text-slate-500 mt-0.5 sm:mt-1 font-normal leading-relaxed">
                   Manage your personal account credentials, contact information, and role.
                 </p>
               </div>
-              <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-2xl bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 font-manrope font-black text-xs sm:text-sm flex items-center justify-center shadow-xs shrink-0 select-none">
+              <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-2xl bg-emerald-500/15 text-emerald-700 border border-emerald-500/30 font-manrope font-black text-xs sm:text-sm flex items-center justify-center shadow-xs shrink-0 select-none">
                 {user?.name?.slice(0, 2)?.toUpperCase() || 'U'}
               </div>
             </div>
 
             <form onSubmit={handleUpdatePersonal} className="space-y-3.5 sm:space-y-5">
               <div>
-                <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 dark:text-zinc-300 mb-1 sm:mb-1.5 tracking-tight">
+                <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 mb-1 sm:mb-1.5 tracking-tight">
                   Full Name *
                 </label>
                 <input
@@ -441,11 +439,11 @@ export function AccountPage() {
                   }}
                   onBlur={(e) => validatePersonalField('name', e.target.value)}
                   placeholder="e.g. Happy Chhikara"
-                  className={`w-full px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-zinc-950 border ${
+                  className={`w-full px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-50 border ${
                     personalErrors.name
                       ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
-                      : 'border-slate-300 dark:border-zinc-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
-                  } text-xs sm:text-sm font-medium text-slate-900 dark:text-white focus:outline-none transition-colors shadow-xs`}
+                      : 'border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
+                  } text-xs sm:text-sm font-medium text-slate-900 focus:outline-none transition-colors shadow-xs`}
                 />
                 {personalErrors.name && (
                   <p className="text-[11px] sm:text-xs text-rose-500 font-medium mt-1.5 flex items-center gap-1">
@@ -459,38 +457,38 @@ export function AccountPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 dark:text-zinc-300 mb-1 sm:mb-1.5 tracking-tight">
+                  <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 mb-1 sm:mb-1.5 tracking-tight">
                     Email Address (Registered)
                   </label>
                   <input
                     type="email"
                     disabled
                     value={personalForm.email}
-                    className="w-full px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-100 dark:bg-zinc-800/60 border border-slate-200 dark:border-zinc-800 text-xs sm:text-sm font-medium text-slate-500 dark:text-zinc-400 cursor-not-allowed shadow-xs"
+                    className="w-full px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-100 border border-slate-200 text-xs sm:text-sm font-medium text-slate-500 cursor-not-allowed shadow-xs"
                   />
-                  <span className="text-[10px] sm:text-[11px] font-normal text-slate-400 dark:text-zinc-500 mt-1 block">
+                  <span className="text-[10px] sm:text-[11px] font-normal text-slate-400 mt-1 block">
                     Email cannot be changed directly for security.
                   </span>
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 dark:text-zinc-300 mb-1 sm:mb-1.5 tracking-tight">
+                  <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 mb-1 sm:mb-1.5 tracking-tight">
                     Phone Number *
                   </label>
                   <div
-                    className={`relative flex items-center rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-zinc-950 border overflow-hidden transition-all shadow-xs composite-input-console ${
+                    className={`relative flex items-center rounded-xl sm:rounded-2xl bg-slate-50 border overflow-hidden transition-all shadow-xs composite-input-console ${
                       personalErrors.phone
                         ? 'border-rose-500 focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-500/20'
-                        : 'border-slate-300 dark:border-zinc-700 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20'
+                        : 'border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20'
                     }`}
                   >
                     {/* Left: Country Code Prefix */}
-                    <span className="pl-3.5 sm:pl-4 pr-2.5 text-xs sm:text-sm font-manrope font-bold text-slate-700 dark:text-zinc-300 select-none shrink-0 bg-transparent">
+                    <span className="pl-3.5 sm:pl-4 pr-2.5 text-xs sm:text-sm font-manrope font-bold text-slate-700 select-none shrink-0 bg-transparent">
                       +91
                     </span>
 
                     {/* Vertical Divider */}
-                    <div className={`h-4 sm:h-5 w-px ${personalErrors.phone ? 'bg-rose-300 dark:bg-rose-800' : 'bg-slate-300 dark:bg-zinc-700'} shrink-0`} />
+                    <div className={`h-4 sm:h-5 w-px ${personalErrors.phone ? 'bg-rose-300' : 'bg-slate-300'} shrink-0`} />
 
                     {/* Right: Phone Input Field */}
                     <input
@@ -515,7 +513,7 @@ export function AccountPage() {
                       }}
                       onBlur={(e) => validatePersonalField('phone', personalForm.phone)}
                       placeholder="Enter 10-digit mobile number"
-                      className="w-full flex-1 bg-transparent px-3 py-2 sm:px-3.5 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none rounded-r-xl sm:rounded-r-2xl"
+                      className="w-full flex-1 bg-transparent px-3 py-2 sm:px-3.5 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none rounded-r-xl sm:rounded-r-2xl"
                     />
                   </div>
                   {personalErrors.phone ? (
@@ -526,7 +524,7 @@ export function AccountPage() {
                       <span>{personalErrors.phone}</span>
                     </p>
                   ) : (
-                    <span className="text-[10px] sm:text-[11px] font-normal text-slate-400 dark:text-zinc-500 mt-1 block">
+                    <span className="text-[10px] sm:text-[11px] font-normal text-slate-400 mt-1 block">
                       Compulsory for host communications and WhatsApp booking alerts.
                     </span>
                   )}
@@ -539,8 +537,8 @@ export function AccountPage() {
                   disabled={!canSaveProfile || loading}
                   className={`w-full py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl font-manrope font-extrabold text-xs sm:text-sm tracking-tight transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
                     !canSaveProfile || loading
-                      ? 'bg-slate-200 dark:bg-zinc-800 text-slate-400 dark:text-zinc-600 cursor-not-allowed opacity-60'
-                      : 'bg-emerald-600 hover:bg-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-zinc-950 shadow-md shadow-emerald-600/20 cursor-pointer active:scale-95'
+                      ? 'bg-slate-200 text-slate-400 cursor-not-allowed opacity-60'
+                      : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20 cursor-pointer active:scale-95'
                   }`}
                   title={!canSaveProfile ? 'Please fill your 10-digit phone number to enable saving' : 'Save Profile Changes'}
                 >
@@ -551,12 +549,12 @@ export function AccountPage() {
 
             {/* If Host: Property Management CTA Banner */}
             {isHost && (
-              <div className="pt-3 sm:pt-4 border-t border-slate-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 bg-emerald-500/10 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-emerald-500/20">
+              <div className="pt-3 sm:pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 bg-emerald-500/10 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-emerald-500/20">
                 <div>
-                  <h4 className="text-xs sm:text-sm font-manrope font-bold text-slate-900 dark:text-white tracking-tight">
+                  <h4 className="text-xs sm:text-sm font-manrope font-bold text-slate-900 tracking-tight">
                     Need to update your property details?
                   </h4>
-                  <p className="text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400 mt-0.5 font-normal leading-relaxed">
+                  <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 font-normal leading-relaxed">
                     Update room rates, photos, amenities, and location via the dedicated Property Form.
                   </p>
                 </div>
@@ -577,13 +575,13 @@ export function AccountPage() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-zinc-800 p-4 sm:p-7 md:p-8 shadow-xs space-y-4 sm:space-y-6 transition-colors"
+            className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-4 sm:p-7 md:p-8 shadow-xs space-y-4 sm:space-y-6 transition-colors"
           >
-            <div className="border-b border-slate-100 dark:border-zinc-800 pb-3 sm:pb-4">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-manrope font-extrabold text-slate-900 dark:text-white tracking-tight">
+            <div className="border-b border-slate-100 pb-3 sm:pb-4">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-manrope font-extrabold text-slate-900 tracking-tight">
                 {user?.hasPassword ? 'Change Password' : 'Set Account Password'}
               </h2>
-              <p className="text-xs sm:text-[13px] text-slate-500 dark:text-zinc-400 mt-1 font-normal leading-relaxed">
+              <p className="text-xs sm:text-[13px] text-slate-500 mt-1 font-normal leading-relaxed">
                 {user?.hasPassword
                   ? 'Ensure your account is using a strong, unique password to keep it secure.'
                   : 'Create a password for your account so you can log in using either Google or your email and password.'}
@@ -593,9 +591,9 @@ export function AccountPage() {
             {/* If user does not have a password yet (Signed in with Google) */}
             {!user?.hasPassword ? (
               <div className="space-y-4 sm:space-y-5">
-                <div className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700/60 space-y-3">
+                <div className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 flex items-center justify-center shrink-0 shadow-xs">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0 shadow-xs">
                       <svg className="w-5 h-5" viewBox="0 0 24 24">
                         <path
                           fill="#4285F4"
@@ -616,15 +614,15 @@ export function AccountPage() {
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-sm font-manrope font-bold text-slate-900 dark:text-white">
+                      <h3 className="text-sm font-manrope font-bold text-slate-900">
                         Google Linked Account
                       </h3>
-                      <p className="text-xs text-slate-500 dark:text-zinc-400">
+                      <p className="text-xs text-slate-500">
                         Signed in with {user?.email}
                       </p>
                     </div>
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed">
+                  <p className="text-xs text-slate-600 leading-relaxed">
                     Your account currently signs in through Google. Setting a password allows you to sign in directly with your email and password from any browser or device, while keeping Google Sign-In fully active.
                   </p>
                 </div>
@@ -632,7 +630,7 @@ export function AccountPage() {
                 <form onSubmit={handleSavePassword} className="space-y-3.5 sm:space-y-4">
                   {/* New Password */}
                   <div>
-                    <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 dark:text-zinc-300 mb-1 sm:mb-1.5 tracking-tight">
+                    <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 mb-1 sm:mb-1.5 tracking-tight">
                       Create Password *
                     </label>
                     <div className="relative">
@@ -648,16 +646,16 @@ export function AccountPage() {
                         }}
                         onBlur={(e) => validatePasswordField('newPassword', e.target.value)}
                         placeholder="Minimum 6 characters"
-                        className={`w-full pl-3.5 pr-10 py-2 sm:pl-4 sm:pr-12 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-zinc-950 border ${
+                        className={`w-full pl-3.5 pr-10 py-2 sm:pl-4 sm:pr-12 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-50 border ${
                           passwordErrors.newPassword
                             ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
-                            : 'border-slate-300 dark:border-zinc-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
-                        } text-xs sm:text-sm font-medium text-slate-900 dark:text-white focus:outline-none transition-colors shadow-xs`}
+                            : 'border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
+                        } text-xs sm:text-sm font-medium text-slate-900 focus:outline-none transition-colors shadow-xs`}
                       />
                       <button
                         type="button"
                         onClick={() => setShowNewPass(!showNewPass)}
-                        className="absolute right-2.5 sm:right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-300 text-[11px] sm:text-xs font-manrope font-semibold cursor-pointer"
+                        className="absolute right-2.5 sm:right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-[11px] sm:text-xs font-manrope font-semibold cursor-pointer"
                       >
                         {showNewPass ? 'Hide' : 'Show'}
                       </button>
@@ -674,7 +672,7 @@ export function AccountPage() {
 
                   {/* Confirm Password */}
                   <div>
-                    <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 dark:text-zinc-300 mb-1 sm:mb-1.5 tracking-tight">
+                    <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 mb-1 sm:mb-1.5 tracking-tight">
                       Confirm Password *
                     </label>
                     <div className="relative">
@@ -690,16 +688,16 @@ export function AccountPage() {
                         }}
                         onBlur={(e) => validatePasswordField('confirmPassword', e.target.value)}
                         placeholder="Re-enter your password"
-                        className={`w-full pl-3.5 pr-10 py-2 sm:pl-4 sm:pr-12 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-zinc-950 border ${
+                        className={`w-full pl-3.5 pr-10 py-2 sm:pl-4 sm:pr-12 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-50 border ${
                           passwordErrors.confirmPassword
                             ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
-                            : 'border-slate-300 dark:border-zinc-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
-                        } text-xs sm:text-sm font-medium text-slate-900 dark:text-white focus:outline-none transition-colors shadow-xs`}
+                            : 'border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
+                        } text-xs sm:text-sm font-medium text-slate-900 focus:outline-none transition-colors shadow-xs`}
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPass(!showConfirmPass)}
-                        className="absolute right-2.5 sm:right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-300 text-[11px] sm:text-xs font-manrope font-semibold cursor-pointer"
+                        className="absolute right-2.5 sm:right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-[11px] sm:text-xs font-manrope font-semibold cursor-pointer"
                       >
                         {showConfirmPass ? 'Hide' : 'Show'}
                       </button>
@@ -718,7 +716,7 @@ export function AccountPage() {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl bg-emerald-600 hover:bg-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-zinc-950 font-manrope font-extrabold text-xs sm:text-sm tracking-tight shadow-md shadow-emerald-600/20 transition-all cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-1.5 sm:gap-2"
+                      className="w-full py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-manrope font-extrabold text-xs sm:text-sm tracking-tight shadow-md shadow-emerald-600/20 transition-all cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-1.5 sm:gap-2"
                     >
                       {loading ? 'Setting Password...' : 'Set Password'}
                     </button>
@@ -728,7 +726,7 @@ export function AccountPage() {
             ) : (
               <form onSubmit={handleSavePassword} className="space-y-3.5 sm:space-y-4">
                 {(user?.authProvider === 'google' || user?.googleId) && (
-                  <div className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-200 dark:border-zinc-800 text-xs text-slate-600 dark:text-zinc-300">
+                  <div className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600">
                     <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                       <path
                         fill="#4285F4"
@@ -748,14 +746,14 @@ export function AccountPage() {
                       />
                     </svg>
                     <span>
-                      Google account linked (<strong className="font-semibold text-slate-800 dark:text-zinc-100">{user?.email}</strong>). You can sign in using either Google or your password.
+                      Google account linked (<strong className="font-semibold text-slate-800">{user?.email}</strong>). You can sign in using either Google or your password.
                     </span>
                   </div>
                 )}
 
                 {/* Old Password */}
                 <div>
-                  <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 dark:text-zinc-300 mb-1 sm:mb-1.5 tracking-tight">
+                  <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 mb-1 sm:mb-1.5 tracking-tight">
                     Current Password *
                   </label>
                   <div className="relative">
@@ -770,16 +768,16 @@ export function AccountPage() {
                       }}
                       onBlur={(e) => validatePasswordField('oldPassword', e.target.value)}
                       placeholder="Enter your current password"
-                      className={`w-full pl-3.5 pr-10 py-2 sm:pl-4 sm:pr-12 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-zinc-950 border ${
+                      className={`w-full pl-3.5 pr-10 py-2 sm:pl-4 sm:pr-12 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-50 border ${
                         passwordErrors.oldPassword
                           ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
-                          : 'border-slate-300 dark:border-zinc-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
-                      } text-xs sm:text-sm font-medium text-slate-900 dark:text-white focus:outline-none transition-colors shadow-xs`}
+                          : 'border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
+                      } text-xs sm:text-sm font-medium text-slate-900 focus:outline-none transition-colors shadow-xs`}
                     />
                     <button
                       type="button"
                       onClick={() => setShowOldPass(!showOldPass)}
-                      className="absolute right-2.5 sm:right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-300 text-[11px] sm:text-xs font-manrope font-semibold cursor-pointer"
+                      className="absolute right-2.5 sm:right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-[11px] sm:text-xs font-manrope font-semibold cursor-pointer"
                     >
                       {showOldPass ? 'Hide' : 'Show'}
                     </button>
@@ -796,7 +794,7 @@ export function AccountPage() {
 
                 {/* New Password */}
                 <div>
-                  <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 dark:text-zinc-300 mb-1 sm:mb-1.5 tracking-tight">
+                  <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 mb-1 sm:mb-1.5 tracking-tight">
                     New Password *
                   </label>
                   <div className="relative">
@@ -812,16 +810,16 @@ export function AccountPage() {
                       }}
                       onBlur={(e) => validatePasswordField('newPassword', e.target.value)}
                       placeholder="Minimum 6 characters"
-                      className={`w-full pl-3.5 pr-10 py-2 sm:pl-4 sm:pr-12 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-zinc-950 border ${
+                      className={`w-full pl-3.5 pr-10 py-2 sm:pl-4 sm:pr-12 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-50 border ${
                         passwordErrors.newPassword
                           ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
-                          : 'border-slate-300 dark:border-zinc-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
-                      } text-xs sm:text-sm font-medium text-slate-900 dark:text-white focus:outline-none transition-colors shadow-xs`}
+                          : 'border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
+                      } text-xs sm:text-sm font-medium text-slate-900 focus:outline-none transition-colors shadow-xs`}
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPass(!showNewPass)}
-                      className="absolute right-2.5 sm:right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-300 text-[11px] sm:text-xs font-manrope font-semibold cursor-pointer"
+                      className="absolute right-2.5 sm:right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-[11px] sm:text-xs font-manrope font-semibold cursor-pointer"
                     >
                       {showNewPass ? 'Hide' : 'Show'}
                     </button>
@@ -838,7 +836,7 @@ export function AccountPage() {
 
                 {/* Confirm Password */}
                 <div>
-                  <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 dark:text-zinc-300 mb-1 sm:mb-1.5 tracking-tight">
+                  <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 mb-1 sm:mb-1.5 tracking-tight">
                     Confirm New Password *
                   </label>
                   <div className="relative">
@@ -854,16 +852,16 @@ export function AccountPage() {
                       }}
                       onBlur={(e) => validatePasswordField('confirmPassword', e.target.value)}
                       placeholder="Re-enter your new password"
-                      className={`w-full pl-3.5 pr-10 py-2 sm:pl-4 sm:pr-12 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-zinc-950 border ${
+                      className={`w-full pl-3.5 pr-10 py-2 sm:pl-4 sm:pr-12 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-50 border ${
                         passwordErrors.confirmPassword
                           ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
-                          : 'border-slate-300 dark:border-zinc-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
-                      } text-xs sm:text-sm font-medium text-slate-900 dark:text-white focus:outline-none transition-colors shadow-xs`}
+                          : 'border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
+                      } text-xs sm:text-sm font-medium text-slate-900 focus:outline-none transition-colors shadow-xs`}
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPass(!showConfirmPass)}
-                      className="absolute right-2.5 sm:right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-300 text-[11px] sm:text-xs font-manrope font-semibold cursor-pointer"
+                      className="absolute right-2.5 sm:right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-[11px] sm:text-xs font-manrope font-semibold cursor-pointer"
                     >
                       {showConfirmPass ? 'Hide' : 'Show'}
                     </button>
@@ -882,7 +880,7 @@ export function AccountPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl bg-emerald-600 hover:bg-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-zinc-950 font-manrope font-extrabold text-xs sm:text-sm tracking-tight shadow-md shadow-emerald-600/20 transition-all cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-1.5 sm:gap-2"
+                    className="w-full py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-manrope font-extrabold text-xs sm:text-sm tracking-tight shadow-md shadow-emerald-600/20 transition-all cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-1.5 sm:gap-2"
                   >
                     {loading ? 'Updating Password...' : 'Change Password'}
                   </button>
@@ -897,19 +895,19 @@ export function AccountPage() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl border border-rose-500/30 p-4 sm:p-7 md:p-8 shadow-xs space-y-4 sm:space-y-6 transition-colors"
+            className="bg-white rounded-2xl sm:rounded-3xl border border-rose-500/30 p-4 sm:p-7 md:p-8 shadow-xs space-y-4 sm:space-y-6 transition-colors"
           >
-            <div className="border-b border-slate-100 dark:border-zinc-800 pb-3 sm:pb-4">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-manrope font-extrabold text-rose-600 dark:text-rose-400 flex items-center gap-1.5 sm:gap-2 tracking-tight">
+            <div className="border-b border-slate-100 pb-3 sm:pb-4">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-manrope font-extrabold text-rose-600 flex items-center gap-1.5 sm:gap-2 tracking-tight">
                 <span>⚠️</span>
                 <span>Delete Account Permanently</span>
               </h2>
-              <p className="text-xs sm:text-[13px] text-slate-500 dark:text-zinc-400 mt-1 font-normal leading-relaxed">
+              <p className="text-xs sm:text-[13px] text-slate-500 mt-1 font-normal leading-relaxed">
                 Permanently remove your account profile, credentials, and associated data from the database.
               </p>
             </div>
 
-            <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-rose-500/10 border border-rose-500/20 text-xs sm:text-[13px] font-medium text-rose-800 dark:text-rose-300 space-y-1.5 sm:space-y-2 leading-relaxed">
+            <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-rose-500/10 border border-rose-500/20 text-xs sm:text-[13px] font-medium text-rose-800 space-y-1.5 sm:space-y-2 leading-relaxed">
               <p className="font-manrope font-bold tracking-tight">Please note the following consequences:</p>
               <ul className="list-disc pl-4 space-y-0.5 sm:space-y-1">
                 <li>Your profile and login access will be immediately terminated.</li>
@@ -939,17 +937,17 @@ export function AccountPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl p-5 sm:p-8 max-w-sm sm:max-w-md w-full border border-slate-200 dark:border-zinc-800 shadow-2xl space-y-4 sm:space-y-5"
+              className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 max-w-sm sm:max-w-md w-full border border-slate-200 shadow-2xl space-y-4 sm:space-y-5"
             >
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 flex items-center justify-center text-lg sm:text-xl font-bold mx-auto">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-lg sm:text-xl font-bold mx-auto">
                 ⚠️
               </div>
 
               <div className="text-center space-y-1">
-                <h3 className="text-base sm:text-lg font-manrope font-extrabold text-slate-900 dark:text-white tracking-tight">
+                <h3 className="text-base sm:text-lg font-manrope font-extrabold text-slate-900 tracking-tight">
                   Confirm Account Deletion
                 </h3>
-                <p className="text-xs sm:text-[13px] text-slate-500 dark:text-zinc-400 font-normal leading-relaxed">
+                <p className="text-xs sm:text-[13px] text-slate-500 font-normal leading-relaxed">
                   Are you absolutely sure you want to delete your account ({user?.email})? All your records will be wiped from the database.
                 </p>
               </div>
@@ -959,7 +957,7 @@ export function AccountPage() {
                   type="button"
                   disabled={isDeleting}
                   onClick={() => setShowDeleteModal(false)}
-                  className="py-2.5 px-3 sm:px-4 rounded-xl border border-slate-300 dark:border-zinc-700 text-xs font-manrope font-bold text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                  className="py-2.5 px-3 sm:px-4 rounded-xl border border-slate-300 text-xs font-manrope font-bold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>

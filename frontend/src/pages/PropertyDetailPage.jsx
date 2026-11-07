@@ -11,7 +11,6 @@ import { PropertyOverviewSection } from '../components/room/PropertyOverviewSect
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { toast } from '../context/ToastContext';
 
-import { ThemeTogglePill } from '../components/common/ThemeTogglePill';
 import { Login } from '../components/navbar/Login';
 import { Left } from '../components/navbar/Left';
 import { Right } from '../components/navbar/Right';
@@ -278,21 +277,21 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 font-sans">
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans">
         <div className="w-10 h-10 rounded-full border-3 border-emerald-500/20 border-t-emerald-500 animate-spin mb-3" />
-        <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">Loading Property Details...</p>
+        <p className="text-sm font-semibold text-slate-600">Loading Property Details...</p>
       </div>
     );
   }
 
   if (!stay) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 font-sans">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Property Not Found</h2>
-        <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">The requested stay could not be located.</p>
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans">
+        <h2 className="text-xl font-bold text-slate-900 mb-2">Property Not Found</h2>
+        <p className="text-sm text-slate-600 mb-6">The requested stay could not be located.</p>
         <button
           onClick={() => navigate('/explore')}
-          className="px-5 py-2.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs shadow-xs hover:opacity-90 transition-opacity cursor-pointer"
+          className="px-5 py-2.5 rounded-full bg-slate-900 text-white font-bold text-xs shadow-xs hover:opacity-90 transition-opacity cursor-pointer"
         >
           Return to Explore
         </button>
@@ -402,7 +401,7 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 font-body-md host-font-scope antialiased">
+    <div className="min-h-screen bg-slate-50 text-slate-900 transition-colors duration-300 font-body-md host-font-scope antialiased">
       {/* ── TOP FLOATING NAVIGATION CAPSULES (MATCHING SEARCH / EXPLORE NAVBAR STYLE) ── */}
       <header className="relative w-full pointer-events-none select-none z-50">
         {/* 1. Left Island: Back button (Property type badge shifted to media section image) */}
@@ -410,14 +409,14 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
 
         {/* 2. Center Island: Segmented Tabs (Property | Host | Reviews) - Aligned to same row on all devices */}
         <div className="fixed top-3.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center pointer-events-auto max-w-[calc(100vw-110px)] sm:max-w-none">
-          <nav className="apple-liquid-nav relative flex items-center h-8 sm:h-9 p-0.5 sm:p-1 rounded-full border border-slate-200/80 dark:border-white/15 shadow-sm">
+          <nav className="apple-liquid-nav relative flex items-center h-8 sm:h-9 p-0.5 sm:p-1 rounded-full border border-slate-200/80 shadow-sm">
             <button
               type="button"
               onClick={() => setActiveCenterTab('property')}
               className={`relative z-10 h-full py-0 px-2 sm:px-3 md:px-4 rounded-full text-[11px] sm:text-xs md:text-sm font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 md:gap-2 select-none shrink-0 ${
                 activeCenterTab === 'property'
-                  ? 'text-white dark:text-slate-950 font-semibold'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium'
+                  ? 'text-white font-semibold'
+                  : 'text-slate-600 hover:text-slate-900 font-medium'
               }`}
             >
               <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -428,7 +427,7 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
               {activeCenterTab === 'property' && (
                 <motion.div
                   layoutId="capsuleTabPillUnified"
-                  className="absolute inset-0 bg-slate-950 dark:bg-white rounded-full -z-10 shadow-sm"
+                  className="absolute inset-0 bg-slate-950 rounded-full -z-10 shadow-sm"
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
@@ -439,8 +438,8 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
               onClick={handleHostTabClick}
               className={`relative z-10 h-full py-0 px-2 sm:px-3 md:px-4 rounded-full text-[11px] sm:text-xs md:text-sm font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 md:gap-2 select-none shrink-0 ${
                 activeCenterTab === 'host'
-                  ? 'text-white dark:text-slate-950 font-semibold'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium'
+                  ? 'text-white font-semibold'
+                  : 'text-slate-600 hover:text-slate-900 font-medium'
               }`}
             >
               <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -451,7 +450,7 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
               {activeCenterTab === 'host' && (
                 <motion.div
                   layoutId="capsuleTabPillUnified"
-                  className="absolute inset-0 bg-slate-950 dark:bg-white rounded-full -z-10 shadow-sm"
+                  className="absolute inset-0 bg-slate-950 rounded-full -z-10 shadow-sm"
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
@@ -462,8 +461,8 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
               onClick={() => setActiveCenterTab('reviews')}
               className={`relative z-10 h-full py-0 px-2 sm:px-3 md:px-4 rounded-full text-[11px] sm:text-xs md:text-sm font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 md:gap-2 select-none shrink-0 ${
                 activeCenterTab === 'reviews'
-                  ? 'text-white dark:text-slate-950 font-semibold'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium'
+                  ? 'text-white font-semibold'
+                  : 'text-slate-600 hover:text-slate-900 font-medium'
               }`}
             >
               <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -473,7 +472,7 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
               {activeCenterTab === 'reviews' && (
                 <motion.div
                   layoutId="capsuleTabPillUnified"
-                  className="absolute inset-0 bg-slate-950 dark:bg-white rounded-full -z-10 shadow-sm"
+                  className="absolute inset-0 bg-slate-950 rounded-full -z-10 shadow-sm"
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
@@ -552,10 +551,10 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
       </main>
 
       {/* FIXED BOTTOM MOBILE BOOKING BAR */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-3 sm:hidden flex items-center justify-between">
+      <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-slate-200 p-3 sm:hidden flex items-center justify-between">
         <div>
           <span className="text-[9px] text-slate-400 uppercase font-medium">{displayRateName}</span>
-          <div className="text-sm font-bold text-slate-900 dark:text-white">
+          <div className="text-sm font-bold text-slate-900">
             {displayExactPrice} <span className="text-[9px] text-slate-500 font-normal">{displayExactUnit}</span>
           </div>
         </div>

@@ -148,16 +148,16 @@ export function MapPickerModal({ isOpen, onClose, onSelectLocation }) {
       <div className="fixed inset-0" onClick={onClose} />
 
       {/* Compact & Lightweight Modal Container with balanced brown theme */}
-      <div className="relative w-full max-w-lg bg-[#fbf7f4] dark:bg-[#1f1612] text-[#2e1b10] dark:text-[#f5eae3] rounded-2xl shadow-2xl overflow-hidden border border-[#e2d2c5] dark:border-[#3d2b22] z-10 animate-in fade-in zoom-in-95 duration-150">
+      <div className="relative w-full max-w-lg bg-[#fbf7f4] text-[#2e1b10] rounded-2xl shadow-2xl overflow-hidden border border-[#e2d2c5] z-10 animate-in fade-in zoom-in-95 duration-150">
         {/* Compact Modal Header */}
-        <div className="relative px-4 py-3 border-b border-[#ebdcd0] dark:border-[#33231b] flex items-center justify-center bg-[#f4ece5] dark:bg-[#19110e]">
-          <h2 className="text-sm font-black text-[#2e1b10] dark:text-[#f5eae3] text-center">
+        <div className="relative px-4 py-3 border-b border-[#ebdcd0] flex items-center justify-center bg-[#f4ece5]">
+          <h2 className="text-sm font-black text-[#2e1b10] text-center">
             Choose Location
           </h2>
 
           <button
             onClick={onClose}
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-[#7d5740] hover:text-[#2e1b10] dark:text-[#ab8f7f] dark:hover:text-white hover:bg-[#ebdcd0] dark:hover:bg-[#2c1e18] transition-colors text-xs font-bold cursor-pointer"
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-[#7d5740] hover:text-[#2e1b10] hover:bg-[#ebdcd0] transition-colors text-xs font-bold cursor-pointer"
           >
             ✕
           </button>
@@ -176,8 +176,8 @@ export function MapPickerModal({ isOpen, onClose, onSelectLocation }) {
                   onClick={() => handleSelectHotspot(city)}
                   className={`px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all border shrink-0 cursor-pointer active:scale-95 ${
                     isSelected
-                      ? 'bg-[#824a25] text-white border-[#824a25] dark:bg-[#9c5a30] dark:border-[#9c5a30] shadow-xs'
-                      : 'bg-[#f0e4db] dark:bg-[#2a1d17] border-[#ddcbbe] dark:border-[#443025] text-[#54331e] dark:text-[#d6c1b3] hover:border-[#824a25]/60 dark:hover:border-[#9c5a30]/60'
+                      ? 'bg-[#824a25] text-white border-[#824a25] shadow-xs'
+                      : 'bg-[#f0e4db] border-[#ddcbbe] text-[#54331e] hover:border-[#824a25]/60'
                   }`}
                 >
                   {city.name}
@@ -187,7 +187,7 @@ export function MapPickerModal({ isOpen, onClose, onSelectLocation }) {
           </div>
 
           {/* Interactive Map View */}
-          <div className="relative w-full h-56 sm:h-60 rounded-xl overflow-hidden border border-[#e2d2c5] dark:border-[#3d2b22] shadow-inner bg-[#f0e4db] dark:bg-[#261b16]">
+          <div className="relative w-full h-56 sm:h-60 rounded-xl overflow-hidden border border-[#e2d2c5] shadow-inner bg-[#f0e4db]">
             <div id="interactive-picker-map" className="w-full h-full z-0" />
 
             {/* Extracted City Overlay Badge */}
@@ -201,23 +201,23 @@ export function MapPickerModal({ isOpen, onClose, onSelectLocation }) {
         </div>
 
         {/* Modal Footer */}
-        <div className="p-3 px-4 border-t border-[#ebdcd0] dark:border-[#33231b] bg-[#f4ece5]/90 dark:bg-[#19110e]/90 flex items-center justify-between">
-          <div className="text-xs text-[#7d5740] dark:text-[#ab8f7f]">
-            Location: <span className="font-bold text-[#824a25] dark:text-[#e08b52]">{extractedCity}</span>
+        <div className="p-3 px-4 border-t border-[#ebdcd0] bg-[#f4ece5]/90 flex items-center justify-between">
+          <div className="text-xs text-[#7d5740]">
+            Location: <span className="font-bold text-[#824a25]">{extractedCity}</span>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-3 py-1.5 text-xs font-semibold text-[#7d5740] hover:text-[#2e1b10] dark:text-[#ab8f7f] dark:hover:text-white cursor-pointer"
+              className="px-3 py-1.5 text-xs font-semibold text-[#7d5740] hover:text-[#2e1b10] cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={() => handleApply()}
-              className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-[#824a25] to-[#69391b] hover:from-[#94552b] hover:to-[#784220] dark:from-[#9c5a30] dark:to-[#7d4420] dark:hover:from-[#ad6638] dark:hover:to-[#8c4e26] text-white font-bold text-xs shadow-sm cursor-pointer active:scale-95 transition-all"
+              className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-[#824a25] to-[#69391b] hover:from-[#94552b] hover:to-[#784220] text-white font-bold text-xs shadow-sm cursor-pointer active:scale-95 transition-all"
             >
               Confirm Location
             </button>

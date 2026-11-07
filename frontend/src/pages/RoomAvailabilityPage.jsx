@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useBookings } from '../context/BookingsContext';
 import { useWishlist } from '../context/WishlistContext';
-import { useTheme } from '../context/ThemeContext';
 import { staysAPI, bookingsAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
 import { UserRoomCategoriesPanel } from '../components/room/UserRoomCategoriesPanel';
@@ -12,7 +11,6 @@ import { UserMonthlySlotCard } from '../components/room/UserMonthlySlotCard';
 import { UserGuestConfirmationCard } from '../components/room/UserGuestConfirmationCard';
 import { PaymentCountdownBanner } from '../components/room/PaymentCountdownBanner';
 import { cancelUserBooking } from '../utils/bookingPayment';
-import { ThemeTogglePill } from '../components/common/ThemeTogglePill';
 import { Login } from '../components/navbar/Login';
 import { Left } from '../components/navbar/Left';
 import { Right } from '../components/navbar/Right';
@@ -55,8 +53,7 @@ export function RoomAvailabilityPage({ onBookClick, onLoginClick }) {
   const { user } = useAuth();
   const { bookings, addBooking, setIsBookingsOpen, deleteBooking } = useBookings();
   const { wishlist = [], setIsWishlistOpen } = useWishlist();
-  const { theme, toggleTheme } = useTheme();
-
+  
   const [stay, setStay] = useState(() => location.state?.stay || null);
   const [loading, setLoading] = useState(() => !location.state?.stay);
 
@@ -1512,9 +1509,9 @@ export function RoomAvailabilityPage({ onBookClick, onLoginClick }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 font-sans">
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans">
         <div className="w-8 h-8 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin mb-3" />
-        <p className="text-slate-500 dark:text-slate-400 font-medium text-xs">
+        <p className="text-slate-500 font-medium text-xs">
           Loading 2D Room Grid...
         </p>
       </div>
@@ -1524,7 +1521,7 @@ export function RoomAvailabilityPage({ onBookClick, onLoginClick }) {
   return (
     <div
       className={`min-h-screen flex flex-col host-page-scope host-font-scope font-body-md antialiased overflow-x-clip relative ${
-        theme === 'dark' ? 'bg-[#07131e] text-slate-100' : 'bg-slate-50 text-slate-900'
+        'bg-slate-50 text-slate-900'
       } xl:h-screen xl:max-h-screen xl:overflow-hidden select-none transition-colors duration-300`}
     >
 

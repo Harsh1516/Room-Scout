@@ -89,7 +89,7 @@ function getBookingStatusMeta(rawStatus, booking = null) {
   if (upiVerification === 'PENDING_VERIFICATION') {
     return {
       label: 'Payment Submitted • Verifying',
-      badgeClass: 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20',
+      badgeClass: 'bg-teal-500/10 text-teal-600 border-teal-500/20',
       dotClass: 'bg-teal-500 animate-pulse',
       step: 3,
       type: 'verifying',
@@ -99,7 +99,7 @@ function getBookingStatusMeta(rawStatus, booking = null) {
   if (upiVerification === 'REJECTED' || isRecheck) {
     return {
       label: isRecheck ? 'Action Required: Correct Payment Details' : 'Payment Reference Rejected',
-      badgeClass: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30',
+      badgeClass: 'bg-rose-500/10 text-rose-600 border-rose-500/30',
       dotClass: 'bg-rose-500 animate-pulse',
       step: 3,
       type: 'upi_rejected',
@@ -109,7 +109,7 @@ function getBookingStatusMeta(rawStatus, booking = null) {
   if (st === 'REJECTED') {
     return {
       label: 'Request Rejected',
-      badgeClass: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+      badgeClass: 'bg-rose-500/10 text-rose-600 border-rose-500/20',
       dotClass: 'bg-rose-500',
       step: 2,
       type: 'rejected',
@@ -119,7 +119,7 @@ function getBookingStatusMeta(rawStatus, booking = null) {
   if (st === 'CANCELLED') {
     return {
       label: 'Cancelled',
-      badgeClass: 'bg-slate-500/10 text-slate-500 dark:text-slate-400 border-slate-500/20',
+      badgeClass: 'bg-slate-500/10 text-slate-500 border-slate-500/20',
       dotClass: 'bg-slate-400',
       step: 1,
       type: 'cancelled',
@@ -135,7 +135,7 @@ function getBookingStatusMeta(rawStatus, booking = null) {
   ) {
     return {
       label: 'Time Out',
-      badgeClass: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+      badgeClass: 'bg-rose-500/10 text-rose-600 border-rose-500/20',
       dotClass: 'bg-rose-500',
       step: 3,
       type: 'timed_out',
@@ -150,7 +150,7 @@ function getBookingStatusMeta(rawStatus, booking = null) {
   ) {
     return {
       label: 'Payment Window Expired • 1 Re-Request Left',
-      badgeClass: 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30',
+      badgeClass: 'bg-amber-500/15 text-amber-700 border-amber-500/30',
       dotClass: 'bg-amber-500 animate-pulse',
       step: 3,
       type: 'first_payment_expired',
@@ -160,7 +160,7 @@ function getBookingStatusMeta(rawStatus, booking = null) {
   if (st === 'EXPIRED' || (booking && isBookingRequestExpired(booking))) {
     return {
       label: 'Request Expired',
-      badgeClass: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+      badgeClass: 'bg-rose-500/10 text-rose-600 border-rose-500/20',
       dotClass: 'bg-rose-500',
       step: 2,
       type: 'expired',
@@ -170,7 +170,7 @@ function getBookingStatusMeta(rawStatus, booking = null) {
   if (st === 'AWAITING_PAYMENT' || st === 'APPROVED - PAYMENT PENDING' || st === 'PAYMENT_PENDING') {
     return {
       label: 'Approved — Payment Pending',
-      badgeClass: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30',
+      badgeClass: 'bg-amber-500/15 text-amber-700 border-amber-500/30',
       dotClass: 'bg-amber-500 animate-pulse',
       step: 3,
       type: 'awaiting_payment',
@@ -180,7 +180,7 @@ function getBookingStatusMeta(rawStatus, booking = null) {
   if (st.includes('PENDING') || st.includes('APPROVAL')) {
     return {
       label: 'Waiting for Host Approval',
-      badgeClass: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+      badgeClass: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
       dotClass: 'bg-blue-500 animate-pulse',
       step: 1,
       type: 'pending_approval',
@@ -190,7 +190,7 @@ function getBookingStatusMeta(rawStatus, booking = null) {
   if (st === 'CHECKED_IN') {
     return {
       label: 'Checked In',
-      badgeClass: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
+      badgeClass: 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30',
       dotClass: 'bg-emerald-500',
       step: 4,
       type: 'confirmed',
@@ -200,7 +200,7 @@ function getBookingStatusMeta(rawStatus, booking = null) {
   if (st === 'CHECKED_OUT' || st === 'COMPLETED') {
     return {
       label: 'Completed / Checked Out',
-      badgeClass: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20',
+      badgeClass: 'bg-slate-500/10 text-slate-600 border-slate-500/20',
       dotClass: 'bg-slate-400',
       step: 4,
       type: 'completed',
@@ -209,7 +209,7 @@ function getBookingStatusMeta(rawStatus, booking = null) {
 
   return {
     label: 'Confirmed',
-    badgeClass: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
+    badgeClass: 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30',
     dotClass: 'bg-emerald-500',
     step: 4,
     type: 'confirmed',
@@ -460,7 +460,7 @@ export function BookingDetailsPage() {
     if (isPermanentlyTimedOut) {
       return {
         label: 'Time Out',
-        badgeClass: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+        badgeClass: 'bg-rose-500/10 text-rose-600 border-rose-500/20',
         dotClass: 'bg-rose-500',
         step: 3,
         type: 'timed_out',
@@ -469,7 +469,7 @@ export function BookingDetailsPage() {
     if (isFirstPaymentExpired) {
       return {
         label: 'Payment Window Expired • 1 Re-Request Left',
-        badgeClass: 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30',
+        badgeClass: 'bg-amber-500/15 text-amber-700 border-amber-500/30',
         dotClass: 'bg-amber-500 animate-pulse',
         step: 3,
         type: 'first_payment_expired',
@@ -692,10 +692,10 @@ export function BookingDetailsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-24 pb-16 px-4 bg-slate-50 dark:bg-[#070D18] flex items-center justify-center">
+      <div className="min-h-screen pt-24 pb-16 px-4 bg-slate-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-9 h-9 rounded-full border-3 border-emerald-500/30 border-t-emerald-500 animate-spin" />
-          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Loading booking status...</p>
+          <p className="text-xs font-semibold text-slate-500">Loading booking status...</p>
         </div>
       </div>
     );
@@ -703,9 +703,9 @@ export function BookingDetailsPage() {
 
   if (isPermanentlyTimedOut) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#070D18] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="text-center">
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-200">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-800">
             Time Out
           </h1>
         </div>
@@ -715,24 +715,24 @@ export function BookingDetailsPage() {
 
   if (error || !booking) {
     return (
-      <div className="min-h-screen pt-24 pb-16 px-4 bg-slate-50 dark:bg-[#070D18] flex items-center justify-center">
-        <div className="max-w-md w-full p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-center space-y-4 shadow-xl">
-          <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 mx-auto flex items-center justify-center">
+      <div className="min-h-screen pt-24 pb-16 px-4 bg-slate-50 flex items-center justify-center">
+        <div className="max-w-md w-full p-6 rounded-3xl bg-white border border-slate-200 text-center space-y-4 shadow-xl">
+          <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-600 mx-auto flex items-center justify-center">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <circle cx="12" cy="12" r="10" />
               <line x1="12" y1="8" x2="12" y2="12" />
               <line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
           </div>
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Reservation Not Found</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+          <h2 className="text-lg font-bold text-slate-900">Reservation Not Found</h2>
+          <p className="text-xs text-slate-500 leading-relaxed">
             {error || 'The requested booking could not be retrieved. It may have expired or belongs to a different account.'}
           </p>
           <div className="pt-2 flex justify-center gap-3">
             <button
               type="button"
               onClick={() => navigate('/')}
-              className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-white hover:bg-slate-200 transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
             >
               Back to Home
             </button>
@@ -750,7 +750,7 @@ export function BookingDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen pt-20 pb-20 px-3 sm:px-6 lg:px-8 bg-slate-50 dark:bg-[#070D18] text-slate-800 dark:text-slate-100 transition-colors">
+    <div className="min-h-screen pt-20 pb-20 px-3 sm:px-6 lg:px-8 bg-slate-50 text-slate-800 transition-colors">
       <div className="max-w-6xl mx-auto space-y-6">
 
         {/* ── Top Bar: Back & Reference ID ── */}
@@ -759,7 +759,7 @@ export function BookingDetailsPage() {
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.04] text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
@@ -768,11 +768,11 @@ export function BookingDetailsPage() {
             </button>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">Booking ID:</span>
+              <span className="text-xs text-slate-400 font-medium">Booking ID:</span>
               <button
                 type="button"
                 onClick={handleCopyRef}
-                className="font-mono text-xs font-bold text-slate-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 inline-flex items-center gap-1 cursor-pointer"
+                className="font-mono text-xs font-bold text-slate-900 hover:text-emerald-600 inline-flex items-center gap-1 cursor-pointer"
                 title="Click to copy booking reference"
               >
                 <span>{booking.bookingReferenceId || booking._id}</span>
@@ -797,7 +797,7 @@ export function BookingDetailsPage() {
         </div>
 
         {/* ── Visual Stepper Timeline ── */}
-        <div className="rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0F1626] p-4 sm:p-5 shadow-xs">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-xs">
           <div className="grid grid-cols-4 gap-2 sm:gap-4 relative">
             {[
               { num: 1, title: 'Requested', desc: 'Request sent to host' },
@@ -819,7 +819,7 @@ export function BookingDetailsPage() {
                         ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-500/20'
                         : isCurrent
                         ? 'bg-amber-500 text-white ring-4 ring-amber-500/20 animate-pulse'
-                        : 'bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-600'
+                        : 'bg-slate-100 text-slate-400'
                     }`}
                   >
                     {isPast ? (
@@ -830,10 +830,10 @@ export function BookingDetailsPage() {
                       step.num
                     )}
                   </div>
-                  <span className={`text-[11px] sm:text-xs font-bold mt-2 ${isCurrent ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+                  <span className={`text-[11px] sm:text-xs font-bold mt-2 ${isCurrent ? 'text-slate-900' : 'text-slate-500'}`}>
                     {step.title}
                   </span>
-                  <span className="hidden sm:block text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 max-w-[110px] truncate">
+                  <span className="hidden sm:block text-[10px] text-slate-400 mt-0.5 max-w-[110px] truncate">
                     {step.desc}
                   </span>
                 </div>
@@ -850,9 +850,9 @@ export function BookingDetailsPage() {
 
             {/* ── Alert: Host Re-request for Correct UTR (Core Feature!) ── */}
             {statusMeta.type === 'upi_rejected' && (
-              <div className="rounded-3xl p-5 sm:p-6 bg-gradient-to-br from-rose-500/10 via-amber-500/5 to-rose-500/5 border-2 border-rose-500/40 dark:border-rose-500/50 space-y-4 shadow-lg shadow-rose-500/5">
+              <div className="rounded-3xl p-5 sm:p-6 bg-gradient-to-br from-rose-500/10 via-amber-500/5 to-rose-500/5 border-2 border-rose-500/40 space-y-4 shadow-lg shadow-rose-500/5">
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-2xl bg-rose-500/20 text-rose-600 flex items-center justify-center shrink-0">
                     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                       <circle cx="12" cy="12" r="10" />
                       <line x1="12" y1="8" x2="12" y2="12" />
@@ -861,40 +861,40 @@ export function BookingDetailsPage() {
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-base font-bold text-rose-800 dark:text-rose-300">
+                      <h3 className="text-base font-bold text-rose-800">
                         Host Requested Correct Payment Details
                       </h3>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-600 text-white">
                         {isMaxAttemptsExceeded ? 'Attempts Exceeded' : 'Final Chance (Attempt 2 of 2)'}
                       </span>
                     </div>
-                    <p className="text-xs text-rose-700/90 dark:text-rose-300/90 mt-1">
+                    <p className="text-xs text-rose-700/90 mt-1">
                       The host reviewed your payment reference and could not verify the credit in their bank statement.
                     </p>
                   </div>
                 </div>
 
                 {/* Host's Specific Rejection Reason Box */}
-                <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900/60 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-rose-600 dark:text-rose-400 tracking-wider">
+                <div className="p-3.5 rounded-2xl bg-white border border-rose-200 space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-rose-600 tracking-wider">
                     Reason Given by Host:
                   </span>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white italic">
+                  <p className="text-sm font-semibold text-slate-900 italic">
                     "{booking.upiPayment?.rejectionReason || upiDetails?.rejectionReason || 'UPI reference did not match host bank records'}"
                   </p>
                   {booking.upiPayment?.transactionRef && (
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 pt-1">
+                    <p className="text-[11px] text-slate-500 pt-1">
                       Previously submitted reference: <span className="font-mono font-semibold">{booking.upiPayment.transactionRef}</span>
                     </p>
                   )}
                 </div>
 
                 {!isMaxAttemptsExceeded ? (
-                  <p className="text-xs text-slate-600 dark:text-slate-300">
+                  <p className="text-xs text-slate-600">
                     Please open your UPI app (Google Pay, PhonePe, Paytm, BHIM) and locate the <strong>12-digit UTR or Bank Reference ID (RRN)</strong>. Enter it below and attach your payment receipt screenshot.
                   </p>
                 ) : (
-                  <div className="p-3 rounded-xl bg-rose-600/10 text-rose-700 dark:text-rose-300 text-xs font-semibold">
+                  <div className="p-3 rounded-xl bg-rose-600/10 text-rose-700 text-xs font-semibold">
                     Maximum submission attempts reached. If you have already paid, please contact the host directly via phone/WhatsApp to confirm manually.
                   </div>
                 )}
@@ -905,28 +905,28 @@ export function BookingDetailsPage() {
             {isFirstPaymentExpired && (
               <div className="rounded-3xl border-2 border-amber-500/40 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent p-6 sm:p-7 space-y-5 shadow-sm">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-600 flex items-center justify-center shrink-0">
                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                      <h3 className="text-lg font-bold text-slate-900">
                         Payment Window Expired
                       </h3>
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-700 border border-amber-500/30">
                         1 Final Chance Available
                       </span>
                     </div>
-                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                    <p className="text-xs text-slate-600 leading-relaxed">
                       The initial time window for payment has expired. You have one final chance to re-request the payment QR code and UPI details. You will receive a new 5-minute timer to complete payment and click &ldquo;Send for Verification&rdquo;.
                     </p>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-amber-500/20 text-xs text-slate-600 dark:text-slate-300 space-y-1.5">
-                  <div className="flex items-center gap-2 font-semibold text-amber-700 dark:text-amber-400">
+                <div className="p-4 rounded-2xl bg-white border border-amber-500/20 text-xs text-slate-600 space-y-1.5">
+                  <div className="flex items-center gap-2 font-semibold text-amber-700">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
@@ -962,28 +962,28 @@ export function BookingDetailsPage() {
 
             {/* ── Case 1: Payment Pending OR Re-Request Submission Form ── */}
             {(statusMeta.type === 'awaiting_payment' || (statusMeta.type === 'upi_rejected' && !isMaxAttemptsExceeded)) && !isFirstPaymentExpired && (
-              <div className="rounded-3xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0F1626] p-5 sm:p-7 space-y-6 shadow-sm">
+              <div className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-7 space-y-6 shadow-sm">
 
                 {/* Section Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-white/[0.06] pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
                   <div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                    <h3 className="text-lg font-bold text-slate-900">
                       {statusMeta.type === 'upi_rejected' ? 'Re-Submit Correct Payment Reference' : 'Direct Host UPI Payment'}
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    <p className="text-xs text-slate-500 mt-0.5">
                       Pay directly to host’s verified UPI with 0% extra fees
                     </p>
                   </div>
 
                   {/* Countdown Timer */}
                   {countdownSec > 0 && (
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700">
                       <svg className="w-4 h-4 animate-spin text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                         <circle cx="12" cy="12" r="10" />
                         <polyline points="12 6 12 12 16 14" />
                       </svg>
                       <div className="text-left">
-                        <span className="text-[10px] block uppercase font-bold text-amber-600 dark:text-amber-400">Time to Pay</span>
+                        <span className="text-[10px] block uppercase font-bold text-amber-600">Time to Pay</span>
                         <span className="font-mono text-xs font-extrabold">{formatCountdown(countdownSec)}</span>
                       </div>
                     </div>
@@ -992,18 +992,18 @@ export function BookingDetailsPage() {
 
                 {/* Final 5-minute Re-request banner if active */}
                 {booking?.paymentReRequested && (
-                  <div className="p-3.5 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-xs font-semibold flex items-center gap-2.5">
+                  <div className="p-3.5 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-800 text-xs font-semibold flex items-center gap-2.5">
                     <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping shrink-0" />
                     <span>Final 5-Minute Window Active: Enter your 12-digit UTR and click &ldquo;Send for Verification&rdquo; before the timer ends.</span>
                   </div>
                 )}
 
                 {/* Step 1: Host QR & UPI Details */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-center p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/[0.06]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-center p-4 rounded-2xl bg-slate-50 border border-slate-100">
                   {/* Left: Scannable QR Code */}
                   <div className="flex flex-col items-center text-center p-3">
                     {upiDetails?.qrCodeDataUrl ? (
-                      <div className="p-3 bg-white rounded-2xl shadow-sm border border-slate-200/80 dark:border-white/10">
+                      <div className="p-3 bg-white rounded-2xl shadow-sm border border-slate-200/80">
                         <img
                           src={upiDetails.qrCodeDataUrl}
                           alt="UPI Payment QR Code"
@@ -1011,7 +1011,7 @@ export function BookingDetailsPage() {
                         />
                       </div>
                     ) : (
-                      <div className="w-40 h-40 rounded-2xl bg-slate-100 dark:bg-white/5 flex flex-col items-center justify-center p-4 text-center text-slate-400">
+                      <div className="w-40 h-40 rounded-2xl bg-slate-100 flex flex-col items-center justify-center p-4 text-center text-slate-400">
                         <svg className="w-8 h-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                           <rect x="3" y="3" width="18" height="18" rx="2" />
                           <circle cx="8.5" cy="8.5" r="1.5" />
@@ -1020,7 +1020,7 @@ export function BookingDetailsPage() {
                         <span className="text-[11px]">QR Code Ready at Host UPI</span>
                       </div>
                     )}
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-2">
+                    <span className="text-[10px] text-slate-400 font-medium mt-2">
                       Scan with Google Pay, PhonePe, Paytm, or BHIM
                     </span>
                   </div>
@@ -1028,22 +1028,22 @@ export function BookingDetailsPage() {
                   {/* Right: Payment Details Card */}
                   <div className="space-y-3.5">
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider">Amount to Pay</span>
-                      <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Amount to Pay</span>
+                      <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">
                         ₹{totalAmount.toLocaleString('en-IN')}
                       </div>
                     </div>
 
                     <div className="space-y-1">
-                      <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider">Host UPI ID</span>
+                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Host UPI ID</span>
                       <div className="flex items-center gap-2">
-                        <div className="flex-1 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 font-mono text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
+                        <div className="flex-1 px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono text-xs font-semibold text-slate-800 truncate">
                           {recipientUpiId || 'property@okhdfcbank'}
                         </div>
                         <button
                           type="button"
                           onClick={handleCopyUpi}
-                          className="px-3 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-950 text-xs font-bold hover:opacity-90 active:scale-95 transition-all cursor-pointer shrink-0"
+                          className="px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:opacity-90 active:scale-95 transition-all cursor-pointer shrink-0"
                         >
                           {copiedUpi ? 'Copied!' : 'Copy'}
                         </button>
@@ -1051,8 +1051,8 @@ export function BookingDetailsPage() {
                     </div>
 
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider">Payee Name</span>
-                      <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Payee Name</span>
+                      <p className="text-xs font-semibold text-slate-700">
                         {recipientPayee}
                       </p>
                     </div>
@@ -1077,7 +1077,7 @@ export function BookingDetailsPage() {
                 {/* Step 2: Submission Form */}
                 <form onSubmit={handleSubmitPayment} className="space-y-4 pt-2">
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                    <label className="block text-xs font-bold text-slate-700">
                       12-Digit UPI Reference Number (UTR / RRN) <span className="text-rose-500">*</span>
                     </label>
                     <input
@@ -1102,9 +1102,9 @@ export function BookingDetailsPage() {
                         }
                       }}
                       placeholder="Enter 12-digit UPI reference (e.g. 430219882711)"
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-mono text-sm uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 font-mono text-sm uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                     />
-                    <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500">
+                    <div className="flex items-center justify-between text-[11px] text-slate-400">
                       <span>Found in your UPI app receipt under &ldquo;UPI Transaction ID&rdquo; or &ldquo;UTR&rdquo;.</span>
                       <span className={`font-mono font-bold ${transactionRef.length === 12 ? 'text-emerald-500' : 'text-slate-400'}`}>
                         {transactionRef.length}/12
@@ -1114,11 +1114,11 @@ export function BookingDetailsPage() {
 
                   {/* Screenshot Receipt Upload */}
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                    <label className="block text-xs font-bold text-slate-700">
                       Payment Screenshot Receipt <span className="text-slate-400 font-normal">(Recommended)</span>
                     </label>
                     <div className="flex items-center gap-3">
-                      <label className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.04] text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/10 transition-colors cursor-pointer inline-flex items-center gap-2">
+                      <label className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer inline-flex items-center gap-2">
                         <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                         </svg>
@@ -1136,9 +1136,9 @@ export function BookingDetailsPage() {
                           <img
                             src={receiptPreview}
                             alt="Receipt Preview"
-                            className="w-9 h-9 object-cover rounded-lg border border-slate-200 dark:border-white/10"
+                            className="w-9 h-9 object-cover rounded-lg border border-slate-200"
                           />
-                          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">Attached</span>
+                          <span className="text-[11px] text-emerald-600 font-semibold">Attached</span>
                           <button
                             type="button"
                             onClick={() => {
@@ -1189,47 +1189,47 @@ export function BookingDetailsPage() {
 
             {/* ── Case 2: Payment Submitted • Awaiting Verification ── */}
             {statusMeta.type === 'verifying' && (
-              <div className="rounded-3xl border border-teal-500/30 bg-teal-500/5 dark:bg-teal-500/[0.04] p-6 sm:p-7 space-y-5 shadow-sm">
+              <div className="rounded-3xl border border-teal-500/30 bg-teal-500/5 p-6 sm:p-7 space-y-5 shadow-sm">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-teal-500/20 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 rounded-2xl bg-teal-500/20 text-teal-600 flex items-center justify-center shrink-0">
                     <svg className="w-6 h-6 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-teal-600 dark:text-teal-400">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-teal-600">
                       Stage 3 of 4 • In Progress
                     </span>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">
+                    <h3 className="text-lg font-bold text-slate-900 mt-0.5">
                       Payment Reference Submitted — Host is Verifying
                     </h3>
-                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                       Thank you! Your UPI reference number has been delivered to the host. The host is checking their bank statement and will approve your booking shortly.
                     </p>
                   </div>
                 </div>
 
                 {/* Submitted Record Details */}
-                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-teal-500/20 space-y-2">
+                <div className="p-4 rounded-2xl bg-white border border-teal-500/20 space-y-2">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-slate-400">Submitted Reference (UTR):</span>
-                    <span className="font-mono font-bold text-slate-900 dark:text-white">
+                    <span className="font-mono font-bold text-slate-900">
                       {booking.upiPayment?.transactionRef || transactionRef || '—'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-slate-400">Submitted At:</span>
-                    <span className="text-slate-700 dark:text-slate-300">
+                    <span className="text-slate-700">
                       {booking.upiPayment?.submittedAt ? new Date(booking.upiPayment.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-slate-400">Host Notification:</span>
-                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Sent via WhatsApp & Dashboard</span>
+                    <span className="text-emerald-600 font-semibold">Sent via WhatsApp & Dashboard</span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <div className="flex items-center gap-2 text-xs text-slate-500">
                   <svg className="w-4 h-4 text-teal-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                     <circle cx="12" cy="12" r="10" />
                     <line x1="12" y1="16" x2="12" y2="12" />
@@ -1242,22 +1242,22 @@ export function BookingDetailsPage() {
 
             {/* ── Case 3: Confirmed / Checked In Pass ── */}
             {statusMeta.type === 'confirmed' && (
-              <div className="rounded-3xl border border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-500/[0.03] p-6 sm:p-7 space-y-6 shadow-sm">
+              <div className="rounded-3xl border border-emerald-500/30 bg-emerald-500/5 p-6 sm:p-7 space-y-6 shadow-sm">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-600 flex items-center justify-center shrink-0">
                       <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                     <div>
-                      <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-600 dark:text-emerald-400">
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-600">
                         Reservation Confirmed
                       </span>
-                      <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">
+                      <h3 className="text-lg font-bold text-slate-900 mt-0.5">
                         Your Stay is Booked & Ready!
                       </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      <p className="text-xs text-slate-500 mt-0.5">
                         Payment verified • Show this pass at property reception
                       </p>
                     </div>
@@ -1265,21 +1265,21 @@ export function BookingDetailsPage() {
                 </div>
 
                 {/* 8-Digit Entry Pass Hero Box & Download Action */}
-                <div className="rounded-2xl bg-gradient-to-br from-emerald-500/15 via-emerald-500/10 to-teal-500/10 border-2 border-emerald-500/40 dark:border-emerald-500/30 p-5 space-y-3.5 shadow-sm">
+                <div className="rounded-2xl bg-gradient-to-br from-emerald-500/15 via-emerald-500/10 to-teal-500/10 border-2 border-emerald-500/40 p-5 space-y-3.5 shadow-sm">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] uppercase font-black tracking-wider text-emerald-800 dark:text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                        <span className="text-[10px] uppercase font-black tracking-wider text-emerald-800 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
                           Official Entry Pass Code
                         </span>
-                        <span className="text-[10.5px] font-semibold text-emerald-700 dark:text-emerald-400">
+                        <span className="text-[10.5px] font-semibold text-emerald-700">
                           ● Present at Check-in
                         </span>
                       </div>
-                      <div className="font-mono text-3xl sm:text-4xl font-black tracking-widest text-emerald-900 dark:text-emerald-200 select-all mt-1.5">
+                      <div className="font-mono text-3xl sm:text-4xl font-black tracking-widest text-emerald-900 select-all mt-1.5">
                         {displayCheckInCode}
                       </div>
-                      <p className="text-[11.5px] text-slate-600 dark:text-slate-300 mt-1 max-w-md">
+                      <p className="text-[11.5px] text-slate-600 mt-1 max-w-md">
                         Show this exact 8-digit verification code or download the official PDF pass to present to host at physical check-in.
                       </p>
                     </div>
@@ -1311,17 +1311,17 @@ export function BookingDetailsPage() {
                 </div>
 
                 {/* Digital Pass Card */}
-                <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 p-5 space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
+                <div className="rounded-2xl bg-white border border-slate-200 p-5 space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                     <div>
                       <span className="text-[10px] text-slate-400 uppercase font-bold">Room Assigned</span>
-                      <div className="text-base font-extrabold text-slate-900 dark:text-white">
+                      <div className="text-base font-extrabold text-slate-900">
                         Room {booking.roomNumber} • {booking.roomType || 'Standard'}
                       </div>
                     </div>
                     <div className="text-right">
                       <span className="text-[10px] text-slate-400 uppercase font-bold">Check-in</span>
-                      <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      <div className="text-xs font-bold text-slate-800">
                         {formatShortDate(booking.checkIn)}
                       </div>
                     </div>
@@ -1329,13 +1329,13 @@ export function BookingDetailsPage() {
 
                   {/* Host Contact Strip */}
                   <div className="space-y-2">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider">Host Details</span>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/[0.05]">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Host Details</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100">
                       <div>
-                        <div className="font-bold text-xs text-slate-900 dark:text-white">
+                        <div className="font-bold text-xs text-slate-900">
                           {hostData?.name || stayData?.title || 'Property Host'}
                         </div>
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                        <div className="text-[11px] text-slate-500">
                           {hostData?.phone || 'Contact provided in confirmation'}
                         </div>
                       </div>
@@ -1358,19 +1358,19 @@ export function BookingDetailsPage() {
 
             {/* ── Case 4: Waiting for Initial Host Approval ── */}
             {statusMeta.type === 'pending_approval' && (
-              <div className="rounded-3xl border border-blue-500/20 bg-blue-500/5 dark:bg-blue-500/[0.03] p-6 space-y-4">
+              <div className="rounded-3xl border border-blue-500/20 bg-blue-500/5 p-6 space-y-4">
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-500/20 text-blue-600 flex items-center justify-center shrink-0">
                     <svg className="w-5 h-5 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                       <circle cx="12" cy="12" r="10" />
                       <polyline points="12 6 12 12 14 14" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                    <h3 className="text-base font-bold text-slate-900">
                       Awaiting Host Approval
                     </h3>
-                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                       Your request has been submitted to the host. Once the host approves your reservation, you will be able to make payment and confirm your slot.
                     </p>
                   </div>
@@ -1380,15 +1380,15 @@ export function BookingDetailsPage() {
 
             {/* ── Activity Audit Log ── */}
             {Array.isArray(booking.auditLog) && booking.auditLog.length > 0 && (
-              <div className="rounded-3xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0F1626] p-5 sm:p-6 space-y-4 shadow-xs">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              <div className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-6 space-y-4 shadow-xs">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
                   Reservation History & Updates
                 </h4>
-                <div className="space-y-3 divide-y divide-slate-100 dark:divide-white/[0.04]">
+                <div className="space-y-3 divide-y divide-slate-100">
                   {booking.auditLog.slice().reverse().map((entry, idx) => (
                     <div key={idx} className="pt-3 first:pt-0 flex items-start justify-between gap-3 text-xs">
                       <div className="space-y-0.5">
-                        <span className="font-semibold text-slate-800 dark:text-slate-200">
+                        <span className="font-semibold text-slate-800">
                           {entry.action === 'REFERENCE_SUBMITTED' ? 'Payment Reference Submitted'
                             : entry.action === 'PAYMENT_VERIFIED' ? 'Payment Verified by Host'
                             : entry.action === 'PAYMENT_RECHECK_REQUESTED' ? 'Host Requested Correct UTR'
@@ -1396,7 +1396,7 @@ export function BookingDetailsPage() {
                             : entry.note || entry.action}
                         </span>
                         {entry.details?.rejectionReason && (
-                          <p className="text-[11px] text-rose-600 dark:text-rose-400">
+                          <p className="text-[11px] text-rose-600">
                             Reason: "{entry.details.rejectionReason}"
                           </p>
                         )}
@@ -1421,9 +1421,9 @@ export function BookingDetailsPage() {
           <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
 
             {/* Stay & Room Card */}
-            <div className="rounded-3xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0F1626] overflow-hidden shadow-sm">
+            <div className="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-sm">
               {/* Image banner */}
-              <div className="h-44 w-full bg-slate-100 dark:bg-white/5 relative overflow-hidden">
+              <div className="h-44 w-full bg-slate-100 relative overflow-hidden">
                 {stayImage ? (
                   <img src={stayImage} alt={resolvedStayTitle} className="w-full h-full object-cover" />
                 ) : (
@@ -1446,28 +1446,28 @@ export function BookingDetailsPage() {
 
               {/* Reservation Details List */}
               <div className="p-5 space-y-4">
-                <div className="grid grid-cols-2 gap-3 pb-3 border-b border-slate-100 dark:border-white/[0.06]">
+                <div className="grid grid-cols-2 gap-3 pb-3 border-b border-slate-100">
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Room</span>
-                    <div className="text-xs font-bold text-slate-900 dark:text-white mt-0.5">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Room</span>
+                    <div className="text-xs font-bold text-slate-900 mt-0.5">
                       Room {booking.roomNumber}
                     </div>
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Category</span>
-                    <div className="text-xs font-bold text-amber-600 dark:text-amber-400 mt-0.5">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Category</span>
+                    <div className="text-xs font-bold text-amber-600 mt-0.5">
                       {booking.roomType || 'Standard'}
                     </div>
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Check-In</span>
-                    <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Check-In</span>
+                    <div className="text-xs font-semibold text-slate-800 mt-0.5">
                       {formatShortDate(booking.checkIn)}
                     </div>
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Check-Out</span>
-                    <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Check-Out</span>
+                    <div className="text-xs font-semibold text-slate-800 mt-0.5">
                       {formatShortDate(booking.checkOut)}
                     </div>
                   </div>
@@ -1477,29 +1477,29 @@ export function BookingDetailsPage() {
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between">
                     <span className="text-slate-400">Duration:</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">{computeDuration(booking)}</span>
+                    <span className="font-semibold text-slate-800">{computeDuration(booking)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">Primary Guest:</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">{booking.fullName || booking.guestName || user?.name || 'Guest'}</span>
+                    <span className="font-semibold text-slate-800">{booking.fullName || booking.guestName || user?.name || 'Guest'}</span>
                   </div>
                   {booking.phone && (
                     <div className="flex justify-between">
                       <span className="text-slate-400">Phone:</span>
-                      <span className="font-mono text-slate-700 dark:text-slate-300">{booking.phone}</span>
+                      <span className="font-mono text-slate-700">{booking.phone}</span>
                     </div>
                   )}
                   {booking.email && (
                     <div className="flex justify-between">
                       <span className="text-slate-400">Email:</span>
-                      <span className="text-slate-700 dark:text-slate-300 truncate max-w-[180px]">{booking.email}</span>
+                      <span className="text-slate-700 truncate max-w-[180px]">{booking.email}</span>
                     </div>
                   )}
                 </div>
 
                 {/* Price Breakdown */}
-                <div className="pt-3 border-t border-slate-100 dark:border-white/[0.06] space-y-2">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider">
+                <div className="pt-3 border-t border-slate-100 space-y-2">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
                     Price Breakdown
                   </span>
                   <div className="flex justify-between text-xs">
@@ -1518,9 +1518,9 @@ export function BookingDetailsPage() {
                       <span className="font-semibold">₹{(booking.taxBreakdown.cgst + booking.taxBreakdown.sgst).toLocaleString('en-IN')}</span>
                     </div>
                   )}
-                  <div className="pt-2 border-t border-slate-100 dark:border-white/[0.06] flex justify-between items-center text-sm font-bold text-slate-900 dark:text-white">
+                  <div className="pt-2 border-t border-slate-100 flex justify-between items-center text-sm font-bold text-slate-900">
                     <span>Total Amount:</span>
-                    <span className="text-base text-emerald-600 dark:text-emerald-400">₹{totalAmount.toLocaleString('en-IN')}</span>
+                    <span className="text-base text-emerald-600">₹{totalAmount.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
 
@@ -1529,7 +1529,7 @@ export function BookingDetailsPage() {
                   {stayData?._id && (
                     <Link
                       to={`/stay/${stayData._id}`}
-                      className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white underline cursor-pointer"
+                      className="text-xs font-semibold text-slate-600 hover:text-slate-900 underline cursor-pointer"
                     >
                       View Property Page
                     </Link>
@@ -1539,7 +1539,7 @@ export function BookingDetailsPage() {
                     <button
                       type="button"
                       onClick={() => setShowCancelModal(true)}
-                      className="text-xs font-semibold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer ml-auto"
+                      className="text-xs font-semibold text-rose-600 hover:underline cursor-pointer ml-auto"
                     >
                       Cancel Reservation
                     </button>
@@ -1557,16 +1557,16 @@ export function BookingDetailsPage() {
       {/* ── Cancel Confirmation Modal ── */}
       {showCancelModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="max-w-sm w-full p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 space-y-4 shadow-2xl">
-            <h3 className="font-bold text-base text-slate-900 dark:text-white">Cancel This Reservation?</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+          <div className="max-w-sm w-full p-6 rounded-3xl bg-white border border-slate-200 space-y-4 shadow-2xl">
+            <h3 className="font-bold text-base text-slate-900">Cancel This Reservation?</h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
               Are you sure you want to cancel your booking for Room {booking.roomNumber}? Your held slot will be released back to the host.
             </p>
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setShowCancelModal(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
               >
                 Keep Booking
               </button>

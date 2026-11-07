@@ -55,7 +55,7 @@ export const PropertyCard = memo(function PropertyCard({
     >
       {/* Warm Cushion on Hover (Warm cream in Light Mode, Frosted Glass in Dark Mode) */}
       <div
-        className={`absolute rounded-xl sm:rounded-2xl bg-[#f8ebd8] dark:bg-white/[0.08] dark:border dark:border-white/20 dark:backdrop-blur-2xl shadow-[0_10px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.7),_0_0_24px_rgba(56,189,248,0.18),_inset_0_1px_2px_rgba(255,255,255,0.22)] pointer-events-none transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`absolute rounded-xl sm:rounded-2xl bg-[#f8ebd8] shadow-[0_10px_30px_rgba(0,0,0,0.06)](0,0,0,0.7),_0_0_24px_rgba(56,189,248,0.18),_inset_0_1px_2px_rgba(255,255,255,0.22)] pointer-events-none transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isHovered
             ? '-inset-1.5 opacity-100 scale-100'
             : 'inset-0 opacity-0 scale-95 group-hover:-inset-1 group-hover:opacity-100 group-hover:scale-100'
@@ -65,7 +65,7 @@ export const PropertyCard = memo(function PropertyCard({
       {/* Foreground Content Stack */}
       <div className="relative z-10 flex flex-col h-full justify-between">
         {/* 1. TOP SECTION: Media Box */}
-        <div className="relative aspect-[16/11] sm:aspect-[16/10] w-full rounded-lg sm:rounded-xl overflow-hidden bg-slate-900 shadow-xs group-hover:shadow-md flex flex-col justify-between p-1.5 sm:p-2.5 border border-slate-200/60 dark:border-white/10 transition-all duration-350 ease-[cubic-bezier(0.16,1,0.3,1)]">
+        <div className="relative aspect-[16/11] sm:aspect-[16/10] w-full rounded-lg sm:rounded-xl overflow-hidden bg-slate-900 shadow-xs group-hover:shadow-md flex flex-col justify-between p-1.5 sm:p-2.5 border border-slate-200/60 transition-all duration-350 ease-[cubic-bezier(0.16,1,0.3,1)]">
           {/* Background Image */}
           <img
             src={displayImage}
@@ -82,18 +82,18 @@ export const PropertyCard = memo(function PropertyCard({
           <div className="relative z-10 flex items-center justify-between gap-1.5 p-0.5 sm:p-1">
             <div className="flex items-center gap-1.5 sm:gap-2 truncate">
               {/* Property Type Badge */}
-              <span className="text-[10px] sm:text-[11.5px] font-sans font-bold tracking-wider uppercase text-white bg-slate-950/75 dark:bg-black/80 border border-white/20 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-xl backdrop-blur-md shadow-xs shrink-0">
+              <span className="text-[10px] sm:text-[11.5px] font-sans font-bold tracking-wider uppercase text-white bg-slate-950/75 border border-white/20 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-xl backdrop-blur-md shadow-xs shrink-0">
                 {propertyType}
               </span>
 
               {/* Rating / New Badge */}
               {isNewStay ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-xl bg-emerald-950/80 dark:bg-emerald-900/80 border border-emerald-400/35 text-emerald-300 dark:text-emerald-200 text-[10px] sm:text-[11.5px] font-sans font-extrabold tracking-wider uppercase backdrop-blur-md shadow-xs shrink-0">
+                <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-xl bg-emerald-950/80 border border-emerald-400/35 text-emerald-300 text-[10px] sm:text-[11.5px] font-sans font-extrabold tracking-wider uppercase backdrop-blur-md shadow-xs shrink-0">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)] animate-pulse" />
                   NEW
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-xl bg-slate-950/80 dark:bg-black/80 border border-amber-400/40 text-amber-300 text-[10px] sm:text-[11.5px] font-sans font-extrabold tracking-wider shadow-xs backdrop-blur-md shrink-0">
+                <span className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-xl bg-slate-950/80 border border-amber-400/40 text-amber-300 text-[10px] sm:text-[11.5px] font-sans font-extrabold tracking-wider shadow-xs backdrop-blur-md shrink-0">
                   {ratingText}
                 </span>
               )}
@@ -132,9 +132,9 @@ export const PropertyCard = memo(function PropertyCard({
         {/* 2. BOTTOM SECTION: Structured Info Below Photo */}
         <div className="pt-1.5 sm:pt-2.5 pb-0.5 px-0.5 flex flex-col space-y-0.5 sm:space-y-1">
           {/* Location Subtitle */}
-          <div className="flex items-center gap-1 text-[8px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">
+          <div className="flex items-center gap-1 text-[8px] sm:text-[10px] text-slate-500 font-medium truncate">
             <svg
-              className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-400 dark:text-slate-500 shrink-0"
+              className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-400 shrink-0"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -149,7 +149,7 @@ export const PropertyCard = memo(function PropertyCard({
           </div>
 
           {/* Title */}
-          <h3 className="text-[10px] sm:text-xs md:text-sm font-bold text-slate-950 dark:text-white line-clamp-1 group-hover:text-slate-900 dark:group-hover:text-sky-300 transition-colors leading-snug">
+          <h3 className="text-[10px] sm:text-xs md:text-sm font-bold text-slate-950 line-clamp-1 group-hover:text-slate-900 transition-colors leading-snug">
             {stay.title || stay.propertyName}
           </h3>
 
@@ -158,7 +158,7 @@ export const PropertyCard = memo(function PropertyCard({
             {tags.slice(0, 3).map((tag, tIdx) => (
               <span
                 key={tIdx}
-                className="text-[10px] font-semibold text-slate-600 dark:text-slate-300 bg-slate-200/70 dark:bg-white/10 border border-slate-300/60 dark:border-white/15 px-2 py-0.5 rounded-md"
+                className="text-[10px] font-semibold text-slate-600 bg-slate-200/70 border border-slate-300/60 px-2 py-0.5 rounded-md"
               >
                 {tag}
               </span>
@@ -166,15 +166,15 @@ export const PropertyCard = memo(function PropertyCard({
           </div>
 
           {/* Footer Price & Action Buttons */}
-          <div className="flex items-center justify-between pt-1 sm:pt-2 border-t border-slate-200/80 dark:border-white/10 gap-1 sm:gap-2">
+          <div className="flex items-center justify-between pt-1 sm:pt-2 border-t border-slate-200/80 gap-1 sm:gap-2">
             <div className="min-w-0">
               <span className="hidden sm:block text-[9px] uppercase font-bold text-slate-400 tracking-wider">
                 Starting Price
               </span>
               <div className="flex items-baseline gap-1 flex-wrap">
-                <span className="text-slate-950 dark:text-white font-black text-[10px] sm:text-sm md:text-base leading-none">
+                <span className="text-slate-950 font-black text-[10px] sm:text-sm md:text-base leading-none">
                   ₹{pricing.primaryPrice}
-                  <span className="text-[8px] sm:text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                  <span className="text-[8px] sm:text-[10px] font-medium text-slate-500">
                     {pricing.primaryUnit}
                   </span>
                 </span>
@@ -188,7 +188,7 @@ export const PropertyCard = memo(function PropertyCard({
                   e.stopPropagation();
                   if (onStayClick) onStayClick(stay);
                 }}
-                className="bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-800 dark:text-white text-[10px] sm:text-xs font-bold px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-lg sm:rounded-xl transition-colors cursor-pointer border border-slate-200/80 dark:border-white/15 shadow-2xs active:scale-95"
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 text-[10px] sm:text-xs font-bold px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-lg sm:rounded-xl transition-colors cursor-pointer border border-slate-200/80 shadow-2xs active:scale-95"
               >
                 Details
               </button>

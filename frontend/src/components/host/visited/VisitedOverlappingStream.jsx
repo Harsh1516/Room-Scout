@@ -119,8 +119,8 @@ export function VisitedOverlappingStream({
                 aria-label={`Jump to reservation card ${idx + 1}`}
                 className={`transition-all duration-300 cursor-pointer ${
                   isActive
-                    ? 'w-6 h-2 rounded-full bg-emerald-600 dark:bg-emerald-400 shadow-xs'
-                    : 'w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600 hover:bg-slate-400 dark:hover:bg-slate-500'
+                    ? 'w-6 h-2 rounded-full bg-emerald-600 shadow-xs'
+                    : 'w-2 h-2 rounded-full bg-slate-300 hover:bg-slate-400'
                 }`}
               />
             );

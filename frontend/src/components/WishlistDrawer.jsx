@@ -58,15 +58,15 @@ export function WishlistDrawer({ onBookClick, onStayClick }) {
                 duration: 0.32,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              className="pointer-events-auto w-80 sm:w-88 max-w-[85vw] flex flex-col bg-white dark:bg-[#0f1117] border-l border-slate-200 dark:border-white/[0.06] shadow-2xl h-full will-change-transform"
+              className="pointer-events-auto w-80 sm:w-88 max-w-[85vw] flex flex-col bg-white border-l border-slate-200 shadow-2xl h-full will-change-transform"
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-white/[0.06]">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                 <div>
-                  <h2 className="text-sm font-semibold text-slate-900 dark:text-white tracking-tight">
+                  <h2 className="text-sm font-semibold text-slate-900 tracking-tight">
                     Your Wishlist
                   </h2>
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                  <p className="text-[11px] text-slate-400 mt-0.5">
                     {wishlist.length === 0
                       ? 'No saved properties'
                       : `${wishlist.length} saved propert${wishlist.length === 1 ? 'y' : 'ies'}`}
@@ -75,7 +75,7 @@ export function WishlistDrawer({ onBookClick, onStayClick }) {
                 <button
                   type="button"
                   onClick={() => setIsWishlistOpen(false)}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors cursor-pointer"
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
                   title="Close Wishlist"
                   aria-label="Close Wishlist"
                 >
@@ -101,7 +101,7 @@ export function WishlistDrawer({ onBookClick, onStayClick }) {
                     return (
                       <div
                         key={stayId}
-                        className="rounded-xl border border-slate-200 dark:border-white/[0.07] bg-white dark:bg-white/[0.02] hover:border-slate-300 dark:hover:border-white/[0.12] transition-colors duration-150 overflow-hidden"
+                        className="rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition-colors duration-150 overflow-hidden"
                       >
                         {/* Top: thumbnail + info (Clicking opens details) */}
                         <div
@@ -109,14 +109,14 @@ export function WishlistDrawer({ onBookClick, onStayClick }) {
                           onClick={() => handleOpenProperty(stay)}
                         >
                           {/* Thumbnail */}
-                          <div className="w-[52px] h-[52px] rounded-lg overflow-hidden shrink-0 bg-slate-100 dark:bg-white/[0.05]">
+                          <div className="w-[52px] h-[52px] rounded-lg overflow-hidden shrink-0 bg-slate-100">
                             <img src={img} alt={displayTitle} className="w-full h-full object-cover" />
                           </div>
 
                           {/* Text */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2">
-                              <span className="text-[13px] font-semibold text-slate-900 dark:text-white leading-snug truncate">
+                              <span className="text-[13px] font-semibold text-slate-900 leading-snug truncate">
                                 {displayTitle}
                               </span>
                               <button
@@ -125,7 +125,7 @@ export function WishlistDrawer({ onBookClick, onStayClick }) {
                                   e.stopPropagation();
                                   removeFromWishlist(stayId);
                                 }}
-                                className="w-5 h-5 rounded-md flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer shrink-0"
+                                className="w-5 h-5 rounded-md flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer shrink-0"
                                 title="Remove from wishlist"
                                 aria-label="Remove from wishlist"
                               >
@@ -137,20 +137,20 @@ export function WishlistDrawer({ onBookClick, onStayClick }) {
 
                             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                               {(stay.type || stay.propertyType) && (
-                                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-500/10 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300 border border-amber-500/25 whitespace-nowrap">
+                                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-700 border border-amber-500/25 whitespace-nowrap">
                                   {stay.type || stay.propertyType || 'PG'}
                                 </span>
                               )}
-                              <span className="text-slate-300 dark:text-slate-700 text-[11px]">·</span>
-                              <span className="text-[11px] text-slate-400 dark:text-slate-500 truncate">
+                              <span className="text-slate-300 text-[11px]">·</span>
+                              <span className="text-[11px] text-slate-400 truncate">
                                 {stay.location || stay.city || 'Uttarakhand'}
                               </span>
                             </div>
 
                             <div className="flex items-center justify-between mt-1.5">
-                              <span className="text-[13px] font-bold text-slate-900 dark:text-white">
+                              <span className="text-[13px] font-bold text-slate-900">
                                 ₹{priceNum.toLocaleString('en-IN')}
-                                <span className="text-[11px] font-normal text-slate-400 dark:text-slate-500">{rateUnit}</span>
+                                <span className="text-[11px] font-normal text-slate-400">{rateUnit}</span>
                               </span>
                             </div>
                           </div>
@@ -158,13 +158,13 @@ export function WishlistDrawer({ onBookClick, onStayClick }) {
 
                         {/* Single Action Button: View Details */}
                         <div
-                          className="flex items-center justify-end px-3 pb-2.5 pt-2 border-t border-slate-100 dark:border-white/[0.04]"
+                          className="flex items-center justify-end px-3 pb-2.5 pt-2 border-t border-slate-100"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <button
                             type="button"
                             onClick={() => handleOpenProperty(stay)}
-                            className="text-xs font-bold px-3.5 py-1.5 min-h-[30px] rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 active:scale-95 transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-xs"
+                            className="text-xs font-bold px-3.5 py-1.5 min-h-[30px] rounded-lg bg-slate-900 text-white hover:opacity-90 active:scale-95 transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-xs"
                           >
                             <span>View Details</span>
                             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
@@ -177,7 +177,7 @@ export function WishlistDrawer({ onBookClick, onStayClick }) {
                   })
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full text-center py-20 gap-3">
-                    <div className="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center">
+                    <div className="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center">
                       <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path
                           strokeLinecap="round"
@@ -187,7 +187,7 @@ export function WishlistDrawer({ onBookClick, onStayClick }) {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No saved stays yet</p>
+                      <p className="text-sm font-semibold text-slate-700">No saved stays yet</p>
                       <p className="text-xs text-slate-400 mt-1">Your saved properties will appear here.</p>
                     </div>
                   </div>
@@ -196,14 +196,14 @@ export function WishlistDrawer({ onBookClick, onStayClick }) {
 
               {/* Footer */}
               {wishlist.length > 0 && (
-                <div className="px-5 py-3.5 border-t border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
-                  <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                <div className="px-5 py-3.5 border-t border-slate-100 flex items-center justify-between">
+                  <span className="text-[11px] text-slate-400">
                     {wishlist.length} saved propert{wishlist.length === 1 ? 'y' : 'ies'}
                   </span>
                   <button
                     type="button"
                     onClick={() => setIsWishlistOpen(false)}
-                    className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                    className="text-[11px] font-semibold text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
                   >
                     Close
                   </button>

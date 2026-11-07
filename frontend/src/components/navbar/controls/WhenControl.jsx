@@ -63,7 +63,7 @@ export function WhenControl({
         className={`flex items-center px-3.5 py-1 sm:py-1.5 rounded-full text-xs font-bold tracking-tight transition-all duration-150 cursor-pointer select-none active:scale-95 border focus:outline-none focus:ring-0 focus-visible:outline-none shadow-xs ${
           isWhenActive
             ? 'bg-cyan-600 text-white border-cyan-400 font-bold shadow-[0_0_12px_rgba(6,182,212,0.4)]'
-            : 'bg-slate-950 text-white hover:bg-slate-900 border-slate-800 dark:border-white/20'
+            : 'bg-slate-950 text-white hover:bg-slate-900 border-slate-800'
         }`}
         title="Select move-in schedule or stay duration"
       >
@@ -74,11 +74,11 @@ export function WhenControl({
       {isOpen && (
         <div
           onClick={(e) => e.stopPropagation()}
-          className="absolute top-full mt-3.5 left-0 sm:left-1/2 sm:-translate-x-1/2 w-76 p-3.5 rounded-2xl apple-liquid-dropdown z-50 text-slate-900 dark:text-slate-100 space-y-2.5 animate-in fade-in zoom-in-95 duration-150"
+          className="absolute top-full mt-3.5 left-0 sm:left-1/2 sm:-translate-x-1/2 w-76 p-3.5 rounded-2xl apple-liquid-dropdown z-50 text-slate-900 space-y-2.5 animate-in fade-in zoom-in-95 duration-150"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-1 border-b border-slate-200/60 dark:border-white/10 pb-1.5">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+          <div className="flex items-center justify-between px-1 border-b border-slate-200/60 pb-1.5">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500">
               When & Duration
             </span>
             {isWhenActive && (
@@ -94,7 +94,7 @@ export function WhenControl({
 
           {/* Move-in Date Input */}
           <form onSubmit={handleCustomDateSubmit} className="space-y-1.5">
-            <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+            <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 block">
               Move-in Date
             </label>
             <div className="flex gap-1.5">
@@ -103,7 +103,7 @@ export function WhenControl({
                 value={customDate}
                 min={new Date().toISOString().split('T')[0]}
                 onChange={(e) => setCustomDate(e.target.value)}
-                className="flex-1 px-3 py-1.5 text-xs rounded-xl bg-white/8 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500 transition-none"
+                className="flex-1 px-3 py-1.5 text-xs rounded-xl bg-white/8 border border-slate-200/60 text-slate-900 focus:outline-none focus:border-cyan-500 transition-none"
               />
               <button
                 type="submit"
@@ -115,11 +115,11 @@ export function WhenControl({
             </div>
           </form>
 
-          <div className="h-px bg-slate-200/60 dark:bg-white/10" />
+          <div className="h-px bg-slate-200/60" />
 
           {/* Duration Presets */}
           <div>
-            <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1 px-1">
+            <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 mb-1 px-1">
               Stay Duration
             </div>
             <div className="space-y-1.5">
@@ -132,15 +132,15 @@ export function WhenControl({
                     onClick={() => handleSelectPreset(p.label)}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-none cursor-pointer focus:outline-none focus:ring-0 active:scale-98 border ${
                       isSelected
-                        ? 'bg-cyan-500/20 text-cyan-800 dark:text-cyan-200 font-bold border-cyan-500/30'
-                        : 'bg-white/8 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-slate-800 dark:text-slate-200'
+                        ? 'bg-cyan-500/20 text-cyan-800 font-bold border-cyan-500/30'
+                        : 'bg-white/8 border border-slate-200/60 text-slate-800'
                     }`}
                   >
                     <div>
                       <div className="font-semibold">{p.label}</div>
-                      <div className="text-[10px] text-slate-500 dark:text-slate-400">{p.desc}</div>
+                      <div className="text-[10px] text-slate-500">{p.desc}</div>
                     </div>
-                    {isSelected && <span className="text-xs font-bold text-cyan-600 dark:text-cyan-400">✓</span>}
+                    {isSelected && <span className="text-xs font-bold text-cyan-600">✓</span>}
                   </button>
                 );
               })}

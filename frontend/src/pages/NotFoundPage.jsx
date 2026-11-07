@@ -7,16 +7,16 @@ export function NotFoundPage() {
   const { isAuthenticated, isHost } = useAuth();
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden transition-colors duration-300">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden transition-colors duration-300">
       {/* Background Decorative Gradient Blobs */}
-      <div className="absolute top-1/4 -left-20 w-72 sm:w-96 h-72 sm:h-96 rounded-full bg-cyan-500/10 dark:bg-cyan-500/5 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 -right-20 w-72 sm:w-96 h-72 sm:h-96 rounded-full bg-indigo-500/10 dark:bg-indigo-500/5 blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 -left-20 w-72 sm:w-96 h-72 sm:h-96 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-20 w-72 sm:w-96 h-72 sm:h-96 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
 
       {/* Top Navigation Bar */}
       <header className="absolute top-0 left-0 right-0 p-6 flex items-center justify-between max-w-6xl mx-auto w-full z-10">
         <Link to="/" className="flex items-center gap-2 group">
           <span className="w-3 h-3 rounded-full bg-cyan-500 group-hover:scale-125 transition-transform" />
-          <span className="text-lg font-black tracking-wider uppercase text-slate-950 dark:text-white">
+          <span className="text-lg font-black tracking-wider uppercase text-slate-950">
             ROOM-SCOUT
           </span>
         </Link>
@@ -27,7 +27,7 @@ export function NotFoundPage() {
         initial={{ opacity: 0, scale: 0.92, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-lg text-center relative z-10 my-auto p-8 sm:p-10 rounded-3xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800 shadow-2xl space-y-6"
+        className="w-full max-w-lg text-center relative z-10 my-auto p-8 sm:p-10 rounded-3xl bg-white/80 backdrop-blur-xl border border-slate-200 shadow-2xl space-y-6"
       >
         {/* Animated 404 Badge */}
         <div className="relative inline-block">
@@ -45,10 +45,10 @@ export function NotFoundPage() {
 
         {/* Headings & Description */}
         <div className="space-y-2.5">
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
             Oops! Page Not Found
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
+          <p className="text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
             The destination or room link you are looking for might have been moved, deleted, or doesn't exist.
           </p>
         </div>
@@ -58,7 +58,7 @@ export function NotFoundPage() {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95"
+            className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95"
           >
             <span>←</span>
             <span>Go Back</span>
@@ -74,7 +74,7 @@ export function NotFoundPage() {
         </div>
 
         {/* Quick Links Footer */}
-        <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-center gap-4 text-xs font-semibold text-slate-400">
+        <div className="pt-4 border-t border-slate-100 flex items-center justify-center gap-4 text-xs font-semibold text-slate-400">
           <Link to="/search" className="hover:text-cyan-500 transition-colors">
             Search Rooms
           </Link>
@@ -86,7 +86,7 @@ export function NotFoundPage() {
       </motion.main>
 
       {/* Footer copyright */}
-      <footer className="text-xs text-slate-400 dark:text-slate-600 mt-6 relative z-10 text-center">
+      <footer className="text-xs text-slate-400 mt-6 relative z-10 text-center">
         © 2026 Room-Scout. All rights reserved.
       </footer>
     </div>

@@ -202,19 +202,19 @@ export function UserRoomCards({
                   } min-w-[114px] w-28 shrink-0 snap-start p-2 rounded-2xl border transition-colors duration-150 flex flex-col justify-between relative cursor-pointer select-none outline-none ${
                     isSelected
                       ? isRoomRequested
-                        ? 'bg-amber-500/35 text-amber-950 dark:text-amber-100 border-2 border-amber-500 dark:border-amber-400 shadow-md ring-2 ring-amber-400/40'
+                        ? 'bg-amber-500/35 text-amber-950 border-2 border-amber-500 shadow-md ring-2 ring-amber-400/40'
                         : isCardOccupied
-                        ? 'bg-rose-500/20 dark:bg-rose-500/25 text-rose-950 dark:text-rose-100 border-2 border-rose-500 dark:border-rose-400 shadow-xs'
+                        ? 'bg-rose-500/20 text-rose-950 border-2 border-rose-500 shadow-xs'
                         : isCardPartiallyOccupied
-                        ? 'bg-amber-500/35 text-amber-950 dark:text-amber-100 border-2 border-amber-500 dark:border-amber-400 shadow-md ring-2 ring-amber-400/40'
-                        : 'bg-emerald-500/25 dark:bg-emerald-500/30 text-emerald-950 dark:text-emerald-50 border-2 border-emerald-400 dark:border-emerald-400/80 shadow-xs'
+                        ? 'bg-amber-500/35 text-amber-950 border-2 border-amber-500 shadow-md ring-2 ring-amber-400/40'
+                        : 'bg-emerald-500/25 text-emerald-950 border-2 border-emerald-400 shadow-xs'
                       : isRoomRequested
-                      ? 'bg-amber-500/10 dark:bg-amber-500/15 text-amber-900 dark:text-amber-200 border border-amber-300/80 dark:border-amber-700/60 hover:bg-amber-500/20'
+                      ? 'bg-amber-500/10 text-amber-900 border border-amber-300/80 hover:bg-amber-500/20'
                       : isCardOccupied
-                      ? 'bg-rose-500/10 dark:bg-rose-500/15 text-rose-950 dark:text-rose-100 border-2 border-rose-400 dark:border-rose-500/80 hover:border-rose-500 hover:bg-rose-500/15'
+                      ? 'bg-rose-500/10 text-rose-950 border-2 border-rose-400 hover:border-rose-500 hover:bg-rose-500/15'
                       : isCardPartiallyOccupied
-                      ? 'bg-amber-500/10 dark:bg-amber-500/15 text-amber-900 dark:text-amber-200 border border-amber-300/80 dark:border-amber-700/60 hover:bg-amber-500/20'
-                      : 'bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-900 dark:text-emerald-100 border border-slate-200 dark:border-zinc-700 hover:border-slate-300 dark:hover:border-zinc-600 hover:bg-emerald-500/15'
+                      ? 'bg-amber-500/10 text-amber-900 border border-amber-300/80 hover:bg-amber-500/20'
+                      : 'bg-emerald-500/10 text-emerald-900 border border-slate-200 hover:border-slate-300 hover:bg-emerald-500/15'
                   }`}
                 >
                   {/* Top Badge: Available / Requested / Occupied */}
@@ -224,10 +224,10 @@ export function UserRoomCards({
                         isRoomRequested
                           ? 'bg-amber-500/25 text-amber-900 font-bold border border-amber-500/30'
                           : isCardOccupied
-                          ? 'bg-rose-500/20 text-rose-900 dark:text-rose-100 border border-rose-300/60 dark:border-rose-800'
+                          ? 'bg-rose-500/20 text-rose-900 border border-rose-300/60'
                           : isCardPartiallyOccupied
-                          ? 'bg-amber-500/25 text-amber-950 dark:text-amber-100'
-                          : 'bg-emerald-500/20 text-emerald-900 dark:text-emerald-100'
+                          ? 'bg-amber-500/25 text-amber-950'
+                          : 'bg-emerald-500/20 text-emerald-900'
                       }`}
                     >
                       {isRoomRequested
@@ -249,12 +249,12 @@ export function UserRoomCards({
                     <span
                       className={`text-sm font-bold tracking-tight block truncate ${
                         isRoomRequested
-                          ? 'text-amber-950 dark:text-amber-100'
+                          ? 'text-amber-950'
                           : isCardOccupied
-                          ? 'text-rose-950 dark:text-rose-100'
+                          ? 'text-rose-950'
                           : isCardPartiallyOccupied
-                          ? 'text-amber-950 dark:text-amber-100'
-                          : 'text-emerald-950 dark:text-emerald-50'
+                          ? 'text-amber-950'
+                          : 'text-emerald-950'
                       }`}
                     >
                       {rawRoomNum}
@@ -265,7 +265,7 @@ export function UserRoomCards({
                   {isMonthly && (
                     <div className="space-y-0.5 my-0.5 w-full">
                       <div className="flex items-center justify-center gap-1 my-0.5">
-                        <span className="text-[9px] font-semibold text-slate-500 dark:text-zinc-400 select-none shrink-0 whitespace-nowrap">
+                        <span className="text-[9px] font-semibold text-slate-500 select-none shrink-0 whitespace-nowrap">
                           Capacity = {capacity}
                         </span>
                       </div>
@@ -286,10 +286,10 @@ export function UserRoomCards({
                         isRoomRequested
                           ? 'text-amber-900 font-semibold'
                           : isCardOccupied
-                          ? 'text-rose-900/90 dark:text-rose-200/90 font-semibold'
+                          ? 'text-rose-900/90 font-semibold'
                           : isCardPartiallyOccupied
-                          ? 'text-amber-800 dark:text-amber-300 font-semibold'
-                          : 'text-emerald-800/80 dark:text-emerald-300/85'
+                          ? 'text-amber-800 font-semibold'
+                          : 'text-emerald-800/80'
                       }`}
                     >
                       {isRoomRequested

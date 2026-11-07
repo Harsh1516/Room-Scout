@@ -185,16 +185,16 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
     <div className="fixed inset-0 z-[9999] overflow-y-auto bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-fade-in">
       <div className="fixed inset-0" onClick={handleResetAndClose} />
 
-      <div className="relative w-full max-w-xl max-h-[90vh] flex flex-col bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-white/10 z-10 my-auto">
+      <div className="relative w-full max-w-xl max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 z-10 my-auto">
         {/* Modal Header */}
-        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-200 dark:border-white/10 flex items-center justify-between bg-slate-50/70 dark:bg-zinc-900/70 shrink-0">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/70 shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
             <span className="text-xl shrink-0">⚡</span>
             <div className="min-w-0">
-              <h2 className="text-sm sm:text-base md:text-lg font-bold text-slate-900 dark:text-white truncate">
+              <h2 className="text-sm sm:text-base md:text-lg font-bold text-slate-900 truncate">
                 {bookingConfirmed ? 'Reservation Confirmed!' : 'Reserve Property'}
               </h2>
-              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400 truncate">
+              <p className="text-[11px] sm:text-xs text-slate-500 truncate">
                 {stay.title} {stay.location ? `(${stay.location})` : ''}
               </p>
             </div>
@@ -203,7 +203,7 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
           <button
             type="button"
             onClick={handleResetAndClose}
-            className="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
+            className="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors shrink-0"
           >
             ✕
           </button>
@@ -217,10 +217,10 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
             </div>
 
             <div>
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900">
                 Reservation Successful!
               </h3>
-              <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Your reservation has been confirmed and registered in your Booked Places drawer.
               </p>
             </div>
@@ -229,10 +229,10 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
             <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-950/20 via-zinc-900/20 to-zinc-900/40 border border-emerald-500/30 text-left space-y-3">
               <div className="flex items-center justify-between border-b border-emerald-500/20 pb-3">
                 <div>
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-600 dark:text-emerald-400 block">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-600 block">
                     Pass Reference Code
                   </span>
-                  <span className="font-mono font-bold text-sm bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2.5 py-0.5 rounded-lg inline-block mt-0.5">
+                  <span className="font-mono font-bold text-sm bg-emerald-500/20 text-emerald-700 px-2.5 py-0.5 rounded-lg inline-block mt-0.5">
                     {bookingId}
                   </span>
                 </div>
@@ -256,21 +256,21 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
                   <span className="text-slate-400 block text-[10px]">Guest Name</span>
-                  <span className="font-bold text-slate-900 dark:text-white">{formData.fullName || 'Guest User'}</span>
+                  <span className="font-bold text-slate-900">{formData.fullName || 'Guest User'}</span>
                 </div>
                 <div>
                   <span className="text-slate-400 block text-[10px]">{isMonthly ? 'Start Month' : 'Check-In'}</span>
-                  <span className="font-bold text-slate-900 dark:text-white">{formData.moveInDate}</span>
+                  <span className="font-bold text-slate-900">{formData.moveInDate}</span>
                 </div>
                 <div>
                   <span className="text-slate-400 block text-[10px]">Duration</span>
-                  <span className="font-bold text-slate-900 dark:text-white">
+                  <span className="font-bold text-slate-900">
                     {isMonthly ? `${formData.durationUnits} Months` : `${formData.durationUnits} Night(s)`}
                   </span>
                 </div>
                 <div>
                   <span className="text-slate-400 block text-[10px]">Total Amount</span>
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                  <span className="font-bold text-emerald-600">
                     ₹{totalAmount.toLocaleString('en-IN')}
                   </span>
                 </div>
@@ -299,7 +299,7 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
           <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1">
                   Full Name *
                 </label>
                 <input
@@ -308,16 +308,16 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
                   placeholder="e.g. Harsh Kumar"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  className="w-full p-2.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full p-2.5 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1">
                   Mobile Number *
                 </label>
-                <div className="flex items-center rounded-xl bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 overflow-hidden focus-within:ring-2 focus-within:ring-emerald-500">
-                  <span className="px-2.5 py-2.5 text-xs font-bold text-slate-600 dark:text-zinc-300 select-none bg-slate-200/60 dark:bg-white/5 border-r border-slate-200 dark:border-white/10 shrink-0">
+                <div className="flex items-center rounded-xl bg-slate-50 border border-slate-200 overflow-hidden focus-within:ring-2 focus-within:ring-emerald-500">
+                  <span className="px-2.5 py-2.5 text-xs font-bold text-slate-600 select-none bg-slate-200/60 border-r border-slate-200 shrink-0">
                     +91
                   </span>
                   <input
@@ -333,7 +333,7 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
                       const digits = raw.length > 10 && raw.startsWith('91') ? raw.slice(-10) : raw.slice(0, 10);
                       setFormData({ ...formData, phone: digits ? `+91 ${digits}` : '' });
                     }}
-                    className="w-full px-2.5 py-2 text-xs bg-transparent text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none"
+                    className="w-full px-2.5 py-2 text-xs bg-transparent text-slate-900 placeholder-slate-400 focus:outline-none"
                   />
                 </div>
               </div>
@@ -341,7 +341,7 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1">
                   {isMonthly ? 'Move-In Date *' : 'Check-In Date *'}
                 </label>
                 <input
@@ -349,19 +349,19 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
                   required
                   value={formData.moveInDate}
                   onChange={(e) => setFormData({ ...formData, moveInDate: e.target.value })}
-                  className="w-full p-2.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full p-2.5 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1">
                   {isMonthly ? 'Tenure Duration' : 'Stay Duration'}
                 </label>
                 {isMonthly ? (
                   <select
                     value={formData.durationUnits}
                     onChange={(e) => setFormData({ ...formData, durationUnits: Number(e.target.value) })}
-                    className="w-full p-2.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full p-2.5 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   >
                     <option value={1}>1 Month</option>
                     <option value={3}>3 Months</option>
@@ -372,7 +372,7 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
                   <select
                     value={formData.durationUnits}
                     onChange={(e) => setFormData({ ...formData, durationUnits: Number(e.target.value) })}
-                    className="w-full p-2.5 text-xs rounded-xl bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full p-2.5 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   >
                     <option value={1}>1 Night</option>
                     <option value={2}>2 Nights</option>
@@ -388,7 +388,7 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
 
             {/* Payment Method Selector */}
             <div className="space-y-2 pt-1">
-              <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300">
+              <label className="block text-xs font-bold text-slate-700">
                 Payment Method *
               </label>
 
@@ -403,7 +403,7 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
                   className={`p-3 rounded-2xl border text-left cursor-pointer transition-all flex flex-col justify-between ${
                     paymentMethod === 'UPI'
                       ? 'border-emerald-500 bg-emerald-500/10 shadow-sm'
-                      : 'border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800/60 hover:border-slate-300 dark:hover:border-white/20'
+                      : 'border-slate-200 bg-slate-50 hover:border-slate-300'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -412,15 +412,15 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
                       className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
                         paymentMethod === 'UPI'
                           ? 'border-emerald-500 bg-emerald-500'
-                          : 'border-slate-400 dark:border-zinc-600'
+                          : 'border-slate-400'
                       }`}
                     >
                       {paymentMethod === 'UPI' && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
                     </span>
                   </div>
                   <div className="mt-2">
-                    <div className="text-xs font-bold text-slate-900 dark:text-white">Direct UPI to Host</div>
-                    <div className="text-[10px] text-slate-500 dark:text-zinc-400">
+                    <div className="text-xs font-bold text-slate-900">Direct UPI to Host</div>
+                    <div className="text-[10px] text-slate-500">
                       Exact room fee • 0% gateway fee • QR / App
                     </div>
                   </div>
@@ -436,7 +436,7 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
                   className={`p-3 rounded-2xl border text-left cursor-pointer transition-all flex flex-col justify-between ${
                     paymentMethod === 'PAY_ON_ARRIVAL'
                       ? 'border-emerald-500 bg-emerald-500/10 shadow-sm'
-                      : 'border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800/60 hover:border-slate-300 dark:hover:border-white/20'
+                      : 'border-slate-200 bg-slate-50 hover:border-slate-300'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -445,15 +445,15 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
                       className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
                         paymentMethod === 'PAY_ON_ARRIVAL'
                           ? 'border-emerald-500 bg-emerald-500'
-                          : 'border-slate-400 dark:border-zinc-600'
+                          : 'border-slate-400'
                       }`}
                     >
                       {paymentMethod === 'PAY_ON_ARRIVAL' && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
                     </span>
                   </div>
                   <div className="mt-2">
-                    <div className="text-xs font-bold text-slate-900 dark:text-white">Pay on Arrival</div>
-                    <div className="text-[10px] text-slate-500 dark:text-zinc-400">
+                    <div className="text-xs font-bold text-slate-900">Pay on Arrival</div>
+                    <div className="text-[10px] text-slate-500">
                       Pay cash at property upon check-in
                     </div>
                   </div>
@@ -462,41 +462,41 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
             </div>
 
             {/* Price Breakdown Card */}
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-200 dark:border-white/10 space-y-2 text-xs">
-              <h4 className="font-bold text-slate-900 dark:text-white mb-2 flex items-center justify-between">
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+              <h4 className="font-bold text-slate-900 mb-2 flex items-center justify-between">
                 <span>Cost Calculation</span>
-                <span className="text-[10px] text-emerald-600 dark:text-emerald-400">Transparent Pricing</span>
+                <span className="text-[10px] text-emerald-600">Transparent Pricing</span>
               </h4>
 
-              <div className="flex items-center justify-between text-slate-600 dark:text-zinc-300">
+              <div className="flex items-center justify-between text-slate-600">
                 <span>{isMonthly ? 'Monthly Rent' : `Room Rate (${unitCount} Night${unitCount > 1 ? 's' : ''})`}</span>
                 <span>₹{basePrice.toLocaleString('en-IN')}</span>
               </div>
               {isMonthly && (
-                <div className="flex items-center justify-between text-slate-600 dark:text-zinc-300">
+                <div className="flex items-center justify-between text-slate-600">
                   <span>Refundable Security Deposit</span>
                   <span>₹{deposit.toLocaleString('en-IN')}</span>
                 </div>
               )}
-              <div className="flex items-center justify-between text-slate-600 dark:text-zinc-300">
+              <div className="flex items-center justify-between text-slate-600">
                 <span>{isMonthly ? 'Setup & Onboarding' : 'Service Fee'}</span>
                 <span>₹{maintenance.toLocaleString('en-IN')}</span>
               </div>
-              <div className="flex items-center justify-between text-slate-600 dark:text-zinc-300">
+              <div className="flex items-center justify-between text-slate-600">
                 <span>GST & Platform Handling (5%)</span>
                 <span>₹{gst.toLocaleString('en-IN')}</span>
               </div>
 
-              <div className="pt-2 border-t border-slate-200 dark:border-white/10 flex items-center justify-between font-black text-slate-900 dark:text-white text-sm">
+              <div className="pt-2 border-t border-slate-200 flex items-center justify-between font-black text-slate-900 text-sm">
                 <span>Total Amount</span>
-                <span className="text-emerald-600 dark:text-emerald-400">
+                <span className="text-emerald-600">
                   ₹{totalAmount.toLocaleString('en-IN')}
                 </span>
               </div>
             </div>
 
             {paymentStepNotice && (
-              <div className="text-center text-xs text-emerald-600 dark:text-emerald-400 font-semibold animate-pulse">
+              <div className="text-center text-xs text-emerald-600 font-semibold animate-pulse">
                 {paymentStepNotice}
               </div>
             )}

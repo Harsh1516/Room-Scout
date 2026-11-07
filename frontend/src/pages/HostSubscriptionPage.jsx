@@ -98,11 +98,11 @@ export function HostSubscriptionPage() {
             type="button"
             onClick={handleBack}
             data-no-hover="true"
-            className="apple-liquid-nav flex items-center justify-center px-3 py-1.5 sm:px-4 sm:py-2 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 dark:border-white/15 shadow-xs cursor-pointer text-slate-800 dark:text-slate-200 font-semibold text-xs sm:text-sm select-none active:scale-95 transition-transform shrink-0"
+            className="apple-liquid-nav flex items-center justify-center px-3 py-1.5 sm:px-4 sm:py-2 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 shadow-xs cursor-pointer text-slate-800 font-semibold text-xs sm:text-sm select-none active:scale-95 transition-transform shrink-0"
             title="Return to Dashboard"
           >
             <svg
-              className="w-4 h-4 text-slate-600 dark:text-slate-300 stroke-[2.5]"
+              className="w-4 h-4 text-slate-600 stroke-[2.5]"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -121,7 +121,7 @@ export function HostSubscriptionPage() {
           <button
             type="button"
             onClick={() => navigate('/host/subscription/buy')}
-            className="apple-liquid-nav host-buy-btn flex items-center justify-center h-8 sm:h-9 px-3.5 sm:px-4 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 dark:border-white/15 text-slate-800 dark:text-slate-200 font-semibold text-xs sm:text-sm shadow-xs active:scale-95 transition-all cursor-pointer select-none"
+            className="apple-liquid-nav host-buy-btn flex items-center justify-center h-8 sm:h-9 px-3.5 sm:px-4 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 text-slate-800 font-semibold text-xs sm:text-sm shadow-xs active:scale-95 transition-all cursor-pointer select-none"
             title="Buy or Renew Subscription Plan"
           >
             <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">

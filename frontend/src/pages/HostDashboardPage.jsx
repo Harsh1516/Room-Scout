@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } fro
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
 import { toast } from '../context/ToastContext';
 import HostDashboardNavbar from '../components/host/HostDashboardNavbar';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
@@ -35,9 +34,9 @@ const HostPaymentSettingsSection = lazy(() =>
 
 function DashboardSkeletonLoader() {
   return (
-    <div className="w-full min-h-[320px] rounded-2xl bg-white/60 dark:bg-zinc-900/60 animate-pulse border border-slate-200 dark:border-zinc-800 flex flex-col items-center justify-center gap-3 p-8">
-      <div className="w-8 h-8 rounded-full border-2 border-slate-200 dark:border-white/10 border-t-[#9333ea] animate-spin" />
-      <span className="text-xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+    <div className="w-full min-h-[320px] rounded-2xl bg-white/60 animate-pulse border border-slate-200 flex flex-col items-center justify-center gap-3 p-8">
+      <div className="w-8 h-8 rounded-full border-2 border-slate-200 border-t-[#9333ea] animate-spin" />
+      <span className="text-xs font-mono uppercase tracking-wider text-slate-400">
         Loading Panel Content...
       </span>
     </div>
@@ -48,8 +47,7 @@ export function HostDashboardPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, updateUserSession } = useAuth();
-  const { isDark } = useTheme();
-
+  
   // Tab Navigation State
   const [activeTab, setActiveTab] = useState(() => {
     if (location.state?.tab) return location.state.tab;
@@ -262,7 +260,7 @@ export function HostDashboardPage() {
 
   return (
     <div
-      className={`min-h-screen w-full flex flex-col host-page-scope font-body-md antialiased text-slate-800 dark:text-slate-100 max-md:bg-white bg-slate-50 dark:bg-[#06080F] selection:bg-purple-500 selection:text-white relative transition-colors duration-200 ${
+      className={`min-h-screen w-full flex flex-col host-page-scope font-body-md antialiased text-slate-800 max-md:bg-white bg-slate-50 selection:bg-purple-500 selection:text-white relative transition-colors duration-200 ${
         activeTab === 'users' || activeTab === 'room' ? 'lg:h-screen lg:max-h-screen lg:overflow-hidden' : ''
       }`}
     >
@@ -304,7 +302,7 @@ export function HostDashboardPage() {
 
       {/* Main Tab Workspace */}
       <main
-        className={`w-full flex-1 relative bg-transparent text-slate-800 dark:text-on-surface font-body-md antialiased flex flex-col selection:bg-[#a855f7] selection:text-slate-900 dark:text-white ${
+        className={`w-full flex-1 relative bg-transparent text-slate-800 font-body-md antialiased flex flex-col selection:bg-[#a855f7] selection:text-slate-900 ${
           activeTab === 'users' || activeTab === 'room' || activeTab === 'property'
             ? 'lg:h-[calc(100vh-4.75rem)] lg:overflow-hidden lg:min-h-0'
             : 'min-h-[calc(100vh-4rem)] overflow-x-hidden'

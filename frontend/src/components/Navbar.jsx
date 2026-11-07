@@ -17,7 +17,7 @@ export function Navbar({ onSearchSubmit, onLoginClick, onSelectUpload, onOpenBoo
         aria-hidden="true"
         className={`fixed top-0 inset-x-0 h-16 sm:h-20 z-35 pointer-events-none transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isElevated
-            ? 'opacity-100 bg-white/70 dark:bg-black/75 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.5)]'
+            ? 'opacity-100 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 shadow-[0_4px_24px_rgba(0,0,0,0.06)](0,0,0,0.5)]'
             : 'opacity-0 bg-transparent border-b border-transparent shadow-none'
         }`}
       />

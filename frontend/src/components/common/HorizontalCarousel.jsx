@@ -101,8 +101,8 @@ export function HorizontalCarousel({
                 onClick={() => scrollToItem(idx)}
                 className={`transition-all duration-200 rounded-full cursor-pointer ${
                   isSelected
-                    ? 'w-5 h-1.5 bg-slate-900 dark:bg-slate-100 shadow-xs'
-                    : 'w-1.5 h-1.5 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-600'
+                    ? 'w-5 h-1.5 bg-slate-900 shadow-xs'
+                    : 'w-1.5 h-1.5 bg-slate-300 hover:bg-slate-400'
                 }`}
                 title={`Slide ${idx + 1}`}
               />

@@ -133,10 +133,10 @@ export function HeroSection({ onSelectUpload }) {
             className="relative will-change-transform"
           >
             <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-[4rem] xl:text-[4.5rem] font-extrabold tracking-[-0.04em] leading-[1.08] select-none text-center lg:text-left">
-              <span className="block text-slate-950 dark:text-white">
+              <span className="block text-slate-950">
                 Find Your
               </span>
-              <span className="block text-slate-500 dark:text-slate-400">
+              <span className="block text-slate-500">
                 Perfect Living Space.
               </span>
             </h1>
@@ -147,9 +147,9 @@ export function HeroSection({ onSelectUpload }) {
             initial={{ opacity: shouldReduceMotion ? 1 : 0, y: offset }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration, delay: shouldReduceMotion ? 0 : (isMobile ? 0.12 : 0.18), ease }}
-            className="text-xs sm:text-base md:text-lg text-slate-600 dark:text-slate-300 max-w-xl font-normal leading-relaxed tracking-normal text-center lg:text-left will-change-transform"
+            className="text-xs sm:text-base md:text-lg text-slate-600 max-w-xl font-normal leading-relaxed tracking-normal text-center lg:text-left will-change-transform"
           >
-            Curated student PGs, serviced flats, and serene homestays. Book transparently directly with verified property owners—<span className="text-slate-900 dark:text-white font-semibold">zero middlemen, zero commissions</span>.
+            Curated student PGs, serviced flats, and serene homestays. Book transparently directly with verified property owners—<span className="text-slate-900 font-semibold">zero middlemen, zero commissions</span>.
           </motion.p>
 
           {/* 3. Quick CTA Action Cluster */}
@@ -163,7 +163,7 @@ export function HeroSection({ onSelectUpload }) {
             <button
               type="button"
               onClick={() => navigate('/search')}
-              className="inline-flex items-center gap-2.5 px-7 py-3.5 sm:px-8 sm:py-4 rounded-2xl bg-slate-950 dark:bg-white text-white dark:text-slate-950 font-medium text-xs sm:text-sm tracking-wider uppercase hover:opacity-90 active:scale-98 transition-all cursor-pointer select-none shadow-sm"
+              className="inline-flex items-center gap-2.5 px-7 py-3.5 sm:px-8 sm:py-4 rounded-2xl bg-slate-950 text-white font-medium text-xs sm:text-sm tracking-wider uppercase hover:opacity-90 active:scale-98 transition-all cursor-pointer select-none shadow-sm"
             >
               <span>
                 {stats.staysCount !== null && stats.staysCount !== undefined
@@ -191,16 +191,16 @@ export function HeroSection({ onSelectUpload }) {
               initial={{ opacity: shouldReduceMotion ? 1 : 0, y: offset }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration, delay: shouldReduceMotion ? 0 : (isMobile ? 0.15 : 0.28), ease }}
-              className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white/70 dark:bg-white/[0.08] backdrop-blur-xl border border-slate-200/70 dark:border-white/15 hover:border-slate-300 dark:hover:border-white/25 shadow-xs transition-colors duration-150 flex flex-col items-center justify-center text-center will-change-transform"
+              className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white/70 backdrop-blur-xl border border-slate-200/70 hover:border-slate-300 shadow-xs transition-colors duration-150 flex flex-col items-center justify-center text-center will-change-transform"
             >
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight">
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 tracking-tight">
                 {stats.staysCount !== null && stats.staysCount !== undefined ? (
                   stats.staysCount.toLocaleString()
                 ) : (
                   <span className="opacity-40 animate-pulse">—</span>
                 )}
               </div>
-              <div className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+              <div className="text-[11px] sm:text-xs text-slate-500 font-medium mt-1">
                 Verified Stays
               </div>
             </motion.div>
@@ -210,12 +210,12 @@ export function HeroSection({ onSelectUpload }) {
               initial={{ opacity: shouldReduceMotion ? 1 : 0, y: offset }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration, delay: shouldReduceMotion ? 0 : (isMobile ? 0.22 : 0.38), ease }}
-              className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white/70 dark:bg-white/[0.08] backdrop-blur-xl border border-slate-200/70 dark:border-white/15 hover:border-slate-300 dark:hover:border-white/25 shadow-xs transition-colors duration-150 flex flex-col items-center justify-center text-center will-change-transform"
+              className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white/70 backdrop-blur-xl border border-slate-200/70 hover:border-slate-300 shadow-xs transition-colors duration-150 flex flex-col items-center justify-center text-center will-change-transform"
             >
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-emerald-600 tracking-tight">
                 0%
               </div>
-              <div className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+              <div className="text-[11px] sm:text-xs text-slate-500 font-medium mt-1">
                 Brokerage Fees
               </div>
             </motion.div>
@@ -225,16 +225,16 @@ export function HeroSection({ onSelectUpload }) {
               initial={{ opacity: shouldReduceMotion ? 1 : 0, y: offset }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration, delay: shouldReduceMotion ? 0 : (isMobile ? 0.28 : 0.46), ease }}
-              className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white/70 dark:bg-white/[0.08] backdrop-blur-xl border border-slate-200/70 dark:border-white/15 hover:border-slate-300 dark:hover:border-white/25 shadow-xs transition-colors duration-150 flex flex-col items-center justify-center text-center will-change-transform"
+              className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white/70 backdrop-blur-xl border border-slate-200/70 hover:border-slate-300 shadow-xs transition-colors duration-150 flex flex-col items-center justify-center text-center will-change-transform"
             >
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 dark:text-white tracking-tight">
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 tracking-tight">
                 {stats.onlineUsersBooked !== null && stats.onlineUsersBooked !== undefined ? (
                   stats.onlineUsersBooked.toLocaleString()
                 ) : (
                   <span className="opacity-40 animate-pulse">—</span>
                 )}
               </div>
-              <div className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+              <div className="text-[11px] sm:text-xs text-slate-500 font-medium mt-1">
                 Online Users Booked
               </div>
             </motion.div>

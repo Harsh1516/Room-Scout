@@ -40,12 +40,12 @@ export function PropertyRoomCategoriesCard({
     : (stay?.rateUnit || '/month');
 
   return (
-    <div className="p-4 sm:p-6 lg:p-7 rounded-2xl sm:rounded-3xl bg-[#2F1B12] dark:bg-[#1B0F09] border border-[#4F3022] dark:border-[#382015] shadow-2xl backdrop-blur-2xl space-y-4 sm:space-y-5">
+    <div className="p-4 sm:p-6 lg:p-7 rounded-2xl sm:rounded-3xl bg-[#2F1B12] border border-[#4F3022] shadow-2xl backdrop-blur-2xl space-y-4 sm:space-y-5">
       {/* Category selector if multiple rates exist */}
       {hasRoomRates && roomRates.length > 1 && (
         <div className="space-y-3">
           {/* Header with minimal horizontal divider */}
-          <div className="border-b border-[#4F3022] dark:border-[#382015] pb-2.5">
+          <div className="border-b border-[#4F3022] pb-2.5">
             <h3 className="text-sm sm:text-base font-bold tracking-tight text-[#FAF2DB]">
               Select Category
             </h3>
@@ -75,7 +75,7 @@ export function PropertyRoomCategoriesCard({
       )}
 
       {/* Only Price / Unit in Green Color (Pic 4) */}
-      <div className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-[#22130C]/90 dark:bg-black/40 border border-[#4F3022] dark:border-[#382015] flex items-baseline gap-2 backdrop-blur-md shadow-inner">
+      <div className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-[#22130C]/90 border border-[#4F3022] flex items-baseline gap-2 backdrop-blur-md shadow-inner">
         <span className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-emerald-400 tracking-tight">
           {displayExactPrice}
         </span>

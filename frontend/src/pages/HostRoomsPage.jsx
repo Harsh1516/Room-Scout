@@ -219,22 +219,22 @@ export function HostRoomsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-xs text-slate-500 font-medium">Loading room layout...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#07131e] text-slate-800 dark:text-on-surface flex flex-col host-page-scope font-body-md antialiased overflow-x-clip selection:bg-custom-btn-primary selection:text-white relative">
+    <div className="min-h-screen bg-white text-slate-800 flex flex-col host-page-scope font-body-md antialiased overflow-x-clip selection:bg-custom-btn-primary selection:text-white relative">
       {/* Top Header Navbar */}
-      <header className="sticky top-0 z-40 backdrop-blur-md bg-white/95 dark:bg-slate-900/95 border-b border-slate-200/80 dark:border-slate-800 shadow-2xs">
+      <header className="sticky top-0 z-40 backdrop-blur-md bg-white/95 border-b border-slate-200/80 shadow-2xs">
         <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 h-15 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handleBackToDashboard}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100/80 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all cursor-pointer shadow-2xs active:scale-[0.98]"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-100/80 text-slate-700 text-xs font-semibold transition-all cursor-pointer shadow-2xs active:scale-[0.98]"
               title="Back to Dashboard"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -245,8 +245,8 @@ export function HostRoomsPage() {
             </button>
           </div>
 
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-inner">
-            <span className="px-4 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs">
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl border border-slate-200/60 shadow-inner">
+            <span className="px-4 py-1.5 rounded-xl text-xs font-semibold bg-white text-slate-900 shadow-xs">
               Room Cards Manager • {activeRate.type} ({activeRate.price}{activeRate.rateUnit})
             </span>
           </div>
@@ -256,7 +256,7 @@ export function HostRoomsPage() {
               type="button"
               disabled={isSaving}
               onClick={handleSaveAndReturn}
-              className="px-4 py-1.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-semibold hover:bg-slate-800 dark:hover:bg-slate-100 transition-all cursor-pointer disabled:opacity-50 shadow-xs active:scale-95 flex items-center gap-1.5"
+              className="px-4 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-all cursor-pointer disabled:opacity-50 shadow-xs active:scale-95 flex items-center gap-1.5"
             >
               {isSaving ? 'Saving...' : 'Save Rooms'}
             </button>
@@ -267,17 +267,17 @@ export function HostRoomsPage() {
 
       {/* Main Content Area */}
       <main className="flex-1 w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 py-6 space-y-6 overflow-x-clip">
-        <div className="p-5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="p-5 rounded-xl bg-white border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">
+              <h2 className="text-base font-bold text-slate-900">
                 {activeRate.type} Cards
               </h2>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold border border-slate-200 dark:border-slate-700">
+              <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold border border-slate-200">
                 {currentTypeRooms.length} Total
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs text-slate-500 mt-1">
               Add individual room cards. Each card has an editable room number and can be removed anytime.
             </p>
           </div>
@@ -285,7 +285,7 @@ export function HostRoomsPage() {
           <button
             type="button"
             onClick={handleAddCard}
-            className="px-4 py-2 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-semibold hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+            className="px-4 py-2 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-colors cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
           >
             <span className="text-sm font-bold">+</span>
             <span>Add Room Card</span>
@@ -293,14 +293,14 @@ export function HostRoomsPage() {
         </div>
 
         {currentTypeRooms.length === 0 ? (
-          <div className="p-12 rounded-xl bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 text-center space-y-3">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              No room cards added for <span className="font-semibold text-slate-700 dark:text-slate-300">{activeRate.type}</span> yet.
+          <div className="p-12 rounded-xl bg-white border border-dashed border-slate-300 text-center space-y-3">
+            <p className="text-xs text-slate-500">
+              No room cards added for <span className="font-semibold text-slate-700">{activeRate.type}</span> yet.
             </p>
             <button
               type="button"
               onClick={handleAddCard}
-              className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-lg border border-slate-300 hover:bg-slate-100 text-slate-800 text-xs font-semibold transition-colors cursor-pointer"
             >
               + Add First Room Card
             </button>
@@ -310,12 +310,12 @@ export function HostRoomsPage() {
             {currentTypeRooms.map((card) => (
               <div
                 key={card._id}
-                className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col justify-center h-28 relative group shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
+                className="p-3.5 rounded-xl border border-slate-200 bg-white flex flex-col justify-center h-28 relative group shadow-xs hover:border-slate-300 transition-colors"
               >
                 <button
                   type="button"
                   onClick={() => handleRemoveCard(card._id)}
-                  className="absolute top-2 right-2 w-6 h-6 rounded-md hover:bg-red-50 dark:hover:bg-red-950/40 text-slate-400 hover:text-red-600 dark:hover:text-red-400 text-xs flex items-center justify-center font-bold transition-colors cursor-pointer"
+                  className="absolute top-2 right-2 w-6 h-6 rounded-md hover:bg-red-50 text-slate-400 hover:text-red-600 text-xs flex items-center justify-center font-bold transition-colors cursor-pointer"
                   title="Remove this room card"
                 >
                   ✕
@@ -330,7 +330,7 @@ export function HostRoomsPage() {
                     value={card.roomNumber}
                     onChange={(e) => handleUpdateRoomNumber(card._id, e.target.value)}
                     placeholder="e.g. 101"
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-900 dark:text-white text-center focus:outline-none focus:border-slate-400 transition-colors"
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-sm font-bold text-slate-900 text-center focus:outline-none focus:border-slate-400 transition-colors"
                   />
                 </div>
               </div>

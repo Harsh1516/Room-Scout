@@ -262,9 +262,9 @@ export function UserGuestConfirmationCard({
 
   return (
     <div className="w-full flex flex-col justify-center my-auto min-h-0">
-      <section className="flex flex-col rounded-[26px] bg-white dark:bg-[#0c1825] border border-slate-200/90 dark:border-[#1f3045] shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] overflow-hidden select-none transition-all">
+      <section className="flex flex-col rounded-[26px] bg-white border border-slate-200/90 shadow-[0_8px_30px_rgb(0,0,0,0.06)](0,0,0,0.4)] overflow-hidden select-none transition-all">
         {/* Header: Month Pill Green Background (#00e599) matching Host side */}
-        <div className="px-5 py-3 border-b border-[#00c984] dark:border-[#00b577] flex items-center justify-center bg-[#00e599] text-[#071320] shadow-xs">
+        <div className="px-5 py-3 border-b border-[#00c984] flex items-center justify-center bg-[#00e599] text-[#071320] shadow-xs">
           <h3 className="text-[15px] font-black text-[#071320] tracking-tight text-center">
             Guest Details
           </h3>
@@ -273,38 +273,38 @@ export function UserGuestConfirmationCard({
         <div className="p-4 sm:p-5 flex flex-col gap-3.5">
           {/* Reservation Stay Summary */}
           {reservationDetails ? (
-            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#142334] border border-slate-200/80 dark:border-[#1f3045] flex items-center justify-between gap-2 shadow-xs">
+            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-2 shadow-xs">
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-xs font-bold text-slate-900 dark:text-white">{roomDisplay}</span>
-                  <span className="text-[10px] font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-[#0c1825] px-2 py-0.5 rounded-md border border-slate-200 dark:border-[#1f3045]">
+                  <span className="text-xs font-bold text-slate-900">{roomDisplay}</span>
+                  <span className="text-[10px] font-medium text-slate-700 bg-white px-2 py-0.5 rounded-md border border-slate-200">
                     {selectedRoom?.type || 'Standard Room'}
                   </span>
                   {reservationDetails.isPending && (
-                    <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-100/90 dark:bg-blue-950/60 px-2 py-0.5 rounded-md border border-blue-300 dark:border-blue-700/60 inline-flex items-center gap-1">
+                    <span className="text-[10px] font-bold text-blue-700 bg-blue-100/90 px-2 py-0.5 rounded-md border border-blue-300 inline-flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
                       Waiting Approval
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                <p className="text-[11px] text-slate-500 mt-0.5 truncate">
                   {reservationDetails.checkInDate} → {reservationDetails.checkOutDate}
                 </p>
               </div>
               <div className="text-right shrink-0">
-                <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-700/60">
+                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-md border border-emerald-300">
                   {reservationDetails.durationLabel}
                 </span>
                 {reservationDetails.totalPrice > 0 && (
-                  <p className="text-xs font-bold text-slate-900 dark:text-white mt-0.5">
+                  <p className="text-xs font-bold text-slate-900 mt-0.5">
                     ₹{reservationDetails.totalPrice.toLocaleString('en-IN')}
                   </p>
                 )}
               </div>
             </div>
           ) : (
-            <div className="p-3 rounded-2xl bg-slate-50/60 dark:bg-[#142334]/40 border border-dashed border-slate-300 dark:border-slate-700 text-xs flex items-center gap-2.5 text-slate-500 dark:text-slate-400 shadow-xs">
-              <div className="w-7 h-7 rounded-xl bg-white dark:bg-[#0c1825] border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 shrink-0">
+            <div className="p-3 rounded-2xl bg-slate-50/60 border border-dashed border-slate-300 text-xs flex items-center gap-2.5 text-slate-500 shadow-xs">
+              <div className="w-7 h-7 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 shrink-0">
                 <span className="material-symbols-outlined text-[16px]">calendar_today</span>
               </div>
               <span className="text-[11px] leading-snug">
@@ -319,7 +319,7 @@ export function UserGuestConfirmationCard({
           <form noValidate onSubmit={onSubmitBooking} className="space-y-3">
             {/* Full Name */}
             <div>
-              <label className="block text-[11.5px] font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-[11.5px] font-medium text-slate-700 mb-1">
                 Full Name *
               </label>
               <div className="relative flex items-center">
@@ -334,13 +334,13 @@ export function UserGuestConfirmationCard({
                   placeholder="Guest full name"
                   className={`w-full px-3 py-2 rounded-xl text-xs font-semibold shadow-2xs transition-all ${
                     isNameFieldReadOnly
-                      ? 'bg-slate-100/90 dark:bg-[#071320]/90 border border-slate-200/90 dark:border-white/10 text-slate-700 dark:text-slate-200 cursor-not-allowed select-none focus:outline-none pr-8'
-                      : 'bg-slate-50 dark:bg-[#06121e]/80 border border-slate-200 dark:border-white/15 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:bg-white dark:focus:bg-[#06121e] focus:border-emerald-500'
+                      ? 'bg-slate-100/90 border border-slate-200/90 text-slate-700 cursor-not-allowed select-none focus:outline-none pr-8'
+                      : 'bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-emerald-500'
                   }`}
                 />
                 {isNameFieldReadOnly && (
                   <div
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none flex items-center"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none flex items-center"
                     title={isPendingBooking ? 'Locked while booking request is pending' : 'Pre-filled from your user account (non-editable)'}
                   >
                     <span className="material-symbols-outlined text-[14px]">lock</span>
@@ -351,21 +351,21 @@ export function UserGuestConfirmationCard({
 
             {/* Mobile Number */}
             <div>
-              <label className="block text-[11.5px] font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-[11.5px] font-medium text-slate-700 mb-1">
                 Mobile Number *
               </label>
               <div
                 className={`flex items-center rounded-xl overflow-hidden shadow-2xs transition-all ${
                   isPhoneFieldReadOnly
-                    ? 'bg-slate-100/90 dark:bg-[#071320]/90 border border-slate-200/90 dark:border-white/10'
-                    : 'bg-slate-50 dark:bg-[#06121e]/80 border border-slate-200 dark:border-white/15 focus-within:border-emerald-500 focus-within:bg-white dark:focus-within:bg-[#06121e]'
+                    ? 'bg-slate-100/90 border border-slate-200/90'
+                    : 'bg-slate-50 border border-slate-200 focus-within:border-emerald-500 focus-within:bg-white'
                 }`}
               >
                 <div
                   className={`px-3 py-2 text-xs font-semibold select-none shrink-0 flex items-center gap-1 border-r ${
                     isPhoneFieldReadOnly
-                      ? 'bg-slate-200/60 dark:bg-[#0d1d2e] border-slate-200/90 dark:border-white/10 text-slate-600 dark:text-slate-400'
-                      : 'bg-slate-100/80 dark:bg-[#142334] border-slate-200 dark:border-white/15 text-slate-700 dark:text-slate-300'
+                      ? 'bg-slate-200/60 border-slate-200/90 text-slate-600'
+                      : 'bg-slate-100/80 border-slate-200 text-slate-700'
                   }`}
                 >
                   <span>🇮🇳</span>
@@ -383,13 +383,13 @@ export function UserGuestConfirmationCard({
                   placeholder="10-digit mobile number"
                   className={`w-full px-2.5 py-2 text-xs font-semibold focus:outline-none ${
                     isPhoneFieldReadOnly
-                      ? 'bg-transparent text-slate-700 dark:text-slate-200 cursor-not-allowed select-none'
-                      : 'bg-transparent text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500'
+                      ? 'bg-transparent text-slate-700 cursor-not-allowed select-none'
+                      : 'bg-transparent text-slate-900 placeholder:text-slate-400'
                   }`}
                 />
                 {isPhoneFieldReadOnly && (
                   <div
-                    className="pr-2.5 text-slate-400 dark:text-slate-500 pointer-events-none flex items-center"
+                    className="pr-2.5 text-slate-400 pointer-events-none flex items-center"
                     title={isPendingBooking ? 'Locked while booking request is pending' : 'Pre-filled from your user account (non-editable)'}
                   >
                     <span className="material-symbols-outlined text-[14px]">lock</span>
@@ -401,18 +401,18 @@ export function UserGuestConfirmationCard({
             {/* Person Count */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block text-[11.5px] font-medium text-slate-700 dark:text-slate-300">
+                <label className="block text-[11.5px] font-medium text-slate-700">
                   Person Count *
                 </label>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700/60">
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
                   Max: {maxAllowedPersons} {maxAllowedPersons === 1 ? 'person' : 'persons'} (Capacity: {roomCapacity})
                 </span>
               </div>
 
-              <div className="flex items-center justify-between h-[38px] px-3 rounded-xl bg-slate-50 dark:bg-[#06121e]/80 border border-slate-200 dark:border-white/15 text-xs shadow-2xs">
+              <div className="flex items-center justify-between h-[38px] px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs shadow-2xs">
                 <div className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[16px] text-emerald-600 dark:text-emerald-400">person</span>
-                  <span className="text-[11.5px] text-slate-700 dark:text-slate-300 font-semibold">
+                  <span className="material-symbols-outlined text-[16px] text-emerald-600">person</span>
+                  <span className="text-[11.5px] text-slate-700 font-semibold">
                     {displayPersonCount} {displayPersonCount === 1 ? 'Person' : 'Persons'}
                   </span>
                 </div>
@@ -422,19 +422,19 @@ export function UserGuestConfirmationCard({
                     type="button"
                     onClick={() => setPersonCount((prev) => Math.max(1, prev - 1))}
                     disabled={isPendingBooking || personCount <= 1}
-                    className="w-7 h-7 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center text-sm font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition-all shadow-2xs"
+                    className="w-7 h-7 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center text-sm font-bold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition-all shadow-2xs"
                     title="Decrease person count"
                   >
                     −
                   </button>
-                  <span className="text-xs font-bold text-slate-900 dark:text-white w-5 text-center select-none">
+                  <span className="text-xs font-bold text-slate-900 w-5 text-center select-none">
                     {displayPersonCount}
                   </span>
                   <button
                     type="button"
                     onClick={() => setPersonCount((prev) => Math.min(maxAllowedPersons, prev + 1))}
                     disabled={isPendingBooking || personCount >= maxAllowedPersons}
-                    className="w-7 h-7 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center text-sm font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition-all shadow-2xs"
+                    className="w-7 h-7 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center text-sm font-bold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition-all shadow-2xs"
                     title="Increase person count"
                   >
                     +
@@ -443,7 +443,7 @@ export function UserGuestConfirmationCard({
               </div>
 
               {displayPersonCount > 1 && (
-                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 font-medium">
+                <p className="text-[10px] text-emerald-600 mt-1 font-medium">
                   ✓ Occupies {displayPersonCount} of {roomCapacity} spaces in Room {roomDisplay}.
                 </p>
               )}
@@ -451,7 +451,7 @@ export function UserGuestConfirmationCard({
 
             {/* Aadhar ID */}
             <div>
-              <label className="block text-[11.5px] font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-[11.5px] font-medium text-slate-700 mb-1">
                 Aadhar ID *
               </label>
               <input
@@ -466,21 +466,21 @@ export function UserGuestConfirmationCard({
                   setGuestAadhar?.(formatted);
                 }}
                 placeholder="12-digit number"
-                className={`w-full px-3 py-2 rounded-xl border text-xs font-semibold placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none shadow-2xs transition-all tracking-wide ${
+                className={`w-full px-3 py-2 rounded-xl border text-xs font-semibold placeholder:text-slate-400 focus:outline-none shadow-2xs transition-all tracking-wide ${
                   isPendingBooking
-                    ? 'bg-slate-100/90 dark:bg-[#071320]/90 border-slate-200/90 dark:border-white/10 text-slate-700 dark:text-slate-200 cursor-not-allowed select-none'
-                    : 'bg-slate-50 dark:bg-[#06121e]/80 border-slate-200 dark:border-white/15 text-slate-900 dark:text-white focus:bg-white dark:focus:bg-[#06121e] focus:border-emerald-500'
+                    ? 'bg-slate-100/90 border-slate-200/90 text-slate-700 cursor-not-allowed select-none'
+                    : 'bg-slate-50 border-slate-200 text-slate-900 focus:bg-white focus:border-emerald-500'
                 }`}
               />
             </div>
 
             {/* Total Payable / Booking Amount (₹) */}
             <div>
-              <label className="block text-[11.5px] font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-[11.5px] font-medium text-slate-700 mb-1">
                 {isPendingBooking ? 'Total Amount (₹)' : 'Total Payable (₹)'}
               </label>
-              <div className="flex items-center px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#06121e]/80 border border-slate-200 dark:border-white/15 text-xs font-bold text-slate-900 dark:text-white shadow-2xs">
-                <span className="text-slate-400 dark:text-slate-500 mr-2 font-bold">₹</span>
+              <div className="flex items-center px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 shadow-2xs">
+                <span className="text-slate-400 mr-2 font-bold">₹</span>
                 <span>{reservationDetails?.totalPrice ? reservationDetails.totalPrice.toLocaleString('en-IN') : '0'}</span>
               </div>
             </div>
@@ -489,7 +489,7 @@ export function UserGuestConfirmationCard({
             <div className="pt-1">
               {isPendingBooking ? (
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 py-2.5 px-3 rounded-xl font-bold text-xs bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800/60 text-blue-700 dark:text-blue-300 flex items-center justify-center gap-2 select-none shadow-xs">
+                  <div className="flex-1 py-2.5 px-3 rounded-xl font-bold text-xs bg-blue-50 border border-blue-200 text-blue-700 flex items-center justify-center gap-2 select-none shadow-xs">
                     <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
                     <span>Waiting for Host Approval</span>
                   </div>
@@ -498,7 +498,7 @@ export function UserGuestConfirmationCard({
                       type="button"
                       disabled={cancelling}
                       onClick={onCancelPendingBooking}
-                      className="py-2.5 px-3 rounded-xl font-bold text-xs border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                      className="py-2.5 px-3 rounded-xl font-bold text-xs border border-rose-200 text-rose-600 hover:bg-rose-50 transition-all cursor-pointer shadow-xs disabled:opacity-50"
                       title="Cancel pending booking request"
                     >
                       {cancelling ? 'Cancelling...' : 'Cancel'}

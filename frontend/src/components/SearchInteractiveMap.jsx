@@ -271,7 +271,7 @@ export function SearchInteractiveMap({
               <div class="px-2.5 py-1 rounded-full text-[11px] font-black tracking-tight shadow-md flex items-center gap-1 border transition-all whitespace-nowrap ${
                 isHovered
                   ? 'bg-slate-950 text-white border-cyan-400 shadow-cyan-500/50 ring-2 ring-cyan-400'
-                  : 'bg-white text-slate-900 border-slate-300 dark:bg-slate-900 dark:text-white dark:border-slate-700'
+                  : 'bg-white text-slate-900 border-slate-300'
               }">
                 <span>₹${formattedPrice}</span>
                 <span class="text-[9px] font-semibold opacity-70">${unitText}</span>
@@ -331,9 +331,9 @@ export function SearchInteractiveMap({
   }, []);
 
   return (
-    <div className="relative w-full h-full min-h-[360px] rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm isolate z-0">
+    <div className="relative w-full h-full min-h-[360px] rounded-3xl overflow-hidden border border-slate-200 shadow-sm isolate z-0">
       <div ref={mapContainerRef} className="w-full h-full min-h-[360px] z-0" />
-      <div className="absolute top-3 left-3 z-10 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-1.5 pointer-events-none">
+      <div className="absolute top-3 left-3 z-10 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold text-slate-800 border border-slate-200 shadow-sm flex items-center gap-1.5 pointer-events-none">
         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
         <span>Live Area Map</span>
       </div>

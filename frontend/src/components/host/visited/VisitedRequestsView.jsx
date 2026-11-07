@@ -440,14 +440,14 @@ export function VisitedRequestsView({
   return (
     <div className="w-full flex-1 min-h-0 flex flex-col lg:flex-row gap-3 items-stretch lg:h-[calc(100vh-195px)] select-none overflow-y-auto lg:overflow-visible">
       {/* ────────────────── LEFT TAB: PERMANENT CATEGORIES PANEL ────────────────── */}
-      <div className="w-full lg:w-[20%] shrink-0 flex flex-col justify-between rounded-[26px] bg-white dark:bg-[#0c1825] border border-slate-200/90 dark:border-[#1f3045] shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] p-3 sm:p-3.5 h-auto lg:h-full min-h-0 overflow-hidden">
+      <div className="w-full lg:w-[20%] shrink-0 flex flex-col justify-between rounded-[26px] bg-white border border-slate-200/90 shadow-[0_8px_30px_rgb(0,0,0,0.06)](0,0,0,0.4)] p-3 sm:p-3.5 h-auto lg:h-full min-h-0 overflow-hidden">
         {/* Upper Header with crisp horizontal divider line */}
-        <div className="flex items-center justify-between pb-2.5 border-b border-slate-200 dark:border-white/10 shrink-0">
+        <div className="flex items-center justify-between pb-2.5 border-b border-slate-200 shrink-0">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-7 h-7 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/70 dark:border-indigo-800/60 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-2xs shrink-0">
+            <div className="w-7 h-7 rounded-xl bg-indigo-50 border border-indigo-200/70 flex items-center justify-center text-indigo-600 shadow-2xs shrink-0">
               <Building2 className="w-3.5 h-3.5" />
             </div>
-            <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight truncate">
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight truncate">
               {subTab === 'checkout'
                 ? 'Check-Out Categories'
                 : subTab === 'checkin'
@@ -456,7 +456,7 @@ export function VisitedRequestsView({
             </h3>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-300 border border-slate-200 dark:border-white/10 shadow-2xs">
+            <span className="text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 shadow-2xs">
               {effectiveCategoriesWithRooms.length}{' '}
               {effectiveCategoriesWithRooms.length === 1 ? 'Wing' : 'Wings'}
             </span>
@@ -469,11 +469,11 @@ export function VisitedRequestsView({
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {effectiveCategoriesWithRooms.length === 0 ? (
-              <div className="p-6 my-auto rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/10 text-center space-y-2 shadow-sm">
-                <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-lg mx-auto text-slate-400">
+              <div className="p-6 my-auto rounded-2xl bg-slate-50 border border-slate-200/80 text-center space-y-2 shadow-sm">
+                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-lg mx-auto text-slate-400">
                   📭
                 </div>
-                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                <p className="text-xs font-medium text-slate-500">
                   {subTab === 'checkout'
                     ? 'No check-out categories available'
                     : subTab === 'checkin'
@@ -499,12 +499,12 @@ export function VisitedRequestsView({
                     className={`rounded-2xl border overflow-hidden transition-all duration-300 ${
                       isSelectedCat
                         ? subTab === 'checkout'
-                          ? 'bg-white dark:bg-[#0f172a] border-sky-500 dark:border-sky-400 ring-2 ring-sky-500/20 shadow-[0_6px_20px_-2px_rgba(2,132,199,0.15)]'
+                          ? 'bg-white border-sky-500 ring-2 ring-sky-500/20 shadow-[0_6px_20px_-2px_rgba(2,132,199,0.15)]'
                           : subTab === 'checkin'
-                          ? 'bg-white dark:bg-[#0f172a] border-emerald-500 dark:border-emerald-400 ring-2 ring-emerald-500/20 shadow-[0_6px_20px_-2px_rgba(16,185,129,0.15)]'
-                          : 'bg-white dark:bg-[#0f172a] border-orange-500 dark:border-orange-400 ring-2 ring-orange-500/20 shadow-[0_6px_20px_-2px_rgba(234,88,12,0.15)]'
-                        : 'bg-white dark:bg-[#0f172a] border-slate-200/90 dark:border-[#223554] shadow-[0_2px_12px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_20px_-2px_rgba(0,0,0,0.08)] ' + (
-                          subTab === 'checkout' ? 'hover:border-sky-300 dark:hover:border-sky-500/40' : subTab === 'checkin' ? 'hover:border-emerald-300 dark:hover:border-emerald-500/40' : 'hover:border-orange-300 dark:hover:border-orange-500/40'
+                          ? 'bg-white border-emerald-500 ring-2 ring-emerald-500/20 shadow-[0_6px_20px_-2px_rgba(16,185,129,0.15)]'
+                          : 'bg-white border-orange-500 ring-2 ring-orange-500/20 shadow-[0_6px_20px_-2px_rgba(234,88,12,0.15)]'
+                        : 'bg-white border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_20px_-2px_rgba(0,0,0,0.08)] ' + (
+                          subTab === 'checkout' ? 'hover:border-sky-300' : subTab === 'checkin' ? 'hover:border-emerald-300' : 'hover:border-orange-300'
                         )
                     }`}
                   >
@@ -519,21 +519,21 @@ export function VisitedRequestsView({
                           handleCategoryHeaderClick(catGroup.type);
                         }
                       }}
-                      className="w-full px-3.5 py-3 flex items-center justify-between text-left cursor-pointer group select-none hover:bg-slate-50/70 dark:hover:bg-white/[0.03] transition-colors"
+                      className="w-full px-3.5 py-3 flex items-center justify-between text-left cursor-pointer group select-none hover:bg-slate-50/70 transition-colors"
                     >
                       <div className="min-w-0 flex-1">
                         <div
-                          className={`text-xs sm:text-[13px] font-extrabold text-slate-800 dark:text-white leading-tight transition-colors ${
+                          className={`text-xs sm:text-[13px] font-extrabold text-slate-800 leading-tight transition-colors ${
                             subTab === 'checkout'
-                              ? 'group-hover:text-sky-600 dark:group-hover:text-sky-400'
+                              ? 'group-hover:text-sky-600'
                               : subTab === 'checkin'
-                              ? 'group-hover:text-emerald-600 dark:group-hover:text-emerald-400'
-                              : 'group-hover:text-orange-600 dark:group-hover:text-orange-400'
+                              ? 'group-hover:text-emerald-600'
+                              : 'group-hover:text-orange-600'
                           }`}
                         >
                           {catGroup.type}
                         </div>
-                        <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate flex items-center gap-1.5 mt-0.5">
+                        <div className="text-[10px] font-semibold text-slate-500 truncate flex items-center gap-1.5 mt-0.5">
                           <span
                             className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                               catTotalRequests > 0
@@ -561,11 +561,11 @@ export function VisitedRequestsView({
                           className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300 ${
                             isExpanded
                               ? subTab === 'checkout'
-                                ? 'bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300 rotate-180'
+                                ? 'bg-sky-100 text-sky-700 rotate-180'
                                 : subTab === 'checkin'
-                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 rotate-180'
-                                : 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300 rotate-180'
-                              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-slate-200 dark:group-hover:bg-slate-700'
+                                ? 'bg-emerald-100 text-emerald-700 rotate-180'
+                                : 'bg-orange-100 text-orange-700 rotate-180'
+                              : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'
                           }`}
                         >
                           <ChevronDown className="w-3.5 h-3.5" />
@@ -583,7 +583,7 @@ export function VisitedRequestsView({
                           transition={{ duration: 0.24, ease: 'easeInOut' }}
                           className="overflow-hidden"
                         >
-                          <div className="px-2.5 sm:px-3 pt-1.5 pb-2 sm:pt-2 sm:pb-2.5 bg-slate-50/80 dark:bg-[#0b1322] border-t border-slate-200/80 dark:border-[#1e293b] space-y-1.5 sm:space-y-2">
+                          <div className="px-2.5 sm:px-3 pt-1.5 pb-2 sm:pt-2 sm:pb-2.5 bg-slate-50/80 border-t border-slate-200/80 space-y-1.5 sm:space-y-2">
                             <RoomCategoryCarousel
                               rooms={catGroup.rooms}
                               catType={catGroup.type}
@@ -613,12 +613,12 @@ export function VisitedRequestsView({
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden shrink-0"
               >
-                <div className="pt-2.5 border-t border-slate-200 dark:border-white/10 flex items-center justify-end">
+                <div className="pt-2.5 border-t border-slate-200 flex items-center justify-end">
                   <div>
-                    <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                    <span className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
                       ₹{(Number(activeCategoryInfo.price) || 3000).toLocaleString('en-IN')}
                     </span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400 ml-1 font-medium">
+                    <span className="text-xs text-slate-500 ml-1 font-medium">
                       {activeCategoryInfo.rateUnit || '/night'}
                     </span>
                   </div>
@@ -629,9 +629,9 @@ export function VisitedRequestsView({
         </div>
 
       {/* ────────────────── MID TAB: REQUESTS / DEPARTURES CARDS ────────────────── */}
-      <div className="w-full flex-1 min-w-0 flex flex-col justify-between rounded-[26px] bg-white dark:bg-[#0c1825] border border-slate-200/90 dark:border-[#1f3045] shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] p-3 sm:p-3.5 min-h-[420px] lg:h-full min-h-0 overflow-hidden">
+      <div className="w-full flex-1 min-w-0 flex flex-col justify-between rounded-[26px] bg-white border border-slate-200/90 shadow-[0_8px_30px_rgb(0,0,0,0.06)](0,0,0,0.4)] p-3 sm:p-3.5 min-h-[420px] lg:h-full min-h-0 overflow-hidden">
         {/* Top Header */}
-        <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-white/5 shrink-0 relative">
+        <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 shrink-0 relative">
           <div className="flex items-center gap-2 min-w-0">
             <span
               className={`w-2 h-2 rounded-full ring-4 shrink-0 transition-colors duration-300 ${
@@ -642,7 +642,7 @@ export function VisitedRequestsView({
                   : 'bg-amber-500 ring-amber-500/20'
               }`}
             />
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight truncate">
+            <h3 className="text-sm font-bold text-slate-900 tracking-tight truncate">
               {subTab === 'checkout'
                 ? scope === 'today'
                   ? "Today's Departures"
@@ -658,34 +658,34 @@ export function VisitedRequestsView({
 
           <div className="flex items-center gap-2 shrink-0">
             {activeSlotGuest ? (
-              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hidden sm:inline">
-                Viewing slot: <strong className="text-slate-800 dark:text-slate-200">{activeSlotGuest?.userName || activeSlotGuest?.fullName || 'Guest'}</strong> (Room {activeSlotGuest?.roomNumber})
+              <span className="text-[11px] font-semibold text-slate-500 hidden sm:inline">
+                Viewing slot: <strong className="text-slate-800">{activeSlotGuest?.userName || activeSlotGuest?.fullName || 'Guest'}</strong> (Room {activeSlotGuest?.roomNumber})
               </span>
             ) : (
-              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hidden sm:inline">
-                Schedule: <strong className="text-slate-800 dark:text-slate-200">Room {defaultRoomNumber}</strong>
+              <span className="text-[11px] font-semibold text-slate-500 hidden sm:inline">
+                Schedule: <strong className="text-slate-800">Room {defaultRoomNumber}</strong>
               </span>
             )}
           </div>
         </div>
 
         {/* Two Rows Grid Area */}
-        <div className="py-2.5 flex-1 min-h-0 overflow-y-auto flex flex-col justify-start [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full">
+        <div className="py-2.5 flex-1 min-h-0 overflow-y-auto flex flex-col justify-start [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full">
           {displayedGuests.length === 0 ? (
-            <div className="p-10 my-auto rounded-2xl bg-slate-50/50 dark:bg-white/[0.02] border border-dashed border-slate-200 dark:border-white/10 text-center space-y-3">
+            <div className="p-10 my-auto rounded-2xl bg-slate-50/50 border border-dashed border-slate-200 text-center space-y-3">
               <div
                 className={`w-12 h-12 rounded-full border text-xl flex items-center justify-center mx-auto shadow-2xs ${
                   subTab === 'checkout'
-                    ? 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800 text-indigo-600'
+                    ? 'bg-indigo-50 border-indigo-200 text-indigo-600'
                     : subTab === 'checkin'
-                    ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-600'
-                    : 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-600'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
+                    : 'bg-amber-50 border-amber-200 text-amber-600'
                 }`}
               >
                 {subTab === 'checkout' ? '🚪' : subTab === 'checkin' ? '🔑' : '🛎️'}
               </div>
               <div className="space-y-1">
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                <h4 className="text-sm font-bold text-slate-900">
                   {subTab === 'checkout'
                     ? scope === 'today'
                       ? 'No departures scheduled for today'
@@ -696,7 +696,7 @@ export function VisitedRequestsView({
                       : 'No scheduled check-ins'
                     : 'No pending booking requests'}
                 </h4>
-                <p className="text-xs text-slate-500 dark:text-zinc-400 max-w-sm mx-auto leading-relaxed">
+                <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
                   {subTab === 'checkout'
                     ? 'When guests are due for check-out or departure, they will appear here.'
                     : subTab === 'checkin'
@@ -739,7 +739,7 @@ export function VisitedRequestsView({
         </div>
 
         {/* ── Horizontal Dots Carousel Pagination Bar ── */}
-        <div className="pt-2.5 border-t border-slate-100 dark:border-white/5 flex items-center justify-between select-none shrink-0">
+        <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between select-none shrink-0">
           <div className="w-16 hidden sm:block" />
 
           {/* Dots Carousel Navigator */}
@@ -748,7 +748,7 @@ export function VisitedRequestsView({
               type="button"
               disabled={validPage === 0}
               onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
-              className="w-7 h-7 rounded-lg border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:pointer-events-none hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer"
+              className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 disabled:opacity-30 disabled:pointer-events-none hover:bg-slate-50 transition-all cursor-pointer"
               aria-label="Previous Page"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -765,11 +765,11 @@ export function VisitedRequestsView({
                   className={`transition-all duration-300 rounded-full cursor-pointer ${
                     validPage === pIdx
                       ? subTab === 'checkout'
-                        ? 'w-6 h-2 bg-sky-600 dark:bg-sky-400 shadow-xs'
+                        ? 'w-6 h-2 bg-sky-600 shadow-xs'
                         : subTab === 'checkin'
-                        ? 'w-6 h-2 bg-emerald-600 dark:bg-emerald-400 shadow-xs'
-                        : 'w-6 h-2 bg-orange-600 dark:bg-orange-400 shadow-xs'
-                      : 'w-2 h-2 bg-slate-200 hover:bg-slate-400 dark:bg-slate-700 dark:hover:bg-slate-500'
+                        ? 'w-6 h-2 bg-emerald-600 shadow-xs'
+                        : 'w-6 h-2 bg-orange-600 shadow-xs'
+                      : 'w-2 h-2 bg-slate-200 hover:bg-slate-400'
                   }`}
                 />
               ))}
@@ -779,14 +779,14 @@ export function VisitedRequestsView({
               type="button"
               disabled={validPage >= totalPages - 1}
               onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
-              className="w-7 h-7 rounded-lg border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:pointer-events-none hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer"
+              className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 disabled:opacity-30 disabled:pointer-events-none hover:bg-slate-50 transition-all cursor-pointer"
               aria-label="Next Page"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
-          <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 w-16 text-right">
+          <span className="text-[11px] font-medium text-slate-400 w-16 text-right">
             Page {validPage + 1} of {totalPages}
           </span>
         </div>

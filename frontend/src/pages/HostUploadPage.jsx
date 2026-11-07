@@ -8,7 +8,6 @@ import { adminAPI, staysAPI } from '../services/api';
 import { Login } from '../components/navbar/Login';
 import { toast } from '../context/ToastContext';
 import { HostUploadTabs } from '../components/host/HostUploadTabs';
-import { ThemeTogglePill } from '../components/common/ThemeTogglePill';
 import { UploadBasicsTab } from '../components/host/upload/UploadBasicsTab';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { fetchAddressFromCoords, parseGoogleMapsUrl } from '../utils/geoUtils';
@@ -1656,7 +1655,7 @@ export function HostUploadPage() {
   const currentStepConfig = WIZARD_STEPS.find((s) => s.id === activeStep) || WIZARD_STEPS[0];
 
   return (
-    <div className="bg-[#f8f9fa] dark:bg-[#0b0c10] text-slate-800 dark:text-zinc-100 host-page-scope font-body-md antialiased min-h-screen flex flex-col justify-between relative selection:bg-[#006C4A] selection:text-white transition-colors duration-300">
+    <div className="bg-[#f8f9fa] text-slate-800 host-page-scope font-body-md antialiased min-h-screen flex flex-col justify-between relative selection:bg-[#006C4A] selection:text-white transition-colors duration-300">
 
       {/* ── Top Header Navigation Bar (Floating Liquid Glass Islands matching Host Dashboard / Pic 2) ── */}
       <header className="relative w-full h-16 sm:h-20 pointer-events-none select-none z-50 font-body-md host-font-scope antialiased">
@@ -1669,11 +1668,11 @@ export function HostUploadPage() {
               navigate('/host/dashboard');
             }}
             data-no-hover="true"
-            className="apple-liquid-nav flex items-center justify-center px-3 py-1.5 sm:px-4 sm:py-2 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 dark:border-white/15 bg-white/70 dark:bg-[#0B0F19]/80 backdrop-blur-2xl shadow-xs cursor-pointer text-slate-800 dark:text-slate-100 hover:border-purple-500/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] font-semibold text-xs sm:text-sm select-none active:scale-95 transition-all duration-200 shrink-0"
+            className="apple-liquid-nav flex items-center justify-center px-3 py-1.5 sm:px-4 sm:py-2 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 bg-white/70 backdrop-blur-2xl shadow-xs cursor-pointer text-slate-800 hover:border-purple-500/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] font-semibold text-xs sm:text-sm select-none active:scale-95 transition-all duration-200 shrink-0"
             title="Return to Host Dashboard"
           >
             <svg
-              className="w-4 h-4 text-purple-600 dark:text-purple-400 stroke-[2.5]"
+              className="w-4 h-4 text-purple-600 stroke-[2.5]"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -1698,16 +1697,15 @@ export function HostUploadPage() {
         </div>
 
         {/* Mobile Center Step Count Badge */}
-        <div className="md:hidden fixed top-3.5 left-1/2 -translate-x-1/2 z-50 pointer-events-auto text-center select-none py-1.5 px-3 rounded-full bg-white/70 dark:bg-[#0B0F19]/80 backdrop-blur-2xl border border-slate-200/80 dark:border-white/15 shadow-xs">
-          <span className="text-xs font-extrabold text-slate-900 dark:text-white tracking-wider uppercase">
+        <div className="md:hidden fixed top-3.5 left-1/2 -translate-x-1/2 z-50 pointer-events-auto text-center select-none py-1.5 px-3 rounded-full bg-white/70 backdrop-blur-2xl border border-slate-200/80 shadow-xs">
+          <span className="text-xs font-extrabold text-slate-900 tracking-wider uppercase">
             Step {activeStep} of {WIZARD_STEPS.length}
           </span>
         </div>
 
         {/* ── 3. RIGHT FLOATING ISLAND: THEME TOGGLE + USER AVATAR ── */}
         <div className="fixed top-3.5 right-2.5 sm:top-5 sm:right-6 z-50 flex items-center gap-2 sm:gap-2.5 pointer-events-auto select-none">
-          <ThemeTogglePill />
-          <div className="relative flex items-center justify-center">
+                    <div className="relative flex items-center justify-center">
             <Login />
           </div>
         </div>
@@ -1733,19 +1731,19 @@ export function HostUploadPage() {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-              className="fixed inset-y-0 left-0 z-50 w-[82vw] max-w-xs bg-white dark:bg-zinc-950 border-r border-slate-200 dark:border-zinc-800 shadow-2xl flex flex-col justify-between p-4 md:hidden pointer-events-auto select-none overflow-y-auto"
+              className="fixed inset-y-0 left-0 z-50 w-[82vw] max-w-xs bg-white border-r border-slate-200 shadow-2xl flex flex-col justify-between p-4 md:hidden pointer-events-auto select-none overflow-y-auto"
             >
               <div className="space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                   <div className="flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+                    <span className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-200/80 text-emerald-700 flex items-center justify-center font-bold text-xs">
                       RS
                     </span>
                     <div>
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-tight">
+                      <h3 className="text-sm font-bold text-slate-900 leading-tight">
                         Upload Steps
                       </h3>
-                      <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                      <p className="text-[11px] text-slate-500">
                         Step {activeStep} of {WIZARD_STEPS.length}
                       </p>
                     </div>
@@ -1753,7 +1751,7 @@ export function HostUploadPage() {
                   <button
                     type="button"
                     onClick={() => setMobileNavOpen(false)}
-                    className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-zinc-900 hover:bg-slate-200 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-300 flex items-center justify-center cursor-pointer transition-colors"
+                    className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer transition-colors"
                     aria-label="Close steps menu"
                   >
                     <X className="w-4 h-4" />
@@ -1776,8 +1774,8 @@ export function HostUploadPage() {
                         }}
                         className={`w-full text-left p-3 rounded-2xl flex items-center gap-3 transition-all cursor-pointer ${
                           isActive
-                            ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/30 text-emerald-950 dark:text-white shadow-xs font-bold'
-                            : 'hover:bg-slate-100/70 dark:hover:bg-zinc-900/60 border border-transparent text-slate-700 dark:text-zinc-300'
+                            ? 'bg-emerald-50 border border-emerald-500/30 text-emerald-950 shadow-xs font-bold'
+                            : 'hover:bg-slate-100/70 border border-transparent text-slate-700'
                         }`}
                       >
                         <div
@@ -1785,8 +1783,8 @@ export function HostUploadPage() {
                             isActive
                               ? 'bg-[#006C4A] text-white shadow-xs'
                               : isCompleted
-                              ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300/40'
-                              : 'bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400'
+                              ? 'bg-emerald-100 text-emerald-700 border border-emerald-300/40'
+                              : 'bg-slate-100 text-slate-500'
                           }`}
                         >
                           {isCompleted && !isActive ? (
@@ -1798,16 +1796,16 @@ export function HostUploadPage() {
 
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between gap-1">
-                            <span className={`text-xs truncate ${isActive ? 'text-[#006C4A] dark:text-emerald-300 font-bold' : 'text-slate-800 dark:text-zinc-200'}`}>
+                            <span className={`text-xs truncate ${isActive ? 'text-[#006C4A] font-bold' : 'text-slate-800'}`}>
                               {step.shortTitle || step.title}
                             </span>
                             {isActive && (
-                              <span className="text-[9.5px] uppercase tracking-wider font-extrabold text-[#006C4A] dark:text-emerald-400">
+                              <span className="text-[9.5px] uppercase tracking-wider font-extrabold text-[#006C4A]">
                                 Current
                               </span>
                             )}
                           </div>
-                          <p className="text-[11px] text-slate-500 dark:text-zinc-400 truncate mt-0.5">
+                          <p className="text-[11px] text-slate-500 truncate mt-0.5">
                             {step.sub}
                           </p>
                         </div>
@@ -1818,14 +1816,14 @@ export function HostUploadPage() {
               </div>
 
               {/* Drawer Footer Progression */}
-              <div className="pt-3 border-t border-slate-100 dark:border-zinc-800 space-y-2">
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-zinc-400">
+              <div className="pt-3 border-t border-slate-100 space-y-2">
+                <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
                   <span>Overall Progress</span>
-                  <span className="font-mono-data font-bold text-[#006C4A] dark:text-emerald-400">
+                  <span className="font-mono-data font-bold text-[#006C4A]">
                     {Math.round(((activeStep - 1) / (WIZARD_STEPS.length - 1)) * 100)}%
                   </span>
                 </div>
-                <div className="w-full h-1.5 bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-[#006C4A] rounded-full transition-all duration-300"
                     style={{ width: `${((activeStep - 1) / (WIZARD_STEPS.length - 1)) * 100}%` }}
@@ -1849,13 +1847,13 @@ export function HostUploadPage() {
             className="max-w-4xl mx-auto text-center space-y-1 sm:space-y-2 md:space-y-0.5"
           >
             {/* Main Step Headline - Large & Balanced for Mobile */}
-            <h1 className="text-2xl sm:text-3xl md:text-xl font-black text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-xl font-black text-slate-900 tracking-tight">
               {currentStepConfig.sub || currentStepConfig.title}
             </h1>
 
             {/* Step Subtitle / Description - Easy to Read on Mobile */}
             {/* Step Subtitle / Description - Kept on Mobile, Hidden on Desktop */}
-            <p className="md:hidden text-xs sm:text-sm text-slate-600 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed font-medium">
+            <p className="md:hidden text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto leading-relaxed font-medium">
               {currentStepConfig.desc}
             </p>
           </motion.div>
@@ -1956,10 +1954,10 @@ export function HostUploadPage() {
 
       {/* ── Fixed Bottom Progression Bar (Airbnb visual reference: screenshots 1 & 2) ── */}
       <footer
-        className="fixed bottom-0 inset-x-0 z-40 backdrop-blur-md max-md:bg-[#3d0c40]/95 max-md:border-t max-md:border-purple-400/20 max-md:shadow-[0_-4px_25px_rgba(61,12,64,0.4)] md:bg-[#f8f9fa]/95 md:dark:bg-[#0b0c10]/95 md:border-t md:border-slate-200/60 md:dark:border-zinc-800/60 shadow-[0_-4px_25px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_25px_rgba(255,255,255,0.02)]"
+        className="fixed bottom-0 inset-x-0 z-40 backdrop-blur-md max-md:bg-[#3d0c40]/95 max-md:border-t max-md:border-purple-400/20 max-md:shadow-[0_-4px_25px_rgba(61,12,64,0.4)] md:bg-[#f8f9fa]/95 md: md:border-t md:border-slate-200/60 md: shadow-[0_-4px_25px_rgba(0,0,0,0.06)](255,255,255,0.02)]"
       >
         {/* Hairline Continuous Progress Indicator Line */}
-        <div className="w-full h-1 relative overflow-hidden max-md:bg-purple-900/60 md:bg-slate-100 md:dark:bg-zinc-800">
+        <div className="w-full h-1 relative overflow-hidden max-md:bg-purple-900/60 md:bg-slate-100 md:">
           <motion.div
             className="h-full bg-gradient-to-r from-[#006C4A] to-teal-500 rounded-r-full transition-all duration-300"
             style={{ width: `${(activeStep / WIZARD_STEPS.length) * 100}%` }}
@@ -1976,13 +1974,13 @@ export function HostUploadPage() {
                   setFieldErrors({});
                   setActiveStep((prev) => Math.max(1, prev - 1));
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 md:py-1 rounded-xl font-extrabold text-sm sm:text-base md:text-xs underline underline-offset-4 cursor-pointer active:scale-95 transition-all max-md:text-purple-200 max-md:hover:text-white md:text-slate-800 md:dark:text-zinc-200 md:hover:text-black md:dark:hover:text-white"
+                className="flex items-center gap-1.5 px-3 py-1.5 md:py-1 rounded-xl font-extrabold text-sm sm:text-base md:text-xs underline underline-offset-4 cursor-pointer active:scale-95 transition-all max-md:text-purple-200 max-md:hover:text-white md:text-slate-800 md: md:hover:text-black md:"
               >
                 <ChevronLeft className="w-4 h-4 md:w-3.5 md:h-3.5" />
                 <span>Back</span>
               </button>
             ) : (
-              <div className="flex items-center gap-2 text-xs sm:text-sm md:text-xs text-slate-500 dark:text-zinc-400 font-medium pl-1">
+              <div className="flex items-center gap-2 text-xs sm:text-sm md:text-xs text-slate-500 font-medium pl-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="hidden sm:inline">Draft auto-saved securely</span>
                 <span className="sm:hidden">Draft saved</span>
@@ -1992,7 +1990,7 @@ export function HostUploadPage() {
 
           {/* Center Info: Step overview badge (Desktop only) */}
           <div className="hidden md:flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">
+            <span className="text-xs font-bold text-slate-500">
               {currentStepConfig.title}
             </span>
           </div>

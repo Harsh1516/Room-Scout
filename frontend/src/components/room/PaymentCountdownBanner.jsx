@@ -88,12 +88,12 @@ export function PaymentCountdownBanner({
       <div
         className={`w-full rounded-2xl p-4 transition-all duration-300 border shadow-lg ${
           isUpiRejected
-            ? 'bg-gradient-to-r from-rose-500/15 via-red-500/10 to-rose-500/15 border-rose-500 dark:border-rose-500/80 text-rose-950 dark:text-rose-100 ring-2 ring-rose-500/30'
+            ? 'bg-gradient-to-r from-rose-500/15 via-red-500/10 to-rose-500/15 border-rose-500 text-rose-950 ring-2 ring-rose-500/30'
             : isPendingVerification
-            ? 'bg-gradient-to-r from-teal-500/15 via-emerald-500/10 to-teal-500/15 border-teal-400 dark:border-teal-500/70 text-teal-950 dark:text-teal-100 ring-2 ring-teal-400/30'
+            ? 'bg-gradient-to-r from-teal-500/15 via-emerald-500/10 to-teal-500/15 border-teal-400 text-teal-950 ring-2 ring-teal-400/30'
             : isLowTime
-            ? 'bg-gradient-to-r from-rose-500/15 via-amber-500/15 to-rose-500/15 border-rose-400 dark:border-rose-500/70 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/30'
-            : 'bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-emerald-500/10 border-amber-400/80 dark:border-amber-500/60 text-amber-950 dark:text-amber-100'
+            ? 'bg-gradient-to-r from-rose-500/15 via-amber-500/15 to-rose-500/15 border-rose-400 text-rose-950 ring-2 ring-rose-400/30'
+            : 'bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-emerald-500/10 border-amber-400/80 text-amber-950'
         }`}
       >
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -114,7 +114,7 @@ export function PaymentCountdownBanner({
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                <span className="text-xs font-black uppercase tracking-wider text-slate-900">
                   {isUpiRejected
                     ? 'UPI Reference Rejected by Host'
                     : isPendingVerification
@@ -136,10 +136,10 @@ export function PaymentCountdownBanner({
                   </span>
                 )}
               </div>
-              <p className="text-[11.5px] text-slate-700 dark:text-zinc-300 mt-0.5">
+              <p className="text-[11.5px] text-slate-700 mt-0.5">
                 {isUpiRejected ? (
                   <span>
-                    <strong className="text-rose-600 dark:text-rose-400">Host Reason: </strong>
+                    <strong className="text-rose-600">Host Reason: </strong>
                     "{booking.upiPayment?.rejectionReason || 'UPI reference did not match host bank records'}". Please update your reference ID or payment receipt.
                   </span>
                 ) : isPendingVerification ? (
@@ -159,7 +159,7 @@ export function PaymentCountdownBanner({
                   type="button"
                   disabled={isProcessing}
                   onClick={() => setIsConfirmingCancel(false)}
-                  className="px-2.5 py-2 rounded-xl text-xs font-semibold bg-slate-200 hover:bg-slate-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer"
+                  className="px-2.5 py-2 rounded-xl text-xs font-semibold bg-slate-200 hover:bg-slate-300 text-slate-700 transition-colors cursor-pointer"
                 >
                   Keep
                 </button>
@@ -177,7 +177,7 @@ export function PaymentCountdownBanner({
                 type="button"
                 disabled={isProcessing}
                 onClick={() => setIsConfirmingCancel(true)}
-                className="px-3 py-2 rounded-xl text-xs font-semibold border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                className="px-3 py-2 rounded-xl text-xs font-semibold border border-rose-300 text-rose-700 hover:bg-rose-50 transition-colors cursor-pointer"
                 title="Cancel your booking request"
               >
                 Cancel Booking

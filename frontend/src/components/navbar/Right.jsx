@@ -5,7 +5,6 @@ import { useWishlist } from '../../context/WishlistContext';
 import { useBookings } from '../../context/BookingsContext';
 import { useAuth } from '../../context/AuthContext';
 import { Login } from './Login';
-import { ThemeTogglePill } from '../common/ThemeTogglePill';
 
 export function Right({ onLoginClick }) {
   const navigate = useNavigate();
@@ -25,7 +24,7 @@ export function Right({ onLoginClick }) {
         <button
           type="button"
           onClick={() => setIsWishlistOpen(true)}
-          className="apple-liquid-nav relative w-11 h-11 sm:w-11.5 sm:h-11.5 rounded-full text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/15 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0"
+          className="apple-liquid-nav relative w-11 h-11 sm:w-11.5 sm:h-11.5 rounded-full text-slate-700 border border-slate-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0"
           title="Saved Wishlist"
           aria-label="Open Wishlist"
         >
@@ -42,7 +41,7 @@ export function Right({ onLoginClick }) {
           </svg>
 
           {wishlist.length > 0 && (
-            <span className="absolute -top-1 -right-1 px-1.5 min-w-4.5 h-4.5 rounded-full bg-rose-500 text-white font-black text-[10px] flex items-center justify-center shadow-xs border-2 border-white dark:border-slate-900 animate-in fade-in zoom-in duration-150">
+            <span className="absolute -top-1 -right-1 px-1.5 min-w-4.5 h-4.5 rounded-full bg-rose-500 text-white font-black text-[10px] flex items-center justify-center shadow-xs border-2 border-white animate-in fade-in zoom-in duration-150">
               {wishlist.length}
             </span>
           )}
@@ -52,12 +51,12 @@ export function Right({ onLoginClick }) {
         <button
           type="button"
           onClick={() => setIsBookingsOpen(true)}
-          className="apple-liquid-nav relative w-11 h-11 sm:w-11.5 sm:h-11.5 rounded-full text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/15 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0"
+          className="apple-liquid-nav relative w-11 h-11 sm:w-11.5 sm:h-11.5 rounded-full text-slate-700 border border-slate-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0"
           title="Booked Places"
           aria-label="Open Booked Places"
         >
           <svg
-            className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400"
+            className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-emerald-600"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -72,15 +71,13 @@ export function Right({ onLoginClick }) {
           </svg>
 
           {bookings.length > 0 && (
-            <span className="absolute -top-1 -right-1 px-1.5 min-w-4.5 h-4.5 rounded-full bg-emerald-600 text-white font-black text-[10px] flex items-center justify-center shadow-xs border-2 border-white dark:border-slate-900 animate-in fade-in zoom-in duration-150">
+            <span className="absolute -top-1 -right-1 px-1.5 min-w-4.5 h-4.5 rounded-full bg-emerald-600 text-white font-black text-[10px] flex items-center justify-center shadow-xs border-2 border-white animate-in fade-in zoom-in duration-150">
               {bookings.length}
             </span>
           )}
         </button>
 
-        {/* 3. Theme Mode Toggle Button */}
-        <ThemeTogglePill />
-
+        
 
         {/* 5. Profile / Login Button */}
         <Login onLoginClick={onLoginClick} />
@@ -94,7 +91,7 @@ export function Right({ onLoginClick }) {
         <button
           type="button"
           onClick={() => setMobileMenuOpen((prev) => !prev)}
-          className="apple-liquid-nav relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/95 dark:bg-slate-900/95 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-center text-sm font-bold transition-all cursor-pointer active:scale-95 shrink-0"
+          className="apple-liquid-nav relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/95 text-slate-800 border border-slate-200/80 shadow-sm flex items-center justify-center text-sm font-bold transition-all cursor-pointer active:scale-95 shrink-0"
           title="Toggle Navigation Menu"
         >
           {wishlist.length > 0 && !mobileMenuOpen && (
@@ -137,7 +134,7 @@ export function Right({ onLoginClick }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
-              className="md:hidden absolute top-14 right-0 z-50 flex flex-col items-center gap-3 py-4 px-2.5 rounded-[2.5rem] bg-white/98 dark:bg-slate-900/98 border border-slate-200/80 dark:border-slate-800 shadow-xl backdrop-blur-xl"
+              className="md:hidden absolute top-14 right-0 z-50 flex flex-col items-center gap-3 py-4 px-2.5 rounded-[2.5rem] bg-white/98 border border-slate-200/80 shadow-xl backdrop-blur-xl"
             >
 
               {/* 2. Saved Wishlist Button */}
@@ -147,7 +144,7 @@ export function Right({ onLoginClick }) {
                   setIsWishlistOpen(true);
                   setMobileMenuOpen(false);
                 }}
-                className="apple-liquid-nav relative w-10 h-10 rounded-full text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/15 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0"
+                className="apple-liquid-nav relative w-10 h-10 rounded-full text-slate-700 border border-slate-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0"
                 title="Saved Wishlist"
                 aria-label="Open Wishlist"
               >
@@ -164,7 +161,7 @@ export function Right({ onLoginClick }) {
                 </svg>
 
                 {wishlist.length > 0 && (
-                  <span className="absolute -top-1 -right-1 px-1.5 min-w-4 h-4 rounded-full bg-rose-500 text-white font-black text-[9px] flex items-center justify-center shadow-xs border border-white dark:border-slate-900 animate-in fade-in zoom-in duration-150">
+                  <span className="absolute -top-1 -right-1 px-1.5 min-w-4 h-4 rounded-full bg-rose-500 text-white font-black text-[9px] flex items-center justify-center shadow-xs border border-white animate-in fade-in zoom-in duration-150">
                     {wishlist.length}
                   </span>
                 )}
@@ -177,12 +174,12 @@ export function Right({ onLoginClick }) {
                   setIsBookingsOpen(true);
                   setMobileMenuOpen(false);
                 }}
-                className="apple-liquid-nav relative w-10 h-10 rounded-full text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/15 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0"
+                className="apple-liquid-nav relative w-10 h-10 rounded-full text-slate-700 border border-slate-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0"
                 title="Booked Places"
                 aria-label="Open Booked Places"
               >
                 <svg
-                  className="w-4.5 h-4.5 text-emerald-600 dark:text-emerald-400"
+                  className="w-4.5 h-4.5 text-emerald-600"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -197,15 +194,13 @@ export function Right({ onLoginClick }) {
                 </svg>
 
                 {bookings.length > 0 && (
-                  <span className="absolute -top-1 -right-1 px-1.5 min-w-4 h-4 rounded-full bg-emerald-600 text-white font-black text-[9px] flex items-center justify-center shadow-xs border border-white dark:border-slate-900 animate-in fade-in zoom-in duration-150">
+                  <span className="absolute -top-1 -right-1 px-1.5 min-w-4 h-4 rounded-full bg-emerald-600 text-white font-black text-[9px] flex items-center justify-center shadow-xs border border-white animate-in fade-in zoom-in duration-150">
                     {bookings.length}
                   </span>
                 )}
               </button>
 
-              {/* 4. Theme Mode Toggle Button */}
-              <ThemeTogglePill />
-
+              
               {/* 5. Profile / Login Button */}
               <Login onLoginClick={() => {
                 onLoginClick && onLoginClick();

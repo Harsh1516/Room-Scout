@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { z } from 'zod';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
 import { authAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
 import { GoogleLogin } from '@react-oauth/google';
@@ -65,8 +64,7 @@ const registerSchema = z
 
 export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessage = '' }) {
   const { user, isAuthenticated, login, register, loginWithGoogle } = useAuth();
-  const { isDark } = useTheme();
-
+  
   const [accountType, setAccountType] = useState(initialRole);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [isForgotMode, setIsForgotMode] = useState(false);
@@ -149,7 +147,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
 
   // Unified Input Border Styling matching the clean, calm Email input field
   const getFieldBorderClass = () => {
-    return 'border-slate-200/90 dark:border-zinc-700/80 focus-within:border-slate-300 dark:focus-within:border-zinc-600';
+    return 'border-slate-200/90 focus-within:border-slate-300';
   };
 
   const handleSubmit = async (e) => {
@@ -328,7 +326,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-md"
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-md"
             onClick={onClose}
             aria-hidden="true"
           />
@@ -340,7 +338,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.94 }}
               transition={{ type: 'spring', damping: 28, stiffness: 380 }}
-              className="fixed top-4 sm:top-6 left-1/2 -translate-x-1/2 z-[10001] bg-white dark:bg-white backdrop-blur-2xl p-1 sm:p-1.5 rounded-full border border-slate-200/90 dark:border-white shadow-[0_8px_30px_rgba(0,0,0,0.08),0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5),0_0_25px_rgba(255,255,255,0.25)] flex items-center select-none ring-1 ring-black/[0.05] dark:ring-black/10"
+              className="fixed top-4 sm:top-6 left-1/2 -translate-x-1/2 z-[10001] bg-white backdrop-blur-2xl p-1 sm:p-1.5 rounded-full border border-slate-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.08),0_2px_8px_rgba(0,0,0,0.04)](0,0,0,0.5),0_0_25px_rgba(255,255,255,0.25)] flex items-center select-none ring-1 ring-black/[0.05]"
               role="tablist"
             >
               {/* Subtle ambient aura behind capsule */}
@@ -359,7 +357,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                 className={`relative px-5 sm:px-6 py-2 rounded-full text-xs sm:text-[13px] font-semibold transition-colors duration-200 z-10 cursor-pointer text-center select-none ${
                   !isRegisterMode
                     ? 'text-white font-bold'
-                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-600 dark:hover:text-slate-900'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 {!isRegisterMode && (
@@ -397,7 +395,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                 className={`relative px-5 sm:px-6 py-2 rounded-full text-xs sm:text-[13px] font-semibold transition-colors duration-200 z-10 cursor-pointer text-center select-none ${
                   isRegisterMode
                     ? 'text-white font-bold'
-                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-600 dark:hover:text-slate-900'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 {isRegisterMode && (
@@ -437,15 +435,15 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
               opacity: { duration: 0.18 },
               scale: { duration: 0.22, ease: [0.16, 1, 0.3, 1] },
             }}
-            className="relative z-10 w-full max-w-[370px] sm:max-w-[390px] bg-white/95 dark:bg-[#0c0e14]/95 backdrop-blur-2xl rounded-3xl border border-slate-200/90 dark:border-white/10 shadow-2xl shadow-emerald-950/[0.08] dark:shadow-black/70 overflow-hidden text-slate-900 dark:text-white my-auto ring-1 ring-black/[0.03] dark:ring-white/[0.05]"
+            className="relative z-10 w-full max-w-[370px] sm:max-w-[390px] bg-white/95 backdrop-blur-2xl rounded-3xl border border-slate-200/90 shadow-2xl shadow-emerald-950/[0.08] overflow-hidden text-slate-900 my-auto ring-1 ring-black/[0.03]"
             data-purpose="login-modal"
           >
             {/* Ambient Corner Glow */}
             <div
               className={`absolute -right-8 -top-8 w-28 h-28 rounded-full blur-2xl pointer-events-none transition-colors duration-500 ${
                 accountType === 'host'
-                  ? 'bg-emerald-300/30 dark:bg-emerald-500/10'
-                  : 'bg-indigo-300/30 dark:bg-indigo-500/10'
+                  ? 'bg-emerald-300/30'
+                  : 'bg-indigo-300/30'
               }`}
             />
 
@@ -454,7 +452,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
               aria-label="Close modal"
               onClick={onClose}
               type="button"
-              className="absolute top-3.5 right-3.5 w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-white bg-slate-100/70 hover:bg-slate-200/70 dark:bg-zinc-800/60 dark:hover:bg-zinc-700/60 border border-slate-200/60 dark:border-zinc-700/60 transition-all z-20 cursor-pointer shadow-2xs"
+              className="absolute top-3.5 right-3.5 w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-800 bg-slate-100/70 hover:bg-slate-200/70 border border-slate-200/60 transition-all z-20 cursor-pointer shadow-2xs"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                 <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
@@ -465,7 +463,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
             <div className="px-5 py-5 sm:px-6 sm:py-5 relative z-10">
               {/* Header Title & Tagline */}
               <div className="text-center mb-3 pt-0.5">
-                <h2 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                <h2 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900">
                   {isForgotMode
                     ? 'Reset Password'
                     : isRegisterMode
@@ -476,7 +474,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                     ? 'Host Login'
                     : 'Login'}
                 </h2>
-                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400 mt-0.5 leading-snug">
+                <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 leading-snug">
                   {isForgotMode
                     ? 'Enter your email to receive recovery instructions'
                     : isRegisterMode
@@ -491,7 +489,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
 
               {/* Success Notification Alert */}
               {successMessage && (
-                <div className="mb-2.5 p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[11px] font-semibold text-center flex items-center justify-center gap-1.5">
+                <div className="mb-2.5 p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-[11px] font-semibold text-center flex items-center justify-center gap-1.5">
                   <span>✓</span>
                   <span>{successMessage}</span>
                 </div>
@@ -500,8 +498,8 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
               {isForgotMode ? (
                 /* Forgot Password Form */
                 <form onSubmit={handleForgotPasswordSubmit} className="space-y-2.5">
-                  <div className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 dark:bg-zinc-800/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('forgotEmail')}`}>
-                    <div className="pl-3 text-slate-500 dark:text-zinc-400">
+                  <div className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('forgotEmail')}`}>
+                    <div className="pl-3 text-slate-500">
                       <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                           d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
@@ -518,7 +516,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
                       placeholder="Enter registered email"
-                      className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-zinc-400 focus:outline-none"
+                      className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-[13px] text-slate-900 placeholder:text-slate-500 focus:outline-none"
                     />
                   </div>
 
@@ -538,7 +536,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                         setErrorMessage('');
                         setSuccessMessage('');
                       }}
-                      className="text-[11px] text-slate-500 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 font-semibold transition-colors cursor-pointer"
+                      className="text-[11px] text-slate-500 hover:text-emerald-600 font-semibold transition-colors cursor-pointer"
                     >
                       ← Back to Login
                     </button>
@@ -561,9 +559,9 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                           }}
                         >
                           <div
-                            className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 dark:bg-zinc-800/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('name')}`}
+                            className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('name')}`}
                           >
-                            <div className="pl-3 text-slate-500 dark:text-zinc-400">
+                            <div className="pl-3 text-slate-500">
                               <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path
                                   d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
@@ -580,7 +578,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                               value={formData.name}
                               onChange={(e) => handleNameChange(e.target.value)}
                               placeholder="Full name"
-                              className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-zinc-400 focus:outline-none"
+                              className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-[13px] text-slate-900 placeholder:text-slate-500 focus:outline-none"
                             />
                           </div>
                         </motion.div>
@@ -590,9 +588,9 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                     {/* 2. Email Address (Always visible) */}
                     <div>
                       <div
-                        className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 dark:bg-zinc-800/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('email')}`}
+                        className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('email')}`}
                       >
-                        <div className="pl-3 text-slate-500 dark:text-zinc-400">
+                        <div className="pl-3 text-slate-500">
                           <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
                               d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
@@ -609,7 +607,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                           value={formData.email}
                           onChange={(e) => handleInputChange('email', e.target.value)}
                           placeholder="Email address"
-                          className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-zinc-400 focus:outline-none"
+                          className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-[13px] text-slate-900 placeholder:text-slate-500 focus:outline-none"
                         />
                       </div>
                     </div>
@@ -628,12 +626,12 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                           }}
                         >
                           <div
-                            className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 dark:bg-zinc-800/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('phone')}`}
+                            className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('phone')}`}
                           >
-                            <span className="pl-3 pr-2 text-xs font-bold text-slate-600 dark:text-zinc-300 select-none shrink-0">
+                            <span className="pl-3 pr-2 text-xs font-bold text-slate-600 select-none shrink-0">
                               +91
                             </span>
-                            <div className="h-4 w-px bg-slate-300 dark:bg-zinc-600 mr-2 shrink-0" />
+                            <div className="h-4 w-px bg-slate-300 mr-2 shrink-0" />
                             <input
                               type="tel"
                               inputMode="numeric"
@@ -646,7 +644,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                                 handleInputChange('phone', digits);
                               }}
                               placeholder="Mobile number"
-                              className="w-full bg-transparent pr-2.5 py-1 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-zinc-400 focus:outline-none"
+                              className="w-full bg-transparent pr-2.5 py-1 text-xs sm:text-[13px] text-slate-900 placeholder:text-slate-500 focus:outline-none"
                             />
                           </div>
                         </motion.div>
@@ -656,9 +654,9 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                     {/* 4. Password Field (Always visible) */}
                     <div>
                       <div
-                        className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 dark:bg-zinc-800/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('password')}`}
+                        className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('password')}`}
                       >
-                        <div className="pl-3 text-slate-500 dark:text-zinc-400">
+                        <div className="pl-3 text-slate-500">
                           <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
                               d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
@@ -674,13 +672,13 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                           value={formData.password}
                           onChange={(e) => handleInputChange('password', e.target.value)}
                           placeholder="Password (min. 8 characters)"
-                          className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-zinc-400 focus:outline-none"
+                          className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-[13px] text-slate-900 placeholder:text-slate-500 focus:outline-none"
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
                           aria-label={showPassword ? 'Hide password' : 'Show password'}
-                          className="pr-2.5 text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer"
+                          className="pr-2.5 text-slate-500 hover:text-slate-800 cursor-pointer"
                         >
                           {showPassword ? (
                             <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -720,9 +718,9 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                           }}
                         >
                           <div
-                            className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 dark:bg-zinc-800/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('confirmPassword')}`}
+                            className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('confirmPassword')}`}
                           >
-                            <div className="pl-3 text-slate-500 dark:text-zinc-400">
+                            <div className="pl-3 text-slate-500">
                               <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path
                                   d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
@@ -738,13 +736,13 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                               value={formData.confirmPassword}
                               onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                               placeholder="Confirm password"
-                              className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-zinc-400 focus:outline-none"
+                              className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-[13px] text-slate-900 placeholder:text-slate-500 focus:outline-none"
                             />
                             <button
                               type="button"
                               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                               aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
-                              className="pr-2.5 text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer"
+                              className="pr-2.5 text-slate-500 hover:text-slate-800 cursor-pointer"
                             >
                               {showConfirmPassword ? (
                                 <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -792,9 +790,9 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                                 type="checkbox"
                                 checked={rememberDevice}
                                 onChange={(e) => setRememberDevice(e.target.checked)}
-                                className="w-3.5 h-3.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-black dark:accent-emerald-500"
+                                className="w-3.5 h-3.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-black"
                               />
-                              <span className="text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400">Remember device</span>
+                              <span className="text-[11px] sm:text-xs text-slate-500">Remember device</span>
                             </label>
                             <button
                               type="button"
@@ -804,7 +802,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                                 setErrorMessage('');
                                 setSuccessMessage('');
                               }}
-                              className="text-[11px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:underline cursor-pointer"
+                              className="text-[11px] sm:text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:underline cursor-pointer"
                             >
                               Forgot password?
                             </button>
@@ -870,24 +868,24 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                     <div className="pt-2">
                       {/* Refined Upper Border / Divider with feathered gradient & matching micro-pill */}
                       <div className="relative my-3 flex items-center justify-center">
-                        <div className="w-full h-px bg-gradient-to-r from-transparent via-slate-300 dark:via-white/15 to-transparent" />
-                        <span className="absolute px-3 py-0.5 rounded-full text-[9.5px] font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-widest bg-white dark:bg-[#0c0e14] border border-slate-200/80 dark:border-white/10 shadow-2xs backdrop-blur-md select-none">
+                        <div className="w-full h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+                        <span className="absolute px-3 py-0.5 rounded-full text-[9.5px] font-semibold text-slate-500 uppercase tracking-widest bg-white border border-slate-200/80 shadow-2xs backdrop-blur-md select-none">
                           or continue with
                         </span>
                       </div>
                       {/* Upgraded Luxury Google Capsule Border with metallic sheen & ambient aura */}
                       <div className="flex justify-center w-full pt-1 pb-0.5">
-                        <div className="relative group p-[1px] rounded-full max-w-[282px] w-full transition-all duration-300 bg-gradient-to-b from-slate-200 via-slate-100 to-slate-200 dark:from-white/25 dark:via-white/10 dark:to-white/5 hover:dark:from-emerald-400/40 hover:dark:via-white/20 hover:dark:to-white/10 shadow-sm dark:shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+                        <div className="relative group p-[1px] rounded-full max-w-[282px] w-full transition-all duration-300 bg-gradient-to-b from-slate-200 via-slate-100 to-slate-200 hover: hover: hover: shadow-sm(0,0,0,0.5)]">
                           {/* Ambient aura glow behind capsule on hover */}
-                          <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 dark:from-emerald-400/20 dark:via-teal-400/20 dark:to-indigo-400/20 blur-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                          <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 blur-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
                           {/* Inner Capsule Border & Container */}
-                          <div className="relative overflow-hidden rounded-full w-full flex justify-center bg-white dark:bg-[#131314] ring-1 ring-black/[0.04] dark:ring-white/[0.08]">
+                          <div className="relative overflow-hidden rounded-full w-full flex justify-center bg-white ring-1 ring-black/[0.04]">
                             <ErrorBoundary fallback={null}>
                               <GoogleLogin
                                 onSuccess={handleGoogleSuccess}
                                 onError={handleGoogleError}
-                                theme={isDark ? 'filled_black' : 'outline'}
+                                theme='outline'
                                 size="large"
                                 width="280"
                                 text={isRegisterMode ? 'signup_with' : 'signin_with'}
@@ -903,7 +901,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
               )}
 
               {/* Switch Role Link */}
-              <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-zinc-800/80 text-center">
+              <div className="mt-3 pt-2.5 border-t border-slate-100 text-center">
                 <button
                   type="button"
                   onClick={() => {
@@ -912,19 +910,19 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                     setErrorMessage('');
                     setFieldErrors({});
                   }}
-                  className="text-[11px] text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                  className="text-[11px] text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
                 >
                   {accountType === 'host' ? (
                     <>
                       Looking to explore stays?{' '}
-                      <span className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                      <span className="font-semibold text-indigo-600 hover:underline">
                         Switch to Guest
                       </span>
                     </>
                   ) : (
                     <>
                       Are you a property owner?{' '}
-                      <span className="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
+                      <span className="font-semibold text-emerald-600 hover:underline">
                         Switch to Host
                       </span>
                     </>

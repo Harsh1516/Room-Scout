@@ -11,17 +11,17 @@ import {
 } from 'lucide-react';
 
 const CONSOLE_THEME = {
-  cardBg: 'bg-[#E2E7FF]/70 hover:bg-[#E2E7FF]/90 dark:bg-[#111C2E] dark:hover:bg-[#142238] backdrop-blur-xl',
-  border: 'border-slate-200/80 hover:border-[#3525CD]/40 dark:border-[#1E2E48] dark:hover:border-[#374c70]',
+  cardBg: 'bg-[#E2E7FF]/70 hover:bg-[#E2E7FF]/90 backdrop-blur-xl',
+  border: 'border-slate-200/80 hover:border-[#3525CD]/40',
   shadow: 'shadow-[0_4px_20px_-4px_rgba(53,37,205,0.08),0_2px_6px_rgba(0,0,0,0.02)]',
-  avatarBg: 'bg-[#E2DFFF] text-[#3525CD] dark:bg-[#4F46E5] dark:text-white border border-[#3525CD]/20 dark:border-transparent',
-  roomBoxBg: 'bg-white dark:bg-[#162238] border border-slate-200/80 dark:border-[#1E2E48] shadow-xs',
-  accentText: 'text-[#3525CD] dark:text-[#818CF8]',
-  badgeWalkin: 'bg-[#E2DFFF] text-[#3525CD] dark:bg-white/20 dark:text-white border border-[#3525CD]/20 dark:border-white/10 font-bold',
-  badgeStatus: 'bg-[#E2DFFF] text-[#3525CD] dark:bg-white/20 dark:text-white border border-[#3525CD]/20 dark:border-white/10 font-bold',
-  primaryBtn: 'bg-transparent hover:bg-black hover:text-white dark:bg-transparent dark:hover:bg-white dark:hover:text-black text-black dark:text-white transition-all duration-500 ease-in-out hover:-translate-y-0.5 hover:shadow-md dark:hover:shadow-[0_4px_12px_rgba(255,255,255,0.15)] active:translate-y-0 active:scale-[0.98]',
-  secondaryBtn: 'bg-transparent hover:bg-black hover:text-white dark:bg-transparent dark:hover:bg-white dark:hover:text-black text-black dark:text-white transition-all duration-500 ease-in-out hover:-translate-y-0.5 hover:shadow-md dark:hover:shadow-[0_4px_12px_rgba(255,255,255,0.15)] active:translate-y-0 active:scale-[0.98]',
-  slotBtn: 'bg-[#E2DFFF]/70 hover:bg-[#E2DFFF] text-[#3525CD] dark:bg-white/10 dark:hover:bg-white/15 dark:text-[#C7D2FE] border border-[#c7d2fe]/60 dark:border-white/10',
+  avatarBg: 'bg-[#E2DFFF] text-[#3525CD] border border-[#3525CD]/20',
+  roomBoxBg: 'bg-white border border-slate-200/80 shadow-xs',
+  accentText: 'text-[#3525CD]',
+  badgeWalkin: 'bg-[#E2DFFF] text-[#3525CD] border border-[#3525CD]/20 font-bold',
+  badgeStatus: 'bg-[#E2DFFF] text-[#3525CD] border border-[#3525CD]/20 font-bold',
+  primaryBtn: 'bg-transparent hover:bg-black hover:text-white text-black transition-all duration-500 ease-in-out hover:-translate-y-0.5 hover:shadow-md(255,255,255,0.15)] active:translate-y-0 active:scale-[0.98]',
+  secondaryBtn: 'bg-transparent hover:bg-black hover:text-white text-black transition-all duration-500 ease-in-out hover:-translate-y-0.5 hover:shadow-md(255,255,255,0.15)] active:translate-y-0 active:scale-[0.98]',
+  slotBtn: 'bg-[#E2DFFF]/70 hover:bg-[#E2DFFF] text-[#3525CD] border border-[#c7d2fe]/60',
 };
 
 const SOFT_PALETTES = [
@@ -144,7 +144,7 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
         onFocusCard ? 'cursor-pointer' : 'cursor-default'
       } ${palette.cardBg} ${palette.border} ${
         isFocused
-          ? 'shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] ring-2 ring-[#3525CD] dark:ring-[#4F46E5]'
+          ? 'shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] ring-2 ring-[#3525CD]'
           : palette.shadow
       }`}
     >
@@ -159,11 +159,11 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
 
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <h3 className="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white leading-tight truncate">
+                <h3 className="text-xs sm:text-[13px] font-bold text-slate-900 leading-tight truncate">
                   {displayName}
                 </h3>
                 {isOnline ? (
-                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 text-[9px] font-semibold border border-purple-200 dark:border-purple-800 shrink-0">
+                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[9px] font-semibold border border-purple-200 shrink-0">
                     Online
                   </span>
                 ) : (
@@ -172,7 +172,7 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
                   </span>
                 )}
               </div>
-              <span className="text-[9px] font-mono text-slate-600/90 dark:text-slate-400 block truncate mt-0.5">
+              <span className="text-[9px] font-mono text-slate-600/90 block truncate mt-0.5">
                 {refCode}
               </span>
             </div>
@@ -182,7 +182,7 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
           <div className="shrink-0 flex items-center gap-1">
             {isConfirmingDelete ? (
               <div
-                className="flex items-center gap-1 p-1 rounded-xl bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800 shadow-sm shrink-0 animate-in fade-in duration-150 z-20"
+                className="flex items-center gap-1 p-1 rounded-xl bg-rose-50 border border-rose-200 shadow-sm shrink-0 animate-in fade-in duration-150 z-20"
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
@@ -192,7 +192,7 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
                     e.stopPropagation();
                     setIsConfirmingDelete(false);
                   }}
-                  className="px-1.5 py-0.5 rounded-lg bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 text-[10px] font-semibold border border-slate-200 dark:border-zinc-700 cursor-pointer"
+                  className="px-1.5 py-0.5 rounded-lg bg-white text-slate-600 text-[10px] font-semibold border border-slate-200 cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -212,32 +212,32 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
             ) : (
               <>
                 {guest.upiPayment?.verificationStatus === 'REJECTED' ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-100 text-rose-900 dark:bg-rose-950/70 dark:text-rose-200 text-[9.5px] font-bold border border-rose-300 dark:border-rose-800">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-100 text-rose-900 text-[9.5px] font-bold border border-rose-300">
                     <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
                     <span>UPI Rejected</span>
                   </span>
                 ) : guest.upiPayment?.verificationStatus === 'PENDING_VERIFICATION' || guest.paymentStatus === 'PENDING_VERIFICATION' ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-100 text-violet-900 dark:bg-violet-950/70 dark:text-violet-200 text-[9.5px] font-bold border border-violet-400/80 animate-pulse">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-100 text-violet-900 text-[9.5px] font-bold border border-violet-400/80 animate-pulse">
                     <span className="w-1.5 h-1.5 rounded-full bg-violet-600 ring-2 ring-violet-400/40" />
                     <span>UPI Pending</span>
                   </span>
                 ) : isAwaitingPayment ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 text-[9.5px] font-semibold border border-amber-300/80">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 text-[9.5px] font-semibold border border-amber-300/80">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 ring-2 ring-amber-400/40" />
                     <span>Awaiting Payment</span>
                   </span>
                 ) : isPending ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 text-[9.5px] font-semibold border border-amber-300/80">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 text-[9.5px] font-semibold border border-amber-300/80">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 ring-2 ring-amber-400/40" />
                     <span>Pending</span>
                   </span>
                 ) : isCheckedIn ? (
                   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold border ${palette.badgeStatus}`}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#3525CD] dark:bg-[#818CF8] ring-2 ring-[#3525CD]/30 dark:ring-[#818CF8]/30" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#3525CD] ring-2 ring-[#3525CD]/30" />
                     <span>Checked In</span>
                   </span>
                 ) : isCheckedOut ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-[9.5px] font-semibold border border-slate-200 dark:border-slate-700">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[9.5px] font-semibold border border-slate-200">
                     <span>Checked Out</span>
                   </span>
                 ) : (
@@ -256,7 +256,7 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
                       e.stopPropagation();
                       setIsConfirmingDelete(true);
                     }}
-                    className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-full border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800 text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-all duration-150 ease-out cursor-pointer shadow-2xs ml-0.5 shrink-0 active:scale-95"
+                    className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-full border border-slate-200 bg-white/80 text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-all duration-150 ease-out cursor-pointer shadow-2xs ml-0.5 shrink-0 active:scale-95"
                   >
                     <X className="w-2.5 h-2.5 stroke-[2.5]" />
                   </button>
@@ -271,7 +271,7 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
                       e.stopPropagation();
                       if (onCloseFocus) onCloseFocus();
                     }}
-                    className="w-6 h-6 rounded-full border border-slate-300 dark:border-slate-600 bg-white/95 dark:bg-slate-800 text-slate-600 dark:text-slate-200 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-all duration-150 ease-out cursor-pointer shadow-xs ml-0.5 shrink-0 active:scale-95"
+                    className="w-6 h-6 rounded-full border border-slate-300 bg-white/95 text-slate-600 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-all duration-150 ease-out cursor-pointer shadow-xs ml-0.5 shrink-0 active:scale-95"
                   >
                     <X className="w-3 h-3 stroke-[2.5]" />
                   </button>
@@ -287,12 +287,12 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
           <div className="flex items-center justify-between gap-1.5">
             <div className="flex items-center gap-1.5 min-w-0">
               <Key className={`w-3 h-3 shrink-0 ${palette.accentText}`} />
-              <span className="text-[11.5px] sm:text-xs font-bold text-slate-900 dark:text-white truncate">
+              <span className="text-[11.5px] sm:text-xs font-bold text-slate-900 truncate">
                 Room {guest.roomNumber || '—'} {guest.roomType ? `(${guest.roomType})` : ''}
               </span>
             </div>
             <div className="text-right shrink-0">
-              <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
+              <span className="text-xs sm:text-sm font-black text-slate-900">
                 ₹{Number(guest.totalAmount || 0).toLocaleString('en-IN')}
               </span>
             </div>
@@ -301,15 +301,15 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
           {/* Dates & Guests OR 8-Digit Entry Code for Check-In page */}
           {subTab === 'checkin' ? (
             <div className="flex items-center justify-between gap-1.5 py-0.5">
-              <span className="text-[10px] sm:text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 shrink-0">
+              <span className="text-[10px] sm:text-[10.5px] font-semibold text-slate-500 shrink-0">
                 Entry Pass Code:
               </span>
-              <span className="font-mono text-xs sm:text-[12.5px] font-black tracking-widest text-[#3525CD] dark:text-[#C7D2FE] bg-[#E2DFFF] dark:bg-[#4F46E5]/25 px-2 py-0.5 rounded-md border border-[#3525CD]/20 dark:border-[#4F46E5]/40 select-all shrink-0">
+              <span className="font-mono text-xs sm:text-[12.5px] font-black tracking-widest text-[#3525CD] bg-[#E2DFFF] px-2 py-0.5 rounded-md border border-[#3525CD]/20 select-all shrink-0">
                 {displayCheckInCode}
               </span>
             </div>
           ) : (
-            <div className="flex items-center justify-between gap-1 text-[10px] sm:text-[10.5px] text-slate-500 dark:text-slate-400">
+            <div className="flex items-center justify-between gap-1 text-[10px] sm:text-[10.5px] text-slate-500">
               {(() => {
                 const durationText = (() => {
                   if (isMonthly) {
@@ -388,8 +388,8 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
           )}
 
           {/* Phone and Slot button */}
-          <div className="text-[10px] font-mono text-slate-600 dark:text-slate-400 pt-1.5 border-t border-slate-200/50 dark:border-white/5 flex items-center justify-between">
-            <span className="font-semibold tracking-tight text-slate-700 dark:text-slate-300">
+          <div className="text-[10px] font-mono text-slate-600 pt-1.5 border-t border-slate-200/50 flex items-center justify-between">
+            <span className="font-semibold tracking-tight text-slate-700">
               {cleanPhone ? `+91 ${cleanPhone}` : (guest.bookingReferenceId || '')}
             </span>
             <button
@@ -404,7 +404,7 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
               }}
               className={`group/slot inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-tight border transition-all duration-150 ease-out cursor-pointer select-none active:scale-[0.97] shadow-2xs ${
                 isSlotSelected
-                  ? 'bg-[#3525CD] hover:bg-[#281ca5] text-white border-[#3525CD] dark:bg-[#4F46E5] dark:text-white shadow-xs shadow-indigo-600/30'
+                  ? 'bg-[#3525CD] hover:bg-[#281ca5] text-white border-[#3525CD] shadow-xs shadow-indigo-600/30'
                   : (palette.slotBtn || 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300/80')
               }`}
               title={isSlotSelected ? 'Click to reset slot' : 'Click to view slot in calendar'}
@@ -471,7 +471,7 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
         {/* Requests: Awaiting Payment indicator when approved but guest hasn't submitted UPI ref yet */}
         {subTab === 'requests' && !isCheckedIn && isAwaitingPayment && guest.upiPayment?.verificationStatus !== 'PENDING_VERIFICATION' && (
           <span
-            className="flex-1 min-w-0 min-h-[36px] px-2 py-1.5 rounded-xl bg-amber-500/10 dark:bg-amber-400/15 text-amber-700 dark:text-amber-300 text-[10px] sm:text-[10.5px] font-semibold flex items-center justify-center gap-1.5 whitespace-nowrap"
+            className="flex-1 min-w-0 min-h-[36px] px-2 py-1.5 rounded-xl bg-amber-500/10 text-amber-700 text-[10px] sm:text-[10.5px] font-semibold flex items-center justify-center gap-1.5 whitespace-nowrap"
             title="Waiting for guest to complete UPI payment"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />

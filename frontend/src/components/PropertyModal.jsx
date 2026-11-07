@@ -106,15 +106,15 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-4xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 z-10 my-auto flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 z-10 my-auto flex flex-col max-h-[90vh]">
         {/* Header Bar */}
-        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-900/70 shrink-0">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/70 shrink-0">
           <div className="flex items-center gap-3">
-            <span className="text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
+            <span className="text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-600 border border-cyan-500/20">
               {stay.type}
             </span>
             {stay.badge && !/verified/i.test(stay.badge) && (
-              <span className="text-xs font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+              <span className="text-xs font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 border border-amber-500/20">
                 {stay.badge}
               </span>
             )}
@@ -126,7 +126,7 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
               className={`p-2.5 rounded-xl border transition-colors flex items-center gap-1.5 text-xs font-bold ${
                 isSaved
                   ? 'bg-rose-500 text-white border-rose-500'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:text-rose-500'
+                  : 'bg-slate-100 text-slate-600 border-slate-200 hover:text-rose-500'
               }`}
             >
               <span>{isSaved ? '♥' : '♡'}</span>
@@ -135,7 +135,7 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
 
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
             >
               ✕
             </button>
@@ -147,10 +147,10 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
           {/* Main Title & Location */}
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
                 {stay.title}
               </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-1 flex-wrap">
+              <p className="text-sm text-slate-500 flex items-center gap-1.5 mt-1 flex-wrap">
                 <span>📍 {stay.location || stay.city || 'Uttarakhand'}</span>
                 <span>•</span>
                 {Array.isArray(reviews) && reviews.length > 0 ? (
@@ -161,7 +161,7 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
                     <span>({reviews.length} {reviews.length === 1 ? 'review' : 'reviews'})</span>
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono font-bold text-[10px] border border-slate-200 dark:border-slate-700">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-mono font-bold text-[10px] border border-slate-200">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                     NEW
                   </span>
@@ -170,7 +170,7 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
             </div>
             <div className="text-left sm:text-right shrink-0">
               <span className="text-xs text-slate-400 block font-medium">Starting from</span>
-              <span className="text-2xl sm:text-3xl font-black text-cyan-600 dark:text-cyan-400">
+              <span className="text-2xl sm:text-3xl font-black text-cyan-600">
                 ₹{currentPrice.toLocaleString('en-IN')}
               </span>
               <span className="text-xs text-slate-500"> {rateUnit}</span>
@@ -179,7 +179,7 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
 
           {/* Image Gallery */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 rounded-2xl overflow-hidden h-64 sm:h-72">
-            <div className="sm:col-span-2 h-full bg-slate-100 dark:bg-slate-800">
+            <div className="sm:col-span-2 h-full bg-slate-100">
               <img
                 src={stay.image || (stay.images && stay.images[0]) || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80'}
                 alt={stay.title}
@@ -221,34 +221,34 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900">
                     Explore Property Tour on Instagram
                   </h4>
-                  <span className="px-2 py-0.5 rounded-full bg-pink-500/10 text-pink-600 dark:text-pink-400 text-[10px] font-bold border border-pink-500/20">
+                  <span className="px-2 py-0.5 rounded-full bg-pink-500/10 text-pink-600 text-[10px] font-bold border border-pink-500/20">
                     Video Reel 📸
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                <p className="text-[11px] text-slate-500 mt-0.5">
                   Watch authentic room walk-throughs, living spaces & student amenities on Instagram.
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-1 text-xs font-bold text-pink-600 dark:text-pink-400 group-hover:translate-x-0.5 transition-transform shrink-0 ml-2">
+            <div className="flex items-center gap-1 text-xs font-bold text-pink-600 group-hover:translate-x-0.5 transition-transform shrink-0 ml-2">
               <span>View on Instagram</span>
               <span>↗</span>
             </div>
           </a>
 
           {/* Navigation Tabs */}
-          <div className="flex border-b border-slate-200 dark:border-slate-800">
+          <div className="flex border-b border-slate-200">
             {['overview', 'amenities', 'reviews'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`py-3 px-6 text-sm font-bold capitalize border-b-2 transition-colors ${
                   activeTab === tab
-                    ? 'border-cyan-500 text-cyan-600 dark:text-cyan-400'
-                    : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                    ? 'border-cyan-500 text-cyan-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
                 }`}
               >
                 {tab}
@@ -277,13 +277,13 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
                         onClick={() => setSelectedSharing(opt.id)}
                         className={`p-4 rounded-2xl border text-left transition-all ${
                           selectedSharing === opt.id
-                            ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-950/40 text-slate-900 dark:text-white ring-2 ring-cyan-500/20'
-                            : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40'
+                            ? 'border-cyan-500 bg-cyan-50 text-slate-900 ring-2 ring-cyan-500/20'
+                            : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
                         }`}
                       >
                         <div className="font-bold text-sm">{opt.label}</div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{opt.desc}</div>
-                        <div className="font-black text-cyan-600 dark:text-cyan-400 text-base mt-2">
+                        <div className="text-xs text-slate-500 mt-0.5">{opt.desc}</div>
+                        <div className="font-black text-cyan-600 text-base mt-2">
                           ₹{price.toLocaleString('en-IN')}<span className="text-xs font-normal text-slate-400">{rateUnit}</span>
                         </div>
                       </button>
@@ -293,22 +293,22 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
               </div>
 
               {/* Room Capacity Metrics */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs">
                 <div>
                   <span className="text-slate-400 font-medium block text-[10px] uppercase tracking-wider">Total Rooms</span>
-                  <span className="text-sm font-black text-slate-900 dark:text-white mt-0.5 block">
+                  <span className="text-sm font-black text-slate-900 mt-0.5 block">
                     {stay.totalRooms || stay.availableRooms || 4} Rooms
                   </span>
                 </div>
                 <div>
                   <span className="text-slate-400 font-medium block text-[10px] uppercase tracking-wider">Available Now</span>
-                  <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-0.5 block">
+                  <span className="text-sm font-black text-emerald-600 mt-0.5 block">
                     {stay.availableRooms ?? 4} Vacant
                   </span>
                 </div>
                 <div className="col-span-2 sm:col-span-1">
                   <span className="text-slate-400 font-medium block text-[10px] uppercase tracking-wider">Gender Policy</span>
-                  <span className="text-sm font-bold text-cyan-600 dark:text-cyan-400 mt-0.5 block">
+                  <span className="text-sm font-bold text-cyan-600 mt-0.5 block">
                     {stay.genderType || 'Both / Unisex'}
                   </span>
                 </div>
@@ -319,7 +319,7 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
                 <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-2">
                   About this Property
                 </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                <p className="text-sm text-slate-600 leading-relaxed">
                   {stay.description || `Located in the serene surroundings of ${stay.location}, this premier ${stay.type} offers modern student and working professional accommodation. Features fully furnished rooms with study desks, attached bathrooms, high-speed Wi-Fi, and 3-time wholesome meals. High security and close proximity to markets and transportation.`}
                 </p>
               </div>
@@ -333,7 +333,7 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
                   {(stay.tags || stay.facilities || ['Wifi', 'Food Included', 'Security']).map((tag, idx) => (
                     <span
                       key={idx}
-                      className="px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300"
+                      className="px-3 py-1 rounded-xl bg-slate-100 text-xs font-semibold text-slate-700"
                     >
                       ✓ {tag}
                     </span>
@@ -353,10 +353,10 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
                 {amenitiesList.map((item, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60"
+                    className="flex items-center gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200"
                   >
                     <span className="text-2xl">{item.icon}</span>
-                    <span className="font-semibold text-sm text-slate-800 dark:text-slate-200">
+                    <span className="font-semibold text-sm text-slate-800">
                       {item.label}
                     </span>
                   </div>
@@ -371,7 +371,7 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
               {/* Existing Reviews List */}
               <div className="space-y-3">
                 {reviews.length === 0 && (
-                  <div className="py-6 text-center text-slate-400 dark:text-slate-500 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+                  <div className="py-6 text-center text-slate-400 border border-dashed border-slate-200 rounded-2xl">
                     <p className="text-xs font-semibold">No reviews yet for this new stay.</p>
                     <p className="text-[11px] mt-0.5">Be the first guest to share your experience!</p>
                   </div>
@@ -379,10 +379,10 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
                 {reviews.map((rev) => (
                   <div
                     key={rev.id}
-                    className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60"
+                    className="p-4 rounded-2xl bg-slate-50 border border-slate-200"
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-sm text-slate-900 dark:text-white">
+                      <span className="font-bold text-sm text-slate-900">
                         {rev.author}
                       </span>
                       <span className="text-xs text-amber-500 font-bold">
@@ -390,14 +390,14 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
                       </span>
                     </div>
                     <span className="text-[11px] text-slate-400 block mb-2">{rev.date}</span>
-                    <p className="text-xs text-slate-600 dark:text-slate-300">{rev.text}</p>
+                    <p className="text-xs text-slate-600">{rev.text}</p>
                   </div>
                 ))}
               </div>
 
               {/* Write a Review */}
-              <form onSubmit={handleAddReview} className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-3">
-                <h4 className="font-bold text-sm text-slate-900 dark:text-white">Write a Guest Review</h4>
+              <form onSubmit={handleAddReview} className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-3">
+                <h4 className="font-bold text-sm text-slate-900">Write a Guest Review</h4>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold text-slate-500">Rating:</span>
                   {[1, 2, 3, 4, 5].map((star) => (
@@ -405,7 +405,7 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
                       type="button"
                       key={star}
                       onClick={() => setNewRating(star)}
-                      className={`text-lg transition-transform ${star <= newRating ? 'text-amber-400 scale-110' : 'text-slate-300 dark:text-slate-600'}`}
+                      className={`text-lg transition-transform ${star <= newRating ? 'text-amber-400 scale-110' : 'text-slate-300'}`}
                     >
                       ★
                     </button>
@@ -416,7 +416,7 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
                   placeholder="Share your experience staying at this property..."
                   value={newReviewText}
                   onChange={(e) => setNewReviewText(e.target.value)}
-                  className="w-full p-3 text-xs rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  className="w-full p-3 text-xs rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 />
                 <button
                   type="submit"
@@ -430,12 +430,12 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
         </div>
 
         {/* Footer / CTA Bar */}
-        <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex items-center justify-between shrink-0">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
           <div>
             <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
               Selected Rate
             </span>
-            <span className="text-lg sm:text-xl font-black text-cyan-600 dark:text-cyan-400">
+            <span className="text-lg sm:text-xl font-black text-cyan-600">
               ₹{currentPrice.toLocaleString('en-IN')}
             </span>
             <span className="text-xs text-slate-500"> {rateUnit}</span>

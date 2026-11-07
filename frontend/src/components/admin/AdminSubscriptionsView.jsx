@@ -610,7 +610,7 @@ export function AdminSubscriptionsView({
       count: counts.pending || 0,
       subText: 'Awaiting verification',
       dotColor: 'bg-amber-400',
-      iconColor: 'text-amber-500 dark:text-amber-400 bg-amber-500/10 border-amber-500/20',
+      iconColor: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
       title: 'Filter table by Pending',
       icon: (
         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -625,7 +625,7 @@ export function AdminSubscriptionsView({
       count: counts.verified || 0,
       subText: 'Active live stays',
       dotColor: 'bg-emerald-400',
-      iconColor: 'text-emerald-500 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+      iconColor: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
       title: 'Filter table by Verified',
       icon: (
         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -640,7 +640,7 @@ export function AdminSubscriptionsView({
       count: counts.rejected || 0,
       subText: 'Failed / invalid UTRs',
       dotColor: 'bg-rose-400',
-      iconColor: 'text-rose-500 dark:text-rose-400 bg-rose-500/10 border-rose-500/20',
+      iconColor: 'text-rose-500 bg-rose-500/10 border-rose-500/20',
       title: 'Filter table by Rejected',
       icon: (
         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -656,7 +656,7 @@ export function AdminSubscriptionsView({
       count: counts.total || 0,
       subText: 'Total requests',
       dotColor: 'bg-purple-400',
-      iconColor: 'text-purple-500 dark:text-purple-400 bg-purple-500/10 border-purple-500/20',
+      iconColor: 'text-purple-500 bg-purple-500/10 border-purple-500/20',
       title: 'Show All requests',
       icon: (
         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -680,23 +680,23 @@ export function AdminSubscriptionsView({
               onClick={() => setSubFilter(card.key)}
               className={`relative overflow-hidden rounded-2xl p-4 sm:p-5 border backdrop-blur-xl transition-all duration-200 group cursor-pointer select-none ${
                 isActive
-                  ? 'bg-purple-50/50 dark:bg-purple-950/20 border-purple-500/50 dark:border-purple-400/40 ring-1 ring-purple-500/20 dark:ring-purple-400/20 shadow-xs'
-                  : 'bg-white/70 dark:bg-[#0B0F19]/70 border-slate-200/80 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/15 hover:bg-slate-50/50 dark:hover:bg-white/[0.02]'
+                  ? 'bg-purple-50/50 border-purple-500/50 ring-1 ring-purple-500/20 shadow-xs'
+                  : 'bg-white/70 border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/50'
               }`}
               title={card.title}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
+                <span className="text-xs font-normal text-slate-500">
                   {card.label}
                 </span>
                 <div className={`w-7 h-7 rounded-xl border flex items-center justify-center shrink-0 ${card.iconColor}`}>
                   {card.icon}
                 </div>
               </div>
-              <div className="text-2xl sm:text-3xl font-normal text-slate-900 dark:text-white mt-2">
+              <div className="text-2xl sm:text-3xl font-normal text-slate-900 mt-2">
                 {card.count}
               </div>
-              <div className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-400 dark:text-slate-500 font-normal">
+              <div className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-400 font-normal">
                 <span className={`w-1.5 h-1.5 rounded-full ${card.dotColor}`} />
                 <span>{card.subText}</span>
               </div>
@@ -706,7 +706,7 @@ export function AdminSubscriptionsView({
       </div>
 
       {/* ── TOOLBAR: STATEMENT ATTACHMENT & PROGRESSIVE ACTION BUTTON ── */}
-      <div className="p-2 sm:p-2.5 rounded-2xl bg-white/70 dark:bg-[#0B0F19]/90 backdrop-blur-2xl border border-slate-200/80 dark:border-white/[0.08] shadow-xs flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+      <div className="p-2 sm:p-2.5 rounded-2xl bg-white/70 backdrop-blur-2xl border border-slate-200/80 shadow-xs flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
         {/* File Attachment & Actions Cluster */}
         <div className="flex flex-wrap items-center gap-2">
           <input
@@ -722,7 +722,7 @@ export function AdminSubscriptionsView({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="px-3.5 py-1.5 rounded-xl text-xs font-normal border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 hover:border-purple-500/50 hover:text-purple-500 flex items-center gap-2 shadow-xs cursor-pointer transition-all active:scale-95"
+              className="px-3.5 py-1.5 rounded-xl text-xs font-normal border border-slate-200 bg-slate-50/80 text-slate-700 hover:border-purple-500/50 hover:text-purple-500 flex items-center gap-2 shadow-xs cursor-pointer transition-all active:scale-95"
               title="Attach credit bank statement (.csv, .pdf) containing 12-digit UTR numbers"
             >
               <svg className="w-4 h-4 text-purple-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -731,7 +731,7 @@ export function AdminSubscriptionsView({
               <span>Attach Statement (.csv, .pdf)</span>
             </button>
           ) : (
-            <div className="flex items-center gap-2.5 bg-purple-500/10 border border-purple-500/25 text-purple-700 dark:text-purple-300 px-3.5 py-1.5 rounded-xl text-xs font-normal shadow-xs">
+            <div className="flex items-center gap-2.5 bg-purple-500/10 border border-purple-500/25 text-purple-700 px-3.5 py-1.5 rounded-xl text-xs font-normal shadow-xs">
               <span className="truncate max-w-[140px] sm:max-w-[200px]" title={attachedFile.name}>
                 📄 {attachedFile.name}
               </span>
@@ -755,11 +755,11 @@ export function AdminSubscriptionsView({
               actionStage === 'extract'
                 ? attachedFile && !isExtracting
                   ? 'bg-purple-600 hover:bg-purple-500 text-white'
-                  : 'bg-slate-100 dark:bg-white/[0.04] text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-white/10 cursor-not-allowed'
+                  : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
                 : actionStage === 'match'
                 ? 'bg-purple-600 hover:bg-purple-500 text-white'
                 : isSorted
-                ? 'bg-purple-600/15 text-purple-600 dark:text-purple-300 border border-purple-500/30 hover:bg-purple-600/25'
+                ? 'bg-purple-600/15 text-purple-600 border border-purple-500/30 hover:bg-purple-600/25'
                 : 'bg-purple-600 hover:bg-purple-500 text-white'
             }`}
             title={
@@ -868,7 +868,7 @@ export function AdminSubscriptionsView({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search host, stay, or 12-digit UTR..."
-              className="w-full pl-9 pr-3 py-1.5 rounded-xl text-xs font-normal bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/90 dark:border-white/[0.08] focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 outline-none text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all shadow-inner"
+              className="w-full pl-9 pr-3 py-1.5 rounded-xl text-xs font-normal bg-slate-50/80 border border-slate-200/90 focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 outline-none text-slate-900 placeholder:text-slate-400 transition-all shadow-inner"
             />
             <svg
               className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -897,7 +897,7 @@ export function AdminSubscriptionsView({
           <button
             type="button"
             onClick={onRefresh}
-            className="p-1.5 rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-slate-50/80 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.08] text-slate-600 dark:text-slate-300 transition-all cursor-pointer active:scale-95"
+            className="p-1.5 rounded-xl border border-slate-200/90 bg-slate-50/80 hover:bg-slate-100 text-slate-600 transition-all cursor-pointer active:scale-95"
             title="Refresh subscriptions"
           >
             <svg className={`w-4 h-4 stroke-[1.8] ${loading ? 'animate-spin text-purple-400' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -909,27 +909,27 @@ export function AdminSubscriptionsView({
 
       {/* ── STATEMENT RECONCILIATION COMPARISON BOARD (Visible when statement is extracted) ── */}
       {extractedUtrs.length > 0 && (
-        <div className="rounded-3xl border border-slate-200/90 dark:border-white/[0.08] bg-white/90 dark:bg-[#0B0F19]/90 backdrop-blur-2xl p-5 shadow-sm flex flex-col gap-4 animate-in fade-in slide-in-from-top-2">
+        <div className="rounded-3xl border border-slate-200/90 bg-white/90 backdrop-blur-2xl p-5 shadow-sm flex flex-col gap-4 animate-in fade-in slide-in-from-top-2">
           {/* Reconciliation Header & Actions */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200/80 dark:border-white/10 pb-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200/80 pb-3">
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
-                <h3 className="font-normal text-slate-900 dark:text-white text-sm sm:text-base flex items-center gap-2">
+                <h3 className="font-normal text-slate-900 text-sm sm:text-base flex items-center gap-2">
                   <span>Statement reconciliation match board</span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/20 font-normal">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-700 border border-purple-500/20 font-normal">
                     {extractedUtrs.length} UTRs extracted
                   </span>
                 </h3>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-normal">
-                Statement: <span className="text-slate-800 dark:text-white font-medium">{attachedFile?.name}</span>.
+              <p className="text-xs text-slate-500 mt-1 font-normal">
+                Statement: <span className="text-slate-800 font-medium">{attachedFile?.name}</span>.
                 {hasMatched ? (
                   <>
-                    {' '}Matched <span className="text-emerald-600 dark:text-emerald-400 font-medium">{matchedCount}</span> host request{matchedCount !== 1 ? 's' : ''} (
-                    <span className="text-amber-600 dark:text-amber-400 font-medium">{matchedPendingRequests.length}</span> pending verification
+                    {' '}Matched <span className="text-emerald-600 font-medium">{matchedCount}</span> host request{matchedCount !== 1 ? 's' : ''} (
+                    <span className="text-amber-600 font-medium">{matchedPendingRequests.length}</span> pending verification
                     {underpaidPendingMatches.length > 0 ? (
-                      <span className="text-rose-600 dark:text-rose-400 font-medium"> — {underpaidPendingMatches.length} underpaid</span>
+                      <span className="text-rose-600 font-medium"> — {underpaidPendingMatches.length} underpaid</span>
                     ) : null}
                     ).
                   </>
@@ -972,7 +972,7 @@ export function AdminSubscriptionsView({
               <button
                 type="button"
                 onClick={handleClearAttachedFile}
-                className="px-3 py-1.5 rounded-xl text-xs font-normal text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 transition-colors cursor-pointer"
+                className="px-3 py-1.5 rounded-xl text-xs font-normal text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors cursor-pointer"
               >
                 Close board
               </button>
@@ -1296,22 +1296,22 @@ export function AdminSubscriptionsView({
       )}
 
       {/* ── SUBSCRIPTIONS DIRECTORY TABLE (All Submissions with Delete Action) ── */}
-      <div className="rounded-3xl border border-slate-200/80 dark:border-white/[0.08] bg-white/80 dark:bg-[#0B0F1D]/80 backdrop-blur-2xl shadow-xl overflow-hidden relative">
+      <div className="rounded-3xl border border-slate-200/80 bg-white/80 backdrop-blur-2xl shadow-xl overflow-hidden relative">
         <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-purple-400/25 to-transparent pointer-events-none" />
 
-        <div className="px-5 py-4 border-b border-slate-200/80 dark:border-white/[0.08] bg-slate-50/60 dark:bg-white/[0.02] flex items-center justify-between gap-3">
+        <div className="px-5 py-4 border-b border-slate-200/80 bg-slate-50/60 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 flex-wrap">
-            <span className="font-normal text-xs text-slate-600 dark:text-slate-300">
+            <span className="font-normal text-xs text-slate-600">
               Subscription requests directory
             </span>
-            <span className="text-xs px-2.5 py-0.5 rounded-full font-normal bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/20">
+            <span className="text-xs px-2.5 py-0.5 rounded-full font-normal bg-purple-500/15 text-purple-700 border border-purple-500/20">
               {filteredRequests.length}
             </span>
             {subFilter !== 'ALL' && (
               <button
                 type="button"
                 onClick={() => setSubFilter('ALL')}
-                className="inline-flex items-center gap-1 text-[11px] font-normal text-purple-600 dark:text-purple-400 hover:text-purple-500 bg-purple-500/10 hover:bg-purple-500/20 px-2 py-0.5 rounded-full border border-purple-500/20 cursor-pointer transition-colors"
+                className="inline-flex items-center gap-1 text-[11px] font-normal text-purple-600 hover:text-purple-500 bg-purple-500/10 hover:bg-purple-500/20 px-2 py-0.5 rounded-full border border-purple-500/20 cursor-pointer transition-colors"
                 title="Reset filter to all requests"
               >
                 <span>Filter: {subFilter}</span>
@@ -1322,8 +1322,8 @@ export function AdminSubscriptionsView({
 
           {/* Delete All Records Button with Confirmation */}
           {confirmDeleteAll ? (
-            <div className="inline-flex items-center gap-2 bg-rose-500/10 dark:bg-rose-950/30 p-1 rounded-xl border border-rose-500/30 animate-in fade-in duration-200">
-              <span className="text-[11px] sm:text-xs text-rose-600 dark:text-rose-300 font-normal pl-1">
+            <div className="inline-flex items-center gap-2 bg-rose-500/10 p-1 rounded-xl border border-rose-500/30 animate-in fade-in duration-200">
+              <span className="text-[11px] sm:text-xs text-rose-600 font-normal pl-1">
                 Delete all records?
               </span>
               <button
@@ -1346,7 +1346,7 @@ export function AdminSubscriptionsView({
                 type="button"
                 onClick={() => setConfirmDeleteAll(false)}
                 disabled={isDeletingAll}
-                className="px-2 py-1 rounded-lg bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300 text-xs font-normal transition-colors cursor-pointer"
+                className="px-2 py-1 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-normal transition-colors cursor-pointer"
                 title="Cancel deletion"
               >
                 Cancel
@@ -1357,7 +1357,7 @@ export function AdminSubscriptionsView({
               type="button"
               onClick={() => setConfirmDeleteAll(true)}
               disabled={requests.length === 0}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-normal text-rose-600 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 hover:border-rose-500/40 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-normal text-rose-600 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 hover:border-rose-500/40 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 shadow-2xs"
               title={requests.length === 0 ? 'No records to delete' : 'Delete all subscription records'}
             >
               <svg className="w-3.5 h-3.5 stroke-[1.8]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -1372,12 +1372,12 @@ export function AdminSubscriptionsView({
         {loading && requests.length === 0 ? (
           <div className="py-16 px-6 text-center text-slate-400 flex flex-col items-center justify-center gap-3">
             <div className="w-7 h-7 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-            <span className="text-xs font-normal text-slate-600 dark:text-slate-300">Loading subscription requests...</span>
+            <span className="text-xs font-normal text-slate-600">Loading subscription requests...</span>
           </div>
         ) : filteredRequests.length === 0 ? (
           <div className="py-16 px-6 text-center flex flex-col items-center justify-center">
             {/* Minimal Icon Box */}
-            <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] flex items-center justify-center text-slate-500 dark:text-slate-400 mb-3 shadow-xs">
+            <div className="w-14 h-14 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 mb-3 shadow-xs">
               <svg className="w-7 h-7 stroke-[1.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                 <polyline points="14 2 14 8 20 8" />
@@ -1387,15 +1387,15 @@ export function AdminSubscriptionsView({
               </svg>
             </div>
 
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-400 text-xs font-normal mb-2">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-xs font-normal mb-2">
               <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
               <span>Live verification pipeline</span>
             </div>
 
-            <h4 className="text-base font-normal text-slate-900 dark:text-white">
+            <h4 className="text-base font-normal text-slate-900">
               No subscription requests found
             </h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mt-1 leading-relaxed font-normal">
+            <p className="text-xs text-slate-500 max-w-md mt-1 leading-relaxed font-normal">
               {searchQuery
                 ? `No requests match "${searchQuery}". Clear your search query or reset your filter.`
                 : 'When hosts submit their 12-digit UPI transaction reference numbers, they will appear here live with instant reconciliation actions.'}
@@ -1406,7 +1406,7 @@ export function AdminSubscriptionsView({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-3.5 py-1.5 rounded-xl text-xs font-normal bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-purple-500/40 hover:text-purple-500 transition-all cursor-pointer shadow-xs active:scale-95"
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-normal bg-slate-50 border border-slate-200 text-slate-700 hover:border-purple-500/40 hover:text-purple-500 transition-all cursor-pointer shadow-xs active:scale-95"
                 >
                   Attach bank statement
                 </button>
@@ -1423,7 +1423,7 @@ export function AdminSubscriptionsView({
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
-              <thead className="bg-slate-50/90 dark:bg-white/[0.03] text-slate-500 dark:text-slate-400 font-normal border-b border-slate-200/80 dark:border-white/[0.06] text-xs">
+              <thead className="bg-slate-50/90 text-slate-500 font-normal border-b border-slate-200/80 text-xs">
                 <tr>
                   <th className="py-3 px-3.5 font-normal">Host & stay</th>
                   <th className="py-3 px-3.5 font-normal">Plan & amount</th>
@@ -1434,32 +1434,32 @@ export function AdminSubscriptionsView({
                   <th className="py-3 px-3.5 text-right font-normal">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-slate-800 dark:text-slate-200">
+              <tbody className="divide-y divide-slate-100 text-slate-800">
                 {filteredRequests.map((item) => {
                   const host = item.hostId || {};
                   const stay = item.stayId || {};
 
                   return (
-                    <tr key={item._id} className="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition-colors">
+                    <tr key={item._id} className="hover:bg-slate-50/80 transition-colors">
                       {/* 1. Host & Stay */}
                       <td className="py-3.5 px-3.5 align-middle">
-                        <div className="font-normal text-slate-900 dark:text-white text-xs truncate max-w-[200px]" title={host.name}>
+                        <div className="font-normal text-slate-900 text-xs truncate max-w-[200px]" title={host.name}>
                           {host.name || 'Unknown Host'}
                         </div>
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[200px]" title={host.email}>
+                        <div className="text-[11px] text-slate-500 truncate max-w-[200px]" title={host.email}>
                           {host.email}
                         </div>
-                        <div className="text-[11px] text-purple-600 dark:text-purple-400 font-normal truncate max-w-[200px] mt-0.5">
+                        <div className="text-[11px] text-purple-600 font-normal truncate max-w-[200px] mt-0.5">
                           🏡 {stay.title || 'Host Stay'}
                         </div>
                       </td>
 
                       {/* 2. Plan & Amount */}
                       <td className="py-3.5 px-3.5 align-middle">
-                        <div className="font-normal text-slate-900 dark:text-white text-xs">
+                        <div className="font-normal text-slate-900 text-xs">
                           {item.planLabel}
                         </div>
-                        <div className="text-emerald-600 dark:text-emerald-400 font-normal text-sm mt-0.5">
+                        <div className="text-emerald-600 font-normal text-sm mt-0.5">
                           ₹{Number(item.amount).toLocaleString('en-IN')}
                         </div>
                         <div className="text-[10px] text-slate-400">
@@ -1479,7 +1479,7 @@ export function AdminSubscriptionsView({
                       {/* 3. 12-Digit UTR */}
                       <td className="py-3.5 px-3.5 align-middle">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-mono font-normal text-slate-900 dark:text-purple-300 text-xs bg-slate-100 dark:bg-purple-950/40 px-2 py-0.5 rounded border border-slate-200 dark:border-purple-800/40">
+                          <span className="font-mono font-normal text-slate-900 text-xs bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
                             {item.transactionRef}
                           </span>
                           <button
@@ -1506,7 +1506,7 @@ export function AdminSubscriptionsView({
                           <button
                             type="button"
                             onClick={() => setPreviewImageUrl(item.receiptUrl)}
-                            className="relative group rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 hover:border-purple-500 transition-all cursor-pointer inline-block"
+                            className="relative group rounded-lg overflow-hidden border border-slate-200 hover:border-purple-500 transition-all cursor-pointer inline-block"
                             title="Click to view payment receipt"
                           >
                             <img
@@ -1527,7 +1527,7 @@ export function AdminSubscriptionsView({
                       </td>
 
                       {/* 5. Date */}
-                      <td className="py-3.5 px-3.5 align-middle text-slate-500 dark:text-slate-400 text-[11px] whitespace-nowrap font-normal">
+                      <td className="py-3.5 px-3.5 align-middle text-slate-500 text-[11px] whitespace-nowrap font-normal">
                         {formatDateTime(item.createdAt)}
                       </td>
 
@@ -1535,7 +1535,7 @@ export function AdminSubscriptionsView({
                       <td className="py-3.5 px-3.5 align-middle">
                         {item.status === 'VERIFIED' ? (
                           <div className="flex flex-col gap-0.5">
-                            <span className="inline-flex items-center gap-1 text-xs font-normal text-emerald-600 dark:text-emerald-400">
+                            <span className="inline-flex items-center gap-1 text-xs font-normal text-emerald-600">
                               ✓ Verified
                             </span>
                             {item.activatedExpiresAt && (
@@ -1546,7 +1546,7 @@ export function AdminSubscriptionsView({
                           </div>
                         ) : item.status === 'REJECTED' ? (
                           <div className="flex flex-col gap-0.5">
-                            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-normal bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30" title={item.rejectionReason}>
+                            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-normal bg-rose-500/15 text-rose-600 border border-rose-500/30" title={item.rejectionReason}>
                               ✕ Rejected
                             </span>
                             {item.rejectionReason && (
@@ -1556,7 +1556,7 @@ export function AdminSubscriptionsView({
                             )}
                           </div>
                         ) : (
-                          <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-normal bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 animate-pulse">
+                          <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-normal bg-amber-500/15 text-amber-700 border border-amber-500/30 animate-pulse">
                             ⏳ Pending
                           </span>
                         )}
@@ -1578,7 +1578,7 @@ export function AdminSubscriptionsView({
                               <button
                                 type="button"
                                 onClick={() => handleOpenReject(item)}
-                                className="px-2.5 py-1 text-xs font-normal rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 active:scale-95 transition-all cursor-pointer"
+                                className="px-2.5 py-1 text-xs font-normal rounded-lg text-rose-600 hover:bg-rose-50 border border-rose-200 active:scale-95 transition-all cursor-pointer"
                                 title="Reject invalid request"
                               >
                                 Reject
@@ -1588,7 +1588,7 @@ export function AdminSubscriptionsView({
                             <button
                               type="button"
                               onClick={() => handleOpenVerify(item)}
-                              className="px-2.5 py-1 text-xs font-normal rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white border border-slate-200 dark:border-white/10 transition-all cursor-pointer"
+                              className="px-2.5 py-1 text-xs font-normal rounded-lg text-slate-500 hover:text-slate-800 border border-slate-200 transition-all cursor-pointer"
                               title="Extend or update validity"
                             >
                               Extend validity
@@ -1597,7 +1597,7 @@ export function AdminSubscriptionsView({
                             <button
                               type="button"
                               onClick={() => handleOpenVerify(item)}
-                              className="px-2.5 py-1 text-xs font-normal rounded-lg text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 border border-amber-500/20 transition-all cursor-pointer"
+                              className="px-2.5 py-1 text-xs font-normal rounded-lg text-amber-600 hover:bg-amber-500/10 border border-amber-500/20 transition-all cursor-pointer"
                               title="Re-evaluate and grant access"
                             >
                               Re-verify
@@ -1652,34 +1652,34 @@ export function AdminSubscriptionsView({
       {/* ── VERIFICATION MODAL ── */}
       {verifyingItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/15 rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl flex flex-col gap-4 animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl flex flex-col gap-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
                 <span className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-normal text-sm">
                   ✓
                 </span>
-                <h3 className="font-normal text-slate-900 dark:text-white text-base">
+                <h3 className="font-normal text-slate-900 text-base">
                   Verify & activate subscription
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setVerifyingItem(null)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
             {/* Request Summary */}
-            <div className="bg-slate-50 dark:bg-slate-950 rounded-2xl p-3.5 border border-slate-200 dark:border-white/10 space-y-2 text-xs">
+            <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-200 space-y-2 text-xs">
               <div className="flex justify-between">
                 <span className="text-slate-500">Host:</span>
-                <span className="font-normal text-slate-900 dark:text-white">{verifyingItem.hostId?.name}</span>
+                <span className="font-normal text-slate-900">{verifyingItem.hostId?.name}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Property:</span>
-                <span className="font-normal text-purple-600 dark:text-purple-400">{verifyingItem.stayId?.title || 'Stay Property'}</span>
+                <span className="font-normal text-purple-600">{verifyingItem.stayId?.title || 'Stay Property'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Amount Paid:</span>
@@ -1687,7 +1687,7 @@ export function AdminSubscriptionsView({
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-500">12-Digit UTR:</span>
-                <span className="font-mono font-normal text-slate-900 dark:text-purple-300 bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-slate-200 dark:border-white/10">
+                <span className="font-mono font-normal text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200">
                   {verifyingItem.transactionRef}
                 </span>
               </div>
@@ -1695,7 +1695,7 @@ export function AdminSubscriptionsView({
 
             {/* Duration Selector */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-normal text-slate-700 dark:text-slate-300">
+              <label className="text-xs font-normal text-slate-700">
                 Grant validity duration:
               </label>
               <div className="grid grid-cols-4 gap-2">
@@ -1712,7 +1712,7 @@ export function AdminSubscriptionsView({
                     className={`py-2 rounded-xl text-xs font-normal border transition-all cursor-pointer ${
                       verifyDuration === d.m
                         ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-white/10'
+                        : 'bg-slate-100 text-slate-700 border-slate-200'
                     }`}
                   >
                     {d.label}
@@ -1731,7 +1731,7 @@ export function AdminSubscriptionsView({
                 value={adminNotes}
                 onChange={(e) => setAdminNotes(e.target.value)}
                 placeholder="e.g. Verified in HDFC / ICICI bank statement"
-                className="px-3 py-2 text-xs font-normal rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white outline-none focus:border-purple-500"
+                className="px-3 py-2 text-xs font-normal rounded-xl bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-purple-500"
               />
             </div>
 
@@ -1740,7 +1740,7 @@ export function AdminSubscriptionsView({
               <button
                 type="button"
                 onClick={() => setVerifyingItem(null)}
-                className="flex-1 py-2.5 rounded-xl text-xs font-normal text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl text-xs font-normal text-slate-600 border border-slate-200 hover:bg-slate-100 cursor-pointer"
               >
                 Cancel
               </button>
@@ -1760,31 +1760,31 @@ export function AdminSubscriptionsView({
       {/* ── REJECTION MODAL ── */}
       {rejectingItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/15 rounded-3xl p-6 max-w-md w-full shadow-2xl flex flex-col gap-4">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 max-w-md w-full shadow-2xl flex flex-col gap-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
                 <span className="w-8 h-8 rounded-full bg-rose-500/20 text-rose-500 flex items-center justify-center font-normal text-sm">
                   ✕
                 </span>
-                <h3 className="font-normal text-slate-900 dark:text-white text-base">
+                <h3 className="font-normal text-slate-900 text-base">
                   Reject subscription request
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setRejectingItem(null)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+            <p className="text-xs text-slate-600 leading-relaxed font-normal">
               Are you sure you want to reject UTR <span className="font-mono text-purple-400 font-normal">{rejectingItem.transactionRef}</span> for <span className="text-white font-medium">{rejectingItem.hostId?.name}</span>?
             </p>
 
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-normal text-slate-700 dark:text-slate-300">
+              <label className="text-xs font-normal text-slate-700">
                 Reason for rejection:
               </label>
               <textarea
@@ -1792,7 +1792,7 @@ export function AdminSubscriptionsView({
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 placeholder="Explain why this transaction could not be verified..."
-                className="p-3 text-xs font-normal rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white outline-none focus:border-rose-500 resize-none"
+                className="p-3 text-xs font-normal rounded-xl bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-rose-500 resize-none"
               />
             </div>
 
@@ -1800,7 +1800,7 @@ export function AdminSubscriptionsView({
               <button
                 type="button"
                 onClick={() => setRejectingItem(null)}
-                className="flex-1 py-2.5 rounded-xl text-xs font-normal text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl text-xs font-normal text-slate-600 border border-slate-200 hover:bg-slate-100 cursor-pointer"
               >
                 Cancel
               </button>
@@ -1820,20 +1820,20 @@ export function AdminSubscriptionsView({
       {/* ── MANUAL PLAN ACTIVATION MODAL ── */}
       {isManualModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/15 rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl flex flex-col gap-4">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl flex flex-col gap-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
                 <span className="w-8 h-8 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center font-normal text-sm">
                   ⚡
                 </span>
-                <h3 className="font-normal text-slate-900 dark:text-white text-base">
+                <h3 className="font-normal text-slate-900 text-base">
                   Direct host plan activation
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsManualModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
               >
                 ✕
               </button>
@@ -1845,13 +1845,13 @@ export function AdminSubscriptionsView({
 
             {/* Select Host */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-normal text-slate-700 dark:text-slate-300">
+              <label className="text-xs font-normal text-slate-700">
                 Select host property:
               </label>
               <select
                 value={manualHostId}
                 onChange={(e) => setManualHostId(e.target.value)}
-                className="w-full px-3 py-2.5 text-xs font-normal rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white outline-none focus:border-purple-500"
+                className="w-full px-3 py-2.5 text-xs font-normal rounded-xl bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-purple-500"
               >
                 <option value="">-- Choose Host --</option>
                 {hosts.map((h) => (
@@ -1864,7 +1864,7 @@ export function AdminSubscriptionsView({
 
             {/* Duration Selector */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-normal text-slate-700 dark:text-slate-300">
+              <label className="text-xs font-normal text-slate-700">
                 Validity duration:
               </label>
               <div className="grid grid-cols-4 gap-2">
@@ -1881,7 +1881,7 @@ export function AdminSubscriptionsView({
                     className={`py-2 rounded-xl text-xs font-normal border transition-all cursor-pointer ${
                       manualDuration === d.m
                         ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-white/10'
+                        : 'bg-slate-100 text-slate-700 border-slate-200'
                     }`}
                   >
                     {d.label}
@@ -1898,7 +1898,7 @@ export function AdminSubscriptionsView({
                 value={manualNote}
                 onChange={(e) => setManualNote(e.target.value)}
                 placeholder="e.g. Promotional launch / Cash received"
-                className="px-3 py-2 text-xs font-normal rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white outline-none focus:border-purple-500"
+                className="px-3 py-2 text-xs font-normal rounded-xl bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-purple-500"
               />
             </div>
 
@@ -1907,7 +1907,7 @@ export function AdminSubscriptionsView({
               <button
                 type="button"
                 onClick={() => setIsManualModalOpen(false)}
-                className="flex-1 py-2.5 rounded-xl text-xs font-normal text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl text-xs font-normal text-slate-600 border border-slate-200 hover:bg-slate-100 cursor-pointer"
               >
                 Cancel
               </button>

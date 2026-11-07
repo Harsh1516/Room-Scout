@@ -188,20 +188,20 @@ export function DataPage({ onStayClick, onBookClick }) {
   const categories = ['All', 'PG', 'Flat', 'Hotel'];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 transition-colors duration-300 font-sans">
       {/* Top Fixed Header */}
-      <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-white/85 dark:bg-slate-900/85 border-b border-slate-200 dark:border-slate-800 shadow-xs">
+      <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-white/85 border-b border-slate-200 shadow-xs">
         <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between relative">
           {/* Left: Back Button */}
           <div className="flex items-center">
             <button
               type="button"
               onClick={() => navigate('/')}
-              className="apple-liquid-nav flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-slate-200/80 dark:border-white/15 hover:border-blue-500/40 hover:bg-white/40 dark:hover:bg-white/10 text-slate-950 dark:text-white text-xs sm:text-sm font-extrabold transition-all cursor-pointer shadow-xs active:scale-95"
+              className="apple-liquid-nav flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-slate-200/80 hover:border-blue-500/40 hover:bg-white/40 text-slate-950 text-xs sm:text-sm font-extrabold transition-all cursor-pointer shadow-xs active:scale-95"
               title="Back to Home"
             >
               <svg
-                className="w-4 h-4 text-blue-600 dark:text-blue-400"
+                className="w-4 h-4 text-blue-600"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -217,17 +217,17 @@ export function DataPage({ onStayClick, onBookClick }) {
           </div>
 
           {/* Center: Centered Stays Database Header Badge */}
-          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs select-none">
-            <div className="w-6 h-6 rounded-lg bg-blue-600/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full bg-slate-100/90 border border-slate-200/80 shadow-xs select-none">
+            <div className="w-6 h-6 rounded-lg bg-blue-600/10 text-blue-600 flex items-center justify-center">
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                 <ellipse cx="12" cy="5" rx="9" ry="3" />
                 <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
                 <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
               </svg>
             </div>
-            <h1 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <h1 className="text-xs sm:text-sm font-extrabold text-slate-900 flex items-center gap-2">
               <span>Stays Database</span>
-              <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 border border-blue-500/20">
                 {filteredStays.length} Stays
               </span>
             </h1>
@@ -239,7 +239,7 @@ export function DataPage({ onStayClick, onBookClick }) {
               type="button"
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-all border border-slate-200 dark:border-slate-700 flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-50"
+              className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all border border-slate-200 flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-50"
               title="Refresh Stays Data"
             >
               <svg
@@ -258,7 +258,7 @@ export function DataPage({ onStayClick, onBookClick }) {
         </div>
 
         {/* Filter & Search Bar */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 border-t border-slate-100 dark:border-slate-800/80 flex flex-col md:flex-row items-center justify-between gap-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-3">
           <div className="relative w-full md:w-80">
             <svg
               className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
@@ -275,13 +275,13 @@ export function DataPage({ onStayClick, onBookClick }) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by stay, location, host..."
-              className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500 transition-all"
+              className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-100/80 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500 transition-all"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
               >
                 ✕
               </button>
@@ -297,7 +297,7 @@ export function DataPage({ onStayClick, onBookClick }) {
                 className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                   selectedCategory === cat
                     ? 'bg-blue-600 text-white shadow-xs shadow-blue-500/20'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
                 {cat}
@@ -310,7 +310,7 @@ export function DataPage({ onStayClick, onBookClick }) {
             <select
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value)}
-              className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              className="px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-medium text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-blue-500 cursor-pointer"
             >
               <option value="recent-first">⚡ Recently Added First</option>
               <option value="price-asc">💵 Price: Low to High</option>
@@ -326,22 +326,22 @@ export function DataPage({ onStayClick, onBookClick }) {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="mb-6 bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-teal-600/10 border border-blue-500/20 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
               <span>All Added Stays & Live Properties</span>
-              <span className="text-xs px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold border border-emerald-500/20">
+              <span className="text-xs px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 font-semibold border border-emerald-500/20">
                 Sorted: Recently Added First
               </span>
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs text-slate-500 mt-1">
               Browse through all registered accommodation units, student PGs, hostels, luxury villas, and hotels with live rates and host records.
             </p>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-white/80 border border-slate-200 text-slate-700">
               Total: {stays.length}
             </span>
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-white/80 border border-slate-200 text-slate-700">
               Matching: {filteredStays.length}
             </span>
           </div>
@@ -355,15 +355,15 @@ export function DataPage({ onStayClick, onBookClick }) {
         )}
 
         {!loading && filteredStays.length === 0 && (
-          <div className="py-20 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8">
-            <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-3 text-slate-400">
+          <div className="py-20 text-center bg-white rounded-2xl border border-slate-200 p-8">
+            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3 text-slate-400">
               <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" x2="16.65" y1="21" y2="16.65" />
               </svg>
             </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">No properties found</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
+            <h3 className="text-base font-bold text-slate-900">No properties found</h3>
+            <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
               No stays match your current filter query. Try clearing the search term or resetting category filters.
             </p>
             <button
@@ -381,11 +381,11 @@ export function DataPage({ onStayClick, onBookClick }) {
         )}
 
         {!loading && filteredStays.length > 0 && (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-800/50 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <tr className="border-b border-slate-200 bg-slate-50/75 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                     <th className="py-3.5 px-4"># Property</th>
                     <th className="py-3.5 px-4">Type / Gender</th>
                     <th className="py-3.5 px-4">Location</th>
@@ -395,7 +395,7 @@ export function DataPage({ onStayClick, onBookClick }) {
                     <th className="py-3.5 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs">
+                <tbody className="divide-y divide-slate-100 text-xs">
                   {filteredStays.map((stay, idx) => {
                     const stayId = stay._id;
                     const dateLabel = formatStayDate(stay, idx);
@@ -412,23 +412,23 @@ export function DataPage({ onStayClick, onBookClick }) {
                     return (
                       <tr
                         key={stayId || idx}
-                        className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                        className="hover:bg-slate-50/80 transition-colors"
                       >
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
                             <img
                               src={stay.image || (stay.images && stay.images[0]) || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80'}
                               alt={stay.title || 'Property'}
-                              className="w-10 h-10 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 flex-shrink-0"
+                              className="w-10 h-10 rounded-lg object-cover bg-slate-100 flex-shrink-0"
                             />
                             <div>
-                              <div className="font-bold text-slate-900 dark:text-white line-clamp-1">
+                              <div className="font-bold text-slate-900 line-clamp-1">
                                 {stay.title || stay.propertyName || 'Property Stay'}
                               </div>
                               <div className="text-[11px] text-slate-400 flex items-center gap-2">
                                 <span>{stay.hostName || stay.host?.name ? `Host: ${stay.hostName || stay.host?.name}` : 'RoomScout Verified'}</span>
                                 {roomsCount > 0 && (
-                                  <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold border border-slate-200 dark:border-slate-700">
+                                  <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-slate-100 text-slate-600 font-semibold border border-slate-200">
                                     {roomsCount} {roomsCount === 1 ? 'Room' : 'Rooms'}
                                   </span>
                                 )}
@@ -439,7 +439,7 @@ export function DataPage({ onStayClick, onBookClick }) {
 
                         <td className="py-3 px-4">
                           <div className="flex flex-col gap-1 items-start">
-                            <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-semibold text-[10px]">
+                            <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-semibold text-[10px]">
                               {stay.type || stay.propertyType || 'PG'}
                             </span>
                             {(stay.genderType || stay.gender) && (
@@ -450,14 +450,14 @@ export function DataPage({ onStayClick, onBookClick }) {
                           </div>
                         </td>
 
-                        <td className="py-3 px-4 text-slate-600 dark:text-slate-300">
+                        <td className="py-3 px-4 text-slate-600">
                           {stay.location || (stay.city && stay.state ? `${stay.city}, ${stay.state}` : (stay.city || stay.address || '—'))}
                         </td>
 
                         <td className="py-3 px-4">
                           <div className="flex flex-col items-start">
                             <div className="flex items-baseline gap-1">
-                              <span className="font-bold text-slate-900 dark:text-white">
+                              <span className="font-bold text-slate-900">
                                 ₹{cleanPrice.toLocaleString('en-IN')}
                               </span>
                               <span className="text-[10px] text-slate-400 font-medium">
@@ -465,7 +465,7 @@ export function DataPage({ onStayClick, onBookClick }) {
                               </span>
                             </div>
                             {stay.roomRates?.[0]?.type && (
-                              <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">
+                              <span className="text-[10px] text-blue-600 font-medium">
                                 {stay.roomRates[0].type}
                               </span>
                             )}
@@ -481,14 +481,14 @@ export function DataPage({ onStayClick, onBookClick }) {
                               </span>
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono font-bold text-[10px] border border-slate-200 dark:border-slate-700">
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-mono font-bold text-[10px] border border-slate-200">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                               NEW
                             </span>
                           )}
                         </td>
 
-                        <td className="py-3 px-4 text-slate-500 dark:text-slate-400">
+                        <td className="py-3 px-4 text-slate-500">
                           {dateLabel}
                         </td>
 
@@ -497,7 +497,7 @@ export function DataPage({ onStayClick, onBookClick }) {
                             <button
                               type="button"
                               onClick={() => onStayClick && onStayClick(stay)}
-                              className="px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
+                              className="px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors cursor-pointer"
                             >
                               Details
                             </button>

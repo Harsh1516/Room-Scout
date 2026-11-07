@@ -13,8 +13,8 @@ export function PersonOccupancyGrid({
   occupiedCount = 0,
   className = 'py-0.5',
   iconClassName = '',
-  vacantColor = 'text-slate-400 dark:text-zinc-500',
-  occupiedColor = 'text-slate-900 dark:text-white',
+  vacantColor = 'text-slate-400',
+  occupiedColor = 'text-slate-900',
   customTitle,
 }) {
   const safeCapacity = Math.max(1, Math.min(10, Number(capacity) || 1));

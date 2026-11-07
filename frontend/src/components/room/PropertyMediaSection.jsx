@@ -29,7 +29,7 @@ export function PropertyMediaSection({
 
   return (
     <div className="lg:col-span-4 space-y-4 p-1 sm:p-1.5">
-      <div className="bg-white/85 dark:bg-slate-950/60 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-white/15 shadow-xl dark:shadow-[0_30px_90px_rgba(0,0,0,0.8)] backdrop-blur-2xl p-3 sm:p-4 transition-all duration-300">
+      <div className="bg-white/85 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-xl(0,0,0,0.8)] backdrop-blur-2xl p-3 sm:p-4 transition-all duration-300">
         {/* Main Featured Photo Box */}
         <div
           onClick={() => onOpenLightbox?.(true)}

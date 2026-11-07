@@ -197,7 +197,7 @@ export default function PlatformPaymentSettingsPage() {
     return (
       <div className="py-24 text-center flex flex-col items-center justify-center gap-3">
         <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-        <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
+        <span className="text-xs font-normal text-slate-500">
           Loading platform financial settings…
         </span>
       </div>
@@ -205,12 +205,12 @@ export default function PlatformPaymentSettingsPage() {
   }
 
   const inputClass =
-    'w-full rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-slate-50/80 dark:bg-white/[0.03] px-3.5 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all shadow-inner';
+    'w-full rounded-xl border border-slate-200/90 bg-slate-50/80 px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all shadow-inner';
 
   return (
     <section className="mx-auto w-full max-w-4xl space-y-6 animate-in fade-in duration-300">
       {/* ── HEADER ── */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-2 border-b border-slate-200/80 dark:border-white/[0.08]">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-2 border-b border-slate-200/80">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-purple-600/25 shrink-0">
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -220,41 +220,41 @@ export default function PlatformPaymentSettingsPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-normal text-purple-600 dark:text-purple-400">
+              <span className="text-xs font-normal text-purple-600">
                 Financial configuration
               </span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-normal text-slate-900 dark:text-white">
+            <h1 className="text-xl sm:text-2xl font-normal text-slate-900">
               UPI & subscription pricing
             </h1>
           </div>
         </div>
-        <div className="text-xs text-slate-500 dark:text-slate-400 max-w-xs text-left sm:text-right font-normal">
+        <div className="text-xs text-slate-500 max-w-xs text-left sm:text-right font-normal">
           Dynamic room-based rates automatically calculate subscription plans for hosts.
         </div>
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
         {/* ── CARD 1: PLATFORM UPI & PAYEE IDENTITY ── */}
-        <div className="rounded-3xl border border-slate-200/80 dark:border-white/[0.08] bg-white/80 dark:bg-[#0B0F1D]/85 backdrop-blur-2xl p-6 sm:p-7 shadow-xl relative overflow-hidden space-y-5">
+        <div className="rounded-3xl border border-slate-200/80 bg-white/80 backdrop-blur-2xl p-6 sm:p-7 shadow-xl relative overflow-hidden space-y-5">
           <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-purple-400/25 to-transparent pointer-events-none" />
 
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/[0.06] pb-3">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-purple-500" />
-              <h2 className="font-normal text-sm sm:text-base text-slate-900 dark:text-white">
+              <h2 className="font-normal text-sm sm:text-base text-slate-900">
                 Platform payment receiver details
               </h2>
             </div>
-            <span className="text-xs font-normal text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2.5 py-0.5 rounded-full border border-purple-500/20">
+            <span className="text-xs font-normal text-purple-600 bg-purple-500/10 px-2.5 py-0.5 rounded-full border border-purple-500/20">
               UPI Direct Crediting
             </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <label className="block space-y-1.5">
-              <span className="text-xs font-normal text-slate-700 dark:text-slate-300">
+              <span className="text-xs font-normal text-slate-700">
                 Payee / Account Holder Name
               </span>
               <input
@@ -267,7 +267,7 @@ export default function PlatformPaymentSettingsPage() {
             </label>
 
             <label className="block space-y-1.5">
-              <span className="text-xs font-normal text-slate-700 dark:text-slate-300">
+              <span className="text-xs font-normal text-slate-700">
                 Platform UPI ID (VPA)
               </span>
               <input
@@ -282,22 +282,22 @@ export default function PlatformPaymentSettingsPage() {
         </div>
 
         {/* ── CARD 2: PROPERTY TYPE PRICING MATRIX (₹ / ROOM / MONTH) ── */}
-        <div className="rounded-3xl border border-slate-200/80 dark:border-white/[0.08] bg-white/80 dark:bg-[#0B0F1D]/85 backdrop-blur-2xl p-6 sm:p-7 shadow-xl relative overflow-hidden space-y-5">
+        <div className="rounded-3xl border border-slate-200/80 bg-white/80 backdrop-blur-2xl p-6 sm:p-7 shadow-xl relative overflow-hidden space-y-5">
           <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-purple-400/25 to-transparent pointer-events-none" />
 
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 dark:border-white/[0.06] pb-3 gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-2">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <h2 className="font-normal text-sm sm:text-base text-slate-900 dark:text-white">
+              <h2 className="font-normal text-sm sm:text-base text-slate-900">
                 Property type rates (₹ / room / month)
               </h2>
             </div>
-            <span className="text-xs font-normal text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 self-start sm:self-auto">
+            <span className="text-xs font-normal text-emerald-600 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 self-start sm:self-auto">
               Dynamic Pricing Engine
             </span>
           </div>
 
-          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-normal">
+          <p className="text-xs text-slate-500 leading-relaxed font-normal">
             Configure the base rate per room per month for each property type. When a host views subscription plans, RoomScout multiplies their total room count by this rate.
           </p>
 
@@ -309,11 +309,11 @@ export default function PlatformPaymentSettingsPage() {
               return (
                 <div
                   key={pt.key}
-                  className="p-4 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-slate-50/70 dark:bg-white/[0.02] hover:border-purple-500/40 transition-all flex flex-col justify-between gap-3 shadow-2xs group"
+                  className="p-4 rounded-2xl border border-slate-200/80 bg-slate-50/70 hover:border-purple-500/40 transition-all flex flex-col justify-between gap-3 shadow-2xs group"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="font-normal text-sm text-slate-900 dark:text-white">
+                      <span className="font-normal text-sm text-slate-900">
                         {pt.label}
                       </span>
                       <span className="block text-[11px] text-slate-400 font-normal">
@@ -321,7 +321,7 @@ export default function PlatformPaymentSettingsPage() {
                       </span>
                     </div>
                     {example10Rooms > 0 && (
-                      <span className="text-[11px] font-normal text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 border border-emerald-500/25 px-2 py-0.5 rounded-lg whitespace-nowrap">
+                      <span className="text-[11px] font-normal text-emerald-700 bg-emerald-500/15 border border-emerald-500/25 px-2 py-0.5 rounded-lg whitespace-nowrap">
                         10 rms = ₹{example10Rooms}/mo
                       </span>
                     )}
@@ -335,7 +335,7 @@ export default function PlatformPaymentSettingsPage() {
                       type="number"
                       min="0"
                       step="1"
-                      className="w-full rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#080D1A] pl-8 pr-24 py-2.5 text-sm font-normal font-mono text-slate-900 dark:text-white outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 transition-all"
+                      className="w-full rounded-xl border border-slate-200/90 bg-white pl-8 pr-24 py-2.5 text-sm font-normal font-mono text-slate-900 outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 transition-all"
                       value={currentRate}
                       onChange={(e) => updatePropertyRate(pt.key, e.target.value)}
                       placeholder="e.g. 10"
@@ -352,26 +352,26 @@ export default function PlatformPaymentSettingsPage() {
         </div>
 
         {/* ── CARD 3: SUBSCRIPTION PLAN DURATION DISCOUNTS & LIVE CALCULATOR ── */}
-        <div className="rounded-3xl border border-slate-200/80 dark:border-white/[0.08] bg-white/80 dark:bg-[#0B0F1D]/85 backdrop-blur-2xl p-6 sm:p-7 shadow-xl relative overflow-hidden space-y-6">
+        <div className="rounded-3xl border border-slate-200/80 bg-white/80 backdrop-blur-2xl p-6 sm:p-7 shadow-xl relative overflow-hidden space-y-6">
           <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-purple-400/25 to-transparent pointer-events-none" />
 
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 dark:border-white/[0.06] pb-3 gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-2">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-indigo-500" />
-              <h2 className="font-normal text-sm sm:text-base text-slate-900 dark:text-white">
+              <h2 className="font-normal text-sm sm:text-base text-slate-900">
                 Subscription plans & discount calculation
               </h2>
             </div>
-            <span className="text-xs font-normal text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-500/20 self-start sm:self-auto">
+            <span className="text-xs font-normal text-indigo-600 bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-500/20 self-start sm:self-auto">
               1 Mo • 3 Mo (5% off) • 6 Mo (10% off)
             </span>
           </div>
 
           {/* Discount Settings Inputs */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-slate-50/70 dark:bg-white/[0.02] flex items-center justify-between gap-3">
+            <div className="p-4 rounded-2xl border border-slate-200/80 bg-slate-50/70 flex items-center justify-between gap-3">
               <div>
-                <span className="text-xs font-normal text-slate-900 dark:text-white block">
+                <span className="text-xs font-normal text-slate-900 block">
                   3 Months Plan Discount
                 </span>
                 <span className="text-[11px] text-slate-400 font-normal">
@@ -384,7 +384,7 @@ export default function PlatformPaymentSettingsPage() {
                   min="0"
                   max="100"
                   step="1"
-                  className="w-full rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#080D1A] px-3 py-2 text-right pr-7 text-xs font-normal font-mono text-slate-900 dark:text-white outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20"
+                  className="w-full rounded-xl border border-slate-200/90 bg-white px-3 py-2 text-right pr-7 text-xs font-normal font-mono text-slate-900 outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20"
                   value={form.discounts.quarterly}
                   onChange={(e) => updateDiscount('quarterly', e.target.value)}
                   required
@@ -395,9 +395,9 @@ export default function PlatformPaymentSettingsPage() {
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-slate-50/70 dark:bg-white/[0.02] flex items-center justify-between gap-3">
+            <div className="p-4 rounded-2xl border border-slate-200/80 bg-slate-50/70 flex items-center justify-between gap-3">
               <div>
-                <span className="text-xs font-normal text-slate-900 dark:text-white block">
+                <span className="text-xs font-normal text-slate-900 block">
                   6 Months Plan Discount
                 </span>
                 <span className="text-[11px] text-slate-400 font-normal">
@@ -410,7 +410,7 @@ export default function PlatformPaymentSettingsPage() {
                   min="0"
                   max="100"
                   step="1"
-                  className="w-full rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#080D1A] px-3 py-2 text-right pr-7 text-xs font-normal font-mono text-slate-900 dark:text-white outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20"
+                  className="w-full rounded-xl border border-slate-200/90 bg-white px-3 py-2 text-right pr-7 text-xs font-normal font-mono text-slate-900 outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20"
                   value={form.discounts.halfYearly}
                   onChange={(e) => updateDiscount('halfYearly', e.target.value)}
                   required
@@ -423,7 +423,7 @@ export default function PlatformPaymentSettingsPage() {
           </div>
 
           {/* ── Live Plan Calculator Preview ── */}
-          <div className="rounded-2xl border border-purple-500/20 bg-purple-500/[0.03] dark:bg-purple-950/20 p-4 sm:p-5 space-y-4">
+          <div className="rounded-2xl border border-purple-500/20 bg-purple-500/[0.03] p-4 sm:p-5 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <svg className="w-4 h-4 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -432,14 +432,14 @@ export default function PlatformPaymentSettingsPage() {
                   <line x1="8" y1="10" x2="16" y2="10" />
                   <line x1="8" y1="14" x2="16" y2="14" />
                 </svg>
-                <span className="text-xs font-normal text-slate-900 dark:text-white">
+                <span className="text-xs font-normal text-slate-900">
                   Live Plan Calculation Preview
                 </span>
               </div>
 
               {/* Room count selector */}
               <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500 dark:text-slate-400 font-normal">
+                <span className="text-xs text-slate-500 font-normal">
                   Test Room Count:
                 </span>
                 <input
@@ -449,7 +449,7 @@ export default function PlatformPaymentSettingsPage() {
                   step="1"
                   value={previewRooms}
                   onChange={(e) => setPreviewRooms(Math.max(1, Number(e.target.value) || 1))}
-                  className="w-16 rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-900 px-2 py-1 text-center text-xs font-mono text-slate-900 dark:text-white"
+                  className="w-16 rounded-lg border border-slate-300 bg-white px-2 py-1 text-center text-xs font-mono text-slate-900"
                 />
                 <span className="text-xs text-slate-400 font-normal">rooms</span>
               </div>
@@ -468,7 +468,7 @@ export default function PlatformPaymentSettingsPage() {
                     className={`px-3 py-1.5 rounded-xl text-xs font-normal transition-all cursor-pointer select-none flex items-center gap-1.5 shrink-0 ${
                       isSelected
                         ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                        : 'bg-white dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10 hover:border-purple-500/40'
+                        : 'bg-white text-slate-700 border border-slate-200 hover:border-purple-500/40'
                     }`}
                   >
                     <span>{pt.label}</span>
@@ -481,50 +481,50 @@ export default function PlatformPaymentSettingsPage() {
             {/* Calculated Plan Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
               {/* 1 Month Plan */}
-              <div className="p-4 rounded-xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-[#070B14] space-y-1.5">
+              <div className="p-4 rounded-xl border border-slate-200/90 bg-white space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-normal text-slate-900 dark:text-white">1 Month</span>
-                  <span className="text-[10px] font-normal text-slate-400 bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-normal text-slate-900">1 Month</span>
+                  <span className="text-[10px] font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
                     Base Plan
                   </span>
                 </div>
-                <div className="text-2xl font-normal font-mono text-slate-900 dark:text-white">
+                <div className="text-2xl font-normal font-mono text-slate-900">
                   ₹{calc1Month.toLocaleString('en-IN')}
                 </div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 font-normal">
+                <div className="text-[11px] text-slate-500 font-normal">
                   {safeRooms} rooms × ₹{activeRate} = ₹{calc1Month}/mo
                 </div>
               </div>
 
               {/* 3 Months Plan */}
-              <div className="p-4 rounded-xl border border-purple-500/40 bg-purple-500/[0.04] dark:bg-purple-950/20 space-y-1.5 relative overflow-hidden">
+              <div className="p-4 rounded-xl border border-purple-500/40 bg-purple-500/[0.04] space-y-1.5 relative overflow-hidden">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-normal text-slate-900 dark:text-white">3 Months</span>
-                  <span className="text-[10px] font-normal text-purple-700 dark:text-purple-300 bg-purple-500/15 border border-purple-500/25 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-normal text-slate-900">3 Months</span>
+                  <span className="text-[10px] font-normal text-purple-700 bg-purple-500/15 border border-purple-500/25 px-2 py-0.5 rounded-full">
                     {dQuarterly}% OFF
                   </span>
                 </div>
-                <div className="text-2xl font-normal font-mono text-purple-600 dark:text-purple-300">
+                <div className="text-2xl font-normal font-mono text-purple-600">
                   ₹{calc3Months.toLocaleString('en-IN')}
                 </div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 font-normal flex items-center justify-between">
+                <div className="text-[11px] text-slate-500 font-normal flex items-center justify-between">
                   <span>₹{Math.round(calc3Months / 3)}/mo</span>
                   <span className="text-emerald-500">Save ₹{monthlyBase * 3 - calc3Months}</span>
                 </div>
               </div>
 
               {/* 6 Months Plan */}
-              <div className="p-4 rounded-xl border border-emerald-500/40 bg-emerald-500/[0.04] dark:bg-emerald-950/20 space-y-1.5 relative overflow-hidden">
+              <div className="p-4 rounded-xl border border-emerald-500/40 bg-emerald-500/[0.04] space-y-1.5 relative overflow-hidden">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-normal text-slate-900 dark:text-white">6 Months</span>
-                  <span className="text-[10px] font-normal text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 border border-emerald-500/25 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-normal text-slate-900">6 Months</span>
+                  <span className="text-[10px] font-normal text-emerald-700 bg-emerald-500/15 border border-emerald-500/25 px-2 py-0.5 rounded-full">
                     {dHalfYearly}% OFF
                   </span>
                 </div>
-                <div className="text-2xl font-normal font-mono text-emerald-600 dark:text-emerald-300">
+                <div className="text-2xl font-normal font-mono text-emerald-600">
                   ₹{calc6Months.toLocaleString('en-IN')}
                 </div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 font-normal flex items-center justify-between">
+                <div className="text-[11px] text-slate-500 font-normal flex items-center justify-between">
                   <span>₹{Math.round(calc6Months / 6)}/mo</span>
                   <span className="text-emerald-500">Save ₹{monthlyBase * 6 - calc6Months}</span>
                 </div>

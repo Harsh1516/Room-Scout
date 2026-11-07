@@ -93,16 +93,16 @@ export function HostOccupantsList({
   };
 
   return (
-    <section className="w-full flex flex-col rounded-[26px] overflow-hidden transition-all bg-white dark:bg-black border border-slate-200/90 dark:border-zinc-800 shadow-sm select-none relative text-slate-900 dark:text-white">
+    <section className="w-full flex flex-col rounded-[26px] overflow-hidden transition-all bg-white border border-slate-200/90 shadow-sm select-none relative text-slate-900">
       {/* Header: Exact match to Mid Tab (HostScheduleCalendar) Header (Pic 2 Liquid Glass Theme in Light Mode, Luna Dark in Dark Mode) */}
-      <div className="px-4 sm:px-5 py-3 min-h-[60px] border-b border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-black text-slate-900 dark:text-white relative z-10 flex items-center justify-between gap-3">
-        <h3 className="text-slate-900 dark:text-white truncate font-extrabold tracking-tight text-base sm:text-lg lg:text-[18px] leading-normal">
+      <div className="px-4 sm:px-5 py-3 min-h-[60px] border-b border-slate-200/90 bg-white text-slate-900 relative z-10 flex items-center justify-between gap-3">
+        <h3 className="text-slate-900 truncate font-extrabold tracking-tight text-base sm:text-lg lg:text-[18px] leading-normal">
           Occupants
         </h3>
 
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <span
-              className="h-6 px-2.5 text-[11px] rounded-full bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 font-bold shadow-2xs select-none flex items-center justify-center leading-normal backdrop-blur-xs"
+              className="h-6 px-2.5 text-[11px] rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold shadow-2xs select-none flex items-center justify-center leading-normal backdrop-blur-xs"
               title={`${roomOccupantsList.length} active occupant${roomOccupantsList.length === 1 ? '' : 's'} in ${cleanRoomDisplay || 'this room'}`}
             >
               {roomOccupantsList.length} Active
@@ -113,7 +113,7 @@ export function HostOccupantsList({
                 <button
                   type="button"
                   onClick={handleScrollUp}
-                  className="w-6 h-6 rounded-lg flex items-center justify-center text-purple-600 dark:text-purple-400 hover:text-slate-900 hover:bg-white/40 dark:text-white/90 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer"
+                  className="w-6 h-6 rounded-lg flex items-center justify-center text-purple-600 hover:text-slate-900 hover:bg-white/40 transition-colors cursor-pointer"
                   title="Scroll up"
                 >
                   <span className="material-symbols-outlined text-[18px] leading-none">keyboard_arrow_up</span>
@@ -121,7 +121,7 @@ export function HostOccupantsList({
                 <button
                   type="button"
                   onClick={handleScrollDown}
-                  className="w-6 h-6 rounded-lg flex items-center justify-center text-purple-600 dark:text-purple-400 hover:text-slate-900 hover:bg-white/40 dark:text-white/90 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer"
+                  className="w-6 h-6 rounded-lg flex items-center justify-center text-purple-600 hover:text-slate-900 hover:bg-white/40 transition-colors cursor-pointer"
                   title="Scroll down"
                 >
                   <span className="material-symbols-outlined text-[18px] leading-none">keyboard_arrow_down</span>
@@ -132,9 +132,9 @@ export function HostOccupantsList({
       </div>
 
       {/* Content Area matching Mid Tab's padding and layout */}
-      <div className="px-4 sm:px-5 pb-3.5 sm:pb-4 pt-3.5 sm:pt-4 flex flex-col gap-2.5 flex-1 min-h-0 relative z-10 bg-white dark:bg-[#0c1825]">
-        {/* Inner Box: Exactly matching Mid Tab's inner container bg-slate-50/50 dark:bg-[#071320] border-slate-200/80 dark:border-[#1a2d42] */}
-        <div className="p-3 sm:p-3.5 rounded-2xl sm:rounded-3xl bg-slate-50/50 dark:bg-[#071320] border border-slate-200/80 dark:border-[#1a2d42] shadow-2xs flex-1 flex flex-col min-h-0 justify-center">
+      <div className="px-4 sm:px-5 pb-3.5 sm:pb-4 pt-3.5 sm:pt-4 flex flex-col gap-2.5 flex-1 min-h-0 relative z-10 bg-white">
+        {/* Inner Box: Exactly matching Mid Tab's inner container bg-slate-50/50 border-slate-200/80 */}
+        <div className="p-3 sm:p-3.5 rounded-2xl sm:rounded-3xl bg-slate-50/50 border border-slate-200/80 shadow-2xs flex-1 flex flex-col min-h-0 justify-center">
           {roomOccupantsList.length > 0 ? (
             <div className="relative flex items-center gap-2.5 flex-1 min-h-0">
               {/* Scrollable list: exactly 3 occupant cards visible at a time (max-h-[336px]), rest scrollable */}
@@ -184,8 +184,8 @@ export function HostOccupantsList({
                       }}
                       className={`h-[104px] shrink-0 flex flex-col justify-between p-3 sm:p-3.5 rounded-2xl w-full transition-all duration-200 cursor-pointer select-none group snap-start ${
                         isSelected
-                          ? 'bg-slate-50 dark:bg-[#122438] border-2 border-[#c0c1ff] shadow-room-open-selected z-10'
-                          : 'bg-slate-50/70 dark:bg-[#0c1825] border border-slate-200/80 dark:border-[#1f3045] hover:border-slate-300 dark:hover:border-[#2f4663] hover:bg-slate-100/50 dark:hover:bg-[#0e1e2e]'
+                          ? 'bg-slate-50 border-2 border-[#c0c1ff] shadow-room-open-selected z-10'
+                          : 'bg-slate-50/70 border border-slate-200/80 hover:border-slate-300 hover:bg-slate-100/50'
                       }`}
                       title={isSelected ? 'Selected booked guest - click to view resident pass' : 'Click to view resident details pass'}
                     >
@@ -196,15 +196,15 @@ export function HostOccupantsList({
                             className={`w-7.5 h-7.5 rounded-full flex items-center justify-center text-[10.5px] font-black shrink-0 transition-all shadow-2xs ${
                               isSelected
                                 ? 'bg-[#c0c1ff] text-[#07006c]'
-                                : 'bg-slate-200/80 dark:bg-purple-600 border border-slate-300 dark:border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200'
+                                : 'bg-slate-200/80 border border-slate-300 text-slate-700'
                             }`}
                           >
                             {(occupant.name || 'G').slice(0, 2).toUpperCase()}
                           </div>
                           <span className={`text-[13.5px] sm:text-[14px] font-extrabold tracking-tight truncate max-w-[170px] sm:max-w-[200px] leading-tight ${
                             isSelected
-                              ? 'text-[#5254cf] dark:text-[#c0c1ff]'
-                              : 'text-slate-900 dark:text-white'
+                              ? 'text-[#5254cf]'
+                              : 'text-slate-900'
                           }`}>
                             {occupant.name}
                           </span>
@@ -215,7 +215,7 @@ export function HostOccupantsList({
                             <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-2xs leading-none ${
                               isSelected
                                 ? 'bg-[#c0c1ff] text-[#07006c]'
-                                : 'bg-white dark:bg-[#071320] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-[#1a2d42]'
+                                : 'bg-white text-slate-600 border border-slate-200'
                             }`}>
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                               <span>{statusBadgeText}</span>
@@ -234,7 +234,7 @@ export function HostOccupantsList({
                                 setConfirmDeleteId((prev) => (prev === occId ? null : occId));
                               }
                             }}
-                            className="w-6 h-6 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer flex items-center justify-center shrink-0"
+                            className="w-6 h-6 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer flex items-center justify-center shrink-0"
                             title="Remove Occupant"
                           >
                             <span className="material-symbols-outlined text-[14px] leading-none">close</span>
@@ -243,8 +243,8 @@ export function HostOccupantsList({
                       </div>
 
                       {/* Bottom Row: Clean Price on left, Minimal & Premium Check-Out Button on right */}
-                      <div className="flex items-center justify-between gap-2.5 w-full pt-2 border-t border-slate-200/80 dark:border-[#1f3045]">
-                        <span className="text-[15px] sm:text-base font-black text-emerald-600 dark:text-[#00e599] tracking-tight leading-none">
+                      <div className="flex items-center justify-between gap-2.5 w-full pt-2 border-t border-slate-200/80">
+                        <span className="text-[15px] sm:text-base font-black text-emerald-600 tracking-tight leading-none">
                           ₹{Number(occupant.totalAmount || occupant.price || 0).toLocaleString('en-IN')}
                         </span>
 
@@ -258,7 +258,7 @@ export function HostOccupantsList({
                                 setConfirmAction(null);
                                 if (typeof setConfirmDeleteId === 'function') setConfirmDeleteId(null);
                               }}
-                              className="h-7 px-3 rounded-lg bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 border border-slate-200 dark:border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 text-[10.5px] font-bold cursor-pointer transition-colors flex items-center justify-center active:scale-95 leading-none"
+                              className="h-7 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-[10.5px] font-bold cursor-pointer transition-colors flex items-center justify-center active:scale-95 leading-none"
                             >
                               Cancel
                             </button>
@@ -288,7 +288,7 @@ export function HostOccupantsList({
                               setConfirmAction({ _id: occId, type: 'checkout' });
                               if (typeof setConfirmDeleteId === 'function') setConfirmDeleteId(occId);
                             }}
-                            className="group/btn h-7 px-3.5 rounded-lg text-[11px] font-bold tracking-tight text-rose-600 dark:text-rose-300 hover:text-white bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-600 dark:hover:bg-rose-600 border border-rose-200 dark:border-rose-500/30 hover:border-rose-600 shadow-2xs hover:shadow-xs transition-all duration-200 active:scale-95 cursor-pointer shrink-0 leading-none flex items-center justify-center"
+                            className="group/btn h-7 px-3.5 rounded-lg text-[11px] font-bold tracking-tight text-rose-600 hover:text-white bg-rose-50 hover:bg-rose-600 border border-rose-200 hover:border-rose-600 shadow-2xs hover:shadow-xs transition-all duration-200 active:scale-95 cursor-pointer shrink-0 leading-none flex items-center justify-center"
                             title="Check-Out Occupant"
                           >
                             <span>Check-Out</span>
@@ -302,7 +302,7 @@ export function HostOccupantsList({
 
               {/* Vertical Direction Dots Carousel */}
               {roomOccupantsList.length > 0 && (
-                <div className="flex flex-col items-center justify-center gap-1.5 shrink-0 px-1 py-2 bg-white/80 dark:bg-[#0c1825] rounded-full border border-slate-200/80 dark:border-[#1a2d42] my-auto shadow-2xs">
+                <div className="flex flex-col items-center justify-center gap-1.5 shrink-0 px-1 py-2 bg-white/80 rounded-full border border-slate-200/80 my-auto shadow-2xs">
                   {roomOccupantsList.map((_, pIdx) => {
                     const isActive = activeCarouselIdx === pIdx;
                     return (
@@ -321,7 +321,7 @@ export function HostOccupantsList({
                         className={`transition-all duration-200 rounded-full cursor-pointer ${
                           isActive
                             ? 'w-1.5 h-4.5 bg-[#c0c1ff] shadow-[0_0_8px_rgba(192,193,255,0.6)]'
-                            : 'w-1.5 h-1.5 bg-slate-300 dark:bg-slate-600 hover:bg-slate-400 dark:hover:bg-slate-500'
+                            : 'w-1.5 h-1.5 bg-slate-300 hover:bg-slate-400'
                         }`}
                         title={`Occupant ${pIdx + 1}`}
                       />
@@ -331,15 +331,15 @@ export function HostOccupantsList({
               )}
             </div>
           ) : (
-            <div className="py-7 px-4 text-center space-y-3 rounded-xl sm:rounded-2xl border border-dashed border-slate-300 dark:border-[#1f3045] bg-white/50 dark:bg-[#0c1825]/50">
-              <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+            <div className="py-7 px-4 text-center space-y-3 rounded-xl sm:rounded-2xl border border-dashed border-slate-300 bg-white/50">
+              <p className="text-xs font-semibold text-slate-600">
                 No occupants scheduled for {cleanRoomDisplay || 'this room'}.
               </p>
               {onAddGuestClick && (
                 <button
                   type="button"
                   onClick={onAddGuestClick}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-900 border border-slate-200/80 dark:border-transparent text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-900 border border-slate-200/80 text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
                 >
                   <span className="material-symbols-outlined text-[15px]">person_add</span>
                   <span>Add Guest</span>
@@ -352,11 +352,11 @@ export function HostOccupantsList({
 
       {/* Footer: + Add Guest Button in Solid White Color */}
       {onAddGuestClick && (
-        <div className="pt-2 sm:pt-2.5 pb-2.5 sm:pb-3 px-4 sm:px-5 border-t border-slate-100 dark:border-[#1a2d42]/60 bg-white dark:bg-[#0c1825] flex items-center relative z-10">
+        <div className="pt-2 sm:pt-2.5 pb-2.5 sm:pb-3 px-4 sm:px-5 border-t border-slate-100 bg-white flex items-center relative z-10">
           <button
             type="button"
             onClick={onAddGuestClick}
-            className="w-full h-8.5 px-4 rounded-xl text-xs gap-1.5 font-bold transition-all flex items-center justify-center cursor-pointer shadow-xs leading-none bg-white hover:bg-slate-100 text-slate-900 border border-slate-200/80 dark:border-transparent active:scale-95"
+            className="w-full h-8.5 px-4 rounded-xl text-xs gap-1.5 font-bold transition-all flex items-center justify-center cursor-pointer shadow-xs leading-none bg-white hover:bg-slate-100 text-slate-900 border border-slate-200/80 active:scale-95"
             title="Add a new guest to this room"
           >
             <span className="material-symbols-outlined text-[16px] leading-none shrink-0 font-bold">person_add</span>

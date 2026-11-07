@@ -144,15 +144,15 @@ export function RoomCategoryCarousel({
               className={`snap-start shrink-0 w-[calc((100%-8px)/2)] min-w-0 h-[68px] sm:h-[78px] lg:h-auto lg:aspect-square rounded-xl sm:rounded-2xl border transition-colors cursor-pointer flex flex-col items-center justify-center p-1.5 sm:p-2 text-center select-none relative group ${
                 isSelectedRoom
                   ? subTab === 'checkout'
-                    ? 'bg-sky-50 dark:bg-[#152338] border-2 border-sky-500 dark:border-sky-400 ring-2 ring-sky-500/25 shadow-md shadow-sky-500/10'
+                    ? 'bg-sky-50 border-2 border-sky-500 ring-2 ring-sky-500/25 shadow-md shadow-sky-500/10'
                     : subTab === 'checkin'
-                    ? 'bg-emerald-50 dark:bg-[#0c221a] border-2 border-emerald-500 dark:border-emerald-400 ring-2 ring-emerald-500/25 shadow-md shadow-emerald-500/10'
-                    : 'bg-orange-50 dark:bg-[#251509] border-2 border-orange-500 dark:border-orange-400 ring-2 ring-orange-500/25 shadow-md shadow-orange-500/10'
+                    ? 'bg-emerald-50 border-2 border-emerald-500 ring-2 ring-emerald-500/25 shadow-md shadow-emerald-500/10'
+                    : 'bg-orange-50 border-2 border-orange-500 ring-2 ring-orange-500/25 shadow-md shadow-orange-500/10'
                   : subTab === 'checkout'
-                  ? 'bg-white dark:bg-[#131f33] border-slate-200/90 dark:border-[#223554] shadow-xs hover:border-sky-500 hover:shadow-md dark:hover:border-sky-400'
+                  ? 'bg-white border-slate-200/90 shadow-xs hover:border-sky-500 hover:shadow-md'
                   : subTab === 'checkin'
-                  ? 'bg-white dark:bg-[#131f33] border-slate-200/90 dark:border-[#223554] shadow-xs hover:border-emerald-500 hover:shadow-md dark:hover:border-emerald-400'
-                  : 'bg-white dark:bg-[#131f33] border-slate-200/90 dark:border-[#223554] shadow-xs hover:border-orange-500 hover:shadow-md dark:hover:border-orange-400'
+                  ? 'bg-white border-slate-200/90 shadow-xs hover:border-emerald-500 hover:shadow-md'
+                  : 'bg-white border-slate-200/90 shadow-xs hover:border-orange-500 hover:shadow-md'
               }`}
             >
               {/* Selected checkmark indicator */}
@@ -175,15 +175,15 @@ export function RoomCategoryCarousel({
                 className={`text-sm sm:text-base lg:text-lg font-black tracking-tight leading-none ${
                   isSelectedRoom
                     ? subTab === 'checkout'
-                      ? 'text-sky-950 dark:text-sky-100'
+                      ? 'text-sky-950'
                       : subTab === 'checkin'
-                      ? 'text-emerald-950 dark:text-emerald-100'
-                      : 'text-orange-950 dark:text-orange-100'
+                      ? 'text-emerald-950'
+                      : 'text-orange-950'
                     : subTab === 'checkout'
-                    ? 'text-slate-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors'
+                    ? 'text-slate-900 group-hover:text-sky-600 transition-colors'
                     : subTab === 'checkin'
-                    ? 'text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors'
-                    : 'text-slate-900 dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors'
+                    ? 'text-slate-900 group-hover:text-emerald-600 transition-colors'
+                    : 'text-slate-900 group-hover:text-orange-600 transition-colors'
                 }`}
               >
                 {rm.roomNumber}
@@ -194,10 +194,10 @@ export function RoomCategoryCarousel({
                 <div
                   className={`mt-1 sm:mt-1.5 flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold shadow-2xs leading-none ${
                     subTab === 'checkout'
-                      ? 'bg-sky-500/15 text-sky-800 dark:text-sky-300 border border-sky-500/30'
+                      ? 'bg-sky-500/15 text-sky-800 border border-sky-500/30'
                       : subTab === 'checkin'
-                      ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30'
-                      : 'bg-orange-500/15 text-orange-800 dark:text-orange-300 border border-orange-500/30'
+                      ? 'bg-emerald-500/15 text-emerald-800 border border-emerald-500/30'
+                      : 'bg-orange-500/15 text-orange-800 border border-orange-500/30'
                   }`}
                 >
                   <span
@@ -223,11 +223,11 @@ export function RoomCategoryCarousel({
                   className={`mt-1 sm:mt-1.5 px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold border leading-none ${
                     isSelectedRoom
                       ? subTab === 'checkout'
-                        ? 'bg-sky-500/15 text-sky-800 dark:text-sky-300 border-sky-500/30'
+                        ? 'bg-sky-500/15 text-sky-800 border-sky-500/30'
                         : subTab === 'checkin'
-                        ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30'
-                        : 'bg-orange-500/15 text-orange-800 dark:text-orange-300 border-orange-500/30'
-                      : 'bg-slate-100 dark:bg-slate-800/80 text-slate-400 dark:text-slate-500 border-slate-200/60 dark:border-slate-700/60'
+                        ? 'bg-emerald-500/15 text-emerald-800 border-emerald-500/30'
+                        : 'bg-orange-500/15 text-orange-800 border-orange-500/30'
+                      : 'bg-slate-100 text-slate-400 border-slate-200/60'
                   }`}
                 >
                   <span>
@@ -252,7 +252,7 @@ export function RoomCategoryCarousel({
             type="button"
             disabled={!canScrollLeft}
             onClick={handleScrollLeft}
-            className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center text-slate-600 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 active:scale-90 disabled:opacity-20 cursor-pointer disabled:pointer-events-none transition-all shadow-2xs"
+            className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 active:scale-90 disabled:opacity-20 cursor-pointer disabled:pointer-events-none transition-all shadow-2xs"
             aria-label="Previous rooms"
           >
             <ChevronLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
@@ -267,8 +267,8 @@ export function RoomCategoryCarousel({
                 aria-label={`Go to room page ${pIdx + 1}`}
                 className={`transition-all duration-300 rounded-full cursor-pointer ${
                   activePage === pIdx
-                    ? 'w-3.5 sm:w-4 h-1.5 bg-indigo-600 dark:bg-indigo-400 shadow-xs'
-                    : 'w-1.5 h-1.5 bg-slate-300 hover:bg-slate-400 dark:bg-slate-700 dark:hover:bg-slate-500'
+                    ? 'w-3.5 sm:w-4 h-1.5 bg-indigo-600 shadow-xs'
+                    : 'w-1.5 h-1.5 bg-slate-300 hover:bg-slate-400'
                 }`}
               />
             ))}
@@ -278,7 +278,7 @@ export function RoomCategoryCarousel({
             type="button"
             disabled={!canScrollRight}
             onClick={handleScrollRight}
-            className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center text-slate-600 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 active:scale-90 disabled:opacity-20 cursor-pointer disabled:pointer-events-none transition-all shadow-2xs"
+            className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 active:scale-90 disabled:opacity-20 cursor-pointer disabled:pointer-events-none transition-all shadow-2xs"
             aria-label="Next rooms"
           >
             <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />

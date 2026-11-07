@@ -24,7 +24,7 @@ export function PropertyTabHeaderActions({
             type="button"
             disabled={isSaving}
             onClick={onCancel}
-            className="px-3 py-1.5 rounded-xl border border-slate-200/90 dark:border-zinc-700 max-md:bg-white/10 max-md:border-white/15 max-md:text-white bg-white/90 hover:bg-slate-100 dark:bg-zinc-800/90 dark:hover:bg-zinc-700/80 text-slate-700 dark:text-zinc-200 text-xs font-medium transition-colors cursor-pointer active:scale-95 disabled:opacity-50 select-none shadow-2xs"
+            className="px-3 py-1.5 rounded-xl border border-slate-200/90 max-md:bg-white/10 max-md:border-white/15 max-md:text-white bg-white/90 hover:bg-slate-100 text-slate-700 text-xs font-medium transition-colors cursor-pointer active:scale-95 disabled:opacity-50 select-none shadow-2xs"
           >
             Cancel
           </motion.button>

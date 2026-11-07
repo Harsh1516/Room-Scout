@@ -56,7 +56,7 @@ export const HostRoomsDropdown = React.memo(function HostRoomsDropdown({ host })
   if (!categories || categories.length === 0) {
     return (
       <div className="flex items-center justify-center py-2">
-        <span className="inline-block px-3 py-1 rounded-lg bg-slate-100/90 dark:bg-slate-800/80 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700/60 text-[11px] font-medium shadow-2xs select-none">
+        <span className="inline-block px-3 py-1 rounded-lg bg-slate-100/90 text-slate-400 border border-slate-200 text-[11px] font-medium shadow-2xs select-none">
           No room categories
         </span>
       </div>
@@ -64,7 +64,7 @@ export const HostRoomsDropdown = React.memo(function HostRoomsDropdown({ host })
   }
 
   return (
-    <div className="w-full divide-y divide-slate-200/80 dark:divide-slate-800 px-1">
+    <div className="w-full divide-y divide-slate-200/80 px-1">
       {categories.map((cat, idx) => (
         <div
           key={cat._id || idx}
@@ -72,23 +72,23 @@ export const HostRoomsDropdown = React.memo(function HostRoomsDropdown({ host })
         >
           {/* Left Side: Room Category Name */}
           <div
-            className="col-span-5 text-left font-normal text-slate-900 dark:text-slate-100 truncate"
+            className="col-span-5 text-left font-normal text-slate-900 truncate"
             title={cat.type}
           >
             {cat.type}
           </div>
 
           {/* Mid Side: Price Details with Billing Cycle */}
-          <div className="col-span-4 text-center font-normal text-slate-800 dark:text-slate-200 whitespace-nowrap">
+          <div className="col-span-4 text-center font-normal text-slate-800 whitespace-nowrap">
             <span>{cat.price}</span>
-            <span className="text-[10px] font-normal text-slate-500 dark:text-slate-400 ml-0.5">
+            <span className="text-[10px] font-normal text-slate-500 ml-0.5">
               {cat.rateUnit}
             </span>
           </div>
 
           {/* Right Side: Room Count inside Category */}
           <div className="col-span-3 text-right whitespace-nowrap">
-            <span className="inline-block px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60 text-[10px] font-normal">
+            <span className="inline-block px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200/60 text-[10px] font-normal">
               {cat.count} {cat.count === 1 ? 'Room' : 'Rooms'}
             </span>
           </div>

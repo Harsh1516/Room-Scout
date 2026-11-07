@@ -103,7 +103,7 @@ export function Login({ onLoginClick }) {
       <button
         type="button"
         onClick={handleLoginClick}
-        className="apple-liquid-nav border border-slate-200/80 dark:border-white/15 text-slate-900 dark:text-white font-bold text-xs sm:text-sm tracking-wider h-11 sm:h-11.5 px-4.5 sm:px-5 rounded-full shadow-xs transition-none cursor-pointer flex items-center gap-2 select-none active:scale-95 focus:outline-none focus:ring-0"
+        className="apple-liquid-nav border border-slate-200/80 text-slate-900 font-bold text-xs sm:text-sm tracking-wider h-11 sm:h-11.5 px-4.5 sm:px-5 rounded-full shadow-xs transition-none cursor-pointer flex items-center gap-2 select-none active:scale-95 focus:outline-none focus:ring-0"
       >
         <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
         <span>LOGIN</span>
@@ -121,13 +121,13 @@ export function Login({ onLoginClick }) {
         <button
           type="button"
           onClick={() => setDropdownOpen((prev) => !prev)}
-          className={`relative w-11 h-11 sm:w-11.5 sm:h-11.5 rounded-full text-white font-black text-sm sm:text-base shadow-xs border border-slate-200/80 dark:border-white/20 transition-none flex items-center justify-center cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 touch-manipulation bg-linear-to-tr from-indigo-600/90 via-blue-600/90 to-cyan-500/90`}
+          className={`relative w-11 h-11 sm:w-11.5 sm:h-11.5 rounded-full text-white font-black text-sm sm:text-base shadow-xs border border-slate-200/80 transition-none flex items-center justify-center cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 touch-manipulation bg-linear-to-tr from-indigo-600/90 via-blue-600/90 to-cyan-500/90`}
           title={`Logged in as ${user.name}`}
           aria-label="User profile menu"
         >
           <span>{initials}</span>
           {/* Online indicator dot — no role badge */}
-          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-emerald-400 border-2 border-white dark:border-slate-900 shadow-xs" />
+          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-emerald-400 border-2 border-white shadow-xs" />
         </button>
 
         {/* Small Sleek Dropdown Menu Tab (Pure White Background with No Transparency) */}
@@ -139,10 +139,10 @@ export function Login({ onLoginClick }) {
               exit={{ opacity: 0, y: -2, transition: { duration: 0.05, ease: 'easeIn' } }}
               transition={{ duration: 0.08, ease: 'easeOut' }}
               style={{ transformOrigin: 'top right' }}
-              className="apple-profile-dropdown absolute right-0 top-10 sm:top-12 w-[225px] sm:w-[255px] max-w-[calc(100vw-20px)] rounded-xl sm:rounded-2xl p-2 sm:p-2.5 z-50 space-y-1 sm:space-y-1.5 select-none origin-top-right will-change-transform bg-white dark:bg-[#0f1117] border border-slate-200/90 dark:border-white/[0.08] shadow-2xl"
+              className="apple-profile-dropdown absolute right-0 top-10 sm:top-12 w-[225px] sm:w-[255px] max-w-[calc(100vw-20px)] rounded-xl sm:rounded-2xl p-2 sm:p-2.5 z-50 space-y-1 sm:space-y-1.5 select-none origin-top-right will-change-transform bg-white border border-slate-200/90 shadow-2xl"
             >
               {/* User Header Profile Card */}
-              <div className="flex items-center gap-2 sm:gap-2.5 pb-2 border-b border-slate-200 dark:border-white/[0.08]">
+              <div className="flex items-center gap-2 sm:gap-2.5 pb-2 border-b border-slate-200">
                 <div
                   className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl text-white font-bold text-[10px] sm:text-xs flex items-center justify-center shadow-xs shrink-0 ${
                     isHost
@@ -153,10 +153,10 @@ export function Login({ onLoginClick }) {
                   {initials}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-bold text-[11px] sm:text-xs text-slate-900 dark:text-white truncate leading-tight">
+                  <div className="font-bold text-[11px] sm:text-xs text-slate-900 truncate leading-tight">
                     {user.name}
                   </div>
-                  <div className="text-[9.5px] sm:text-[10px] text-slate-500 dark:text-slate-400 truncate font-normal leading-tight mt-0.5">
+                  <div className="text-[9.5px] sm:text-[10px] text-slate-500 truncate font-normal leading-tight mt-0.5">
                     {user.email}
                   </div>
                 </div>
@@ -172,10 +172,10 @@ export function Login({ onLoginClick }) {
                     setDropdownOpen(false);
                     navigate('/account');
                   }}
-                  className="group w-full text-left px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg sm:rounded-xl text-[10.5px] sm:text-[11.5px] font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-transparent hover:bg-slate-100 dark:hover:bg-white/[0.08] border border-transparent hover:border-slate-200/80 dark:hover:border-white/[0.08] text-slate-800 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:shadow-2xs"
+                  className="group w-full text-left px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg sm:rounded-xl text-[10.5px] sm:text-[11.5px] font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-transparent hover:bg-slate-100 border border-transparent hover:border-slate-200/80 text-slate-800 hover:text-slate-900 hover:shadow-2xs"
                 >
                   <div className="flex items-center gap-2">
-                    <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center border border-cyan-500/20 group-hover:scale-105 group-hover:bg-cyan-500/20 transition-all duration-150 shrink-0">
+                    <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-cyan-500/10 text-cyan-600 flex items-center justify-center border border-cyan-500/20 group-hover:scale-105 group-hover:bg-cyan-500/20 transition-all duration-150 shrink-0">
                       <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
                         <circle cx="12" cy="7" r="4" />
@@ -183,7 +183,7 @@ export function Login({ onLoginClick }) {
                     </div>
                     <span className="truncate">Account</span>
                   </div>
-                  <span className="text-[9px] sm:text-[9.5px] text-slate-400 dark:text-slate-500 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 font-semibold group-hover:translate-x-0.5 transition-all duration-150 shrink-0">
+                  <span className="text-[9px] sm:text-[9.5px] text-slate-400 group-hover:text-cyan-600 font-semibold group-hover:translate-x-0.5 transition-all duration-150 shrink-0">
                     Manage →
                   </span>
                 </button>
@@ -195,10 +195,10 @@ export function Login({ onLoginClick }) {
                     setDropdownOpen(false);
                     setActiveModal('settings');
                   }}
-                  className="group w-full text-left px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg sm:rounded-xl text-[10.5px] sm:text-[11.5px] font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-transparent hover:bg-slate-100 dark:hover:bg-white/[0.08] border border-transparent hover:border-slate-200/80 dark:hover:border-white/[0.08] text-slate-800 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:shadow-2xs"
+                  className="group w-full text-left px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg sm:rounded-xl text-[10.5px] sm:text-[11.5px] font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-transparent hover:bg-slate-100 border border-transparent hover:border-slate-200/80 text-slate-800 hover:text-slate-900 hover:shadow-2xs"
                 >
                   <div className="flex items-center gap-2">
-                    <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-300 flex items-center justify-center border border-slate-400/20 group-hover:rotate-45 group-hover:scale-105 transition-all duration-200 shrink-0">
+                    <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-slate-500/10 text-slate-600 flex items-center justify-center border border-slate-400/20 group-hover:rotate-45 group-hover:scale-105 transition-all duration-200 shrink-0">
                       <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="3" />
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
@@ -206,7 +206,7 @@ export function Login({ onLoginClick }) {
                     </div>
                     <span className="truncate">Settings</span>
                   </div>
-                  <span className="text-[9px] sm:text-[9.5px] text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300 font-semibold transition-colors shrink-0">Options</span>
+                  <span className="text-[9px] sm:text-[9.5px] text-slate-400 group-hover:text-slate-600 font-semibold transition-colors shrink-0">Options</span>
                 </button>
 
                 {/* 3. Updates Button */}
@@ -216,10 +216,10 @@ export function Login({ onLoginClick }) {
                     setDropdownOpen(false);
                     setActiveModal('updates');
                   }}
-                  className="group w-full text-left px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg sm:rounded-xl text-[10.5px] sm:text-[11.5px] font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-transparent hover:bg-slate-100 dark:hover:bg-white/[0.08] border border-transparent hover:border-slate-200/80 dark:hover:border-white/[0.08] text-slate-800 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:shadow-2xs"
+                  className="group w-full text-left px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg sm:rounded-xl text-[10.5px] sm:text-[11.5px] font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-transparent hover:bg-slate-100 border border-transparent hover:border-slate-200/80 text-slate-800 hover:text-slate-900 hover:shadow-2xs"
                 >
                   <div className="flex items-center gap-2">
-                    <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20 group-hover:scale-105 group-hover:bg-emerald-500/20 transition-all duration-150 shrink-0">
+                    <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center border border-emerald-500/20 group-hover:scale-105 group-hover:bg-emerald-500/20 transition-all duration-150 shrink-0">
                       <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
                         <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
@@ -227,7 +227,7 @@ export function Login({ onLoginClick }) {
                     </div>
                     <span className="truncate">Updates</span>
                   </div>
-                  <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[8px] sm:text-[8.5px] font-black border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-colors shrink-0">
+                  <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/10 text-emerald-600 text-[8px] sm:text-[8.5px] font-black border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-colors shrink-0">
                     v2.4
                   </span>
                 </button>
@@ -239,10 +239,10 @@ export function Login({ onLoginClick }) {
                     setDropdownOpen(false);
                     setActiveModal('notifications');
                   }}
-                  className="group w-full text-left px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg sm:rounded-xl text-[10.5px] sm:text-[11.5px] font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-transparent hover:bg-slate-100 dark:hover:bg-white/[0.08] border border-transparent hover:border-slate-200/80 dark:hover:border-white/[0.08] text-slate-800 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:shadow-2xs"
+                  className="group w-full text-left px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg sm:rounded-xl text-[10.5px] sm:text-[11.5px] font-bold transition-all duration-150 flex items-center justify-between cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-transparent hover:bg-slate-100 border border-transparent hover:border-slate-200/80 text-slate-800 hover:text-slate-900 hover:shadow-2xs"
                 >
                   <div className="flex items-center gap-2">
-                    <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20 group-hover:scale-105 group-hover:bg-amber-500/20 transition-all duration-150 shrink-0">
+                    <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center border border-amber-500/20 group-hover:scale-105 group-hover:bg-amber-500/20 transition-all duration-150 shrink-0">
                       <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
                         <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
@@ -255,24 +255,24 @@ export function Login({ onLoginClick }) {
                       {unreadCount}
                     </span>
                   ) : (
-                    <span className="text-[9px] sm:text-[9.5px] text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300 font-semibold transition-colors shrink-0">All read</span>
+                    <span className="text-[9px] sm:text-[9.5px] text-slate-400 group-hover:text-slate-600 font-semibold transition-colors shrink-0">All read</span>
                   )}
                 </button>
               </div>
 
               {/* 5. Switch Account & Logout */}
               {/* Logout Button */}
-              <div className="pt-1 border-t border-slate-200 dark:border-white/[0.08]">
+              <div className="pt-1 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => {
                     setDropdownOpen(false);
                     setActiveModal('logout');
                   }}
-                  className="group w-full px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg sm:rounded-xl text-[10.5px] sm:text-[11.5px] font-bold text-rose-600 dark:text-rose-400 bg-transparent hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent hover:border-rose-200 dark:hover:border-rose-900/50 flex items-center justify-between cursor-pointer active:scale-98 hover:shadow-2xs transition-all duration-150 focus:outline-none focus:ring-0"
+                  className="group w-full px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg sm:rounded-xl text-[10.5px] sm:text-[11.5px] font-bold text-rose-600 bg-transparent hover:bg-rose-50 border border-transparent hover:border-rose-200 flex items-center justify-between cursor-pointer active:scale-98 hover:shadow-2xs transition-all duration-150 focus:outline-none focus:ring-0"
                 >
                   <div className="flex items-center gap-2">
-                    <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-500/25 group-hover:scale-105 group-hover:bg-rose-500/25 transition-all duration-150 shrink-0">
+                    <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-rose-500/15 text-rose-600 flex items-center justify-center border border-rose-500/25 group-hover:scale-105 group-hover:bg-rose-500/25 transition-all duration-150 shrink-0">
                       <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                         <polyline points="16 17 21 12 16 7" />
@@ -313,7 +313,7 @@ export function Login({ onLoginClick }) {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.92, y: -15 }}
                   transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-                  className="w-full max-w-sm rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-7 relative z-10 space-y-5 text-center"
+                  className="w-full max-w-sm rounded-3xl bg-white border border-slate-200 shadow-2xl p-6 sm:p-7 relative z-10 space-y-5 text-center"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center mx-auto border border-rose-500/20 shadow-inner">
                     <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -324,10 +324,10 @@ export function Login({ onLoginClick }) {
                   </div>
 
                   <div className="space-y-1.5">
-                    <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                    <h3 className="text-lg font-black text-slate-900">
                       Confirm Logout?
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                    <p className="text-xs text-slate-500 leading-relaxed">
                       Are you sure you want to end your session for <strong>{user?.name}</strong>?
                     </p>
                   </div>
@@ -336,7 +336,7 @@ export function Login({ onLoginClick }) {
                     <button
                       type="button"
                       onClick={() => setActiveModal(null)}
-                      className="py-2.5 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors cursor-pointer"
+                      className="py-2.5 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
                     >
                       Cancel
                     </button>
@@ -369,22 +369,22 @@ export function Login({ onLoginClick }) {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.92, y: -15 }}
                   transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-                  className="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-7 relative z-10 space-y-5"
+                  className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-2xl p-6 sm:p-7 relative z-10 space-y-5"
                 >
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-slate-500/10 text-slate-600 dark:text-slate-300 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-xl bg-slate-500/10 text-slate-600 flex items-center justify-center">
                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <circle cx="12" cy="12" r="3" />
                           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
                         </svg>
                       </div>
-                      <h3 className="text-lg font-black text-slate-900 dark:text-white">Settings</h3>
+                      <h3 className="text-lg font-black text-slate-900">Settings</h3>
                     </div>
                     <button
                       type="button"
                       onClick={() => setActiveModal(null)}
-                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="text-slate-400 hover:text-slate-600 text-sm p-1 rounded-full hover:bg-slate-100"
                     >
                       ✕
                     </button>
@@ -393,10 +393,10 @@ export function Login({ onLoginClick }) {
                   <div className="space-y-3">
 
                     {/* Booking Notifications Toggle */}
-                    <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
                       <div>
-                        <div className="text-xs font-bold text-slate-900 dark:text-white">Instant Booking Alerts</div>
-                        <div className="text-[10px] text-slate-500 dark:text-slate-400">Receive real-time reservation notifications</div>
+                        <div className="text-xs font-bold text-slate-900">Instant Booking Alerts</div>
+                        <div className="text-[10px] text-slate-500">Receive real-time reservation notifications</div>
                       </div>
                       <input
                         type="checkbox"
@@ -407,10 +407,10 @@ export function Login({ onLoginClick }) {
                     </div>
 
                     {/* Email Summaries Toggle */}
-                    <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
                       <div>
-                        <div className="text-xs font-bold text-slate-900 dark:text-white">Email Digest & Summaries</div>
-                        <div className="text-[10px] text-slate-500 dark:text-slate-400">Weekly student booking & stay highlights</div>
+                        <div className="text-xs font-bold text-slate-900">Email Digest & Summaries</div>
+                        <div className="text-[10px] text-slate-500">Weekly student booking & stay highlights</div>
                       </div>
                       <input
                         type="checkbox"
@@ -451,48 +451,48 @@ export function Login({ onLoginClick }) {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.92, y: -15 }}
                   transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-                  className="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-7 relative z-10 space-y-4"
+                  className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-2xl p-6 sm:p-7 relative z-10 space-y-4"
                 >
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
                         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
                           <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
                         </svg>
                       </div>
                       <div>
-                        <h3 className="text-lg font-black text-slate-900 dark:text-white">What's New in v2.4</h3>
-                        <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold">Latest Release Notes</p>
+                        <h3 className="text-lg font-black text-slate-900">What's New in v2.4</h3>
+                        <p className="text-[11px] text-emerald-600 font-bold">Latest Release Notes</p>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => setActiveModal(null)}
-                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="text-slate-400 hover:text-slate-600 text-sm p-1 rounded-full hover:bg-slate-100"
                     >
                       ✕
                     </button>
                   </div>
 
                   <div className="space-y-3 text-xs leading-relaxed max-h-72 overflow-y-auto pr-1">
-                    <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
-                      <div className="font-bold text-emerald-800 dark:text-emerald-300">✨ Unified Account Center</div>
-                      <p className="text-slate-600 dark:text-slate-300 mt-1">
+                    <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200">
+                      <div className="font-bold text-emerald-800">✨ Unified Account Center</div>
+                      <p className="text-slate-600 mt-1">
                         Manage your personal details, change password with old password confirmation, and property details in one place.
                       </p>
                     </div>
 
-                    <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800">
-                      <div className="font-bold text-blue-800 dark:text-blue-300">🔑 10-Digit Password Recovery</div>
-                      <p className="text-slate-600 dark:text-slate-300 mt-1">
+                    <div className="p-3 rounded-2xl bg-blue-50 border border-blue-200">
+                      <div className="font-bold text-blue-800">🔑 10-Digit Password Recovery</div>
+                      <p className="text-slate-600 mt-1">
                         Instant random 10-digit password generation with 1-click login on Google Auth dialog.
                       </p>
                     </div>
 
-                    <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                      <div className="font-bold text-slate-800 dark:text-slate-200">📍 Interactive Leaflet GPS Pinning</div>
-                      <p className="text-slate-600 dark:text-slate-400 mt-1">
+                    <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                      <div className="font-bold text-slate-800">📍 Interactive Leaflet GPS Pinning</div>
+                      <p className="text-slate-600 mt-1">
                         Pin exact latitude and longitude for any hostel or PG with draggable markers.
                       </p>
                     </div>
@@ -501,7 +501,7 @@ export function Login({ onLoginClick }) {
                   <button
                     type="button"
                     onClick={() => setActiveModal(null)}
-                    className="w-full py-3 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs transition-all cursor-pointer"
+                    className="w-full py-3 rounded-2xl bg-slate-900 text-white font-bold text-xs transition-all cursor-pointer"
                   >
                     Got It, Thanks!
                   </button>
@@ -525,19 +525,19 @@ export function Login({ onLoginClick }) {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.92, y: -15 }}
                   transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-                  className="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-7 relative z-10 space-y-4"
+                  className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-2xl p-6 sm:p-7 relative z-10 space-y-4"
                 >
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
                           <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
                         </svg>
                       </div>
                       <div>
-                        <h3 className="text-lg font-black text-slate-900 dark:text-white">Notifications</h3>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        <h3 className="text-lg font-black text-slate-900">Notifications</h3>
+                        <p className="text-[11px] text-slate-500">
                           {unreadCount} unread notification{unreadCount === 1 ? '' : 's'}
                         </p>
                       </div>
@@ -545,7 +545,7 @@ export function Login({ onLoginClick }) {
                     <button
                       type="button"
                       onClick={() => setActiveModal(null)}
-                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="text-slate-400 hover:text-slate-600 text-sm p-1 rounded-full hover:bg-slate-100"
                     >
                       ✕
                     </button>
@@ -557,16 +557,16 @@ export function Login({ onLoginClick }) {
                         key={n.id}
                         className={`p-3 rounded-2xl border text-xs transition-colors flex items-start justify-between gap-3 ${
                           n.unread
-                            ? 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/80'
-                            : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700'
+                            ? 'bg-emerald-50/60 border-emerald-200'
+                            : 'bg-slate-50 border-slate-200'
                         }`}
                       >
                         <div>
-                          <div className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                          <div className="font-bold text-slate-900 flex items-center gap-2">
                             {n.unread && <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />}
                             <span>{n.title}</span>
                           </div>
-                          <p className="text-slate-600 dark:text-slate-300 mt-1 text-[11px] leading-relaxed">
+                          <p className="text-slate-600 mt-1 text-[11px] leading-relaxed">
                             {n.desc}
                           </p>
                           <span className="text-[10px] text-slate-400 mt-1.5 block">{n.time}</span>
@@ -579,7 +579,7 @@ export function Login({ onLoginClick }) {
                     <button
                       type="button"
                       onClick={markAllNotificationsRead}
-                      className="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors cursor-pointer"
+                      className="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
                     >
                       Mark All Read
                     </button>

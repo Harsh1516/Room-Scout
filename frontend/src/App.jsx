@@ -8,7 +8,6 @@ import { ThemeProvider } from './context/ThemeContext';
 import { adminAPI } from './services/api';
 import { ScrollToTop } from './components/ScrollToTop';
 import { ToastProvider, toast } from './context/ToastContext';
-import { FloatingThemeToggle } from './components/common/FloatingThemeToggle';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 
 import { ErrorBoundary } from './components/common/ErrorBoundary';
@@ -44,10 +43,10 @@ const BookedPlacesDrawer = lazy(() => import('./components/BookedPlacesDrawer').
 // Simple Page Fallback
 function PageFallback() {
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-black flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="flex flex-col items-center gap-3">
         <div className="w-8 h-8 rounded-full border-2 border-emerald-500/20 border-t-emerald-600 animate-spin" />
-        <span className="text-[11px] font-bold tracking-wider uppercase text-slate-400 dark:text-zinc-500">
+        <span className="text-[11px] font-bold tracking-wider uppercase text-slate-400">
           Loading...
         </span>
       </div>
@@ -377,7 +376,7 @@ function AppContent() {
   const isHostPage = location.pathname.startsWith('/host');
 
   return (
-    <div className={`min-h-screen ${isHostPage ? 'host-page-scope font-body-md selection:bg-custom-btn-primary selection:text-white bg-white dark:bg-slate-950' : (normalizedPath === '/' || normalizedPath === '/explore' || normalizedPath === '/account' ? 'bg-white dark:bg-black' : 'bg-slate-100 dark:bg-slate-950')} text-slate-900 dark:text-slate-100`}>
+    <div className={`min-h-screen ${isHostPage ? 'host-page-scope font-body-md selection:bg-custom-btn-primary selection:text-white bg-white' : (normalizedPath === '/' || normalizedPath === '/explore' || normalizedPath === '/account' ? 'bg-white' : 'bg-slate-100')} text-slate-900`}>
       <ScrollToTop />
       {shouldShowNavbar && !leftPanelOpen && (
         <Navbar
@@ -623,9 +622,7 @@ function AppContent() {
         </div>
       )}
 
-      {/* Global Floating Theme Toggle (Single source of truth across complete website) */}
-      <FloatingThemeToggle />
-    </div>
+          </div>
   );
 }
 

@@ -265,10 +265,10 @@ export function ZenKoiWaterBackground() {
       <canvas ref={canvasRef} className="block w-full h-full pointer-events-none" />
 
       {/* ── Subtle Atmospheric Ambient Vignette & Crystal Radiance ── */}
-      <div className="absolute inset-0 bg-radial-[circle_at_center] from-transparent via-[#032a39]/15 to-[#021822]/45 dark:via-[#021822]/35 dark:to-[#010c12]/75 pointer-events-none" />
+      <div className="absolute inset-0 bg-radial-[circle_at_center] from-transparent via-[#032a39]/15 to-[#021822]/45 pointer-events-none" />
 
       {/* ── Soft Top Specular Depth Gradient ── */}
-      <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/10 dark:from-black/30 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
 
       {/* ── Subtle Floating Water Sparkles / Light Glints (Pure CSS transforms, 0 layout shifts) ── */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">

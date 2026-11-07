@@ -16,7 +16,7 @@ export function HostUploadTabs({
   return (
     <nav
       aria-label="Property upload steps"
-      className="apple-liquid-nav relative flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-full border border-slate-200/80 dark:border-white/15 bg-white/70 dark:bg-[#0B0F19]/80 backdrop-blur-2xl shadow-xs select-none"
+      className="apple-liquid-nav relative flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-full border border-slate-200/80 bg-white/70 backdrop-blur-2xl shadow-xs select-none"
     >
       {steps.map((step) => {
         const isActive = step.id === activeStep;
@@ -30,7 +30,7 @@ export function HostUploadTabs({
             className={`group relative py-1.5 sm:py-2 px-3 sm:px-3.5 md:py-2 md:px-4 rounded-full text-xs md:text-sm font-semibold tracking-tight transition-all duration-200 flex items-center gap-1.5 md:gap-2 cursor-pointer z-10 select-none ${
               isActive
                 ? 'text-white'
-                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             {/* Active Pill Glider with Spring Physics */}
@@ -53,8 +53,8 @@ export function HostUploadTabs({
                 isActive
                   ? 'bg-white/20 text-white'
                   : isDone
-                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                  : 'bg-slate-200/80 dark:bg-zinc-800 text-slate-500 dark:text-zinc-500'
+                  ? 'bg-emerald-500/15 text-emerald-600'
+                  : 'bg-slate-200/80 text-slate-500'
               }`}
             >
               {isDone && !isActive ? (

@@ -18,8 +18,8 @@ export function VengeanceGlowCard({
   return (
     <div
       className={cn(
-        'group relative rounded-2xl sm:rounded-3xl p-5 sm:p-7 border border-emerald-200/80 dark:border-zinc-800 shadow-md shadow-emerald-950/[0.03] hover:shadow-xl hover:shadow-emerald-500/15 hover:border-emerald-400 dark:hover:border-emerald-500/50 transition-all duration-300 ease-out flex flex-col justify-between overflow-hidden',
-        !isTransparent && 'bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/50 dark:from-zinc-900/90 dark:via-zinc-900 dark:to-zinc-900/80',
+        'group relative rounded-2xl sm:rounded-3xl p-5 sm:p-7 border border-emerald-200/80 shadow-md shadow-emerald-950/[0.03] hover:shadow-xl hover:shadow-emerald-500/15 hover:border-emerald-400 transition-all duration-300 ease-out flex flex-col justify-between overflow-hidden',
+        !isTransparent && 'bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/50',
         className
       )}
       {...props}
@@ -34,7 +34,7 @@ export function VengeanceGlowCard({
       {/* Ambient Corner Blur Orb (Matching Landing Page) */}
       {!isTransparent && (
         <div
-          className="absolute -right-8 -top-8 w-28 h-28 bg-emerald-200/40 dark:bg-emerald-500/10 rounded-full blur-2xl pointer-events-none group-hover:scale-150 transition-transform duration-500 z-0"
+          className="absolute -right-8 -top-8 w-28 h-28 bg-emerald-200/40 rounded-full blur-2xl pointer-events-none group-hover:scale-150 transition-transform duration-500 z-0"
         />
       )}
 

@@ -200,13 +200,13 @@ export function PropertyDetailsSection({
         <div className="lg:col-span-3 flex items-start justify-center h-full transition-all duration-300 ease-in-out">
           <aside className="w-full flex flex-col shrink-0 relative max-md:mt-0 mt-8 transition-all duration-300 ease-in-out">
           {/* ── Upper Tab: Property Info (Styled like navbar capsule with black edit button in light theme) ── */}
-          <div className="max-md:w-[300px] max-md:max-w-[calc(100vw-28px)] max-md:mx-auto max-md:mt-1 max-md:mb-2 max-md:rounded-2xl max-md:border max-md:border-purple-200/90 max-md:bg-purple-100/80 max-md:dark:bg-purple-950/50 max-md:dark:border-purple-800/50 max-md:backdrop-blur-2xl max-md:shadow-xs max-md:p-4 md:w-[calc(100%-18px)] md:sm:w-[calc(100%-22px)] md:mx-auto md:rounded-t-2xl md:sm:rounded-t-3xl md:rounded-b-none md:border-x md:border-t md:border-slate-200/80 md:dark:border-zinc-700 md:shadow-[0_14px_36px_rgba(0,0,0,0.16)] md:dark:shadow-[0_16px_40px_rgba(255,255,255,0.12)] md:hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] md:dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] md:bg-white/95 md:dark:bg-zinc-700/90 backdrop-blur-2xl text-slate-800 dark:text-zinc-100 flex flex-col gap-3 p-4 sm:p-5 pb-8 sm:pb-9 relative shrink-0 z-0">
+          <div className="max-md:w-[300px] max-md:max-w-[calc(100vw-28px)] max-md:mx-auto max-md:mt-1 max-md:mb-2 max-md:rounded-2xl max-md:border max-md:border-purple-200/90 max-md:bg-purple-100/80 max-md: max-md: max-md:backdrop-blur-2xl max-md:shadow-xs max-md:p-4 md:w-[calc(100%-18px)] md:sm:w-[calc(100%-22px)] md:mx-auto md:rounded-t-2xl md:sm:rounded-t-3xl md:rounded-b-none md:border-x md:border-t md:border-slate-200/80 md: md:shadow-[0_14px_36px_rgba(0,0,0,0.16)] md:(255,255,255,0.12)] md:hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] md:(255,255,255,0.25)] md:bg-white/95 md: backdrop-blur-2xl text-slate-800 flex flex-col gap-3 p-4 sm:p-5 pb-8 sm:pb-9 relative shrink-0 z-0">
             {/* Top Specular Rim Reflection for Upper Tab */}
-            <div className="max-md:hidden absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 max-md:via-purple-300/30 dark:via-zinc-700/40 to-transparent pointer-events-none z-20" />
+            <div className="max-md:hidden absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 max-md:via-purple-300/30 to-transparent pointer-events-none z-20" />
 
             {/* Header: Place Name + Top-Right Edit Button (Solid black in light theme) */}
             <div className="flex items-center justify-between max-md:justify-center gap-2 relative z-10 w-full">
-              <h1 className="text-base sm:text-lg lg:text-xl font-bold max-md:text-[22px] max-md:font-black max-md:text-center max-md:w-full max-md:leading-tight max-md:text-slate-950 text-slate-900 dark:text-white tracking-tight truncate flex-1 min-w-0">
+              <h1 className="text-base sm:text-lg lg:text-xl font-bold max-md:text-[22px] max-md:font-black max-md:text-center max-md:w-full max-md:leading-tight max-md:text-slate-950 text-slate-900 tracking-tight truncate flex-1 min-w-0">
                 {hostProperty?.propertyName || hostProperty?.title || '—'}
               </h1>
 
@@ -227,12 +227,12 @@ export function PropertyDetailsSection({
             {/* Badges/Metadata in Clean Palette */}
             <div className="flex flex-col gap-1.5 pt-0.5 text-xs relative z-10">
               <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 font-semibold max-md:text-slate-700 text-slate-800 dark:text-slate-100/80">
-                  <span className="material-symbols-outlined text-[15px] text-purple-600 dark:text-purple-400">apartment</span>
+                <span className="flex items-center gap-1.5 font-semibold max-md:text-slate-700 text-slate-800">
+                  <span className="material-symbols-outlined text-[15px] text-purple-600">apartment</span>
                   <span>{hostProperty?.propertyType || hostProperty?.category ? `${hostProperty.propertyType || hostProperty.category} Category` : '—'}</span>
                 </span>
-                <span className="flex items-center gap-1 font-bold max-md:text-slate-900 text-slate-800 dark:text-slate-100">
-                  <span className="material-symbols-outlined text-[14px] max-md:text-amber-400 text-amber-500 dark:text-slate-100" style={{ fontVariationSettings: "'FILL' 1" }}>
+                <span className="flex items-center gap-1 font-bold max-md:text-slate-900 text-slate-800">
+                  <span className="material-symbols-outlined text-[14px] max-md:text-amber-400 text-amber-500" style={{ fontVariationSettings: "'FILL' 1" }}>
                     star
                   </span>
                   <span>
@@ -243,9 +243,9 @@ export function PropertyDetailsSection({
                 </span>
               </div>
 
-              <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 dark:text-slate-100/80">
-                <span className="flex items-center gap-1.5 font-medium max-md:text-slate-600 text-slate-500 dark:text-slate-400 dark:text-slate-100/80">
-                  <span className="material-symbols-outlined text-[15px] text-purple-600 dark:text-purple-400">group</span>
+              <div className="flex items-center justify-between text-slate-500">
+                <span className="flex items-center gap-1.5 font-medium max-md:text-slate-600 text-slate-500">
+                  <span className="material-symbols-outlined text-[15px] text-purple-600">group</span>
                   <span>For: {hostProperty?.genderType ? hostProperty.genderType.charAt(0).toUpperCase() + hostProperty.genderType.slice(1).toLowerCase() : '—'}</span>
                 </span>
               </div>
@@ -256,33 +256,33 @@ export function PropertyDetailsSection({
               <button
                 type="button"
                 onClick={handleOpenPublicUrl}
-                className="group relative overflow-hidden w-full h-9 rounded-xl max-md:bg-white/95 max-md:border-purple-200/80 max-md:text-purple-950 max-md:hover:bg-white bg-transparent hover:bg-sky-200 dark:hover:bg-zinc-900 active:scale-95 text-slate-800 dark:text-zinc-100 hover:text-sky-800 dark:hover:text-white flex items-center justify-center gap-1.5 border border-slate-300 dark:border-zinc-600 hover:border-sky-400 dark:hover:border-black shadow-2xs transition-all cursor-pointer font-medium"
+                className="group relative overflow-hidden w-full h-9 rounded-xl max-md:bg-white/95 max-md:border-purple-200/80 max-md:text-purple-950 max-md:hover:bg-white bg-transparent hover:bg-sky-200 active:scale-95 text-slate-800 hover:text-sky-800 flex items-center justify-center gap-1.5 border border-slate-300 hover:border-sky-400 shadow-2xs transition-all cursor-pointer font-medium"
               >
-                <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-none group-hover:transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-black/20 dark:via-white/35 to-transparent pointer-events-none" />
+                <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-none group-hover:transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-black/20 to-transparent pointer-events-none" />
                 <span className="text-xs font-medium">Public URL</span>
-                <span className="material-symbols-outlined text-[15px] text-purple-600 dark:text-purple-400">north_east</span>
+                <span className="material-symbols-outlined text-[15px] text-purple-600">north_east</span>
               </button>
 
               {onEditDetails ? (
                 <button
                   type="button"
                   onClick={onEditDetails}
-                  className="group relative overflow-hidden w-full h-9 rounded-xl max-md:bg-purple-600 max-md:text-white max-md:border-purple-600 max-md:hover:bg-purple-700 bg-transparent hover:bg-sky-200 dark:hover:bg-zinc-900 active:scale-95 text-slate-800 dark:text-zinc-100 hover:text-sky-800 dark:hover:text-white flex items-center justify-center gap-1.5 border border-slate-300 dark:border-zinc-600 hover:border-sky-400 dark:hover:border-black shadow-2xs transition-all cursor-pointer font-medium"
+                  className="group relative overflow-hidden w-full h-9 rounded-xl max-md:bg-purple-600 max-md:text-white max-md:border-purple-600 max-md:hover:bg-purple-700 bg-transparent hover:bg-sky-200 active:scale-95 text-slate-800 hover:text-sky-800 flex items-center justify-center gap-1.5 border border-slate-300 hover:border-sky-400 shadow-2xs transition-all cursor-pointer font-medium"
                   title="Edit Listing Details"
                 >
                   <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-none group-hover:transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
-                  <PencilIcon className="w-3.5 h-3.5 max-md:text-white text-purple-600 dark:text-purple-400" />
+                  <PencilIcon className="w-3.5 h-3.5 max-md:text-white text-purple-600" />
                   <span className="text-xs font-semibold">Edit</span>
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={handleShare}
-                  className="group relative overflow-hidden w-full h-9 rounded-xl max-md:bg-slate-100 max-md:border-slate-200/80 max-md:text-slate-800 max-md:hover:bg-slate-200 bg-transparent hover:bg-sky-200 dark:hover:bg-zinc-900 active:scale-95 text-slate-800 dark:text-zinc-100 hover:text-sky-800 dark:hover:text-white flex items-center justify-center gap-1.5 border border-slate-300 dark:border-zinc-600 hover:border-sky-400 dark:hover:border-black shadow-2xs transition-all cursor-pointer font-medium"
+                  className="group relative overflow-hidden w-full h-9 rounded-xl max-md:bg-slate-100 max-md:border-slate-200/80 max-md:text-slate-800 max-md:hover:bg-slate-200 bg-transparent hover:bg-sky-200 active:scale-95 text-slate-800 hover:text-sky-800 flex items-center justify-center gap-1.5 border border-slate-300 hover:border-sky-400 shadow-2xs transition-all cursor-pointer font-medium"
                   title="Share listing link"
                 >
-                  <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-none group-hover:transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-black/20 dark:via-white/35 to-transparent pointer-events-none" />
-                  <span className="material-symbols-outlined text-[16px] text-purple-600 dark:text-purple-400">share</span>
+                  <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-none group-hover:transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-black/20 to-transparent pointer-events-none" />
+                  <span className="material-symbols-outlined text-[16px] text-purple-600">share</span>
                   <span className="text-xs font-medium">Share</span>
                 </button>
               )}
@@ -294,7 +294,7 @@ export function PropertyDetailsSection({
           <div className="md:hidden w-full flex justify-center py-2.5 px-4 relative z-20 max-md:bg-white">
             <nav
               aria-label="Sub-Tabs Navigation"
-              className="flex items-center justify-between w-[300px] max-w-[calc(100vw-28px)] px-2 py-1.5 rounded-full bg-purple-100/80 dark:bg-purple-950/50 backdrop-blur-2xl border border-purple-200/90 dark:border-purple-800/50 shadow-xs"
+              className="flex items-center justify-between w-[300px] max-w-[calc(100vw-28px)] px-2 py-1.5 rounded-full bg-purple-100/80 backdrop-blur-2xl border border-purple-200/90 shadow-xs"
             >
               {sections.map((sec, idx) => {
                 const isActive = activeIndex === idx;
@@ -339,7 +339,7 @@ export function PropertyDetailsSection({
           </div>
 
           {/* ── Lower Tab: Configuration Matrix / Tabs (Desktop Only) ── */}
-          <div className="hidden md:flex flex-col p-4 sm:p-5 pb-5 md:bg-white/95 md:dark:bg-zinc-900/95 backdrop-blur-2xl md:rounded-2xl md:sm:rounded-3xl md:rounded-t-[28px] md:sm:rounded-t-[32px] md:-mt-4 md:sm:-mt-5 md:border-x md:border-b md:border-slate-200/80 md:dark:border-zinc-800 shadow-[0_14px_36px_rgba(0,0,0,0.16)] dark:shadow-[0_16px_40px_rgba(255,255,255,0.12)] hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] transition-colors relative z-10 w-full">
+          <div className="hidden md:flex flex-col p-4 sm:p-5 pb-5 md:bg-white/95 md: backdrop-blur-2xl md:rounded-2xl md:sm:rounded-3xl md:rounded-t-[28px] md:sm:rounded-t-[32px] md:-mt-4 md:sm:-mt-5 md:border-x md:border-b md:border-slate-200/80 md: shadow-[0_14px_36px_rgba(0,0,0,0.16)](255,255,255,0.12)] hover:shadow-[0_0_24px_rgba(0,0,0,0.25)](255,255,255,0.25)] transition-colors relative z-10 w-full">
               {/* Top specular rim removed to avoid visible line while hovering */}
               {/* Sub-Tabs Steps Navigation */}
               <nav aria-label="Steps Navigation" className="flex flex-col gap-1.5 relative z-10">
@@ -360,7 +360,7 @@ export function PropertyDetailsSection({
                       className={`group relative overflow-hidden flex items-center justify-between px-3 h-[42px] rounded-xl cursor-pointer text-left w-full select-none focus:outline-none transition-all duration-150 ${
                         isActive
                           ? ''
-                          : 'bg-transparent max-md:hover:bg-white/10 hover:bg-white/70 dark:hover:bg-[#0B0F19]/80 hover:backdrop-blur-2xl hover:shadow-[0_0_20px_rgba(168,85,247,0.3)]'
+                          : 'bg-transparent max-md:hover:bg-white/10 hover:bg-white/70 hover:backdrop-blur-2xl hover:shadow-[0_0_20px_rgba(168,85,247,0.3)]'
                       }`}
                     >
                       <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-none group-hover:transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none z-0" />
@@ -382,7 +382,7 @@ export function PropertyDetailsSection({
                       <div className="flex items-center gap-2.5 min-w-0 relative z-10">
                         <span
                           className={`material-symbols-outlined text-[17px] shrink-0 transition-colors duration-150 ${
-                            isActive ? 'max-md:text-slate-950 text-white dark:text-white' : 'max-md:text-purple-300/80 text-slate-500 dark:text-zinc-400 group-hover:text-slate-900 dark:group-hover:text-white'
+                            isActive ? 'max-md:text-slate-950 text-white' : 'max-md:text-purple-300/80 text-slate-500 group-hover:text-slate-900'
                           }`}
                         >
                           {sec.icon}
@@ -393,8 +393,8 @@ export function PropertyDetailsSection({
                           <span
                             className={`text-xs truncate transition-all duration-150 ${
                               isActive
-                                ? 'font-bold max-md:text-slate-950 text-slate-900 dark:text-white tracking-normal'
-                                : 'font-semibold max-md:text-purple-100 text-slate-700 dark:text-zinc-300 group-hover:text-slate-900 dark:group-hover:text-white'
+                                ? 'font-bold max-md:text-slate-950 text-slate-900 tracking-normal'
+                                : 'font-semibold max-md:text-purple-100 text-slate-700 group-hover:text-slate-900'
                             }`}
                           >
                             {sec.title}
@@ -408,8 +408,8 @@ export function PropertyDetailsSection({
                           <span
                             className={`px-2 py-0.5 rounded-md text-[9.5px] font-mono transition-all duration-150 ${
                               isActive
-                                ? 'bg-purple-200/70 dark:bg-white/20 max-md:bg-[#18221D]/15 text-purple-900 dark:text-white max-md:text-slate-950 border border-purple-300/60 dark:border-white/20 max-md:border-[#18221D]/20 font-bold'
-                                : 'bg-white/60 group-hover:bg-white/80 dark:bg-zinc-800 max-md:bg-white/10 text-slate-800 dark:text-zinc-300 max-md:text-purple-200 border border-white/70 dark:border-zinc-700 max-md:border-white/15 font-bold'
+                                ? 'bg-purple-200/70 max-md:bg-[#18221D]/15 text-purple-900 max-md:text-slate-950 border border-purple-300/60 max-md:border-[#18221D]/20 font-bold'
+                                : 'bg-white/60 group-hover:bg-white/80 max-md:bg-white/10 text-slate-800 max-md:text-purple-200 border border-white/70 max-md:border-white/15 font-bold'
                             }`}
                           >
                             {sec.badge}
@@ -431,8 +431,8 @@ export function PropertyDetailsSection({
                               }}
                               className={`material-symbols-outlined text-[15px] shrink-0 select-none ${
                                 isActive
-                                  ? 'max-md:text-slate-950 text-purple-700 dark:text-white'
-                                  : 'max-md:text-purple-400/50 text-slate-500 dark:text-zinc-500'
+                                  ? 'max-md:text-slate-950 text-purple-700'
+                                  : 'max-md:text-purple-400/50 text-slate-500'
                               }`}
                             >
                               check
@@ -449,7 +449,7 @@ export function PropertyDetailsSection({
         </div>
 
         {/* Main Content Panel (col-span-9 - Luna Glassmorphic Aesthetic) */}
-        <main className="lg:col-span-9 flex flex-col h-full min-h-0 overflow-y-auto scroll-smooth no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-md:w-full max-md:mx-0 max-md:rounded-t-[32px] sm:max-md:rounded-t-[40px] max-md:rounded-b-none max-md:mt-0 max-md:border-none max-md:bg-[#3d0c40] max-md:shadow-none max-md:p-4 max-md:pt-6 max-md:pb-36 max-md:min-h-screen max-md:z-20 md:rounded-2xl md:sm:rounded-3xl relative overflow-hidden md:bg-white/80 md:dark:bg-zinc-900/95 md:border md:border-slate-200/80 md:dark:border-zinc-800 shadow-[0_14px_36px_rgba(0,0,0,0.16)] dark:shadow-[0_16px_40px_rgba(255,255,255,0.12)] hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] p-4 sm:p-7 lg:p-8 pb-8 sm:pb-10 lg:pb-8 transition-all duration-300 ease-in-out">
+        <main className="lg:col-span-9 flex flex-col h-full min-h-0 overflow-y-auto scroll-smooth no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-md:w-full max-md:mx-0 max-md:rounded-t-[32px] sm:max-md:rounded-t-[40px] max-md:rounded-b-none max-md:mt-0 max-md:border-none max-md:bg-[#3d0c40] max-md:shadow-none max-md:p-4 max-md:pt-6 max-md:pb-36 max-md:min-h-screen max-md:z-20 md:rounded-2xl md:sm:rounded-3xl relative overflow-hidden md:bg-white/80 md: md:border md:border-slate-200/80 md: shadow-[0_14px_36px_rgba(0,0,0,0.16)](255,255,255,0.12)] hover:shadow-[0_0_24px_rgba(0,0,0,0.25)](255,255,255,0.25)] p-4 sm:p-7 lg:p-8 pb-8 sm:pb-10 lg:pb-8 transition-all duration-300 ease-in-out">
           {/* Ambient Glass Reflections & Refractive Lighting in Luna cyan & deep navy */}
           <div
             aria-hidden="true"
@@ -458,7 +458,7 @@ export function PropertyDetailsSection({
             {/* Top specular rim removed */}
             {/* Corner Refraction Glows removed */}
             {/* Bottom Grounding Vignette */}
-            <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-purple-900/[0.04] dark:from-zinc-950/20 to-transparent pointer-events-none z-0" />
+            <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-purple-900/[0.04] to-transparent pointer-events-none z-0" />
           </div>
 
           <div className={`flex flex-col flex-1 min-h-full max-md:justify-start max-md:gap-0 gap-6 sm:gap-8 relative z-10 ${currentSection.id === 'photos' ? 'justify-center' : 'justify-between'}`}>
@@ -472,11 +472,11 @@ export function PropertyDetailsSection({
                 transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                 className="hidden md:flex flex-col items-center text-center justify-center pt-1 sm:pt-2 w-full"
               >
-                <h2 className="text-xl sm:text-2xl lg:text-3xl font-medium max-md:text-white text-slate-900 dark:text-white tracking-normal">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-medium max-md:text-white text-slate-900 tracking-normal">
                   {currentSection.title}
                 </h2>
 
-                <p className="text-xs sm:text-sm max-md:text-purple-200/80 text-slate-500 dark:text-zinc-400 font-normal mt-1.5 max-w-xl text-center leading-relaxed">
+                <p className="text-xs sm:text-sm max-md:text-purple-200/80 text-slate-500 font-normal mt-1.5 max-w-xl text-center leading-relaxed">
                   {currentSection.id === 'overview' && 'Start with the core identity, property type, and guest categorization.'}
                   {currentSection.id === 'description' && 'Add an editorial property description and key highlights for prospective residents.'}
                   {currentSection.id === 'location' && 'Pinpoint exact road access, city zone, postal code, and geolocation coordinates.'}

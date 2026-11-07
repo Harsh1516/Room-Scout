@@ -126,16 +126,16 @@ function UserCategoryRoomCarousel({
       {/* Optional carousel navigation arrows if > 3 rooms */}
       {matchingRooms.length > 3 && (
         <div className="flex items-center justify-between pb-0.5 px-0.5">
-          <span className="text-xs font-extrabold text-slate-900 dark:text-white tracking-tight leading-none">
+          <span className="text-xs font-extrabold text-slate-900 tracking-tight leading-none">
             Rooms ({matchingRooms.length})
           </span>
 
-          <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-[#071320] rounded-xl p-0.5 border border-slate-200/80 dark:border-[#1a2d42]">
+          <div className="flex items-center gap-0.5 bg-slate-100 rounded-xl p-0.5 border border-slate-200/80">
             <button
               type="button"
               onClick={handleScrollLeft}
               disabled={!canScrollLeft}
-              className="w-5 h-5 rounded-md flex items-center justify-center text-slate-400 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+              className="w-5 h-5 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-800 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
               title="Previous room"
             >
               <span className="material-symbols-outlined text-[14px]">chevron_left</span>
@@ -144,7 +144,7 @@ function UserCategoryRoomCarousel({
               type="button"
               onClick={handleScrollRight}
               disabled={!canScrollRight}
-              className="w-5 h-5 rounded-md flex items-center justify-center text-slate-400 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+              className="w-5 h-5 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-800 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
               title="Next room"
             >
               <span className="material-symbols-outlined text-[14px]">chevron_right</span>
@@ -154,9 +154,9 @@ function UserCategoryRoomCarousel({
       )}
 
       {matchingRooms.length === 0 ? (
-        <div className="p-3 rounded-2xl text-xs text-center border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-[#06121e]/40 space-y-1">
+        <div className="p-3 rounded-2xl text-xs text-center border border-dashed border-slate-300 text-slate-500 bg-slate-50/50 space-y-1">
           <p>
-            No room cards available for <span className="text-slate-800 dark:text-white font-semibold">{rate.type || 'this category'}</span> yet.
+            No room cards available for <span className="text-slate-800 font-semibold">{rate.type || 'this category'}</span> yet.
           </p>
         </div>
       ) : (
@@ -210,21 +210,21 @@ function UserCategoryRoomCarousel({
                   className={`group relative flex flex-col justify-between p-2 sm:p-2.5 rounded-2xl overflow-hidden w-[calc((100%-20px)/3)] min-w-[calc((100%-20px)/3)] max-w-[calc((100%-20px)/3)] h-[154px] sm:h-[158px] shrink-0 snap-start transition-[border-color,box-shadow,background-color,opacity] duration-150 select-none outline-none cursor-pointer ${
                     isBookedToday
                       ? isCardSelected
-                        ? 'bg-gradient-to-b from-[#ca8100] via-[#854f00] to-[#261400] text-white border-2 border-amber-400 dark:border-amber-400 shadow-room-booked-selected z-10'
-                        : 'bg-gradient-to-b from-[#a36800]/80 via-[#633c00]/80 to-[#1f1100]/90 text-white/95 border border-amber-700/50 dark:border-amber-600/40 shadow-xs opacity-90 hover:opacity-100 hover:border-amber-500/70 hover:shadow-md hover:shadow-amber-950/20'
+                        ? 'bg-gradient-to-b from-[#ca8100] via-[#854f00] to-[#261400] text-white border-2 border-amber-400 shadow-room-booked-selected z-10'
+                        : 'bg-gradient-to-b from-[#a36800]/80 via-[#633c00]/80 to-[#1f1100]/90 text-white/95 border border-amber-700/50 shadow-xs opacity-90 hover:opacity-100 hover:border-amber-500/70 hover:shadow-md hover:shadow-amber-950/20'
                       : isCardSelected
-                      ? 'bg-white dark:bg-zinc-800 border-2 border-[#c0c1ff] shadow-room-open-selected ring-4 ring-indigo-100/80 dark:ring-indigo-900/40 z-10'
-                      : 'bg-white/70 dark:bg-zinc-800/90 border border-slate-200 dark:border-zinc-700 hover:border-slate-300 dark:hover:border-zinc-600'
+                      ? 'bg-white border-2 border-[#c0c1ff] shadow-room-open-selected ring-4 ring-indigo-100/80 z-10'
+                      : 'bg-white/70 border border-slate-200 hover:border-slate-300'
                   }`}
                 >
                   {/* Card Header Status & Room Free % */}
                   <div className="flex items-center justify-between w-full h-5 px-0.5">
                     {isBookedToday ? (
-                      <span className="text-[9px] sm:text-[9.5px] font-black uppercase tracking-wider text-amber-200 dark:text-amber-200 leading-none">
+                      <span className="text-[9px] sm:text-[9.5px] font-black uppercase tracking-wider text-amber-200 leading-none">
                         BOOKED
                       </span>
                     ) : (
-                      <span className="text-[9px] sm:text-[9.5px] font-black text-[#5254cf] dark:text-[#c0c1ff] uppercase tracking-wider leading-none">
+                      <span className="text-[9px] sm:text-[9.5px] font-black text-[#5254cf] uppercase tracking-wider leading-none">
                         OPEN
                       </span>
                     )}
@@ -234,10 +234,10 @@ function UserCategoryRoomCarousel({
                         isBookedToday
                           ? 'bg-black/40 text-amber-200 border border-amber-300/20'
                           : roomStat.percentFree >= 50
-                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-500/25'
+                          ? 'bg-emerald-500/15 text-emerald-600 border border-emerald-500/25'
                           : roomStat.percentFree > 0
-                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/25'
-                          : 'bg-rose-500/15 text-rose-600 dark:text-rose-300 border border-rose-500/25'
+                          ? 'bg-amber-500/15 text-amber-600 border border-amber-500/25'
+                          : 'bg-rose-500/15 text-rose-600 border border-rose-500/25'
                       }`}
                       title={`Room ${cleanRoomNum}: ${roomStat.percentFree}% Free (${roomStat.unbookedCount} of ${roomStat.totalCount} ${roomStat.isMonthly ? 'months' : 'days'} unbooked)`}
                     >
@@ -250,8 +250,8 @@ function UserCategoryRoomCarousel({
                     <span
                       className={`block text-[9.5px] mb-1 uppercase tracking-widest font-extrabold leading-none ${
                         isBookedToday
-                          ? 'text-amber-200/80 dark:text-amber-200/80'
-                          : 'text-slate-400 dark:text-slate-400'
+                          ? 'text-amber-200/80'
+                          : 'text-slate-400'
                       }`}
                     >
                       ROOM
@@ -261,7 +261,7 @@ function UserCategoryRoomCarousel({
                       className={`block w-full text-center bg-transparent border-none outline-none p-0 leading-none ${
                         isBookedToday
                           ? 'text-[20px] sm:text-[22px] text-white font-extrabold drop-shadow-xs tracking-tight'
-                          : 'text-[22px] sm:text-[24px] text-[#5254cf] dark:text-[#c0c1ff] font-black tracking-tight'
+                          : 'text-[22px] sm:text-[24px] text-[#5254cf] font-black tracking-tight'
                       }`}
                     >
                       {cleanRoomNum}
@@ -272,14 +272,14 @@ function UserCategoryRoomCarousel({
                   <div
                     className={`h-7 px-2.5 rounded-xl w-full flex items-center justify-between text-xs ${
                       isBookedToday
-                        ? 'bg-black/35 border border-white/15 dark:border-white/10 backdrop-blur-xs'
-                        : 'bg-slate-50/90 dark:bg-zinc-900/80 border border-slate-200/80 dark:border-zinc-700/80 shadow-2xs'
+                        ? 'bg-black/35 border border-white/15 backdrop-blur-xs'
+                        : 'bg-slate-50/90 border border-slate-200/80 shadow-2xs'
                     }`}
                     onClick={(e) => e.stopPropagation()}
                   >
                     <span
                       className={`text-[9px] font-extrabold uppercase tracking-wider leading-none ${
-                        isBookedToday ? 'text-amber-200' : 'text-slate-500 dark:text-slate-400'
+                        isBookedToday ? 'text-amber-200' : 'text-slate-500'
                       }`}
                     >
                       CAP
@@ -287,7 +287,7 @@ function UserCategoryRoomCarousel({
 
                     <span
                       className={`text-[12px] font-black text-center select-none leading-none ${
-                        isBookedToday ? 'text-white' : 'text-[#5254cf] dark:text-[#c0c1ff]'
+                        isBookedToday ? 'text-white' : 'text-[#5254cf]'
                       }`}
                     >
                       {roomCapacity}
@@ -309,7 +309,7 @@ function UserCategoryRoomCarousel({
                   className={`transition-all duration-300 rounded-full cursor-pointer ${
                     activeDotIndex === dotIdx
                       ? 'w-5 h-1.5 bg-[#c0c1ff]'
-                      : 'w-1.5 h-1.5 bg-slate-300 dark:bg-slate-600/70 hover:bg-slate-400'
+                      : 'w-1.5 h-1.5 bg-slate-300 hover:bg-slate-400'
                   }`}
                   title={`Room ${rm.roomNumber || dotIdx + 1}`}
                 />
@@ -503,12 +503,12 @@ export function UserRoomCategoriesPanel({
                 key={rowKey}
                 className={`w-full flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden transition-all ${
                   isExpanded
-                    ? 'bg-white dark:bg-black'
-                    : 'bg-white dark:bg-black'
+                    ? 'bg-white'
+                    : 'bg-white'
                 } ${
                   isExpanded
-                    ? 'border border-slate-200/90 dark:border-zinc-800 shadow-xl'
-                    : 'border border-slate-200/90 dark:border-zinc-800 shadow-xl'
+                    ? 'border border-slate-200/90 shadow-xl'
+                    : 'border border-slate-200/90 shadow-xl'
                 } ${!isExpanded ? 'cursor-pointer' : ''}`}
               >
                 {/* Card Header (Accessible Toggle Trigger) - Clean Neutral Tab */}
@@ -516,17 +516,17 @@ export function UserRoomCategoriesPanel({
                   onClick={(e) => handleToggleCategory(index, e)}
                   className={`px-4 sm:px-5 py-3 ${
                     isExpanded
-                      ? 'border-b border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-black text-slate-900 dark:text-white'
-                      : 'bg-white dark:bg-black text-slate-900 dark:text-white'
+                      ? 'border-b border-slate-200/90 bg-white text-slate-900'
+                      : 'bg-white text-slate-900'
                   } flex items-center justify-between select-none cursor-pointer`}
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <h2 className="text-[14px] sm:text-[16px] text-slate-900 dark:text-white truncate font-extrabold tracking-tight leading-normal pb-0.5">
+                    <h2 className="text-[14px] sm:text-[16px] text-slate-900 truncate font-extrabold tracking-tight leading-normal pb-0.5">
                       {rate.type || 'Unnamed Category'}
                     </h2>
 
                     {rate.price && (
-                      <span className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-zinc-400 shrink-0 leading-normal pb-0.5">
+                      <span className="text-[11px] sm:text-xs font-bold text-slate-500 shrink-0 leading-normal pb-0.5">
                         • ₹{rawPrice}{rate.rateUnit || '/night'}
                       </span>
                     )}
@@ -537,10 +537,10 @@ export function UserRoomCategoriesPanel({
                     <span
                       className={`h-6 px-2.5 sm:px-3 text-[11px] sm:text-xs rounded-full font-black tracking-wide shadow-2xs select-none flex items-center justify-center leading-normal backdrop-blur-xs transition-colors ${
                         stats.percentFree >= 50
-                          ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                          ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600'
                           : stats.percentFree > 0
-                          ? 'bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400'
-                          : 'bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400'
+                          ? 'bg-amber-500/10 border border-amber-500/20 text-amber-600'
+                          : 'bg-rose-500/10 border border-rose-500/20 text-rose-600'
                       }`}
                       title={`${stats.percentFree}% Free (${stats.totalUnbooked} of ${stats.totalPossible} ${isMonthly ? 'months' : 'days'} unbooked across all rooms in this category)`}
                     >
@@ -550,7 +550,7 @@ export function UserRoomCategoriesPanel({
 
                   <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                     <span
-                      className="h-6 px-2.5 text-[11px] rounded-full bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 font-bold shadow-2xs select-none flex items-center justify-center leading-normal"
+                      className="h-6 px-2.5 text-[11px] rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold shadow-2xs select-none flex items-center justify-center leading-normal"
                       title={`${stats.availableCount} of ${stats.totalCount} rooms are available today`}
                     >
                       {stats.availableCount}/{stats.totalCount} Avail
@@ -560,7 +560,7 @@ export function UserRoomCategoriesPanel({
                       type="button"
                       animate={{ rotate: isExpanded ? 180 : 0 }}
                       transition={{ type: 'spring', stiffness: 320, damping: 30, mass: 0.8 }}
-                      className="w-6 h-6 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 dark:text-zinc-500 dark:hover:text-white transition-colors cursor-pointer"
+                      className="w-6 h-6 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors cursor-pointer"
                       title={isExpanded ? 'Collapse category' : 'Expand category'}
                       onClick={(e) => {
                         e.stopPropagation();

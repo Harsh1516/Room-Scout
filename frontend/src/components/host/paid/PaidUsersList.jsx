@@ -491,7 +491,7 @@ export function PaidUsersList({
     return (
       <div
         key={bookingId || idx}
-        className="flex flex-col gap-4 p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#0f1d2d] border border-slate-200/90 dark:border-slate-800 shadow-[0_4px_18px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_25px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-200"
+        className="flex flex-col gap-4 p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-[0_4px_18px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_25px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-200"
       >
         {/* Identity + Amount */}
         <div className="flex items-start justify-between gap-3">
@@ -500,14 +500,14 @@ export function PaidUsersList({
               <div
                 className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-sm border shadow-xs ${
                   isOnline
-                    ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border-indigo-200/70 dark:border-indigo-800/60'
-                    : 'bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 border-teal-200/70 dark:border-teal-800/60'
+                    ? 'bg-indigo-50 text-indigo-700 border-indigo-200/70'
+                    : 'bg-teal-50 text-teal-700 border-teal-200/70'
                 }`}
               >
                 {initials}
               </div>
               <span
-                className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full text-white flex items-center justify-center ring-2 ring-white dark:ring-[#0f1d2d] ${
+                className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full text-white flex items-center justify-center ring-2 ring-white ${
                   isOnline ? 'bg-indigo-600' : 'bg-teal-600'
                 }`}
               >
@@ -516,23 +516,23 @@ export function PaidUsersList({
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate">{displayName}</h3>
+                <h3 className="text-sm font-bold text-slate-900 truncate">{displayName}</h3>
                 {isCheckedIn ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/60">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/70">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />In-House
                   </span>
                 ) : isCheckedOut ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200/70 dark:border-purple-800/60">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-purple-50 text-purple-700 border border-purple-200/70">
                     <CheckCircle2 className="w-2.5 h-2.5" />Checked Out
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/70 dark:border-amber-800/60">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-amber-50 text-amber-700 border border-amber-200/70">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />Awaiting Check-in
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-zinc-500 mt-1">
-                {cleanPhone && <span className="font-medium text-slate-500 dark:text-zinc-400">+91 {cleanPhone}</span>}
+              <div className="flex items-center gap-2 text-xs text-slate-400 mt-1">
+                {cleanPhone && <span className="font-medium text-slate-500">+91 {cleanPhone}</span>}
                 {refCode && (
                   <>
                     <span>·</span>
@@ -542,7 +542,7 @@ export function PaidUsersList({
                 {(g.upiPayment?.transactionRef || g.transactionRef) && (
                   <>
                     <span>·</span>
-                    <span className="font-mono text-[11px] text-indigo-600 dark:text-indigo-400 font-bold">
+                    <span className="font-mono text-[11px] text-indigo-600 font-bold">
                       UTR: {g.upiPayment?.transactionRef || g.transactionRef}
                     </span>
                   </>
@@ -551,15 +551,15 @@ export function PaidUsersList({
             </div>
           </div>
           <div className="text-right shrink-0">
-            <div className="text-base font-black text-emerald-600 dark:text-emerald-400 font-mono">
+            <div className="text-base font-black text-emerald-600 font-mono">
               ₹{paidAmount.toLocaleString('en-IN')}
             </div>
             {isOnline ? (
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 mt-0.5">
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 mt-0.5">
                 <ShieldCheck className="w-3 h-3" />Paid Online
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-teal-600 dark:text-teal-400 mt-0.5">
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-teal-600 mt-0.5">
                 <Receipt className="w-3 h-3" />Counter Paid
               </span>
             )}
@@ -567,18 +567,18 @@ export function PaidUsersList({
         </div>
 
         {/* Stay details strip with premium typography and icons */}
-        <div className="flex items-center gap-2 flex-wrap px-3 py-2.5 rounded-xl bg-slate-50/90 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/80">
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300">
+        <div className="flex items-center gap-2 flex-wrap px-3 py-2.5 rounded-xl bg-slate-50/90 border border-slate-100">
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700">
             <BedDouble className="w-3.5 h-3.5 text-slate-400" />Room {g.roomNumber || '-'}
           </span>
-          <span className="text-slate-300 dark:text-zinc-700">·</span>
-          <span className="text-xs text-slate-500 dark:text-zinc-400">{g.roomType || 'Standard'}</span>
-          <span className="text-slate-300 dark:text-zinc-700">·</span>
-          <span className="text-xs font-semibold text-purple-600 dark:text-purple-400">{nightsCount}N</span>
+          <span className="text-slate-300">·</span>
+          <span className="text-xs text-slate-500">{g.roomType || 'Standard'}</span>
+          <span className="text-slate-300">·</span>
+          <span className="text-xs font-semibold text-purple-600">{nightsCount}N</span>
           {(rawIn || rawOut) && (
             <>
-              <span className="text-slate-300 dark:text-zinc-700">·</span>
-              <span className="text-xs text-slate-500 dark:text-zinc-400 flex items-center gap-1">
+              <span className="text-slate-300">·</span>
+              <span className="text-xs text-slate-500 flex items-center gap-1">
                 <Calendar className="w-3 h-3 text-slate-400" />
                 {formatDisplayDate(rawIn)} - {formatDisplayDate(rawOut)}
               </span>
@@ -586,9 +586,9 @@ export function PaidUsersList({
           )}
           {g.personCount > 0 && (
             <>
-              <span className="text-slate-300 dark:text-zinc-700">·</span>
-              <span className="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-400 font-semibold">
-                <Users className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+              <span className="text-slate-300">·</span>
+              <span className="inline-flex items-center gap-1 text-xs text-slate-600 font-semibold">
+                <Users className="w-3.5 h-3.5 text-slate-400" />
                 <span>{g.personCount} {g.personCount === 1 ? 'Guest' : 'Guests'}</span>
               </span>
             </>
@@ -601,7 +601,7 @@ export function PaidUsersList({
             <button
               type="button"
               onClick={() => handleOpenOccupantModal(g)}
-              className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-2xs"
+              className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold border border-slate-200 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-2xs"
             >
               <Eye className="w-3.5 h-3.5 text-slate-400" />
               <span>Invoice Pass</span>
@@ -609,7 +609,7 @@ export function PaidUsersList({
             {cleanPhone && (
               <a
                 href={`tel:+91${cleanPhone}`}
-                className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
+                className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold border border-slate-200 transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
               >
                 <Phone className="w-3 h-3 text-slate-400" />
                 <span className="hidden sm:inline">Call</span>
@@ -624,7 +624,7 @@ export function PaidUsersList({
                     type="button"
                     disabled={actionLoadingId === bookingId}
                     onClick={() => setConfirmCheckoutId(null)}
-                    className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+                    className="px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200 cursor-pointer hover:bg-slate-200 transition-all"
                   >
                     Cancel
                   </button>
@@ -648,7 +648,7 @@ export function PaidUsersList({
                 </button>
               )
             ) : isCheckedOut ? (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/80">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>Stay Completed</span>
               </span>
@@ -686,29 +686,29 @@ export function PaidUsersList({
         transition={{
           layout: { duration: 0.36, ease: [0.25, 1, 0.5, 1] },
         }}
-        className="w-full flex flex-col rounded-[26px] bg-white dark:bg-[#0c1825] border border-slate-200/90 dark:border-[#1f3045] shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] overflow-hidden select-none"
+        className="w-full flex flex-col rounded-[26px] bg-white border border-slate-200/90 shadow-[0_8px_30px_rgb(0,0,0,0.06)](0,0,0,0.4)] overflow-hidden select-none"
       >
         {/* Top Header Banner - Clean text without pill backgrounds, with larger prominent Revenue font */}
-        <div className="px-4 sm:px-6 pt-3 sm:pt-3.5 pb-2.5 sm:pb-3 border-b border-sky-200/80 dark:border-sky-800/50 bg-sky-100/85 dark:bg-sky-950/70">
+        <div className="px-4 sm:px-6 pt-3 sm:pt-3.5 pb-2.5 sm:pb-3 border-b border-sky-200/80 bg-sky-100/85">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             {/* Left: Back button + Large Revenue Text + Clean Unboxed Metrics */}
             <div className="flex items-center gap-3 sm:gap-4 flex-wrap min-w-0">
               <button
                 type="button"
                 onClick={onBack}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-sky-300/80 dark:border-sky-700/80 bg-white/95 dark:bg-sky-900/60 hover:bg-white text-sky-900 dark:text-sky-100 text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-sky-300/80 bg-white/95 hover:bg-white text-sky-900 text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
                 title="Return to Check-in view"
               >
-                <ArrowLeft className="w-3.5 h-3.5 text-sky-700 dark:text-sky-300" />
+                <ArrowLeft className="w-3.5 h-3.5 text-sky-700" />
                 <span>Back</span>
               </button>
 
               {/* Prominent Revenue Text (Bigger size, NO background box) */}
               <div className="flex items-baseline gap-2 shrink-0">
-                <span className="text-[11px] font-black uppercase tracking-wider text-sky-950/70 dark:text-sky-300/80">
+                <span className="text-[11px] font-black uppercase tracking-wider text-sky-950/70">
                   Revenue
                 </span>
-                <span className="text-xl sm:text-2xl font-black text-emerald-700 dark:text-emerald-400 font-mono tracking-tight leading-none">
+                <span className="text-xl sm:text-2xl font-black text-emerald-700 font-mono tracking-tight leading-none">
                   ₹{totalRevenue.toLocaleString('en-IN')}
                 </span>
               </div>
@@ -719,16 +719,16 @@ export function PaidUsersList({
                   type="button"
                   onClick={() => setShowResetModal(true)}
                   title="Manually reset revenue counter to ₹0"
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/95 dark:bg-sky-900/70 hover:bg-white text-sky-900 dark:text-sky-100 border border-sky-300/90 dark:border-sky-700/80 shadow-2xs hover:shadow-xs transition-all cursor-pointer active:scale-95"
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/95 hover:bg-white text-sky-900 border border-sky-300/90 shadow-2xs hover:shadow-xs transition-all cursor-pointer active:scale-95"
                 >
-                  <RotateCcw className="w-3 h-3 text-sky-700 dark:text-sky-300" />
+                  <RotateCcw className="w-3 h-3 text-sky-700" />
                   <span>Reset</span>
                 </button>
                 {isResetActive && (
                   <button
                     type="button"
                     onClick={() => setShowResetModal(true)}
-                    className="text-[10px] font-semibold text-sky-900/80 dark:text-sky-300 underline underline-offset-2 hover:text-sky-950 dark:hover:text-white cursor-pointer transition-colors"
+                    className="text-[10px] font-semibold text-sky-900/80 underline underline-offset-2 hover:text-sky-950 cursor-pointer transition-colors"
                     title="Revenue counter is reset for this cycle. Click to view or restore all-time."
                   >
                     (Cycle Reset · All-Time ₹{rawTotalRevenue.toLocaleString('en-IN')})
@@ -738,22 +738,22 @@ export function PaidUsersList({
 
               {/* Clean breakdown text (NO background boxes) */}
               <div className="hidden sm:flex items-center gap-2 text-xs shrink-0">
-                <span className="text-sky-400/80 dark:text-sky-600 font-bold">|</span>
-                <span className="inline-flex items-center gap-1 font-bold font-mono text-indigo-700 dark:text-indigo-300">
-                  <Globe className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                <span className="text-sky-400/80 font-bold">|</span>
+                <span className="inline-flex items-center gap-1 font-bold font-mono text-indigo-700">
+                  <Globe className="w-3.5 h-3.5 text-indigo-600" />
                   <span>₹{onlineRevenue.toLocaleString('en-IN')}</span>
                 </span>
-                <span className="text-sky-400/80 dark:text-sky-600 font-bold">·</span>
-                <span className="inline-flex items-center gap-1 font-bold font-mono text-teal-800 dark:text-teal-300">
-                  <Store className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                <span className="text-sky-400/80 font-bold">·</span>
+                <span className="inline-flex items-center gap-1 font-bold font-mono text-teal-800">
+                  <Store className="w-3.5 h-3.5 text-teal-600" />
                   <span>₹{offlineRevenue.toLocaleString('en-IN')}</span>
                 </span>
               </div>
 
               {/* Clean in-house status indicator (NO background boxes) */}
               <div className="hidden md:flex items-center gap-2 shrink-0 text-xs font-semibold">
-                <span className="text-sky-400/80 dark:text-sky-600">|</span>
-                <span className="inline-flex items-center gap-1.5 text-emerald-800 dark:text-emerald-300">
+                <span className="text-sky-400/80">|</span>
+                <span className="inline-flex items-center gap-1.5 text-emerald-800">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
                   <span>{checkedInCount} In-House</span>
                 </span>
@@ -763,27 +763,27 @@ export function PaidUsersList({
             {/* Right: Date text + Premium Capsule Tab Switcher */}
             <div className="flex items-center gap-3 shrink-0">
               {/* Calendar date info matching Room page */}
-              <div className="hidden lg:flex items-center gap-1.5 text-xs font-semibold text-sky-950 dark:text-sky-200 select-none">
-                <Calendar className="w-3.5 h-3.5 text-[#3525CD] dark:text-[#818CF8]" />
+              <div className="hidden lg:flex items-center gap-1.5 text-xs font-semibold text-sky-950 select-none">
+                <Calendar className="w-3.5 h-3.5 text-[#3525CD]" />
                 <span>Today: {todayFormatted}</span>
               </div>
 
               {/* High-Level Segmented Tabs Capsule matching VisitedSubNavbar */}
-              <div className="inline-flex items-center p-1 rounded-full bg-white/90 dark:bg-[#111C2E] border border-sky-300/80 dark:border-[#1E2E48] shadow-inner relative select-none shrink-0">
+              <div className="inline-flex items-center p-1 rounded-full bg-white/90 border border-sky-300/80 shadow-inner relative select-none shrink-0">
                 {/* Online Tab Button */}
                 <button
                   type="button"
                   onClick={() => switchTab('ONLINE')}
                   className={`relative px-3.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs transition-all duration-200 flex items-center gap-1.5 cursor-pointer z-10 select-none ${
                     sectionFilter === 'ONLINE'
-                      ? 'text-[#3525CD] dark:text-white font-bold'
-                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 font-medium'
+                      ? 'text-[#3525CD] font-bold'
+                      : 'text-slate-600 hover:text-slate-900 font-medium'
                   }`}
                 >
                   {sectionFilter === 'ONLINE' && (
                     <motion.div
                       layoutId="paidUsersTabIndicator"
-                      className="absolute inset-0 rounded-full bg-white dark:bg-[#4F46E5] shadow-sm shadow-indigo-500/15 border border-slate-200/60 dark:border-indigo-400/30 -z-10 pointer-events-none"
+                      className="absolute inset-0 rounded-full bg-white shadow-sm shadow-indigo-500/15 border border-slate-200/60 -z-10 pointer-events-none"
                       transition={{
                         type: 'spring',
                         stiffness: 450,
@@ -795,13 +795,13 @@ export function PaidUsersList({
                   {/* Dual-ring beacon dot */}
                   <span className="relative flex h-2 w-2 shrink-0">
                     {sectionFilter === 'ONLINE' && (
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-500 dark:bg-white opacity-75" />
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-500 opacity-75" />
                     )}
                     <span
                       className={`relative inline-flex rounded-full h-2 w-2 ${
                         sectionFilter === 'ONLINE'
-                          ? 'bg-[#3525CD] dark:bg-white'
-                          : 'bg-slate-400 dark:bg-slate-500'
+                          ? 'bg-[#3525CD]'
+                          : 'bg-slate-400'
                       }`}
                     />
                   </span>
@@ -810,8 +810,8 @@ export function PaidUsersList({
                   <span
                     className={`min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-mono font-bold leading-none inline-flex items-center justify-center ${
                       sectionFilter === 'ONLINE'
-                        ? 'bg-[#E2DFFF] text-[#3525CD] dark:bg-white/20 dark:text-white'
-                        : 'bg-slate-200/70 text-slate-600 dark:bg-[#162238] dark:text-slate-400 dark:border dark:border-[#223554]'
+                        ? 'bg-[#E2DFFF] text-[#3525CD]'
+                        : 'bg-slate-200/70 text-slate-600'
                     }`}
                   >
                     {onlineGuests.length}
@@ -824,14 +824,14 @@ export function PaidUsersList({
                   onClick={() => switchTab('OFFLINE')}
                   className={`relative px-3.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs transition-all duration-200 flex items-center gap-1.5 cursor-pointer z-10 select-none ${
                     sectionFilter === 'OFFLINE'
-                      ? 'text-teal-700 dark:text-white font-bold'
-                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 font-medium'
+                      ? 'text-teal-700 font-bold'
+                      : 'text-slate-600 hover:text-slate-900 font-medium'
                   }`}
                 >
                   {sectionFilter === 'OFFLINE' && (
                     <motion.div
                       layoutId="paidUsersTabIndicator"
-                      className="absolute inset-0 rounded-full bg-white dark:bg-teal-600 shadow-sm shadow-teal-500/15 border border-slate-200/60 dark:border-teal-400/30 -z-10 pointer-events-none"
+                      className="absolute inset-0 rounded-full bg-white shadow-sm shadow-teal-500/15 border border-slate-200/60 -z-10 pointer-events-none"
                       transition={{
                         type: 'spring',
                         stiffness: 450,
@@ -843,13 +843,13 @@ export function PaidUsersList({
                   {/* Dual-ring beacon dot */}
                   <span className="relative flex h-2 w-2 shrink-0">
                     {sectionFilter === 'OFFLINE' && (
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-500 dark:bg-white opacity-75" />
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-500 opacity-75" />
                     )}
                     <span
                       className={`relative inline-flex rounded-full h-2 w-2 ${
                         sectionFilter === 'OFFLINE'
-                          ? 'bg-teal-600 dark:bg-white'
-                          : 'bg-slate-400 dark:bg-slate-500'
+                          ? 'bg-teal-600'
+                          : 'bg-slate-400'
                       }`}
                     />
                   </span>
@@ -858,8 +858,8 @@ export function PaidUsersList({
                   <span
                     className={`min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-mono font-bold leading-none inline-flex items-center justify-center ${
                       sectionFilter === 'OFFLINE'
-                        ? 'bg-teal-100 text-teal-800 dark:bg-white/20 dark:text-white'
-                        : 'bg-slate-200/70 text-slate-600 dark:bg-[#162238] dark:text-slate-400 dark:border dark:border-[#223554]'
+                        ? 'bg-teal-100 text-teal-800'
+                        : 'bg-slate-200/70 text-slate-600'
                     }`}
                   >
                     {offlineGuests.length}
@@ -871,9 +871,9 @@ export function PaidUsersList({
         </div>
 
         {/* Card Body - Crisp background for cards to elevate and pop */}
-        <div className="p-4 sm:p-5 lg:p-6 flex flex-col gap-4 flex-1 min-h-0 bg-slate-50/70 dark:bg-[#071320]">
+        <div className="p-4 sm:p-5 lg:p-6 flex flex-col gap-4 flex-1 min-h-0 bg-slate-50/70">
           {/* Sub-header with Channel Title + Revenue sub-pill and Search */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200/70 dark:border-slate-800/80">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200/70">
             <div className="flex items-center gap-3">
               <div
                 className={`w-9 h-9 rounded-2xl flex items-center justify-center text-white shadow-sm shrink-0 ${
@@ -886,20 +886,20 @@ export function PaidUsersList({
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+                  <h2 className="text-sm font-bold text-slate-900">
                     {sectionFilter === 'ONLINE' ? 'Online Paid Bookings' : 'Offline Registered Guests'}
                   </h2>
                   <span
                     className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold font-mono border ${
                       sectionFilter === 'ONLINE'
-                        ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200/70 dark:border-indigo-800/50'
-                        : 'bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border-teal-200/70 dark:border-teal-800/50'
+                        ? 'bg-indigo-50 text-indigo-700 border-indigo-200/70'
+                        : 'bg-teal-50 text-teal-700 border-teal-200/70'
                     }`}
                   >
                     ₹{currentRevenue.toLocaleString('en-IN')}
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                <p className="text-[11px] text-slate-400 mt-0.5">
                   {sectionFilter === 'ONLINE'
                     ? 'Verified bookings via Direct UPI / Bank credit'
                     : 'Walk-ins and counter registrations recorded by host'}
@@ -910,14 +910,14 @@ export function PaidUsersList({
             {/* Filter Pills & Search Box */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
               {/* Status Filter Tabs: All, In-House, Checked Out */}
-              <div className="inline-flex items-center p-0.5 rounded-xl bg-slate-200/70 dark:bg-slate-800/80 border border-slate-300/60 dark:border-slate-700/60 text-xs shrink-0 select-none">
+              <div className="inline-flex items-center p-0.5 rounded-xl bg-slate-200/70 border border-slate-300/60 text-xs shrink-0 select-none">
                 <button
                   type="button"
                   onClick={() => { setFilterStatus('ALL'); setCurrentPage(0); }}
                   className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     filterStatus === 'ALL'
-                      ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                      ? 'bg-white text-slate-900 shadow-2xs'
+                      : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   All ({listForSection.length})
@@ -927,8 +927,8 @@ export function PaidUsersList({
                   onClick={() => { setFilterStatus('CHECKED_IN'); setCurrentPage(0); }}
                   className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
                     filterStatus === 'CHECKED_IN'
-                      ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-2xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                      ? 'bg-white text-emerald-600 shadow-2xs'
+                      : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -939,8 +939,8 @@ export function PaidUsersList({
                   onClick={() => { setFilterStatus('CHECKED_OUT'); setCurrentPage(0); }}
                   className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
                     filterStatus === 'CHECKED_OUT'
-                      ? 'bg-white dark:bg-slate-700 text-purple-600 dark:text-purple-400 shadow-2xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                      ? 'bg-white text-purple-600 shadow-2xs'
+                      : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   <CheckCircle2 className="w-3 h-3 text-purple-500" />
@@ -959,7 +959,7 @@ export function PaidUsersList({
                     setCurrentPage(0);
                   }}
                   placeholder="Search guest, phone, room..."
-                  className="w-full pl-9 pr-8 py-2 rounded-xl text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 dark:focus:border-indigo-600 placeholder:text-slate-400 dark:placeholder:text-slate-600 transition-all shadow-2xs"
+                  className="w-full pl-9 pr-8 py-2 rounded-xl text-xs bg-white text-slate-900 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 placeholder:text-slate-400 transition-all shadow-2xs"
                 />
                 {searchQuery && (
                   <button
@@ -968,7 +968,7 @@ export function PaidUsersList({
                       setSearchQuery('');
                       setCurrentPage(0);
                     }}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer p-0.5"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-0.5"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -989,24 +989,24 @@ export function PaidUsersList({
               className="flex-1"
             >
               {currentGuests.length === 0 ? (
-                <div className="py-16 text-center rounded-3xl bg-white dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/70 flex flex-col items-center justify-center shadow-xs">
+                <div className="py-16 text-center rounded-3xl bg-white border border-slate-200/80 flex flex-col items-center justify-center shadow-xs">
                   <div
                     className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-3 ${
                       sectionFilter === 'ONLINE'
-                        ? 'bg-indigo-100/60 dark:bg-indigo-950/60 text-indigo-600'
-                        : 'bg-teal-100/60 dark:bg-teal-950/60 text-teal-600'
+                        ? 'bg-indigo-100/60 text-indigo-600'
+                        : 'bg-teal-100/60 text-teal-600'
                     }`}
                   >
                     {sectionFilter === 'ONLINE' ? <Globe className="w-6 h-6" /> : <Store className="w-6 h-6" />}
                   </div>
-                  <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                  <h3 className="text-sm font-bold text-slate-700">
                     {searchQuery
                       ? 'No matching guests found'
                       : sectionFilter === 'ONLINE'
                       ? 'No online paid bookings yet'
                       : 'No offline registered guests yet'}
                   </h3>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 max-w-sm mt-1">
+                  <p className="text-xs text-slate-400 max-w-sm mt-1">
                     {searchQuery
                       ? `No records found matching "${searchQuery}". Clear your search to view all ${
                           sectionFilter === 'ONLINE' ? 'online' : 'offline'
@@ -1022,7 +1022,7 @@ export function PaidUsersList({
                         setSearchQuery('');
                         setCurrentPage(0);
                       }}
-                      className="mt-4 px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 cursor-pointer transition-all shadow-xs"
+                      className="mt-4 px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer transition-all shadow-xs"
                     >
                       Clear Search Filter
                     </button>
@@ -1035,7 +1035,7 @@ export function PaidUsersList({
                   </div>
 
                   {/* Horizontal Dots Carousel Pagination Bar */}
-                  <div className="pt-3 border-t border-slate-200/70 dark:border-slate-800/80 flex items-center justify-between select-none shrink-0 mt-1">
+                  <div className="pt-3 border-t border-slate-200/70 flex items-center justify-between select-none shrink-0 mt-1">
                     <div className="w-16 hidden sm:block" />
 
                     {/* Dots Carousel Navigator */}
@@ -1044,7 +1044,7 @@ export function PaidUsersList({
                         type="button"
                         disabled={validPage === 0}
                         onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
-                        className="w-7 h-7 rounded-lg border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:pointer-events-none hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer"
+                        className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 disabled:opacity-30 disabled:pointer-events-none hover:bg-slate-100 transition-all cursor-pointer"
                         aria-label="Previous Page"
                       >
                         <ChevronLeft className="w-4 h-4" />
@@ -1061,9 +1061,9 @@ export function PaidUsersList({
                             className={`transition-all duration-300 rounded-full cursor-pointer shrink-0 ${
                               validPage === pIdx
                                 ? sectionFilter === 'ONLINE'
-                                  ? 'w-6 h-2 bg-indigo-600 dark:bg-indigo-400 shadow-xs'
-                                  : 'w-6 h-2 bg-teal-600 dark:bg-teal-400 shadow-xs'
-                                : 'w-2 h-2 bg-slate-200 hover:bg-slate-400 dark:bg-slate-700 dark:hover:bg-slate-500'
+                                  ? 'w-6 h-2 bg-indigo-600 shadow-xs'
+                                  : 'w-6 h-2 bg-teal-600 shadow-xs'
+                                : 'w-2 h-2 bg-slate-200 hover:bg-slate-400'
                             }`}
                           />
                         ))}
@@ -1073,14 +1073,14 @@ export function PaidUsersList({
                         type="button"
                         disabled={validPage >= totalPages - 1}
                         onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
-                        className="w-7 h-7 rounded-lg border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:pointer-events-none hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer"
+                        className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 disabled:opacity-30 disabled:pointer-events-none hover:bg-slate-100 transition-all cursor-pointer"
                         aria-label="Next Page"
                       >
                         <ChevronRight className="w-4 h-4" />
                       </button>
                     </div>
 
-                    <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 w-16 text-right">
+                    <span className="text-[11px] font-medium text-slate-400 w-16 text-right">
                       Page {validPage + 1} of {totalPages}
                     </span>
                   </div>
@@ -1098,18 +1098,18 @@ export function PaidUsersList({
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            className="w-full max-w-md bg-white dark:bg-[#0c1825] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4"
+            className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl space-y-4"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
                   <RotateCcw className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  <h3 className="text-base font-bold text-slate-900">
                     Reset Revenue Counter
                   </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-slate-500">
                     Cycle baseline & payout settlement
                   </p>
                 </div>
@@ -1117,36 +1117,36 @@ export function PaidUsersList({
               <button
                 type="button"
                 onClick={() => setShowResetModal(false)}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800/80 space-y-2 text-xs">
-              <div className="flex justify-between items-center text-slate-700 dark:text-slate-200">
+            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-2 text-xs">
+              <div className="flex justify-between items-center text-slate-700">
                 <span className="font-medium">All-Time Host Revenue:</span>
-                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-sm">
+                <span className="font-mono font-bold text-emerald-600 text-sm">
                   ₹{rawTotalRevenue.toLocaleString('en-IN')}
                 </span>
               </div>
-              <div className="flex justify-between items-center text-slate-500 dark:text-slate-400 text-[11.5px]">
+              <div className="flex justify-between items-center text-slate-500 text-[11.5px]">
                 <span>• Online (Direct UPI):</span>
-                <span className="font-mono font-semibold text-indigo-600 dark:text-indigo-400">₹{rawOnlineRevenue.toLocaleString('en-IN')}</span>
+                <span className="font-mono font-semibold text-indigo-600">₹{rawOnlineRevenue.toLocaleString('en-IN')}</span>
               </div>
-              <div className="flex justify-between items-center text-slate-500 dark:text-slate-400 text-[11.5px]">
+              <div className="flex justify-between items-center text-slate-500 text-[11.5px]">
                 <span>• Offline (Counter / Cash):</span>
-                <span className="font-mono font-semibold text-teal-600 dark:text-teal-400">₹{rawOfflineRevenue.toLocaleString('en-IN')}</span>
+                <span className="font-mono font-semibold text-teal-600">₹{rawOfflineRevenue.toLocaleString('en-IN')}</span>
               </div>
 
               {isResetActive && (
-                <div className="pt-2 border-t border-slate-200 dark:border-slate-800 text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                <div className="pt-2 border-t border-slate-200 text-[11px] text-amber-600 font-medium">
                   Currently active cycle reset (Baseline: ₹{(revenueReset.baselineTotal || 0).toLocaleString('en-IN')})
                 </div>
               )}
             </div>
 
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            <p className="text-xs text-slate-500 leading-relaxed">
               Resetting sets your active revenue display to ₹0 from this point onward. All guest bookings, past checked-out stays, transaction references, and invoices are permanently safe. You can restore your all-time earnings anytime.
             </p>
 
@@ -1155,7 +1155,7 @@ export function PaidUsersList({
                 type="button"
                 onClick={() => setShowResetModal(false)}
                 disabled={isResettingRevenue}
-                className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
+                className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-all cursor-pointer"
               >
                 Cancel
               </button>
@@ -1165,7 +1165,7 @@ export function PaidUsersList({
                   type="button"
                   onClick={handleRestoreAllTime}
                   disabled={isResettingRevenue}
-                  className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 transition-all cursor-pointer"
+                  className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-xs font-bold text-slate-800 transition-all cursor-pointer"
                 >
                   Restore All-Time (₹{rawTotalRevenue.toLocaleString('en-IN')})
                 </button>

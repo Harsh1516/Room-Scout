@@ -81,14 +81,14 @@ export function RecentlyAdded({ onStayClick, onBookClick }) {
       <ScrollReveal desktopOffset={20} mobileOffset={12} desktopDuration={0.5} mobileDuration={0.35}>
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 sm:mb-8 gap-3 sm:gap-4 w-full">
           <div>
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-slate-950 dark:text-white mt-1.5 sm:mt-2 tracking-tight drop-shadow-sm dark:drop-shadow-[0_8px_30px_rgba(0,0,0,0.9)]">
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-slate-950 mt-1.5 sm:mt-2 tracking-tight drop-shadow-sm(0,0,0,0.9)]">
               Recently Added Listings
             </h2>
           </div>
 
           <button
             onClick={() => navigate('/search')}
-            className="self-start sm:self-auto text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white hover:text-slate-700 dark:hover:text-white flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl bg-white/80 dark:bg-white/10 dark:hover:bg-white/20 border border-slate-200 dark:border-white/25 backdrop-blur-2xl transition-all cursor-pointer shadow-xs dark:shadow-[inset_0_1px_2px_rgba(255,255,255,0.2)] active:scale-95"
+            className="self-start sm:self-auto text-[11px] sm:text-xs font-bold text-slate-900 hover:text-slate-700 flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl bg-white/80 border border-slate-200 backdrop-blur-2xl transition-all cursor-pointer shadow-xs(255,255,255,0.2)] active:scale-95"
           >
             <span>Explore All Properties</span>
             <span>→</span>
@@ -107,17 +107,17 @@ export function RecentlyAdded({ onStayClick, onBookClick }) {
       {/* Empty State when no host has listed a stay yet */}
       {!loading && recentStays.length === 0 && (
         <ScrollReveal desktopOffset={16} mobileOffset={10}>
-          <div className="bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 sm:p-12 text-center backdrop-blur-xl max-w-2xl mx-auto shadow-sm">
-            <div className="w-14 h-14 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-4">
+          <div className="bg-white/80 border border-slate-200 rounded-3xl p-8 sm:p-12 text-center backdrop-blur-xl max-w-2xl mx-auto shadow-sm">
+            <div className="w-14 h-14 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto mb-4">
               <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                 <polyline points="9 22 9 12 15 12 15 22" />
               </svg>
             </div>
-            <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">
+            <h3 className="text-lg sm:text-xl font-extrabold text-slate-900">
               No Properties Listed Yet
             </h3>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-md mx-auto leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-500 mt-2 max-w-md mx-auto leading-relaxed">
               New verified listings are currently being processed. Check back soon for fresh PGs, hostels, and stays!
             </p>
           </div>

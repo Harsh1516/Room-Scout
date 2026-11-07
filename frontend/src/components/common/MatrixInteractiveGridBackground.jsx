@@ -318,7 +318,7 @@ export function MatrixInteractiveGridBackground({ className = '' } = {}) {
   return (
     <div
       aria-hidden="true"
-      className={`fixed inset-0 w-full h-full pointer-events-none z-0 overflow-hidden select-none bg-black hidden dark:block ${className}`}
+      className={`fixed inset-0 w-full h-full pointer-events-none z-0 overflow-hidden select-none bg-black hidden ${className}`}
     >
       <canvas
         ref={canvasRef}

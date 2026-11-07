@@ -6,7 +6,6 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from '../context/ToastContext';
 import { AdminHostsTable } from '../components/admin/AdminHostsTable';
 import { AdminUsersTable } from '../components/admin/AdminUsersTable';
-import { ThemeTogglePill } from '../components/common/ThemeTogglePill';
 import PlatformPaymentSettingsPage from './PlatformPaymentSettingsPage';
 import { AdminSubscriptionsView } from '../components/admin/AdminSubscriptionsView';
 
@@ -630,24 +629,24 @@ export function AdminPage() {
 
   if (!isAdminAuthorized) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-black text-slate-800 dark:text-slate-200 flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="w-full max-w-md p-6 sm:p-8 rounded-3xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 shadow-2xl flex flex-col items-center text-center"
+          className="w-full max-w-md p-6 sm:p-8 rounded-3xl bg-white/80 backdrop-blur-xl border border-slate-200/80 shadow-2xl flex flex-col items-center text-center"
         >
-          <div className="w-14 h-14 rounded-2xl bg-purple-500/10 dark:bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-600 dark:text-purple-400 mb-4 shadow-inner">
+          <div className="w-14 h-14 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-600 mb-4 shadow-inner">
             <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
               <path d="M7 11V7a5 5 0 0 1 10 0v4" />
             </svg>
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-normal text-slate-900 dark:text-white mb-2">
+          <h2 className="text-xl sm:text-2xl font-normal text-slate-900 mb-2">
             Administrator Access
           </h2>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 mb-6 font-normal">
+          <p className="text-xs sm:text-sm text-slate-600 mb-6 font-normal">
             This management console requires verified admin credentials or your master security passkey.
           </p>
 
@@ -660,7 +659,7 @@ export function AdminPage() {
                 setPasskeyError('');
               }}
               placeholder="Enter Master Admin Passkey..."
-              className="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-black/60 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 text-sm font-normal focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 transition-all"
+              className="w-full px-4 py-3 rounded-2xl bg-slate-100 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm font-normal focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 transition-all"
               autoFocus
             />
 
@@ -682,7 +681,7 @@ export function AdminPage() {
           <button
             type="button"
             onClick={() => navigate('/explore')}
-            className="mt-4 text-xs font-normal text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-white transition-colors cursor-pointer"
+            className="mt-4 text-xs font-normal text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
           >
             ← Return to Explore
           </button>
@@ -692,7 +691,7 @@ export function AdminPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-slate-50 dark:bg-[#06080F] text-slate-800 dark:text-slate-100 antialiased selection:bg-purple-500 selection:text-white transition-colors duration-200 font-sans overflow-x-hidden">
+    <div className="relative min-h-screen bg-slate-50 text-slate-800 antialiased selection:bg-purple-500 selection:text-white transition-colors duration-200 font-sans overflow-x-hidden">
       {/* ── AMBIENT RADIANT MESH GLOW BACKGROUND ── */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         {/* Top Center Radiant Glow */}
@@ -702,7 +701,7 @@ export function AdminPage() {
         {/* Bottom Right Soft Violet Aura */}
         <div className="absolute top-2/3 -right-48 w-96 h-96 bg-purple-600/[0.08] blur-[120px] rounded-full" />
         {/* Subtle Micro-Dot Matrix Overlay for Depth */}
-        <div className="absolute inset-0 bg-[radial-gradient(#0000000d_1px,transparent_1px)] dark:bg-[radial-gradient(#ffffff0a_1px,transparent_1px)] [background-size:24px_24px] opacity-60" />
+        <div className="absolute inset-0 bg-[radial-gradient(#0000000d_1px,transparent_1px)](#ffffff0a_1px,transparent_1px)] [background-size:24px_24px] opacity-60" />
       </div>
 
       {/* ===================================================================== */}
@@ -714,7 +713,7 @@ export function AdminPage() {
           <button
             type="button"
             onClick={() => navigate('/explore')}
-            className="apple-liquid-nav flex items-center justify-center p-2 sm:px-3 sm:py-1.5 gap-2 rounded-full border border-slate-200/80 dark:border-white/[0.1] bg-white/70 dark:bg-[#0B0F19]/80 backdrop-blur-2xl shadow-xs cursor-pointer hover:scale-105 active:scale-95 transition-all duration-200 hover:border-purple-500/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] focus:outline-none focus:ring-0"
+            className="apple-liquid-nav flex items-center justify-center p-2 sm:px-3 sm:py-1.5 gap-2 rounded-full border border-slate-200/80 bg-white/70 backdrop-blur-2xl shadow-xs cursor-pointer hover:scale-105 active:scale-95 transition-all duration-200 hover:border-purple-500/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] focus:outline-none focus:ring-0"
             title="Return to Explore Stays"
             aria-label="RoomScout Brand Home"
           >
@@ -732,10 +731,10 @@ export function AdminPage() {
                 <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" />
               </svg>
             </div>
-            <span className="hidden sm:inline tracking-tight font-normal text-slate-900 dark:text-white text-xs sm:text-sm">
+            <span className="hidden sm:inline tracking-tight font-normal text-slate-900 text-xs sm:text-sm">
               RoomScout
             </span>
-            <span className="hidden md:inline-flex text-[10px] font-normal px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-500/20 to-indigo-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30">
+            <span className="hidden md:inline-flex text-[10px] font-normal px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-500/20 to-indigo-500/20 text-purple-700 border border-purple-500/30">
               Admin
             </span>
           </button>
@@ -744,7 +743,7 @@ export function AdminPage() {
           <button
             type="button"
             onClick={() => navigate('/data')}
-            className="apple-liquid-nav hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-full border border-slate-200/80 dark:border-white/[0.1] bg-white/70 dark:bg-[#0B0F19]/80 backdrop-blur-2xl text-xs font-normal text-slate-700 dark:text-slate-200 hover:border-purple-500/50 hover:text-purple-400 transition-all cursor-pointer shadow-xs active:scale-95"
+            className="apple-liquid-nav hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-full border border-slate-200/80 bg-white/70 backdrop-blur-2xl text-xs font-normal text-slate-700 hover:border-purple-500/50 hover:text-purple-400 transition-all cursor-pointer shadow-xs active:scale-95"
             title="View Raw Database Records"
           >
             <svg className="w-3.5 h-3.5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -759,7 +758,7 @@ export function AdminPage() {
         {/* 2. CENTER: Segmented Admin Console Capsule (Users / Hosts / Subscriptions / UPI) */}
         <div className="fixed top-3.5 sm:top-5 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[calc(100vw-96px)] sm:max-w-none flex justify-center select-none">
           <LayoutGroup id="admin-segmented-nav-capsule">
-            <nav className="apple-liquid-nav relative flex items-center p-1 sm:p-1.5 rounded-full border border-slate-200/80 dark:border-white/[0.1] bg-white/70 dark:bg-[#0B0F19]/85 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+            <nav className="apple-liquid-nav relative flex items-center p-1 sm:p-1.5 rounded-full border border-slate-200/80 bg-white/70 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
               {/* Users Tab */}
               <button
                 type="button"
@@ -769,14 +768,14 @@ export function AdminPage() {
                 }}
                 className={`relative z-10 px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none font-normal transition-colors duration-150 ${
                   activeTab === 'users'
-                    ? 'text-slate-900 dark:text-white'
-                    : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white'
+                    ? 'text-slate-900'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 {activeTab === 'users' && (
                   <motion.div
                     layoutId="admin-nav-pill-indicator"
-                    className="absolute inset-0 rounded-full bg-white dark:bg-zinc-800 shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)] border border-slate-200/80 dark:border-white/15 -z-10 pointer-events-none"
+                    className="absolute inset-0 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)](0,0,0,0.4)] border border-slate-200/80 -z-10 pointer-events-none"
                     transition={{
                       type: 'spring',
                       stiffness: 450,
@@ -785,15 +784,15 @@ export function AdminPage() {
                     }}
                   />
                 )}
-                <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'users' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400 dark:text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'users' ? 'text-purple-600' : 'text-slate-400'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 <span className="relative z-10 tracking-tight font-normal">Users</span>
                 <span
                   className={`relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-normal leading-none transition-colors ${
                     activeTab === 'users'
-                      ? 'bg-purple-500/15 text-purple-700 dark:text-purple-300'
-                      : 'bg-slate-200/80 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400'
+                      ? 'bg-purple-500/15 text-purple-700'
+                      : 'bg-slate-200/80 text-slate-600'
                   }`}
                 >
                   {users.length}
@@ -809,14 +808,14 @@ export function AdminPage() {
                 }}
                 className={`relative z-10 px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none font-normal transition-colors duration-150 ${
                   activeTab === 'hosts'
-                    ? 'text-slate-900 dark:text-white'
-                    : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white'
+                    ? 'text-slate-900'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 {activeTab === 'hosts' && (
                   <motion.div
                     layoutId="admin-nav-pill-indicator"
-                    className="absolute inset-0 rounded-full bg-white dark:bg-zinc-800 shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)] border border-slate-200/80 dark:border-white/15 -z-10 pointer-events-none"
+                    className="absolute inset-0 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)](0,0,0,0.4)] border border-slate-200/80 -z-10 pointer-events-none"
                     transition={{
                       type: 'spring',
                       stiffness: 450,
@@ -825,15 +824,15 @@ export function AdminPage() {
                     }}
                   />
                 )}
-                <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'hosts' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400 dark:text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'hosts' ? 'text-purple-600' : 'text-slate-400'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 <span className="relative z-10 tracking-tight font-normal">Hosts</span>
                 <span
                   className={`relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-normal leading-none transition-colors ${
                     activeTab === 'hosts'
-                      ? 'bg-purple-500/15 text-purple-700 dark:text-purple-300'
-                      : 'bg-slate-200/80 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400'
+                      ? 'bg-purple-500/15 text-purple-700'
+                      : 'bg-slate-200/80 text-slate-600'
                   }`}
                 >
                   {hosts.length}
@@ -849,14 +848,14 @@ export function AdminPage() {
                 }}
                 className={`relative z-10 px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none font-normal transition-colors duration-150 ${
                   activeTab === 'subscriptions'
-                    ? 'text-slate-900 dark:text-white'
-                    : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white'
+                    ? 'text-slate-900'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 {activeTab === 'subscriptions' && (
                   <motion.div
                     layoutId="admin-nav-pill-indicator"
-                    className="absolute inset-0 rounded-full bg-white dark:bg-zinc-800 shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)] border border-slate-200/80 dark:border-white/15 -z-10 pointer-events-none"
+                    className="absolute inset-0 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)](0,0,0,0.4)] border border-slate-200/80 -z-10 pointer-events-none"
                     transition={{
                       type: 'spring',
                       stiffness: 450,
@@ -865,7 +864,7 @@ export function AdminPage() {
                     }}
                   />
                 )}
-                <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'subscriptions' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400 dark:text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'subscriptions' ? 'text-purple-600' : 'text-slate-400'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                 </svg>
                 <span className="relative z-10 tracking-tight font-normal">Subscriptions</span>
@@ -877,8 +876,8 @@ export function AdminPage() {
                   <span
                     className={`relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-normal leading-none transition-colors ${
                       activeTab === 'subscriptions'
-                        ? 'bg-purple-500/15 text-purple-700 dark:text-purple-300'
-                        : 'bg-slate-200/80 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400'
+                        ? 'bg-purple-500/15 text-purple-700'
+                        : 'bg-slate-200/80 text-slate-600'
                     }`}
                   >
                     {subscriptions.length}
@@ -895,14 +894,14 @@ export function AdminPage() {
                 }}
                 className={`relative z-10 px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none font-normal transition-colors duration-150 ${
                   activeTab === 'upi'
-                    ? 'text-slate-900 dark:text-white'
-                    : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white'
+                    ? 'text-slate-900'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 {activeTab === 'upi' && (
                   <motion.div
                     layoutId="admin-nav-pill-indicator"
-                    className="absolute inset-0 rounded-full bg-white dark:bg-zinc-800 shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.4)] border border-slate-200/80 dark:border-white/15 -z-10 pointer-events-none"
+                    className="absolute inset-0 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)](0,0,0,0.4)] border border-slate-200/80 -z-10 pointer-events-none"
                     transition={{
                       type: 'spring',
                       stiffness: 450,
@@ -911,7 +910,7 @@ export function AdminPage() {
                     }}
                   />
                 )}
-                <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'upi' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400 dark:text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'upi' ? 'text-purple-600' : 'text-slate-400'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <rect x="2" y="5" width="20" height="14" rx="2" />
                   <line x1="2" y1="10" x2="22" y2="10" />
                 </svg>
@@ -927,16 +926,14 @@ export function AdminPage() {
           <button
             type="button"
             onClick={() => navigate('/explore')}
-            className="apple-liquid-nav hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-full bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 text-xs font-normal transition-all shadow-xs cursor-pointer select-none active:scale-95"
+            className="apple-liquid-nav hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-full bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 border border-purple-500/30 text-xs font-normal transition-all shadow-xs cursor-pointer select-none active:scale-95"
             title="Return to User Explore Stays"
           >
             <span>🧭</span>
             <span>Explore Stays</span>
           </button>
 
-          {/* Theme Mode Toggle Pill */}
-          <ThemeTogglePill />
-
+          
           {/* Admin Avatar & Lock Button */}
           <button
             type="button"
@@ -950,7 +947,7 @@ export function AdminPage() {
             aria-label="Lock Admin Console"
           >
             <span>{user?.name ? user.name.slice(0, 2).toUpperCase() : 'AD'}</span>
-            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-purple-400 text-slate-950 font-normal flex items-center justify-center text-[7px] border-2 border-white dark:border-slate-900 shadow-xs">
+            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-purple-400 text-slate-950 font-normal flex items-center justify-center text-[7px] border-2 border-white shadow-xs">
               🔒
             </span>
           </button>
@@ -967,7 +964,7 @@ export function AdminPage() {
         {/* 2. Users Tab Panel */}
         <div className={activeTab === 'users' ? 'block space-y-5 w-full' : 'hidden'}>
           {/* BEGIN: FilterAndSearchToolbar */}
-            <section className="bg-white/80 dark:bg-[#0B0F1D]/85 rounded-3xl border border-slate-200/80 dark:border-white/[0.08] backdrop-blur-2xl shadow-xl p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4" data-purpose="toolbar">
+            <section className="bg-white/80 rounded-3xl border border-slate-200/80 backdrop-blur-2xl shadow-xl p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4" data-purpose="toolbar">
               <div className="flex items-center flex-wrap gap-2">
                 {/* Online Users Button */}
                 <button
@@ -978,16 +975,16 @@ export function AdminPage() {
                   }}
                   className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-normal transition-all shadow-xs active:scale-95 cursor-pointer ${
                     userSubTab === 'online'
-                      ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.15)] ring-1 ring-emerald-500/20'
-                      : 'text-slate-600 dark:text-slate-400 bg-white/60 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] hover:bg-slate-100 dark:hover:bg-white/[0.06] hover:text-slate-900 dark:hover:text-white'
+                      ? 'bg-emerald-500/15 text-emerald-700 border border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.15)] ring-1 ring-emerald-500/20'
+                      : 'text-slate-600 bg-white/60 border border-slate-200/80 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
                   <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-400/50 animate-pulse" />
                   <span>Online Users</span>
                   <span className={`px-2 py-0.5 rounded-lg text-[10.5px] font-normal border ${
                     userSubTab === 'online'
-                      ? 'bg-white dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-500/30'
-                      : 'bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 border-transparent'
+                      ? 'bg-white text-emerald-800 border-emerald-500/30'
+                      : 'bg-slate-100 text-slate-700 border-transparent'
                   }`}>
                     {onlineUsersList.length}
                   </span>
@@ -1002,16 +999,16 @@ export function AdminPage() {
                   }}
                   className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-normal transition-all shadow-xs active:scale-95 cursor-pointer ${
                     userSubTab === 'offline'
-                      ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.15)] ring-1 ring-amber-500/20'
-                      : 'text-slate-600 dark:text-slate-400 bg-white/60 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] hover:bg-slate-100 dark:hover:bg-white/[0.06] hover:text-slate-900 dark:hover:text-white'
+                      ? 'bg-amber-500/15 text-amber-700 border border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.15)] ring-1 ring-amber-500/20'
+                      : 'text-slate-600 bg-white/60 border border-slate-200/80 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
                   <span className="w-2 h-2 rounded-full bg-amber-500 ring-2 ring-amber-400/50" />
                   <span>Offline Users</span>
                   <span className={`px-2 py-0.5 rounded-lg text-[10.5px] font-normal border ${
                     userSubTab === 'offline'
-                      ? 'bg-white dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-500/30'
-                      : 'bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 border-transparent'
+                      ? 'bg-white text-amber-800 border-amber-500/30'
+                      : 'bg-slate-100 text-slate-700 border-transparent'
                   }`}>
                     {offlineUsersList.length}
                   </span>
@@ -1026,12 +1023,12 @@ export function AdminPage() {
                   }}
                   className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-normal transition-all shadow-xs active:scale-95 cursor-pointer ${
                     userSubTab === 'all'
-                      ? 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/40 shadow-[0_0_15px_rgba(168,85,247,0.15)] ring-1 ring-purple-500/20'
-                      : 'text-slate-600 dark:text-slate-400 bg-white/60 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] hover:bg-slate-100 dark:hover:bg-white/[0.06] hover:text-slate-900 dark:hover:text-white'
+                      ? 'bg-purple-500/15 text-purple-700 border border-purple-500/40 shadow-[0_0_15px_rgba(168,85,247,0.15)] ring-1 ring-purple-500/20'
+                      : 'text-slate-600 bg-white/60 border border-slate-200/80 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
                   <span>All Accounts</span>
-                  <span className="bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-lg text-[10.5px] font-normal">
+                  <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-lg text-[10.5px] font-normal">
                     {users.length}
                   </span>
                 </button>
@@ -1057,13 +1054,13 @@ export function AdminPage() {
                         ? 'Search offline guest, phone, stay...'
                         : 'Search all users...'
                     }
-                    className="w-full pl-9 pr-7 py-2 text-xs font-normal bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/90 dark:border-white/[0.08] focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 text-slate-900 dark:text-white rounded-xl focus:outline-none transition-all placeholder:text-slate-400 shadow-inner"
+                    className="w-full pl-9 pr-7 py-2 text-xs font-normal bg-slate-50/80 border border-slate-200/90 focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 text-slate-900 rounded-xl focus:outline-none transition-all placeholder:text-slate-400 shadow-inner"
                   />
                   {searchQuery && (
                     <button
                       type="button"
                       onClick={() => setSearchQuery('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 cursor-pointer"
                     >
                       ✕
                     </button>
@@ -1074,7 +1071,7 @@ export function AdminPage() {
                   <button
                     type="button"
                     onClick={() => setShowFilterMenu((prev) => !prev)}
-                    className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-50/80 dark:bg-white/[0.04] border border-slate-200/90 dark:border-white/[0.08] shadow-xs hover:border-purple-500/40 transition-all shrink-0 cursor-pointer active:scale-95"
+                    className="p-2 rounded-xl text-slate-600 hover:text-slate-900 bg-slate-50/80 border border-slate-200/90 shadow-xs hover:border-purple-500/40 transition-all shrink-0 cursor-pointer active:scale-95"
                     title="Apply Custom Filters"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
@@ -1088,14 +1085,14 @@ export function AdminPage() {
                         initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 5 }}
-                        className="absolute right-0 mt-2 w-48 bg-white/95 dark:bg-[#0E1322] rounded-2xl shadow-2xl border border-slate-200/80 dark:border-white/10 py-2 z-50 text-xs backdrop-blur-2xl"
+                        className="absolute right-0 mt-2 w-48 bg-white/95 rounded-2xl shadow-2xl border border-slate-200/80 py-2 z-50 text-xs backdrop-blur-2xl"
                       >
                         <div className="px-3.5 py-1 font-normal text-slate-400 text-xs">Sort by</div>
                         <button
                           type="button"
                           onClick={() => { setSortBy('newest'); setShowFilterMenu(false); }}
-                          className={`w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-white/[0.06] flex items-center justify-between cursor-pointer ${
-                            sortBy === 'newest' ? 'font-normal text-purple-600 dark:text-purple-400' : 'text-slate-700 dark:text-slate-300'
+                          className={`w-full text-left px-3.5 py-2 hover:bg-slate-100 flex items-center justify-between cursor-pointer ${
+                            sortBy === 'newest' ? 'font-normal text-purple-600' : 'text-slate-700'
                           }`}
                         >
                           <span>Newest First</span>
@@ -1104,8 +1101,8 @@ export function AdminPage() {
                         <button
                           type="button"
                           onClick={() => { setSortBy('oldest'); setShowFilterMenu(false); }}
-                          className={`w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-white/[0.06] flex items-center justify-between cursor-pointer ${
-                            sortBy === 'oldest' ? 'font-normal text-purple-600 dark:text-purple-400' : 'text-slate-700 dark:text-slate-300'
+                          className={`w-full text-left px-3.5 py-2 hover:bg-slate-100 flex items-center justify-between cursor-pointer ${
+                            sortBy === 'oldest' ? 'font-normal text-purple-600' : 'text-slate-700'
                           }`}
                         >
                           <span>Oldest First</span>
@@ -1114,8 +1111,8 @@ export function AdminPage() {
                         <button
                           type="button"
                           onClick={() => { setSortBy('name_asc'); setShowFilterMenu(false); }}
-                          className={`w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-white/[0.06] flex items-center justify-between cursor-pointer ${
-                            sortBy === 'name_asc' ? 'font-normal text-purple-600 dark:text-purple-400' : 'text-slate-700 dark:text-slate-300'
+                          className={`w-full text-left px-3.5 py-2 hover:bg-slate-100 flex items-center justify-between cursor-pointer ${
+                            sortBy === 'name_asc' ? 'font-normal text-purple-600' : 'text-slate-700'
                           }`}
                         >
                           <span>Name (A - Z)</span>
@@ -1124,8 +1121,8 @@ export function AdminPage() {
                         <button
                           type="button"
                           onClick={() => { setSortBy('name_desc'); setShowFilterMenu(false); }}
-                          className={`w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-white/[0.06] flex items-center justify-between cursor-pointer ${
-                            sortBy === 'name_desc' ? 'font-normal text-purple-600 dark:text-purple-400' : 'text-slate-700 dark:text-slate-300'
+                          className={`w-full text-left px-3.5 py-2 hover:bg-slate-100 flex items-center justify-between cursor-pointer ${
+                            sortBy === 'name_desc' ? 'font-normal text-purple-600' : 'text-slate-700'
                           }`}
                         >
                           <span>Name (Z - A)</span>
@@ -1139,7 +1136,7 @@ export function AdminPage() {
                 <button
                   type="button"
                   onClick={() => handleExportCSV(filteredUsers, 'roomscout-users.csv')}
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-normal text-slate-700 dark:text-slate-200 bg-slate-50/80 dark:bg-white/[0.04] hover:bg-slate-100 dark:hover:bg-white/[0.08] border border-slate-200/90 dark:border-white/[0.08] shadow-xs hover:border-purple-500/40 transition-all shrink-0 active:scale-95 cursor-pointer"
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-normal text-slate-700 bg-slate-50/80 hover:bg-slate-100 border border-slate-200/90 shadow-xs hover:border-purple-500/40 transition-all shrink-0 active:scale-95 cursor-pointer"
                   title="Export as CSV"
                 >
                   <svg className="w-3.5 h-3.5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
@@ -1170,35 +1167,35 @@ export function AdminPage() {
         {/* 3. Hosts Tab Panel */}
         <div className={activeTab === 'hosts' ? 'block space-y-4 w-full' : 'hidden'}>
             {/* Toolbar for Hosts */}
-            <section className="bg-white/80 dark:bg-[#0B0F1D]/85 rounded-3xl border border-slate-200/80 dark:border-white/[0.08] backdrop-blur-2xl shadow-xl p-3.5 sm:p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 relative overflow-hidden">
+            <section className="bg-white/80 rounded-3xl border border-slate-200/80 backdrop-blur-2xl shadow-xl p-3.5 sm:p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 relative overflow-hidden">
               <div className="flex items-center gap-3">
-                <div className="text-xs text-slate-600 dark:text-slate-300 font-normal">
-                  Showing <span className="text-slate-900 dark:text-white font-medium">{filteredHosts.length}</span> of <span className="text-slate-900 dark:text-white font-medium">{hosts.length}</span> property hosts
+                <div className="text-xs text-slate-600 font-normal">
+                  Showing <span className="text-slate-900 font-medium">{filteredHosts.length}</span> of <span className="text-slate-900 font-medium">{hosts.length}</span> property hosts
                 </div>
 
                 {selectedHostIds.length > 0 && (
-                  <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30 animate-pulse">
+                  <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-500/15 text-purple-700 border border-purple-500/30 animate-pulse">
                     <span>{selectedHostIds.length} selected</span>
                   </span>
                 )}
               </div>
 
               {/* Center Filter Segment: All / Approved / Pending */}
-              <div className="flex items-center justify-center p-1 rounded-2xl bg-slate-100/90 dark:bg-white/[0.04] border border-slate-200/90 dark:border-white/[0.08] shadow-inner self-center">
+              <div className="flex items-center justify-center p-1 rounded-2xl bg-slate-100/90 border border-slate-200/90 shadow-inner self-center">
                 <button
                   type="button"
                   onClick={() => setHostStatusFilter('all')}
                   className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer select-none ${
                     hostStatusFilter === 'all'
-                      ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      ? 'bg-white text-slate-900 shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   <span>All</span>
                   <span className={`px-1.5 py-0.2 text-[10.5px] rounded-md font-mono ${
                     hostStatusFilter === 'all'
-                      ? 'bg-slate-100 dark:bg-zinc-700 text-slate-800 dark:text-zinc-200'
-                      : 'bg-slate-200/60 dark:bg-white/10 text-slate-500 dark:text-slate-400'
+                      ? 'bg-slate-100 text-slate-800'
+                      : 'bg-slate-200/60 text-slate-500'
                   }`}>
                     {hosts.length}
                   </span>
@@ -1209,16 +1206,16 @@ export function AdminPage() {
                   onClick={() => setHostStatusFilter('approved')}
                   className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer select-none ${
                     hostStatusFilter === 'approved'
-                      ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 shadow-xs font-semibold'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400'
+                      ? 'bg-emerald-500/15 text-emerald-700 border border-emerald-500/30 shadow-xs font-semibold'
+                      : 'text-slate-600 hover:text-emerald-600'
                   }`}
                 >
                   <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
                   <span>Approved</span>
                   <span className={`px-1.5 py-0.2 text-[10.5px] rounded-md font-mono ${
                     hostStatusFilter === 'approved'
-                      ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold'
-                      : 'bg-slate-200/60 dark:bg-white/10 text-slate-500 dark:text-slate-400'
+                      ? 'bg-emerald-500/20 text-emerald-700 font-bold'
+                      : 'bg-slate-200/60 text-slate-500'
                   }`}>
                     {approvedHostsCount}
                   </span>
@@ -1229,16 +1226,16 @@ export function AdminPage() {
                   onClick={() => setHostStatusFilter('pending')}
                   className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer select-none ${
                     hostStatusFilter === 'pending'
-                      ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 shadow-xs font-semibold'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400'
+                      ? 'bg-amber-500/15 text-amber-700 border border-amber-500/30 shadow-xs font-semibold'
+                      : 'text-slate-600 hover:text-amber-600'
                   }`}
                 >
                   <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0 animate-pulse" />
                   <span>Pending</span>
                   <span className={`px-1.5 py-0.2 text-[10.5px] rounded-md font-mono ${
                     hostStatusFilter === 'pending'
-                      ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold'
-                      : 'bg-slate-200/60 dark:bg-white/10 text-slate-500 dark:text-slate-400'
+                      ? 'bg-amber-500/20 text-amber-700 font-bold'
+                      : 'bg-slate-200/60 text-slate-500'
                   }`}>
                     {pendingHostsCount}
                   </span>
@@ -1274,7 +1271,7 @@ export function AdminPage() {
                     <button
                       type="button"
                       onClick={handleClearHostSelection}
-                      className="px-2 py-2 text-xs text-slate-500 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
+                      className="px-2 py-2 text-xs text-slate-500 hover:text-slate-700 transition-colors cursor-pointer"
                       title="Clear selection"
                     >
                       Clear
@@ -1294,13 +1291,13 @@ export function AdminPage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search host, property, status..."
-                    className="w-full pl-9 pr-7 py-2 text-xs font-normal bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/90 dark:border-white/[0.08] focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 text-slate-900 dark:text-white rounded-xl focus:outline-none transition-all placeholder:text-slate-400 shadow-inner"
+                    className="w-full pl-9 pr-7 py-2 text-xs font-normal bg-slate-50/80 border border-slate-200/90 focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 text-slate-900 rounded-xl focus:outline-none transition-all placeholder:text-slate-400 shadow-inner"
                   />
                   {searchQuery && (
                     <button
                       type="button"
                       onClick={() => setSearchQuery('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 cursor-pointer"
                     >
                       ✕
                     </button>
@@ -1310,7 +1307,7 @@ export function AdminPage() {
                 <button
                   type="button"
                   onClick={() => handleExportCSV(filteredHosts, 'roomscout-hosts.csv')}
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-normal text-slate-700 dark:text-slate-200 bg-slate-50/80 dark:bg-white/[0.04] hover:bg-slate-100 dark:hover:bg-white/[0.08] border border-slate-200/90 dark:border-white/[0.08] shadow-xs hover:border-purple-500/40 transition-all shrink-0 active:scale-95 cursor-pointer"
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-normal text-slate-700 bg-slate-50/80 hover:bg-slate-100 border border-slate-200/90 shadow-xs hover:border-purple-500/40 transition-all shrink-0 active:scale-95 cursor-pointer"
                   title="Export Hosts as CSV"
                 >
                   <svg className="w-3.5 h-3.5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
@@ -1321,7 +1318,7 @@ export function AdminPage() {
               </div>
             </section>
 
-            <div className="bg-white/80 dark:bg-[#0B0F1D]/85 rounded-3xl border border-slate-200/80 dark:border-white/[0.08] backdrop-blur-2xl shadow-xl overflow-hidden relative">
+            <div className="bg-white/80 rounded-3xl border border-slate-200/80 backdrop-blur-2xl shadow-xl overflow-hidden relative">
               <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-purple-400/20 to-transparent pointer-events-none" />
               <AdminHostsTable
                 hosts={filteredHosts}
@@ -1350,7 +1347,7 @@ export function AdminPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 20 }}
-                  className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 dark:bg-zinc-900/95 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700/80 dark:border-zinc-700/80 backdrop-blur-2xl flex items-center gap-4"
+                  className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700/80 backdrop-blur-2xl flex items-center gap-4"
                 >
                   <span className="text-xs font-medium">
                     <span className="font-bold text-purple-400">{selectedHostIds.length}</span> host{selectedHostIds.length === 1 ? '' : 's'} selected

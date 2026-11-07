@@ -35,8 +35,8 @@ export function SkiperSpotlightCard({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
-        'relative rounded-2xl sm:rounded-3xl border border-emerald-200/80 dark:border-zinc-800 shadow-md shadow-emerald-950/[0.03] hover:shadow-xl hover:shadow-emerald-500/10 hover:border-emerald-300 dark:hover:border-zinc-700 transition-all duration-300 overflow-hidden',
-        !isTransparent && 'bg-white/95 dark:bg-zinc-900/95',
+        'relative rounded-2xl sm:rounded-3xl border border-emerald-200/80 shadow-md shadow-emerald-950/[0.03] hover:shadow-xl hover:shadow-emerald-500/10 hover:border-emerald-300 transition-all duration-300 overflow-hidden',
+        !isTransparent && 'bg-white/95',
         className
       )}
       {...props}

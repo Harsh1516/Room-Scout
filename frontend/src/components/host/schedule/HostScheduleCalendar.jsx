@@ -405,22 +405,22 @@ export function HostScheduleCalendar({
   return (
     <div
       ref={calendarCardRef}
-      className="w-full flex flex-col rounded-[26px] overflow-hidden transition-all bg-white dark:bg-black border border-slate-200/90 dark:border-zinc-800 shadow-sm select-none relative text-slate-900 dark:text-white"
+      className="w-full flex flex-col rounded-[26px] overflow-hidden transition-all bg-white border border-slate-200/90 shadow-sm select-none relative text-slate-900"
     >
       {/* Room Detail Banner */}
-      <div className="px-4 sm:px-5 py-3 border-b border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-black text-slate-900 dark:text-white relative z-10">
+      <div className="px-4 sm:px-5 py-3 border-b border-slate-200/90 bg-white text-slate-900 relative z-10">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-slate-900 dark:text-white truncate font-extrabold tracking-tight text-base sm:text-lg lg:text-[18px] leading-normal pb-0.5">
+              <h3 className="text-slate-900 truncate font-extrabold tracking-tight text-base sm:text-lg lg:text-[18px] leading-normal pb-0.5">
                 {roomDisplay}
               </h3>
-              <span className="h-6 px-2.5 text-[11px] rounded-full bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 font-bold shadow-2xs select-none flex items-center justify-center leading-normal">
+              <span className="h-6 px-2.5 text-[11px] rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold shadow-2xs select-none flex items-center justify-center leading-normal">
                 {roomTypeDisplay}
               </span>
             </div>
             {!reservationDetails && !hideCheckInOutTimes && (
-              <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5 font-medium leading-normal">
+              <p className="text-[11px] text-slate-500 mt-0.5 font-medium leading-normal">
                 {isMonthly
                   ? 'Check-in: 1st of Month (12:00 AM) • Check-out: End of Month (11:59 PM)'
                   : 'Check-in: 12:00 PM • Check-out: 11:59 AM'}
@@ -435,17 +435,17 @@ export function HostScheduleCalendar({
                 if (parts.length === 2) {
                   return (
                     <div className="flex items-baseline justify-end">
-                      <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
+                      <span className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-none">
                         {parts[0]}
                       </span>
-                      <span className="text-xs sm:text-sm font-bold text-purple-600 dark:text-purple-400/75 dark:text-slate-200 ml-0.5">
+                      <span className="text-xs sm:text-sm font-bold text-purple-600 ml-0.5">
                         /{parts[1]}
                       </span>
                     </div>
                   );
                 }
                 return (
-                  <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
+                  <span className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-none">
                     {priceDisplay}
                   </span>
                 );
@@ -618,40 +618,40 @@ export function HostScheduleCalendar({
               }}
               className="overflow-hidden"
             >
-              <div className="rounded-xl sm:rounded-2xl p-2.5 sm:p-3 border border-slate-200 dark:border-white/10 dark:border-purple-600/50 bg-purple-500/5 dark:bg-purple-600/30 backdrop-blur-md shadow-xs space-y-1.5 mt-0.5">
+              <div className="rounded-xl sm:rounded-2xl p-2.5 sm:p-3 border border-slate-200 bg-purple-500/5 backdrop-blur-md shadow-xs space-y-1.5 mt-0.5">
                 <div className="flex items-center justify-between gap-1.5 sm:gap-2 w-full text-xs">
                   <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-                    <span className="font-bold text-[11px] sm:text-[13.5px] text-slate-900 dark:text-white">
+                    <span className="font-bold text-[11px] sm:text-[13.5px] text-slate-900">
                       {reservationDetails.checkInDate}
                     </span>
-                    <span className="font-semibold text-[8.5px] sm:text-[9.5px] px-1.5 sm:px-2 py-0.5 rounded-full bg-purple-500/10 dark:bg-white/10 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-white/10 dark:border-purple-600/30">
+                    <span className="font-semibold text-[8.5px] sm:text-[9.5px] px-1.5 sm:px-2 py-0.5 rounded-full bg-purple-500/10 text-slate-800 border border-slate-200">
                       {reservationDetails.checkInTime}
                     </span>
                   </div>
 
                   <div className="flex-1 flex items-center justify-center relative mx-1 sm:mx-2 min-w-[24px]">
-                    <div className="w-full border-t border-dashed border-slate-200 dark:border-white/10 dark:border-purple-600/30" />
-                    <span className="absolute px-1.5 py-0.5 bg-purple-600 text-[8.5px] sm:text-[9px] font-bold text-slate-100 uppercase rounded-full border border-slate-200 dark:border-white/10 tracking-wider shadow-2xs">
+                    <div className="w-full border-t border-dashed border-slate-200" />
+                    <span className="absolute px-1.5 py-0.5 bg-purple-600 text-[8.5px] sm:text-[9px] font-bold text-slate-100 uppercase rounded-full border border-slate-200 tracking-wider shadow-2xs">
                       TO
                     </span>
                   </div>
 
                   <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 justify-end">
-                    <span className="font-bold text-[11px] sm:text-[13.5px] text-slate-900 dark:text-white">
+                    <span className="font-bold text-[11px] sm:text-[13.5px] text-slate-900">
                       {reservationDetails.checkOutDate}
                     </span>
-                    <span className="font-semibold text-[8.5px] sm:text-[9.5px] px-1.5 sm:px-2 py-0.5 rounded-full bg-purple-500/10 dark:bg-white/10 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-white/10 dark:border-purple-600/30">
+                    <span className="font-semibold text-[8.5px] sm:text-[9.5px] px-1.5 sm:px-2 py-0.5 rounded-full bg-purple-500/10 text-slate-800 border border-slate-200">
                       {reservationDetails.checkOutTime}
                     </span>
                   </div>
                 </div>
 
                 {reservationDetails.unitPrice > 0 && (
-                  <div className="pt-1.5 border-t border-slate-200 dark:border-white/10 dark:border-purple-600/20 flex items-center justify-between text-xs">
-                    <span className="font-medium text-purple-600 dark:text-purple-400/80 dark:text-slate-200/80 text-[11px]">
+                  <div className="pt-1.5 border-t border-slate-200 flex items-center justify-between text-xs">
+                    <span className="font-medium text-purple-600 text-[11px]">
                       {reservationDetails.priceBreakdown}
                     </span>
-                    <span className="text-base sm:text-lg font-extrabold text-slate-800 dark:text-slate-200 tracking-tight">
+                    <span className="text-base sm:text-lg font-extrabold text-slate-800 tracking-tight">
                       ₹{reservationDetails.totalPrice.toLocaleString('en-IN')}
                     </span>
                   </div>
@@ -731,10 +731,10 @@ export function HostScheduleCalendar({
 
         {/* Month Card Header & Subtitle */}
         <div className="flex items-center justify-between pt-0.5">
-          <span className="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+          <span className="text-xs sm:text-[13px] font-bold text-slate-900 tracking-tight flex items-center gap-1.5">
             <span>{isMonthly ? 'Month Card (12 Months)' : 'Month Card'}</span>
             {!hideMonthCardExtras && isUserRequestSelection && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-code-sm text-[9.5px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-300 dark:border-purple-600/50">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-code-sm text-[9.5px] font-bold bg-purple-100 text-purple-700 border border-purple-300">
                 <span className="material-symbols-outlined text-[11px]">lock</span>
                 Display-Only
               </span>
@@ -744,9 +744,9 @@ export function HostScheduleCalendar({
             <span className={`text-[11px] sm:text-xs ${
               sortedSelected.length > 0
                 ? isUserRequestSelection
-                  ? 'text-purple-600 dark:text-purple-300 font-bold'
-                  : 'text-emerald-600 dark:text-[#00e599] font-bold'
-                : 'text-slate-400 dark:text-slate-500 font-medium'
+                  ? 'text-purple-600 font-bold'
+                  : 'text-emerald-600 font-bold'
+                : 'text-slate-400 font-medium'
             }`}>
               {isUserRequestSelection
                 ? isMonthly
@@ -766,7 +766,7 @@ export function HostScheduleCalendar({
       {/* Schedule Matrix */}
       {isMonthly ? (
         <div className="space-y-4">
-          <div className="p-3 sm:p-4 rounded-2xl sm:rounded-3xl bg-slate-50/50 dark:bg-[#071320] border border-slate-200/80 dark:border-[#1a2d42] shadow-2xs">
+          <div className="p-3 sm:p-4 rounded-2xl sm:rounded-3xl bg-slate-50/50 border border-slate-200/80 shadow-2xs">
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2">
               {(() => {
                 const roomCapacity = Math.max(
@@ -853,20 +853,20 @@ export function HostScheduleCalendar({
                           : isFullyBooked
                           ? isOnlineBooking
                             ? 'bg-purple-600 border-2 border-purple-500 text-white cursor-pointer hover:bg-purple-500 shadow-xs'
-                            : 'bg-rose-50 dark:bg-[#1a0a0f] border-2 border-rose-500 dark:border-rose-600/70 text-rose-700 dark:text-rose-100 cursor-pointer hover:border-rose-400 shadow-xs'
+                            : 'bg-rose-50 border-2 border-rose-500 text-rose-700 cursor-pointer hover:border-rose-400 shadow-xs'
                           : isLocked
-                          ? 'bg-slate-100/50 dark:bg-[#071320] border border-dashed border-slate-300 dark:border-[#1f3045] text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-60'
+                          ? 'bg-slate-100/50 border border-dashed border-slate-300 text-slate-400 cursor-not-allowed opacity-60'
                           : isSelected
                           ? isUserRequestSelection
                             ? 'animate-slot-flash border-2 font-extrabold shadow-md cursor-default pointer-events-none'
-                            : 'bg-slate-50 dark:bg-[#122438] border-2 border-[#c0c1ff] shadow-room-open-selected z-10 cursor-pointer'
+                            : 'bg-slate-50 border-2 border-[#c0c1ff] shadow-room-open-selected z-10 cursor-pointer'
                           : isPartiallyBooked
-                          ? 'bg-amber-50/80 dark:bg-[#1c1200] border-2 border-amber-400 dark:border-amber-500/70 text-amber-900 dark:text-amber-100 font-bold hover:border-amber-400 cursor-pointer'
+                          ? 'bg-amber-50/80 border-2 border-amber-400 text-amber-900 font-bold hover:border-amber-400 cursor-pointer'
                           : isUserRequestSelection
-                          ? 'bg-white/50 dark:bg-[#0c1825]/60 border border-slate-200 dark:border-[#1f3045] text-slate-400 dark:text-slate-500 cursor-not-allowed pointer-events-none'
+                          ? 'bg-white/50 border border-slate-200 text-slate-400 cursor-not-allowed pointer-events-none'
                           : isCurrentMonth
-                          ? 'bg-white dark:bg-[#0c1825] border-2 border-[#00e599] text-slate-900 dark:text-white font-bold hover:bg-slate-50 dark:hover:bg-[#0e1e2e] cursor-pointer shadow-xs'
-                          : 'bg-slate-50/70 dark:bg-[#0c1825] border border-slate-200/80 dark:border-[#1f3045] hover:border-slate-300 dark:hover:border-[#2f4663] hover:bg-slate-100/50 dark:hover:bg-[#0e1e2e] text-slate-800 dark:text-zinc-200 cursor-pointer'
+                          ? 'bg-white border-2 border-[#00e599] text-slate-900 font-bold hover:bg-slate-50 cursor-pointer shadow-xs'
+                          : 'bg-slate-50/70 border border-slate-200/80 hover:border-slate-300 hover:bg-slate-100/50 text-slate-800 cursor-pointer'
                       }`}
                     >
                       <span
@@ -887,18 +887,18 @@ export function HostScheduleCalendar({
                         isFullyBooked
                           ? isOnlineBooking
                             ? 'bg-purple-700 text-white border border-purple-500'
-                            : 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-500/50'
+                            : 'bg-rose-100 text-rose-700 border border-rose-300'
                           : isLocked
-                          ? 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                          ? 'bg-slate-200 text-slate-600'
                           : isSelected
                           ? isUserRequestSelection
                             ? 'animate-badge-flash font-bold border'
                             : 'bg-[#c0c1ff] text-[#07006c] font-black shadow-2xs'
                           : isPartiallyBooked
-                          ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-500/50'
+                          ? 'bg-amber-100 text-amber-800 border border-amber-300'
                           : isCurrentMonth
-                          ? 'bg-[#00e599]/20 text-[#006C4A] dark:text-[#00e599] border border-[#00e599]/40 font-bold'
-                          : 'bg-white dark:bg-[#071320] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-[#1a2d42]'
+                          ? 'bg-[#00e599]/20 text-[#006C4A] border border-[#00e599]/40 font-bold'
+                          : 'bg-white text-slate-600 border border-slate-200'
                       }`}>
                         {isFullyBooked
                           ? (roomCapacity > 1 ? `${roomCapacity}/${roomCapacity} Booked` : (primaryOccupant?.userName ? primaryOccupant.userName.split(' ')[0] : 'Booked'))
@@ -914,13 +914,13 @@ export function HostScheduleCalendar({
                       <div className="my-1 flex items-baseline justify-center gap-1.5 whitespace-nowrap">
                         <span className={`text-xs sm:text-[13.5px] font-black leading-tight tracking-tight ${
                           isSelected && !isUserRequestSelection
-                            ? 'text-[#5254cf] dark:text-[#c0c1ff]'
-                            : 'text-slate-900 dark:text-white'
+                            ? 'text-[#5254cf]'
+                            : 'text-slate-900'
                         }`}>{m.monthShort}</span>
                         <span className={`text-[11px] sm:text-xs font-medium leading-tight ${
                           isSelected && !isUserRequestSelection
-                            ? 'text-[#5254cf]/80 dark:text-[#c0c1ff]/80'
-                            : 'text-slate-400 dark:text-slate-400'
+                            ? 'text-[#5254cf]/80'
+                            : 'text-slate-400'
                         }`}>{m.year}</span>
                       </div>
 
@@ -932,12 +932,12 @@ export function HostScheduleCalendar({
                         occupiedColor={
                           isFullyBooked && isOnlineBooking
                             ? 'text-white'
-                            : 'text-slate-900 dark:text-white'
+                            : 'text-slate-900'
                         }
                         vacantColor={
                           isSelected && !isPartiallyBooked && !isFullyBooked
-                            ? 'text-[#5254cf] dark:text-[#c0c1ff]'
-                            : 'text-slate-400 dark:text-slate-500'
+                            ? 'text-[#5254cf]'
+                            : 'text-slate-400'
                         }
                         customTitle={`${occupiedCount} of ${roomCapacity} slot${roomCapacity > 1 ? 's' : ''} occupied in ${m.monthShort} ${m.year} (solid = booked, outline = available)`}
                       />
@@ -969,12 +969,12 @@ export function HostScheduleCalendar({
                       />
                     )}
                     {!isCurrent && (
-                      <span className="absolute inset-0 rounded-full bg-slate-100 dark:bg-[#071320] border border-slate-200/80 dark:border-[#1a2d42] z-0" />
+                      <span className="absolute inset-0 rounded-full bg-slate-100 border border-slate-200/80 z-0" />
                     )}
                     <span className={`relative z-10 transition-colors ${
                       isCurrent
                         ? 'text-[#07006c] font-black'
-                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-bold'
+                        : 'text-slate-600 hover:text-slate-900 font-bold'
                     }`}>
                       {group.monthYear}
                     </span>
@@ -984,8 +984,8 @@ export function HostScheduleCalendar({
             </div>
           )}
 
-          <div className="flex flex-col rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-white/10 dark:border-purple-600/40 bg-white/70 dark:bg-purple-600/50 backdrop-blur-xl shadow-[0_4px_24px_rgba(41,28,14,0.04)] dark:shadow-[0_8px_32px_rgba(41,28,14,0.4)] p-3 sm:p-3.5">
-            <div className="grid grid-cols-7 text-center text-[10.5px] sm:text-[11px] font-medium text-slate-800 dark:text-slate-200/80 uppercase tracking-wider pb-2 select-none">
+          <div className="flex flex-col rounded-2xl sm:rounded-3xl border border-slate-200 bg-white/70 backdrop-blur-xl shadow-[0_4px_24px_rgba(41,28,14,0.04)](41,28,14,0.4)] p-3 sm:p-3.5">
+            <div className="grid grid-cols-7 text-center text-[10.5px] sm:text-[11px] font-medium text-slate-800 uppercase tracking-wider pb-2 select-none">
               {WEEKDAYS.map((wd) => (
                 <span key={wd}>{wd}</span>
               ))}
@@ -1116,12 +1116,12 @@ export function HostScheduleCalendar({
 
                             const capsuleBg = isThisSlotSelectedGuest
                               ? isSelectedGuestOnline
-                                ? 'animate-slot-flash bg-[#E0F2FE] dark:bg-primary/30 text-slate-900 dark:text-on-surface border-[#38BDF8] dark:border-primary font-bold shadow-md'
-                                : 'animate-booked-slot-flash bg-[#E0F2FE] dark:bg-primary/30 text-slate-900 dark:text-on-surface border-[#38BDF8] dark:border-primary font-bold shadow-md'
+                                ? 'animate-slot-flash bg-[#E0F2FE] text-slate-900 border-[#38BDF8] font-bold shadow-md'
+                                : 'animate-booked-slot-flash bg-[#E0F2FE] text-slate-900 border-[#38BDF8] font-bold shadow-md'
                               : isBooked
                               ? 'bg-purple-500/15 text-slate-100 font-semibold'
                               : isUserReqSelected
-                              ? 'animate-slot-flash bg-[#E0F2FE] dark:bg-primary/30 text-slate-900 dark:text-on-surface border-[#38BDF8] dark:border-primary shadow-md'
+                              ? 'animate-slot-flash bg-[#E0F2FE] text-slate-900 border-[#38BDF8] shadow-md'
                               : '';
 
                             const isCheckInDay = isBooked && !isSameAsPrev;
@@ -1145,12 +1145,12 @@ export function HostScheduleCalendar({
                                     isBooked
                                       ? `${capsuleBg} cursor-pointer hover:brightness-105 active:scale-[0.98]`
                                       : isLocked
-                                      ? 'border border-dashed border-slate-200 dark:border-white/10 text-slate-100/40 cursor-not-allowed rounded-full font-normal'
+                                      ? 'border border-dashed border-slate-200 text-slate-100/40 cursor-not-allowed rounded-full font-normal'
                                       : isUserReqSelected
                                       ? `${capsuleBg} font-extrabold cursor-default pointer-events-none`
                                       : isUserRequestSelection
                                       ? isToday
-                                        ? 'border-2 border-[#c0c1ff] text-slate-900 dark:text-white cursor-pointer font-bold bg-transparent rounded-full'
+                                        ? 'border-2 border-[#c0c1ff] text-slate-900 cursor-pointer font-bold bg-transparent rounded-full'
                                         : 'text-slate-100 flex items-center justify-center font-normal hover:bg-white/10 transition-colors cursor-pointer rounded-full'
                                       : isSelected
                                       ? 'bg-[#c0c1ff] text-[#07006c] font-black cursor-pointer shadow-md shadow-[#c0c1ff]/30 rounded-full'
@@ -1162,13 +1162,13 @@ export function HostScheduleCalendar({
                                   <span>{slot.dayNum}</span>
                                   {isCheckInDay ? (
                                     <span
-                                      className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 z-10 px-2 py-0.5 rounded-full bg-purple-600 border border-slate-200 dark:border-white/10 text-slate-100 font-mono text-[9.5px] leading-none font-bold whitespace-nowrap shadow-xs"
+                                      className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 z-10 px-2 py-0.5 rounded-full bg-purple-600 border border-slate-200 text-slate-100 font-mono text-[9.5px] leading-none font-bold whitespace-nowrap shadow-xs"
                                       title={slotGuest?.userName || slotGuest?.guestName || ''}
                                     >
                                       {guestName}
                                     </span>
                                   ) : isUserReqSelected && !isReqSameAsPrev ? (
-                                    <span className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 z-10 px-2 py-0.5 rounded-full bg-[#E0F2FE] dark:bg-surface-container-high/90 border border-[#7DD3FC] dark:border-primary/50 text-[#0369A1] dark:text-primary font-mono text-[9.5px] leading-none font-bold whitespace-nowrap shadow-xs animate-badge-flash">
+                                    <span className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 z-10 px-2 py-0.5 rounded-full bg-[#E0F2FE] border border-[#7DD3FC] text-[#0369A1] font-mono text-[9.5px] leading-none font-bold whitespace-nowrap shadow-xs animate-badge-flash">
                                       {requestedUserBooking?.userName ? requestedUserBooking.userName.split(' ')[0] : (requestedUserBooking?.fullName ? requestedUserBooking.fullName.split(' ')[0] : (requestedUserBooking?.guestName ? requestedUserBooking.guestName.split(' ')[0] : 'Requested'))}
                                     </span>
                                   ) : null}
