@@ -205,8 +205,8 @@ export function PropertyDetailsSection({
             <div className="max-md:hidden absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 max-md:via-purple-300/30 dark:via-zinc-700/40 to-transparent pointer-events-none z-20" />
 
             {/* Header: Place Name + Top-Right Edit Button (Solid black in light theme) */}
-            <div className="flex items-center justify-between gap-2 relative z-10">
-              <h1 className="text-base sm:text-lg lg:text-xl font-bold max-md:text-slate-900 text-slate-900 dark:text-white tracking-normal truncate flex-1 min-w-0">
+            <div className="flex items-center justify-between max-md:justify-center gap-2 relative z-10 w-full">
+              <h1 className="text-base sm:text-lg lg:text-xl font-bold max-md:text-[22px] max-md:font-black max-md:text-center max-md:w-full max-md:leading-tight max-md:text-slate-950 text-slate-900 dark:text-white tracking-tight truncate flex-1 min-w-0">
                 {hostProperty?.propertyName || hostProperty?.title || '—'}
               </h1>
 
