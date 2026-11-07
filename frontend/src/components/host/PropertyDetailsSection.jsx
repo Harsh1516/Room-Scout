@@ -281,7 +281,7 @@ export function PropertyDetailsSection({
           <div className="md:hidden w-full flex justify-center py-2.5 px-0.5 relative z-20">
             <nav
               aria-label="Sub-Tabs Navigation"
-              className="flex items-center justify-between w-full max-w-[390px] p-1.5 rounded-full bg-[#4a0d4f]/85 backdrop-blur-2xl border border-purple-300/30 shadow-[0_8px_32px_rgba(61,12,64,0.5),inset_0_1px_1px_rgba(255,255,255,0.15)] gap-1"
+              className="flex items-center justify-around w-full max-w-[370px] px-2 py-1.5 rounded-full bg-[#4a0d4f]/85 backdrop-blur-2xl border border-purple-300/30 shadow-[0_8px_32px_rgba(61,12,64,0.5),inset_0_1px_1px_rgba(255,255,255,0.15)]"
             >
               {sections.map((sec, idx) => {
                 const isActive = activeIndex === idx;
@@ -296,14 +296,23 @@ export function PropertyDetailsSection({
                     whileTap={{ scale: 0.88 }}
                     title={sec.title}
                     aria-label={sec.title}
-                    className={`relative w-10 h-10 min-w-[40px] rounded-full flex items-center justify-center select-none cursor-pointer shrink-0 transition-all duration-200 ${
+                    style={{
+                      width: 40,
+                      height: 40,
+                      minWidth: 40,
+                      minHeight: 40,
+                      maxWidth: 40,
+                      maxHeight: 40,
+                      borderRadius: '50%',
+                    }}
+                    className={`relative p-0 aspect-square rounded-full flex items-center justify-center select-none cursor-pointer shrink-0 grow-0 transition-all duration-200 ${
                       isActive
                         ? 'bg-purple-300 text-slate-950 shadow-[0_0_16px_rgba(216,180,254,0.6)] font-bold scale-105 ring-2 ring-purple-300/70'
                         : 'bg-white/10 hover:bg-white/20 text-purple-200/85 border border-purple-300/20 hover:text-white'
                     }`}
                   >
                     <span
-                      className={`material-symbols-outlined text-[20px] transition-transform duration-200 ${
+                      className={`material-symbols-outlined text-[20px] shrink-0 leading-none flex items-center justify-center select-none transition-transform duration-200 ${
                         isActive ? 'scale-110 font-bold' : ''
                       }`}
                     >
@@ -311,7 +320,7 @@ export function PropertyDetailsSection({
                     </span>
                     {sec.isComplete && !isActive && (
                       <span
-                        className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-400 ring-1 ring-[#4a0d4f]"
+                        className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-[#4a0d4f] z-10"
                         title="Completed"
                       />
                     )}
