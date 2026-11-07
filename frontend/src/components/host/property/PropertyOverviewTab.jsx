@@ -66,10 +66,10 @@ export function PropertyOverviewTab({
   return (
     <div className="space-y-3.5">
       {/* Property Identity Card */}
-      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/95 backdrop-blur-xl shadow-sm space-y-4 relative overflow-hidden">
-        <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wider text-slate-800 dark:text-zinc-200 border-b border-slate-100 dark:border-zinc-800 pb-3 flex-wrap gap-2 relative z-10">
+      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/95 backdrop-blur-xl shadow-sm space-y-4 relative overflow-hidden max-md:bg-[#242220] max-md:border-white/[0.06] max-md:rounded-2xl max-md:p-4">
+        <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wider max-md:text-[#D6D0C7] text-slate-800 dark:text-zinc-200 border-b border-slate-100 dark:border-zinc-800 max-md:border-white/[0.06] pb-3 flex-wrap gap-2 relative z-10">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
+            <span className="w-2 h-2 rounded-full max-md:bg-[#A7C2B4] max-md:shadow-none bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
             <span>Property Identity</span>
           </div>
           <PropertyTabHeaderActions
@@ -150,79 +150,79 @@ export function PropertyOverviewTab({
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 relative z-10">
             {/* 1. Property Name */}
-            <div className="p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 hover:border-purple-500/50 dark:hover:border-purple-500/40 hover:bg-white dark:hover:bg-zinc-800 transition-all flex flex-col justify-between gap-2 shadow-xs">
+            <div className="p-3.5 rounded-xl sm:rounded-2xl max-md:bg-[#2C2927] max-md:border-white/[0.06] max-md:hover:border-[#A7C2B4]/40 bg-slate-50/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 hover:border-purple-500/50 dark:hover:border-purple-500/40 hover:bg-white dark:hover:bg-zinc-800 transition-all flex flex-col justify-between gap-2 shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-purple-600 dark:text-purple-400 uppercase tracking-wider font-medium">
+                <span className="text-[10px] max-md:text-[#A7C2B4] text-purple-600 dark:text-purple-400 uppercase tracking-wider font-medium">
                   Property Name
                 </span>
-                <span className="material-symbols-outlined text-[17px] text-purple-600 dark:text-purple-400 shrink-0">badge</span>
+                <span className="material-symbols-outlined text-[17px] max-md:text-[#A7C2B4] text-purple-600 dark:text-purple-400 shrink-0">badge</span>
               </div>
               <div>
-                <p className="text-sm sm:text-base font-normal text-slate-900 dark:text-white tracking-normal truncate">
+                <p className="text-sm sm:text-base font-normal max-md:text-[#F3EFEA] text-slate-900 dark:text-white tracking-normal truncate">
                   {hostProperty?.propertyName || hostProperty?.title || '—'}
                 </p>
-                <span className="text-[10.5px] text-slate-500 dark:text-zinc-400 font-normal">
+                <span className="text-[10.5px] max-md:text-[#9E988F] text-slate-500 dark:text-zinc-400 font-normal">
                   {hostProperty?.propertyName || hostProperty?.title ? 'Primary public title' : '—'}
                 </span>
               </div>
             </div>
 
             {/* 2. Property Type */}
-            <div className="p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 hover:border-purple-500/50 dark:hover:border-purple-500/40 hover:bg-white dark:hover:bg-zinc-800 transition-all flex flex-col justify-between gap-2 shadow-xs">
+            <div className="p-3.5 rounded-xl sm:rounded-2xl max-md:bg-[#2C2927] max-md:border-white/[0.06] max-md:hover:border-[#A7C2B4]/40 bg-slate-50/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 hover:border-purple-500/50 dark:hover:border-purple-500/40 hover:bg-white dark:hover:bg-zinc-800 transition-all flex flex-col justify-between gap-2 shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-purple-600 dark:text-purple-400 uppercase tracking-wider font-medium">
+                <span className="text-[10px] max-md:text-[#A7C2B4] text-purple-600 dark:text-purple-400 uppercase tracking-wider font-medium">
                   Property Type
                 </span>
-                <span className="material-symbols-outlined text-[17px] text-purple-600 dark:text-purple-400 shrink-0">apartment</span>
+                <span className="material-symbols-outlined text-[17px] max-md:text-[#A7C2B4] text-purple-600 dark:text-purple-400 shrink-0">apartment</span>
               </div>
               <div>
-                <p className="text-sm sm:text-base font-normal text-slate-900 dark:text-white tracking-normal">
+                <p className="text-sm sm:text-base font-normal max-md:text-[#F3EFEA] text-slate-900 dark:text-white tracking-normal">
                   {hostProperty?.propertyType || hostProperty?.category || '—'}
                 </p>
-                <span className="text-[10.5px] text-slate-500 dark:text-zinc-400 font-normal">
+                <span className="text-[10.5px] max-md:text-[#9E988F] text-slate-500 dark:text-zinc-400 font-normal">
                   {hostProperty?.propertyType || hostProperty?.category ? `${hostProperty.propertyType || hostProperty.category} Accommodation` : '—'}
                 </span>
               </div>
             </div>
 
             {/* 3. Gender Allowed */}
-            <div className="p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 hover:border-purple-500/50 dark:hover:border-purple-500/40 hover:bg-white dark:hover:bg-zinc-800 transition-all flex flex-col justify-between gap-2 shadow-xs">
+            <div className="p-3.5 rounded-xl sm:rounded-2xl max-md:bg-[#2C2927] max-md:border-white/[0.06] max-md:hover:border-[#A7C2B4]/40 bg-slate-50/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 hover:border-purple-500/50 dark:hover:border-purple-500/40 hover:bg-white dark:hover:bg-zinc-800 transition-all flex flex-col justify-between gap-2 shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-purple-600 dark:text-purple-400 uppercase tracking-wider font-medium">
+                <span className="text-[10px] max-md:text-[#A7C2B4] text-purple-600 dark:text-purple-400 uppercase tracking-wider font-medium">
                   Gender Allowed
                 </span>
-                <span className="material-symbols-outlined text-[17px] text-purple-600 dark:text-purple-400 shrink-0">group</span>
+                <span className="material-symbols-outlined text-[17px] max-md:text-[#A7C2B4] text-purple-600 dark:text-purple-400 shrink-0">group</span>
               </div>
               <div>
-                <p className="text-sm sm:text-base font-normal text-slate-900 dark:text-white tracking-normal">
+                <p className="text-sm sm:text-base font-normal max-md:text-[#F3EFEA] text-slate-900 dark:text-white tracking-normal">
                   {normalizeGender(hostProperty?.genderType) || '—'}
                 </p>
-                <span className="text-[10.5px] text-slate-500 dark:text-zinc-400 font-normal">
+                <span className="text-[10.5px] max-md:text-[#9E988F] text-slate-500 dark:text-zinc-400 font-normal">
                   {hostProperty?.genderType ? (hostProperty.genderType.toLowerCase() === 'both' ? 'Co-living permitted' : `${hostProperty.genderType.charAt(0).toUpperCase() + hostProperty.genderType.slice(1).toLowerCase()} only`) : '—'}
                 </span>
               </div>
             </div>
 
             {/* 4. Current Rating */}
-            <div className="p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 hover:border-purple-500/50 dark:hover:border-purple-500/40 hover:bg-white dark:hover:bg-zinc-800 transition-all flex flex-col justify-between gap-2 shadow-xs">
+            <div className="p-3.5 rounded-xl sm:rounded-2xl max-md:bg-[#2C2927] max-md:border-white/[0.06] max-md:hover:border-[#A7C2B4]/40 bg-slate-50/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 hover:border-purple-500/50 dark:hover:border-purple-500/40 hover:bg-white dark:hover:bg-zinc-800 transition-all flex flex-col justify-between gap-2 shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-purple-600 dark:text-purple-400 uppercase tracking-wider font-medium">
+                <span className="text-[10px] max-md:text-[#A7C2B4] text-purple-600 dark:text-purple-400 uppercase tracking-wider font-medium">
                   Current Rating
                 </span>
-                <span className="material-symbols-outlined text-[17px] text-purple-600 dark:text-purple-400 shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                <span className="material-symbols-outlined text-[17px] max-md:text-[#A7C2B4] text-purple-600 dark:text-purple-400 shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
               </div>
               <div>
-                <p className="text-sm sm:text-base font-normal text-slate-900 dark:text-white tracking-normal flex items-center gap-1">
+                <p className="text-sm sm:text-base font-normal max-md:text-[#F3EFEA] text-slate-900 dark:text-white tracking-normal flex items-center gap-1">
                   {(Number(hostProperty?.reviewsCount) > 0 || (Array.isArray(hostProperty?.reviews) && hostProperty.reviews.length > 0)) && Number(hostProperty?.rating) > 0 ? (
                     <>
                       <span>{Number(hostProperty.rating).toFixed(1)}</span>
-                      <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-normal">/ 5.0</span>
+                      <span className="text-[10px] max-md:text-[#9E988F] text-slate-500 dark:text-zinc-400 font-normal">/ 5.0</span>
                     </>
                   ) : (
-                    <span className="text-xs sm:text-sm font-normal text-purple-600 dark:text-purple-400/80">No ratings yet</span>
+                    <span className="text-xs sm:text-sm font-normal max-md:text-[#A7C2B4] text-purple-600 dark:text-purple-400/80">No ratings yet</span>
                   )}
                 </p>
-                <span className="text-[10.5px] text-slate-500 dark:text-zinc-400 font-normal">
+                <span className="text-[10.5px] max-md:text-[#9E988F] text-slate-500 dark:text-zinc-400 font-normal">
                   {(Number(hostProperty?.reviewsCount) > 0 || (Array.isArray(hostProperty?.reviews) && hostProperty.reviews.length > 0))
                     ? `${hostProperty.reviewsCount || hostProperty.reviews?.length} review${(hostProperty.reviewsCount || hostProperty.reviews?.length) === 1 ? '' : 's'}`
                     : 'New listing • 0 reviews'}

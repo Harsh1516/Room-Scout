@@ -273,12 +273,15 @@ export function HostUploadPage() {
 
   const fileInputRef = useRef(null);
 
-  // Stepper state (1 to 5) initialized from draft or navigation state
+  // Stepper state (1 to 5) initialized from navigation state or draft
   const [activeStep, setActiveStep] = useState(() => {
     if (location.state?.initialStep && Number(location.state.initialStep) >= 1 && Number(location.state.initialStep) <= 5) {
       return Number(location.state.initialStep);
     }
-    // Always start the upload wizard on the first (Basics) step
+    const draft = loadDraftFromStorage(user);
+    if (draft?.activeStep && Number(draft.activeStep) >= 1 && Number(draft.activeStep) <= 5) {
+      return Number(draft.activeStep);
+    }
     return 1;
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -315,10 +318,46 @@ export function HostUploadPage() {
   });
   const [isImportingGMap, setIsImportingGMap] = useState(false);
 
-  // Form State initialized from live dashboard navigation state, draft (persists across reload), or default
+  // Form State initialized from draft (persists across reload), live dashboard navigation state, or default
   const [formData, setFormData] = useState(() => {
-    // 1. If hostProperty was passed from dashboard navigation, use it as priority source of truth
+    // 1. Prioritize draft from localStorage so refresh NEVER wipes user-entered details (facilities, rules, etc.)
+    const draft = loadDraftFromStorage(user);
     const passedProp = location.state?.hostProperty;
+
+    if (draft?.formData && typeof draft.formData === 'object') {
+      const merged = {
+        ...DEFAULT_HOST_FORM_DATA,
+        ...(passedProp && typeof passedProp === 'object' ? passedProp : {}),
+        ...draft.formData,
+      };
+
+      if (!merged.name && user?.name) merged.name = user.name;
+      if (!merged.email && user?.email) merged.email = user.email;
+      if (!merged.phone && user?.phone) merged.phone = user.phone;
+
+      // Ensure manual facilities and rules entered by user are strictly preserved from draft
+      const draftFacs = Array.isArray(draft.formData.facilities)
+        ? draft.formData.facilities
+        : (Array.isArray(draft.formData.amenities) ? draft.formData.amenities : []);
+      merged.facilities = draftFacs;
+      merged.amenities = draftFacs;
+      merged.rules = Array.isArray(draft.formData.rules) ? draft.formData.rules : [];
+
+      if (Array.isArray(merged.rooms) || Array.isArray(merged.roomRates)) {
+        const { rates: hydratedRates, rooms: hydratedRooms } = reconcileRoomsWithRates(
+          merged.rooms,
+          merged.roomRates
+        );
+        merged.roomRates = hydratedRates;
+        merged.rooms = hydratedRooms;
+      } else {
+        merged.rooms = [];
+        merged.roomRates = [];
+      }
+      return merged;
+    }
+
+    // 2. If no draft exists yet, use hostProperty passed from dashboard navigation
     if (passedProp && typeof passedProp === 'object') {
       const { rates: loadedRates, rooms: loadedRooms } = reconcileRoomsWithRates(
         passedProp.rooms,
@@ -362,9 +401,9 @@ export function HostUploadPage() {
         images: cleanImgs,
         instagramVideoUrl: passedProp.instagramVideoUrl || '',
         description: passedProp.description || passedProp.bio || '',
-        facilities: [],
-        amenities: [],
-        rules: [],
+        facilities: Array.isArray(passedProp.facilities) ? passedProp.facilities : (Array.isArray(passedProp.amenities) ? passedProp.amenities : []),
+        amenities: Array.isArray(passedProp.amenities) ? passedProp.amenities : (Array.isArray(passedProp.facilities) ? passedProp.facilities : []),
+        rules: Array.isArray(passedProp.rules) ? passedProp.rules : [],
         roomRates: loadedRates,
         rooms: loadedRooms,
         status: passedProp.status || 'Pending Approval',
@@ -375,40 +414,15 @@ export function HostUploadPage() {
       return hydrated;
     }
 
-    // 2. Prioritize draft from localStorage so refresh NEVER wipes user-entered details
-    try {
-      const draft = loadDraftFromStorage(user);
-      if (draft?.formData && typeof draft.formData === 'object') {
-        const merged = {
-          ...DEFAULT_HOST_FORM_DATA,
-          ...draft.formData,
-        };
-        if (!merged.name && user?.name) merged.name = user.name;
-        if (!merged.email && user?.email) merged.email = user.email;
-        if (!merged.phone && user?.phone) merged.phone = user.phone;
-
-        if (Array.isArray(merged.rooms) || Array.isArray(merged.roomRates)) {
-          const { rates: hydratedRates, rooms: hydratedRooms } = reconcileRoomsWithRates(
-            merged.rooms,
-            merged.roomRates
-          );
-          merged.roomRates = hydratedRates;
-          merged.rooms = hydratedRooms;
-        } else {
-          merged.rooms = [];
-          merged.roomRates = [];
-        }
-        return merged;
-      }
-    } catch (err) {
-      console.warn('Could not hydrate draft formData:', err);
-    }
-
+    // 3. Default fresh state
     return {
       ...DEFAULT_HOST_FORM_DATA,
       name: user?.name || '',
       email: user?.email || '',
       phone: user?.phone || '',
+      facilities: [],
+      amenities: [],
+      rules: [],
     };
   });
 
@@ -510,9 +524,18 @@ export function HostUploadPage() {
             .slice(0, MAX_PHOTOS);
 
           setFormData((prev) => {
-            // Keep strictly user-manually entered rules and facilities; do not auto-attach from backend prop
-            const mergedRules = Array.isArray(prev.rules) ? prev.rules : [];
-            const mergedFacilities = Array.isArray(prev.facilities) ? prev.facilities : [];
+            // Check draft as well to strictly preserve user-entered manual perks & rules
+            const currentDraft = loadDraftFromStorage(user);
+            const draftFormData = currentDraft?.formData || {};
+
+            // Keep strictly user-manually entered rules and facilities; do not auto-attach default backend points
+            const mergedRules = (Array.isArray(prev.rules) && prev.rules.length > 0)
+              ? prev.rules
+              : (Array.isArray(draftFormData.rules) ? draftFormData.rules : []);
+
+            const mergedFacilities = (Array.isArray(prev.facilities) && prev.facilities.length > 0)
+              ? prev.facilities
+              : (Array.isArray(draftFormData.facilities) ? draftFormData.facilities : (Array.isArray(draftFormData.amenities) ? draftFormData.amenities : []));
 
             const prevImages = (Array.isArray(prev.images) && prev.images.length > 0) ? prev.images : [];
             const mergedImages = prevImages.length > 0 ? prevImages : cleanExistingImages;
@@ -555,7 +578,10 @@ export function HostUploadPage() {
               isApproved: prop.status === 'Approved' || Boolean(prop.isApproved),
             };
 
-            saveDraftToStorage(updated, activeStep, googleMapsUrl, user);
+            const preservedStep = (currentDraft?.activeStep && Number(currentDraft.activeStep) >= 1)
+              ? Number(currentDraft.activeStep)
+              : activeStep;
+            saveDraftToStorage(updated, preservedStep, googleMapsUrl, user);
             return updated;
           });
         }

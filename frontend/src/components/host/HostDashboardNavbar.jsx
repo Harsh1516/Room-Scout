@@ -323,13 +323,13 @@ export function HostDashboardNavbar({
       </div>
 
       {/* ── 4. MOBILE CENTER CAPSULE (Fixed at bottom on mobile screens) ── */}
-      <div className="md:hidden fixed bottom-4 sm:bottom-5 left-1/2 -translate-x-1/2 z-50 pointer-events-auto px-3 sm:px-4 w-full max-w-sm flex justify-center select-none pb-[env(safe-area-inset-bottom,0px)]">
-        <nav className="apple-liquid-nav relative flex items-center p-1 rounded-full border border-slate-200/80 dark:border-white/[0.1] bg-white/90 dark:bg-[#0B0F19]/90 shadow-lg backdrop-blur-2xl max-w-full justify-between gap-1">
+      <div className="md:hidden fixed bottom-4 sm:bottom-5 left-1/2 -translate-x-1/2 z-50 pointer-events-auto px-4 w-full max-w-[400px] flex justify-center select-none pb-[env(safe-area-inset-bottom,0px)]">
+        <nav className="apple-liquid-nav relative flex items-center p-1.5 rounded-full border border-slate-200/80 dark:border-white/[0.1] max-md:border-white/[0.08] bg-white/95 dark:bg-[#0B0F19]/95 max-md:bg-[#242220]/95 shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.5)] backdrop-blur-2xl w-full gap-1">
           <button
             type="button"
             onClick={() => handleSelectTab('property')}
-            className={`min-h-[38px] py-1.5 px-3 rounded-full text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
-              activeTab === 'property' ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
+            className={`flex-1 justify-center min-h-[40px] py-2 px-2 rounded-full text-xs font-bold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
+              activeTab === 'property' ? 'max-md:bg-[#A7C2B4] max-md:text-[#18221D] bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 max-md:text-[#A8A29A] hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <span>Property</span>
@@ -338,10 +338,10 @@ export function HostDashboardNavbar({
           <button
             type="button"
             onClick={() => handleSelectTab('room')}
-            className={`min-h-[38px] py-1.5 px-3 rounded-full text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
+            className={`flex-1 justify-center min-h-[40px] py-2 px-2 rounded-full text-xs font-bold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
               !isApproved
                 ? 'opacity-40 cursor-not-allowed text-slate-400'
-                : activeTab === 'room' ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
+                : activeTab === 'room' ? 'max-md:bg-[#A7C2B4] max-md:text-[#18221D] bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 max-md:text-[#A8A29A] hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <span>Rooms</span>
@@ -350,15 +350,15 @@ export function HostDashboardNavbar({
           <button
             type="button"
             onClick={() => handleSelectTab('users')}
-            className={`min-h-[38px] py-1.5 px-3 rounded-full text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
+            className={`flex-1 justify-center min-h-[40px] py-2 px-2 rounded-full text-xs font-bold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
               !isApproved
                 ? 'opacity-40 cursor-not-allowed text-slate-400'
-                : activeTab === 'users' ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
+                : activeTab === 'users' ? 'max-md:bg-[#A7C2B4] max-md:text-[#18221D] bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 max-md:text-[#A8A29A] hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <span>Users</span>
             {isApproved && todayCheckInsCount > 0 && (
-              <span className="px-1 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
                 {todayCheckInsCount}
               </span>
             )}
@@ -368,10 +368,10 @@ export function HostDashboardNavbar({
           <button
             type="button"
             onClick={() => handleSelectTab('payment')}
-            className={`min-h-[38px] py-1.5 px-3 rounded-full text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
+            className={`flex-1 justify-center min-h-[40px] py-2 px-2 rounded-full text-xs font-bold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
               !isApproved
                 ? 'opacity-40 cursor-not-allowed text-slate-400'
-                : activeTab === 'payment' ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
+                : activeTab === 'payment' ? 'max-md:bg-[#A7C2B4] max-md:text-[#18221D] bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 max-md:text-[#A8A29A] hover:text-slate-900 dark:hover:text-white'
             }`}
             title={!isApproved ? 'Locked until Admin Approval' : 'Host Direct UPI & QR Configuration'}
           >

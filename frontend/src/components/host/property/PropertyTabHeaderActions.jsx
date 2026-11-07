@@ -24,7 +24,7 @@ export function PropertyTabHeaderActions({
             type="button"
             disabled={isSaving}
             onClick={onCancel}
-            className="px-3 py-1.5 rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/90 hover:bg-slate-100 dark:bg-zinc-800/90 dark:hover:bg-zinc-700/80 text-slate-700 dark:text-zinc-200 text-xs font-medium transition-colors cursor-pointer active:scale-95 disabled:opacity-50 select-none shadow-2xs"
+            className="px-3 py-1.5 rounded-xl border border-slate-200/90 dark:border-zinc-700 max-md:bg-[#2C2927] max-md:border-white/[0.08] max-md:text-[#D6D0C7] bg-white/90 hover:bg-slate-100 dark:bg-zinc-800/90 dark:hover:bg-zinc-700/80 text-slate-700 dark:text-zinc-200 text-xs font-medium transition-colors cursor-pointer active:scale-95 disabled:opacity-50 select-none shadow-2xs"
           >
             Cancel
           </motion.button>
@@ -38,7 +38,7 @@ export function PropertyTabHeaderActions({
         type="button"
         disabled={isSaving || (isEditing && saveDisabled)}
         onClick={isEditing ? onSave : onStartEdit}
-        className={`px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-purple-600/20 active:scale-95 select-none transition-colors ${
+        className={`px-3 py-1.5 rounded-xl max-md:bg-[#A7C2B4] max-md:text-[#18221D] max-md:hover:bg-[#B5D1C3] max-md:shadow-none bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-purple-600/20 active:scale-95 select-none transition-colors ${
           isSaving || (isEditing && saveDisabled) ? 'opacity-70 cursor-not-allowed' : ''
         }`}
       >
@@ -52,7 +52,7 @@ export function PropertyTabHeaderActions({
               transition={{ duration: 0.15 }}
               className="flex items-center gap-1.5"
             >
-              <CheckIcon className="w-3.5 h-3.5 text-white shrink-0" />
+              <CheckIcon className="w-3.5 h-3.5 max-md:text-[#18221D] text-white shrink-0" />
               <span>{isSaving ? savingLabel : saveLabel}</span>
             </motion.span>
           ) : (
@@ -64,7 +64,7 @@ export function PropertyTabHeaderActions({
               transition={{ duration: 0.15 }}
               className="flex items-center gap-1.5"
             >
-              <PencilIcon className="w-3.5 h-3.5 text-white shrink-0" />
+              <PencilIcon className="w-3.5 h-3.5 max-md:text-[#18221D] text-white shrink-0" />
               <span>Edit</span>
             </motion.span>
           )}
