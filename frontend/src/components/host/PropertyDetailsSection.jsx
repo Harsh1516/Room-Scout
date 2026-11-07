@@ -192,15 +192,15 @@ export function PropertyDetailsSection({
   };
 
   return (
-    <div className="flex flex-col w-full h-full min-h-0 justify-center">
+    <div className="flex flex-col w-full h-full min-h-0 justify-center max-md:bg-white">
       {/* ── Two-Column Dashboard Workspace ── */}
-      <div className="flex items-start justify-center w-full h-full min-h-0">
-        <div className="grid grid-cols-1 lg:grid-cols-12 max-md:gap-0 gap-3.5 sm:gap-5 items-start w-full max-w-full transition-all duration-300 ease-in-out">
+      <div className="flex items-start justify-center w-full h-full min-h-0 max-md:bg-white">
+        <div className="grid grid-cols-1 lg:grid-cols-12 max-md:gap-0 gap-3.5 sm:gap-5 items-start w-full max-w-full transition-all duration-300 ease-in-out max-md:bg-white">
         {/* Left Navigation Rail: Stepped Layered Cards */}
         <div className="lg:col-span-3 flex items-start justify-center h-full transition-all duration-300 ease-in-out">
           <aside className="w-full flex flex-col shrink-0 relative max-md:mt-0 mt-8 transition-all duration-300 ease-in-out">
           {/* ── Upper Tab: Property Info (Styled like navbar capsule with black edit button in light theme) ── */}
-          <div className="max-md:w-full max-md:mx-0 max-md:bg-white max-md:border-none max-md:shadow-none max-md:p-4 max-md:pb-2 md:w-[calc(100%-18px)] md:sm:w-[calc(100%-22px)] md:mx-auto md:rounded-t-2xl md:sm:rounded-t-3xl md:rounded-b-none md:border-x md:border-t md:border-slate-200/80 md:dark:border-zinc-700 md:shadow-[0_14px_36px_rgba(0,0,0,0.16)] md:dark:shadow-[0_16px_40px_rgba(255,255,255,0.12)] md:hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] md:dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] md:bg-white/95 md:dark:bg-zinc-700/90 backdrop-blur-2xl text-slate-800 dark:text-zinc-100 flex flex-col gap-3 p-4 sm:p-5 pb-8 sm:pb-9 relative shrink-0 z-0">
+          <div className="max-md:mx-3.5 max-md:mt-1 max-md:mb-2 max-md:w-auto max-md:rounded-2xl max-md:border max-md:border-slate-200/90 max-md:bg-white/85 max-md:backdrop-blur-xl max-md:shadow-sm max-md:p-4 md:w-[calc(100%-18px)] md:sm:w-[calc(100%-22px)] md:mx-auto md:rounded-t-2xl md:sm:rounded-t-3xl md:rounded-b-none md:border-x md:border-t md:border-slate-200/80 md:dark:border-zinc-700 md:shadow-[0_14px_36px_rgba(0,0,0,0.16)] md:dark:shadow-[0_16px_40px_rgba(255,255,255,0.12)] md:hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] md:dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] md:bg-white/95 md:dark:bg-zinc-700/90 backdrop-blur-2xl text-slate-800 dark:text-zinc-100 flex flex-col gap-3 p-4 sm:p-5 pb-8 sm:pb-9 relative shrink-0 z-0">
             {/* Top Specular Rim Reflection for Upper Tab */}
             <div className="max-md:hidden absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 max-md:via-purple-300/30 dark:via-zinc-700/40 to-transparent pointer-events-none z-20" />
 
@@ -215,7 +215,7 @@ export function PropertyDetailsSection({
                 <button
                   type="button"
                   onClick={onEditDetails}
-                  className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-xs active:scale-95 shrink-0"
+                  className="hidden md:flex px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs items-center gap-1.5 cursor-pointer transition-all shadow-xs active:scale-95 shrink-0"
                   title="Edit Listing Details"
                 >
                   <PencilIcon className="w-3.5 h-3.5 text-white" />
@@ -263,16 +263,29 @@ export function PropertyDetailsSection({
                 <span className="material-symbols-outlined text-[15px] text-purple-600 dark:text-purple-400">north_east</span>
               </button>
 
-              <button
-                type="button"
-                onClick={handleShare}
-                className="group relative overflow-hidden w-full h-9 rounded-xl max-md:bg-slate-100 max-md:border-slate-200/80 max-md:text-slate-800 max-md:hover:bg-slate-200 bg-transparent hover:bg-sky-200 dark:hover:bg-zinc-900 active:scale-95 text-slate-800 dark:text-zinc-100 hover:text-sky-800 dark:hover:text-white flex items-center justify-center gap-1.5 border border-slate-300 dark:border-zinc-600 hover:border-sky-400 dark:hover:border-black shadow-2xs transition-all cursor-pointer font-medium"
-                title="Share listing link"
-              >
-                <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-none group-hover:transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-black/20 dark:via-white/35 to-transparent pointer-events-none" />
-                <span className="material-symbols-outlined text-[16px] text-purple-600 dark:text-purple-400">share</span>
-                <span className="text-xs font-medium">Share</span>
-              </button>
+              {onEditDetails ? (
+                <button
+                  type="button"
+                  onClick={onEditDetails}
+                  className="group relative overflow-hidden w-full h-9 rounded-xl max-md:bg-purple-600 max-md:text-white max-md:border-purple-600 max-md:hover:bg-purple-700 bg-transparent hover:bg-sky-200 dark:hover:bg-zinc-900 active:scale-95 text-slate-800 dark:text-zinc-100 hover:text-sky-800 dark:hover:text-white flex items-center justify-center gap-1.5 border border-slate-300 dark:border-zinc-600 hover:border-sky-400 dark:hover:border-black shadow-2xs transition-all cursor-pointer font-medium"
+                  title="Edit Listing Details"
+                >
+                  <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-none group-hover:transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+                  <PencilIcon className="w-3.5 h-3.5 max-md:text-white text-purple-600 dark:text-purple-400" />
+                  <span className="text-xs font-semibold">Edit</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  className="group relative overflow-hidden w-full h-9 rounded-xl max-md:bg-slate-100 max-md:border-slate-200/80 max-md:text-slate-800 max-md:hover:bg-slate-200 bg-transparent hover:bg-sky-200 dark:hover:bg-zinc-900 active:scale-95 text-slate-800 dark:text-zinc-100 hover:text-sky-800 dark:hover:text-white flex items-center justify-center gap-1.5 border border-slate-300 dark:border-zinc-600 hover:border-sky-400 dark:hover:border-black shadow-2xs transition-all cursor-pointer font-medium"
+                  title="Share listing link"
+                >
+                  <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-none group-hover:transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-black/20 dark:via-white/35 to-transparent pointer-events-none" />
+                  <span className="material-symbols-outlined text-[16px] text-purple-600 dark:text-purple-400">share</span>
+                  <span className="text-xs font-medium">Share</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -441,7 +454,7 @@ export function PropertyDetailsSection({
         </div>
 
         {/* Main Content Panel (col-span-9 - Luna Glassmorphic Aesthetic) */}
-        <main className="lg:col-span-9 flex flex-col h-full min-h-0 overflow-y-auto scroll-smooth no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-md:w-full max-md:mx-0 max-md:rounded-t-[32px] sm:max-md:rounded-t-[40px] max-md:rounded-b-none max-md:mt-0 max-md:border-t max-md:border-purple-300/25 max-md:border-x-0 max-md:bg-[#3d0c40] max-md:shadow-[0_-12px_40px_rgba(61,12,64,0.4)] max-md:p-4 max-md:pt-6 max-md:pb-36 max-md:min-h-screen max-md:z-20 md:rounded-2xl md:sm:rounded-3xl relative overflow-hidden md:bg-white/80 md:dark:bg-zinc-900/95 md:border md:border-slate-200/80 md:dark:border-zinc-800 shadow-[0_14px_36px_rgba(0,0,0,0.16)] dark:shadow-[0_16px_40px_rgba(255,255,255,0.12)] hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] p-4 sm:p-7 lg:p-8 pb-8 sm:pb-10 lg:pb-8 transition-all duration-300 ease-in-out">
+        <main className="lg:col-span-9 flex flex-col h-full min-h-0 overflow-y-auto scroll-smooth no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-md:w-full max-md:mx-0 max-md:rounded-t-[32px] sm:max-md:rounded-t-[40px] max-md:rounded-b-none max-md:mt-0 max-md:border-none max-md:bg-[#3d0c40] max-md:shadow-none max-md:p-4 max-md:pt-6 max-md:pb-36 max-md:min-h-screen max-md:z-20 md:rounded-2xl md:sm:rounded-3xl relative overflow-hidden md:bg-white/80 md:dark:bg-zinc-900/95 md:border md:border-slate-200/80 md:dark:border-zinc-800 shadow-[0_14px_36px_rgba(0,0,0,0.16)] dark:shadow-[0_16px_40px_rgba(255,255,255,0.12)] hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] p-4 sm:p-7 lg:p-8 pb-8 sm:pb-10 lg:pb-8 transition-all duration-300 ease-in-out">
           {/* Ambient Glass Reflections & Refractive Lighting in Luna cyan & deep navy */}
           <div
             aria-hidden="true"

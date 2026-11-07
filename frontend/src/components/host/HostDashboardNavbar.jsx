@@ -50,7 +50,9 @@ export function HostDashboardNavbar({
   };
 
   return (
-    <header className="relative w-full h-16 sm:h-20 pointer-events-none select-none z-50 font-body-md host-font-scope antialiased">
+    <header className="relative w-full h-16 sm:h-20 pointer-events-none select-none z-50 font-body-md host-font-scope antialiased max-md:bg-white">
+      {/* Mobile top solid white background bar */}
+      <div className="md:hidden fixed top-0 inset-x-0 h-16 bg-white z-40 pointer-events-none" />
       {/* ── 1. LEFT FLOATING ISLAND: BACK BUTTON + PROPERTY TYPE BADGE / STATUS ── */}
       <div className="fixed top-3.5 left-2.5 sm:top-5 sm:left-6 z-50 flex items-center gap-1.5 sm:gap-2 pointer-events-auto select-none">
         {/* Back Button */}
@@ -323,8 +325,8 @@ export function HostDashboardNavbar({
       </div>
 
       {/* ── 4. MOBILE CENTER CAPSULE (Fixed at bottom on mobile screens) ── */}
-      <div className="md:hidden fixed bottom-0 inset-x-0 z-50 pointer-events-none flex justify-center px-4 pb-4 pt-8 bg-gradient-to-t from-[#3d0c40] via-[#3d0c40]/95 to-transparent select-none pb-[env(safe-area-inset-bottom,16px)]">
-        <nav className="pointer-events-auto relative flex items-center p-1.5 rounded-full border border-slate-200/90 bg-white/95 dark:bg-[#0B0F19]/95 shadow-[0_8px_30px_rgba(0,0,0,0.18)] backdrop-blur-2xl w-full max-w-[400px] gap-1">
+      <div className="md:hidden fixed bottom-6 sm:bottom-8 inset-x-0 z-50 pointer-events-none flex justify-center px-4 select-none pb-[env(safe-area-inset-bottom,0px)]">
+        <nav className="pointer-events-auto relative flex items-center p-1.5 rounded-full border border-slate-200/90 bg-white dark:bg-[#0B0F19] shadow-[0_12px_36px_rgba(0,0,0,0.25)] backdrop-blur-2xl w-full max-w-[360px] gap-1">
           <button
             type="button"
             onClick={() => handleSelectTab('property')}

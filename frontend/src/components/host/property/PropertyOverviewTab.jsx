@@ -67,25 +67,27 @@ export function PropertyOverviewTab({
     <div className="space-y-3.5">
       {/* Property Identity Card */}
       <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/95 backdrop-blur-xl shadow-sm space-y-4 relative overflow-hidden max-md:bg-transparent max-md:border-none max-md:shadow-none max-md:p-0 max-md:space-y-3.5">
-        <div className="flex items-center justify-between pb-3 w-full border-b border-slate-100 dark:border-zinc-800 max-md:border-none max-md:pb-1 flex-wrap gap-2 relative z-10">
-          <h2 className="text-xl sm:text-2xl font-bold max-md:text-white text-slate-900 dark:text-white tracking-normal">
+        <div className="relative flex items-center justify-center pb-3 w-full border-b border-slate-100 dark:border-zinc-800 max-md:border-none max-md:pb-2">
+          <h2 className="text-xl sm:text-2xl font-bold max-md:text-white text-slate-900 dark:text-white tracking-normal text-center">
             Property Overview
           </h2>
-          <PropertyTabHeaderActions
-            isEditing={isEditing}
-            isSaving={isSaving}
-            onStartEdit={onStartEdit}
-            onCancel={() => {
-              setFormData({
-                propertyName: hostProperty?.propertyName || hostProperty?.title || '',
-                propertyType: hostProperty?.propertyType || hostProperty?.type || '',
-                genderType: normalizeGender(hostProperty?.genderType),
-              });
-              if (onCancel) onCancel();
-            }}
-            onSave={handleSave}
-            saveDisabled={!formData.propertyName.trim()}
-          />
+          <div className="absolute right-0 top-1/2 -translate-y-1/2">
+            <PropertyTabHeaderActions
+              isEditing={isEditing}
+              isSaving={isSaving}
+              onStartEdit={onStartEdit}
+              onCancel={() => {
+                setFormData({
+                  propertyName: hostProperty?.propertyName || hostProperty?.title || '',
+                  propertyType: hostProperty?.propertyType || hostProperty?.type || '',
+                  genderType: normalizeGender(hostProperty?.genderType),
+                });
+                if (onCancel) onCancel();
+              }}
+              onSave={handleSave}
+              saveDisabled={!formData.propertyName.trim()}
+            />
+          </div>
         </div>
 
         {isEditing ? (
