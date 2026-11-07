@@ -42,11 +42,11 @@ export function PropertyDescriptionTab({
 
   return (
     <div className="space-y-3.5">
-      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/95 backdrop-blur-xl shadow-sm space-y-4 relative overflow-hidden max-md:bg-[#242220] max-md:border-white/[0.06] max-md:rounded-2xl max-md:p-4">
+      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/95 backdrop-blur-xl shadow-sm space-y-4 relative overflow-hidden max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:rounded-2xl max-md:p-4 max-md:shadow-black/20">
         {/* Header Strip with Character Count and Limit */}
-        <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wider max-md:text-[#D6D0C7] text-slate-800 dark:text-zinc-200 border-b border-slate-100 dark:border-zinc-800 max-md:border-white/[0.06] pb-3 flex-wrap gap-2 relative z-10">
+        <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wider max-md:text-white text-slate-800 dark:text-zinc-200 border-b border-slate-100 dark:border-zinc-800 max-md:border-white/10 pb-3 flex-wrap gap-2 relative z-10">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full max-md:bg-[#A7C2B4] max-md:shadow-none bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
+            <span className="w-2 h-2 rounded-full max-md:bg-purple-300 max-md:shadow-none bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
             <span>Host Written Summary</span>
           </div>
 
@@ -101,24 +101,24 @@ export function PropertyDescriptionTab({
             </div>
           </div>
         ) : (
-          <div className="p-4 sm:p-5 rounded-xl sm:rounded-2xl max-md:bg-[#2C2927] max-md:border-white/[0.06] max-md:hover:border-[#A7C2B4]/40 bg-slate-50/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 hover:border-purple-500/50 dark:hover:border-purple-500/40 hover:bg-white dark:hover:bg-zinc-800 transition-all flex flex-col justify-between gap-3 shadow-2xs relative z-10">
+          <div className="p-4 sm:p-5 rounded-xl sm:rounded-2xl max-md:bg-white/10 max-md:border-white/15 max-md:hover:border-purple-300/40 bg-slate-50/80 dark:bg-zinc-800/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 hover:border-purple-500/50 dark:hover:border-purple-500/40 hover:bg-white dark:hover:bg-zinc-800 transition-all flex flex-col justify-between gap-3 shadow-2xs relative z-10">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] max-md:text-[#A7C2B4] text-purple-600 dark:text-purple-400 uppercase tracking-wider font-medium">
+              <span className="text-[10px] max-md:text-purple-200 text-purple-600 dark:text-purple-400 uppercase tracking-wider font-medium">
                 Editorial Bio & Overview
               </span>
-              <span className="material-symbols-outlined text-[17px] max-md:text-[#A7C2B4] text-purple-600 dark:text-purple-400 shrink-0">description</span>
+              <span className="material-symbols-outlined text-[17px] max-md:text-purple-200 text-purple-600 dark:text-purple-400 shrink-0">description</span>
             </div>
             <div>
-              <p className="text-xs sm:text-sm font-normal max-md:text-[#F3EFEA] text-slate-900 dark:text-white tracking-normal leading-relaxed whitespace-pre-wrap">
+              <p className="text-xs sm:text-sm font-normal max-md:text-white text-slate-900 dark:text-white tracking-normal leading-relaxed whitespace-pre-wrap">
                 {description ? (
                   description
                 ) : (
-                  <span className="text-xs sm:text-sm font-normal max-md:text-[#A7C2B4] text-purple-600 dark:text-purple-400/60 dark:text-slate-200/50 italic">
+                  <span className="text-xs sm:text-sm font-normal max-md:text-purple-200/80 text-purple-600 dark:text-purple-400/60 dark:text-slate-200/50 italic">
                     No description provided yet. Click &quot;Edit&quot; to write a description (max {MAX_DESCRIPTION_CHARS} characters).
                   </span>
                 )}
               </p>
-              <span className="text-[10.5px] max-md:text-[#9E988F] text-slate-500 dark:text-zinc-400 block mt-1.5 font-normal">
+              <span className="text-[10.5px] max-md:text-purple-200/60 text-slate-500 dark:text-zinc-400 block mt-1.5 font-normal">
                 {description ? `Public listing narrative (${description.length} characters)` : '—'}
               </span>
             </div>

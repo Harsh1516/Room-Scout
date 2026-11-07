@@ -262,7 +262,7 @@ export function HostDashboardPage() {
 
   return (
     <div
-      className={`min-h-screen w-full flex flex-col host-page-scope font-body-md antialiased text-slate-800 dark:text-slate-100 max-md:bg-[#1A1918] bg-slate-50 dark:bg-[#06080F] selection:bg-purple-500 selection:text-white relative transition-colors duration-200 ${
+      className={`min-h-screen w-full flex flex-col host-page-scope font-body-md antialiased text-slate-800 dark:text-slate-100 max-md:bg-[#2b082e] bg-slate-50 dark:bg-[#06080F] selection:bg-purple-500 selection:text-white relative transition-colors duration-200 ${
         activeTab === 'users' || activeTab === 'room' ? 'lg:h-screen lg:max-h-screen lg:overflow-hidden' : ''
       }`}
     >

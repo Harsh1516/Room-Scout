@@ -509,11 +509,11 @@ export function PropertyPhotosTab({
       />
 
       {/* Main Visual Gallery Card */}
-      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/95 backdrop-blur-xl shadow-sm space-y-4 relative overflow-hidden max-md:bg-[#242220] max-md:border-white/[0.06] max-md:rounded-2xl max-md:p-4">
+      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/95 backdrop-blur-xl shadow-sm space-y-4 relative overflow-hidden max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:rounded-2xl max-md:p-4 max-md:shadow-black/20">
         {/* Header Strip - Aligned with Address & Geography standard */}
-        <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-100 dark:border-zinc-800 max-md:border-white/[0.06] pb-3 relative z-10">
-          <p className="text-xs font-medium uppercase tracking-wider max-md:text-[#D6D0C7] text-slate-800 dark:text-slate-200 flex items-center gap-2 min-w-0">
-            <span className="w-2 h-2 rounded-full max-md:bg-[#A7C2B4] max-md:shadow-none bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)] shrink-0" />
+        <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-100 dark:border-zinc-800 max-md:border-white/10 pb-3 relative z-10">
+          <p className="text-xs font-medium uppercase tracking-wider max-md:text-white text-slate-800 dark:text-slate-200 flex items-center gap-2 min-w-0">
+            <span className="w-2 h-2 rounded-full max-md:bg-purple-300 max-md:shadow-none bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)] shrink-0" />
             <span className="truncate">Visual Gallery & Walkthrough</span>
           </p>
 

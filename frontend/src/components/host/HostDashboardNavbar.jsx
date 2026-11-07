@@ -324,12 +324,12 @@ export function HostDashboardNavbar({
 
       {/* ── 4. MOBILE CENTER CAPSULE (Fixed at bottom on mobile screens) ── */}
       <div className="md:hidden fixed bottom-4 sm:bottom-5 left-1/2 -translate-x-1/2 z-50 pointer-events-auto px-4 w-full max-w-[400px] flex justify-center select-none pb-[env(safe-area-inset-bottom,0px)]">
-        <nav className="apple-liquid-nav relative flex items-center p-1.5 rounded-full border border-slate-200/80 dark:border-white/[0.1] max-md:border-white/[0.08] bg-white/95 dark:bg-[#0B0F19]/95 max-md:bg-[#242220]/95 shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.5)] backdrop-blur-2xl w-full gap-1">
+        <nav className="apple-liquid-nav relative flex items-center p-1.5 rounded-full border border-slate-200/80 dark:border-white/[0.1] max-md:border-purple-300/20 bg-white/95 dark:bg-[#0B0F19]/95 max-md:bg-[#3d0c40]/95 shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.5)] max-md:shadow-[0_8px_30px_rgba(61,12,64,0.4)] backdrop-blur-2xl w-full gap-1">
           <button
             type="button"
             onClick={() => handleSelectTab('property')}
             className={`flex-1 justify-center min-h-[40px] py-2 px-2 rounded-full text-xs font-bold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
-              activeTab === 'property' ? 'max-md:bg-[#A7C2B4] max-md:text-[#18221D] bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 max-md:text-[#A8A29A] hover:text-slate-900 dark:hover:text-white'
+              activeTab === 'property' ? 'max-md:bg-purple-300 max-md:text-slate-950 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 max-md:text-purple-200/80 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <span>Property</span>
@@ -341,7 +341,7 @@ export function HostDashboardNavbar({
             className={`flex-1 justify-center min-h-[40px] py-2 px-2 rounded-full text-xs font-bold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
               !isApproved
                 ? 'opacity-40 cursor-not-allowed text-slate-400'
-                : activeTab === 'room' ? 'max-md:bg-[#A7C2B4] max-md:text-[#18221D] bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 max-md:text-[#A8A29A] hover:text-slate-900 dark:hover:text-white'
+                : activeTab === 'room' ? 'max-md:bg-purple-300 max-md:text-slate-950 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 max-md:text-purple-200/80 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <span>Rooms</span>
@@ -353,7 +353,7 @@ export function HostDashboardNavbar({
             className={`flex-1 justify-center min-h-[40px] py-2 px-2 rounded-full text-xs font-bold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
               !isApproved
                 ? 'opacity-40 cursor-not-allowed text-slate-400'
-                : activeTab === 'users' ? 'max-md:bg-[#A7C2B4] max-md:text-[#18221D] bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 max-md:text-[#A8A29A] hover:text-slate-900 dark:hover:text-white'
+                : activeTab === 'users' ? 'max-md:bg-purple-300 max-md:text-slate-950 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 max-md:text-purple-200/80 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <span>Users</span>
@@ -371,7 +371,7 @@ export function HostDashboardNavbar({
             className={`flex-1 justify-center min-h-[40px] py-2 px-2 rounded-full text-xs font-bold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
               !isApproved
                 ? 'opacity-40 cursor-not-allowed text-slate-400'
-                : activeTab === 'payment' ? 'max-md:bg-[#A7C2B4] max-md:text-[#18221D] bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 max-md:text-[#A8A29A] hover:text-slate-900 dark:hover:text-white'
+                : activeTab === 'payment' ? 'max-md:bg-purple-300 max-md:text-slate-950 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 max-md:text-purple-200/80 hover:text-slate-900 dark:hover:text-white'
             }`}
             title={!isApproved ? 'Locked until Admin Approval' : 'Host Direct UPI & QR Configuration'}
           >
