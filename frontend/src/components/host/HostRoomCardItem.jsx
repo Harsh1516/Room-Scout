@@ -41,28 +41,28 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
         compact ? 'h-[114px] sm:h-[118px]' : 'h-[154px] sm:h-[158px]'
       } shrink-0 snap-start transition-[border-color,box-shadow,background-color,opacity] duration-150 cursor-pointer select-none outline-none transform-gpu ${
         confirmDelete
-          ? 'bg-rose-50 dark:bg-error-container/20 border-2 border-rose-500 dark:border-error text-rose-600 dark:text-error'
+          ? 'max-md:bg-rose-950/80 max-md:border-2 max-md:border-rose-400 max-md:text-rose-200 md:bg-rose-50 md:dark:bg-error-container/20 md:border-2 md:border-rose-500 md:dark:border-error md:text-rose-600 md:dark:text-error'
           : isBookedToday
           ? isCardSelected
             ? 'bg-gradient-to-b from-[#ca8100] via-[#854f00] to-[#261400] text-white border-2 border-amber-400 dark:border-amber-400 shadow-room-booked-selected z-10'
             : 'bg-gradient-to-b from-[#a36800]/80 via-[#633c00]/80 to-[#1f1100]/90 text-white/95 border border-amber-700/40 dark:border-amber-600/30 shadow-xs opacity-90 hover:opacity-100'
           : isCardSelected
-          ? 'bg-white dark:bg-zinc-800 border-2 border-[#c0c1ff] shadow-room-open-selected z-10'
-          : 'bg-white/70 dark:bg-zinc-800/90 border border-slate-200 dark:border-zinc-700 hover:border-slate-300 dark:hover:border-zinc-600'
+          ? 'max-md:bg-white/25 max-md:border-2 max-md:border-purple-300 max-md:shadow-[0_0_15px_rgba(216,180,254,0.35)] md:bg-white md:dark:bg-zinc-800 md:border-2 md:border-[#c0c1ff] md:shadow-room-open-selected z-10'
+          : 'max-md:bg-white/10 max-md:border max-md:border-white/15 max-md:hover:bg-white/15 md:bg-white/70 md:dark:bg-zinc-800/90 md:border md:border-slate-200 md:dark:border-zinc-700 md:hover:border-slate-300 md:dark:hover:border-zinc-600'
       }`}
     >
       {/* Delete Confirmation Overlay */}
       {confirmDelete ? (
         <div
-          className="absolute inset-0 z-30 rounded-2xl bg-white/95 dark:bg-zinc-800/95 p-2 flex flex-col items-center justify-between text-center select-none border border-rose-300 dark:border-rose-500/50 backdrop-blur-sm"
+          className="absolute inset-0 z-30 rounded-2xl max-md:bg-[#3d0c40]/95 max-md:border-rose-400/50 md:bg-white/95 md:dark:bg-zinc-800/95 p-2 flex flex-col items-center justify-between text-center select-none border md:border-rose-300 md:dark:border-rose-500/50 backdrop-blur-sm"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="pt-1.5 flex flex-col items-center">
             <span className="material-symbols-outlined text-rose-500 text-[18px] mb-0.5 leading-none">delete</span>
-            <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400 block leading-tight">
+            <span className="text-[11px] font-bold text-rose-500 md:text-rose-600 md:dark:text-rose-400 block leading-tight">
               Delete Room?
             </span>
-            <span className="text-[9.5px] font-medium text-slate-600 dark:text-slate-300 leading-snug mt-0.5">
+            <span className="text-[9.5px] font-medium max-md:text-purple-200 md:text-slate-600 md:dark:text-slate-300 leading-snug mt-0.5">
               Room {card.roomNumber || ''}
             </span>
           </div>
@@ -75,7 +75,7 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
                 e.stopPropagation();
                 setConfirmDelete(false);
               }}
-              className="flex-1 py-1.5 px-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-zinc-700 dark:hover:bg-zinc-600 text-slate-700 dark:text-slate-200 text-[10px] font-semibold transition-all cursor-pointer text-center truncate disabled:opacity-50 leading-none border border-slate-200 dark:border-zinc-600 active:scale-95"
+              className="flex-1 py-1.5 px-1 rounded-lg max-md:bg-white/15 max-md:text-white max-md:border-white/20 md:bg-slate-100 md:hover:bg-slate-200 md:dark:bg-zinc-700 md:dark:hover:bg-zinc-600 md:text-slate-700 md:dark:text-slate-200 text-[10px] font-semibold transition-all cursor-pointer text-center truncate disabled:opacity-50 leading-none border md:border-slate-200 md:dark:border-zinc-600 active:scale-95"
             >
               Cancel
             </button>
@@ -109,7 +109,7 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
             BOOKED
           </span>
         ) : (
-          <span className="text-[9.5px] font-black text-[#5254cf] dark:text-[#c0c1ff] uppercase tracking-wider leading-none">
+          <span className="text-[9.5px] font-black max-md:text-emerald-300 md:text-[#5254cf] md:dark:text-[#c0c1ff] uppercase tracking-wider leading-none">
             OPEN
           </span>
         )}
@@ -123,7 +123,7 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
           className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors cursor-pointer ${
             isBookedToday
               ? 'text-amber-200/80 hover:text-white hover:bg-white/10'
-              : 'text-slate-400 hover:text-rose-500 dark:text-slate-400 dark:hover:text-rose-400 hover:bg-slate-200/50 dark:hover:bg-zinc-700/60'
+              : 'max-md:text-purple-200 max-md:hover:text-rose-300 max-md:hover:bg-white/10 md:text-slate-400 md:hover:text-rose-500 md:dark:text-slate-400 md:dark:hover:text-rose-400 md:hover:bg-slate-200/50 md:dark:hover:bg-zinc-700/60'
           }`}
           title="Remove room"
         >
@@ -137,7 +137,7 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
           className={`block ${compact ? 'text-[8px] mb-0.5' : 'text-[9.5px] mb-1'} uppercase tracking-widest font-extrabold leading-none ${
             isBookedToday
               ? 'text-amber-200/80 dark:text-amber-200/80'
-              : 'text-slate-400 dark:text-slate-400'
+              : 'max-md:text-purple-200/80 md:text-slate-400 md:dark:text-slate-400'
           }`}
         >
           ROOM
@@ -165,8 +165,8 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
             isBookedToday
               ? compact ? 'text-[17px] sm:text-[18px] text-white font-extrabold drop-shadow-xs tracking-tight' : 'text-[20px] sm:text-[22px] text-white font-extrabold drop-shadow-xs tracking-tight'
               : compact
-              ? 'text-[17px] sm:text-[18px] text-[#5254cf] dark:text-[#c0c1ff] font-black tracking-tight'
-              : 'text-[22px] sm:text-[24px] text-[#5254cf] dark:text-[#c0c1ff] font-black tracking-tight'
+              ? 'text-[17px] sm:text-[18px] max-md:text-white md:text-[#5254cf] md:dark:text-[#c0c1ff] font-black tracking-tight'
+              : 'text-[22px] sm:text-[24px] max-md:text-white md:text-[#5254cf] md:dark:text-[#c0c1ff] font-black tracking-tight'
           }`}
         />
       </div>
@@ -176,13 +176,13 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
         className={`${compact ? 'h-5.5 px-1.5 rounded-lg' : 'h-7 px-2 rounded-xl'} w-full flex items-center justify-between text-xs ${
           isBookedToday
             ? 'bg-black/35 border border-white/15 dark:border-white/10 backdrop-blur-xs'
-            : 'bg-slate-50/90 dark:bg-zinc-900/80 border border-slate-200/80 dark:border-zinc-700/80 shadow-2xs'
+            : 'max-md:bg-black/25 max-md:border max-md:border-white/10 max-md:shadow-none md:bg-slate-50/90 md:dark:bg-zinc-900/80 md:border md:border-slate-200/80 md:dark:border-zinc-700/80 md:shadow-2xs'
         }`}
         onClick={(e) => e.stopPropagation()}
       >
         <span
           className={`text-[9px] font-extrabold uppercase tracking-wider leading-none ${
-            isBookedToday ? 'text-amber-200' : 'text-slate-400 dark:text-slate-400'
+            isBookedToday ? 'text-amber-200' : 'max-md:text-purple-200/80 md:text-slate-400 md:dark:text-slate-400'
           }`}
         >
           CAP
@@ -197,7 +197,7 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
               onStepCapacity?.(cardId, cIdx, card, -1);
             }}
             className={`w-4.5 h-4.5 flex items-center justify-center rounded cursor-pointer select-none transition-colors leading-none ${
-              isBookedToday ? 'text-amber-200 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-slate-700 dark:hover:text-[#c0c1ff] hover:bg-slate-100 dark:hover:bg-zinc-700'
+              isBookedToday ? 'text-amber-200 hover:text-white hover:bg-white/10' : 'max-md:text-purple-200 max-md:hover:text-white max-md:hover:bg-white/15 md:text-slate-400 md:hover:text-slate-700 md:dark:hover:text-[#c0c1ff] md:hover:bg-slate-100 md:dark:hover:bg-zinc-700'
             } disabled:opacity-30 disabled:cursor-not-allowed`}
             title="Decrease capacity"
           >
@@ -205,7 +205,7 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
           </button>
 
           <span className={`min-w-[14px] text-[11.5px] font-black text-center select-none leading-none ${
-            isBookedToday ? 'text-white' : 'text-[#5254cf] dark:text-[#c0c1ff]'
+            isBookedToday ? 'text-white' : 'max-md:text-white md:text-[#5254cf] md:dark:text-[#c0c1ff]'
           }`}>
             {capacity}
           </span>
@@ -218,7 +218,7 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
               onStepCapacity?.(cardId, cIdx, card, 1);
             }}
             className={`w-4.5 h-4.5 flex items-center justify-center rounded cursor-pointer select-none transition-colors leading-none ${
-              isBookedToday ? 'text-amber-200 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-slate-700 dark:hover:text-[#c0c1ff] hover:bg-slate-100 dark:hover:bg-zinc-700'
+              isBookedToday ? 'text-amber-200 hover:text-white hover:bg-white/10' : 'max-md:text-purple-200 max-md:hover:text-white max-md:hover:bg-white/15 md:text-slate-400 md:hover:text-slate-700 md:dark:hover:text-[#c0c1ff] md:hover:bg-slate-100 md:dark:hover:bg-zinc-700'
             } disabled:opacity-30 disabled:cursor-not-allowed`}
             title="Increase capacity"
           >

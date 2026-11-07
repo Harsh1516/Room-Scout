@@ -47,16 +47,14 @@ export function UploadRoomsPricingTab({
         {/* Card Body: Purple on Mobile, Clean White/Dark on Desktop */}
         <section className="rounded-2xl sm:rounded-3xl border shadow-lg transition-colors
           max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:p-4 max-md:shadow-black/20
-          md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:p-5 md:sm:p-6 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
+          md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:p-5 md:sm:p-5.5 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
         >
           {/* Desktop-Only Header Inside Card */}
           <div className="hidden md:block pb-4 mb-4 border-b border-slate-100 dark:border-zinc-800/80 text-center relative">
             <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               Room Categories & Rates
             </h2>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1">
-              Configure room types (Single, Double, etc.), monthly rates, and room numbers
-            </p>
+            
 
             <button
               type="button"
@@ -125,7 +123,7 @@ export function UploadRoomsPricingTab({
         {/* Card Body: Purple on Mobile, Clean White/Dark on Desktop */}
         <section className="rounded-2xl sm:rounded-3xl border shadow-lg space-y-4 transition-colors
           max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:p-4 max-md:shadow-black/20
-          md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:p-5 md:sm:p-6 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
+          md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:p-5 md:sm:p-5.5 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
         >
           {/* Desktop-Only Heading Inside Card */}
           <div className="hidden md:block pb-3 border-b border-slate-100 dark:border-zinc-800/80 text-center relative">
@@ -144,9 +142,7 @@ export function UploadRoomsPricingTab({
             </span>
           </div>
 
-          <p className="hidden md:block text-xs text-slate-500 dark:text-zinc-400 leading-relaxed">
-            Describe your stay to prospective residents. Mention the neighborhood, student atmosphere, cleanliness, and study vibe.
-          </p>
+          
 
           <div className="space-y-1.5">
             <textarea

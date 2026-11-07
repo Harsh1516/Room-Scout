@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { ScrollReveal } from '../common/ScrollReveal';
 
 const FEATURES = [
   {
@@ -47,27 +47,30 @@ export function Features() {
   return (
     <section className="w-full py-8 sm:py-16 px-3 sm:px-8 lg:px-16 2xl:px-24">
       {/* Section Heading */}
-      <div className="text-center mb-6 sm:mb-8 space-y-1.5 sm:space-y-2 max-w-3xl mx-auto">
-        <span className="inline-block px-2.5 py-1 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 bg-slate-900/10 dark:bg-white/10 border border-slate-900/15 dark:border-white/20 backdrop-blur-xl">
-          Why Choose Room-Scout
-        </span>
-        <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-slate-950 dark:text-white tracking-tight drop-shadow-sm dark:drop-shadow-[0_8px_30px_rgba(0,0,0,0.9)]">
-          Built for Seamless Living
-        </h2>
-        <p className="text-slate-600 dark:text-slate-300 text-[11px] sm:text-xs md:text-sm font-medium">
-          Discover why thousands of students and travelers rely on Room-Scout for verified stays across India.
-        </p>
-      </div>
+      <ScrollReveal desktopOffset={20} mobileOffset={12} desktopDuration={0.5} mobileDuration={0.35}>
+        <div className="text-center mb-6 sm:mb-8 space-y-1.5 sm:space-y-2 max-w-3xl mx-auto">
+          <span className="inline-block px-2.5 py-1 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 bg-slate-900/10 dark:bg-white/10 border border-slate-900/15 dark:border-white/20 backdrop-blur-xl">
+            Why Choose Room-Scout
+          </span>
+          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-slate-950 dark:text-white tracking-tight drop-shadow-sm dark:drop-shadow-[0_8px_30px_rgba(0,0,0,0.9)]">
+            Built for Seamless Living
+          </h2>
+          <p className="text-slate-600 dark:text-slate-300 text-[11px] sm:text-xs md:text-sm font-medium">
+            Discover why thousands of students and travelers rely on Room-Scout for verified stays across India.
+          </p>
+        </div>
+      </ScrollReveal>
 
-      {/* Two Tabs in a Row Grid */}
+      {/* Grid of Featured Amenities with Responsive Staggered Reveals */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-6 w-full">
         {FEATURES.map((feature, idx) => (
-          <motion.div
+          <ScrollReveal
             key={feature.id}
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.35, delay: idx * 0.08 }}
+            staggerIndex={idx}
+            desktopOffset={20}
+            mobileOffset={12}
+            desktopDuration={0.55}
+            mobileDuration={0.35}
             className="group relative p-2.5 sm:p-6 rounded-xl sm:rounded-2xl bg-white/85 dark:bg-slate-950/60 border border-slate-200 dark:border-white/15 shadow-sm sm:shadow-md dark:shadow-[0_20px_50px_rgba(0,0,0,0.7)] backdrop-blur-xl transition-colors duration-200 hover:border-slate-400 dark:hover:border-white/30 flex flex-col justify-between min-w-0"
           >
             <div>
@@ -86,9 +89,11 @@ export function Features() {
                 {feature.description}
               </p>
             </div>
-          </motion.div>
+          </ScrollReveal>
         ))}
       </div>
     </section>
   );
 }
+
+export default Features;

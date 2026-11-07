@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Console } from './Console';
 
@@ -128,10 +128,22 @@ export function Center({ onSearchSubmit }) {
     setIsMapModalOpen(false);
   };
 
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <>
-      {/* 🚀 3-SEGMENT SEARCH CONSOLE CENTERED AT TOP FOR ALL RESOLUTIONS */}
-      <div className="fixed top-3.5 sm:top-5 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[calc(100vw-96px)] sm:max-w-none flex justify-center" ref={navRef}>
+      {/* 🚀 3-SEGMENT SEARCH CONSOLE CENTERED AT TOP FOR ALL RESOLUTIONS (STAGGERED INITIAL REVEAL) */}
+      <motion.div
+        initial={{ opacity: shouldReduceMotion ? 1 : 0, y: shouldReduceMotion ? 0 : -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{
+          duration: shouldReduceMotion ? 0 : 0.45,
+          delay: shouldReduceMotion ? 0 : 0.12,
+          ease: [0.16, 1, 0.3, 1],
+        }}
+        className="fixed top-3.5 sm:top-5 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[calc(100vw-96px)] sm:max-w-none flex justify-center will-change-transform"
+        ref={navRef}
+      >
         <Console
           selectedType={selectedType}
           setSelectedType={setSelectedType}
@@ -156,7 +168,7 @@ export function Center({ onSearchSubmit }) {
           isSearching={isSearching}
           searchProgress={searchProgress}
         />
-      </div>
+      </motion.div>
 
       {/* Interactive Map Picker Modal (Loaded on-demand when clicked) */}
       {isMapModalOpen && (

@@ -84,7 +84,7 @@ export function UploadPhotosTab({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
       transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-      className="max-w-4xl w-full mx-auto space-y-5 sm:space-y-6"
+      className="w-full max-w-6xl mx-auto space-y-5 md:space-y-0 md:grid md:grid-cols-12 md:gap-5 lg:gap-6 md:items-start"
     >
       <input
         type="file"
@@ -95,43 +95,54 @@ export function UploadPhotosTab({
         className="hidden"
       />
 
-      {/* ── CARD 1: Gallery Manager Header & Grid ── */}
-      <div className="space-y-2.5 sm:space-y-3">
+      {/* ── CARD 1: Gallery Manager Header & Grid (Left Side on Desktop) ── */}
+      <div className="md:col-span-7 flex flex-col space-y-2.5 sm:space-y-3 min-w-0">
         {/* Mobile-Only Heading (Outside, Centered) */}
-        <div className="md:hidden text-center px-1 mb-2">
+        <div className="md:hidden text-center px-1 mb-2 space-y-1.5">
           <h2 className="text-xl font-black text-white tracking-tight">
             Property Showcase Gallery
           </h2>
+          <div className="flex items-center justify-center">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold tracking-wide bg-white/15 text-white border border-white/25 backdrop-blur-md shadow-xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              16:9 photos only
+            </span>
+          </div>
         </div>
 
         {/* Card Body: Purple on Mobile, Clean White/Dark on Desktop */}
         <section className="rounded-2xl sm:rounded-3xl border shadow-lg space-y-4 sm:space-y-5 transition-colors
           max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:p-4 max-md:shadow-black/20
-          md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:p-5 md:sm:p-7 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
+          md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:p-4 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
         >
           {/* Desktop-Only Gallery Header Inside Card */}
-          <div className="hidden md:block pb-4 border-b border-slate-100 dark:border-zinc-800/80 text-center relative">
-            <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          <div className="hidden md:block pb-2.5 border-b border-slate-100 dark:border-zinc-800/80 text-center relative">
+            <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight">
               Property Showcase Gallery
             </h2>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1">
-              Add up to {maxPhotos} high quality photos. The first photo will be your main listing cover.
-            </p>
 
-            <div className="hidden sm:flex items-center gap-2 absolute right-0 top-0">
+            {/* 16:9 Photos Only Tab directly below title */}
+            <div className="flex items-center justify-center mt-1">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold tracking-wide bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 shadow-2xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                16:9 photos only
+              </span>
+            </div>
+
+            <div className="hidden sm:flex items-center gap-2 absolute right-0 top-1/2 -translate-y-1/2">
               {formData.images?.length > 0 && (
-                <span className="px-3 py-1 rounded-full text-xs font-mono font-semibold bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700/60">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700/60">
                   {totalMemoryFormatted}
                 </span>
               )}
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80">
                 {formData.images?.length || 0} / {maxPhotos} Photos
               </span>
             </div>
           </div>
 
-          {/* Photo Grid: Mobile 1 top full width + 2 bottom small + 2 bottom small */}
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3.5 md:gap-4">
+          {/* Photo Grid */}
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5 md:gap-3">
             {(formData.images || []).map((imgUrl, i) => {
               const isCover = i === 0;
               const isBeingDragged = draggedPhotoIndex === i;
@@ -253,7 +264,7 @@ export function UploadPhotosTab({
                   max-md:text-purple-200/70
                   md:text-slate-400 md:dark:text-zinc-500"
                 >
-                  PNG, JPG or WebP
+                  16:9 Aspect Ratio • PNG, JPG or WebP
                 </span>
               </button>
             )}
@@ -261,8 +272,8 @@ export function UploadPhotosTab({
         </section>
       </div>
 
-      {/* ── CARD 2: Video Walkthrough Tour (Optional) ── */}
-      <div className="space-y-2.5 sm:space-y-3">
+      {/* ── CARD 2: Video Walkthrough Tour (Optional - Right Side on Desktop) ── */}
+      <div className="md:col-span-5 flex flex-col space-y-2.5 sm:space-y-3 min-w-0">
         {/* Mobile-Only Heading (Outside, Centered) */}
         <div className="md:hidden text-center px-1 mb-2 mt-4">
           <h2 className="text-xl font-black text-white tracking-tight">
@@ -271,18 +282,18 @@ export function UploadPhotosTab({
         </div>
 
         {/* Card Body: Purple on Mobile, Clean White/Dark on Desktop */}
-        <section className="rounded-2xl sm:rounded-3xl border shadow-lg space-y-3 transition-colors
+        <section className="rounded-2xl sm:rounded-3xl border shadow-lg space-y-3.5 transition-colors
           max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:p-4 max-md:shadow-black/20
-          md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:p-5 md:sm:p-6 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
+          md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:p-4 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
         >
           {/* Desktop-Only Heading Inside Card */}
-          <div className="hidden md:block pb-3 border-b border-slate-100 dark:border-zinc-800/80 text-center relative">
-            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-              Virtual Tour / Video Link (Optional)
+          <div className="hidden md:block pb-2.5 border-b border-slate-100 dark:border-zinc-800/80 text-center relative">
+            <h3 className="text-base font-black text-slate-900 dark:text-white tracking-tight">
+              Virtual Tour / Video Link
             </h3>
-            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-              Instagram Reel or YouTube video walkthrough
-            </p>
+            <span className="text-[11px] font-medium text-slate-400 dark:text-zinc-500 block">
+              Optional listing walkthrough
+            </span>
 
             {formData.instagramVideoUrl && (
               <a
@@ -293,22 +304,26 @@ export function UploadPhotosTab({
                 }
                 target="_blank"
                 rel="noreferrer"
-                className="hidden sm:inline-flex px-3 py-1 rounded-lg bg-pink-600 hover:bg-pink-700 text-white text-xs font-semibold transition-colors items-center gap-1 shadow-xs absolute right-0 top-0"
+                className="hidden sm:inline-flex px-2.5 py-1 rounded-full bg-pink-600 hover:bg-pink-700 text-white text-[11px] font-bold transition-colors items-center gap-1 shadow-xs absolute right-0 top-0 cursor-pointer"
               >
                 <span>Test Link ↗</span>
               </a>
             )}
           </div>
 
-          <input
-            type="url"
-            value={formData.instagramVideoUrl || ''}
-            onChange={(e) => setFormData({ ...formData, instagramVideoUrl: e.target.value })}
-            placeholder="Instagram Reel or YouTube video walkthrough link..."
-            className="w-full h-11 sm:h-12 px-4 rounded-xl border text-xs sm:text-sm focus:outline-none transition-all
-              max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
-              md:bg-slate-50/70 md:dark:bg-zinc-800/40 md:border-slate-200 md:dark:border-zinc-700/80 md:text-slate-900 md:dark:text-white md:placeholder:text-slate-400 md:dark:placeholder:text-zinc-500 md:focus:border-pink-500 md:focus:ring-2 md:focus:ring-pink-500/15"
-          />
+          <div className="space-y-1.5">
+            <input
+              type="url"
+              value={formData.instagramVideoUrl || ''}
+              onChange={(e) => setFormData({ ...formData, instagramVideoUrl: e.target.value })}
+              placeholder="Instagram Reel or YouTube video walkthrough link..."
+              className="w-full h-11 sm:h-12 md:h-10 px-4 md:px-3 rounded-xl border text-xs sm:text-sm md:text-xs focus:outline-none transition-all
+                max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
+                md:bg-slate-50/70 md:dark:bg-zinc-800/40 md:border-slate-200 md:dark:border-zinc-700/80 md:text-slate-900 md:dark:text-white md:placeholder:text-slate-400 md:dark:placeholder:text-zinc-500 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15"
+            />
+          </div>
+
+
         </section>
       </div>
     </motion.div>

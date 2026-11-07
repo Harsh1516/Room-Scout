@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useBookings } from '../context/BookingsContext';
 import { useAuth } from '../context/AuthContext';
@@ -206,16 +207,46 @@ export function BookedPlacesDrawer({ onLoginClick }) {
     navigate(`/booking/${encodeURIComponent(bookingIdentifier)}`);
   };
 
-  if (!isBookingsOpen) return null;
+  // Close smoothly on Escape key press
+  useEffect(() => {
+    if (!isBookingsOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && !bookingToDelete) {
+        setIsBookingsOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isBookingsOpen, setIsBookingsOpen, bookingToDelete]);
+
 
   return (
-    <div className="fixed inset-0 z-[9999] overflow-hidden">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => setIsBookingsOpen(false)} />
+    <AnimatePresence>
+      {isBookingsOpen && (
+        <div className="fixed inset-0 z-[9999] overflow-hidden">
+          {/* Backdrop */}
+          <motion.div
+            key="bookings-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.28, ease: 'easeOut' }}
+            className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+            onClick={() => setIsBookingsOpen(false)}
+          />
 
-      {/* Drawer */}
-      <div className="fixed inset-y-0 right-0 flex pl-0 sm:pl-10 max-w-full">
-        <div className="w-80 sm:w-88 max-w-[85vw] flex flex-col bg-white dark:bg-[#0f1117] border-l border-slate-200 dark:border-white/[0.06] shadow-2xl">
+          {/* Drawer */}
+          <div className="fixed inset-y-0 right-0 flex pl-0 sm:pl-10 max-w-full pointer-events-none">
+            <motion.div
+              key="bookings-drawer-panel"
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{
+                duration: 0.32,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+              className="pointer-events-auto w-80 sm:w-88 max-w-[85vw] flex flex-col bg-white dark:bg-[#0f1117] border-l border-slate-200 dark:border-white/[0.06] shadow-2xl h-full will-change-transform">
 
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-white/[0.06]">
@@ -455,8 +486,8 @@ export function BookedPlacesDrawer({ onLoginClick }) {
               </button>
             </div>
           )}
-        </div>
-      </div>
+            </motion.div>
+          </div>
 
       {/* Remove Booking Confirmation Modal */}
       {bookingToDelete && (
@@ -533,7 +564,9 @@ export function BookedPlacesDrawer({ onLoginClick }) {
           </div>
         </div>
       )}
-    </div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }
 

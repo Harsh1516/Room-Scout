@@ -25,12 +25,12 @@ export function Right({ onLoginClick }) {
         <button
           type="button"
           onClick={() => setIsWishlistOpen(true)}
-          className="apple-liquid-nav relative w-8 h-8 sm:w-9 sm:h-9 rounded-full text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/15 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0"
+          className="apple-liquid-nav relative w-11 h-11 sm:w-11.5 sm:h-11.5 rounded-full text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/15 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0"
           title="Saved Wishlist"
           aria-label="Open Wishlist"
         >
           <svg
-            className="w-4 h-4 text-rose-500"
+            className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-rose-500"
             viewBox="0 0 24 24"
             fill={wishlist.length > 0 ? 'currentColor' : 'none'}
             stroke="currentColor"
@@ -42,7 +42,7 @@ export function Right({ onLoginClick }) {
           </svg>
 
           {wishlist.length > 0 && (
-            <span className="absolute -top-1 -right-1 px-1.5 min-w-4 h-4 rounded-full bg-rose-500 text-white font-black text-[9px] flex items-center justify-center shadow-xs border border-white dark:border-slate-900 animate-in fade-in zoom-in duration-150">
+            <span className="absolute -top-1 -right-1 px-1.5 min-w-4.5 h-4.5 rounded-full bg-rose-500 text-white font-black text-[10px] flex items-center justify-center shadow-xs border-2 border-white dark:border-slate-900 animate-in fade-in zoom-in duration-150">
               {wishlist.length}
             </span>
           )}
@@ -52,12 +52,12 @@ export function Right({ onLoginClick }) {
         <button
           type="button"
           onClick={() => setIsBookingsOpen(true)}
-          className="apple-liquid-nav relative w-8 h-8 sm:w-9 sm:h-9 rounded-full text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/15 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0"
+          className="apple-liquid-nav relative w-11 h-11 sm:w-11.5 sm:h-11.5 rounded-full text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/15 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0"
           title="Booked Places"
           aria-label="Open Booked Places"
         >
           <svg
-            className="w-4 h-4 text-emerald-600 dark:text-emerald-400"
+            className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -72,7 +72,7 @@ export function Right({ onLoginClick }) {
           </svg>
 
           {bookings.length > 0 && (
-            <span className="absolute -top-1 -right-1 px-1.5 min-w-4 h-4 rounded-full bg-emerald-600 text-white font-black text-[9px] flex items-center justify-center shadow-xs border border-white dark:border-slate-900 animate-in fade-in zoom-in duration-150">
+            <span className="absolute -top-1 -right-1 px-1.5 min-w-4.5 h-4.5 rounded-full bg-emerald-600 text-white font-black text-[10px] flex items-center justify-center shadow-xs border-2 border-white dark:border-slate-900 animate-in fade-in zoom-in duration-150">
               {bookings.length}
             </span>
           )}

@@ -362,9 +362,9 @@ export function HostUploadPage() {
         images: cleanImgs,
         instagramVideoUrl: passedProp.instagramVideoUrl || '',
         description: passedProp.description || passedProp.bio || '',
-        facilities: Array.isArray(passedProp.facilities) && passedProp.facilities.length > 0 ? passedProp.facilities : (Array.isArray(passedProp.amenities) ? passedProp.amenities : DEFAULT_HOST_FORM_DATA.facilities),
-        amenities: Array.isArray(passedProp.facilities) && passedProp.facilities.length > 0 ? passedProp.facilities : (Array.isArray(passedProp.amenities) ? passedProp.amenities : DEFAULT_HOST_FORM_DATA.amenities),
-        rules: Array.isArray(passedProp.rules) && passedProp.rules.length > 0 ? passedProp.rules : [],
+        facilities: [],
+        amenities: [],
+        rules: [],
         roomRates: loadedRates,
         rooms: loadedRooms,
         status: passedProp.status || 'Pending Approval',
@@ -418,6 +418,11 @@ export function HostUploadPage() {
   useEffect(() => {
     saveDraftToStorage(formData, activeStep, googleMapsUrl, user);
   }, [formData, activeStep, googleMapsUrl, user]);
+
+  // Smoothly scroll to top when user changes tabs
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeStep]);
 
   // Window unload listener to flush latest keystrokes before browser refresh
   useEffect(() => {
@@ -505,7 +510,7 @@ export function HostUploadPage() {
             .slice(0, MAX_PHOTOS);
 
           setFormData((prev) => {
-            // Keep only user-manually entered rules and facilities, do not auto-attach from backend prop
+            // Keep strictly user-manually entered rules and facilities; do not auto-attach from backend prop
             const mergedRules = Array.isArray(prev.rules) ? prev.rules : [];
             const mergedFacilities = Array.isArray(prev.facilities) ? prev.facilities : [];
 
@@ -873,52 +878,111 @@ export function HostUploadPage() {
 
   const handleAddFacility = (e) => {
     e?.preventDefault?.();
+    e?.stopPropagation?.();
     const clean = newFacilityInput.trim();
     if (!clean) return;
-    if ((formData.facilities || []).some((f) => f.toLowerCase() === clean.toLowerCase())) {
+    if ((formData.facilities || formData.amenities || []).some((f) => f.toLowerCase() === clean.toLowerCase())) {
       showToast('This facility is already added.');
+      setNewFacilityInput('');
       return;
     }
-    const updated = [...(formData.facilities || []), clean];
-    setFormData((prev) => ({
-      ...prev,
-      facilities: updated,
-      amenities: updated,
-    }));
+    const updated = [...(formData.facilities || formData.amenities || []), clean];
+    setFormData((prev) => {
+      const next = {
+        ...prev,
+        facilities: updated,
+        amenities: updated,
+      };
+      saveDraftToStorage(next, activeStep, googleMapsUrl, user);
+      return next;
+    });
     setNewFacilityInput('');
   };
 
   const handleRemoveFacility = (facilityName, e) => {
     e?.preventDefault?.();
-    const updated = (formData.facilities || []).filter((f) => f !== facilityName);
-    setFormData((prev) => ({
-      ...prev,
-      facilities: updated,
-      amenities: updated,
-    }));
+    e?.stopPropagation?.();
+    const current = formData.facilities || formData.amenities || [];
+    const updated = current.filter((f) => f !== facilityName);
+    setFormData((prev) => {
+      const next = {
+        ...prev,
+        facilities: updated,
+        amenities: updated,
+      };
+      saveDraftToStorage(next, activeStep, googleMapsUrl, user);
+      return next;
+    });
   };
 
   const handleAddRule = (e) => {
     e?.preventDefault?.();
+    e?.stopPropagation?.();
     const clean = newRuleInput.trim();
     if (!clean) return;
     if ((formData.rules || []).some((r) => r.toLowerCase() === clean.toLowerCase())) {
       showToast('This rule is already added.');
+      setNewRuleInput('');
       return;
     }
-    setFormData((prev) => ({
-      ...prev,
-      rules: [...(prev.rules || []), clean],
-    }));
+    const updated = [...(formData.rules || []), clean];
+    setFormData((prev) => {
+      const next = {
+        ...prev,
+        rules: updated,
+      };
+      saveDraftToStorage(next, activeStep, googleMapsUrl, user);
+      return next;
+    });
     setNewRuleInput('');
   };
 
   const handleRemoveRule = (ruleIndex, e) => {
     e?.preventDefault?.();
-    setFormData((prev) => ({
-      ...prev,
-      rules: (prev.rules || []).filter((_, i) => i !== ruleIndex),
-    }));
+    e?.stopPropagation?.();
+    const updated = (formData.rules || []).filter((_, i) => i !== ruleIndex);
+    setFormData((prev) => {
+      const next = {
+        ...prev,
+        rules: updated,
+      };
+      saveDraftToStorage(next, activeStep, googleMapsUrl, user);
+      return next;
+    });
+  };
+
+  const handleUpdateFacility = (oldFacility, newFacility, e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    const clean = (newFacility || '').trim();
+    if (!clean || clean.toLowerCase() === (oldFacility || '').toLowerCase()) return;
+    const current = formData.facilities || formData.amenities || [];
+    const updated = current.map((f) => (f === oldFacility ? clean : f));
+    setFormData((prev) => {
+      const next = {
+        ...prev,
+        facilities: updated,
+        amenities: updated,
+      };
+      saveDraftToStorage(next, activeStep, googleMapsUrl, user);
+      return next;
+    });
+  };
+
+  const handleUpdateRule = (ruleIndex, newRule, e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    const clean = (newRule || '').trim();
+    if (!clean) return;
+    const updated = (formData.rules || []).map((r, i) => (i === ruleIndex ? clean : r));
+    setFormData((prev) => {
+      const next = {
+        ...prev,
+        rules: updated,
+      };
+      saveDraftToStorage(next, activeStep, googleMapsUrl, user);
+      return next;
+    });
   };
 
 
@@ -1329,8 +1393,43 @@ export function HostUploadPage() {
     return true;
   };
 
-  const handleNextStep = () => {
+  const handleNextStep = (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
     setFieldErrors({});
+
+    // If on Step 3 and host typed a facility or rule without explicitly clicking + Add, auto-commit it
+    if (activeStep === 3) {
+      let updatedFacilities = [...(formData.facilities || formData.amenities || [])];
+      let updatedRules = [...(formData.rules || [])];
+      let hasChanges = false;
+
+      const cleanFac = newFacilityInput.trim();
+      if (cleanFac && !updatedFacilities.some((f) => f.toLowerCase() === cleanFac.toLowerCase())) {
+        updatedFacilities.push(cleanFac);
+        setNewFacilityInput('');
+        hasChanges = true;
+      }
+
+      const cleanRule = newRuleInput.trim();
+      if (cleanRule && !updatedRules.some((r) => r.toLowerCase() === cleanRule.toLowerCase())) {
+        updatedRules.push(cleanRule);
+        setNewRuleInput('');
+        hasChanges = true;
+      }
+
+      if (hasChanges) {
+        const nextData = {
+          ...formData,
+          facilities: updatedFacilities,
+          amenities: updatedFacilities,
+          rules: updatedRules,
+        };
+        setFormData(nextData);
+        saveDraftToStorage(nextData, activeStep, googleMapsUrl, user);
+      }
+    }
+
     const isValid = validateStep(activeStep, true);
     if (!isValid) return;
 
@@ -1533,47 +1632,54 @@ export function HostUploadPage() {
   return (
     <div className="bg-[#f8f9fa] dark:bg-[#0b0c10] text-slate-800 dark:text-zinc-100 host-page-scope font-body-md antialiased min-h-screen flex flex-col justify-between relative selection:bg-[#006C4A] selection:text-white transition-colors duration-300">
 
-      {/* ── Top Header Navigation Bar (Single seamless background with page body) ── */}
-      <header className="sticky top-0 z-40 w-full bg-[#f8f9fa] dark:bg-[#0b0c10] border-b-0 h-18 sm:h-20 px-3 sm:px-6 lg:px-8 flex items-center justify-between select-none">
-        {/* Left Action: Return to Dashboard */}
-        <div className="flex items-center gap-2 sm:gap-3">
+      {/* ── Top Header Navigation Bar (Floating Liquid Glass Islands matching Host Dashboard / Pic 2) ── */}
+      <header className="relative w-full h-16 sm:h-20 pointer-events-none select-none z-50 font-body-md host-font-scope antialiased">
+        {/* ── 1. LEFT FLOATING ISLAND: BACK BUTTON ── */}
+        <div className="fixed top-3.5 left-2.5 sm:top-5 sm:left-6 z-50 flex items-center gap-1.5 sm:gap-2 pointer-events-auto select-none">
           <button
             type="button"
             onClick={() => {
               saveDraftToStorage(formData, activeStep, googleMapsUrl, user);
               navigate('/host/dashboard');
             }}
-            className="flex items-center justify-center gap-2 h-11 sm:h-12 px-4 sm:px-5 rounded-full border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/80 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-800 dark:text-zinc-100 font-bold text-sm sm:text-base cursor-pointer active:scale-95 transition-all shadow-xs shrink-0"
-            title="Save draft and return to dashboard"
+            data-no-hover="true"
+            className="apple-liquid-nav flex items-center justify-center px-3 py-1.5 sm:px-4 sm:py-2 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 dark:border-white/15 bg-white/70 dark:bg-[#0B0F19]/80 backdrop-blur-2xl shadow-xs cursor-pointer text-slate-800 dark:text-slate-100 hover:border-purple-500/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] font-semibold text-xs sm:text-sm select-none active:scale-95 transition-all duration-200 shrink-0"
+            title="Return to Host Dashboard"
           >
-            <ArrowLeft className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-slate-700 dark:text-zinc-200" />
-            <span className="hidden sm:inline">Exit to Dashboard</span>
-            <span className="sm:hidden font-bold">Exit</span>
+            <svg
+              className="w-4 h-4 text-purple-600 dark:text-purple-400 stroke-[2.5]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+            <span>Back</span>
           </button>
         </div>
 
-        {/* Center: Desktop Stepper Tabs (md+) & Mobile Center Step Count Text-Only */}
-        <div className="flex items-center justify-center min-w-0">
-          {/* Desktop Stepper Navigation Tabs (Centered) */}
-          <div className="hidden md:flex items-center">
-            <HostUploadTabs
-              steps={WIZARD_STEPS}
-              activeStep={activeStep}
-              onSelectStep={handleSelectStep}
-              isStepCompleted={(stepId) => validateStep(stepId, false)}
-            />
-          </div>
-
-          {/* Mobile Center Step Count: Text Only (Non-clickable) */}
-          <div className="md:hidden text-center select-none py-1.5 px-2">
-            <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-wider uppercase">
-              Step {activeStep} of {WIZARD_STEPS.length}
-            </span>
-          </div>
+        {/* ── 2. CENTER FLOATING ISLAND: NAVIGATION TABS (DESKTOP) & STEP COUNTER (MOBILE) ── */}
+        <div className="hidden md:flex fixed top-3.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 items-center pointer-events-auto select-none">
+          <HostUploadTabs
+            steps={WIZARD_STEPS}
+            activeStep={activeStep}
+            onSelectStep={handleSelectStep}
+            isStepCompleted={(stepId) => validateStep(stepId, false)}
+          />
         </div>
 
-        {/* Right Action: Theme Toggle + User Avatar */}
-        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+        {/* Mobile Center Step Count Badge */}
+        <div className="md:hidden fixed top-3.5 left-1/2 -translate-x-1/2 z-50 pointer-events-auto text-center select-none py-1.5 px-3 rounded-full bg-white/70 dark:bg-[#0B0F19]/80 backdrop-blur-2xl border border-slate-200/80 dark:border-white/15 shadow-xs">
+          <span className="text-xs font-extrabold text-slate-900 dark:text-white tracking-wider uppercase">
+            Step {activeStep} of {WIZARD_STEPS.length}
+          </span>
+        </div>
+
+        {/* ── 3. RIGHT FLOATING ISLAND: THEME TOGGLE + USER AVATAR ── */}
+        <div className="fixed top-3.5 right-2.5 sm:top-5 sm:right-6 z-50 flex items-center gap-2 sm:gap-2.5 pointer-events-auto select-none">
           <ThemeTogglePill />
           <div className="relative flex items-center justify-center">
             <Login />
@@ -1706,7 +1812,7 @@ export function HostUploadPage() {
       </AnimatePresence>
 
       {/* ── Fixed Step Editorial Header (Airbnb-style bold & calm typography with smooth tab transition) ── */}
-      <section className="w-full shrink-0 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-3 sm:pb-4 select-none">
+      <section className="w-full shrink-0 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 md:pt-1 pb-3 sm:pb-4 md:pb-1.5 select-none">
         <AnimatePresence mode="wait">
           <motion.div
             key={`step-heading-${activeStep}`}
@@ -1714,15 +1820,16 @@ export function HostUploadPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="max-w-4xl mx-auto text-center space-y-1 sm:space-y-2"
+            className="max-w-4xl mx-auto text-center space-y-1 sm:space-y-2 md:space-y-0.5"
           >
             {/* Main Step Headline - Large & Balanced for Mobile */}
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-xl font-black text-slate-900 dark:text-white tracking-tight">
               {currentStepConfig.sub || currentStepConfig.title}
             </h1>
 
             {/* Step Subtitle / Description - Easy to Read on Mobile */}
-            <p className="text-xs sm:text-sm md:text-base text-slate-600 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed font-medium">
+            {/* Step Subtitle / Description - Kept on Mobile, Hidden on Desktop */}
+            <p className="md:hidden text-xs sm:text-sm text-slate-600 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed font-medium">
               {currentStepConfig.desc}
             </p>
           </motion.div>
@@ -1731,7 +1838,7 @@ export function HostUploadPage() {
 
       {/* ── Main Viewport-Fitted Canvas (Natural Smooth Scroll, Generous Bottom Padding) ── */}
       <main
-        className="flex-1 w-full relative z-10 max-md:bg-[#3d0c40] max-md:rounded-t-[2.5rem] max-md:shadow-[0_-8px_40px_rgba(61,12,64,0.4)] max-md:px-4 max-md:py-6 max-md:pb-32 md:max-w-6xl md:mx-auto md:px-4 md:sm:px-6 md:lg:px-8 md:py-2 md:sm:py-4 md:pb-32 md:sm:pb-36"
+        className="flex-1 w-full relative z-10 max-md:bg-[#3d0c40] max-md:rounded-t-[2.5rem] max-md:shadow-[0_-8px_40px_rgba(61,12,64,0.4)] max-md:px-4 max-md:py-6 max-md:pb-32 md:max-w-6xl md:mx-auto md:px-4 md:sm:px-6 md:lg:px-8 md:py-1 md:pb-36"
       >
         <ErrorBoundary>
           <AnimatePresence mode="wait">
@@ -1766,10 +1873,12 @@ export function HostUploadPage() {
                 setNewFacilityInput={setNewFacilityInput}
                 onAddFacility={handleAddFacility}
                 onRemoveFacility={handleRemoveFacility}
+                onUpdateFacility={handleUpdateFacility}
                 newRuleInput={newRuleInput}
                 setNewRuleInput={setNewRuleInput}
                 onAddRule={handleAddRule}
                 onRemoveRule={handleRemoveRule}
+                onUpdateRule={handleUpdateRule}
               />
             )}
 
@@ -1831,7 +1940,7 @@ export function HostUploadPage() {
           />
         </div>
 
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-18 sm:h-20 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 max-md:h-18 md:h-13.5 flex items-center justify-between">
           {/* Left Action: Back Button or Auto-save Draft Status */}
           <div className="flex items-center">
             {activeStep > 1 ? (
@@ -1841,13 +1950,13 @@ export function HostUploadPage() {
                   setFieldErrors({});
                   setActiveStep((prev) => Math.max(1, prev - 1));
                 }}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl font-extrabold text-sm sm:text-base underline underline-offset-4 cursor-pointer active:scale-95 transition-all max-md:text-purple-200 max-md:hover:text-white md:text-slate-800 md:dark:text-zinc-200 md:hover:text-black md:dark:hover:text-white"
+                className="flex items-center gap-1.5 px-3 py-1.5 md:py-1 rounded-xl font-extrabold text-sm sm:text-base md:text-xs underline underline-offset-4 cursor-pointer active:scale-95 transition-all max-md:text-purple-200 max-md:hover:text-white md:text-slate-800 md:dark:text-zinc-200 md:hover:text-black md:dark:hover:text-white"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-4 h-4 md:w-3.5 md:h-3.5" />
                 <span>Back</span>
               </button>
             ) : (
-              <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium pl-1">
+              <div className="flex items-center gap-2 text-xs sm:text-sm md:text-xs text-slate-500 dark:text-zinc-400 font-medium pl-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="hidden sm:inline">Draft auto-saved securely</span>
                 <span className="sm:hidden">Draft saved</span>
@@ -1857,7 +1966,7 @@ export function HostUploadPage() {
 
           {/* Center Info: Step overview badge (Desktop only) */}
           <div className="hidden md:flex items-center gap-2">
-            <span className="text-sm font-bold text-slate-500 dark:text-zinc-400">
+            <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">
               {currentStepConfig.title}
             </span>
           </div>
@@ -1868,31 +1977,31 @@ export function HostUploadPage() {
               <button
                 type="button"
                 onClick={handleNextStep}
-                className="h-12 sm:h-13 px-8 sm:px-10 rounded-full bg-[#006C4A] hover:bg-[#005a3e] active:bg-[#004d35] text-white font-extrabold text-sm sm:text-base shadow-sm shadow-[#006C4A]/30 flex items-center gap-2 cursor-pointer active:scale-95 transition-all"
+                className="h-11 max-md:h-12 md:h-9 px-6 sm:px-8 md:px-6 rounded-full bg-[#006C4A] hover:bg-[#005a3e] active:bg-[#004d35] text-white font-extrabold text-sm md:text-xs shadow-sm shadow-[#006C4A]/30 flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
               >
                 <span>Continue</span>
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 h-4" />
               </button>
             ) : (
               <button
                 type="button"
                 disabled={isSubmitting}
                 onClick={handleSubmit}
-                className="h-12 sm:h-13 px-8 sm:px-11 rounded-full bg-[#006C4A] hover:bg-[#005a3e] active:bg-[#004d35] text-white font-extrabold text-sm sm:text-base shadow-md shadow-[#006C4A]/30 flex items-center gap-2 cursor-pointer disabled:opacity-50 active:scale-95 transition-all"
+                className="h-11 max-md:h-12 md:h-9 px-6 sm:px-8 md:px-6 rounded-full bg-[#006C4A] hover:bg-[#005a3e] active:bg-[#004d35] text-white font-extrabold text-sm md:text-xs shadow-md shadow-[#006C4A]/30 flex items-center gap-1.5 cursor-pointer disabled:opacity-50 active:scale-95 transition-all"
               >
                 {isSubmitting ? (
                   <>
-                    <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                    <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
                     <span>Saving...</span>
                   </>
                 ) : isEditing ? (
                   <>
-                    <Check className="w-5 h-5 stroke-[3]" />
+                    <Check className="w-4 h-4 stroke-[3]" />
                     <span>Update Listing</span>
                   </>
                 ) : (
                   <>
-                    <Check className="w-5 h-5 stroke-[3]" />
+                    <Check className="w-4 h-4 stroke-[3]" />
                     <span>Publish Listing</span>
                   </>
                 )}

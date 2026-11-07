@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PropertyCard } from '../components/common/PropertyCard';
 import { StayCinematicShowcase } from '../components/common/StayCinematicShowcase';
+import { ScrollReveal } from '../components/common/ScrollReveal';
+import { useScrollElevation } from '../hooks/useScrollElevation';
 
 const SearchInteractiveMap = lazy(() =>
   import('../components/SearchInteractiveMap').then((m) => ({ default: m.SearchInteractiveMap }))
@@ -40,6 +42,7 @@ export function SearchResultsPage({
   const [hoveredStayId, setHoveredStayId] = useState(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const isScrolled = useScrollElevation(20);
 
   // Reset showcaseIndex only when stays list actually changes
   const prevStaysRef = useRef(stays);
@@ -477,8 +480,12 @@ export function SearchResultsPage({
       {!isLoading && stays.length > 0 && (
         <div className="fixed top-16 sm:top-18 inset-x-0 z-30 pointer-events-none px-3 sm:px-10 lg:px-12 xl:px-16">
           <div className="w-full max-w-[1760px] mx-auto flex items-center justify-between">
-            {/* Showcase / Grid View Mode Switcher */}
-            <div className="pointer-events-auto inline-flex items-center p-1 rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-slate-200/90 dark:border-slate-800 shadow-md backdrop-blur-xl text-xs font-bold">
+            {/* Showcase / Grid View Mode Switcher with Dynamic Scroll Elevation */}
+            <div className={`pointer-events-auto inline-flex items-center p-1 rounded-2xl bg-white/95 dark:bg-slate-900/95 border transition-all duration-300 backdrop-blur-xl text-xs font-bold ${
+              isScrolled
+                ? 'border-slate-300 dark:border-slate-700 shadow-xl dark:shadow-[0_10px_25px_rgba(0,0,0,0.5)]'
+                : 'border-slate-200/90 dark:border-slate-800 shadow-md'
+            }`}>
               <button
                 type="button"
                 onClick={() => setViewMode('showcase')}
@@ -563,16 +570,24 @@ export function SearchResultsPage({
             ) : (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 sm:gap-6 w-full">
-                  {stays.map((stay) => (
-                    <PropertyCard
+                  {stays.map((stay, idx) => (
+                    <ScrollReveal
                       key={stay._id}
-                      stay={stay}
-                      isHovered={hoveredStayId === stay._id}
-                      onHover={setHoveredStayId}
-                      onLeave={() => setHoveredStayId(null)}
-                      onStayClick={onStayClick}
-                      onBookClick={onBookClick}
-                    />
+                      staggerIndex={idx % 4}
+                      desktopOffset={20}
+                      mobileOffset={12}
+                      desktopDuration={0.55}
+                      mobileDuration={0.35}
+                    >
+                      <PropertyCard
+                        stay={stay}
+                        isHovered={hoveredStayId === stay._id}
+                        onHover={setHoveredStayId}
+                        onLeave={() => setHoveredStayId(null)}
+                        onStayClick={onStayClick}
+                        onBookClick={onBookClick}
+                      />
+                    </ScrollReveal>
                   ))}
                 </div>
               </div>

@@ -21,13 +21,13 @@ export function UploadLocationTab({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
       transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-      className="max-w-5xl w-full mx-auto space-y-5 sm:space-y-6"
+      className="max-w-5xl md:max-w-4xl w-full mx-auto space-y-5 sm:space-y-6 md:space-y-3"
     >
       {/* ── CARD 1: Google Maps Fast Import Unified Capsule ── */}
       {setGoogleMapsUrl && (
         <section className="rounded-2xl sm:rounded-full border shadow-lg transition-colors
           max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:p-3 max-md:shadow-black/20
-          md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:p-2 md:sm:p-2.5 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
+          md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:p-1.5 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
         >
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5">
             {/* Open Google Maps Button */}
@@ -35,7 +35,7 @@ export function UploadLocationTab({
               href="https://www.google.com/maps"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 h-12 sm:h-13 px-5 rounded-xl sm:rounded-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm sm:text-base font-bold shadow-xs active:scale-95 transition-all shrink-0 cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 h-11 sm:h-11.5 px-5 rounded-xl sm:rounded-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm sm:text-base font-bold shadow-xs active:scale-95 transition-all shrink-0 cursor-pointer"
             >
               <ExternalLink className="w-5 h-5 text-white" />
               <span>Google Maps</span>
@@ -54,7 +54,7 @@ export function UploadLocationTab({
                   }
                 }}
                 placeholder="Paste Google Maps link (e.g. https://maps.app.goo.gl/...)"
-                className="w-full h-12 sm:h-13 px-4 rounded-xl sm:rounded-full border text-sm sm:text-base focus:outline-none transition-all
+                className="w-full h-11 sm:h-11.5 px-4 rounded-xl sm:rounded-full border text-sm sm:text-base focus:outline-none transition-all
                   max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
                   md:bg-slate-50/80 md:dark:bg-zinc-800/50 md:border-slate-200/90 md:dark:border-zinc-700/80 md:text-slate-900 md:dark:text-white md:placeholder:text-slate-400 md:dark:placeholder:text-zinc-500 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15"
               />
@@ -77,7 +77,7 @@ export function UploadLocationTab({
               type="button"
               onClick={handleImportGoogleMaps}
               disabled={isImportingGMap || !googleMapsUrl?.trim()}
-              className="h-12 sm:h-13 px-6 sm:px-7 rounded-xl sm:rounded-full bg-[#006C4A] hover:bg-[#005a3e] active:bg-[#004d35] text-white text-sm sm:text-base font-bold shadow-xs active:scale-95 transition-all shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="h-11 sm:h-11.5 px-6 sm:px-7 rounded-xl sm:rounded-full bg-[#006C4A] hover:bg-[#005a3e] active:bg-[#004d35] text-white text-sm sm:text-base font-bold shadow-xs active:scale-95 transition-all shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isImportingGMap ? (
                 <>
@@ -106,18 +106,18 @@ export function UploadLocationTab({
             </h2>
           </div>
 
-          <section className="flex-1 rounded-2xl sm:rounded-3xl border shadow-lg overflow-hidden flex flex-col min-h-[340px] sm:min-h-[400px] transition-colors
+          <section className="flex-1 rounded-2xl sm:rounded-3xl border shadow-lg overflow-hidden flex flex-col min-h-[340px] sm:min-h-[400px] md:min-h-[280px] transition-colors
             max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:p-2 max-md:shadow-black/20
             md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
           >
             {/* Desktop-Only Heading Inside Card */}
             <div className="hidden md:block px-4 py-3 sm:py-3.5 border-b border-slate-100 dark:border-zinc-800/80 text-center">
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              <h3 className="text-xl sm:text-2xl md:text-base font-black text-slate-900 dark:text-white tracking-tight">
                 Pin Location on Map
               </h3>
             </div>
 
-            <div className="w-full flex-1 relative min-h-[300px] sm:min-h-[360px] rounded-xl overflow-hidden">
+            <div className="w-full flex-1 relative min-h-[300px] sm:min-h-[360px] md:min-h-[250px] rounded-xl overflow-hidden">
               <MapLocationPicker
                 latitude={formData.latitude}
                 longitude={formData.longitude}
@@ -141,7 +141,7 @@ export function UploadLocationTab({
 
           <section className="flex-1 rounded-2xl sm:rounded-3xl border shadow-lg flex flex-col justify-between space-y-4 transition-colors
             max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:p-4 max-md:shadow-black/20
-            md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:p-5 md:sm:p-6 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
+            md:bg-white md:dark:bg-zinc-900 md:border-slate-200/90 md:dark:border-zinc-800 md:p-3.5 md:sm:p-4 md:shadow-black/5 md:dark:shadow-[0_4px_25px_rgba(255,255,255,0.04)]"
           >
             <div>
               {/* Desktop-Only Heading Inside Card (With Subtitle) */}
@@ -149,25 +149,20 @@ export function UploadLocationTab({
                 <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                   Address Details
                 </h3>
-                <p className="text-sm text-slate-500 dark:text-zinc-400 mt-0.5">
-                  Verify or edit the street address
-                </p>
+                
               </div>
 
-              <div className="space-y-3.5">
+              <div className="space-y-3.5 md:space-y-2.5">
                 {/* Street / Road Area */}
                 <div className="space-y-1">
-                  {/* Desktop-Only Label */}
-                  <label className="hidden md:block text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400">
-                    Street / Area / Colony <span className="text-rose-500">*</span>
-                  </label>
+
                   <input
                     type="text"
                     required
                     value={formData.roadArea || ''}
                     onChange={(e) => setFormData({ ...formData, roadArea: e.target.value })}
                     placeholder="Street / Area / Colony *"
-                    className={`w-full h-12 sm:h-13 px-3.5 rounded-xl border text-sm sm:text-base focus:outline-none transition-all
+                    className={`w-full h-11 sm:h-11.5 md:h-9.5 px-3.5 md:px-3 rounded-xl border text-sm sm:text-base md:text-xs focus:outline-none transition-all
                       max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
                       md:bg-slate-50/70 md:dark:bg-zinc-800/40 md:border-slate-200 md:dark:border-zinc-700/80 md:text-slate-900 md:dark:text-white md:placeholder:text-slate-400 md:dark:placeholder:text-zinc-500 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 ${
                       fieldErrors.roadArea
@@ -183,17 +178,14 @@ export function UploadLocationTab({
                 {/* City & State (2 columns) */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    {/* Desktop-Only Label */}
-                    <label className="hidden md:block text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400">
-                      City <span className="text-rose-500">*</span>
-                    </label>
+
                     <input
                       type="text"
                       required
                       value={formData.city || ''}
                       onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                       placeholder="City *"
-                      className={`w-full h-12 sm:h-13 px-3.5 rounded-xl border text-sm sm:text-base focus:outline-none transition-all
+                      className={`w-full h-11 sm:h-11.5 md:h-9.5 px-3.5 md:px-3 rounded-xl border text-sm sm:text-base md:text-xs focus:outline-none transition-all
                         max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
                         md:bg-slate-50/70 md:dark:bg-zinc-800/40 md:border-slate-200 md:dark:border-zinc-700/80 md:text-slate-900 md:dark:text-white md:placeholder:text-slate-400 md:dark:placeholder:text-zinc-500 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 ${
                         fieldErrors.city
@@ -207,17 +199,14 @@ export function UploadLocationTab({
                   </div>
 
                   <div className="space-y-1">
-                    {/* Desktop-Only Label */}
-                    <label className="hidden md:block text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400">
-                      State <span className="text-rose-500">*</span>
-                    </label>
+
                     <input
                       type="text"
                       required
                       value={formData.state || ''}
                       onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                       placeholder="State *"
-                      className={`w-full h-12 sm:h-13 px-3.5 rounded-xl border text-sm sm:text-base focus:outline-none transition-all
+                      className={`w-full h-11 sm:h-11.5 md:h-9.5 px-3.5 md:px-3 rounded-xl border text-sm sm:text-base md:text-xs focus:outline-none transition-all
                         max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
                         md:bg-slate-50/70 md:dark:bg-zinc-800/40 md:border-slate-200 md:dark:border-zinc-700/80 md:text-slate-900 md:dark:text-white md:placeholder:text-slate-400 md:dark:placeholder:text-zinc-500 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 ${
                         fieldErrors.state
@@ -234,17 +223,14 @@ export function UploadLocationTab({
                 {/* PIN Code & Country */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    {/* Desktop-Only Label */}
-                    <label className="hidden md:block text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400">
-                      PIN Code <span className="text-rose-500">*</span>
-                    </label>
+
                     <input
                       type="text"
                       required
                       value={formData.pincode || ''}
                       onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
                       placeholder="PIN Code *"
-                      className={`w-full h-12 sm:h-13 px-3.5 rounded-xl border text-sm sm:text-base focus:outline-none transition-all
+                      className={`w-full h-11 sm:h-11.5 md:h-9.5 px-3.5 md:px-3 rounded-xl border text-sm sm:text-base md:text-xs focus:outline-none transition-all
                         max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
                         md:bg-slate-50/70 md:dark:bg-zinc-800/40 md:border-slate-200 md:dark:border-zinc-700/80 md:text-slate-900 md:dark:text-white md:placeholder:text-slate-400 md:dark:placeholder:text-zinc-500 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 ${
                         fieldErrors.pincode
@@ -258,15 +244,12 @@ export function UploadLocationTab({
                   </div>
 
                   <div className="space-y-1">
-                    {/* Desktop-Only Label */}
-                    <label className="hidden md:block text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-400">
-                      Country
-                    </label>
+
                     <input
                       type="text"
                       disabled
                       value="India"
-                      className="w-full h-12 sm:h-13 px-3.5 rounded-xl border text-sm sm:text-base font-medium cursor-not-allowed transition-all
+                      className="w-full h-11 sm:h-11.5 md:h-9.5 px-3.5 md:px-3 rounded-xl border text-sm sm:text-base md:text-xs font-medium cursor-not-allowed transition-all
                         max-md:bg-white/5 max-md:border-white/10 max-md:text-purple-200/70
                         md:bg-slate-100 md:dark:bg-zinc-800 md:border-slate-200 md:dark:border-zinc-700 md:text-slate-500 md:dark:text-zinc-400"
                     />

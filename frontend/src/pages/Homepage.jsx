@@ -2,6 +2,8 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { HeroSection } from '../components/homepage/HeroSection';
 import { RecentlyAdded } from '../components/homepage/RecentlyAdded';
+import { Features } from '../components/homepage/Features';
+import { GuestReviews } from '../components/homepage/GuestReviews';
 import { LeftPropertiesPanel } from '../components/homepage/LeftPropertiesPanel';
 import { HomepageFooter } from '../components/homepage/HomepageFooter';
 
@@ -11,7 +13,6 @@ export function Homepage({ setCategoryFilter, onStayClick, onBookClick, onSelect
   const handleSelectCategory = (catId) => {
     let catName = 'All';
     if (catId === 'pg') catName = 'PG';
-    else if (catId === 'pg') catName = 'PG';
     else if (catId === 'flats') catName = 'Flat';
     else if (catId === 'hotels') catName = 'Hotel';
 
@@ -22,7 +23,6 @@ export function Homepage({ setCategoryFilter, onStayClick, onBookClick, onSelect
   return (
     <main className="relative min-h-screen bg-white dark:bg-black text-slate-900 dark:text-white overflow-x-hidden">
       {/* ── Fixed Screen Ambient Canvas (Locks to viewport: content scrolls THROUGH without moving) ── */}
-      {/* ── Fixed Screen Ambient Canvas (Slowly shifts through sweet harmonious colors) ── */}
       <div 
         aria-hidden="true" 
         className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
@@ -64,15 +64,21 @@ export function Homepage({ setCategoryFilter, onStayClick, onBookClick, onSelect
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        className="relative z-10"
+        className="relative z-10 space-y-6 sm:space-y-12"
       >
-        {/* 1. Clean Modern Hero Section (Above the fold) */}
+        {/* 1. Clean Modern Hero Section (Staggered initial reveal) */}
         <HeroSection onSelectUpload={onSelectUpload} />
 
-        {/* 2. Recently Added Verified Listings (Above the fold) */}
+        {/* 2. Recently Added Verified Listings (Scroll-triggered cards) */}
         <RecentlyAdded onStayClick={onStayClick} onBookClick={onBookClick} />
 
-        {/* 3. Minimalist Footer */}
+        {/* 3. Featured Amenities (Scroll-triggered cards) */}
+        <Features />
+
+        {/* 4. Guest Reviews Section (Scroll-triggered cards) */}
+        <GuestReviews />
+
+        {/* 5. Minimalist Footer */}
         <HomepageFooter />
       </motion.div>
     </main>

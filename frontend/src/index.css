@@ -1560,9 +1560,65 @@ input:-webkit-autofill:active {
   -webkit-text-fill-color: #ffffff !important;
 }
 
+/* ==========================================================================
+   Responsive Scroll-Triggered Reveal & Motion Styles
+   ========================================================================== */
+
+/* Hardware-accelerate reveal items on desktop while keeping composite light */
+.scroll-reveal-item {
+  contain: layout style;
+}
+
+/* On mobile / touch devices, disable expensive 3D perspective shifts to eliminate touch lag */
+@media (max-width: 768px), (pointer: coarse) {
+  .scroll-reveal-item {
+    transform-style: flat !important;
+  }
+}
+
+/* Accessibility: respect user prefers-reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal-item,
+  .scroll-reveal-container,
+  [data-scroll-reveal="true"] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+    will-change: auto !important;
+  }
+}
 
 
 
 
 
 
+
+
+
+/* Enable sleek, unobtrusive scrollbar on desktop screens while preserving hidden scrollbars on mobile */
+@media (min-width: 768px) {
+  html, body {
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(148, 163, 184, 0.4) transparent !important;
+  }
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: block !important;
+    width: 6px !important;
+  }
+  html::-webkit-scrollbar-track,
+  body::-webkit-scrollbar-track {
+    background: transparent !important;
+  }
+  html::-webkit-scrollbar-thumb,
+  body::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.4) !important;
+    border-radius: 9999px !important;
+  }
+  html::-webkit-scrollbar-thumb:hover,
+  body::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.6) !important;
+  }
+}
