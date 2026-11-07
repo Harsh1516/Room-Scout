@@ -328,7 +328,7 @@ export function HostDashboardNavbar({
           <button
             type="button"
             onClick={() => handleSelectTab('property')}
-            className={`flex-1 justify-center min-h-[40px] py-2 px-2 rounded-full text-xs font-bold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
+            className={`flex-1 justify-center min-h-[42px] py-2 px-2 rounded-full max-md:text-sm text-xs font-bold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
               activeTab === 'property' ? 'max-md:bg-purple-300 max-md:text-slate-950 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 max-md:text-purple-200/80 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -338,7 +338,7 @@ export function HostDashboardNavbar({
           <button
             type="button"
             onClick={() => handleSelectTab('room')}
-            className={`flex-1 justify-center min-h-[40px] py-2 px-2 rounded-full text-xs font-bold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
+            className={`flex-1 justify-center min-h-[42px] py-2 px-2 rounded-full max-md:text-sm text-xs font-bold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
               !isApproved
                 ? 'opacity-40 cursor-not-allowed text-slate-400'
                 : activeTab === 'room' ? 'max-md:bg-purple-300 max-md:text-slate-950 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 max-md:text-purple-200/80 hover:text-slate-900 dark:hover:text-white'
@@ -350,7 +350,7 @@ export function HostDashboardNavbar({
           <button
             type="button"
             onClick={() => handleSelectTab('users')}
-            className={`flex-1 justify-center min-h-[40px] py-2 px-2 rounded-full text-xs font-bold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
+            className={`flex-1 justify-center min-h-[42px] py-2 px-2 rounded-full max-md:text-sm text-xs font-bold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
               !isApproved
                 ? 'opacity-40 cursor-not-allowed text-slate-400'
                 : activeTab === 'users' ? 'max-md:bg-purple-300 max-md:text-slate-950 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 max-md:text-purple-200/80 hover:text-slate-900 dark:hover:text-white'
@@ -368,7 +368,7 @@ export function HostDashboardNavbar({
           <button
             type="button"
             onClick={() => handleSelectTab('payment')}
-            className={`flex-1 justify-center min-h-[40px] py-2 px-2 rounded-full text-xs font-bold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
+            className={`flex-1 justify-center min-h-[42px] py-2 px-2 rounded-full max-md:text-sm text-xs font-bold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
               !isApproved
                 ? 'opacity-40 cursor-not-allowed text-slate-400'
                 : activeTab === 'payment' ? 'max-md:bg-purple-300 max-md:text-slate-950 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 max-md:text-purple-200/80 hover:text-slate-900 dark:hover:text-white'
