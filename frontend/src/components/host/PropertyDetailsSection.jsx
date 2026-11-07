@@ -200,13 +200,13 @@ export function PropertyDetailsSection({
         <div className="lg:col-span-3 flex items-start justify-center h-full transition-all duration-300 ease-in-out">
           <aside className="w-full flex flex-col shrink-0 relative max-md:mt-0 mt-8 transition-all duration-300 ease-in-out">
           {/* ── Upper Tab: Property Info (Styled like navbar capsule with black edit button in light theme) ── */}
-          <div className="max-md:w-full max-md:mx-0 max-md:bg-transparent max-md:border-none max-md:shadow-none max-md:p-2 max-md:pb-1 md:w-[calc(100%-18px)] md:sm:w-[calc(100%-22px)] md:mx-auto md:rounded-t-2xl md:sm:rounded-t-3xl md:rounded-b-none md:border-x md:border-t md:border-slate-200/80 md:dark:border-zinc-700 md:shadow-[0_14px_36px_rgba(0,0,0,0.16)] md:dark:shadow-[0_16px_40px_rgba(255,255,255,0.12)] md:hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] md:dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] md:bg-white/95 md:dark:bg-zinc-700/90 backdrop-blur-2xl text-slate-800 dark:text-zinc-100 flex flex-col gap-3 p-4 sm:p-5 pb-8 sm:pb-9 relative shrink-0 z-0">
+          <div className="max-md:w-full max-md:mx-0 max-md:bg-white max-md:border-none max-md:shadow-none max-md:p-4 max-md:pb-2 md:w-[calc(100%-18px)] md:sm:w-[calc(100%-22px)] md:mx-auto md:rounded-t-2xl md:sm:rounded-t-3xl md:rounded-b-none md:border-x md:border-t md:border-slate-200/80 md:dark:border-zinc-700 md:shadow-[0_14px_36px_rgba(0,0,0,0.16)] md:dark:shadow-[0_16px_40px_rgba(255,255,255,0.12)] md:hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] md:dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] md:bg-white/95 md:dark:bg-zinc-700/90 backdrop-blur-2xl text-slate-800 dark:text-zinc-100 flex flex-col gap-3 p-4 sm:p-5 pb-8 sm:pb-9 relative shrink-0 z-0">
             {/* Top Specular Rim Reflection for Upper Tab */}
             <div className="max-md:hidden absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 max-md:via-purple-300/30 dark:via-zinc-700/40 to-transparent pointer-events-none z-20" />
 
             {/* Header: Place Name + Top-Right Edit Button (Solid black in light theme) */}
             <div className="flex items-center justify-between gap-2 relative z-10">
-              <h1 className="text-base sm:text-lg lg:text-xl font-bold max-md:text-white text-slate-900 dark:text-white tracking-normal truncate flex-1 min-w-0">
+              <h1 className="text-base sm:text-lg lg:text-xl font-bold max-md:text-slate-900 text-slate-900 dark:text-white tracking-normal truncate flex-1 min-w-0">
                 {hostProperty?.propertyName || hostProperty?.title || '—'}
               </h1>
 
@@ -215,10 +215,10 @@ export function PropertyDetailsSection({
                 <button
                   type="button"
                   onClick={onEditDetails}
-                  className="px-3 py-1.5 rounded-xl max-md:bg-purple-300 max-md:text-slate-950 max-md:hover:bg-purple-200 max-md:font-bold max-md:border-none max-md:shadow-none bg-purple-600 hover:bg-purple-700 text-white border border-purple-500/30 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-md shadow-purple-600/20 active:scale-95 shrink-0"
+                  className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-xs active:scale-95 shrink-0"
                   title="Edit Listing Details"
                 >
-                  <PencilIcon className="w-3.5 h-3.5 max-md:text-slate-950 text-white" />
+                  <PencilIcon className="w-3.5 h-3.5 text-white" />
                   <span>Edit</span>
                 </button>
               )}
@@ -227,11 +227,11 @@ export function PropertyDetailsSection({
             {/* Badges/Metadata in Clean Palette */}
             <div className="flex flex-col gap-1.5 pt-0.5 text-xs relative z-10">
               <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 font-semibold max-md:text-purple-100 text-slate-800 dark:text-slate-100/80">
-                  <span className="material-symbols-outlined text-[15px] max-md:text-purple-300 text-purple-600 dark:text-purple-400">apartment</span>
+                <span className="flex items-center gap-1.5 font-semibold max-md:text-slate-700 text-slate-800 dark:text-slate-100/80">
+                  <span className="material-symbols-outlined text-[15px] text-purple-600 dark:text-purple-400">apartment</span>
                   <span>{hostProperty?.propertyType || hostProperty?.category ? `${hostProperty.propertyType || hostProperty.category} Category` : '—'}</span>
                 </span>
-                <span className="flex items-center gap-1 font-bold max-md:text-white text-slate-800 dark:text-slate-100">
+                <span className="flex items-center gap-1 font-bold max-md:text-slate-900 text-slate-800 dark:text-slate-100">
                   <span className="material-symbols-outlined text-[14px] max-md:text-amber-400 text-amber-500 dark:text-slate-100" style={{ fontVariationSettings: "'FILL' 1" }}>
                     star
                   </span>
@@ -244,8 +244,8 @@ export function PropertyDetailsSection({
               </div>
 
               <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 dark:text-slate-100/80">
-                <span className="flex items-center gap-1.5 font-medium max-md:text-purple-200/80 text-slate-500 dark:text-slate-400 dark:text-slate-100/80">
-                  <span className="material-symbols-outlined text-[15px] max-md:text-purple-300 text-purple-600 dark:text-purple-400">group</span>
+                <span className="flex items-center gap-1.5 font-medium max-md:text-slate-600 text-slate-500 dark:text-slate-400 dark:text-slate-100/80">
+                  <span className="material-symbols-outlined text-[15px] text-purple-600 dark:text-purple-400">group</span>
                   <span>For: {hostProperty?.genderType ? hostProperty.genderType.charAt(0).toUpperCase() + hostProperty.genderType.slice(1).toLowerCase() : '—'}</span>
                 </span>
               </div>
@@ -256,21 +256,21 @@ export function PropertyDetailsSection({
               <button
                 type="button"
                 onClick={handleOpenPublicUrl}
-                className="group relative overflow-hidden w-full h-9 rounded-xl max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:hover:bg-white/20 bg-transparent hover:bg-sky-200 dark:hover:bg-zinc-900 active:scale-95 text-slate-800 dark:text-zinc-100 hover:text-sky-800 dark:hover:text-white flex items-center justify-center gap-1.5 border border-slate-300 dark:border-zinc-600 hover:border-sky-400 dark:hover:border-black shadow-2xs transition-all cursor-pointer font-medium"
+                className="group relative overflow-hidden w-full h-9 rounded-xl max-md:bg-slate-100 max-md:border-slate-200/80 max-md:text-slate-800 max-md:hover:bg-slate-200 bg-transparent hover:bg-sky-200 dark:hover:bg-zinc-900 active:scale-95 text-slate-800 dark:text-zinc-100 hover:text-sky-800 dark:hover:text-white flex items-center justify-center gap-1.5 border border-slate-300 dark:border-zinc-600 hover:border-sky-400 dark:hover:border-black shadow-2xs transition-all cursor-pointer font-medium"
               >
                 <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-none group-hover:transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-black/20 dark:via-white/35 to-transparent pointer-events-none" />
                 <span className="text-xs font-medium">Public URL</span>
-                <span className="material-symbols-outlined text-[15px] max-md:text-purple-300 text-purple-600 dark:text-purple-400">north_east</span>
+                <span className="material-symbols-outlined text-[15px] text-purple-600 dark:text-purple-400">north_east</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleShare}
-                className="group relative overflow-hidden w-full h-9 rounded-xl max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:hover:bg-white/20 bg-transparent hover:bg-sky-200 dark:hover:bg-zinc-900 active:scale-95 text-slate-800 dark:text-zinc-100 hover:text-sky-800 dark:hover:text-white flex items-center justify-center gap-1.5 border border-slate-300 dark:border-zinc-600 hover:border-sky-400 dark:hover:border-black shadow-2xs transition-all cursor-pointer font-medium"
+                className="group relative overflow-hidden w-full h-9 rounded-xl max-md:bg-slate-100 max-md:border-slate-200/80 max-md:text-slate-800 max-md:hover:bg-slate-200 bg-transparent hover:bg-sky-200 dark:hover:bg-zinc-900 active:scale-95 text-slate-800 dark:text-zinc-100 hover:text-sky-800 dark:hover:text-white flex items-center justify-center gap-1.5 border border-slate-300 dark:border-zinc-600 hover:border-sky-400 dark:hover:border-black shadow-2xs transition-all cursor-pointer font-medium"
                 title="Share listing link"
               >
                 <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-none group-hover:transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-black/20 dark:via-white/35 to-transparent pointer-events-none" />
-                <span className="material-symbols-outlined text-[16px] max-md:text-purple-300 text-purple-600 dark:text-purple-400">share</span>
+                <span className="material-symbols-outlined text-[16px] text-purple-600 dark:text-purple-400">share</span>
                 <span className="text-xs font-medium">Share</span>
               </button>
             </div>
@@ -278,10 +278,10 @@ export function PropertyDetailsSection({
 
           {/* ── Lower Tab: Configuration Matrix / Tabs (Styled exactly like right tab in light theme) ── */}
           {/* ── Mobile Horizontal Glass Capsule (Icons Only) ── */}
-          <div className="md:hidden w-full flex justify-center py-2.5 px-0.5 relative z-20">
+          <div className="md:hidden w-full flex justify-center py-2.5 px-4 relative z-20 max-md:bg-white">
             <nav
               aria-label="Sub-Tabs Navigation"
-              className="flex items-center justify-around w-full max-w-[370px] px-2 py-1.5 rounded-full bg-[#4a0d4f]/85 backdrop-blur-2xl border border-purple-300/30 shadow-[0_8px_32px_rgba(61,12,64,0.5),inset_0_1px_1px_rgba(255,255,255,0.15)]"
+              className="flex items-center justify-center w-fit max-w-fit px-1.5 py-1.5 rounded-full bg-slate-100/90 backdrop-blur-2xl border border-slate-200/90 shadow-xs gap-2"
             >
               {sections.map((sec, idx) => {
                 const isActive = activeIndex === idx;
@@ -307,8 +307,8 @@ export function PropertyDetailsSection({
                     }}
                     className={`relative p-0 aspect-square rounded-full flex items-center justify-center select-none cursor-pointer shrink-0 grow-0 transition-all duration-200 ${
                       isActive
-                        ? 'bg-purple-300 text-slate-950 shadow-[0_0_16px_rgba(216,180,254,0.6)] font-bold scale-105 ring-2 ring-purple-300/70'
-                        : 'bg-white/10 hover:bg-white/20 text-purple-200/85 border border-purple-300/20 hover:text-white'
+                        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/30 scale-105 font-bold'
+                        : 'bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200/80 shadow-2xs'
                     }`}
                   >
                     <span
@@ -320,7 +320,7 @@ export function PropertyDetailsSection({
                     </span>
                     {sec.isComplete && !isActive && (
                       <span
-                        className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-[#4a0d4f] z-10"
+                        className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white z-10"
                         title="Completed"
                       />
                     )}
@@ -441,7 +441,7 @@ export function PropertyDetailsSection({
         </div>
 
         {/* Main Content Panel (col-span-9 - Luna Glassmorphic Aesthetic) */}
-        <main className="lg:col-span-9 flex flex-col h-full min-h-0 overflow-y-auto scroll-smooth no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-md:w-full max-md:mx-0 max-md:rounded-2xl max-md:mt-0 max-md:border max-md:border-purple-300/25 max-md:bg-[#4a0d4f] max-md:shadow-xl max-md:p-4 max-md:pb-36 max-md:min-h-screen max-md:z-20 md:rounded-2xl md:sm:rounded-3xl relative overflow-hidden md:bg-white/80 md:dark:bg-zinc-900/95 md:border md:border-slate-200/80 md:dark:border-zinc-800 shadow-[0_14px_36px_rgba(0,0,0,0.16)] dark:shadow-[0_16px_40px_rgba(255,255,255,0.12)] hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] p-4 sm:p-7 lg:p-8 pb-8 sm:pb-10 lg:pb-8 transition-all duration-300 ease-in-out">
+        <main className="lg:col-span-9 flex flex-col h-full min-h-0 overflow-y-auto scroll-smooth no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-md:w-full max-md:mx-0 max-md:rounded-t-[32px] sm:max-md:rounded-t-[40px] max-md:rounded-b-none max-md:mt-0 max-md:border-t max-md:border-purple-300/25 max-md:border-x-0 max-md:bg-[#3d0c40] max-md:shadow-[0_-12px_40px_rgba(61,12,64,0.4)] max-md:p-4 max-md:pt-6 max-md:pb-36 max-md:min-h-screen max-md:z-20 md:rounded-2xl md:sm:rounded-3xl relative overflow-hidden md:bg-white/80 md:dark:bg-zinc-900/95 md:border md:border-slate-200/80 md:dark:border-zinc-800 shadow-[0_14px_36px_rgba(0,0,0,0.16)] dark:shadow-[0_16px_40px_rgba(255,255,255,0.12)] hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] p-4 sm:p-7 lg:p-8 pb-8 sm:pb-10 lg:pb-8 transition-all duration-300 ease-in-out">
           {/* Ambient Glass Reflections & Refractive Lighting in Luna cyan & deep navy */}
           <div
             aria-hidden="true"

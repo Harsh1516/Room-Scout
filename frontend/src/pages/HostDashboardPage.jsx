@@ -262,7 +262,7 @@ export function HostDashboardPage() {
 
   return (
     <div
-      className={`min-h-screen w-full flex flex-col host-page-scope font-body-md antialiased text-slate-800 dark:text-slate-100 max-md:bg-[#3d0c40] bg-slate-50 dark:bg-[#06080F] selection:bg-purple-500 selection:text-white relative transition-colors duration-200 ${
+      className={`min-h-screen w-full flex flex-col host-page-scope font-body-md antialiased text-slate-800 dark:text-slate-100 max-md:bg-white bg-slate-50 dark:bg-[#06080F] selection:bg-purple-500 selection:text-white relative transition-colors duration-200 ${
         activeTab === 'users' || activeTab === 'room' ? 'lg:h-screen lg:max-h-screen lg:overflow-hidden' : ''
       }`}
     >
@@ -321,7 +321,7 @@ export function HostDashboardPage() {
                 initial="enter"
                 animate="center"
                 exit="exit"
-                className="w-full flex-1 h-full min-h-0 flex flex-col max-md:px-3 px-3 sm:px-6 max-md:pt-2 pt-8 sm:pt-10 max-md:pb-0 pb-24 sm:pb-28 lg:pb-10 max-w-[1600px] mx-auto overflow-visible relative"
+                className="w-full flex-1 h-full min-h-0 flex flex-col max-md:px-0 px-3 sm:px-6 max-md:pt-0 pt-8 sm:pt-10 max-md:pb-0 pb-24 sm:pb-28 lg:pb-10 max-w-[1600px] mx-auto overflow-visible relative"
               >
                 <ErrorBoundary>
                   <Suspense fallback={<DashboardSkeletonLoader />}>
