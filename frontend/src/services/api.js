@@ -32,7 +32,7 @@ async function request(endpoint, options = {}) {
     // Prevent hanging requests with a 15-second timeout signal
     const timeoutSignal =
       typeof AbortSignal !== 'undefined' && AbortSignal.timeout
-        ? AbortSignal.timeout(15000)
+        ? AbortSignal.timeout(45000)
         : undefined;
 
     const config = {
@@ -97,6 +97,16 @@ async function request(endpoint, options = {}) {
 
     return data;
     } catch (error) {
+      if (
+        error.name === 'TimeoutError' ||
+        error.name === 'AbortError' ||
+        error.message?.includes('timed out') ||
+        error.message?.includes('timeout')
+      ) {
+        const timeoutError = new Error('Server is waking up from sleep (cold start). Please try again in a few seconds.');
+        timeoutError.status = 504;
+        throw timeoutError;
+      }
       if (
         (error.name === 'TypeError' && error.message && error.message.toLowerCase().includes('fetch')) ||
         error.message?.includes('NetworkError') ||

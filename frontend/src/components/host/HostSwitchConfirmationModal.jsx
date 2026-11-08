@@ -139,13 +139,13 @@ export function HostSwitchConfirmationModal({ isOpen, onClose, onConfirm }) {
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-        {/* Modal Dark Overlay Backdrop */}
+        {/* Modal Complete Black Backdrop Overlay */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 bg-black/60 backdrop-blur-md"
+          className="fixed inset-0 bg-black"
           onClick={onClose}
           aria-hidden="true"
         />
@@ -160,7 +160,7 @@ export function HostSwitchConfirmationModal({ isOpen, onClose, onConfirm }) {
           aria-modal="true"
           role="dialog"
           onClick={(e) => e.stopPropagation()}
-          className="relative z-10 w-full max-w-[390px] rounded-[32px] bg-[#0c101d]/90 backdrop-blur-2xl p-6 sm:p-7 shadow-[0_20px_50px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.08)] border border-white/10 select-none text-slate-100 antialiased"
+          className="relative z-10 w-full max-w-[390px] rounded-[32px] bg-[#0c101d] p-6 sm:p-7 shadow-[0_20px_50px_rgba(0,0,0,0.25),0_0_0_1px_rgba(0,0,0,0.08)] border border-slate-800 select-none text-slate-100 antialiased"
           data-purpose="host-switch-modal"
         >
           {/* Modal Header with Title and Close Button */}

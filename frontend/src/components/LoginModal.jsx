@@ -315,13 +315,13 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          {/* Subtle Dimmed Backdrop Overlay */}
+          {/* Complete Solid Black Backdrop Overlay */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-md"
+            className="fixed inset-0 bg-black"
             onClick={onClose}
             aria-hidden="true"
           />
@@ -332,31 +332,12 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 14 }}
             transition={{ type: 'spring', damping: 28, stiffness: 360 }}
-            className="relative w-full max-w-[420px] max-h-[92vh] overflow-y-auto no-scrollbar rounded-[36px] sm:rounded-[44px] flex flex-col justify-between shadow-2xl bg-[#080b11] border border-white/10 z-10 my-auto text-slate-800 antialiased select-none"
+            className="relative w-full max-w-[420px] max-h-[92vh] overflow-y-auto no-scrollbar rounded-[36px] sm:rounded-[44px] flex flex-col justify-between shadow-2xl bg-black border border-white/10 z-10 my-auto text-slate-800 antialiased select-none"
             data-purpose="mobile-viewport"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* ── Atmospheric Backdrop with Warm Ambient Glows ── */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden" data-purpose="ambient-lighting">
-              {/* Dark gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-b from-[#090d16]/75 via-[#0b101c]/90 to-[#04060a] z-10" />
-              {/* Architectural interior ambient blobs */}
-              <div className="absolute -top-24 -left-20 w-80 h-80 rounded-full bg-emerald-700/20 blur-[90px]" />
-              <div className="absolute top-1/4 -right-24 w-96 h-96 rounded-full bg-amber-600/10 blur-[100px]" />
-              <div className="absolute bottom-1/3 left-1/4 w-72 h-72 rounded-full bg-teal-500/15 blur-[85px]" />
-              {/* Subtle background architectural lines */}
-              <div className="absolute inset-0 opacity-15 mix-blend-overlay">
-                <svg height="100%" width="100%" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <radialGradient cx="50%" cy="30%" id="luxe-ambient-grad" r="70%">
-                      <stop offset="0%" stopColor="#ffffff" stopOpacity="0.4" />
-                      <stop offset="100%" stopColor="#000000" stopOpacity="0" />
-                    </radialGradient>
-                  </defs>
-                  <rect fill="url(#luxe-ambient-grad)" height="100%" width="100%" />
-                </svg>
-              </div>
-            </div>
+            {/* ── Atmospheric Pure Black Background ── */}
+            <div className="absolute inset-0 bg-black pointer-events-none" data-purpose="ambient-lighting" />
 
             {/* ── Top Bar: Segmented Switcher (Login / Register) ── */}
             <header className="relative z-20 pt-7 sm:pt-8 px-6 flex flex-col items-center gap-3 pb-0 shrink-0">
@@ -412,9 +393,9 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
               )}
             </header>
 
-            {/* ── Floating Frosted Glass Card ── */}
+            {/* ── Floating White Card / Tab ── */}
             <section aria-labelledby="modal-heading" className="relative z-20 px-3.5 sm:px-4 py-4 w-full">
-              <div className="rounded-[30px] sm:rounded-[32px] p-5 sm:p-7 relative border border-white/60 bg-white/[0.94] backdrop-blur-[24px] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.45),0_0_0_1px_rgba(255,255,255,0.4)]">
+              <div className="rounded-[30px] sm:rounded-[32px] p-5 sm:p-7 relative border border-slate-100 bg-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)]">
                 {/* Dismiss / Close Button */}
                 <button
                   aria-label="Dismiss login modal"
