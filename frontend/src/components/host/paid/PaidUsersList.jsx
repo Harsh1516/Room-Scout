@@ -686,7 +686,7 @@ export function PaidUsersList({
         transition={{
           layout: { duration: 0.36, ease: [0.25, 1, 0.5, 1] },
         }}
-        className="w-full flex flex-col rounded-[26px] bg-white border border-slate-200/90 shadow-[0_8px_30px_rgb(0,0,0,0.06)](0,0,0,0.4)] overflow-hidden select-none"
+        className="w-full flex flex-col rounded-[26px] bg-white border border-slate-200/90 shadow-[0_8px_30px_rgb(0,0,0,0.06)] overflow-hidden select-none"
       >
         {/* Top Header Banner - Clean text without pill backgrounds, with larger prominent Revenue font */}
         <div className="px-4 sm:px-6 pt-3 sm:pt-3.5 pb-2.5 sm:pb-3 border-b border-sky-200/80 bg-sky-100/85">

@@ -104,7 +104,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
       setIsForgotMode(false);
       setIsRegisterMode(false);
       setFieldErrors({});
-      setTimeout(() => firstInputRef.current?.focus(), 60);
+      setTimeout(() => firstInputRef.current?.focus(), 80);
     }
   }, [isOpen, initialRole]);
 
@@ -143,11 +143,6 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
   const handleNameChange = (val) => {
     const lettersOnly = val.replace(/[^a-zA-Z\s]/g, '');
     handleInputChange('name', lettersOnly);
-  };
-
-  // Unified Input Border Styling matching the clean, calm Email input field
-  const getFieldBorderClass = () => {
-    return 'border-slate-200/90 focus-within:border-slate-300';
   };
 
   const handleSubmit = async (e) => {
@@ -319,233 +314,217 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 overflow-y-auto pt-20 sm:pt-24 pb-8">
-          {/* Backdrop Glassmorphic Overlay */}
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          {/* Subtle Dimmed Backdrop Overlay */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-md"
+            className="fixed inset-0 bg-black/60 backdrop-blur-md"
             onClick={onClose}
             aria-hidden="true"
           />
 
-          {/* ── Top Console: Fixed at the VERY TOP of Website, Horizontally Centered, Completely Rounded ── */}
-          {!isForgotMode && (
-            <motion.div
-              initial={{ opacity: 0, y: -20, scale: 0.94 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.94 }}
-              transition={{ type: 'spring', damping: 28, stiffness: 380 }}
-              className="fixed top-4 sm:top-6 left-1/2 -translate-x-1/2 z-[10001] bg-white backdrop-blur-2xl p-1 sm:p-1.5 rounded-full border border-slate-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.08),0_2px_8px_rgba(0,0,0,0.04)](0,0,0,0.5),0_0_25px_rgba(255,255,255,0.25)] flex items-center select-none ring-1 ring-black/[0.05]"
-              role="tablist"
-            >
-              {/* Subtle ambient aura behind capsule */}
-              <div
-                className={`absolute -inset-1 rounded-full blur-md opacity-35 pointer-events-none transition-colors duration-500 ${
-                  accountType === 'host' ? 'bg-emerald-400/30' : 'bg-indigo-400/30'
-                }`}
-              />
-
-              {/* Login Option */}
-              <button
-                type="button"
-                role="tab"
-                aria-selected={!isRegisterMode}
-                onClick={() => switchMode(false)}
-                className={`relative px-5 sm:px-6 py-2 rounded-full text-xs sm:text-[13px] font-semibold transition-colors duration-200 z-10 cursor-pointer text-center select-none ${
-                  !isRegisterMode
-                    ? 'text-white font-bold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {!isRegisterMode && (
-                  <motion.div
-                    layoutId="auth-liquid-pill-very-top"
-                    className="absolute inset-0 rounded-full bg-slate-900 shadow-[0_2px_10px_rgba(15,23,42,0.35),inset_0_1px_1px_rgba(255,255,255,0.22)] overflow-hidden"
-                    transition={{
-                      type: 'spring',
-                      stiffness: 480,
-                      damping: 32,
-                      mass: 0.6,
-                    }}
-                  >
-                    {/* Liquid Sheen */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-transparent pointer-events-none rounded-full" />
-                    {/* Expanding droplet pulse */}
-                    <motion.span
-                      key="splash-top-login"
-                      initial={{ scale: 0.2, opacity: 0.8 }}
-                      animate={{ scale: 2.2, opacity: 0 }}
-                      transition={{ duration: 0.45, ease: 'easeOut' }}
-                      className="absolute inset-0 m-auto w-8 h-8 rounded-full bg-white/20 pointer-events-none"
-                    />
-                  </motion.div>
-                )}
-                <span className="relative z-10">Login</span>
-              </button>
-
-              {/* Register Option */}
-              <button
-                type="button"
-                role="tab"
-                aria-selected={isRegisterMode}
-                onClick={() => switchMode(true)}
-                className={`relative px-5 sm:px-6 py-2 rounded-full text-xs sm:text-[13px] font-semibold transition-colors duration-200 z-10 cursor-pointer text-center select-none ${
-                  isRegisterMode
-                    ? 'text-white font-bold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {isRegisterMode && (
-                  <motion.div
-                    layoutId="auth-liquid-pill-very-top"
-                    className="absolute inset-0 rounded-full bg-slate-900 shadow-[0_2px_10px_rgba(15,23,42,0.35),inset_0_1px_1px_rgba(255,255,255,0.22)] overflow-hidden"
-                    transition={{
-                      type: 'spring',
-                      stiffness: 480,
-                      damping: 32,
-                      mass: 0.6,
-                    }}
-                  >
-                    {/* Liquid Sheen */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-transparent pointer-events-none rounded-full" />
-                    {/* Expanding droplet pulse */}
-                    <motion.span
-                      key="splash-top-register"
-                      initial={{ scale: 0.2, opacity: 0.8 }}
-                      animate={{ scale: 2.2, opacity: 0 }}
-                      transition={{ duration: 0.45, ease: 'easeOut' }}
-                      className="absolute inset-0 m-auto w-8 h-8 rounded-full bg-white/20 pointer-events-none"
-                    />
-                  </motion.div>
-                )}
-                <span className="relative z-10">Register</span>
-              </button>
-            </motion.div>
-          )}
-
-          {/* ── Main Modal Card: Centered on screen, fluidly expands/contracts only according to input field area ── */}
+          {/* ── Main Mobile / Modal Container (Matches Luxury Hospitality Design) ── */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: 12 }}
+            initial={{ opacity: 0, scale: 0.96, y: 14 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 12 }}
-            transition={{
-              opacity: { duration: 0.18 },
-              scale: { duration: 0.22, ease: [0.16, 1, 0.3, 1] },
-            }}
-            className="relative z-10 w-full max-w-[370px] sm:max-w-[390px] bg-white/95 backdrop-blur-2xl rounded-3xl border border-slate-200/90 shadow-2xl shadow-emerald-950/[0.08] overflow-hidden text-slate-900 my-auto ring-1 ring-black/[0.03]"
-            data-purpose="login-modal"
+            exit={{ opacity: 0, scale: 0.96, y: 14 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 360 }}
+            className="relative w-full max-w-[420px] max-h-[92vh] overflow-y-auto no-scrollbar rounded-[36px] sm:rounded-[44px] flex flex-col justify-between shadow-2xl bg-[#080b11] border border-white/10 z-10 my-auto text-slate-800 antialiased select-none"
+            data-purpose="mobile-viewport"
+            onClick={(e) => e.stopPropagation()}
           >
-            {/* Ambient Corner Glow */}
-            <div
-              className={`absolute -right-8 -top-8 w-28 h-28 rounded-full blur-2xl pointer-events-none transition-colors duration-500 ${
-                accountType === 'host'
-                  ? 'bg-emerald-300/30'
-                  : 'bg-indigo-300/30'
-              }`}
-            />
-
-            {/* Close Button (Top Right of Card) */}
-            <button
-              aria-label="Close modal"
-              onClick={onClose}
-              type="button"
-              className="absolute top-3.5 right-3.5 w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-800 bg-slate-100/70 hover:bg-slate-200/70 border border-slate-200/60 transition-all z-20 cursor-pointer shadow-2xs"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-
-            {/* Modal Body */}
-            <div className="px-5 py-5 sm:px-6 sm:py-5 relative z-10">
-              {/* Header Title & Tagline */}
-              <div className="text-center mb-3 pt-0.5">
-                <h2 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900">
-                  {isForgotMode
-                    ? 'Reset Password'
-                    : isRegisterMode
-                    ? accountType === 'host'
-                      ? 'Host Registration'
-                      : 'Create Account'
-                    : accountType === 'host'
-                    ? 'Host Login'
-                    : 'Login'}
-                </h2>
-                <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 leading-snug">
-                  {isForgotMode
-                    ? 'Enter your email to receive recovery instructions'
-                    : isRegisterMode
-                    ? accountType === 'host'
-                      ? 'List your rooms directly without broker commissions'
-                      : 'Explore verified rooms near your campus or office'
-                    : accountType === 'host'
-                    ? 'Access your listings, room rates, and bookings'
-                    : 'Direct stays with zero brokerage'}
-                </p>
+            {/* ── Atmospheric Backdrop with Warm Ambient Glows ── */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden" data-purpose="ambient-lighting">
+              {/* Dark gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-b from-[#090d16]/75 via-[#0b101c]/90 to-[#04060a] z-10" />
+              {/* Architectural interior ambient blobs */}
+              <div className="absolute -top-24 -left-20 w-80 h-80 rounded-full bg-emerald-700/20 blur-[90px]" />
+              <div className="absolute top-1/4 -right-24 w-96 h-96 rounded-full bg-amber-600/10 blur-[100px]" />
+              <div className="absolute bottom-1/3 left-1/4 w-72 h-72 rounded-full bg-teal-500/15 blur-[85px]" />
+              {/* Subtle background architectural lines */}
+              <div className="absolute inset-0 opacity-15 mix-blend-overlay">
+                <svg height="100%" width="100%" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <radialGradient cx="50%" cy="30%" id="luxe-ambient-grad" r="70%">
+                      <stop offset="0%" stopColor="#ffffff" stopOpacity="0.4" />
+                      <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+                    </radialGradient>
+                  </defs>
+                  <rect fill="url(#luxe-ambient-grad)" height="100%" width="100%" />
+                </svg>
               </div>
+            </div>
 
-              {/* Success Notification Alert */}
-              {successMessage && (
-                <div className="mb-2.5 p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-[11px] font-semibold text-center flex items-center justify-center gap-1.5">
-                  <span>✓</span>
-                  <span>{successMessage}</span>
-                </div>
-              )}
-
-              {isForgotMode ? (
-                /* Forgot Password Form */
-                <form onSubmit={handleForgotPasswordSubmit} className="space-y-2.5">
-                  <div className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('forgotEmail')}`}>
-                    <div className="pl-3 text-slate-500">
-                      <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                        />
-                      </svg>
-                    </div>
-                    <input
-                      type="email"
-                      required
-                      autoComplete="email"
-                      value={forgotEmail}
-                      onChange={(e) => setForgotEmail(e.target.value)}
-                      placeholder="Enter registered email"
-                      className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-[13px] text-slate-900 placeholder:text-slate-500 focus:outline-none"
-                    />
-                  </div>
-
+            {/* ── Top Bar: Segmented Switcher (Login / Register) ── */}
+            <header className="relative z-20 pt-7 sm:pt-8 px-6 flex flex-col items-center gap-3 pb-0 shrink-0">
+              {!isForgotMode ? (
+                <nav
+                  aria-label="Portal Mode Selection"
+                  className="p-1 rounded-full flex items-center shadow-lg bg-white/[0.12] backdrop-blur-[12px] border border-white/15"
+                >
+                  {/* Login Pill */}
                   <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full h-[38px] sm:h-[40px] inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-xs sm:text-[13px] font-semibold text-white shadow-md shadow-emerald-600/25 active:scale-[0.99] transition-all cursor-pointer disabled:opacity-50"
+                    type="button"
+                    onClick={() => switchMode(false)}
+                    className={`relative py-1.5 px-6 rounded-full text-xs transition-all duration-200 cursor-pointer z-10 select-none ${
+                      !isRegisterMode
+                        ? 'text-white font-semibold'
+                        : 'text-white/70 hover:text-white font-medium'
+                    }`}
                   >
-                    {isSubmitting ? 'Sending...' : 'Send Recovery Password'}
+                    {!isRegisterMode && (
+                      <motion.div
+                        layoutId="portalModeActivePill"
+                        className="absolute inset-0 rounded-full bg-[#0f172a] shadow-sm -z-10"
+                        transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                      />
+                    )}
+                    <span>Login</span>
                   </button>
 
-                  <div className="text-center pt-0.5">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsForgotMode(false);
-                        setErrorMessage('');
-                        setSuccessMessage('');
-                      }}
-                      className="text-[11px] text-slate-500 hover:text-emerald-600 font-semibold transition-colors cursor-pointer"
-                    >
-                      ← Back to Login
-                    </button>
-                  </div>
-                </form>
+                  {/* Register Pill */}
+                  <button
+                    type="button"
+                    onClick={() => switchMode(true)}
+                    className={`relative py-1.5 px-6 rounded-full text-xs transition-all duration-200 cursor-pointer z-10 select-none ${
+                      isRegisterMode
+                        ? 'text-white font-semibold'
+                        : 'text-white/70 hover:text-white font-medium'
+                    }`}
+                  >
+                    {isRegisterMode && (
+                      <motion.div
+                        layoutId="portalModeActivePill"
+                        className="absolute inset-0 rounded-full bg-[#0f172a] shadow-sm -z-10"
+                        transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                      />
+                    )}
+                    <span>Register</span>
+                  </button>
+                </nav>
               ) : (
-                <form onSubmit={handleSubmit} noValidate className="space-y-2">
-                  <div className="space-y-2">
-                    {/* 1. Full Name (Animated Expand/Collapse for Register Mode Only) */}
+                <div className="py-1.5 px-6 rounded-full text-xs font-semibold bg-[#0f172a] text-white shadow-sm border border-white/10">
+                  Password Recovery
+                </div>
+              )}
+            </header>
+
+            {/* ── Floating Frosted Glass Card ── */}
+            <section aria-labelledby="modal-heading" className="relative z-20 px-3.5 sm:px-4 py-4 w-full">
+              <div className="rounded-[30px] sm:rounded-[32px] p-5 sm:p-7 relative border border-white/60 bg-white/[0.94] backdrop-blur-[24px] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.45),0_0_0_1px_rgba(255,255,255,0.4)]">
+                {/* Dismiss / Close Button */}
+                <button
+                  aria-label="Dismiss login modal"
+                  onClick={onClose}
+                  type="button"
+                  className="absolute top-4 right-4 sm:top-5 sm:right-5 w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center transition-colors cursor-pointer z-20"
+                >
+                  <svg className="w-3.5 h-3.5 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <line x1="18" x2="6" y1="6" y2="18" />
+                    <line x1="6" x2="18" y1="6" y2="18" />
+                  </svg>
+                </button>
+
+                {/* Card Header: Title & Subtitle */}
+                <header className="text-center pt-1 pb-4">
+                  <h1 className="text-xl font-bold tracking-tight text-slate-900" id="modal-heading">
+                    {isForgotMode
+                      ? 'Reset Password'
+                      : isRegisterMode
+                      ? accountType === 'host'
+                        ? 'Host Registration'
+                        : 'Create Account'
+                      : accountType === 'host'
+                      ? 'Host Login'
+                      : 'Login'}
+                  </h1>
+                  <p className="text-[12.5px] text-slate-500 font-normal mt-1 leading-snug">
+                    {isForgotMode
+                      ? 'Enter your registered email to receive recovery instructions'
+                      : isRegisterMode
+                      ? accountType === 'host'
+                        ? 'List your rooms directly without broker commissions'
+                        : 'Explore verified rooms near your campus or office'
+                      : accountType === 'host'
+                      ? 'Access your listings, room rates, and bookings'
+                      : 'Direct stays with zero brokerage'}
+                  </p>
+                </header>
+
+                {/* Prompt Notification Banner */}
+                {promptMessage && (
+                  <div className="mb-3 p-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-800 text-xs font-medium text-center">
+                    {promptMessage}
+                  </div>
+                )}
+
+                {/* Error Banner */}
+                {errorMessage && (
+                  <div className="mb-3 p-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-700 text-xs font-semibold text-center">
+                    {errorMessage}
+                  </div>
+                )}
+
+                {/* Success Banner */}
+                {successMessage && (
+                  <div className="mb-3 p-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 text-xs font-semibold text-center flex items-center justify-center gap-1.5">
+                    <span>✓</span>
+                    <span>{successMessage}</span>
+                  </div>
+                )}
+
+                {/* Form Elements */}
+                {isForgotMode ? (
+                  /* Forgot Password Form */
+                  <form onSubmit={handleForgotPasswordSubmit} className="space-y-3.5">
+                    <div className="flex items-center bg-slate-50/80 border border-slate-200/90 py-2.5 sm:py-3 transition-all duration-200 rounded-full px-4 sm:px-5 focus-within:border-[#059669] focus-within:ring-3 focus-within:ring-[#059669]/15">
+                      <svg className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                        <path d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <input
+                        type="email"
+                        required
+                        autoComplete="email"
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        placeholder="Enter registered email"
+                        className="w-full bg-transparent p-0 border-0 text-[13.5px] text-slate-900 placeholder:text-slate-400 focus:ring-0 focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="pt-1">
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full bg-[#059669] hover:bg-[#047857] active:scale-[0.99] text-white py-3 px-5 font-semibold text-sm flex items-center justify-center space-x-2 shadow-lg shadow-emerald-700/25 transition-all duration-200 rounded-full cursor-pointer disabled:opacity-50"
+                      >
+                        <span>{isSubmitting ? 'Sending...' : 'Send Recovery Password'}</span>
+                        <svg className="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    <div className="text-center pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsForgotMode(false);
+                          setErrorMessage('');
+                          setSuccessMessage('');
+                        }}
+                        className="text-xs text-[#047857] hover:text-emerald-700 font-semibold transition-colors cursor-pointer"
+                      >
+                        ← Back to Login
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <form onSubmit={handleSubmit} noValidate className="space-y-3">
+                    {/* 1. Full Name (Register Mode Only) */}
                     <AnimatePresence initial={false}>
                       {isRegisterMode && (
                         <motion.div
@@ -553,24 +532,12 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                           initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
                           animate={{ opacity: 1, height: 'auto', transitionEnd: { overflow: 'visible' } }}
                           exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
-                          transition={{
-                            height: { duration: 0.22, ease: [0.16, 1, 0.3, 1] },
-                            opacity: { duration: 0.16, ease: 'easeOut' },
-                          }}
+                          transition={{ height: { duration: 0.22 }, opacity: { duration: 0.16 } }}
                         >
-                          <div
-                            className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('name')}`}
-                          >
-                            <div className="pl-3 text-slate-500">
-                              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path
-                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                />
-                              </svg>
-                            </div>
+                          <div className="flex items-center bg-slate-50/80 border border-slate-200/90 py-2.5 sm:py-3 transition-all duration-200 rounded-full px-4 sm:px-5 focus-within:border-[#059669] focus-within:ring-3 focus-within:ring-[#059669]/15">
+                            <svg className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                              <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
                             <input
                               ref={firstInputRef}
                               type="text"
@@ -578,28 +545,19 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                               value={formData.name}
                               onChange={(e) => handleNameChange(e.target.value)}
                               placeholder="Full name"
-                              className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-[13px] text-slate-900 placeholder:text-slate-500 focus:outline-none"
+                              className="w-full bg-transparent p-0 border-0 text-[13.5px] text-slate-900 placeholder:text-slate-400 focus:ring-0 focus:outline-none"
                             />
                           </div>
                         </motion.div>
                       )}
                     </AnimatePresence>
 
-                    {/* 2. Email Address (Always visible) */}
-                    <div>
-                      <div
-                        className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('email')}`}
-                      >
-                        <div className="pl-3 text-slate-500">
-                          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
-                              d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                            />
-                          </svg>
-                        </div>
+                    {/* 2. Email Input Field (Always visible) */}
+                    <div data-purpose="field-email">
+                      <div className="flex items-center bg-slate-50/80 border border-slate-200/90 py-2.5 sm:py-3 transition-all duration-200 rounded-full px-4 sm:px-5 focus-within:border-[#059669] focus-within:ring-3 focus-within:ring-[#059669]/15">
+                        <svg className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                          <path d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
                         <input
                           ref={!isRegisterMode ? firstInputRef : null}
                           type="email"
@@ -607,12 +565,13 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                           value={formData.email}
                           onChange={(e) => handleInputChange('email', e.target.value)}
                           placeholder="Email address"
-                          className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-[13px] text-slate-900 placeholder:text-slate-500 focus:outline-none"
+                          required
+                          className="w-full bg-transparent p-0 border-0 text-[13.5px] text-slate-900 placeholder:text-slate-400 focus:ring-0 focus:outline-none"
                         />
                       </div>
                     </div>
 
-                    {/* 3. Contact Phone (Animated Expand/Collapse for Register Mode Only) */}
+                    {/* 3. Mobile Number (Register Mode Only) */}
                     <AnimatePresence initial={false}>
                       {isRegisterMode && (
                         <motion.div
@@ -620,17 +579,10 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                           initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
                           animate={{ opacity: 1, height: 'auto', transitionEnd: { overflow: 'visible' } }}
                           exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
-                          transition={{
-                            height: { duration: 0.22, ease: [0.16, 1, 0.3, 1] },
-                            opacity: { duration: 0.16, ease: 'easeOut' },
-                          }}
+                          transition={{ height: { duration: 0.22 }, opacity: { duration: 0.16 } }}
                         >
-                          <div
-                            className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('phone')}`}
-                          >
-                            <span className="pl-3 pr-2 text-xs font-bold text-slate-600 select-none shrink-0">
-                              +91
-                            </span>
+                          <div className="flex items-center bg-slate-50/80 border border-slate-200/90 py-2.5 sm:py-3 transition-all duration-200 rounded-full px-4 sm:px-5 focus-within:border-[#059669] focus-within:ring-3 focus-within:ring-[#059669]/15">
+                            <span className="text-xs font-bold text-slate-600 select-none shrink-0 mr-1.5">+91</span>
                             <div className="h-4 w-px bg-slate-300 mr-2 shrink-0" />
                             <input
                               type="tel"
@@ -643,68 +595,50 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                                 const digits = raw.length > 10 && raw.startsWith('91') ? raw.slice(-10) : raw.slice(0, 10);
                                 handleInputChange('phone', digits);
                               }}
-                              placeholder="Mobile number"
-                              className="w-full bg-transparent pr-2.5 py-1 text-xs sm:text-[13px] text-slate-900 placeholder:text-slate-500 focus:outline-none"
+                              placeholder="Mobile number (10 digits)"
+                              className="w-full bg-transparent p-0 border-0 text-[13.5px] text-slate-900 placeholder:text-slate-400 focus:ring-0 focus:outline-none"
                             />
                           </div>
                         </motion.div>
                       )}
                     </AnimatePresence>
 
-                    {/* 4. Password Field (Always visible) */}
-                    <div>
-                      <div
-                        className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('password')}`}
-                      >
-                        <div className="pl-3 text-slate-500">
-                          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
-                              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                            />
-                          </svg>
-                        </div>
+                    {/* 4. Password Input Field with Toggle */}
+                    <div data-purpose="field-password">
+                      <div className="flex items-center bg-slate-50/80 border border-slate-200/90 py-2.5 sm:py-3 transition-all duration-200 rounded-full px-4 sm:px-5 focus-within:border-[#059669] focus-within:ring-3 focus-within:ring-[#059669]/15">
+                        <svg className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                          <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
                         <input
                           type={showPassword ? 'text' : 'password'}
                           autoComplete={isRegisterMode ? 'new-password' : 'current-password'}
                           value={formData.password}
                           onChange={(e) => handleInputChange('password', e.target.value)}
                           placeholder="Password (min. 8 characters)"
-                          className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-[13px] text-slate-900 placeholder:text-slate-500 focus:outline-none"
+                          required
+                          className="w-full bg-transparent p-0 border-0 text-[13.5px] text-slate-900 placeholder:text-slate-400 focus:ring-0 focus:outline-none"
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          aria-label={showPassword ? 'Hide password' : 'Show password'}
-                          className="pr-2.5 text-slate-500 hover:text-slate-800 cursor-pointer"
+                          aria-label="Toggle password visibility"
+                          className="text-slate-400 hover:text-slate-600 focus:outline-none ml-2 transition-colors cursor-pointer"
                         >
                           {showPassword ? (
-                            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"
-                              />
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
                             </svg>
                           ) : (
-                            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                              />
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                              <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" strokeLinecap="round" strokeLinejoin="round" />
+                              <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                           )}
                         </button>
                       </div>
                     </div>
 
-                    {/* 5. Confirm Password (Animated Expand/Collapse for Register Mode Only) */}
+                    {/* 5. Confirm Password (Register Mode Only) */}
                     <AnimatePresence initial={false}>
                       {isRegisterMode && (
                         <motion.div
@@ -712,56 +646,35 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                           initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
                           animate={{ opacity: 1, height: 'auto', transitionEnd: { overflow: 'visible' } }}
                           exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
-                          transition={{
-                            height: { duration: 0.22, ease: [0.16, 1, 0.3, 1] },
-                            opacity: { duration: 0.16, ease: 'easeOut' },
-                          }}
+                          transition={{ height: { duration: 0.22 }, opacity: { duration: 0.16 } }}
                         >
-                          <div
-                            className={`h-[38px] sm:h-[40px] login-input-container relative flex items-center rounded-xl border bg-slate-100/90 hover:bg-slate-100 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] transition-all ${getFieldBorderClass('confirmPassword')}`}
-                          >
-                            <div className="pl-3 text-slate-500">
-                              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path
-                                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                />
-                              </svg>
-                            </div>
+                          <div className="flex items-center bg-slate-50/80 border border-slate-200/90 py-2.5 sm:py-3 transition-all duration-200 rounded-full px-4 sm:px-5 focus-within:border-[#059669] focus-within:ring-3 focus-within:ring-[#059669]/15">
+                            <svg className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                              <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
                             <input
                               type={showConfirmPassword ? 'text' : 'password'}
                               autoComplete="off"
                               value={formData.confirmPassword}
                               onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                               placeholder="Confirm password"
-                              className="w-full bg-transparent px-2.5 py-1 text-xs sm:text-[13px] text-slate-900 placeholder:text-slate-500 focus:outline-none"
+                              required
+                              className="w-full bg-transparent p-0 border-0 text-[13.5px] text-slate-900 placeholder:text-slate-400 focus:ring-0 focus:outline-none"
                             />
                             <button
                               type="button"
                               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                              aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
-                              className="pr-2.5 text-slate-500 hover:text-slate-800 cursor-pointer"
+                              aria-label="Toggle confirm password visibility"
+                              className="text-slate-400 hover:text-slate-600 focus:outline-none ml-2 transition-colors cursor-pointer"
                             >
                               {showConfirmPassword ? (
-                                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"
-                                  />
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
                                 </svg>
                               ) : (
-                                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                  />
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                                  <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" strokeLinecap="round" strokeLinejoin="round" />
+                                  <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
                               )}
                             </button>
@@ -770,29 +683,26 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                       )}
                     </AnimatePresence>
 
-                    {/* 6. Helper Row: Remember Me & Forgot Password (Login Mode Only) */}
+                    {/* Secondary Controls: Remember device & Forgot password (Login Mode Only) */}
                     <AnimatePresence initial={false}>
                       {!isRegisterMode && (
                         <motion.div
-                          key="login-helper-row"
+                          key="login-secondary-controls"
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
-                          transition={{
-                            height: { duration: 0.2, ease: [0.16, 1, 0.3, 1] },
-                            opacity: { duration: 0.14, ease: 'easeOut' },
-                          }}
+                          transition={{ height: { duration: 0.2 }, opacity: { duration: 0.14 } }}
                           className="overflow-hidden"
                         >
-                          <div className="flex items-center justify-between pt-0.5 pb-0.5">
-                            <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                          <div className="flex items-center justify-between pt-0.5 pb-1 text-xs">
+                            <label className="flex items-center space-x-2 cursor-pointer select-none text-slate-600 font-medium">
                               <input
                                 type="checkbox"
                                 checked={rememberDevice}
                                 onChange={(e) => setRememberDevice(e.target.checked)}
-                                className="w-3.5 h-3.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-black"
+                                className="w-4 h-4 rounded-full border-slate-300 text-[#059669] focus:ring-0 cursor-pointer accent-[#059669]"
                               />
-                              <span className="text-[11px] sm:text-xs text-slate-500">Remember device</span>
+                              <span>Remember device</span>
                             </label>
                             <button
                               type="button"
@@ -802,7 +712,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                                 setErrorMessage('');
                                 setSuccessMessage('');
                               }}
-                              className="text-[11px] sm:text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:underline cursor-pointer"
+                              className="text-[#047857] hover:text-emerald-700 font-semibold transition-colors cursor-pointer"
                             >
                               Forgot password?
                             </button>
@@ -810,125 +720,116 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                         </motion.div>
                       )}
                     </AnimatePresence>
-                  </div>
 
-                  {/* Primary Action Button */}
-                  <div className="pt-1.5">
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className={`w-full h-[38px] sm:h-[40px] group inline-flex items-center justify-center gap-1.5 rounded-xl font-semibold text-xs sm:text-[13px] text-white shadow-md active:scale-[0.99] transition-all duration-200 cursor-pointer disabled:opacity-50 ${
-                        accountType === 'host'
-                          ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-600/25 hover:shadow-lg hover:shadow-emerald-600/35'
-                          : 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 shadow-indigo-600/25 hover:shadow-lg hover:shadow-indigo-600/35'
-                      }`}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <svg className="animate-spin h-3.5 w-3.5 text-white" viewBox="0 0 24 24" fill="none">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                          </svg>
-                          <span>Processing...</span>
-                        </>
-                      ) : (
-                        <>
-                          <motion.span
-                            key={isRegisterMode ? 'btn-label-reg' : 'btn-label-login'}
-                            initial={{ opacity: 0, y: 3 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -3 }}
-                            transition={{ duration: 0.15 }}
-                          >
-                            {isRegisterMode
-                              ? accountType === 'host'
-                                ? 'Host a Stay'
-                                : 'Create Account'
-                              : accountType === 'host'
-                              ? 'Login to Host Portal'
-                              : 'Login'}
-                          </motion.span>
-                          <svg
-                            className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                            viewBox="0 0 24 24"
-                          >
-                            <path d="M5 12h14" />
-                            <path d="m12 5 7 7-7 7" />
-                          </svg>
-                        </>
-                      )}
-                    </button>
-                  </div>
+                    {/* Primary Submit Button */}
+                    <div className="pt-1">
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full bg-[#059669] hover:bg-[#047857] active:scale-[0.99] text-white py-3 px-5 font-semibold text-sm flex items-center justify-center space-x-2 shadow-lg shadow-emerald-700/25 transition-all duration-200 rounded-full cursor-pointer disabled:opacity-50"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <svg className="animate-spin h-4 w-4 text-white mr-2" viewBox="0 0 24 24" fill="none">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                            </svg>
+                            <span>Processing...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>
+                              {isRegisterMode
+                                ? accountType === 'host'
+                                  ? 'Host a Stay'
+                                  : 'Create Account'
+                                : accountType === 'host'
+                                ? 'Login to Host Portal'
+                                : 'Login'}
+                            </span>
+                            <svg className="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                )}
 
-                  {/* Google OAuth Option */}
-                  {GOOGLE_CLIENT_ID && (
-                    <div className="pt-2">
-                      {/* Refined Upper Border / Divider with feathered gradient & matching micro-pill */}
-                      <div className="relative my-3 flex items-center justify-center">
-                        <div className="w-full h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
-                        <span className="absolute px-3 py-0.5 rounded-full text-[9.5px] font-semibold text-slate-500 uppercase tracking-widest bg-white border border-slate-200/80 shadow-2xs backdrop-blur-md select-none">
-                          or continue with
-                        </span>
+                {/* Divider with Text Pill */}
+                {!isForgotMode && GOOGLE_CLIENT_ID && (
+                  <>
+                    <div className="relative my-4 flex items-center justify-center">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-slate-200/80" />
                       </div>
-                      {/* Upgraded Luxury Google Capsule Border with metallic sheen & ambient aura */}
-                      <div className="flex justify-center w-full pt-1 pb-0.5">
-                        <div className="relative group p-[1px] rounded-full max-w-[282px] w-full transition-all duration-300 bg-gradient-to-b from-slate-200 via-slate-100 to-slate-200 hover: hover: hover: shadow-sm(0,0,0,0.5)]">
-                          {/* Ambient aura glow behind capsule on hover */}
-                          <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 blur-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                      <span className="relative bg-white px-3 py-0.5 rounded-full border border-slate-100 text-[10px] uppercase font-bold tracking-wider text-slate-400 shadow-sm">
+                        Or continue with
+                      </span>
+                    </div>
 
-                          {/* Inner Capsule Border & Container */}
-                          <div className="relative overflow-hidden rounded-full w-full flex justify-center bg-white ring-1 ring-black/[0.04]">
-                            <ErrorBoundary fallback={null}>
-                              <GoogleLogin
-                                onSuccess={handleGoogleSuccess}
-                                onError={handleGoogleError}
-                                theme='outline'
-                                size="large"
-                                width="280"
-                                text={isRegisterMode ? 'signup_with' : 'signin_with'}
-                                shape="pill"
-                              />
-                            </ErrorBoundary>
-                          </div>
-                        </div>
+                    {/* Google OAuth Action */}
+                    <div className="flex justify-center w-full">
+                      <div className="w-full flex justify-center">
+                        <ErrorBoundary fallback={null}>
+                          <GoogleLogin
+                            onSuccess={handleGoogleSuccess}
+                            onError={handleGoogleError}
+                            theme="outline"
+                            size="large"
+                            width="280"
+                            text={isRegisterMode ? 'signup_with' : 'signin_with'}
+                            shape="pill"
+                          />
+                        </ErrorBoundary>
                       </div>
                     </div>
-                  )}
-                </form>
-              )}
+                  </>
+                )}
 
-              {/* Switch Role Link */}
-              <div className="mt-3 pt-2.5 border-t border-slate-100 text-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const nextRole = accountType === 'host' ? 'user' : 'host';
-                    setAccountType(nextRole);
-                    setErrorMessage('');
-                    setFieldErrors({});
-                  }}
-                  className="text-[11px] text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
-                >
-                  {accountType === 'host' ? (
-                    <>
-                      Looking to explore stays?{' '}
-                      <span className="font-semibold text-indigo-600 hover:underline">
-                        Switch to Guest
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      Are you a property owner?{' '}
-                      <span className="font-semibold text-emerald-600 hover:underline">
-                        Switch to Host
-                      </span>
-                    </>
-                  )}
-                </button>
+                {/* Footnote: Switch between Guest and Host */}
+                <footer className="mt-4 text-center">
+                  <p className="text-xs text-slate-500">
+                    {accountType === 'host' ? (
+                      <>
+                        Looking to explore stays?{' '}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAccountType('user');
+                            setErrorMessage('');
+                            setFieldErrors({});
+                          }}
+                          className="text-indigo-600 hover:text-indigo-700 font-semibold transition-colors cursor-pointer"
+                        >
+                          Switch to Guest
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        Are you a property owner?{' '}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAccountType('host');
+                            setErrorMessage('');
+                            setFieldErrors({});
+                          }}
+                          className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors cursor-pointer"
+                        >
+                          Switch to Host
+                        </button>
+                      </>
+                    )}
+                  </p>
+                </footer>
               </div>
+            </section>
+
+            {/* Mobile Home Indicator Bar */}
+            <div className="relative z-20 pb-2.5 flex justify-center shrink-0">
+              <div className="w-28 h-1 bg-white/20 rounded-full" />
             </div>
           </motion.div>
         </div>

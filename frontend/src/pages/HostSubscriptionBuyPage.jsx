@@ -709,7 +709,7 @@ export function HostSubscriptionBuyPage() {
               {/* Platform QR Code Card with Dynamic Amount QR */}
               <div className="bg-white rounded-2xl p-4 flex flex-col items-center justify-center gap-3 shadow-lg">
                 {selectedPlan.qrCodeDataUrl || plansData?.qrCodeDataUrl ? (
-                  <img
+                  <img decoding="async" loading="lazy"
                     src={selectedPlan.qrCodeDataUrl || plansData.qrCodeDataUrl}
                     alt={`Platform UPI QR Code for ${selectedPlan.label}`}
                     className="w-56 h-56 object-contain rounded-lg shadow-inner"
@@ -855,7 +855,7 @@ export function HostSubscriptionBuyPage() {
 
                 {receiptPreview ? (
                   <div className="relative rounded-2xl border border-white/15 bg-slate-950 p-2.5 flex items-center justify-between gap-3">
-                    <img
+                    <img decoding="async" loading="lazy"
                       src={receiptPreview}
                       alt="Receipt Preview"
                       className="w-16 h-16 object-cover rounded-xl border border-white/10"

@@ -1655,12 +1655,12 @@ export function HostUploadPage() {
   const currentStepConfig = WIZARD_STEPS.find((s) => s.id === activeStep) || WIZARD_STEPS[0];
 
   return (
-    <div className="bg-[#f8f9fa] text-slate-800 host-page-scope font-body-md antialiased min-h-screen flex flex-col justify-between relative selection:bg-[#006C4A] selection:text-white transition-colors duration-300">
+    <div className="bg-[#f5f2ea] text-slate-800 host-page-scope font-body-md antialiased min-h-screen flex flex-col justify-between relative selection:bg-[#006C4A] selection:text-white transition-colors duration-300">
 
       {/* ── Top Header Navigation Bar (Floating Liquid Glass Islands matching Host Dashboard / Pic 2) ── */}
-      <header className="relative w-full h-16 sm:h-20 pointer-events-none select-none z-50 font-body-md host-font-scope antialiased">
+      <header className="relative w-full h-14 sm:h-20 pointer-events-none select-none z-50 font-body-md host-font-scope antialiased">
         {/* ── 1. LEFT FLOATING ISLAND: BACK BUTTON ── */}
-        <div className="fixed top-3.5 left-2.5 sm:top-5 sm:left-6 z-50 flex items-center gap-1.5 sm:gap-2 pointer-events-auto select-none">
+        <div className="fixed top-2.5 sm:top-5 left-2.5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none h-8 sm:h-[46px]">
           <button
             type="button"
             onClick={() => {
@@ -1668,26 +1668,25 @@ export function HostUploadPage() {
               navigate('/host/dashboard');
             }}
             data-no-hover="true"
-            className="apple-liquid-nav flex items-center justify-center px-3 py-1.5 sm:px-4 sm:py-2 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 bg-white/70 backdrop-blur-2xl shadow-xs cursor-pointer text-slate-800 hover:border-purple-500/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] font-semibold text-xs sm:text-sm select-none active:scale-95 transition-all duration-200 shrink-0"
+            className="inline-flex items-center justify-center h-8 sm:h-[46px] px-3.5 sm:px-5 gap-1.5 sm:gap-2 rounded-full bg-white text-slate-700 text-xs sm:text-[14px] font-semibold shadow-sm border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer select-none active:scale-95 shrink-0"
             title="Return to Host Dashboard"
           >
             <svg
-              className="w-4 h-4 text-purple-600 stroke-[2.5]"
+              className="w-3.5 h-3.5 text-slate-600 stroke-[2.2] shrink-0"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <line x1="19" y1="12" x2="5" y2="12" />
-              <polyline points="12 19 5 12 12 5" />
+              <path d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
-            <span>Back</span>
+            <span className="flex items-center justify-center leading-none tracking-tight">Back</span>
           </button>
         </div>
 
         {/* ── 2. CENTER FLOATING ISLAND: NAVIGATION TABS (DESKTOP) & STEP COUNTER (MOBILE) ── */}
-        <div className="hidden md:flex fixed top-3.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 items-center pointer-events-auto select-none">
+        <div className="hidden md:flex fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 items-center pointer-events-auto select-none h-8 sm:h-[46px]">
           <HostUploadTabs
             steps={WIZARD_STEPS}
             activeStep={activeStep}
@@ -1697,15 +1696,17 @@ export function HostUploadPage() {
         </div>
 
         {/* Mobile Center Step Count Badge */}
-        <div className="md:hidden fixed top-3.5 left-1/2 -translate-x-1/2 z-50 pointer-events-auto text-center select-none py-1.5 px-3 rounded-full bg-white/70 backdrop-blur-2xl border border-slate-200/80 shadow-xs">
-          <span className="text-xs font-extrabold text-slate-900 tracking-wider uppercase">
-            Step {activeStep} of {WIZARD_STEPS.length}
-          </span>
+        <div className="md:hidden fixed top-2.5 left-1/2 -translate-x-1/2 z-50 pointer-events-auto select-none h-8 flex items-center">
+          <div className="inline-flex items-center justify-center h-8 px-3.5 rounded-full bg-white text-slate-700 text-xs font-semibold shadow-sm border border-slate-100 shrink-0 select-none">
+            <span className="tracking-tight uppercase leading-none flex items-center justify-center">
+              Step {activeStep} of {WIZARD_STEPS.length}
+            </span>
+          </div>
         </div>
 
-        {/* ── 3. RIGHT FLOATING ISLAND: THEME TOGGLE + USER AVATAR ── */}
-        <div className="fixed top-3.5 right-2.5 sm:top-5 sm:right-6 z-50 flex items-center gap-2 sm:gap-2.5 pointer-events-auto select-none">
-                    <div className="relative flex items-center justify-center">
+        {/* ── 3. RIGHT FLOATING ISLAND: USER AVATAR ── */}
+        <div className="fixed top-2.5 sm:top-5 right-2.5 sm:right-6 z-50 flex items-center gap-2 pointer-events-auto select-none h-8 sm:h-[46px]">
+          <div className="relative flex items-center justify-center h-8 sm:h-[46px]">
             <Login />
           </div>
         </div>
@@ -1954,7 +1955,7 @@ export function HostUploadPage() {
 
       {/* ── Fixed Bottom Progression Bar (Airbnb visual reference: screenshots 1 & 2) ── */}
       <footer
-        className="fixed bottom-0 inset-x-0 z-40 backdrop-blur-md max-md:bg-[#3d0c40]/95 max-md:border-t max-md:border-purple-400/20 max-md:shadow-[0_-4px_25px_rgba(61,12,64,0.4)] md:bg-[#f8f9fa]/95 md: md:border-t md:border-slate-200/60 md: shadow-[0_-4px_25px_rgba(0,0,0,0.06)](255,255,255,0.02)]"
+        className="fixed bottom-0 inset-x-0 z-40 backdrop-blur-md max-md:bg-[#3d0c40]/95 max-md:border-t max-md:border-purple-400/20 max-md:shadow-[0_-4px_25px_rgba(61,12,64,0.4)] md:bg-[#f5f2ea]/95 md:border-t md:border-slate-200/60 shadow-[0_-4px_25px_rgba(0,0,0,0.06)]"
       >
         {/* Hairline Continuous Progress Indicator Line */}
         <div className="w-full h-1 relative overflow-hidden max-md:bg-purple-900/60 md:bg-slate-100 md:">

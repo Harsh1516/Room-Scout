@@ -46,16 +46,28 @@ export const PropertyCard = memo(function PropertyCard({
     (Array.isArray(stay.images) && stay.images[0]) ||
     'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80';
 
+  // Responsive downscaled WebP/AVIF images for mobile screens
+  const getOptimizedImageUrl = (url, width = 640) => {
+    if (!url || typeof url !== 'string') return url;
+    if (url.includes('images.unsplash.com')) {
+      if (url.includes('w=')) {
+        return url.replace(/w=\d+/, `w=${width}`).replace(/q=\d+/, 'q=75');
+      }
+      return `${url}&auto=format&fit=crop&w=${width}&q=75`;
+    }
+    return url;
+  };
+
   return (
     <div
       onMouseEnter={() => onHover && onHover(stayId)}
       onMouseLeave={() => onLeave && onLeave()}
       onClick={() => onStayClick && onStayClick(stay)}
-      className={`group relative cursor-pointer select-none p-1 sm:p-2 rounded-xl sm:rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${className}`}
+      className={`group relative cursor-pointer select-none max-md:p-0 max-md:bg-[#141B26] max-md:rounded-3xl max-md:border max-md:border-white/[0.09] max-md:shadow-card max-md:overflow-hidden p-1 sm:p-2 rounded-xl sm:rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${className}`}
     >
-      {/* Warm Cushion on Hover (Warm cream in Light Mode, Frosted Glass in Dark Mode) */}
+      {/* Warm Cushion on Hover (Hidden on mobile) */}
       <div
-        className={`absolute rounded-xl sm:rounded-2xl bg-[#f8ebd8] shadow-[0_10px_30px_rgba(0,0,0,0.06)](0,0,0,0.7),_0_0_24px_rgba(56,189,248,0.18),_inset_0_1px_2px_rgba(255,255,255,0.22)] pointer-events-none transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`hidden md:block absolute rounded-xl sm:rounded-2xl bg-[#f8ebd8] shadow-[0_10px_30px_rgba(0,0,0,0.06)] pointer-events-none transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isHovered
             ? '-inset-1.5 opacity-100 scale-100'
             : 'inset-0 opacity-0 scale-95 group-hover:-inset-1 group-hover:opacity-100 group-hover:scale-100'
@@ -65,10 +77,12 @@ export const PropertyCard = memo(function PropertyCard({
       {/* Foreground Content Stack */}
       <div className="relative z-10 flex flex-col h-full justify-between">
         {/* 1. TOP SECTION: Media Box */}
-        <div className="relative aspect-[16/11] sm:aspect-[16/10] w-full rounded-lg sm:rounded-xl overflow-hidden bg-slate-900 shadow-xs group-hover:shadow-md flex flex-col justify-between p-1.5 sm:p-2.5 border border-slate-200/60 transition-all duration-350 ease-[cubic-bezier(0.16,1,0.3,1)]">
+        <div className="relative aspect-[16/11] sm:aspect-[16/10] w-full max-md:rounded-none max-md:border-0 rounded-lg sm:rounded-xl overflow-hidden bg-slate-900 shadow-xs group-hover:shadow-md flex flex-col justify-between p-1.5 sm:p-2.5 border border-slate-200/60 transition-all duration-350 ease-[cubic-bezier(0.16,1,0.3,1)]">
           {/* Background Image */}
           <img
-            src={displayImage}
+            src={getOptimizedImageUrl(displayImage, 640)}
+            srcSet={`${getOptimizedImageUrl(displayImage, 420)} 420w, ${getOptimizedImageUrl(displayImage, 768)} 768w`}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             alt={stay.title || stay.propertyName || 'Property'}
             loading="lazy"
             decoding="async"
@@ -130,9 +144,9 @@ export const PropertyCard = memo(function PropertyCard({
         </div>
 
         {/* 2. BOTTOM SECTION: Structured Info Below Photo */}
-        <div className="pt-1.5 sm:pt-2.5 pb-0.5 px-0.5 flex flex-col space-y-0.5 sm:space-y-1">
+        <div className="max-md:p-3.5 max-md:space-y-1 pt-1.5 sm:pt-2.5 pb-0.5 px-0.5 flex flex-col space-y-0.5 sm:space-y-1">
           {/* Location Subtitle */}
-          <div className="flex items-center gap-1 text-[8px] sm:text-[10px] text-slate-500 font-medium truncate">
+          <div className="flex items-center gap-1 text-[8px] sm:text-[10px] max-md:text-[11px] max-md:text-slate-400 text-slate-500 font-medium truncate">
             <svg
               className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-400 shrink-0"
               viewBox="0 0 24 24"
@@ -149,7 +163,7 @@ export const PropertyCard = memo(function PropertyCard({
           </div>
 
           {/* Title */}
-          <h3 className="text-[10px] sm:text-xs md:text-sm font-bold text-slate-950 line-clamp-1 group-hover:text-slate-900 transition-colors leading-snug">
+          <h3 className="text-[10px] sm:text-xs md:text-sm max-md:text-[14px] max-md:text-white font-bold text-slate-950 line-clamp-1 group-hover:text-slate-900 transition-colors leading-snug">
             {stay.title || stay.propertyName}
           </h3>
 
@@ -166,15 +180,15 @@ export const PropertyCard = memo(function PropertyCard({
           </div>
 
           {/* Footer Price & Action Buttons */}
-          <div className="flex items-center justify-between pt-1 sm:pt-2 border-t border-slate-200/80 gap-1 sm:gap-2">
+          <div className="flex items-center justify-between pt-1 sm:pt-2 border-t max-md:border-white/[0.08] border-slate-200/80 gap-1 sm:gap-2">
             <div className="min-w-0">
               <span className="hidden sm:block text-[9px] uppercase font-bold text-slate-400 tracking-wider">
                 Starting Price
               </span>
               <div className="flex items-baseline gap-1 flex-wrap">
-                <span className="text-slate-950 font-black text-[10px] sm:text-sm md:text-base leading-none">
+                <span className="max-md:text-white text-slate-950 font-black text-[11px] sm:text-sm md:text-base leading-none">
                   ₹{pricing.primaryPrice}
-                  <span className="text-[8px] sm:text-[10px] font-medium text-slate-500">
+                  <span className="text-[8px] sm:text-[10px] font-medium max-md:text-slate-400 text-slate-500 ml-0.5">
                     {pricing.primaryUnit}
                   </span>
                 </span>
@@ -188,7 +202,7 @@ export const PropertyCard = memo(function PropertyCard({
                   e.stopPropagation();
                   if (onStayClick) onStayClick(stay);
                 }}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-800 text-[10px] sm:text-xs font-bold px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-lg sm:rounded-xl transition-colors cursor-pointer border border-slate-200/80 shadow-2xs active:scale-95"
+                className="max-md:bg-white/[0.07] max-md:hover:bg-emerald-500 max-md:hover:text-neutral-950 max-md:text-slate-200 max-md:border-white/[0.1] max-md:rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-[10px] sm:text-xs font-bold px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-lg sm:rounded-xl transition-colors cursor-pointer border border-slate-200/80 shadow-2xs active:scale-95"
               >
                 Details
               </button>

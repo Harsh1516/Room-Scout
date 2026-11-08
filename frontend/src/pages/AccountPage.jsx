@@ -5,8 +5,7 @@ import { z } from 'zod';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
-import { Left } from '../components/navbar/Left';
-import { Right } from '../components/navbar/Right';
+import { Login } from '../components/navbar/Login';
 
 // Helper to extract raw 10-digit phone number without +91 prefix
 const extractRawPhoneNumber = (phoneStr = '') => {
@@ -305,26 +304,49 @@ export function AccountPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-slate-50/60 text-slate-900 transition-colors duration-300 font-body-md antialiased pb-8 sm:pb-12">
-      {/* ── TOP FLOATING NAVIGATION CAPSULES (MATCHING USER DASHBOARD / EXPLORE NAVBAR STYLE) ── */}
-      <header className="relative w-full pointer-events-none select-none z-50">
-        {/* 1. Left Island: Back button */}
-        <Left
-          showBrand={false}
-          showBadge={false}
-          showBack={true}
-          fallbackUrl={isHost ? '/host/dashboard' : '/explore'}
-        />
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate(isHost ? '/host/dashboard' : '/explore');
+    }
+  };
 
-        {/* 2. Center Island: Floating Liquid Glass Segmented Tabs */}
-        <div className="fixed top-3.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center pointer-events-auto max-w-[calc(100vw-110px)] sm:max-w-none">
-          <nav className="apple-liquid-nav relative flex items-center h-8 sm:h-9 p-0.5 sm:p-1 rounded-full border border-slate-200/80 shadow-sm select-none">
+  return (
+    <div className="min-h-screen bg-[#f5f2ea] text-slate-900 transition-colors duration-300 font-body-md antialiased pb-8 sm:pb-12">
+      {/* ── TOP FLOATING NAVIGATION CAPSULES (MATCHING PIC 1 SETTING) ── */}
+      <header className="relative w-full h-14 sm:h-20 pointer-events-none select-none z-50 font-body-md antialiased">
+        {/* 1. Left Island: Back button */}
+        <div className="fixed top-2.5 sm:top-5 left-2.5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none h-8 sm:h-[46px]">
+          <button
+            type="button"
+            onClick={handleBack}
+            data-no-hover="true"
+            className="inline-flex items-center justify-center h-8 sm:h-[46px] px-3.5 sm:px-5 gap-1.5 sm:gap-2 rounded-full bg-white text-slate-700 text-xs sm:text-[14px] font-semibold shadow-sm border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer select-none active:scale-95 shrink-0"
+            title="Return"
+          >
+            <svg
+              className="w-3.5 h-3.5 text-slate-600 stroke-[2.2] shrink-0"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+            <span className="flex items-center justify-center leading-none tracking-tight">Back</span>
+          </button>
+        </div>
+
+        {/* 2. Center Island: Floating Liquid Glass Segmented Tabs (matching Pic 1 positioning) */}
+        <div className="fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center pointer-events-auto max-w-[calc(100vw-130px)] sm:max-w-none h-9 sm:h-[46px] select-none">
+          <nav className="apple-liquid-nav relative flex items-center h-9 sm:h-[46px] p-1 sm:p-1.5 rounded-full border border-slate-200/90 bg-white shadow-[0_4px_14px_-2px_rgba(0,0,0,0.1),0_2px_6px_-1px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)] select-none">
             {/* Tab 1: Profile Details */}
             <button
               type="button"
               onClick={() => setActiveTab('details')}
-              className={`relative z-10 h-full py-0 px-2 sm:px-3 md:px-3.5 rounded-full text-[11px] sm:text-xs md:text-[13px] font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 select-none shrink-0 ${
+              className={`relative z-10 h-full py-0 px-2.5 sm:px-3.5 rounded-full text-[11px] sm:text-xs md:text-[13px] font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 select-none shrink-0 ${
                 activeTab === 'details'
                   ? 'text-white font-bold'
                   : 'text-slate-600 hover:text-slate-900 font-medium'
@@ -348,7 +370,7 @@ export function AccountPage() {
             <button
               type="button"
               onClick={() => setActiveTab('password')}
-              className={`relative z-10 h-full py-0 px-2 sm:px-3 md:px-3.5 rounded-full text-[11px] sm:text-xs md:text-[13px] font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 select-none shrink-0 ${
+              className={`relative z-10 h-full py-0 px-2.5 sm:px-3.5 rounded-full text-[11px] sm:text-xs md:text-[13px] font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 select-none shrink-0 ${
                 activeTab === 'password'
                   ? 'text-white font-bold'
                   : 'text-slate-600 hover:text-slate-900 font-medium'
@@ -372,7 +394,7 @@ export function AccountPage() {
             <button
               type="button"
               onClick={() => setActiveTab('delete')}
-              className={`relative z-10 h-full py-0 px-2 sm:px-3 md:px-3.5 rounded-full text-[11px] sm:text-xs md:text-[13px] font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 select-none shrink-0 ${
+              className={`relative z-10 h-full py-0 px-2.5 sm:px-3.5 rounded-full text-[11px] sm:text-xs md:text-[13px] font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 select-none shrink-0 ${
                 activeTab === 'delete'
                   ? 'text-white font-bold'
                   : 'text-rose-600 hover:text-rose-700 font-medium'
@@ -395,206 +417,344 @@ export function AccountPage() {
           </nav>
         </div>
 
-        {/* 3. Right Island: Actions (Wishlist + Booked Places + Theme Toggle + Login/Profile with Mobile Hamburger) */}
-        <Right />
+        {/* 3. Right Island: Profile / Login Avatar Button */}
+        <div className="fixed top-2.5 sm:top-5 right-2.5 sm:right-6 z-50 flex items-center gap-1.5 sm:gap-2.5 pointer-events-auto select-none h-8 sm:h-[46px]">
+          <div className="relative flex items-center justify-center h-8 sm:h-[46px]">
+            <Login />
+          </div>
+        </div>
       </header>
 
       {/* Main Container */}
-      <main className="max-w-3xl mx-auto px-3 sm:px-6 pt-18 sm:pt-22 lg:pt-26 pb-12 sm:pb-16 min-h-[calc(100vh-4rem)]">
+      <main className="max-w-3xl mx-auto px-3 sm:px-6 pt-16 sm:pt-22 lg:pt-26 pb-12 sm:pb-16 min-h-[calc(100vh-4rem)]">
 
-        {/* TAB 1: PROFILE DETAILS */}
+        {/* ── TAB 1: PROFILE DETAILS (GREEN THEMED CARD ON MOBILE) ── */}
         {activeTab === 'details' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl sm:rounded-3xl border border-slate-200 p-3.5 sm:p-7 md:p-8 shadow-xs space-y-3.5 sm:space-y-6 transition-colors"
+            className="max-md:bg-[#0b291b] max-md:rounded-[32px] sm:max-md:rounded-[36px] max-md:border max-md:border-emerald-400/20 max-md:p-4 sm:max-md:p-6 max-md:shadow-[0_12px_36px_rgba(11,41,27,0.45)] md:bg-white md:rounded-3xl md:border md:border-slate-200 md:p-8 md:shadow-xs space-y-4 sm:space-y-6 transition-all duration-300"
           >
-            <div className="border-b border-slate-100 pb-2.5 sm:pb-4 flex items-center justify-between gap-3">
+            {/* Desktop Header */}
+            <div className="hidden md:flex border-b border-slate-100 pb-4 items-center justify-between gap-3">
               <div className="min-w-0">
-                <h2 className="text-lg sm:text-2xl md:text-3xl font-manrope font-extrabold text-slate-900 tracking-tight">
+                <h2 className="text-2xl lg:text-3xl font-manrope font-extrabold text-slate-900 tracking-tight">
                   {isHost ? 'Host Profile Details' : 'Personal Profile Details'}
                 </h2>
-                <p className="text-[11px] sm:text-xs md:text-[13px] text-slate-500 mt-0.5 sm:mt-1 font-normal leading-relaxed">
-                  Manage your personal account credentials, contact information, and role.
-                </p>
               </div>
-              <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-2xl bg-emerald-500/15 text-emerald-700 border border-emerald-500/30 font-manrope font-black text-xs sm:text-sm flex items-center justify-center shadow-xs shrink-0 select-none">
+              <div className="w-11 h-11 rounded-2xl bg-emerald-500/15 text-emerald-700 border border-emerald-500/30 font-manrope font-black text-sm flex items-center justify-center shadow-xs shrink-0 select-none">
                 {user?.name?.slice(0, 2)?.toUpperCase() || 'U'}
               </div>
             </div>
 
-            <form onSubmit={handleUpdatePersonal} className="space-y-3.5 sm:space-y-5">
-              <div>
-                <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 mb-1 sm:mb-1.5 tracking-tight">
-                  Full Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={personalForm.name}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setPersonalForm((prev) => ({ ...prev, name: val }));
-                    if (personalErrors.name) validatePersonalField('name', val);
-                  }}
-                  onBlur={(e) => validatePersonalField('name', e.target.value)}
-                  placeholder="e.g. Happy Chhikara"
-                  className={`w-full px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-50 border ${
-                    personalErrors.name
-                      ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
-                      : 'border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
-                  } text-xs sm:text-sm font-medium text-slate-900 focus:outline-none transition-colors shadow-xs`}
-                />
-                {personalErrors.name && (
-                  <p className="text-[11px] sm:text-xs text-rose-500 font-medium mt-1.5 flex items-center gap-1">
-                    <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                    <span>{personalErrors.name}</span>
-                  </p>
-                )}
-              </div>
+            {/* Mobile Centered Title (Matches Pic 1 style) */}
+            <div className="md:hidden flex flex-col items-center justify-center pt-1 mb-5 sm:mb-6 w-full text-center">
+              <h2 className="text-xl sm:text-2xl font-bold font-black text-white tracking-normal text-center">
+                {isHost ? 'Host Profile Details' : 'Personal Profile Details'}
+              </h2>
+            </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            {/* Inner Section Card Covering Input Fields (Matches Pic 1 style) */}
+            <section className="rounded-2xl sm:rounded-3xl border shadow-lg transition-colors max-md:bg-[#14422b] max-md:border-emerald-300/20 max-md:p-4 sm:max-md:p-5 max-md:shadow-black/20 md:bg-transparent md:border-none md:p-0 md:shadow-none space-y-4 relative overflow-hidden">
+              <form onSubmit={handleUpdatePersonal} className="space-y-3.5 sm:space-y-4">
+                {/* Full Name */}
                 <div>
-                  <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 mb-1 sm:mb-1.5 tracking-tight">
-                    Email Address (Registered)
+                  <label className="block text-xs font-bold uppercase tracking-wider max-md:text-emerald-200 md:text-slate-700 mb-1.5">
+                    Full Name *
                   </label>
                   <input
-                    type="email"
-                    disabled
-                    value={personalForm.email}
-                    className="w-full px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-100 border border-slate-200 text-xs sm:text-sm font-medium text-slate-500 cursor-not-allowed shadow-xs"
-                  />
-                  <span className="text-[10px] sm:text-[11px] font-normal text-slate-400 mt-1 block">
-                    Email cannot be changed directly for security.
-                  </span>
-                </div>
-
-                <div>
-                  <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 mb-1 sm:mb-1.5 tracking-tight">
-                    Phone Number *
-                  </label>
-                  <div
-                    className={`relative flex items-center rounded-xl sm:rounded-2xl bg-slate-50 border overflow-hidden transition-all shadow-xs composite-input-console ${
-                      personalErrors.phone
-                        ? 'border-rose-500 focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-500/20'
-                        : 'border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20'
+                    type="text"
+                    required
+                    value={personalForm.name}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setPersonalForm((prev) => ({ ...prev, name: val }));
+                      if (personalErrors.name) validatePersonalField('name', val);
+                    }}
+                    onBlur={(e) => validatePersonalField('name', e.target.value)}
+                    placeholder="e.g. Happy Chhikara"
+                    className={`w-full h-11 px-4 rounded-xl border text-sm font-medium focus:outline-none transition-all shadow-xs ${
+                      personalErrors.name
+                        ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                        : 'max-md:bg-white/10 max-md:border-white/20 max-md:text-white max-md:placeholder:text-emerald-200/40 max-md:focus:border-white/60 max-md:focus:ring-2 max-md:focus:ring-white/20 md:bg-slate-50 md:border-slate-300 md:text-slate-900 md:focus:border-emerald-500 md:focus:ring-2 md:focus:ring-emerald-500/20'
                     }`}
-                  >
-                    {/* Left: Country Code Prefix */}
-                    <span className="pl-3.5 sm:pl-4 pr-2.5 text-xs sm:text-sm font-manrope font-bold text-slate-700 select-none shrink-0 bg-transparent">
-                      +91
-                    </span>
-
-                    {/* Vertical Divider */}
-                    <div className={`h-4 sm:h-5 w-px ${personalErrors.phone ? 'bg-rose-300' : 'bg-slate-300'} shrink-0`} />
-
-                    {/* Right: Phone Input Field */}
-                    <input
-                      type="tel"
-                      required
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      maxLength={10}
-                      autoComplete="tel-national"
-                      value={personalForm.phone}
-                      onChange={(e) => {
-                        const digits = e.target.value.replace(/\D/g, '');
-                        let clean = digits;
-                        if ((clean.length === 12 || clean.length === 11) && clean.startsWith('91')) {
-                          clean = clean.slice(2);
-                        } else if (clean.length === 11 && clean.startsWith('0')) {
-                          clean = clean.slice(1);
-                        }
-                        const updated = clean.slice(0, 10);
-                        setPersonalForm((prev) => ({ ...prev, phone: updated }));
-                        if (personalErrors.phone) validatePersonalField('phone', updated);
-                      }}
-                      onBlur={(e) => validatePersonalField('phone', personalForm.phone)}
-                      placeholder="Enter 10-digit mobile number"
-                      className="w-full flex-1 bg-transparent px-3 py-2 sm:px-3.5 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none rounded-r-xl sm:rounded-r-2xl"
-                    />
-                  </div>
-                  {personalErrors.phone ? (
-                    <p className="text-[11px] sm:text-xs text-rose-500 font-medium mt-1.5 flex items-center gap-1">
+                  />
+                  {personalErrors.name && (
+                    <p className="text-[11px] sm:text-xs text-rose-400 font-medium mt-1.5 flex items-center gap-1">
                       <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                       </svg>
-                      <span>{personalErrors.phone}</span>
+                      <span>{personalErrors.name}</span>
                     </p>
-                  ) : (
-                    <span className="text-[10px] sm:text-[11px] font-normal text-slate-400 mt-1 block">
-                      Compulsory for host communications and WhatsApp booking alerts.
-                    </span>
                   )}
                 </div>
-              </div>
 
-              <div className="pt-1 sm:pt-2">
-                <button
-                  type="submit"
-                  disabled={!canSaveProfile || loading}
-                  className={`w-full py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl font-manrope font-extrabold text-xs sm:text-sm tracking-tight transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
-                    !canSaveProfile || loading
-                      ? 'bg-slate-200 text-slate-400 cursor-not-allowed opacity-60'
-                      : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20 cursor-pointer active:scale-95'
-                  }`}
-                  title={!canSaveProfile ? 'Please fill your 10-digit phone number to enable saving' : 'Save Profile Changes'}
-                >
-                  {loading ? 'Saving Changes...' : 'Save Profile Changes'}
-                </button>
-              </div>
-            </form>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+                  {/* Email (Readonly) */}
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider max-md:text-emerald-200 md:text-slate-700 mb-1.5">
+                      Email Address (Registered)
+                    </label>
+                    <input
+                      type="email"
+                      disabled
+                      value={personalForm.email}
+                      className="w-full h-11 px-4 rounded-xl border max-md:bg-white/5 max-md:border-white/10 max-md:text-white/60 md:bg-slate-100 md:border-slate-200 md:text-slate-500 text-sm font-medium cursor-not-allowed shadow-xs"
+                    />
+                  </div>
 
-            {/* If Host: Property Management CTA Banner */}
-            {isHost && (
-              <div className="pt-3 sm:pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 bg-emerald-500/10 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-emerald-500/20">
-                <div>
-                  <h4 className="text-xs sm:text-sm font-manrope font-bold text-slate-900 tracking-tight">
+                  {/* Phone Number */}
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider max-md:text-emerald-200 md:text-slate-700 mb-1.5">
+                      Phone Number *
+                    </label>
+                    <div
+                      className={`relative flex items-center h-11 rounded-xl border overflow-hidden transition-all shadow-xs ${
+                        personalErrors.phone
+                          ? 'border-rose-500 focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-500/20'
+                          : 'max-md:bg-white/10 max-md:border-white/20 max-md:focus-within:border-white/60 max-md:focus-within:ring-2 max-md:focus-within:ring-white/20 md:bg-slate-50 md:border-slate-300 md:focus-within:border-emerald-500 md:focus-within:ring-2 md:focus-within:ring-emerald-500/20'
+                      }`}
+                    >
+                      {/* Left: Country Code Prefix */}
+                      <span className="pl-3.5 sm:pl-4 pr-2.5 text-xs sm:text-sm font-bold max-md:text-emerald-200 md:text-slate-700 select-none shrink-0 bg-transparent">
+                        +91
+                      </span>
+
+                      {/* Vertical Divider */}
+                      <div className={`h-4 sm:h-5 w-px ${personalErrors.phone ? 'bg-rose-400' : 'max-md:bg-white/20 md:bg-slate-300'} shrink-0`} />
+
+                      {/* Right: Phone Input Field */}
+                      <input
+                        type="tel"
+                        required
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={10}
+                        autoComplete="tel-national"
+                        value={personalForm.phone}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/\D/g, '');
+                          let clean = digits;
+                          if ((clean.length === 12 || clean.length === 11) && clean.startsWith('91')) {
+                            clean = clean.slice(2);
+                          } else if (clean.length === 11 && clean.startsWith('0')) {
+                            clean = clean.slice(1);
+                          }
+                          const updated = clean.slice(0, 10);
+                          setPersonalForm((prev) => ({ ...prev, phone: updated }));
+                          if (personalErrors.phone) validatePersonalField('phone', updated);
+                        }}
+                        onBlur={(e) => validatePersonalField('phone', personalForm.phone)}
+                        placeholder="Enter 10-digit mobile number"
+                        className="w-full flex-1 bg-transparent px-3 py-2 text-xs sm:text-sm font-medium max-md:text-white max-md:placeholder:text-emerald-200/40 md:text-slate-900 md:placeholder:text-slate-400 focus:outline-none rounded-r-xl"
+                      />
+                    </div>
+                    {personalErrors.phone && (
+                      <p className="text-[11px] sm:text-xs text-rose-400 font-medium mt-1.5 flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        <span>{personalErrors.phone}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-2 sm:pt-3">
+                  <button
+                    type="submit"
+                    disabled={!canSaveProfile || loading}
+                    className={`w-full h-11 sm:h-12 rounded-xl sm:rounded-2xl font-extrabold text-xs sm:text-sm tracking-tight transition-all flex items-center justify-center gap-2 ${
+                      !canSaveProfile || loading
+                        ? 'max-md:bg-white/10 max-md:text-white/40 md:bg-slate-200 md:text-slate-400 cursor-not-allowed opacity-60'
+                        : 'max-md:bg-emerald-400 max-md:hover:bg-emerald-300 max-md:text-emerald-950 max-md:shadow-lg max-md:shadow-emerald-950/40 md:bg-emerald-600 md:hover:bg-emerald-500 md:text-white md:shadow-md md:shadow-emerald-600/20 cursor-pointer active:scale-95'
+                    }`}
+                    title={!canSaveProfile ? 'Please fill your 10-digit phone number to enable saving' : 'Save Profile Changes'}
+                  >
+                    {loading ? 'Saving Changes...' : 'Save Profile Changes'}
+                  </button>
+                </div>
+              </form>
+
+              {/* If Host: Property Management CTA Banner */}
+              {isHost && (
+                <div className="pt-3.5 sm:pt-4 border-t max-md:border-white/15 md:border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 max-md:bg-white/10 max-md:border max-md:border-white/15 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl md:bg-emerald-500/10 md:border md:border-emerald-500/20">
+                  <h4 className="text-xs sm:text-sm font-bold max-md:text-white md:text-slate-900 tracking-tight">
                     Need to update your property details?
                   </h4>
-                  <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 font-normal leading-relaxed">
-                    Update room rates, photos, amenities, and location via the dedicated Property Form.
-                  </p>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/host/upload')}
+                    className="px-3.5 py-2 rounded-xl max-md:bg-white max-md:hover:bg-emerald-50 max-md:text-emerald-950 md:bg-emerald-600 md:hover:bg-emerald-500 md:text-white text-xs font-extrabold tracking-tight transition-all shadow-xs shrink-0 cursor-pointer active:scale-95 w-full sm:w-auto text-center"
+                  >
+                    Property Form →
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => navigate('/host/upload')}
-                  className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-manrope font-bold tracking-tight transition-all shadow-xs shrink-0 cursor-pointer active:scale-95 w-full sm:w-auto text-center"
-                >
-                  Property Form →
-                </button>
-              </div>
-            )}
+              )}
+            </section>
           </motion.div>
         )}
 
-        {/* TAB 2: PASSWORD */}
+        {/* ── TAB 2: PASSWORD (GREEN THEMED CARD ON MOBILE) ── */}
         {activeTab === 'password' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-4 sm:p-7 md:p-8 shadow-xs space-y-4 sm:space-y-6 transition-colors"
+            className="max-md:bg-[#0b291b] max-md:rounded-[32px] sm:max-md:rounded-[36px] max-md:border max-md:border-emerald-400/20 max-md:p-4 sm:max-md:p-6 max-md:shadow-[0_12px_36px_rgba(11,41,27,0.45)] md:bg-white md:rounded-3xl md:border md:border-slate-200 md:p-8 md:shadow-xs space-y-4 sm:space-y-6 transition-all duration-300"
           >
-            <div className="border-b border-slate-100 pb-3 sm:pb-4">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-manrope font-extrabold text-slate-900 tracking-tight">
+            {/* Desktop Header */}
+            <div className="hidden md:block border-b border-slate-100 pb-4">
+              <h2 className="text-2xl lg:text-3xl font-manrope font-extrabold text-slate-900 tracking-tight">
                 {user?.hasPassword ? 'Change Password' : 'Set Account Password'}
               </h2>
-              <p className="text-xs sm:text-[13px] text-slate-500 mt-1 font-normal leading-relaxed">
-                {user?.hasPassword
-                  ? 'Ensure your account is using a strong, unique password to keep it secure.'
-                  : 'Create a password for your account so you can log in using either Google or your email and password.'}
-              </p>
             </div>
 
-            {/* If user does not have a password yet (Signed in with Google) */}
-            {!user?.hasPassword ? (
-              <div className="space-y-4 sm:space-y-5">
-                <div className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0 shadow-xs">
-                      <svg className="w-5 h-5" viewBox="0 0 24 24">
+            {/* Mobile Centered Title (Matches Pic 1 style) */}
+            <div className="md:hidden flex flex-col items-center justify-center pt-1 mb-5 sm:mb-6 w-full text-center">
+              <h2 className="text-xl sm:text-2xl font-bold font-black text-white tracking-normal text-center">
+                {user?.hasPassword ? 'Change Password' : 'Set Account Password'}
+              </h2>
+            </div>
+
+            {/* Inner Section Card Covering Password Fields (Matches Pic 1 style) */}
+            <section className="rounded-2xl sm:rounded-3xl border shadow-lg transition-colors max-md:bg-[#14422b] max-md:border-emerald-300/20 max-md:p-4 sm:max-md:p-5 max-md:shadow-black/20 md:bg-transparent md:border-none md:p-0 md:shadow-none space-y-4 relative overflow-hidden">
+              {/* If user does not have a password yet (Signed in with Google) */}
+              {!user?.hasPassword ? (
+                <div className="space-y-4">
+                  <div className="p-3.5 rounded-xl max-md:bg-white/10 max-md:border max-md:border-white/15 md:bg-slate-50 md:border md:border-slate-200 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0 shadow-xs">
+                        <svg className="w-5 h-5" viewBox="0 0 24 24">
+                          <path
+                            fill="#4285F4"
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                          />
+                          <path
+                            fill="#34A853"
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                          />
+                          <path
+                            fill="#FBBC05"
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                          />
+                          <path
+                            fill="#EA4335"
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold max-md:text-white md:text-slate-900">
+                          Google Linked Account
+                        </h3>
+                        <p className="text-xs max-md:text-emerald-200/80 md:text-slate-500">
+                          {user?.email}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleSavePassword} className="space-y-3.5">
+                    {/* New Password */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider max-md:text-emerald-200 md:text-slate-700 mb-1.5">
+                        Create Password *
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showNewPass ? 'text' : 'password'}
+                          required
+                          minLength={6}
+                          value={passwordForm.newPassword}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setPasswordForm((prev) => ({ ...prev, newPassword: val }));
+                            if (passwordErrors.newPassword) validatePasswordField('newPassword', val);
+                          }}
+                          onBlur={(e) => validatePasswordField('newPassword', e.target.value)}
+                          placeholder="Minimum 6 characters"
+                          className={`w-full h-11 pl-4 pr-12 rounded-xl border text-sm font-medium focus:outline-none transition-all shadow-xs ${
+                            passwordErrors.newPassword
+                              ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                              : 'max-md:bg-white/10 max-md:border-white/20 max-md:text-white max-md:placeholder:text-emerald-200/40 max-md:focus:border-white/60 max-md:focus:ring-2 max-md:focus:ring-white/20 md:bg-slate-50 md:border-slate-300 md:text-slate-900 md:focus:border-emerald-500 md:focus:ring-2 md:focus:ring-emerald-500/20'
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPass(!showNewPass)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 max-md:text-emerald-200 hover:max-md:text-white md:text-slate-400 hover:md:text-slate-600 text-xs font-bold cursor-pointer"
+                        >
+                          {showNewPass ? 'Hide' : 'Show'}
+                        </button>
+                      </div>
+                      {passwordErrors.newPassword && (
+                        <p className="text-[11px] sm:text-xs text-rose-400 font-medium mt-1.5 flex items-center gap-1">
+                          <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          <span>{passwordErrors.newPassword}</span>
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Confirm Password */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider max-md:text-emerald-200 md:text-slate-700 mb-1.5">
+                        Confirm Password *
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showConfirmPass ? 'text' : 'password'}
+                          required
+                          minLength={6}
+                          value={passwordForm.confirmPassword}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setPasswordForm((prev) => ({ ...prev, confirmPassword: val }));
+                            if (passwordErrors.confirmPassword) validatePasswordField('confirmPassword', val);
+                          }}
+                          onBlur={(e) => validatePasswordField('confirmPassword', e.target.value)}
+                          placeholder="Re-enter your password"
+                          className={`w-full h-11 pl-4 pr-12 rounded-xl border text-sm font-medium focus:outline-none transition-all shadow-xs ${
+                            passwordErrors.confirmPassword
+                              ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                              : 'max-md:bg-white/10 max-md:border-white/20 max-md:text-white max-md:placeholder:text-emerald-200/40 max-md:focus:border-white/60 max-md:focus:ring-2 max-md:focus:ring-white/20 md:bg-slate-50 md:border-slate-300 md:text-slate-900 md:focus:border-emerald-500 md:focus:ring-2 md:focus:ring-emerald-500/20'
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPass(!showConfirmPass)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 max-md:text-emerald-200 hover:max-md:text-white md:text-slate-400 hover:md:text-slate-600 text-xs font-bold cursor-pointer"
+                        >
+                          {showConfirmPass ? 'Hide' : 'Show'}
+                        </button>
+                      </div>
+                      {passwordErrors.confirmPassword && (
+                        <p className="text-[11px] sm:text-xs text-rose-400 font-medium mt-1.5 flex items-center gap-1">
+                          <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          <span>{passwordErrors.confirmPassword}</span>
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="pt-2">
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full h-11 sm:h-12 rounded-xl sm:rounded-2xl max-md:bg-emerald-400 max-md:hover:bg-emerald-300 max-md:text-emerald-950 max-md:shadow-lg max-md:shadow-emerald-950/40 md:bg-emerald-600 md:hover:bg-emerald-500 md:text-white font-extrabold text-xs sm:text-sm tracking-tight md:shadow-md md:shadow-emerald-600/20 transition-all cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        {loading ? 'Setting Password...' : 'Set Password'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              ) : (
+                <form onSubmit={handleSavePassword} className="space-y-3.5">
+                  {(user?.authProvider === 'google' || user?.googleId) && (
+                    <div className="flex items-center gap-2.5 p-3 rounded-xl max-md:bg-white/10 max-md:border max-md:border-white/15 max-md:text-emerald-100 md:bg-slate-50 md:border md:border-slate-200 text-xs md:text-slate-600">
+                      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                         <path
                           fill="#4285F4"
                           d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -612,26 +772,57 @@ export function AccountPage() {
                           d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                         />
                       </svg>
+                      <span>
+                        Google account linked (<strong className="font-semibold max-md:text-white md:text-slate-800">{user?.email}</strong>)
+                      </span>
                     </div>
-                    <div>
-                      <h3 className="text-sm font-manrope font-bold text-slate-900">
-                        Google Linked Account
-                      </h3>
-                      <p className="text-xs text-slate-500">
-                        Signed in with {user?.email}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    Your account currently signs in through Google. Setting a password allows you to sign in directly with your email and password from any browser or device, while keeping Google Sign-In fully active.
-                  </p>
-                </div>
+                  )}
 
-                <form onSubmit={handleSavePassword} className="space-y-3.5 sm:space-y-4">
+                  {/* Old Password */}
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider max-md:text-emerald-200 md:text-slate-700 mb-1.5">
+                      Current Password *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showOldPass ? 'text' : 'password'}
+                        required
+                        value={passwordForm.oldPassword}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setPasswordForm((prev) => ({ ...prev, oldPassword: val }));
+                          if (passwordErrors.oldPassword) validatePasswordField('oldPassword', val);
+                        }}
+                        onBlur={(e) => validatePasswordField('oldPassword', e.target.value)}
+                        placeholder="Enter your current password"
+                        className={`w-full h-11 pl-4 pr-12 rounded-xl border text-sm font-medium focus:outline-none transition-all shadow-xs ${
+                          passwordErrors.oldPassword
+                            ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                            : 'max-md:bg-white/10 max-md:border-white/20 max-md:text-white max-md:placeholder:text-emerald-200/40 max-md:focus:border-white/60 max-md:focus:ring-2 max-md:focus:ring-white/20 md:bg-slate-50 md:border-slate-300 md:text-slate-900 md:focus:border-emerald-500 md:focus:ring-2 md:focus:ring-emerald-500/20'
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowOldPass(!showOldPass)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 max-md:text-emerald-200 hover:max-md:text-white md:text-slate-400 hover:md:text-slate-600 text-xs font-bold cursor-pointer"
+                      >
+                        {showOldPass ? 'Hide' : 'Show'}
+                      </button>
+                    </div>
+                    {passwordErrors.oldPassword && (
+                      <p className="text-[11px] sm:text-xs text-rose-400 font-medium mt-1.5 flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        <span>{passwordErrors.oldPassword}</span>
+                      </p>
+                    )}
+                  </div>
+
                   {/* New Password */}
                   <div>
-                    <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 mb-1 sm:mb-1.5 tracking-tight">
-                      Create Password *
+                    <label className="block text-xs font-bold uppercase tracking-wider max-md:text-emerald-200 md:text-slate-700 mb-1.5">
+                      New Password *
                     </label>
                     <div className="relative">
                       <input
@@ -646,22 +837,22 @@ export function AccountPage() {
                         }}
                         onBlur={(e) => validatePasswordField('newPassword', e.target.value)}
                         placeholder="Minimum 6 characters"
-                        className={`w-full pl-3.5 pr-10 py-2 sm:pl-4 sm:pr-12 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-50 border ${
+                        className={`w-full h-11 pl-4 pr-12 rounded-xl border text-sm font-medium focus:outline-none transition-all shadow-xs ${
                           passwordErrors.newPassword
                             ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
-                            : 'border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
-                        } text-xs sm:text-sm font-medium text-slate-900 focus:outline-none transition-colors shadow-xs`}
+                            : 'max-md:bg-white/10 max-md:border-white/20 max-md:text-white max-md:placeholder:text-emerald-200/40 max-md:focus:border-white/60 max-md:focus:ring-2 max-md:focus:ring-white/20 md:bg-slate-50 md:border-slate-300 md:text-slate-900 md:focus:border-emerald-500 md:focus:ring-2 md:focus:ring-emerald-500/20'
+                        }`}
                       />
                       <button
                         type="button"
                         onClick={() => setShowNewPass(!showNewPass)}
-                        className="absolute right-2.5 sm:right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-[11px] sm:text-xs font-manrope font-semibold cursor-pointer"
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 max-md:text-emerald-200 hover:max-md:text-white md:text-slate-400 hover:md:text-slate-600 text-xs font-bold cursor-pointer"
                       >
                         {showNewPass ? 'Hide' : 'Show'}
                       </button>
                     </div>
                     {passwordErrors.newPassword && (
-                      <p className="text-[11px] sm:text-xs text-rose-500 font-medium mt-1.5 flex items-center gap-1">
+                      <p className="text-[11px] sm:text-xs text-rose-400 font-medium mt-1.5 flex items-center gap-1">
                         <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                         </svg>
@@ -672,8 +863,8 @@ export function AccountPage() {
 
                   {/* Confirm Password */}
                   <div>
-                    <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 mb-1 sm:mb-1.5 tracking-tight">
-                      Confirm Password *
+                    <label className="block text-xs font-bold uppercase tracking-wider max-md:text-emerald-200 md:text-slate-700 mb-1.5">
+                      Confirm New Password *
                     </label>
                     <div className="relative">
                       <input
@@ -687,23 +878,23 @@ export function AccountPage() {
                           if (passwordErrors.confirmPassword) validatePasswordField('confirmPassword', val);
                         }}
                         onBlur={(e) => validatePasswordField('confirmPassword', e.target.value)}
-                        placeholder="Re-enter your password"
-                        className={`w-full pl-3.5 pr-10 py-2 sm:pl-4 sm:pr-12 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-50 border ${
+                        placeholder="Re-enter your new password"
+                        className={`w-full h-11 pl-4 pr-12 rounded-xl border text-sm font-medium focus:outline-none transition-all shadow-xs ${
                           passwordErrors.confirmPassword
                             ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
-                            : 'border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
-                        } text-xs sm:text-sm font-medium text-slate-900 focus:outline-none transition-colors shadow-xs`}
+                            : 'max-md:bg-white/10 max-md:border-white/20 max-md:text-white max-md:placeholder:text-emerald-200/40 max-md:focus:border-white/60 max-md:focus:ring-2 max-md:focus:ring-white/20 md:bg-slate-50 md:border-slate-300 md:text-slate-900 md:focus:border-emerald-500 md:focus:ring-2 md:focus:ring-emerald-500/20'
+                        }`}
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPass(!showConfirmPass)}
-                        className="absolute right-2.5 sm:right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-[11px] sm:text-xs font-manrope font-semibold cursor-pointer"
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 max-md:text-emerald-200 hover:max-md:text-white md:text-slate-400 hover:md:text-slate-600 text-xs font-bold cursor-pointer"
                       >
                         {showConfirmPass ? 'Hide' : 'Show'}
                       </button>
                     </div>
                     {passwordErrors.confirmPassword && (
-                      <p className="text-[11px] sm:text-xs text-rose-500 font-medium mt-1.5 flex items-center gap-1">
+                      <p className="text-[11px] sm:text-xs text-rose-400 font-medium mt-1.5 flex items-center gap-1">
                         <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                         </svg>
@@ -712,219 +903,65 @@ export function AccountPage() {
                     )}
                   </div>
 
-                  <div className="pt-1 sm:pt-2">
+                  <div className="pt-2">
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-manrope font-extrabold text-xs sm:text-sm tracking-tight shadow-md shadow-emerald-600/20 transition-all cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-1.5 sm:gap-2"
+                      className="w-full h-11 sm:h-12 rounded-xl sm:rounded-2xl max-md:bg-emerald-400 max-md:hover:bg-emerald-300 max-md:text-emerald-950 max-md:shadow-lg max-md:shadow-emerald-950/40 md:bg-emerald-600 md:hover:bg-emerald-500 md:text-white font-extrabold text-xs sm:text-sm tracking-tight md:shadow-md md:shadow-emerald-600/20 transition-all cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
                     >
-                      {loading ? 'Setting Password...' : 'Set Password'}
+                      {loading ? 'Updating Password...' : 'Change Password'}
                     </button>
                   </div>
                 </form>
-              </div>
-            ) : (
-              <form onSubmit={handleSavePassword} className="space-y-3.5 sm:space-y-4">
-                {(user?.authProvider === 'google' || user?.googleId) && (
-                  <div className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600">
-                    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                      <path
-                        fill="#4285F4"
-                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                      />
-                      <path
-                        fill="#34A853"
-                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                      />
-                      <path
-                        fill="#FBBC05"
-                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                      />
-                      <path
-                        fill="#EA4335"
-                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                      />
-                    </svg>
-                    <span>
-                      Google account linked (<strong className="font-semibold text-slate-800">{user?.email}</strong>). You can sign in using either Google or your password.
-                    </span>
-                  </div>
-                )}
-
-                {/* Old Password */}
-                <div>
-                  <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 mb-1 sm:mb-1.5 tracking-tight">
-                    Current Password *
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showOldPass ? 'text' : 'password'}
-                      required
-                      value={passwordForm.oldPassword}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setPasswordForm((prev) => ({ ...prev, oldPassword: val }));
-                        if (passwordErrors.oldPassword) validatePasswordField('oldPassword', val);
-                      }}
-                      onBlur={(e) => validatePasswordField('oldPassword', e.target.value)}
-                      placeholder="Enter your current password"
-                      className={`w-full pl-3.5 pr-10 py-2 sm:pl-4 sm:pr-12 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-50 border ${
-                        passwordErrors.oldPassword
-                          ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
-                          : 'border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
-                      } text-xs sm:text-sm font-medium text-slate-900 focus:outline-none transition-colors shadow-xs`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowOldPass(!showOldPass)}
-                      className="absolute right-2.5 sm:right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-[11px] sm:text-xs font-manrope font-semibold cursor-pointer"
-                    >
-                      {showOldPass ? 'Hide' : 'Show'}
-                    </button>
-                  </div>
-                  {passwordErrors.oldPassword && (
-                    <p className="text-[11px] sm:text-xs text-rose-500 font-medium mt-1.5 flex items-center gap-1">
-                      <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                      <span>{passwordErrors.oldPassword}</span>
-                    </p>
-                  )}
-                </div>
-
-                {/* New Password */}
-                <div>
-                  <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 mb-1 sm:mb-1.5 tracking-tight">
-                    New Password *
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showNewPass ? 'text' : 'password'}
-                      required
-                      minLength={6}
-                      value={passwordForm.newPassword}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setPasswordForm((prev) => ({ ...prev, newPassword: val }));
-                        if (passwordErrors.newPassword) validatePasswordField('newPassword', val);
-                      }}
-                      onBlur={(e) => validatePasswordField('newPassword', e.target.value)}
-                      placeholder="Minimum 6 characters"
-                      className={`w-full pl-3.5 pr-10 py-2 sm:pl-4 sm:pr-12 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-50 border ${
-                        passwordErrors.newPassword
-                          ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
-                          : 'border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
-                      } text-xs sm:text-sm font-medium text-slate-900 focus:outline-none transition-colors shadow-xs`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewPass(!showNewPass)}
-                      className="absolute right-2.5 sm:right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-[11px] sm:text-xs font-manrope font-semibold cursor-pointer"
-                    >
-                      {showNewPass ? 'Hide' : 'Show'}
-                    </button>
-                  </div>
-                  {passwordErrors.newPassword && (
-                    <p className="text-[11px] sm:text-xs text-rose-500 font-medium mt-1.5 flex items-center gap-1">
-                      <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                      <span>{passwordErrors.newPassword}</span>
-                    </p>
-                  )}
-                </div>
-
-                {/* Confirm Password */}
-                <div>
-                  <label className="block text-xs sm:text-[13px] font-manrope font-bold text-slate-700 mb-1 sm:mb-1.5 tracking-tight">
-                    Confirm New Password *
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showConfirmPass ? 'text' : 'password'}
-                      required
-                      minLength={6}
-                      value={passwordForm.confirmPassword}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setPasswordForm((prev) => ({ ...prev, confirmPassword: val }));
-                        if (passwordErrors.confirmPassword) validatePasswordField('confirmPassword', val);
-                      }}
-                      onBlur={(e) => validatePasswordField('confirmPassword', e.target.value)}
-                      placeholder="Re-enter your new password"
-                      className={`w-full pl-3.5 pr-10 py-2 sm:pl-4 sm:pr-12 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-50 border ${
-                        passwordErrors.confirmPassword
-                          ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
-                          : 'border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
-                      } text-xs sm:text-sm font-medium text-slate-900 focus:outline-none transition-colors shadow-xs`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPass(!showConfirmPass)}
-                      className="absolute right-2.5 sm:right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-[11px] sm:text-xs font-manrope font-semibold cursor-pointer"
-                    >
-                      {showConfirmPass ? 'Hide' : 'Show'}
-                    </button>
-                  </div>
-                  {passwordErrors.confirmPassword && (
-                    <p className="text-[11px] sm:text-xs text-rose-500 font-medium mt-1.5 flex items-center gap-1">
-                      <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                      <span>{passwordErrors.confirmPassword}</span>
-                    </p>
-                  )}
-                </div>
-
-                <div className="pt-1 sm:pt-2">
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-manrope font-extrabold text-xs sm:text-sm tracking-tight shadow-md shadow-emerald-600/20 transition-all cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-1.5 sm:gap-2"
-                  >
-                    {loading ? 'Updating Password...' : 'Change Password'}
-                  </button>
-                </div>
-              </form>
-            )}
+              )}
+            </section>
           </motion.div>
         )}
 
-        {/* TAB 3: DELETE ACCOUNT */}
+        {/* ── TAB 3: DELETE ACCOUNT (CRIMSON RED THEMED CARD ON MOBILE) ── */}
         {activeTab === 'delete' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl sm:rounded-3xl border border-rose-500/30 p-4 sm:p-7 md:p-8 shadow-xs space-y-4 sm:space-y-6 transition-colors"
+            className="max-md:bg-[#310c0c] max-md:rounded-[32px] sm:max-md:rounded-[36px] max-md:border max-md:border-rose-400/25 max-md:p-4 sm:max-md:p-6 max-md:shadow-[0_12px_36px_rgba(49,12,12,0.5)] md:bg-white md:rounded-3xl md:border md:border-rose-500/30 md:p-8 md:shadow-xs space-y-4 sm:space-y-6 transition-all duration-300"
           >
-            <div className="border-b border-slate-100 pb-3 sm:pb-4">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-manrope font-extrabold text-rose-600 flex items-center gap-1.5 sm:gap-2 tracking-tight">
+            {/* Desktop Header */}
+            <div className="hidden md:block border-b border-slate-100 pb-4">
+              <h2 className="text-2xl lg:text-3xl font-manrope font-extrabold text-rose-600 flex items-center gap-2 tracking-tight">
                 <span>⚠️</span>
                 <span>Delete Account Permanently</span>
               </h2>
-              <p className="text-xs sm:text-[13px] text-slate-500 mt-1 font-normal leading-relaxed">
-                Permanently remove your account profile, credentials, and associated data from the database.
-              </p>
             </div>
 
-            <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-rose-500/10 border border-rose-500/20 text-xs sm:text-[13px] font-medium text-rose-800 space-y-1.5 sm:space-y-2 leading-relaxed">
-              <p className="font-manrope font-bold tracking-tight">Please note the following consequences:</p>
-              <ul className="list-disc pl-4 space-y-0.5 sm:space-y-1">
-                <li>Your profile and login access will be immediately terminated.</li>
-                <li>{isHost ? 'Your listed property and host record will be permanently deleted.' : 'Your active bookings and wishlist history will be removed.'}</li>
-                <li>This action is irreversible and cannot be undone.</li>
-              </ul>
+            {/* Mobile Centered Title (Matches Pic 1 style) */}
+            <div className="md:hidden flex flex-col items-center justify-center pt-1 mb-5 sm:mb-6 w-full text-center">
+              <h2 className="text-xl sm:text-2xl font-bold font-black text-white tracking-normal text-center flex items-center justify-center gap-2">
+                <span>⚠️</span>
+                <span>Delete Account Permanently</span>
+              </h2>
             </div>
 
-            <div className="pt-1 sm:pt-2">
-              <button
-                type="button"
-                onClick={() => setShowDeleteModal(true)}
-                className="w-full py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-manrope font-extrabold text-xs sm:text-sm tracking-tight shadow-md shadow-rose-600/20 transition-all cursor-pointer active:scale-95"
-              >
-                Permanently Delete My Account
-              </button>
-            </div>
+            {/* Inner Section Card Covering Consequences Box (Matches Pic 1 style) */}
+            <section className="rounded-2xl sm:rounded-3xl border shadow-lg transition-colors max-md:bg-[#481212] max-md:border-rose-300/20 max-md:p-4 sm:max-md:p-5 max-md:shadow-black/20 md:bg-transparent md:border-none md:p-0 md:shadow-none space-y-4 relative overflow-hidden">
+              <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl max-md:bg-white/10 max-md:border max-md:border-white/15 max-md:text-rose-100 md:bg-rose-500/10 md:border md:border-rose-500/20 md:text-rose-800 text-xs sm:text-[13px] font-medium space-y-2 leading-relaxed">
+                <p className="font-bold tracking-tight max-md:text-white md:text-rose-900">Please note the following consequences:</p>
+                <ul className="list-disc pl-4 space-y-1 max-md:text-rose-200 md:text-rose-800">
+                  <li>Your profile and login access will be immediately terminated.</li>
+                  <li>{isHost ? 'Your listed property and host record will be permanently deleted.' : 'Your active bookings and wishlist history will be removed.'}</li>
+                  <li>This action is irreversible and cannot be undone.</li>
+                </ul>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(true)}
+                  className="w-full h-11 sm:h-12 rounded-xl sm:rounded-2xl max-md:bg-rose-500 max-md:hover:bg-rose-400 max-md:text-white max-md:shadow-lg max-md:shadow-rose-950/40 md:bg-rose-600 md:hover:bg-rose-700 md:text-white font-black text-xs sm:text-sm tracking-tight md:shadow-md md:shadow-rose-600/20 transition-all cursor-pointer active:scale-95"
+                >
+                  Permanently Delete My Account
+                </button>
+              </div>
+            </section>
           </motion.div>
         )}
       </main>
@@ -944,7 +981,7 @@ export function AccountPage() {
               </div>
 
               <div className="text-center space-y-1">
-                <h3 className="text-base sm:text-lg font-manrope font-extrabold text-slate-900 tracking-tight">
+                <h3 className="text-base sm:lg font-manrope font-extrabold text-slate-900 tracking-tight">
                   Confirm Account Deletion
                 </h3>
                 <p className="text-xs sm:text-[13px] text-slate-500 font-normal leading-relaxed">

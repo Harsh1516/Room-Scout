@@ -37,7 +37,7 @@ export function VerificationPipeline() {
 
   return (
     <section className="w-full py-8 sm:py-14 px-3 sm:px-8 lg:px-16 2xl:px-24">
-      <div className="w-full p-4 sm:p-10 rounded-2xl sm:rounded-3xl bg-white/85 border border-slate-200 shadow-xl(0,0,0,0.8)] backdrop-blur-2xl">
+      <div className="w-full p-4 sm:p-10 rounded-2xl sm:rounded-3xl bg-white/85 border border-slate-200 shadow-xl backdrop-blur-2xl">
         
         {/* Header */}
         <div className="text-center max-w-4xl mx-auto space-y-2 sm:space-y-3 mb-6 sm:mb-10">

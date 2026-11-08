@@ -440,7 +440,7 @@ export function VisitedRequestsView({
   return (
     <div className="w-full flex-1 min-h-0 flex flex-col lg:flex-row gap-3 items-stretch lg:h-[calc(100vh-195px)] select-none overflow-y-auto lg:overflow-visible">
       {/* ────────────────── LEFT TAB: PERMANENT CATEGORIES PANEL ────────────────── */}
-      <div className="w-full lg:w-[20%] shrink-0 flex flex-col justify-between rounded-[26px] bg-white border border-slate-200/90 shadow-[0_8px_30px_rgb(0,0,0,0.06)](0,0,0,0.4)] p-3 sm:p-3.5 h-auto lg:h-full min-h-0 overflow-hidden">
+      <div className="w-full lg:w-[20%] shrink-0 flex flex-col justify-between rounded-[26px] bg-white border border-slate-200/90 shadow-[0_8px_30px_rgb(0,0,0,0.06)] p-3 sm:p-3.5 h-auto lg:h-full min-h-0 overflow-hidden">
         {/* Upper Header with crisp horizontal divider line */}
         <div className="flex items-center justify-between pb-2.5 border-b border-slate-200 shrink-0">
           <div className="flex items-center gap-2 min-w-0">
@@ -629,7 +629,7 @@ export function VisitedRequestsView({
         </div>
 
       {/* ────────────────── MID TAB: REQUESTS / DEPARTURES CARDS ────────────────── */}
-      <div className="w-full flex-1 min-w-0 flex flex-col justify-between rounded-[26px] bg-white border border-slate-200/90 shadow-[0_8px_30px_rgb(0,0,0,0.06)](0,0,0,0.4)] p-3 sm:p-3.5 min-h-[420px] lg:h-full min-h-0 overflow-hidden">
+      <div className="w-full flex-1 min-w-0 flex flex-col justify-between rounded-[26px] bg-white border border-slate-200/90 shadow-[0_8px_30px_rgb(0,0,0,0.06)] p-3 sm:p-3.5 min-h-[420px] lg:h-full min-h-0 overflow-hidden">
         {/* Top Header */}
         <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 shrink-0 relative">
           <div className="flex items-center gap-2 min-w-0">

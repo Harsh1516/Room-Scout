@@ -1004,7 +1004,7 @@ export function BookingDetailsPage() {
                   <div className="flex flex-col items-center text-center p-3">
                     {upiDetails?.qrCodeDataUrl ? (
                       <div className="p-3 bg-white rounded-2xl shadow-sm border border-slate-200/80">
-                        <img
+                        <img decoding="async" loading="lazy"
                           src={upiDetails.qrCodeDataUrl}
                           alt="UPI Payment QR Code"
                           className="w-40 h-40 object-contain mx-auto"
@@ -1133,7 +1133,7 @@ export function BookingDetailsPage() {
 
                       {receiptPreview && (
                         <div className="flex items-center gap-2">
-                          <img
+                          <img decoding="async" loading="lazy"
                             src={receiptPreview}
                             alt="Receipt Preview"
                             className="w-9 h-9 object-cover rounded-lg border border-slate-200"
@@ -1425,7 +1425,7 @@ export function BookingDetailsPage() {
               {/* Image banner */}
               <div className="h-44 w-full bg-slate-100 relative overflow-hidden">
                 {stayImage ? (
-                  <img src={stayImage} alt={resolvedStayTitle} className="w-full h-full object-cover" />
+                  <img decoding="async" loading="lazy" src={stayImage} alt={resolvedStayTitle} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-slate-400">
                     <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>

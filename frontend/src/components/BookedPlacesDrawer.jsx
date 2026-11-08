@@ -335,7 +335,7 @@ export function BookedPlacesDrawer({ onLoginClick }) {
                       {/* Thumbnail */}
                       <div className="w-[52px] h-[52px] rounded-lg overflow-hidden shrink-0 bg-slate-100">
                         {img ? (
-                          <img src={img} alt={displayTitle} className="w-full h-full object-cover" />
+                          <img decoding="async" loading="lazy" src={img} alt={displayTitle} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
                             <svg className="w-5 h-5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>

@@ -224,7 +224,7 @@ export function HostSubscriptionPage() {
             <div className="w-full md:w-64 bg-slate-950/80 rounded-2xl border border-white/10 p-3.5 flex flex-col gap-3 shrink-0">
               <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-800">
                 {stay.image ? (
-                  <img src={stay.image} alt={stay.title} className="w-full h-full object-cover" />
+                  <img decoding="async" loading="lazy" src={stay.image} alt={stay.title} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-xs text-slate-500 font-normal">
                     No Property Image

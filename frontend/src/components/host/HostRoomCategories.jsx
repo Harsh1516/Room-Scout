@@ -88,6 +88,7 @@ function CategoryRoomCarousel({
   markCategoryDirty,
 }) {
   const scrollRef = useRef(null);
+  const tickingRef = useRef(false);
   const [activeDotIndex, setActiveDotIndex] = useState(0);
   const prevCountRef = useRef(matchingRooms.length);
   const [localCapacities, setLocalCapacities] = useState({});
@@ -114,8 +115,9 @@ function CategoryRoomCarousel({
     if (!el) return;
     const atStart = el.scrollLeft <= 2;
     const atEnd = el.scrollLeft >= el.scrollWidth - el.clientWidth - 2;
-    setCanScrollLeft(!atStart);
-    setCanScrollRight(!atEnd && el.scrollWidth > el.clientWidth);
+    setCanScrollLeft((prev) => (prev !== !atStart ? !atStart : prev));
+    const canRight = !atEnd && el.scrollWidth > el.clientWidth;
+    setCanScrollRight((prev) => (prev !== canRight ? canRight : prev));
 
     if (matchingRooms.length > 1) {
       const scrollLeft = el.scrollLeft;
@@ -130,7 +132,7 @@ function CategoryRoomCarousel({
           closestIdx = i;
         }
       }
-      setActiveDotIndex(closestIdx);
+      setActiveDotIndex((prev) => (prev !== closestIdx ? closestIdx : prev));
     }
   }, [matchingRooms.length]);
 
@@ -180,7 +182,12 @@ function CategoryRoomCarousel({
   );
 
   const handleScroll = () => {
-    updateScrollState();
+    if (tickingRef.current) return;
+    tickingRef.current = true;
+    window.requestAnimationFrame(() => {
+      updateScrollState();
+      tickingRef.current = false;
+    });
   };
 
   const scrollToItem = (idx, e) => {

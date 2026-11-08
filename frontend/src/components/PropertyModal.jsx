@@ -180,20 +180,20 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
           {/* Image Gallery */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 rounded-2xl overflow-hidden h-64 sm:h-72">
             <div className="sm:col-span-2 h-full bg-slate-100">
-              <img
+              <img decoding="async" loading="lazy"
                 src={stay.image || (stay.images && stay.images[0]) || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80'}
                 alt={stay.title}
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="hidden sm:flex flex-col gap-3 h-full">
-              <img
+              <img decoding="async" loading="lazy"
                 src={(stay.images && stay.images[1]) || stay.image || 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=800&q=80'}
                 alt="Room detail"
                 className="w-full h-1/2 object-cover rounded-lg filter brightness-95"
               />
               <div className="relative w-full h-1/2 rounded-lg overflow-hidden bg-slate-800">
-                <img
+                <img decoding="async" loading="lazy"
                   src={(stay.images && stay.images[2]) || stay.image || 'https://images.unsplash.com/photo-1522770179533-24471fcdba45?auto=format&fit=crop&w=800&q=80'}
                   alt="Amenity detail"
                   className="w-full h-full object-cover filter brightness-50"

@@ -64,53 +64,39 @@ export function Left({
 
   if (showBrand && showBack) {
     return (
-      <div className="fixed top-3.5 left-3 sm:top-5 sm:left-6 z-50 flex items-center gap-2 select-none pointer-events-auto">
+      <div className="fixed top-2.5 sm:top-5 left-2.5 sm:left-6 z-50 flex items-center gap-2 select-none pointer-events-auto h-9 sm:h-[46px]">
         {/* Back Button */}
         <button
           type="button"
           onClick={handleBack}
           data-no-hover="true"
-          className="apple-liquid-nav flex items-center justify-center h-8 sm:h-9 px-3 py-1 sm:px-3.5 sm:py-1.5 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 shadow-xs cursor-pointer text-slate-800 font-semibold text-xs sm:text-sm select-none active:scale-95 transition-transform shrink-0"
+          className="inline-flex items-center justify-center h-9 sm:h-[46px] px-3.5 sm:px-5 gap-1.5 sm:gap-2 rounded-full bg-white text-slate-700 text-xs sm:text-[14px] font-semibold shadow-sm border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer select-none active:scale-95 shrink-0"
           title="Go Back"
         >
           <svg
-            className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 stroke-[2.5]"
+            className="w-3.5 h-3.5 text-slate-600 stroke-[2.2] shrink-0"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <line x1="19" y1="12" x2="5" y2="12" />
-            <polyline points="12 19 5 12 12 5" />
+            <path d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
-          <span>Back</span>
+          <span className="flex items-center justify-center leading-none tracking-tight">Back</span>
         </button>
 
-        {/* Brand Pill */}
+        {/* Brand Pill (Shown on desktop) */}
         <button
           type="button"
           onClick={() => navigate('/explore')}
           data-no-hover="true"
-          className="apple-liquid-nav hidden md:flex items-center justify-center h-8 sm:h-9 px-2.5 sm:px-3 gap-2 rounded-full border border-slate-200/80 shadow-xs cursor-pointer focus:outline-none focus:ring-0 select-none shrink-0"
+          className="hidden md:inline-flex items-center justify-center h-9 sm:h-[46px] px-3.5 sm:px-4 gap-2 rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-sm cursor-pointer focus:outline-none focus:ring-0 select-none shrink-0 hover:bg-slate-50 transition-colors"
           title="Go to Home"
           aria-label="Go to Home"
         >
-          <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center shrink-0">
-            <svg
-              className="w-3.5 h-3.5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" />
-            </svg>
-          </div>
-          <span className="hidden sm:inline tracking-tight font-bold text-slate-900 text-xs sm:text-sm">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm shrink-0" />
+          <span className="tracking-tight font-bold text-slate-900 text-xs sm:text-sm">
             RoomScout
           </span>
         </button>
@@ -120,51 +106,41 @@ export function Left({
 
   if (showBrand) {
     return (
-      <div className="fixed top-3.5 left-3 sm:top-5 sm:left-6 z-50 flex flex-col items-start gap-1.5 select-none pointer-events-auto">
-        {/* Brand Pill */}
+      <div className="fixed max-md:bottom-4 max-md:left-4 max-md:top-auto md:top-5 md:left-6 z-50 flex items-center gap-2 select-none pointer-events-auto h-9 sm:h-[46px]">
+        {/* Brand Pill — Shifted to Bottom Left Corner on Mobile */}
         <button
           type="button"
           onClick={() => navigate('/explore')}
           data-no-hover="true"
-          className="apple-liquid-nav flex items-center justify-center h-8 sm:h-9 px-2.5 sm:px-3 gap-2 rounded-full border border-slate-200/80 shadow-xs cursor-pointer focus:outline-none focus:ring-0 select-none shrink-0"
+          className="inline-flex items-center justify-center h-9 sm:h-[46px] px-3.5 sm:px-4 gap-1.5 sm:gap-2 rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-lg md:shadow-sm cursor-pointer focus:outline-none focus:ring-0 select-none shrink-0 hover:bg-slate-50 transition-colors active:scale-95"
           title="Go to Home"
           aria-label="Go to Home"
         >
-          <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center shrink-0">
-            <svg
-              className="w-3.5 h-3.5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" />
-            </svg>
-          </div>
-          <span className="hidden sm:inline tracking-tight font-bold text-slate-900 text-xs sm:text-sm">
-            RoomScout
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-emerald-500/20 shadow-xs shrink-0" />
+          <span className="font-extrabold tracking-wider text-slate-900 text-xs">
+            ROOM-SCOUT
+          </span>
+          <span className="text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+            3D
           </span>
         </button>
 
-        {/* Host Dashboard (if already a host with property) or Upload Property */}
+        {/* Host Dashboard (if already a host with property) or Upload Property — Desktop Only */}
         {isHostWithProperty ? (
           <button
             type="button"
             onClick={() => navigate('/host/dashboard')}
             data-no-hover="true"
-            className="apple-liquid-nav flex items-center justify-center h-8 sm:h-9 px-2.5 sm:px-3 gap-2 rounded-full border border-slate-200/80 shadow-xs cursor-pointer focus:outline-none focus:ring-0 select-none shrink-0 active:scale-95 transition-transform"
+            className="hidden md:inline-flex items-center justify-center h-9 sm:h-[46px] px-3.5 sm:px-4 gap-2 rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-sm cursor-pointer focus:outline-none focus:ring-0 select-none shrink-0 active:scale-95 hover:bg-slate-50 transition-colors"
             title="Host Dashboard"
           >
-            <div className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-600 flex items-center justify-center shrink-0">
+            <div className="w-5 h-5 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
               <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                 <polyline points="9 22 9 12 15 12 15 22" />
               </svg>
             </div>
-            <span className="hidden sm:inline tracking-tight font-bold text-slate-900 text-xs sm:text-sm">
+            <span className="tracking-tight font-bold text-slate-900 text-xs sm:text-sm">
               Host Dashboard
             </span>
           </button>
@@ -173,17 +149,17 @@ export function Left({
             type="button"
             onClick={handleUpload}
             data-no-hover="true"
-            className="apple-liquid-nav flex items-center justify-center h-8 sm:h-9 px-2.5 sm:px-3 gap-2 rounded-full border border-slate-200/80 shadow-xs cursor-pointer focus:outline-none focus:ring-0 select-none shrink-0 active:scale-95 transition-transform"
+            className="hidden md:inline-flex items-center justify-center h-9 sm:h-[46px] px-3.5 sm:px-4 gap-2 rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-sm cursor-pointer focus:outline-none focus:ring-0 select-none shrink-0 active:scale-95 hover:bg-slate-50 transition-colors"
             title="Upload Your Property"
           >
-            <div className="w-5 h-5 rounded-full bg-teal-500/20 text-teal-600 flex items-center justify-center shrink-0">
+            <div className="w-5 h-5 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
               <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                 <polyline points="17 8 12 3 7 8" />
                 <line x1="12" y1="3" x2="12" y2="15" />
               </svg>
             </div>
-            <span className="hidden sm:inline tracking-tight font-bold text-slate-900 text-xs sm:text-sm">
+            <span className="tracking-tight font-bold text-slate-900 text-xs sm:text-sm">
               Upload Property
             </span>
           </button>
@@ -193,33 +169,32 @@ export function Left({
   }
 
   return (
-    <div className="fixed top-3.5 left-3 sm:top-5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none font-body-md">
+    <div className="fixed top-2.5 sm:top-5 left-2.5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none font-body-md h-9 sm:h-[46px]">
       {/* Back Button */}
       <button
         type="button"
         onClick={handleBack}
         data-no-hover="true"
-        className="apple-liquid-nav flex items-center justify-center h-8 sm:h-9 px-3 py-1 sm:px-3.5 sm:py-1.5 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 shadow-xs cursor-pointer text-slate-800 font-semibold text-xs sm:text-sm select-none active:scale-95 transition-transform shrink-0"
+        className="inline-flex items-center justify-center h-9 sm:h-[46px] px-3.5 sm:px-5 gap-1.5 sm:gap-2 rounded-full bg-white text-slate-700 text-xs sm:text-[14px] font-semibold shadow-sm border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer select-none active:scale-95 shrink-0"
         title="Go Back"
       >
         <svg
-          className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 stroke-[2.5]"
+          className="w-3.5 h-3.5 text-slate-600 stroke-[2.2] shrink-0"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          <line x1="19" y1="12" x2="5" y2="12" />
-          <polyline points="12 19 5 12 12 5" />
+          <path d="M15.75 19.5L8.25 12l7.5-7.5" />
         </svg>
-        <span>Back</span>
+        <span className="flex items-center justify-center leading-none tracking-tight">Back</span>
       </button>
 
       {/* Property Type Badge (Defaults to 'PG', always visible) */}
       {showBadge && (
-        <span className="apple-liquid-nav h-8 sm:h-9 inline-flex items-center justify-center text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 sm:px-3 rounded-full text-amber-700 border border-amber-500/30 gap-1.5 shadow-xs shrink-0 select-none">
-          <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-500 fill-amber-500/20 stroke-[2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <span className="h-9 sm:h-[46px] inline-flex items-center justify-center text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-3 rounded-full bg-amber-50 text-amber-800 border border-amber-200/80 gap-1.5 shadow-xs shrink-0 select-none">
+          <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-600 fill-amber-500/20 stroke-[2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z" />
           </svg>
           <span>{propertyType || 'PG'}</span>

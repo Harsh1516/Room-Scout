@@ -144,7 +144,7 @@ export function FeaturedDestinations() {
             >
               {/* Warm Cushion on Hover (Warm cream in Light Mode, Frosted Glass in Dark Mode) */}
               <div
-                className="absolute rounded-xl sm:rounded-2xl bg-[#f8ebd8] shadow-[0_10px_30px_rgba(0,0,0,0.06)](0,0,0,0.7),_0_0_24px_rgba(56,189,248,0.18),_inset_0_1px_2px_rgba(255,255,255,0.22)] pointer-events-none inset-0 opacity-0 scale-95 group-hover:-inset-1 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                className="absolute rounded-xl sm:rounded-2xl bg-[#f8ebd8] shadow-[0_10px_30px_rgba(0,0,0,0.06)] pointer-events-none inset-0 opacity-0 scale-95 group-hover:-inset-1 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
               />
 
               {/* Foreground Content Stack */}

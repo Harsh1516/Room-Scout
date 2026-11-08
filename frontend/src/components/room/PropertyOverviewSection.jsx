@@ -146,7 +146,7 @@ export function PropertyOverviewSection({
           transition={{ duration: 0.22, ease: 'easeOut' }}
         >
           {/* Main Unified Container */}
-          <div className={`w-full p-5 sm:p-8 lg:p-10 rounded-2xl sm:rounded-3xl shadow-xl(0,0,0,0.8)] backdrop-blur-2xl relative overflow-hidden transition-colors duration-300 ${
+          <div className={`w-full p-5 sm:p-8 lg:p-10 rounded-2xl sm:rounded-3xl shadow-xl backdrop-blur-2xl relative overflow-hidden transition-colors duration-300 ${
             activeCenterTab === 'host'
               ? 'bg-white border border-slate-200/90'
               : 'bg-[#FAF2DB] border border-[#E8DABB]'
@@ -276,7 +276,7 @@ export function PropertyOverviewSection({
                         <div className="relative shrink-0">
                           <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-2xl p-1 bg-white border border-slate-200 shadow-md flex items-center justify-center overflow-hidden">
                             {hostAvatar && (typeof hostAvatar === 'string' && (hostAvatar.startsWith('http') || hostAvatar.startsWith('data:') || hostAvatar.startsWith('/'))) ? (
-                              <img src={hostAvatar} alt={hostName} className="w-full h-full object-cover rounded-xl" />
+                              <img decoding="async" loading="lazy" src={hostAvatar} alt={hostName} className="w-full h-full object-cover rounded-xl" />
                             ) : (
                               <div className="w-full h-full rounded-xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-700 text-white font-normal text-2xl flex items-center justify-center shadow-inner tracking-wider">
                                 {hostAvatar || (hostName ? hostName.slice(0, 2).toUpperCase() : 'H')}

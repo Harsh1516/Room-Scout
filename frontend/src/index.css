@@ -84,6 +84,12 @@
   --font-headline-lg: 'Plus Jakarta Sans', sans-serif;
   --font-headline-sm: 'Plus Jakarta Sans', sans-serif;
   --font-headline-xl-mobile: 'Plus Jakarta Sans', sans-serif;
+
+  --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
+  --shadow-pill: 0 2px 14px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 14px 40px -10px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.07);
+  --shadow-card-glow: 0 14px 40px -10px rgba(0, 0, 0, 0.7), 0 0 20px -3px rgba(16, 185, 129, 0.12);
+  --shadow-float: 0 20px 40px -12px rgba(0, 0, 0, 0.8), 0 0 24px rgba(16, 185, 129, 0.25);
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -548,20 +554,30 @@ input:autofill:active {
 
 /* ⚡ MAXIMUM SMOOTH 60FPS / 120FPS MOBILE PERFORMANCE & ZERO-LAG TOUCH */
 @media (max-width: 768px) {
+  html, body {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
+  }
+
   *, ::before, ::after {
     -webkit-tap-highlight-color: transparent !important;
     -webkit-touch-callout: none;
   }
 
-  /* Disable expensive real-time backdrop blur compositing on mobile for animated items */
+  /* Disable expensive real-time backdrop blur compositing on mobile for animated & scrolling items */
   .apple-liquid-nav,
   .apple-glass-pill,
-  .console-clear-capsule {
+  .console-clear-capsule,
+  .backdrop-blur-none,
+  .backdrop-blur-sm,
+  .backdrop-blur,
+  .backdrop-blur-md,
+  .backdrop-blur-lg,
+  .backdrop-blur-xl,
+  .backdrop-blur-2xl,
+  .backdrop-blur-3xl {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    transform: translate3d(0, 0, 0) !important;
-    backface-visibility: hidden !important;
-    will-change: transform, opacity !important;
   }
 
   /* Solid crisp glass fallbacks for instant zero-lag mobile rendering */
@@ -600,9 +616,17 @@ input:autofill:active {
     background: #ffffff !important;
   }
 
+  /* Eliminate layer explosion: do NOT force translate3d on all buttons */
   button, a, [role="button"] {
     touch-action: manipulation !important;
-    transform: translate3d(0, 0, 0);
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Turn off heavy continuous blur drift animations on mobile */
+  .animate-orb-drift-1,
+  .animate-orb-drift-2 {
+    animation: none !important;
   }
 }
 

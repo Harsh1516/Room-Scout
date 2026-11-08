@@ -71,6 +71,20 @@ export function HostDashboardPage() {
   const [showPropertyTelemetry, setShowPropertyTelemetry] = useState(false);
   const [propertySubTabIndex, setPropertySubTabIndex] = useState(0);
 
+  // Support opening activity telemetry via custom event or query parameter
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('telemetry') === 'true') {
+        setShowPropertyTelemetry(true);
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+      const handler = () => setShowPropertyTelemetry(true);
+      window.addEventListener('host:open_activity', handler);
+      return () => window.removeEventListener('host:open_activity', handler);
+    }
+  }, []);
+
   useEffect(() => {
     const prevIdx = TAB_ORDER[prevTabRef.current] ?? 0;
     const nextIdx = TAB_ORDER[activeTab] ?? 0;
@@ -260,7 +274,7 @@ export function HostDashboardPage() {
 
   return (
     <div
-      className={`min-h-screen w-full flex flex-col host-page-scope font-body-md antialiased text-slate-800 max-md:bg-white bg-slate-50 selection:bg-purple-500 selection:text-white relative transition-colors duration-200 ${
+      className={`min-h-screen w-full flex flex-col host-page-scope font-body-md antialiased text-slate-800 max-md:bg-[#f5f2ea] bg-slate-50 selection:bg-purple-500 selection:text-white relative transition-colors duration-200 ${
         activeTab === 'users' || activeTab === 'room' ? 'lg:h-screen lg:max-h-screen lg:overflow-hidden' : ''
       }`}
     >

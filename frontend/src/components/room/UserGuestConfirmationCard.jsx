@@ -262,7 +262,7 @@ export function UserGuestConfirmationCard({
 
   return (
     <div className="w-full flex flex-col justify-center my-auto min-h-0">
-      <section className="flex flex-col rounded-[26px] bg-white border border-slate-200/90 shadow-[0_8px_30px_rgb(0,0,0,0.06)](0,0,0,0.4)] overflow-hidden select-none transition-all">
+      <section className="flex flex-col rounded-[26px] bg-white border border-slate-200/90 shadow-[0_8px_30px_rgb(0,0,0,0.06)] overflow-hidden select-none transition-all">
         {/* Header: Month Pill Green Background (#00e599) matching Host side */}
         <div className="px-5 py-3 border-b border-[#00c984] flex items-center justify-center bg-[#00e599] text-[#071320] shadow-xs">
           <h3 className="text-[15px] font-black text-[#071320] tracking-tight text-center">

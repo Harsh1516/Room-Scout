@@ -508,39 +508,64 @@ export function PropertyPhotosTab({
         className="hidden"
       />
 
-      {/* Main Visual Gallery Card */}
-      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white/70 backdrop-blur-xl shadow-sm space-y-4 relative overflow-hidden max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:rounded-2xl max-md:p-4 max-md:shadow-black/20">
-        {/* Header Strip - Aligned with Address & Geography standard */}
-        <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-100 max-md:border-white/10 pb-3 relative z-10">
-          <p className="text-xs font-medium uppercase tracking-wider max-md:text-white text-slate-800 flex items-center gap-2 min-w-0">
-            <span className="w-2 h-2 rounded-full max-md:bg-purple-300 max-md:shadow-none bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)] shrink-0" />
-            <span className="truncate">Visual Gallery & Walkthrough</span>
-          </p>
+      {/* ── Centered Heading with Generous Gap ── */}
+      <div className="flex flex-col items-center justify-center pt-1 mb-5 sm:mb-6 w-full text-center">
+        <h2 className="text-xl sm:text-2xl font-bold max-md:font-black max-md:text-white text-slate-900 tracking-normal text-center">
+          Visual Gallery & Walkthrough
+        </h2>
+        <span className="text-xs max-md:text-purple-200/80 text-purple-600 font-medium mt-0.5">
+          {localImages.length} / {MAX_PHOTOS} Photos • Total Size: {totalMemoryFormatted}
+        </span>
+      </div>
 
-          {/* Center Position: Total Size Indicator */}
-          <div className="flex items-center justify-center pointer-events-none order-last sm:order-none w-full sm:w-auto">
-            <span className="px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/25 text-xs font-mono text-purple-700 font-medium shadow-2xs flex items-center gap-1.5 backdrop-blur-md">
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
-              <span>Total Size: {totalMemoryFormatted}</span>
-            </span>
-          </div>
-
+      {/* ── Actions attached to top right corner of the section (Mobile only, desktop uses card header strip) ── */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-end px-0.5 md:hidden">
           <PropertyTabHeaderActions
             isEditing={isEditing}
             isSaving={isSaving || isProcessingImage}
             onStartEdit={onStartEdit}
             onCancel={() => {
               setLocalImages(Array.isArray(images) ? images.slice(0, MAX_PHOTOS) : []);
-              setLocalVideoUrl(videoUrl || '');
-              setUploadNotice('');
+              setLocalVideoUrl(videoUrl || "");
+              setUploadNotice("");
               if (onCancel) onCancel();
             }}
             onSave={handleSave}
             saveLabel="Save Media"
-            savingLabel={isProcessingImage ? 'Processing...' : 'Saving...'}
+            savingLabel={isProcessingImage ? "Processing..." : "Saving..."}
           />
         </div>
 
+        {/* ── Outer Card Covering Inputs and Labels ── */}
+        <section className="rounded-2xl sm:rounded-3xl border shadow-lg transition-colors max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:p-4 max-md:shadow-black/20 md:bg-white/70 md:backdrop-blur-xl md:border-slate-200/80 md:p-5 md:sm:p-6 md:shadow-sm space-y-4 relative overflow-hidden">
+        {/* Desktop-Only Header Strip */}
+        <div className="hidden md:flex items-center justify-between flex-wrap gap-2 border-b border-slate-100 pb-3 relative z-10">
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-800 flex items-center gap-2 min-w-0">
+            <span className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)] shrink-0" />
+            <span className="truncate">Visual Gallery & Walkthrough</span>
+          </p>
+          <div className="flex items-center justify-center pointer-events-none order-last sm:order-none w-full sm:w-auto">
+            <span className="px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/25 text-xs font-mono text-purple-700 font-medium shadow-2xs flex items-center gap-1.5 backdrop-blur-md">
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+              <span>Total Size: {totalMemoryFormatted}</span>
+            </span>
+          </div>
+          <PropertyTabHeaderActions
+            isEditing={isEditing}
+            isSaving={isSaving || isProcessingImage}
+            onStartEdit={onStartEdit}
+            onCancel={() => {
+              setLocalImages(Array.isArray(images) ? images.slice(0, MAX_PHOTOS) : []);
+              setLocalVideoUrl(videoUrl || "");
+              setUploadNotice("");
+              if (onCancel) onCancel();
+            }}
+            onSave={handleSave}
+            saveLabel="Save Media"
+            savingLabel={isProcessingImage ? "Processing..." : "Saving..."}
+          />
+        </div>
         {uploadNotice && (
           <p className="font-body-md text-xs text-amber-700 font-medium bg-amber-50 border border-amber-200 rounded-xl px-3 py-1.5">
             {uploadNotice}
@@ -705,116 +730,63 @@ export function PropertyPhotosTab({
           </p>
         )}
 
-        {/* Video Tour Link Card - Aligned with Address & Geography standard */}
-        <div className="p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/80 backdrop-blur-md border border-slate-200/80 hover:border-purple-500/50 hover:bg-white transition-all flex flex-col justify-between gap-2.5 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] text-purple-600 uppercase tracking-wider font-medium">
-              Video Tour Walkthrough
-            </span>
-            <span className="material-symbols-outlined text-[17px] text-purple-600 shrink-0">
-              videocam
-            </span>
-          </div>
+        {/* Video Tour Link Section (Only Label, Input Field, Open Link Button) */}
+        <div className="space-y-1.5">
+          <label className="block text-[11px] font-semibold uppercase tracking-wider max-md:text-purple-200 text-purple-600 pl-1">
+            Video Tour Link
+          </label>
 
-          {!isEditing ? (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-normal text-slate-900 tracking-normal truncate select-all">
-                  {localVideoUrl?.trim() || 'No walkthrough video linked yet'}
-                </p>
-                <span className="text-[10.5px] text-slate-500 font-normal">
-                  {localVideoUrl?.trim() ? 'Public walkthrough link' : 'YouTube video or Instagram Reel link to boost listing views'}
-                </span>
-              </div>
-
-              {localVideoUrl?.trim() ? (
-                <a
-                  href={formattedVideoUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-all shadow-md shadow-purple-600/20 active:scale-95 shrink-0 self-start sm:self-auto"
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <input
+                type="url"
+                value={isEditing ? localVideoUrl : (localVideoUrl || videoUrl || "")}
+                onChange={(e) => isEditing && setLocalVideoUrl(e.target.value)}
+                readOnly={!isEditing}
+                placeholder={isEditing ? "Paste video link (YouTube / Instagram Reel)..." : "No video link added"}
+                className={`w-full px-4 py-2.5 rounded-xl border text-xs sm:text-[13px] transition-all font-mono shadow-xs ${
+                  isEditing
+                    ? "max-md:bg-white/10 max-md:border-white/20 max-md:text-white max-md:placeholder:text-purple-200/50 max-md:focus:border-white/60 max-md:focus:ring-2 max-md:focus:ring-white/20 bg-slate-50/80 border-slate-200/90 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 shadow-inner"
+                    : "max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/40 bg-slate-50/60 border-slate-200/80 text-slate-700 cursor-default"
+                }`}
+              />
+              {isEditing && localVideoUrl?.trim() && (
+                <button
+                  type="button"
+                  onClick={() => setLocalVideoUrl("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-lg text-purple-300 hover:text-white transition-all cursor-pointer"
+                  title="Clear video link"
                 >
-                  <span>Open Video</span>
-                  <span className="material-symbols-outlined text-[13px]">open_in_new</span>
-                </a>
-              ) : (
-                onStartEdit && (
-                  <button
-                    type="button"
-                    onClick={onStartEdit}
-                    className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-all shadow-md shadow-purple-600/20 active:scale-95 shrink-0 self-start sm:self-auto"
-                  >
-                    <span className="material-symbols-outlined text-[14px]">add</span>
-                    <span>Add Video Link</span>
-                  </button>
-                )
+                  <XMarkIcon className="w-3.5 h-3.5" />
+                </button>
               )}
             </div>
-          ) : (
-            <div className="space-y-1.5">
-              <div className="relative flex items-center">
-                <input
-                  type="url"
-                  value={localVideoUrl}
-                  onChange={(e) => setLocalVideoUrl(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }
-                  }}
-                  placeholder="https://www.instagram.com/reel/... or https://www.youtube.com/watch?v=..."
-                  className="w-full pl-3.5 pr-20 py-2.5 rounded-xl bg-slate-50/80 border border-slate-200/90 text-xs sm:text-[13px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 shadow-inner transition-colors font-mono"
-                />
-                {localVideoUrl?.trim() && (
-                  <button
-                    type="button"
-                    onClick={() => setLocalVideoUrl('')}
-                    className="absolute right-2.5 p-1 rounded-lg text-slate-400 hover:text-slate-700 transition-all cursor-pointer"
-                    title="Clear video link"
-                  >
-                    <XMarkIcon className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <span className="text-[10.5px] text-slate-500 font-normal">
-                  Supports standard YouTube URLs, Shorts, and Instagram Reel links
-                </span>
-                {formattedVideoUrl && (
-                  <a
-                    href={formattedVideoUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-2.5 py-1 rounded-lg bg-purple-500/10 hover:bg-[#a855f7]/25 border border-slate-200/80 text-slate-800 text-[11px] font-medium flex items-center gap-1 transition-all"
-                  >
-                    <span>Test link</span>
-                    <span className="material-symbols-outlined text-[12px]">open_in_new</span>
-                  </a>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
 
-        {/* Footer Strip - EXACT MATCH TO PIC 2'S FOOTER STRIP */}
-        <div className="pt-3 mt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium uppercase tracking-wider text-purple-600">
-              Memory Occupied:
-            </span>
-            <span className="px-2.5 py-0.5 rounded-full bg-purple-500/10 text-xs font-medium text-slate-800 border border-slate-200/80 shadow-2xs backdrop-blur-sm flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-600 shadow-[0_0_6px_#9333ea]" />
-              <span>{localImages.length}/{MAX_PHOTOS} Photos • {totalMemoryFormatted}</span>
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-normal text-purple-600">
-              Click photo to inspect full size
-            </span>
+            {formattedVideoUrl ? (
+              <a
+                href={formattedVideoUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-1 cursor-pointer shadow-md shadow-blue-600/30 active:scale-95 transition-all shrink-0"
+                title="Open video link"
+              >
+                <span>Open Link</span>
+                <span className="material-symbols-outlined text-[13px]">open_in_new</span>
+              </a>
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="px-2.5 py-1.5 rounded-lg border border-blue-400/30 max-md:bg-blue-600/25 max-md:text-blue-200/70 bg-blue-50 border-blue-200 text-blue-500 text-xs font-medium flex items-center gap-1 cursor-not-allowed opacity-70 shadow-none shrink-0"
+                title="No link to open"
+              >
+                <span>Open Link</span>
+                <span className="material-symbols-outlined text-[13px]">open_in_new</span>
+              </button>
+            )}
           </div>
         </div>
+      </section>
       </div>
 
       {/* Lightbox Image Preview Modal */}

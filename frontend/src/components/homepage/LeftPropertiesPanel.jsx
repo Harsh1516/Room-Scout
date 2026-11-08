@@ -149,18 +149,18 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
             exit={{ opacity: 0, x: -30 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             onClick={() => setIsOpen(true)}
-            className="fixed left-0 top-1/2 -translate-y-1/2 z-40 rounded-r-2xl border-l-0 border-r border-y border-white/80 bg-white/85 backdrop-blur-2xl shadow-xl px-2.5 py-4 flex flex-col items-center gap-2 cursor-pointer hover:bg-white transition-colors duration-150 select-none"
+            className="fixed left-0 top-1/2 -translate-y-1/2 z-40 rounded-r-2xl border-l-0 border-r border-y max-md:border-white/[0.08] max-md:bg-[#141B26]/90 max-md:shadow-card border-white/80 bg-white/85 backdrop-blur-2xl shadow-xl px-2.5 py-4 flex flex-col items-center gap-2 cursor-pointer hover:bg-white transition-colors duration-150 select-none"
             title="Open Properties Panel"
           >
-            <svg className="w-4 h-4 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+            <svg className="w-4 h-4 max-md:text-emerald-400 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
               <path d="M10 6h4" />
               <path d="M10 10h4" />
             </svg>
-            <span className="[writing-mode:vertical-lr] text-[11px] font-medium tracking-wider text-slate-700 uppercase rotate-180">
+            <span className="[writing-mode:vertical-lr] text-[11px] font-medium tracking-wider max-md:text-slate-300 text-slate-700 uppercase rotate-180">
               Stays
             </span>
-            <span className="text-xs text-sky-600 font-medium">
+            <span className="text-xs max-md:text-emerald-400 text-sky-600 font-medium">
               ›
             </span>
           </motion.button>

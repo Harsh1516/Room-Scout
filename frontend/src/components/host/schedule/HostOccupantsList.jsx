@@ -144,7 +144,8 @@ export function HostOccupantsList({
                   const scrollTop = e.currentTarget.scrollTop;
                   const cardStep = 116;
                   const newIdx = Math.round(scrollTop / cardStep);
-                  setActiveCarouselIdx(Math.min(newIdx, roomOccupantsList.length - 1));
+                  const clamped = Math.min(newIdx, roomOccupantsList.length - 1);
+                  setActiveCarouselIdx((prev) => (prev !== clamped ? clamped : prev));
                 }}
                 className="flex-1 flex flex-col gap-2.5 overflow-y-auto no-scrollbar scroll-smooth snap-y snap-mandatory pr-0.5 max-h-[336px]"
               >

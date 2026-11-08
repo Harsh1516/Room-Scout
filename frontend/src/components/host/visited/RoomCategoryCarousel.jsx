@@ -16,6 +16,7 @@ export function RoomCategoryCarousel({
   subTab = 'requests',
 }) {
   const scrollRef = useRef(null);
+  const tickingRef = useRef(false);
   const [activePage, setActivePage] = useState(0);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(rooms.length > 2);
@@ -28,21 +29,32 @@ export function RoomCategoryCarousel({
     const { scrollLeft, clientWidth, scrollWidth } = scrollRef.current;
     const isAtStart = scrollLeft <= 4;
     const isAtEnd = scrollLeft >= scrollWidth - clientWidth - 4;
-    setCanScrollLeft(!isAtStart);
-    setCanScrollRight(!isAtEnd && rooms.length > CARDS_VISIBLE);
+    setCanScrollLeft((prev) => (prev !== !isAtStart ? !isAtStart : prev));
+    const canRight = !isAtEnd && rooms.length > CARDS_VISIBLE;
+    setCanScrollRight((prev) => (prev !== canRight ? canRight : prev));
 
     if (isAtEnd) {
-      setActivePage(totalPages - 1);
+      setActivePage((prev) => (prev !== totalPages - 1 ? totalPages - 1 : prev));
     } else if (isAtStart) {
-      setActivePage(0);
+      setActivePage((prev) => (prev !== 0 ? 0 : prev));
     } else {
       const cardWidth = scrollRef.current.firstElementChild?.offsetWidth || (clientWidth / CARDS_VISIBLE);
       const cardStep = cardWidth + 8; // 8px gap
       const firstVisibleIdx = Math.round(scrollLeft / cardStep);
       const computedPage = Math.floor(firstVisibleIdx / CARDS_VISIBLE);
-      setActivePage(Math.min(totalPages - 1, Math.max(0, computedPage)));
+      const clampedPage = Math.min(totalPages - 1, Math.max(0, computedPage));
+      setActivePage((prev) => (prev !== clampedPage ? clampedPage : prev));
     }
   }, [rooms.length, totalPages]);
+
+  const handleScroll = () => {
+    if (tickingRef.current) return;
+    tickingRef.current = true;
+    window.requestAnimationFrame(() => {
+      updateScrollState();
+      tickingRef.current = false;
+    });
+  };
 
   const handleScrollLeft = (e) => {
     e.stopPropagation();
@@ -124,7 +136,7 @@ export function RoomCategoryCarousel({
       {/* Horizontal Scroll Track */}
       <div
         ref={scrollRef}
-        onScroll={updateScrollState}
+        onScroll={handleScroll}
         className="flex items-center gap-2 overflow-x-auto snap-x snap-mandatory pt-1.5 pb-1 sm:pt-2.5 sm:pb-2 px-1 sm:px-1.5 [&::-webkit-scrollbar]:hidden overscroll-x-contain scroll-smooth"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >

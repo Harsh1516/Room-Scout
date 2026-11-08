@@ -701,7 +701,7 @@ export function AdminPage() {
         {/* Bottom Right Soft Violet Aura */}
         <div className="absolute top-2/3 -right-48 w-96 h-96 bg-purple-600/[0.08] blur-[120px] rounded-full" />
         {/* Subtle Micro-Dot Matrix Overlay for Depth */}
-        <div className="absolute inset-0 bg-[radial-gradient(#0000000d_1px,transparent_1px)](#ffffff0a_1px,transparent_1px)] [background-size:24px_24px] opacity-60" />
+        <div className="absolute inset-0 bg-[radial-gradient(#0000000d_1px,transparent_1px)] [background-size:24px_24px] opacity-60" />
       </div>
 
       {/* ===================================================================== */}
@@ -775,7 +775,7 @@ export function AdminPage() {
                 {activeTab === 'users' && (
                   <motion.div
                     layoutId="admin-nav-pill-indicator"
-                    className="absolute inset-0 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)](0,0,0,0.4)] border border-slate-200/80 -z-10 pointer-events-none"
+                    className="absolute inset-0 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-slate-200/80 -z-10 pointer-events-none"
                     transition={{
                       type: 'spring',
                       stiffness: 450,
@@ -815,7 +815,7 @@ export function AdminPage() {
                 {activeTab === 'hosts' && (
                   <motion.div
                     layoutId="admin-nav-pill-indicator"
-                    className="absolute inset-0 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)](0,0,0,0.4)] border border-slate-200/80 -z-10 pointer-events-none"
+                    className="absolute inset-0 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-slate-200/80 -z-10 pointer-events-none"
                     transition={{
                       type: 'spring',
                       stiffness: 450,
@@ -855,7 +855,7 @@ export function AdminPage() {
                 {activeTab === 'subscriptions' && (
                   <motion.div
                     layoutId="admin-nav-pill-indicator"
-                    className="absolute inset-0 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)](0,0,0,0.4)] border border-slate-200/80 -z-10 pointer-events-none"
+                    className="absolute inset-0 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-slate-200/80 -z-10 pointer-events-none"
                     transition={{
                       type: 'spring',
                       stiffness: 450,
@@ -901,7 +901,7 @@ export function AdminPage() {
                 {activeTab === 'upi' && (
                   <motion.div
                     layoutId="admin-nav-pill-indicator"
-                    className="absolute inset-0 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)](0,0,0,0.4)] border border-slate-200/80 -z-10 pointer-events-none"
+                    className="absolute inset-0 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-slate-200/80 -z-10 pointer-events-none"
                     transition={{
                       type: 'spring',
                       stiffness: 450,

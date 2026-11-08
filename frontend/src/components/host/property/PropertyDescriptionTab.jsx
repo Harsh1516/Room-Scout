@@ -42,30 +42,35 @@ export function PropertyDescriptionTab({
   const currentCharsCount = (isEditing ? localDesc : (description || '')).length;
 
   return (
-    <div className="space-y-3.5">
-      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white/70 backdrop-blur-xl shadow-sm space-y-4 relative overflow-hidden max-md:bg-transparent max-md:border-none max-md:shadow-none max-md:p-0 max-md:space-y-3.5">
-        {/* Mobile Header: Heading 'Description' with Character Count beneath and Actions on the right */}
-        <div className="md:hidden relative flex flex-col items-center justify-center pb-2 w-full">
-          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-normal text-center">
-            Description
-          </h2>
-          <span className="text-xs text-purple-200/80 font-normal text-center mt-0.5">
-            {currentCharsCount} / {MAX_DESCRIPTION_CHARS} characters
-          </span>
-          <div className="absolute right-0 top-1/2 -translate-y-1/2">
-            <PropertyTabHeaderActions
-              isEditing={isEditing}
-              isSaving={isSaving}
-              onStartEdit={onStartEdit}
-              onCancel={() => {
-                setLocalDesc((description || '').slice(0, MAX_DESCRIPTION_CHARS));
-                if (onCancel) onCancel();
-              }}
-              onSave={handleSave}
-              saveDisabled={isBelowMin}
-            />
-          </div>
+    <div>
+      {/* ── Centered Heading with Generous Gap ── */}
+      <div className="flex flex-col items-center justify-center pt-1 mb-5 sm:mb-6 w-full text-center">
+        <h2 className="text-xl sm:text-2xl font-bold max-md:font-black text-white md:text-slate-900 tracking-normal text-center">
+          Description
+        </h2>
+        <span className="text-xs text-purple-200/80 md:hidden font-normal text-center mt-0.5">
+          {currentCharsCount} / {MAX_DESCRIPTION_CHARS} characters
+        </span>
+      </div>
+
+      {/* ── Actions attached to top right corner of the section (Mobile only, desktop uses card header strip) ── */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-end px-0.5 md:hidden">
+          <PropertyTabHeaderActions
+            isEditing={isEditing}
+            isSaving={isSaving}
+            onStartEdit={onStartEdit}
+            onCancel={() => {
+              setLocalDesc((description || '').slice(0, MAX_DESCRIPTION_CHARS));
+              if (onCancel) onCancel();
+            }}
+            onSave={handleSave}
+            saveDisabled={isBelowMin}
+          />
         </div>
+
+        {/* ── Outer Card Covering Inputs and Labels ── */}
+        <section className="rounded-2xl sm:rounded-3xl border shadow-lg transition-colors max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:p-4 max-md:shadow-black/20 md:bg-white/70 md:backdrop-blur-xl md:border-slate-200/80 md:p-5 md:sm:p-6 md:shadow-sm space-y-4 relative overflow-hidden">
 
         {/* Desktop Header Strip with Character Count and Limit */}
         <div className="hidden md:flex items-center justify-between text-xs font-medium uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-3 flex-wrap gap-2 relative z-10">
@@ -109,7 +114,7 @@ export function PropertyDescriptionTab({
               value={localDesc}
               onChange={(e) => setLocalDesc(e.target.value.slice(0, MAX_DESCRIPTION_CHARS))}
               placeholder="Describe your property's ambiance, nearby landmarks, security features, student perks..."
-              className="w-full p-3.5 sm:p-4 rounded-xl sm:rounded-2xl max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:text-white max-md:placeholder:text-purple-200/50 bg-slate-100/90 border border-slate-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 text-slate-900 text-xs sm:text-sm outline-none transition-all resize-y min-h-[90px] placeholder:text-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-md"
+              className="w-full p-3.5 sm:p-4 rounded-xl sm:rounded-2xl max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/50 bg-slate-100/90 border border-slate-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 text-slate-900 text-xs sm:text-sm outline-none transition-all resize-y min-h-[90px] placeholder:text-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-md"
             />
 
             <div className="flex items-center justify-between gap-3 pt-1 border-t border-slate-200/80 max-md:border-white/10 flex-wrap">
@@ -125,7 +130,7 @@ export function PropertyDescriptionTab({
             </div>
           </div>
         ) : (
-          <div className="p-4 sm:p-5 rounded-xl sm:rounded-2xl max-md:bg-[#5a1060] max-md:border-purple-300/20 bg-slate-50/80 backdrop-blur-md border border-slate-200/80 hover:border-purple-500/50 hover:bg-white transition-all flex flex-col justify-between gap-3 shadow-2xs relative z-10">
+          <div className="p-4 sm:p-5 rounded-xl sm:rounded-2xl max-md:bg-white/10 max-md:border-white/15 bg-slate-50/80 backdrop-blur-md border border-slate-200/80 hover:border-purple-500/50 hover:bg-white transition-all flex flex-col justify-between gap-3 shadow-2xs relative z-10">
             {/* Desktop only sub-header */}
             <div className="hidden md:flex items-center justify-between">
               <span className="text-[10px] text-purple-600 uppercase tracking-wider font-medium">
@@ -150,6 +155,7 @@ export function PropertyDescriptionTab({
             </div>
           </div>
         )}
+      </section>
       </div>
     </div>
   );

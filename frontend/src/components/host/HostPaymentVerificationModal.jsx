@@ -203,7 +203,7 @@ export function HostPaymentVerificationModal({
                   onClick={() => setIsLightboxOpen(true)}
                   className="relative group rounded-xl overflow-hidden border border-slate-200 bg-black/5 cursor-zoom-in max-h-52 flex items-center justify-center p-1.5 transition-all hover:border-emerald-500/50"
                 >
-                  <img
+                  <img decoding="async" loading="lazy"
                     src={receiptUrl}
                     alt="Uploaded payment receipt"
                     className="max-h-48 w-full object-contain rounded-lg group-hover:scale-[1.01] transition-transform duration-200"
@@ -358,7 +358,7 @@ export function HostPaymentVerificationModal({
 
                 {/* Center Image Container */}
                 <div className="relative flex-1 min-h-0 flex items-center justify-center p-2 sm:p-4 overflow-auto rounded-2xl bg-black/60 border border-white/5">
-                  <img
+                  <img decoding="async" loading="lazy"
                     src={receiptUrl}
                     alt="Payment Receipt Screenshot"
                     className="max-h-[75vh] w-auto max-w-full object-contain rounded-xl shadow-2xl select-none"

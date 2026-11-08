@@ -24,19 +24,27 @@ export function UserRoomCards({
   allKnownBookings = [],
 }) {
   const scrollRef = useRef(null);
+  const tickingRef = useRef(false);
   const [activeDotIndex, setActiveDotIndex] = useState(0);
 
   const handleScroll = () => {
-    const el = scrollRef.current;
-    if (!el || filteredRooms.length <= 1) return;
-    const maxScroll = el.scrollWidth - el.clientWidth;
-    if (maxScroll <= 0) {
-      setActiveDotIndex(0);
-      return;
-    }
-    const ratio = el.scrollLeft / maxScroll;
-    const nextIdx = Math.round(ratio * (filteredRooms.length - 1));
-    setActiveDotIndex(Math.max(0, Math.min(nextIdx, filteredRooms.length - 1)));
+    if (tickingRef.current) return;
+    tickingRef.current = true;
+    window.requestAnimationFrame(() => {
+      const el = scrollRef.current;
+      if (el && filteredRooms.length > 1) {
+        const maxScroll = el.scrollWidth - el.clientWidth;
+        if (maxScroll <= 0) {
+          setActiveDotIndex((prev) => (prev !== 0 ? 0 : prev));
+        } else {
+          const ratio = el.scrollLeft / maxScroll;
+          const nextIdx = Math.round(ratio * (filteredRooms.length - 1));
+          const clamped = Math.max(0, Math.min(nextIdx, filteredRooms.length - 1));
+          setActiveDotIndex((prev) => (prev !== clamped ? clamped : prev));
+        }
+      }
+      tickingRef.current = false;
+    });
   };
 
   const handleScrollLeft = (e) => {

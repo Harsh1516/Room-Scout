@@ -48,20 +48,28 @@ export function HorizontalCarousel({
     [handleWheel]
   );
 
-  // Track active dot in real time during scroll
-  const handleScroll = () => {
-    const el = scrollRef.current;
-    if (!el || count <= 1) return;
-    const maxScroll = el.scrollWidth - el.clientWidth;
-    if (maxScroll <= 0) {
-      setActiveDotIndex(0);
-      return;
-    }
-    const progress = el.scrollLeft / maxScroll;
-    const rawIndex = Math.round(progress * (count - 1));
-    const clamped = Math.max(0, Math.min(rawIndex, count - 1));
-    setActiveDotIndex(clamped);
-  };
+  const tickingRef = useRef(false);
+
+  // Track active dot in real time during scroll (throttled to 60fps via rAF to avoid main-thread re-render spam)
+  const handleScroll = useCallback(() => {
+    if (tickingRef.current) return;
+    tickingRef.current = true;
+    window.requestAnimationFrame(() => {
+      const el = scrollRef.current;
+      if (el && count > 1) {
+        const maxScroll = el.scrollWidth - el.clientWidth;
+        if (maxScroll <= 0) {
+          setActiveDotIndex((prev) => (prev !== 0 ? 0 : prev));
+        } else {
+          const progress = el.scrollLeft / maxScroll;
+          const rawIndex = Math.round(progress * (count - 1));
+          const clamped = Math.max(0, Math.min(rawIndex, count - 1));
+          setActiveDotIndex((prev) => (prev !== clamped ? clamped : prev));
+        }
+      }
+      tickingRef.current = false;
+    });
+  }, [count]);
 
   // Scroll specific card into view when clicking a dot
   const scrollToItem = (idx) => {

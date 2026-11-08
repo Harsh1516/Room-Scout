@@ -286,7 +286,7 @@ export function DirectUpiPaymentModal({
                   <div className="flex flex-col items-center justify-center text-center">
                     {details?.qrCodeDataUrl ? (
                       <div className="relative p-2.5 bg-white rounded-2xl shadow-sm border border-slate-200">
-                        <img
+                        <img decoding="async" loading="lazy"
                           src={details.qrCodeDataUrl}
                           alt="Booking Direct UPI QR Code"
                           className="w-44 h-44 object-contain rounded-lg"
@@ -417,7 +417,7 @@ export function DirectUpiPaymentModal({
                         </label>
                         {receiptPreview && (
                           <div className="flex items-center gap-2">
-                            <img
+                            <img decoding="async" loading="lazy"
                               src={receiptPreview}
                               alt="Receipt Preview"
                               className="w-8 h-8 rounded-lg object-cover border border-slate-300"

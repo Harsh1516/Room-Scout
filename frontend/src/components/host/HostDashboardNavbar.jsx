@@ -49,31 +49,28 @@ export function HostDashboardNavbar({
   };
 
   return (
-    <header className="relative w-full h-16 sm:h-20 pointer-events-none select-none z-50 font-body-md host-font-scope antialiased max-md:bg-white">
-      {/* Mobile top solid white background bar */}
-      <div className="md:hidden fixed top-0 inset-x-0 h-16 bg-white z-40 pointer-events-none" />
+    <header className="relative w-full h-14 sm:h-20 pointer-events-none select-none z-50 font-body-md host-font-scope antialiased">
       {/* ── 1. LEFT FLOATING ISLAND: BACK BUTTON + PROPERTY TYPE BADGE / STATUS ── */}
-      <div className="fixed top-3.5 left-2.5 sm:top-5 sm:left-6 z-50 flex items-center gap-1.5 sm:gap-2 pointer-events-auto select-none">
+      <div className="fixed top-2.5 sm:top-5 left-2.5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none h-8 sm:h-[46px]">
         {/* Back Button */}
         <button
           type="button"
           onClick={handleBack}
           data-no-hover="true"
-          className="apple-liquid-nav flex items-center justify-center px-3 py-1.5 sm:px-4 sm:py-2 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 bg-white/70 backdrop-blur-2xl shadow-xs cursor-pointer text-slate-800 hover:border-purple-500/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] font-semibold text-xs sm:text-sm select-none active:scale-95 transition-all duration-200 shrink-0"
+          className="inline-flex items-center justify-center h-8 sm:h-[46px] px-3.5 sm:px-5 gap-1.5 sm:gap-2 rounded-full bg-white text-slate-700 text-xs sm:text-[14px] font-semibold shadow-sm border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer select-none active:scale-95 shrink-0"
           title="Return"
         >
           <svg
-            className="w-4 h-4 text-purple-600 stroke-[2.5]"
+            className="w-3.5 h-3.5 text-slate-600 stroke-[2.2] shrink-0"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <line x1="19" y1="12" x2="5" y2="12" />
-            <polyline points="12 19 5 12 12 5" />
+            <path d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
-          <span className="hidden min-[380px]:inline">Back</span>
+          <span className="flex items-center justify-center leading-none tracking-tight">Back</span>
         </button>
 
         {/* Host Subscription Plan Navigation Button — shown only after admin approves the property */}
@@ -82,11 +79,11 @@ export function HostDashboardNavbar({
             type="button"
             onClick={() => navigate('/host/subscription')}
             data-no-hover="true"
-            className="apple-liquid-nav flex items-center justify-center px-3 py-1.5 sm:px-4 sm:py-2 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 bg-white/70 backdrop-blur-2xl hover:border-purple-500/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] shadow-xs cursor-pointer text-slate-800 font-semibold text-xs sm:text-sm select-none active:scale-95 transition-all duration-200 shrink-0"
+            className="inline-flex items-center justify-center h-8 sm:h-[46px] px-3.5 sm:px-5 gap-1.5 sm:gap-2 rounded-full bg-white text-slate-700 text-xs sm:text-[14px] font-semibold shadow-sm border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer select-none active:scale-95 shrink-0"
             title="View Subscription & Purchase Plans"
           >
             <svg
-              className="w-4 h-4 text-purple-600 stroke-[2.2]"
+              className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600 stroke-[2.2] sm:stroke-[2.4] shrink-0"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -95,24 +92,26 @@ export function HostDashboardNavbar({
             >
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
             </svg>
-            <span>Plan</span>
+            <span className="flex items-center justify-center leading-none tracking-tight">Plan</span>
           </button>
         )}
+      </div>
 
-        {/* Awaiting Approval Indicator (if property is not yet approved) */}
-        {!isApproved && (
-          <span
-            className="hidden sm:inline-flex items-center gap-1.5 ml-2 text-amber-600 text-xs sm:text-sm font-semibold shrink-0 select-none"
+      {/* ── Mobile Center "Awaiting Approval" Floating Badge ── */}
+      {!isApproved && (
+        <div className="md:hidden fixed top-2.5 left-1/2 -translate-x-1/2 z-50 pointer-events-auto select-none h-8 flex items-center">
+          <div
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 h-8 rounded-full bg-[#FFF5EC] border border-[#FCD9BD] text-[#C26117] text-xs font-semibold shadow-sm tracking-tight shrink-0 select-none"
             title="Plan, Rooms, Guest Management & UPI Settings unlock after admin approval."
           >
-            <svg className="w-4 h-4 text-amber-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            <svg className="w-3.5 h-3.5 text-[#C26117] stroke-2 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <rect x="5" y="11" width="14" height="10" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M8 11V7a4 4 0 0 1 8 0v4" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <span>Awaiting Approval</span>
-          </span>
-        )}
-      </div>
+            <span className="whitespace-nowrap flex items-center leading-none">Awaiting Approval</span>
+          </div>
+        </div>
+      )}
 
       {/* ── 2. CENTER FLOATING ISLAND: SEGMENTED TABS (PROPERTY | ROOMS | USER VISITED | UPI) ── */}
       <div
@@ -252,19 +251,7 @@ export function HostDashboardNavbar({
       </div>
 
       {/* ── 3. RIGHT FLOATING ISLAND: OCCUPANCY / PAID USERS + THEME TOGGLE + PROFILE ── */}
-      <div className="fixed top-3.5 right-3 sm:top-5 sm:right-6 z-50 flex items-center gap-2 sm:gap-2.5 pointer-events-auto">
-        {/* On Property Tab: Activity Pill */}
-        {activeTab === 'property' && (
-          <button
-            type="button"
-            onClick={onOpenPropertyTelemetry}
-            className="apple-liquid-nav relative flex items-center justify-center h-8 sm:h-9 px-3.5 sm:px-4 rounded-full border border-slate-200/80 bg-white/70 text-slate-800 text-xs font-semibold shadow-xs hover:border-purple-500/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] cursor-pointer select-none active:scale-95 transition-all duration-200 shrink-0"
-            title="View Property Activity & Telemetry"
-          >
-            <span className="text-xs font-semibold tracking-tight">Activity</span>
-          </button>
-        )}
-
+      <div className="fixed top-2.5 sm:top-5 right-2.5 sm:right-6 z-50 flex items-center gap-1.5 sm:gap-2.5 pointer-events-auto select-none h-8 sm:h-[46px]">
         {/* On User Visited Tab: Paid Users Pill */}
         {activeTab === 'users' && (
           <button
@@ -274,15 +261,15 @@ export function HostDashboardNavbar({
                 onVisitedSubTabChange(visitedSubTab === 'paid' ? 'checkin' : 'paid');
               }
             }}
-            className={`h-8 sm:h-9 relative flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 rounded-full border text-xs font-semibold transition-all cursor-pointer select-none active:scale-95 shrink-0 ${
+            className={`h-8 sm:h-[46px] relative flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4.5 rounded-full border text-xs sm:text-[15px] font-bold sm:font-extrabold transition-all cursor-pointer select-none active:scale-95 shrink-0 ${
               visitedSubTab === 'paid'
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-500 shadow-[0_2px_12px_rgba(147,51,234,0.35)]'
-                : 'apple-liquid-nav border-slate-200/80 bg-white/70 text-slate-800 shadow-xs hover:border-purple-500/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)]'
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-500 shadow-[0_4px_16px_rgba(147,51,234,0.4)]'
+                : 'apple-liquid-nav border-slate-200/90 bg-white text-slate-800 shadow-[0_4px_16px_rgba(0,0,0,0.1)] sm:shadow-[0_4px_16px_rgba(0,0,0,0.14)] hover:border-purple-500/50 hover:shadow-[0_6px_22px_rgba(0,0,0,0.22)]'
             }`}
             title="View Paid Residents list"
           >
             <svg
-              className={`w-3.5 h-3.5 shrink-0 transition-colors ${
+              className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-colors ${
                 visitedSubTab === 'paid'
                   ? 'text-emerald-300'
                   : 'text-emerald-500'
@@ -297,14 +284,14 @@ export function HostDashboardNavbar({
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
             </svg>
 
-            <span className="text-xs font-semibold tracking-tight hidden sm:inline">
+            <span className="text-xs sm:text-[15px] font-bold sm:font-extrabold tracking-tight hidden sm:inline">
               Paid Users
             </span>
-            <span className="text-xs font-semibold tracking-tight sm:hidden">
+            <span className="text-xs sm:text-[15px] font-bold sm:font-extrabold tracking-tight sm:hidden">
               Paid
             </span>
 
-            <span className={`font-mono text-xs font-bold min-w-[22px] h-[22px] px-1.5 rounded-full inline-flex items-center justify-center leading-none transition-colors ${
+            <span className={`font-mono text-[10px] sm:text-xs font-bold min-w-[18px] h-[18px] sm:min-w-[22px] sm:h-[22px] px-1 sm:px-1.5 rounded-full inline-flex items-center justify-center leading-none transition-colors ${
               visitedSubTab === 'paid'
                 ? 'bg-white/20 text-white'
                 : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
@@ -314,19 +301,19 @@ export function HostDashboardNavbar({
           </button>
         )}
 
-        {/* Profile / Login Avatar Button */}
-        <div className="relative flex items-center justify-center">
-          <Login />
+        {/* Profile / Login Avatar Button with Activity handler */}
+        <div className="relative flex items-center justify-center h-8 sm:h-[46px]">
+          <Login onOpenActivity={onOpenPropertyTelemetry} />
         </div>
       </div>
 
       {/* ── 4. MOBILE CENTER CAPSULE (Fixed at bottom on mobile screens) ── */}
-      <div className="md:hidden fixed bottom-6 sm:bottom-8 inset-x-0 z-50 pointer-events-none flex justify-center px-4 select-none pb-[env(safe-area-inset-bottom,0px)]">
-        <nav className="pointer-events-auto relative flex items-center p-1.5 rounded-full border border-slate-200/90 bg-white shadow-[0_12px_36px_rgba(0,0,0,0.25)] backdrop-blur-2xl w-full max-w-[390px] gap-1">
+      <div className="md:hidden fixed bottom-5 sm:bottom-8 inset-x-0 z-50 pointer-events-none flex justify-center px-4 select-none pb-[env(safe-area-inset-bottom,0px)]">
+        <nav className="pointer-events-auto relative flex items-center p-1 sm:p-1.5 rounded-full border border-slate-200/90 bg-white shadow-[0_12px_36px_rgba(0,0,0,0.25)] backdrop-blur-2xl w-full max-w-[340px] sm:max-w-[360px] gap-1">
           <button
             type="button"
             onClick={() => handleSelectTab('property')}
-            className={`flex-1 justify-center min-h-[46px] py-2.5 px-2 rounded-full text-[15px] sm:text-base font-extrabold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
+            className={`flex-1 justify-center min-h-[38px] sm:min-h-[42px] py-1.5 sm:py-2 px-1.5 sm:px-2 rounded-full text-xs sm:text-sm font-bold tracking-tight transition-all flex items-center gap-1 select-none active:scale-95 ${
               activeTab === 'property'
                 ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs'
                 : 'text-slate-700 hover:text-purple-700'
@@ -338,9 +325,9 @@ export function HostDashboardNavbar({
           <button
             type="button"
             onClick={() => handleSelectTab('room')}
-            className={`flex-1 justify-center min-h-[46px] py-2.5 px-2 rounded-full text-[15px] sm:text-base font-extrabold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
+            className={`flex-1 justify-center min-h-[38px] sm:min-h-[42px] py-1.5 sm:py-2 px-1.5 sm:px-2 rounded-full text-xs sm:text-sm font-bold tracking-tight transition-all flex items-center gap-1 select-none active:scale-95 ${
               !isApproved
-                ? 'cursor-not-allowed text-slate-600'
+                ? 'cursor-not-allowed text-slate-500'
                 : activeTab === 'room'
                 ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs'
                 : 'text-slate-700 hover:text-purple-700'
@@ -349,7 +336,7 @@ export function HostDashboardNavbar({
           >
             <span>Rooms</span>
             {!isApproved && (
-              <svg className="w-4 h-4 text-amber-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-3.5 h-3.5 text-amber-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
@@ -359,9 +346,9 @@ export function HostDashboardNavbar({
           <button
             type="button"
             onClick={() => handleSelectTab('users')}
-            className={`flex-1 justify-center min-h-[46px] py-2.5 px-2 rounded-full text-[15px] sm:text-base font-extrabold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
+            className={`flex-1 justify-center min-h-[38px] sm:min-h-[42px] py-1.5 sm:py-2 px-1.5 sm:px-2 rounded-full text-xs sm:text-sm font-bold tracking-tight transition-all flex items-center gap-1 select-none active:scale-95 ${
               !isApproved
-                ? 'cursor-not-allowed text-slate-600'
+                ? 'cursor-not-allowed text-slate-500'
                 : activeTab === 'users'
                 ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs'
                 : 'text-slate-700 hover:text-purple-700'
@@ -370,25 +357,24 @@ export function HostDashboardNavbar({
           >
             <span>Users</span>
             {!isApproved && (
-              <svg className="w-4 h-4 text-amber-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-3.5 h-3.5 text-amber-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
             )}
             {isApproved && todayCheckInsCount > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-700">
+              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-700">
                 {todayCheckInsCount}
               </span>
             )}
           </button>
 
-          {/* Mobile UPI Settings */}
           <button
             type="button"
             onClick={() => handleSelectTab('payment')}
-            className={`flex-1 justify-center min-h-[46px] py-2.5 px-2 rounded-full text-[15px] sm:text-base font-extrabold tracking-tight transition-all flex items-center gap-1.5 select-none active:scale-95 ${
+            className={`flex-1 justify-center min-h-[38px] sm:min-h-[42px] py-1.5 sm:py-2 px-1.5 sm:px-2 rounded-full text-xs sm:text-sm font-bold tracking-tight transition-all flex items-center gap-1 select-none active:scale-95 ${
               !isApproved
-                ? 'cursor-not-allowed text-slate-600'
+                ? 'cursor-not-allowed text-slate-500'
                 : activeTab === 'payment'
                 ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs'
                 : 'text-slate-700 hover:text-purple-700'
@@ -397,7 +383,7 @@ export function HostDashboardNavbar({
           >
             <span>UPI</span>
             {!isApproved && (
-              <svg className="w-4 h-4 text-amber-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-3.5 h-3.5 text-amber-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>

@@ -80,7 +80,7 @@ export function Center({ onSearchSubmit }) {
     }
   };
 
-  // Submit Search & Trigger Left-to-Right Loading Fill
+  // Submit Search Immediately (Zero-Lag Navigation)
   const handleSearch = (e) => {
     e?.preventDefault();
 
@@ -89,35 +89,22 @@ export function Center({ onSearchSubmit }) {
     setShowWherePicker(false);
     setShowWhoPicker(false);
 
-    // Trigger water ripple effect
-    setRippleTriggerId(Date.now());
+    if (onSearchSubmit) {
+      onSearchSubmit({
+        query: selectedLocation || selectedType || '',
+        location: selectedLocation,
+        type: selectedType || 'All',
+        gender: (selectedWho?.includes('Boys') || selectedWho?.includes('Male'))
+          ? 'Male'
+          : (selectedWho?.includes('Girls') || selectedWho?.includes('Female'))
+          ? 'Female'
+          : 'All',
+        who: selectedWho,
+      });
+    }
 
-    // Start Left-to-Right Color Progress Fill
-    setIsSearching(true);
-
-    // Allow 750ms for the full liquid fill animation to be observed smoothly
-    setTimeout(() => {
-      if (onSearchSubmit) {
-        onSearchSubmit({
-          query: selectedLocation || selectedType || '',
-          location: selectedLocation,
-          type: selectedType || 'All',
-          gender: (selectedWho?.includes('Boys') || selectedWho?.includes('Male'))
-            ? 'Male'
-            : (selectedWho?.includes('Girls') || selectedWho?.includes('Female'))
-            ? 'Female'
-            : 'All',
-          who: selectedWho,
-        });
-      }
-
-      // Navigate to search results page
-      navigate('/search');
-
-      setTimeout(() => {
-        setIsSearching(false);
-      }, 200);
-    }, 750);
+    // Navigate immediately to eliminate button lag
+    navigate('/search');
   };
 
   // Handle map selection
@@ -141,7 +128,7 @@ export function Center({ onSearchSubmit }) {
           delay: shouldReduceMotion ? 0 : 0.12,
           ease: [0.16, 1, 0.3, 1],
         }}
-        className="fixed top-3.5 sm:top-5 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[calc(100vw-96px)] sm:max-w-none flex justify-center will-change-transform"
+        className="fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[calc(100vw-96px)] sm:max-w-none flex justify-center will-change-transform h-9 sm:h-[46px]"
         ref={navRef}
       >
         <Console

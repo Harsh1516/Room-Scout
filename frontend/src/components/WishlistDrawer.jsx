@@ -110,7 +110,7 @@ export function WishlistDrawer({ onBookClick, onStayClick }) {
                         >
                           {/* Thumbnail */}
                           <div className="w-[52px] h-[52px] rounded-lg overflow-hidden shrink-0 bg-slate-100">
-                            <img src={img} alt={displayTitle} className="w-full h-full object-cover" />
+                            <img decoding="async" loading="lazy" src={img} alt={displayTitle} className="w-full h-full object-cover" />
                           </div>
 
                           {/* Text */}

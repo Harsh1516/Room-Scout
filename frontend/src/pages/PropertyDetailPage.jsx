@@ -658,7 +658,7 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
                         : 'border-white/20 opacity-60 hover:opacity-100 hover:border-white/50'
                     }`}
                   >
-                    <img src={imgUrl} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                    <img decoding="async" loading="lazy" src={imgUrl} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>

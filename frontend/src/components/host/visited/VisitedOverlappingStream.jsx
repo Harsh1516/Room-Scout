@@ -25,6 +25,7 @@ export function VisitedOverlappingStream({
 }) {
   const carouselRef = useRef(null);
   const cardRefs = useRef([]);
+  const tickingRef = useRef(false);
   const [activeIndex, setActiveIndex] = useState(0);
 
   // Sync refs array length
@@ -33,12 +34,18 @@ export function VisitedOverlappingStream({
   }, [guests.length]);
 
   const handleCarouselScroll = () => {
-    if (!carouselRef.current || guests.length === 0) return;
-    const scrollLeft = carouselRef.current.scrollLeft;
-    const cardWidth = 260; // Approximate card step width
-    const calculatedIndex = Math.round(scrollLeft / cardWidth);
-    const clampedIndex = Math.max(0, Math.min(guests.length - 1, calculatedIndex));
-    setActiveIndex(clampedIndex);
+    if (tickingRef.current) return;
+    tickingRef.current = true;
+    window.requestAnimationFrame(() => {
+      if (carouselRef.current && guests.length > 0) {
+        const scrollLeft = carouselRef.current.scrollLeft;
+        const cardWidth = 260; // Approximate card step width
+        const calculatedIndex = Math.round(scrollLeft / cardWidth);
+        const clampedIndex = Math.max(0, Math.min(guests.length - 1, calculatedIndex));
+        setActiveIndex((prev) => (prev !== clampedIndex ? clampedIndex : prev));
+      }
+      tickingRef.current = false;
+    });
   };
 
   const handleDotClick = (idx) => {

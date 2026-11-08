@@ -1,15 +1,11 @@
 import React, { useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from '../../../context/ToastContext';
-import { AnimasterTiltCard } from '../../common/AnimasterTiltCard';
 
 export function PropertyTelemetryModal({
   isOpen,
   onClose,
   hostProperty,
   guests = [],
-  onSwitchTab,
-  onSelectSubTab,
 }) {
   // Close on Escape key
   useEffect(() => {
@@ -53,24 +49,12 @@ export function PropertyTelemetryModal({
     return '₹0';
   }, [hostProperty?.roomRates, activeTenants]);
 
-  const handleOpenPublicUrl = () => {
-    const slug = hostProperty?.slug || hostProperty?._id || hostProperty?.stayId;
-    if (slug) {
-      window.open(`/property/${slug}`, '_blank', 'noopener,noreferrer');
-    } else {
-      toast.info('Publish or complete basic details to view public listing page.');
-    }
-  };
-
-  const handleConfigureAmenities = () => {
-    if (onSelectSubTab) onSelectSubTab(3);
-    onClose();
-  };
-
-  const handleManageRooms = () => {
-    if (onSwitchTab) onSwitchTab('room');
-    onClose();
-  };
+  const stats = [
+    { label: 'Total Beds', value: totalBeds },
+    { label: 'Active Tenants', value: activeTenants },
+    { label: 'Vacant Beds', value: vacantBeds },
+    { label: 'Est. Revenue', value: monthlyRevFormatted },
+  ];
 
   return (
     <AnimatePresence>
@@ -83,168 +67,64 @@ export function PropertyTelemetryModal({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/65 backdrop-blur-xl"
+            className="fixed inset-0 bg-black/75 backdrop-blur-xl"
           />
 
-          {/* Modal Container */}
+          {/* Modal Container: Rounded top & bottom, dark green tab matching Pic 2 */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-3xl rounded-2xl sm:rounded-3xl bg-white/95 backdrop-blur-2xl border border-slate-200/80 shadow-2xl p-4 sm:p-6 space-y-4 sm:space-y-5 my-auto text-slate-900 z-10 max-h-[90vh] overflow-y-auto overflow-x-hidden"
+            className="relative w-full max-w-lg rounded-3xl sm:rounded-[36px] bg-[#0b291b] border border-emerald-400/20 shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_30px_rgba(16,185,129,0.12)] p-4 sm:p-6 space-y-4 my-auto z-10 max-h-[90vh] overflow-y-auto overflow-x-hidden"
           >
-            {/* Header Glow */}
-            <div className="absolute -right-10 -top-10 w-44 h-44 bg-[#a855f7]/20 rounded-full blur-3xl pointer-events-none" />
+            {/* Close Button Top-Right */}
+            <button
+              type="button"
+              onClick={onClose}
+              className="absolute right-4 top-4.5 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer border border-white/15 active:scale-95 z-20"
+              title="Close"
+            >
+              <span className="material-symbols-outlined text-[18px]">close</span>
+            </button>
 
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-3.5 border-b border-slate-200 relative z-10">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#9333ea] text-slate-100 flex items-center justify-center shadow-md border border-purple-500/30 shrink-0">
-                  <span className="material-symbols-outlined text-[20px]">analytics</span>
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-medium tracking-normal text-slate-900">
-                    Property Telemetry &amp; Quick Actions
-                  </h3>
-                  <p className="text-xs text-slate-600">
-                    Live allocation, room telemetry, and management controls for {hostProperty?.propertyName || 'your property'}.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2.5">
-                <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium uppercase tracking-wider bg-[#a855f7]/15 text-purple-700 border border-purple-500/30 shadow-2xs">
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
-                  {occupancyRate}% OCCUPANCY
-                </span>
-
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="w-8 h-8 rounded-full bg-white hover:bg-[#a855f7]/15 text-slate-900 flex items-center justify-center transition-colors cursor-pointer border border-purple-500/30"
-                  title="Close modal"
-                >
-                  <span className="material-symbols-outlined text-[18px]">close</span>
-                </button>
-              </div>
+            {/* ── Centered Heading (No Left Icon) ── */}
+            <div className="flex flex-col items-center justify-center pt-1 w-full text-center">
+              <h3 className="text-xl sm:text-2xl font-bold max-md:font-black text-white tracking-normal text-center">
+                Property Activity
+              </h3>
+              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10.5px] font-bold uppercase tracking-wider bg-white/10 text-emerald-300 border border-white/15 mt-1.5 shadow-2xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                {occupancyRate}% OCCUPANCY
+              </span>
             </div>
 
-            {/* Occupancy & Inventory Snapshot Card */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-white/90 border border-slate-200/80 space-y-3.5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-xs font-medium text-slate-900 uppercase tracking-wider">
-                    Occupancy &amp; Inventory Snapshot
-                  </h4>
-                  <p className="text-[11px] text-slate-600">
-                    Real-time room allocation across all wings
-                  </p>
-                </div>
-                <span className="sm:hidden inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium uppercase bg-[#a855f7]/15 text-purple-700 border border-purple-500/30">
-                  {occupancyRate}%
-                </span>
+            {/* ── Inner Section Card (Lighter green container matching Pic 2) ── */}
+            <section className="rounded-2xl sm:rounded-3xl border shadow-lg bg-[#14422b] border-emerald-300/20 p-4 sm:p-5 space-y-3.5 relative overflow-hidden">
+              <label className="block text-xs font-bold uppercase tracking-wider text-emerald-200">
+                Occupancy &amp; Inventory
+              </label>
+
+              {/* ── 4 Stats with Light Theme Inner Squares (As same like Pic 2) ── */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+                {stats.map((item) => (
+                  <div
+                    key={item.label}
+                    className="group relative p-3 sm:p-4 rounded-2xl border border-white/15 bg-white/10 flex flex-col items-center justify-center text-center gap-2 select-none shadow-xs"
+                  >
+                    {/* Light theme inner square matching Pic 2's icon square */}
+                    <span className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center bg-white text-[#0b291b] font-black text-base sm:text-lg shadow-xs shrink-0">
+                      {item.value}
+                    </span>
+
+                    <span className="text-[11px] sm:text-xs font-black text-white tracking-normal">
+                      {item.label}
+                    </span>
+                  </div>
+                ))}
               </div>
-
-
-              {/* 4 Stats Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
-                <div className="p-3 rounded-xl bg-white/95 border border-slate-200/80 shadow-sm flex flex-col gap-1">
-                  <span className="text-[10px] text-slate-600 uppercase font-medium tracking-wider">Total Beds</span>
-                  <span className="text-base sm:text-lg text-slate-900 font-normal">{totalBeds}</span>
-                  <span className="text-[10.5px] text-slate-500">{totalBeds > 0 ? 'Across Units' : '—'}</span>
-                </div>
-                <div className="p-3 rounded-xl bg-white/95 border border-slate-200/80 shadow-sm flex flex-col gap-1">
-                  <span className="text-[10px] text-slate-600 uppercase font-medium tracking-wider">Active Tenants</span>
-                  <span className="text-base sm:text-lg text-purple-600 font-normal">{activeTenants}</span>
-                  <span className="text-[10.5px] text-slate-500 font-medium">
-                    {activeTenants > 0 ? `${activeTenants} occupants` : '—'}
-                  </span>
-                </div>
-                <div className="p-3 rounded-xl bg-white/95 border border-slate-200/80 shadow-sm flex flex-col gap-1">
-                  <span className="text-[10px] text-slate-600 uppercase font-medium tracking-wider">Vacant Beds</span>
-                  <span className="text-base sm:text-lg text-purple-600 font-normal">{vacantBeds}</span>
-                  <span className="text-[10.5px] text-slate-500">{totalBeds > 0 ? 'Under inquiry' : '—'}</span>
-                </div>
-                <div className="p-3 rounded-xl bg-white/95 border border-slate-200/80 shadow-sm flex flex-col gap-1">
-                  <span className="text-[10px] text-slate-600 uppercase font-medium tracking-wider">Est. Monthly Rev</span>
-                  <span className="text-base sm:text-lg text-slate-900 font-normal">{monthlyRevFormatted}</span>
-                  <span className="text-[10.5px] text-slate-500 font-medium">
-                    {activeTenants > 0 ? 'Monthly estimate' : '—'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Fast Actions Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <AnimasterTiltCard maxTilt={5} className="group p-4 rounded-2xl bg-white/90 border border-slate-200/80 hover:border-purple-500 shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-3">
-                <div className="flex items-center justify-between">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#9333ea] text-slate-100 border border-purple-500/30 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-                    <span className="material-symbols-outlined text-[18px]">visibility</span>
-                  </div>
-                  <span className="material-symbols-outlined text-purple-600 text-[15px] group-hover:text-slate-100 transition-colors">north_east</span>
-                </div>
-                <div>
-                  <h5 className="text-xs font-medium text-slate-900">Preview Listing</h5>
-                  <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
-                    View the public listing page as seen by prospective residents.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleOpenPublicUrl}
-                  className="w-full py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:brightness-105 text-white font-medium text-xs transition-all cursor-pointer shadow-sm active:scale-95"
-                >
-                  Launch Preview
-                </button>
-              </AnimasterTiltCard>
-
-              <AnimasterTiltCard maxTilt={5} className="group p-4 rounded-2xl bg-white/90 border border-slate-200/80 hover:border-purple-500 shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-3">
-                <div className="flex items-center justify-between">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#9333ea] text-slate-100 border border-purple-500/30 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-                    <span className="material-symbols-outlined text-[18px]">tune</span>
-                  </div>
-                  <span className="material-symbols-outlined text-purple-600 text-[15px] group-hover:text-slate-100 transition-colors">chevron_right</span>
-                </div>
-                <div>
-                  <h5 className="text-xs font-medium text-slate-900">Update Amenities</h5>
-                  <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
-                    Configure Wi-Fi, food options, gym passes, and house rules.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleConfigureAmenities}
-                  className="w-full py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:brightness-105 text-white font-medium text-xs transition-all cursor-pointer shadow-sm active:scale-95"
-                >
-                  Configure Perks
-                </button>
-              </AnimasterTiltCard>
-
-              <AnimasterTiltCard maxTilt={5} className="group p-4 rounded-2xl bg-white/80 border border-slate-200 hover:border-purple-500 transition-all shadow-xs hover:shadow-md flex flex-col justify-between gap-3">
-                <div className="flex items-center justify-between">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#9333ea] text-slate-100 border border-purple-500/30 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-                    <span className="material-symbols-outlined text-[18px]">meeting_room</span>
-                  </div>
-                  <span className="material-symbols-outlined text-purple-600 text-[15px] group-hover:text-slate-100 transition-colors">open_in_new</span>
-                </div>
-                <div>
-                  <h5 className="text-xs font-medium text-slate-900">Manage Rooms</h5>
-                  <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
-                    Adjust per-bed pricing, AC/Non-AC categories, and allocations.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleManageRooms}
-                  className="w-full py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:brightness-105 text-white font-medium text-xs transition-all cursor-pointer shadow-sm active:scale-95"
-                >
-                  Room Inventory
-                </button>
-              </AnimasterTiltCard>
-            </div>
+            </section>
           </motion.div>
         </div>
       )}

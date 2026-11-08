@@ -29,14 +29,14 @@ export function PropertyMediaSection({
 
   return (
     <div className="lg:col-span-4 space-y-4 p-1 sm:p-1.5">
-      <div className="bg-white/85 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-xl(0,0,0,0.8)] backdrop-blur-2xl p-3 sm:p-4 transition-all duration-300">
+      <div className="bg-white/85 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-xl backdrop-blur-2xl p-3 sm:p-4 transition-all duration-300">
         {/* Main Featured Photo Box */}
         <div
           onClick={() => onOpenLightbox?.(true)}
           className="relative aspect-[4/3] w-full rounded-xl sm:rounded-2xl overflow-hidden bg-slate-900 select-none cursor-default"
         >
           {mainImage ? (
-            <img
+            <img decoding="async" loading="lazy"
               src={mainImage}
               alt={propertyTitle}
               className="w-full h-full object-cover select-none pointer-events-none"

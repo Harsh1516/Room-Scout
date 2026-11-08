@@ -64,7 +64,7 @@ export function ToastProvider({ children }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.92 }}
               transition={{ type: 'spring', stiffness: 450, damping: 30 }}
-              className="pointer-events-auto flex items-center justify-center px-5 py-2.5 rounded-full bg-slate-950/95 text-white border border-white/15 shadow-[0_12px_40px_rgba(0,0,0,0.55)](0,0,0,0.35)] backdrop-blur-2xl text-xs sm:text-sm font-semibold select-none cursor-pointer text-center max-w-[90vw] sm:max-w-xl"
+              className="pointer-events-auto flex items-center justify-center px-5 py-2.5 rounded-full bg-slate-950/95 text-white border border-white/15 shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-2xl text-xs sm:text-sm font-semibold select-none cursor-pointer text-center max-w-[90vw] sm:max-w-xl"
               onClick={() => removeToast(t.id)}
             >
               {/* Message Text */}

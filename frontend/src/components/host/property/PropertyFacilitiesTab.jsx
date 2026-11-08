@@ -73,14 +73,20 @@ export function PropertyFacilitiesTab({
   );
 
   return (
-    <div className="space-y-3.5">
-      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white/70 backdrop-blur-xl shadow-sm space-y-4 relative overflow-hidden max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:rounded-2xl max-md:p-4 max-md:shadow-black/20">
-        <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-100 max-md:border-white/10 pb-3 relative z-10">
-          <p className="text-xs font-medium uppercase tracking-wider max-md:text-white text-slate-800 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full max-md:bg-purple-300 max-md:shadow-none bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
-            Active Amenities ({localFacilities.length})
-          </p>
+    <div>
+      {/* ── Centered Heading with Generous Gap ── */}
+      <div className="flex flex-col items-center justify-center pt-1 mb-5 sm:mb-6 w-full text-center">
+        <h2 className="text-xl sm:text-2xl font-bold max-md:font-black max-md:text-white text-slate-900 tracking-normal text-center">
+          Amenities & Facilities
+        </h2>
+        <span className="text-xs max-md:text-purple-200/80 text-purple-600 font-medium mt-0.5">
+          {localFacilities.length} Active Features
+        </span>
+      </div>
 
+      {/* ── Actions attached to top right corner of the section ── */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-end px-0.5">
           <PropertyTabHeaderActions
             isEditing={isEditing}
             isSaving={isSaving}
@@ -93,6 +99,8 @@ export function PropertyFacilitiesTab({
           />
         </div>
 
+        {/* ── Outer Card Covering Inputs and Labels ── */}
+        <section className="rounded-2xl sm:rounded-3xl border shadow-lg transition-colors max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:p-4 max-md:shadow-black/20 md:bg-white/70 md:backdrop-blur-xl md:border-slate-200/80 md:p-5 md:sm:p-6 md:shadow-sm space-y-4 relative overflow-hidden">
         {isEditing ? (
           <div className="space-y-4 relative z-10">
             {/* Active Amenities Chips with Delete */}
@@ -101,7 +109,7 @@ export function PropertyFacilitiesTab({
                 {localFacilities.map((facility, fIdx) => (
                   <div
                     key={fIdx}
-                    className="px-3 py-1.5 rounded-xl bg-white/80 backdrop-blur-md border border-slate-200/80 text-slate-900 text-xs font-normal flex items-center gap-2 shadow-2xs group"
+                    className="px-3 py-1.5 rounded-xl max-md:bg-white/15 max-md:border-white/20 max-md:text-white bg-white/80 backdrop-blur-md border border-slate-200/80 text-slate-900 text-xs font-normal flex items-center gap-2 shadow-2xs group"
                   >
                     <div className="w-4 h-4 rounded-md bg-purple-500/10 text-purple-600 flex items-center justify-center">
                       <CheckIcon className="w-2.5 h-2.5" />
@@ -129,7 +137,7 @@ export function PropertyFacilitiesTab({
                 value={newFacilityInput}
                 onChange={(e) => setNewFacilityInput(e.target.value)}
                 placeholder="Add custom facility (e.g. Lift / Elevator, Swimming Pool)..."
-                className="flex-1 px-4 py-2.5 rounded-xl bg-slate-50/80 border border-slate-200/90 text-xs sm:text-[13px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 shadow-inner transition-colors backdrop-blur-md"
+                className="flex-1 px-4 py-2.5 rounded-xl max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/50 bg-slate-50/80 border border-slate-200/90 text-xs sm:text-[13px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 shadow-inner transition-colors backdrop-blur-md"
               />
               <button
                 type="submit"
@@ -153,7 +161,7 @@ export function PropertyFacilitiesTab({
                       key={preset}
                       type="button"
                       onClick={() => handleAddPreset(preset)}
-                      className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-purple-500/10 border border-slate-200/80 text-xs font-normal text-slate-800 cursor-pointer transition-all flex items-center gap-1.5 shadow-2xs active:scale-95 backdrop-blur-sm"
+                      className="px-3 py-1.5 rounded-xl max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:hover:bg-white/20 bg-white/80 hover:bg-purple-500/10 border border-slate-200/80 text-xs font-normal text-slate-800 cursor-pointer transition-all flex items-center gap-1.5 shadow-2xs active:scale-95 backdrop-blur-sm"
                     >
                       <span className="text-purple-600 font-medium">+</span>
                       <span>{preset}</span>
@@ -170,9 +178,9 @@ export function PropertyFacilitiesTab({
                 {facilities.map((facility, fIdx) => (
                   <div
                     key={fIdx}
-                    className="px-3.5 py-2.5 rounded-xl sm:rounded-2xl bg-slate-50/80 backdrop-blur-md border border-slate-200/80 hover:border-purple-500/50 hover:bg-white text-slate-900 text-xs sm:text-[13px] font-normal tracking-normal flex items-center gap-2 transition-all shadow-2xs hover:shadow-xs group"
+                    className="px-3.5 py-2.5 rounded-xl sm:rounded-2xl max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:hover:bg-white/15 bg-slate-50/80 backdrop-blur-md border border-slate-200/80 hover:border-purple-500/50 hover:bg-white text-slate-900 text-xs sm:text-[13px] font-normal tracking-normal flex items-center gap-2 transition-all shadow-2xs hover:shadow-xs group"
                   >
-                    <CheckIcon className="w-3.5 h-3.5 text-purple-600 stroke-[2.2] shrink-0" />
+                    <CheckIcon className="w-3.5 h-3.5 max-md:text-purple-300 text-purple-600 stroke-[2.2] shrink-0" />
                     <span className="truncate">{facility}</span>
                   </div>
                 ))}
@@ -184,6 +192,7 @@ export function PropertyFacilitiesTab({
             )}
           </div>
         )}
+      </section>
       </div>
     </div>
   );

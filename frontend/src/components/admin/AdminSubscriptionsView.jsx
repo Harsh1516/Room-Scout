@@ -1509,7 +1509,7 @@ export function AdminSubscriptionsView({
                             className="relative group rounded-lg overflow-hidden border border-slate-200 hover:border-purple-500 transition-all cursor-pointer inline-block"
                             title="Click to view payment receipt"
                           >
-                            <img
+                            <img decoding="async" loading="lazy"
                               src={item.receiptUrl}
                               alt="Payment Receipt"
                               className="w-10 h-10 object-cover group-hover:scale-105 transition-transform"
@@ -1945,7 +1945,7 @@ export function AdminSubscriptionsView({
               </button>
             </div>
             <div className="overflow-auto max-h-[80vh] p-2 flex items-center justify-center bg-black">
-              <img
+              <img decoding="async" loading="lazy"
                 src={previewImageUrl}
                 alt="Payment Receipt Screenshot"
                 className="max-w-full max-h-[75vh] object-contain rounded-xl"

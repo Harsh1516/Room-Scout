@@ -231,7 +231,7 @@ export function HostPaymentSettingsSection({ hostProperty }) {
 
           <div className="p-3 bg-white rounded-2xl shadow-sm border border-slate-200">
             {previewQr ? (
-              <img
+              <img decoding="async" loading="lazy"
                 src={previewQr}
                 alt="Host UPI Preview QR Code"
                 className="w-48 h-48 object-contain rounded-lg"

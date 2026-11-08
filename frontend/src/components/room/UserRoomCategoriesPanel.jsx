@@ -28,6 +28,7 @@ function UserCategoryRoomCarousel({
   upcomingMonths = [],
 }) {
   const scrollRef = useRef(null);
+  const tickingRef = useRef(false);
   const [activeDotIndex, setActiveDotIndex] = useState(0);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -37,8 +38,9 @@ function UserCategoryRoomCarousel({
     if (!el) return;
     const atStart = el.scrollLeft <= 2;
     const atEnd = el.scrollLeft >= el.scrollWidth - el.clientWidth - 2;
-    setCanScrollLeft(!atStart);
-    setCanScrollRight(!atEnd && el.scrollWidth > el.clientWidth);
+    setCanScrollLeft((prev) => (prev !== !atStart ? !atStart : prev));
+    const canRight = !atEnd && el.scrollWidth > el.clientWidth;
+    setCanScrollRight((prev) => (prev !== canRight ? canRight : prev));
 
     if (matchingRooms.length > 1) {
       const scrollLeft = el.scrollLeft;
@@ -53,7 +55,7 @@ function UserCategoryRoomCarousel({
           closestIdx = i;
         }
       }
-      setActiveDotIndex(closestIdx);
+      setActiveDotIndex((prev) => (prev !== closestIdx ? closestIdx : prev));
     }
   }, [matchingRooms.length]);
 
@@ -86,7 +88,12 @@ function UserCategoryRoomCarousel({
   );
 
   const handleScroll = () => {
-    updateScrollState();
+    if (tickingRef.current) return;
+    tickingRef.current = true;
+    window.requestAnimationFrame(() => {
+      updateScrollState();
+      tickingRef.current = false;
+    });
   };
 
   const scrollToItem = (idx, e) => {

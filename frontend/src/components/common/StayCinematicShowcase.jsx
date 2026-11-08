@@ -495,7 +495,7 @@ export function StayCinematicShowcase({
                     } rounded-md overflow-hidden bg-slate-900 cursor-pointer select-none group transition-all duration-[380ms] ease-[cubic-bezier(0.16,1,0.3,1)]`}
                     title={stay.title || stay.propertyName}
                   >
-                    <img
+                    <img decoding="async" loading="lazy"
                       src={isActive ? (mainDisplayImage || getStayImage(stay)) : getStayImage(stay)}
                       alt={stay.title || 'Stay Cover'}
                       className="w-full h-full object-cover select-none"

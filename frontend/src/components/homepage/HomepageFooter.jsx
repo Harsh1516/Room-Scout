@@ -5,9 +5,30 @@ export function HomepageFooter() {
   const navigate = useNavigate();
 
   return (
-    <footer className="w-full relative z-10 border-t border-slate-200 bg-white/90 backdrop-blur-2xl text-slate-600 py-6 sm:py-16 px-3 sm:px-8 lg:px-16 2xl:px-24 mt-8 sm:mt-20 transition-colors">
+    <footer className="w-full relative z-10 max-md:bg-transparent max-md:border-t-0 max-md:mt-5 max-md:px-4 max-md:py-0 border-t border-slate-200 bg-white/90 backdrop-blur-2xl text-slate-600 py-6 sm:py-16 px-3 sm:px-8 lg:px-16 2xl:px-24 mt-8 sm:mt-20 transition-colors">
       <ScrollReveal desktopOffset={20} mobileOffset={12} desktopDuration={0.5} mobileDuration={0.35}>
-        <div className="w-full">
+        {/* ── MOBILE BRAND FOOTER CARD (From design snippet) ── */}
+        <div className="md:hidden bg-[#141B26] rounded-3xl p-5 text-white shadow-xl relative overflow-hidden border border-white/[0.08] mb-6">
+          {/* Subtle Architectural Ambient Light Accent */}
+          <div className="absolute -right-8 -bottom-8 w-36 h-36 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="flex items-center gap-2 mb-2.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+            <span className="text-xs font-extrabold tracking-widest uppercase">ROOM-SCOUT</span>
+            <span className="text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-950/60 text-emerald-300 border border-emerald-500/30">
+              VERIFIED LIVING
+            </span>
+          </div>
+          <p className="text-[11px] leading-relaxed text-slate-400 font-normal">
+            India's premier 3D-verified stay discovery network. Direct host connections, zero brokerage fees, and 100% physically inspected student PGs, serviced apartments, and co-living spaces.
+          </p>
+          <div className="mt-4 pt-3 border-t border-white/[0.07] flex items-center justify-between text-[10px] text-slate-500 font-medium">
+            <span>© 2026 ROOM-SCOUT Inc.</span>
+            <span className="text-slate-400 tracking-wide font-normal">Pan-India Network</span>
+          </div>
+        </div>
+
+        {/* ── DESKTOP FOOTER ── */}
+        <div className="hidden md:block w-full">
           <div className="flex flex-col lg:flex-row gap-6 lg:gap-12 pb-6 sm:pb-12 border-b border-slate-200">
             
             {/* Brand Manifesto */}

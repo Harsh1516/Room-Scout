@@ -9,6 +9,7 @@ import { adminAPI } from './services/api';
 import { ScrollToTop } from './components/ScrollToTop';
 import { ToastProvider, toast } from './context/ToastContext';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { HostSwitchConfirmationModal } from './components/host/HostSwitchConfirmationModal';
 
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { GoogleOAuthProvider } from '@react-oauth/google';
@@ -90,12 +91,8 @@ function AppContent() {
   }, []);
   // "Ready to Switch to Host" slide-to-confirm modal state
   const [showHostSwitchModal, setShowHostSwitchModal] = useState(false);
-  const [hostSwitchKnobX, setHostSwitchKnobX] = useState(0);
-  const [hostSwitchDragging, setHostSwitchDragging] = useState(false);
-  const hostSwitchSliderRef = useRef(null);
 
   const handleSelectUpload = () => {
-    setHostSwitchKnobX(0);
     setShowHostSwitchModal(true);
   };
 
@@ -103,6 +100,7 @@ function AppContent() {
     setShowHostSwitchModal(false);
     proceedToHostUpload();
   };
+
   const [selectedStayForDetail, setSelectedStayForDetail] = useState(null);
   const [selectedStayForBooking, setSelectedStayForBooking] = useState(null);
 
@@ -116,74 +114,6 @@ function AppContent() {
   useEffect(() => {
     if (isLoginOpen) setHasLoadedLogin(true);
   }, [isLoginOpen]);
-
-  // Drag handling for the host-switch slide-to-confirm control
-  useEffect(() => {
-    if (!hostSwitchDragging) return;
-
-    const handleMove = (e) => {
-      const slider = hostSwitchSliderRef.current;
-      if (!slider) return;
-      const rect = slider.getBoundingClientRect();
-      const maxX = rect.width - 48;
-      const x = e.clientX - rect.left - 24;
-      setHostSwitchKnobX(Math.max(0, Math.min(maxX, x)));
-    };
-
-    const handleUp = () => {
-      const slider = hostSwitchSliderRef.current;
-      if (!slider) {
-        setHostSwitchDragging(false);
-        return;
-      }
-      const rect = slider.getBoundingClientRect();
-      const maxX = rect.width - 48;
-      setHostSwitchDragging(false);
-      if (hostSwitchKnobX > maxX * 0.8) {
-        confirmHostSwitch();
-      } else {
-        setHostSwitchKnobX(0);
-      }
-    };
-
-    const handleTouchMove = (e) => {
-      const touch = e.touches?.[0];
-      if (!touch) return;
-      const slider = hostSwitchSliderRef.current;
-      if (!slider) return;
-      const rect = slider.getBoundingClientRect();
-      const maxX = rect.width - 48;
-      const x = touch.clientX - rect.left - 24;
-      setHostSwitchKnobX(Math.max(0, Math.min(maxX, x)));
-    };
-
-    const handleTouchEnd = () => {
-      const slider = hostSwitchSliderRef.current;
-      if (!slider) {
-        setHostSwitchDragging(false);
-        return;
-      }
-      const rect = slider.getBoundingClientRect();
-      const maxX = rect.width - 48;
-      setHostSwitchDragging(false);
-      if (hostSwitchKnobX > maxX * 0.8) {
-        confirmHostSwitch();
-      } else {
-        setHostSwitchKnobX(0);
-      }
-    };
-
-    window.addEventListener('mousemove', handleMove);
-    window.addEventListener('mouseup', handleUp);
-    window.addEventListener('touchmove', handleTouchMove);
-    window.addEventListener('touchend', handleTouchEnd);
-    return () => {
-      window.removeEventListener('mousemove', handleMove);
-      window.removeEventListener('mouseup', handleUp);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [hostSwitchDragging, hostSwitchKnobX]);
   useEffect(() => {
     if (selectedStayForDetail) setHasLoadedPropertyModal(true);
   }, [selectedStayForDetail]);
@@ -578,49 +508,11 @@ function AppContent() {
       )}
 
       {/* Ready to Switch to Host - slide-to-confirm modal */}
-      {showHostSwitchModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md">
-          <div className="w-full max-w-md rounded-3xl border border-white/15 bg-slate-900/95 p-6 shadow-2xl">
-            <h2 className="text-xl font-semibold text-white">Ready to Switch to Host</h2>
-            <p className="mt-2 text-sm text-slate-300">
-              Slide the control to the right to confirm you are ready to become a host and continue to property upload.
-            </p>
-
-            <div
-              ref={hostSwitchSliderRef}
-              className="relative mt-6 h-14 w-full rounded-full border border-white/15 bg-slate-950/80 overflow-hidden select-none"
-            >
-              {/* White fill that follows the knob */}
-              <div
-                className="absolute top-0 left-0 h-full bg-white/25 transition-[width] duration-75"
-                style={{ width: `${Math.min(hostSwitchKnobX + 48, hostSwitchSliderRef.current?.getBoundingClientRect().width || 0)}px` }}
-              />
-              <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold tracking-wide text-slate-500">
-                SLIDE TO CONFIRM
-              </div>
-              <div
-                onMouseDown={() => setHostSwitchDragging(true)}
-                onTouchStart={() => setHostSwitchDragging(true)}
-                className="absolute top-1 left-0 h-12 w-12 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 flex items-center justify-center cursor-grab active:cursor-grabbing shadow-lg"
-                style={{ transform: `translateX(${hostSwitchKnobX}px)` }}
-              >
-                <span className="text-white text-lg">›</span>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setShowHostSwitchModal(false);
-                setHostSwitchKnobX(0);
-              }}
-              className="mt-4 w-full rounded-xl border border-white/10 bg-white/5 py-2.5 text-sm text-slate-300 hover:bg-white/10"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
+      <HostSwitchConfirmationModal
+        isOpen={showHostSwitchModal}
+        onClose={() => setShowHostSwitchModal(false)}
+        onConfirm={confirmHostSwitch}
+      />
 
           </div>
   );

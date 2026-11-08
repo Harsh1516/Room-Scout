@@ -984,7 +984,7 @@ export function HostScheduleCalendar({
             </div>
           )}
 
-          <div className="flex flex-col rounded-2xl sm:rounded-3xl border border-slate-200 bg-white/70 backdrop-blur-xl shadow-[0_4px_24px_rgba(41,28,14,0.04)](41,28,14,0.4)] p-3 sm:p-3.5">
+          <div className="flex flex-col rounded-2xl sm:rounded-3xl border border-slate-200 bg-white/70 backdrop-blur-xl shadow-[0_4px_24px_rgba(41,28,14,0.04)] p-3 sm:p-3.5">
             <div className="grid grid-cols-7 text-center text-[10.5px] sm:text-[11px] font-medium text-slate-800 uppercase tracking-wider pb-2 select-none">
               {WEEKDAYS.map((wd) => (
                 <span key={wd}>{wd}</span>

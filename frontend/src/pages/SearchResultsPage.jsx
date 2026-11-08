@@ -137,13 +137,13 @@ export function SearchResultsPage({
         initial={false}
         animate={{ x: isFiltersOpen ? '0%' : '-100%' }}
         transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-        className="fixed top-0 bottom-0 left-0 z-50 w-80 sm:w-96 max-w-[85vw] bg-white/95 backdrop-blur-2xl border-r border-slate-200 shadow-[10px_0_36px_rgba(0,0,0,0.14)](0,0,0,0.6)] flex flex-col justify-between select-none"
+        className="fixed top-0 bottom-0 left-0 z-50 w-80 sm:w-96 max-w-[85vw] bg-white/95 backdrop-blur-2xl border-r border-slate-200 shadow-[10px_0_36px_rgba(0,0,0,0.14)] flex flex-col justify-between select-none"
       >
         {/* Ultra-Premium Minimal Toggle Handle at the Center of the Left Screen Border */}
         <button
           type="button"
           onClick={() => setIsFiltersOpen((prev) => !prev)}
-          className="absolute top-1/2 -translate-y-1/2 left-full flex flex-col items-center justify-center w-8 sm:w-9 h-22 sm:h-26 bg-gradient-to-b from-white/95 via-slate-50/95 to-slate-100/90 backdrop-blur-2xl border border-l-0 border-slate-300/80 hover:border-emerald-500/50 rounded-r-2xl shadow-[4px_0_24px_rgba(0,0,0,0.12)] hover:shadow-[6px_0_28px_rgba(16,185,129,0.22)](0,0,0,0.7)](16,185,129,0.3)] text-slate-700 hover:text-emerald-500 transition-all duration-300 cursor-pointer group active:scale-95 select-none"
+          className="absolute top-1/2 -translate-y-1/2 left-full flex flex-col items-center justify-center w-8 sm:w-9 h-22 sm:h-26 bg-gradient-to-b from-white/95 via-slate-50/95 to-slate-100/90 backdrop-blur-2xl border border-l-0 border-slate-300/80 hover:border-emerald-500/50 rounded-r-2xl shadow-[4px_0_24px_rgba(0,0,0,0.12)] hover:shadow-[6px_0_28px_rgba(16,185,129,0.22)] text-slate-700 hover:text-emerald-500 transition-all duration-300 cursor-pointer group active:scale-95 select-none"
           title={isFiltersOpen ? 'Collapse Filters (<)' : 'Expand Filters (>)'}
           aria-label={isFiltersOpen ? 'Close filters' : 'Open filters'}
         >

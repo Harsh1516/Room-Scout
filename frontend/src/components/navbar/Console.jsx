@@ -85,7 +85,7 @@ export function Console({
   return (
     <div ref={consoleRef} className="relative select-none">
       <nav
-        className="relative flex items-center p-0.5 sm:p-1.5 rounded-full console-clear-capsule shadow-lg border border-white/20 select-none max-w-[calc(100vw-96px)] sm:max-w-none"
+        className="relative flex items-center p-0.5 sm:p-1 rounded-full bg-white/95 border border-slate-200/90 shadow-sm select-none max-w-[calc(100vw-96px)] sm:max-w-none h-9 sm:h-[46px]"
         style={{ borderRadius: 9999 }}
       >
         {/* 1. Expandable 3-Segment Controls (What, Where, Who) */}
@@ -166,11 +166,11 @@ export function Console({
             }
           }}
           title={!isExpanded ? 'Click to expand search options' : (canSearch ? 'Search verified stays' : 'Select filters or search')}
-          className="relative font-bold text-[11px] sm:text-xs px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full shrink-0 select-none flex items-center justify-center gap-1 sm:gap-2 bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 text-white shadow-[0_0_15px_rgba(6,182,212,0.35)] hover:shadow-[0_0_20px_rgba(6,182,212,0.5)] cursor-pointer active:scale-95 focus:outline-none transition-transform"
+          className="relative font-bold text-xs sm:text-[13px] px-3.5 sm:px-4 h-8 sm:h-[38px] rounded-full shrink-0 select-none flex items-center justify-center gap-1.5 sm:gap-2 bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 text-white shadow-xs cursor-pointer active:scale-95 focus:outline-none transition-transform"
         >
           {/* Search Magnifying Glass or Spinner */}
           <svg
-            className={`w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0 ${isSearching ? 'animate-spin' : ''}`}
+            className={`w-3.5 h-3.5 shrink-0 text-white ${isSearching ? 'animate-spin' : ''}`}
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"

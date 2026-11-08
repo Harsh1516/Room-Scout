@@ -58,6 +58,22 @@ export function PropertyDetailsSection({
     return [];
   }, [hostProperty]);
 
+  const formattedJoinedDate = useMemo(() => {
+    const rawDate =
+      hostProperty?.joinedDate ||
+      hostProperty?.createdAt ||
+      hostProperty?.hostId?.createdAt ||
+      hostProperty?.hostJoined ||
+      hostProperty?.updatedAt;
+    const d = rawDate ? new Date(rawDate) : new Date();
+    if (isNaN(d.getTime())) return null;
+    return d.toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  }, [hostProperty]);
+
   const isOverviewComplete = Boolean(hostProperty?.propertyName || hostProperty?.title);
   const isDescriptionComplete = Boolean((hostProperty?.description || hostProperty?.bio || '').trim().length >= 10);
   const isLocationComplete = Boolean(hostProperty?.city || hostProperty?.address || hostProperty?.location);
@@ -192,30 +208,143 @@ export function PropertyDetailsSection({
   };
 
   return (
-    <div className="flex flex-col w-full h-full min-h-0 justify-center max-md:bg-white">
+    <div className="flex flex-col w-full h-full min-h-0 justify-center max-md:bg-[#f5f2ea]">
       {/* ── Two-Column Dashboard Workspace ── */}
-      <div className="flex items-start justify-center w-full h-full min-h-0 max-md:bg-white">
-        <div className="grid grid-cols-1 lg:grid-cols-12 max-md:gap-0 gap-3.5 sm:gap-5 items-start w-full max-w-full transition-all duration-300 ease-in-out max-md:bg-white">
+      <div className="flex items-start justify-center w-full h-full min-h-0 max-md:bg-[#f5f2ea]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 max-md:gap-0 gap-3.5 sm:gap-5 items-start w-full max-w-full transition-all duration-300 ease-in-out max-md:bg-[#f5f2ea]">
         {/* Left Navigation Rail: Stepped Layered Cards */}
         <div className="lg:col-span-3 flex items-start justify-center h-full transition-all duration-300 ease-in-out">
           <aside className="w-full flex flex-col shrink-0 relative max-md:mt-0 mt-8 transition-all duration-300 ease-in-out">
-          {/* ── Upper Tab: Property Info (Styled like navbar capsule with black edit button in light theme) ── */}
-          <div className="max-md:w-[300px] max-md:max-w-[calc(100vw-28px)] max-md:mx-auto max-md:mt-1 max-md:mb-2 max-md:rounded-2xl max-md:border max-md:border-purple-200/90 max-md:bg-purple-100/80 max-md: max-md: max-md:backdrop-blur-2xl max-md:shadow-xs max-md:p-4 md:w-[calc(100%-18px)] md:sm:w-[calc(100%-22px)] md:mx-auto md:rounded-t-2xl md:sm:rounded-t-3xl md:rounded-b-none md:border-x md:border-t md:border-slate-200/80 md: md:shadow-[0_14px_36px_rgba(0,0,0,0.16)] md:(255,255,255,0.12)] md:hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] md:(255,255,255,0.25)] md:bg-white/95 md: backdrop-blur-2xl text-slate-800 flex flex-col gap-3 p-4 sm:p-5 pb-8 sm:pb-9 relative shrink-0 z-0">
-            {/* Top Specular Rim Reflection for Upper Tab */}
-            <div className="max-md:hidden absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 max-md:via-purple-300/30 to-transparent pointer-events-none z-20" />
-
-            {/* Header: Place Name + Top-Right Edit Button (Solid black in light theme) */}
-            <div className="flex items-center justify-between max-md:justify-center gap-2 relative z-10 w-full">
-              <h1 className="text-base sm:text-lg lg:text-xl font-bold max-md:text-[22px] max-md:font-black max-md:text-center max-md:w-full max-md:leading-tight max-md:text-slate-950 text-slate-900 tracking-tight truncate flex-1 min-w-0">
+          {/* ── Upper Tab: Property Info ── */}
+          {/* ── MOBILE VIEW: Matches Pic 2 Exactly ── */}
+          <div className="md:hidden w-full max-w-sm mx-auto px-3.5 pt-1 pb-1">
+            <div className="bg-white rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/80">
+              {/* Title */}
+              <h1 className="text-xl font-bold text-slate-900 tracking-tight mb-2 truncate">
                 {hostProperty?.propertyName || hostProperty?.title || '—'}
               </h1>
 
-              {/* Edit button: solid black in light mode, glass in dark mode */}
+              {/* Category & Tags */}
+              <div className="flex items-center gap-2 mb-4">
+                <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#7E42F5]">
+                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                    <path d="M5 4a2 2 0 012-2h10a2 2 0 012 2v18l-7-3.5L5 22V4z" />
+                  </svg>
+                  <span>
+                    {hostProperty?.propertyType || hostProperty?.category
+                      ? `${hostProperty.propertyType || hostProperty.category} Category`
+                      : 'Hotel Category'}
+                  </span>
+                </div>
+                <span className="w-1 h-1 rounded-full bg-slate-300" />
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#FEF6E6] text-[#B87A06] text-[11px] font-bold">
+                  <span>★</span>
+                  <span>
+                    {(Number(hostProperty?.reviewsCount) > 0 || (Array.isArray(hostProperty?.reviews) && hostProperty.reviews.length > 0)) && Number(hostProperty?.rating) > 0
+                      ? Number(hostProperty.rating).toFixed(1)
+                      : 'New'}
+                  </span>
+                </span>
+              </div>
+
+              {/* Info Tiles (2 Columns) */}
+              <div className="grid grid-cols-2 gap-2.5 mb-5">
+                {/* Gender Tile */}
+                <div className="flex items-center gap-3 p-3 rounded-2xl bg-[#F8F9FE] border border-slate-100">
+                  <div className="w-8 h-8 rounded-xl bg-[#EEF2FF] text-[#6366F1] flex items-center justify-center shrink-0">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">FOR</div>
+                    <div className="text-xs font-bold text-slate-800 truncate">
+                      {hostProperty?.genderType
+                        ? hostProperty.genderType.charAt(0).toUpperCase() + hostProperty.genderType.slice(1).toLowerCase()
+                        : 'Male'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Joined Date Tile */}
+                <div className="flex items-center gap-3 p-3 rounded-2xl bg-[#F8F9FE] border border-slate-100">
+                  <div className="w-8 h-8 rounded-xl bg-[#FAF5FF] text-[#9333EA] flex items-center justify-center shrink-0">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <rect x="3" y="4" width="18" height="18" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <line x1="16" y1="2" x2="16" y2="6" strokeLinecap="round" strokeLinejoin="round" />
+                      <line x1="8" y1="2" x2="8" y2="6" strokeLinecap="round" strokeLinejoin="round" />
+                      <line x1="3" y1="10" x2="21" y2="10" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">JOINED</div>
+                    <div className="text-xs font-bold text-slate-800 truncate">
+                      {formattedJoinedDate || '6 Nov 2026'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Public URL Button */}
+                <button
+                  type="button"
+                  onClick={handleOpenPublicUrl}
+                  className="flex items-center justify-center gap-1.5 py-3 px-4 rounded-2xl bg-white border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 transition-colors shadow-sm cursor-pointer active:scale-95"
+                >
+                  <span>Public URL</span>
+                  <svg className="w-3.5 h-3.5 text-[#7E42F5] stroke-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+                  </svg>
+                </button>
+
+                {/* Edit Button */}
+                {onEditDetails ? (
+                  <button
+                    type="button"
+                    onClick={onEditDetails}
+                    className="flex items-center justify-center gap-1.5 py-3 px-4 rounded-2xl bg-[#7E42F5] text-white text-xs font-bold hover:bg-[#6D34E3] transition-colors shadow-sm shadow-[#7E42F5]/20 cursor-pointer active:scale-95"
+                  >
+                    <svg className="w-3.5 h-3.5 stroke-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"
+                      />
+                    </svg>
+                    <span>Edit</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleShare}
+                    className="flex items-center justify-center gap-1.5 py-3 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 text-xs font-bold transition-colors shadow-sm cursor-pointer active:scale-95"
+                  >
+                    <span className="material-symbols-outlined text-[16px] text-purple-600">share</span>
+                    <span>Share</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* ── DESKTOP VIEW: Upper Tab ── */}
+          <div className="hidden md:flex w-[calc(100%-18px)] sm:w-[calc(100%-22px)] mx-auto rounded-t-2xl sm:rounded-t-3xl rounded-b-none border-x border-t border-slate-200/80 shadow-[0_14px_36px_rgba(0,0,0,0.16)] bg-white/95 backdrop-blur-2xl text-slate-800 flex-col gap-3 p-4 sm:p-5 pb-8 sm:pb-9 relative shrink-0 z-0">
+            {/* Top Specular Rim Reflection for Upper Tab */}
+            <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none z-20" />
+
+            {/* Header: Place Name + Top-Right Edit Button */}
+            <div className="flex items-center justify-between gap-2 relative z-10 w-full">
+              <h1 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900 tracking-tight truncate flex-1 min-w-0">
+                {hostProperty?.propertyName || hostProperty?.title || '—'}
+              </h1>
+
               {onEditDetails && (
                 <button
                   type="button"
                   onClick={onEditDetails}
-                  className="hidden md:flex px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs items-center gap-1.5 cursor-pointer transition-all shadow-xs active:scale-95 shrink-0"
+                  className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs items-center gap-1.5 cursor-pointer transition-all shadow-xs active:scale-95 shrink-0"
                   title="Edit Listing Details"
                 >
                   <PencilIcon className="w-3.5 h-3.5 text-white" />
@@ -227,12 +356,12 @@ export function PropertyDetailsSection({
             {/* Badges/Metadata in Clean Palette */}
             <div className="flex flex-col gap-1.5 pt-0.5 text-xs relative z-10">
               <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 font-semibold max-md:text-slate-700 text-slate-800">
+                <span className="flex items-center gap-1.5 font-semibold text-slate-800">
                   <span className="material-symbols-outlined text-[15px] text-purple-600">apartment</span>
                   <span>{hostProperty?.propertyType || hostProperty?.category ? `${hostProperty.propertyType || hostProperty.category} Category` : '—'}</span>
                 </span>
-                <span className="flex items-center gap-1 font-bold max-md:text-slate-900 text-slate-800">
-                  <span className="material-symbols-outlined text-[14px] max-md:text-amber-400 text-amber-500" style={{ fontVariationSettings: "'FILL' 1" }}>
+                <span className="flex items-center gap-1 font-bold text-slate-800">
+                  <span className="material-symbols-outlined text-[14px] text-amber-500" style={{ fontVariationSettings: "'FILL' 1" }}>
                     star
                   </span>
                   <span>
@@ -243,11 +372,17 @@ export function PropertyDetailsSection({
                 </span>
               </div>
 
-              <div className="flex items-center justify-between text-slate-500">
-                <span className="flex items-center gap-1.5 font-medium max-md:text-slate-600 text-slate-500">
-                  <span className="material-symbols-outlined text-[15px] text-purple-600">group</span>
-                  <span>For: {hostProperty?.genderType ? hostProperty.genderType.charAt(0).toUpperCase() + hostProperty.genderType.slice(1).toLowerCase() : '—'}</span>
+              <div className="flex items-center justify-between gap-1 text-slate-500">
+                <span className="flex items-center gap-1.5 font-medium text-slate-500 truncate">
+                  <span className="material-symbols-outlined text-[15px] text-purple-600 shrink-0">group</span>
+                  <span className="truncate">For: {hostProperty?.genderType ? hostProperty.genderType.charAt(0).toUpperCase() + hostProperty.genderType.slice(1).toLowerCase() : '—'}</span>
                 </span>
+                {formattedJoinedDate && (
+                  <span className="flex items-center gap-1 font-medium text-slate-500 shrink-0 text-right">
+                    <span className="material-symbols-outlined text-[14px] text-purple-600 shrink-0">calendar_today</span>
+                    <span>Joined on {formattedJoinedDate}</span>
+                  </span>
+                )}
               </div>
             </div>
 
@@ -256,7 +391,7 @@ export function PropertyDetailsSection({
               <button
                 type="button"
                 onClick={handleOpenPublicUrl}
-                className="group relative overflow-hidden w-full h-9 rounded-xl max-md:bg-white/95 max-md:border-purple-200/80 max-md:text-purple-950 max-md:hover:bg-white bg-transparent hover:bg-sky-200 active:scale-95 text-slate-800 hover:text-sky-800 flex items-center justify-center gap-1.5 border border-slate-300 hover:border-sky-400 shadow-2xs transition-all cursor-pointer font-medium"
+                className="group relative overflow-hidden w-full h-9 rounded-xl bg-transparent hover:bg-sky-200 active:scale-95 text-slate-800 hover:text-sky-800 flex items-center justify-center gap-1.5 border border-slate-300 hover:border-sky-400 shadow-2xs transition-all cursor-pointer font-medium"
               >
                 <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-none group-hover:transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-black/20 to-transparent pointer-events-none" />
                 <span className="text-xs font-medium">Public URL</span>
@@ -267,18 +402,18 @@ export function PropertyDetailsSection({
                 <button
                   type="button"
                   onClick={onEditDetails}
-                  className="group relative overflow-hidden w-full h-9 rounded-xl max-md:bg-purple-600 max-md:text-white max-md:border-purple-600 max-md:hover:bg-purple-700 bg-transparent hover:bg-sky-200 active:scale-95 text-slate-800 hover:text-sky-800 flex items-center justify-center gap-1.5 border border-slate-300 hover:border-sky-400 shadow-2xs transition-all cursor-pointer font-medium"
+                  className="group relative overflow-hidden w-full h-9 rounded-xl bg-transparent hover:bg-sky-200 active:scale-95 text-slate-800 hover:text-sky-800 flex items-center justify-center gap-1.5 border border-slate-300 hover:border-sky-400 shadow-2xs transition-all cursor-pointer font-medium"
                   title="Edit Listing Details"
                 >
                   <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-none group-hover:transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
-                  <PencilIcon className="w-3.5 h-3.5 max-md:text-white text-purple-600" />
+                  <PencilIcon className="w-3.5 h-3.5 text-purple-600" />
                   <span className="text-xs font-semibold">Edit</span>
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={handleShare}
-                  className="group relative overflow-hidden w-full h-9 rounded-xl max-md:bg-slate-100 max-md:border-slate-200/80 max-md:text-slate-800 max-md:hover:bg-slate-200 bg-transparent hover:bg-sky-200 active:scale-95 text-slate-800 hover:text-sky-800 flex items-center justify-center gap-1.5 border border-slate-300 hover:border-sky-400 shadow-2xs transition-all cursor-pointer font-medium"
+                  className="group relative overflow-hidden w-full h-9 rounded-xl bg-transparent hover:bg-sky-200 active:scale-95 text-slate-800 hover:text-sky-800 flex items-center justify-center gap-1.5 border border-slate-300 hover:border-sky-400 shadow-2xs transition-all cursor-pointer font-medium"
                   title="Share listing link"
                 >
                   <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-none group-hover:transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-black/20 to-transparent pointer-events-none" />
@@ -291,10 +426,10 @@ export function PropertyDetailsSection({
 
           {/* ── Lower Tab: Configuration Matrix / Tabs (Styled exactly like right tab in light theme) ── */}
           {/* ── Mobile Horizontal Glass Capsule (Icons Only) ── */}
-          <div className="md:hidden w-full flex justify-center py-2.5 px-4 relative z-20 max-md:bg-white">
+          <div className="md:hidden w-full flex justify-center py-2.5 px-4 relative z-20 max-md:bg-[#f5f2ea]">
             <nav
               aria-label="Sub-Tabs Navigation"
-              className="flex items-center justify-between w-[300px] max-w-[calc(100vw-28px)] px-2 py-1.5 rounded-full bg-purple-100/80 backdrop-blur-2xl border border-purple-200/90 shadow-xs"
+              className="flex items-center justify-between w-[300px] max-w-[calc(100vw-28px)] px-2 py-1.5 rounded-full bg-[#3d0c40] backdrop-blur-2xl border border-purple-400/30 shadow-[0_8px_24px_rgba(61,12,64,0.35)]"
             >
               {sections.map((sec, idx) => {
                 const isActive = activeIndex === idx;
@@ -306,7 +441,7 @@ export function PropertyDetailsSection({
                       setActiveIndex(idx);
                       setEditingSectionId(null);
                     }}
-                    whileTap={{ scale: 0.88 }}
+                    whileTap={{ scale: 0.95 }}
                     title={sec.title}
                     aria-label={sec.title}
                     style={{
@@ -318,20 +453,22 @@ export function PropertyDetailsSection({
                       maxHeight: 40,
                       borderRadius: '50%',
                     }}
-                    className={`relative p-0 aspect-square rounded-full flex items-center justify-center select-none cursor-pointer shrink-0 grow-0 transition-all duration-200 ${
+                    className={`relative p-0 aspect-square rounded-full flex items-center justify-center select-none cursor-pointer shrink-0 grow-0 transition-colors duration-150 ${
                       isActive
-                        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/35 scale-105 font-bold'
-                        : 'bg-white/95 hover:bg-white text-purple-700 hover:text-purple-950 border border-purple-200/80 shadow-2xs'
+                        ? 'bg-white/20 text-white border border-white/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_2px_8px_rgba(0,0,0,0.25)] backdrop-blur-md'
+                        : 'bg-transparent border-0 shadow-none text-white/60 hover:text-white'
                     }`}
                   >
                     <span
-                      className={`material-symbols-outlined text-[20px] shrink-0 leading-none flex items-center justify-center select-none transition-transform duration-200 ${
-                        isActive ? 'scale-110 font-bold' : ''
+                      style={{
+                        fontVariationSettings: "'wght' 300, 'FILL' 0",
+                      }}
+                      className={`material-symbols-outlined text-[17px] shrink-0 leading-none flex items-center justify-center select-none font-normal transition-colors ${
+                        isActive ? 'text-white' : 'text-white/60 hover:text-white'
                       }`}
                     >
                       {sec.icon}
                     </span>
-                    
                   </motion.button>
                 );
               })}
@@ -339,7 +476,7 @@ export function PropertyDetailsSection({
           </div>
 
           {/* ── Lower Tab: Configuration Matrix / Tabs (Desktop Only) ── */}
-          <div className="hidden md:flex flex-col p-4 sm:p-5 pb-5 md:bg-white/95 md: backdrop-blur-2xl md:rounded-2xl md:sm:rounded-3xl md:rounded-t-[28px] md:sm:rounded-t-[32px] md:-mt-4 md:sm:-mt-5 md:border-x md:border-b md:border-slate-200/80 md: shadow-[0_14px_36px_rgba(0,0,0,0.16)](255,255,255,0.12)] hover:shadow-[0_0_24px_rgba(0,0,0,0.25)](255,255,255,0.25)] transition-colors relative z-10 w-full">
+          <div className="hidden md:flex flex-col p-4 sm:p-5 pb-5 md:bg-white/95 md: backdrop-blur-2xl md:rounded-2xl md:sm:rounded-3xl md:rounded-t-[28px] md:sm:rounded-t-[32px] md:-mt-4 md:sm:-mt-5 md:border-x md:border-b md:border-slate-200/80 md: shadow-[0_14px_36px_rgba(0,0,0,0.16)] hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] transition-colors relative z-10 w-full">
               {/* Top specular rim removed to avoid visible line while hovering */}
               {/* Sub-Tabs Steps Navigation */}
               <nav aria-label="Steps Navigation" className="flex flex-col gap-1.5 relative z-10">
@@ -381,7 +518,10 @@ export function PropertyDetailsSection({
                       {/* Left: Standalone Icon + Title */}
                       <div className="flex items-center gap-2.5 min-w-0 relative z-10">
                         <span
-                          className={`material-symbols-outlined text-[17px] shrink-0 transition-colors duration-150 ${
+                          style={{
+                            fontVariationSettings: "'wght' 300, 'FILL' 0",
+                          }}
+                          className={`material-symbols-outlined text-[17px] shrink-0 transition-colors duration-150 font-normal ${
                             isActive ? 'max-md:text-slate-950 text-white' : 'max-md:text-purple-300/80 text-slate-500 group-hover:text-slate-900'
                           }`}
                         >
@@ -449,7 +589,7 @@ export function PropertyDetailsSection({
         </div>
 
         {/* Main Content Panel (col-span-9 - Luna Glassmorphic Aesthetic) */}
-        <main className="lg:col-span-9 flex flex-col h-full min-h-0 overflow-y-auto scroll-smooth no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-md:w-full max-md:mx-0 max-md:rounded-t-[32px] sm:max-md:rounded-t-[40px] max-md:rounded-b-none max-md:mt-0 max-md:border-none max-md:bg-[#3d0c40] max-md:shadow-none max-md:p-4 max-md:pt-6 max-md:pb-36 max-md:min-h-screen max-md:z-20 md:rounded-2xl md:sm:rounded-3xl relative overflow-hidden md:bg-white/80 md: md:border md:border-slate-200/80 md: shadow-[0_14px_36px_rgba(0,0,0,0.16)](255,255,255,0.12)] hover:shadow-[0_0_24px_rgba(0,0,0,0.25)](255,255,255,0.25)] p-4 sm:p-7 lg:p-8 pb-8 sm:pb-10 lg:pb-8 transition-all duration-300 ease-in-out">
+        <main className="lg:col-span-9 flex flex-col h-full min-h-0 overflow-y-auto scroll-smooth no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-md:w-full max-md:mx-0 max-md:rounded-t-[32px] sm:max-md:rounded-t-[40px] max-md:rounded-b-none max-md:mt-0 max-md:border-none max-md:bg-[#3d0c40] max-md:shadow-[0_-8px_30px_rgba(0,0,0,0.35),0_-2px_10px_rgba(0,0,0,0.2)] max-md:p-4 max-md:pt-6 max-md:pb-36 max-md:min-h-screen max-md:z-20 md:rounded-2xl md:sm:rounded-3xl relative overflow-hidden md:bg-white/80 md:border md:border-slate-200/80 md:shadow-[0_14px_36px_rgba(0,0,0,0.16)] hover:shadow-[0_0_24px_rgba(0,0,0,0.25)] p-4 sm:p-7 lg:p-8 pb-8 sm:pb-10 lg:pb-8 transition-all duration-300 ease-in-out">
           {/* Ambient Glass Reflections & Refractive Lighting in Luna cyan & deep navy */}
           <div
             aria-hidden="true"
@@ -492,12 +632,12 @@ export function PropertyDetailsSection({
               <AnimatePresence mode="wait">
                 <motion.div
                   key={`tab-${currentSection.id}`}
-                  initial={{ opacity: 0, y: 12, filter: 'blur(3px)' }}
-                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                  exit={{ opacity: 0, y: -8, filter: 'blur(3px)' }}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
                   transition={{
-                    duration: 0.25,
-                    ease: [0.22, 1, 0.36, 1], // Apple fluid easing curve
+                    duration: 0.18,
+                    ease: [0.16, 1, 0.3, 1],
                   }}
                   className="w-full"
                 >

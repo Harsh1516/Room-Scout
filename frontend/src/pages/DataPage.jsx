@@ -416,7 +416,7 @@ export function DataPage({ onStayClick, onBookClick }) {
                       >
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
-                            <img
+                            <img decoding="async" loading="lazy"
                               src={stay.image || (stay.images && stay.images[0]) || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80'}
                               alt={stay.title || 'Property'}
                               className="w-10 h-10 rounded-lg object-cover bg-slate-100 flex-shrink-0"
