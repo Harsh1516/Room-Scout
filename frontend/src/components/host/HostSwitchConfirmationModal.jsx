@@ -150,7 +150,7 @@ export function HostSwitchConfirmationModal({ isOpen, onClose, onConfirm }) {
           aria-hidden="true"
         />
 
-        {/* ── Host Confirmation Modal Container ── */}
+        {/* ── Host Confirmation Modal Container (White Tab) ── */}
         <motion.section
           initial={{ opacity: 0, scale: 0.95, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -160,12 +160,12 @@ export function HostSwitchConfirmationModal({ isOpen, onClose, onConfirm }) {
           aria-modal="true"
           role="dialog"
           onClick={(e) => e.stopPropagation()}
-          className="relative z-10 w-full max-w-[390px] rounded-[32px] bg-[#0c101d] p-6 sm:p-7 shadow-[0_20px_50px_rgba(0,0,0,0.25),0_0_0_1px_rgba(0,0,0,0.08)] border border-slate-800 select-none text-slate-100 antialiased"
+          className="relative z-10 w-full max-w-[390px] rounded-[32px] bg-white p-6 sm:p-7 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.35),0_0_0_1px_rgba(0,0,0,0.06)] border border-slate-100 select-none text-slate-800 antialiased"
           data-purpose="host-switch-modal"
         >
           {/* Modal Header with Title and Close Button */}
           <header className="flex items-start justify-between gap-4 mb-2.5">
-            <h2 className="text-[23px] sm:text-2xl font-bold tracking-tight text-white leading-snug" id="modal-title">
+            <h2 className="text-[22px] sm:text-2xl font-bold tracking-tight text-slate-900 leading-snug" id="modal-title">
               Ready to Switch to Host
             </h2>
             {/* Close icon button */}
@@ -173,7 +173,7 @@ export function HostSwitchConfirmationModal({ isOpen, onClose, onConfirm }) {
               aria-label="Close modal"
               type="button"
               onClick={onClose}
-              className="p-1.5 -mr-1 -mt-1 text-slate-400 hover:text-white rounded-full bg-white/5 hover:bg-white/10 active:scale-95 transition-all focus:outline-none cursor-pointer"
+              className="p-1.5 -mr-1 -mt-1 text-slate-400 hover:text-slate-700 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-95 transition-all focus:outline-none cursor-pointer"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
@@ -183,7 +183,7 @@ export function HostSwitchConfirmationModal({ isOpen, onClose, onConfirm }) {
 
           {/* Description Paragraph */}
           <div className="mb-7">
-            <p className="text-[14px] leading-relaxed text-slate-300/80 font-normal">
+            <p className="text-[14px] leading-relaxed text-slate-600 font-normal">
               Slide the control to the right to confirm you are ready to become a host and continue to property upload.
             </p>
           </div>
@@ -192,16 +192,16 @@ export function HostSwitchConfirmationModal({ isOpen, onClose, onConfirm }) {
           <div className="mb-3.5" data-purpose="slider-container">
             <div
               ref={trackRef}
-              className="relative w-full h-[62px] rounded-full bg-[#070a11]/80 border border-white/[0.09] p-1 flex items-center overflow-hidden touch-none select-none shadow-inner"
+              className="relative w-full h-[62px] rounded-full bg-slate-100 border border-slate-200/90 p-1 flex items-center overflow-hidden touch-none select-none shadow-inner"
             >
               {/* Background Track Glow & Progress Fill Indicator */}
               <div
                 className={`absolute left-0 top-0 bottom-0 pointer-events-none rounded-full transition-all ${
                   isCompleted
-                    ? 'w-full bg-emerald-600/30'
+                    ? 'w-full bg-emerald-500/25'
                     : isDragging
-                    ? 'bg-gradient-to-r from-purple-700/30 to-violet-600/30 duration-75'
-                    : 'bg-gradient-to-r from-purple-700/30 to-violet-600/30 duration-200'
+                    ? 'bg-gradient-to-r from-purple-500/20 to-violet-500/20 duration-75'
+                    : 'bg-gradient-to-r from-purple-500/20 to-violet-500/20 duration-200'
                 }`}
                 style={{ width: isCompleted ? '100%' : `${knobX + 27}px` }}
               />
@@ -211,9 +211,9 @@ export function HostSwitchConfirmationModal({ isOpen, onClose, onConfirm }) {
                 className="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-200"
                 style={{ opacity: labelOpacity }}
               >
-                <span className="text-[12px] font-bold tracking-[0.16em] uppercase text-slate-400/80 flex items-center gap-1.5 pl-6">
+                <span className="text-[12px] font-bold tracking-[0.16em] uppercase text-slate-500 flex items-center gap-1.5 pl-6">
                   Slide to Confirm
-                  <span className="inline-flex items-center text-slate-500 animate-pulse opacity-75">
+                  <span className="inline-flex items-center text-slate-400 animate-pulse opacity-85">
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                       <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
@@ -233,12 +233,12 @@ export function HostSwitchConfirmationModal({ isOpen, onClose, onConfirm }) {
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
                 onPointerCancel={handlePointerCancel}
-                className={`relative z-10 w-[54px] h-[54px] rounded-full text-white flex items-center justify-center ring-1 ring-white/30 cursor-grab active:cursor-grabbing transform select-none ${
+                className={`relative z-10 w-[54px] h-[54px] rounded-full text-white flex items-center justify-center ring-1 ring-white/40 cursor-grab active:cursor-grabbing transform select-none ${
                   isDragging ? 'duration-0' : 'transition-transform duration-200 ease-out'
                 } ${
                   isCompleted
-                    ? 'bg-emerald-500 shadow-lg shadow-emerald-500/30'
-                    : 'bg-gradient-to-tr from-violet-600 via-indigo-600 to-purple-500 shadow-[0_0_25px_-4px_rgba(139,92,246,0.45)] hover:brightness-110 active:scale-95'
+                    ? 'bg-emerald-500 shadow-lg shadow-emerald-500/40'
+                    : 'bg-gradient-to-tr from-violet-600 via-indigo-600 to-purple-500 shadow-[0_4px_20px_rgba(139,92,246,0.45)] hover:brightness-105 active:scale-95'
                 }`}
                 style={{ transform: `translateX(${knobX}px)` }}
               >
@@ -278,7 +278,7 @@ export function HostSwitchConfirmationModal({ isOpen, onClose, onConfirm }) {
             <button
               type="button"
               onClick={onClose}
-              className="w-full h-[52px] rounded-full bg-[#111728]/90 hover:bg-[#161e33] active:bg-[#232f4e]/80 border border-white/[0.08] hover:border-white/20 text-[15px] font-semibold text-slate-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500/40 cursor-pointer"
+              className="w-full h-[52px] rounded-full bg-slate-100 hover:bg-slate-200 active:bg-slate-300 border border-slate-200/80 text-[15px] font-semibold text-slate-700 transition-all duration-200 focus:outline-none cursor-pointer"
             >
               Cancel
             </button>
@@ -291,9 +291,9 @@ export function HostSwitchConfirmationModal({ isOpen, onClose, onConfirm }) {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 8 }}
-                className="mt-4 p-3 rounded-2xl bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 text-xs font-medium text-center flex items-center justify-center gap-2"
+                className="mt-4 p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold text-center flex items-center justify-center gap-2"
               >
-                <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="m4.5 12.75 6 6 9-13.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 <span>Confirmed! Redirecting to property upload...</span>
