@@ -17,7 +17,13 @@ export const envSchema = z
       .default('development'),
 
     PORT: z
-      .preprocess((val) => (val !== undefined && val !== null ? String(val) : '5000'), z.string().regex(/^\d+$/, { message: 'PORT must be a numeric integer string' }).transform(Number)),
+      .preprocess(
+        (val) => {
+          if (val !== undefined && val !== null && String(val).trim() !== '') return String(val).trim();
+          return process.env.NODE_ENV === 'production' ? '10000' : '5000';
+        },
+        z.string().regex(/^\d+$/, { message: 'PORT must be a numeric integer string' }).transform(Number)
+      ),
 
     MONGO_URI: z
       .string({ required_error: 'MONGO_URI is required' })
