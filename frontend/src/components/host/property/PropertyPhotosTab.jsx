@@ -510,10 +510,10 @@ export function PropertyPhotosTab({
 
       {/* ── Centered Heading with Generous Gap ── */}
       <div className="flex flex-col items-center justify-center pt-1 mb-5 sm:mb-6 w-full text-center">
-        <h2 className="text-xl sm:text-2xl font-bold max-md:font-black max-md:text-white text-slate-900 tracking-normal text-center">
+        <h2 className="text-[22px] sm:text-2xl font-black max-md:text-white text-slate-900 tracking-tight text-center">
           Visual Gallery & Walkthrough
         </h2>
-        <span className="text-xs max-md:text-purple-200/80 text-purple-600 font-medium mt-0.5">
+        <span className="text-[13px] font-medium max-md:text-purple-200/80 text-purple-600 mt-0.5">
           {localImages.length} / {MAX_PHOTOS} Photos • Total Size: {totalMemoryFormatted}
         </span>
       </div>

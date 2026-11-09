@@ -592,6 +592,12 @@ export function HostUploadPage() {
   }, [user?.email, user?.name, user?.phone]);
 
   const showToast = (msg, type = 'info') => {
+    if (!msg) return;
+    // Explicitly allow 16:9 photo aspect ratio alerts to pass through to toast.error
+    if (msg.includes('16:9')) {
+      toast.error(msg);
+      return;
+    }
     // Suppress error toasts on upload form as each error is already highlighted inline with the fields
     if (
       type === 'error' ||
@@ -633,7 +639,7 @@ export function HostUploadPage() {
   const handleImportGoogleMaps = async () => {
     const rawUrl = googleMapsUrl.trim();
     if (!rawUrl) {
-      showToast('Please paste a Google Maps link first.', 'error');
+      toast.error('Please paste a Google Maps link first.');
       return;
     }
 
@@ -659,15 +665,13 @@ export function HostUploadPage() {
             lng = res.longitude;
             if (res.placeName) detectedPlace = res.placeName;
             // Auto-fill address fields returned by progressive geocoding fallback
-            if (res.roadArea || res.city || res.state || res.pincode) {
-              setFormData((prev) => ({
-                ...prev,
-                roadArea: res.roadArea || prev.roadArea,
-                city: res.city || prev.city,
-                state: res.state || prev.state,
-                pincode: res.pincode || prev.pincode,
-              }));
-            }
+            setFormData((prev) => ({
+              ...prev,
+              roadArea: res.roadArea || prev.roadArea,
+              city: res.city || prev.city,
+              state: res.state || prev.state,
+              pincode: res.pincode || prev.pincode,
+            }));
           }
         } catch (apiErr) {
           console.warn('Backend link resolve note:', apiErr);
@@ -675,7 +679,7 @@ export function HostUploadPage() {
       }
 
       if (lat === null || lng === null || isNaN(lat) || isNaN(lng)) {
-        showToast('Could not extract coordinates from this Google Maps link.', 'error');
+        toast.error('Could not extract coordinates from this link. Please check the URL or pin your location on the map.');
         return;
       }
 
@@ -697,20 +701,20 @@ export function HostUploadPage() {
         if (detectedAddr) {
           setFormData((prev) => ({
             ...prev,
-            roadArea: detectedAddr.roadArea ? detectedAddr.roadArea.trim() : prev.roadArea,
-            city: detectedAddr.city ? detectedAddr.city.trim() : prev.city,
-            state: detectedAddr.state ? detectedAddr.state.trim() : prev.state,
-            pincode: detectedAddr.pincode ? detectedAddr.pincode.trim() : prev.pincode,
+            roadArea: detectedAddr.roadArea || prev.roadArea,
+            city: detectedAddr.city || prev.city,
+            state: detectedAddr.state || prev.state,
+            pincode: detectedAddr.pincode || prev.pincode,
           }));
         }
       } catch (revErr) {
         console.warn('Reverse geocode error:', revErr);
       }
 
-      showToast(`Exact location imported (${fixedLat}, ${fixedLng}) & address auto-filled!`, 'success');
+      toast.success(`Location imported & address details filled!`);
     } catch (err) {
       console.error('Import Google Maps error:', err);
-      showToast(`Failed to import location: ${err.message}`, 'error');
+      toast.error(`Failed to import location: ${err.message || 'Please try again'}`);
     } finally {
       setIsImportingGMap(false);
     }
@@ -769,7 +773,7 @@ export function HostUploadPage() {
           if (!is16x9) {
             resolve({
               valid: false,
-              message: 'Photos must be in 16:9 only',
+              message: 'Photos must be in 16:9 aspect ratio only.',
             });
           } else {
             resolve({ valid: true });
@@ -800,7 +804,7 @@ export function HostUploadPage() {
     for (const file of filesToUpload) {
       const validation = await validate16x9Ratio(file);
       if (!validation.valid) {
-        showToast(validation.message, 'error');
+        toast.error(validation.message || 'Photos must be in 16:9 aspect ratio only.');
         continue;
       }
       try {
@@ -1658,9 +1662,9 @@ export function HostUploadPage() {
     <div className="bg-[#f5f2ea] text-slate-800 host-page-scope font-body-md antialiased min-h-screen flex flex-col justify-between relative selection:bg-[#006C4A] selection:text-white transition-colors duration-300">
 
       {/* ── Top Header Navigation Bar (Floating Liquid Glass Islands matching Host Dashboard / Pic 2) ── */}
-      <header className="relative w-full h-14 sm:h-20 pointer-events-none select-none z-50 font-body-md host-font-scope antialiased">
+      <header className="relative w-full h-[70px] sm:h-[88px] pointer-events-none select-none z-50 font-body-md host-font-scope antialiased">
         {/* ── 1. LEFT FLOATING ISLAND: BACK BUTTON ── */}
-        <div className="fixed top-2.5 sm:top-5 left-2.5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none h-8 sm:h-[46px]">
+        <div className="fixed top-2.5 sm:top-5 left-2.5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none h-13 sm:h-[54px]">
           <button
             type="button"
             onClick={() => {
@@ -1668,11 +1672,11 @@ export function HostUploadPage() {
               navigate('/host/dashboard');
             }}
             data-no-hover="true"
-            className="inline-flex items-center justify-center h-8 sm:h-[46px] px-3.5 sm:px-5 gap-1.5 sm:gap-2 rounded-full bg-white text-slate-700 text-xs sm:text-[14px] font-semibold shadow-sm border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer select-none active:scale-95 shrink-0"
+            className="inline-flex items-center justify-center h-13 sm:h-[54px] px-4 sm:px-5.5 gap-2 rounded-full bg-white text-slate-800 text-sm sm:text-base font-semibold shadow-sm border border-slate-200/90 hover:bg-slate-50 transition-colors cursor-pointer select-none active:scale-95 shrink-0"
             title="Return to Host Dashboard"
           >
             <svg
-              className="w-3.5 h-3.5 text-slate-600 stroke-[2.2] shrink-0"
+              className="w-4.5 h-4.5 text-slate-700 stroke-[2.2] shrink-0"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -1686,7 +1690,7 @@ export function HostUploadPage() {
         </div>
 
         {/* ── 2. CENTER FLOATING ISLAND: NAVIGATION TABS (DESKTOP) & STEP COUNTER (MOBILE) ── */}
-        <div className="hidden md:flex fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 items-center pointer-events-auto select-none h-8 sm:h-[46px]">
+        <div className="hidden md:flex fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 items-center pointer-events-auto select-none h-13 sm:h-[54px]">
           <HostUploadTabs
             steps={WIZARD_STEPS}
             activeStep={activeStep}
@@ -1696,19 +1700,42 @@ export function HostUploadPage() {
         </div>
 
         {/* Mobile Center Step Count Badge */}
-        <div className="md:hidden fixed top-2.5 left-1/2 -translate-x-1/2 z-50 pointer-events-auto select-none h-8 flex items-center">
-          <div className="inline-flex items-center justify-center h-8 px-3.5 rounded-full bg-white text-slate-700 text-xs font-semibold shadow-sm border border-slate-100 shrink-0 select-none">
+        <div className="md:hidden fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 pointer-events-auto select-none h-13 sm:h-[54px] flex items-center">
+          <div className="inline-flex items-center justify-center h-13 sm:h-[54px] px-4.5 sm:px-5.5 rounded-full bg-white text-slate-800 text-sm sm:text-base font-bold shadow-sm border border-slate-200/90 shrink-0 select-none">
             <span className="tracking-tight uppercase leading-none flex items-center justify-center">
               Step {activeStep} of {WIZARD_STEPS.length}
             </span>
           </div>
         </div>
 
-        {/* ── 3. RIGHT FLOATING ISLAND: USER AVATAR ── */}
-        <div className="fixed top-2.5 sm:top-5 right-2.5 sm:right-6 z-50 flex items-center gap-2 pointer-events-auto select-none h-8 sm:h-[46px]">
-          <div className="relative flex items-center justify-center h-8 sm:h-[46px]">
-            <Login />
+        {/* ── 3. RIGHT FLOATING ISLAND: USER AVATAR + USER DASHBOARD ── */}
+        <div className="fixed top-2.5 sm:top-5 right-2.5 sm:right-6 z-50 flex flex-col items-end gap-2 pointer-events-auto select-none">
+          <div className="flex items-center gap-2 h-13 sm:h-[54px]">
+            <div className="relative flex items-center justify-center h-13 sm:h-[54px]">
+              <Login />
+            </div>
           </div>
+
+          {/* User Dashboard Circular Button at bottom of Profile Icon */}
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="relative w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-sm hover:bg-slate-50 hover:shadow-md flex items-center justify-center font-bold transition-all cursor-pointer select-none active:scale-95 shrink-0"
+            title="Switch to User Dashboard"
+            aria-label="User Dashboard"
+          >
+            <svg
+              className="w-5.5 h-5.5 sm:w-6 sm:h-6 text-purple-600 stroke-[2.2] shrink-0"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+          </button>
         </div>
       </header>
 
@@ -1848,13 +1875,13 @@ export function HostUploadPage() {
             className="max-w-4xl mx-auto text-center space-y-1 sm:space-y-2 md:space-y-0.5"
           >
             {/* Main Step Headline - Large & Balanced for Mobile */}
-            <h1 className="text-2xl sm:text-3xl md:text-xl font-black text-slate-900 tracking-tight">
+            <h1 className="text-[26px] sm:text-3xl md:text-xl font-black text-slate-900 tracking-tight">
               {currentStepConfig.sub || currentStepConfig.title}
             </h1>
 
             {/* Step Subtitle / Description - Easy to Read on Mobile */}
             {/* Step Subtitle / Description - Kept on Mobile, Hidden on Desktop */}
-            <p className="md:hidden text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto leading-relaxed font-medium">
+            <p className="md:hidden text-[14px] sm:text-sm text-slate-600 max-w-2xl mx-auto leading-relaxed font-medium">
               {currentStepConfig.desc}
             </p>
           </motion.div>

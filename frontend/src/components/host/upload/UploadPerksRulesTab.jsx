@@ -93,7 +93,7 @@ export function UploadPerksRulesTab({
       <div className="space-y-2.5 sm:space-y-3">
         {/* Mobile-Only Heading (Outside, Centered) */}
         <div className="md:hidden text-center px-1 mb-2">
-          <h2 className="text-xl font-black text-white tracking-tight">
+          <h2 className="text-[22px] font-black text-white tracking-tight">
             What this place offers
           </h2>
         </div>
@@ -136,9 +136,9 @@ export function UploadPerksRulesTab({
                     }
                   }}
                   placeholder="Add Facility / Amenity (e.g. High-Speed Wi-Fi, Attached Bathroom)..."
-                  className="flex-1 h-11 sm:h-12 md:h-10 px-4 md:px-3 rounded-xl border text-xs sm:text-sm md:text-xs focus:outline-none transition-all
+                  className="flex-1 h-11 max-md:h-12 md:h-9 px-4 sm:px-4.5 rounded-full border text-[14px] sm:text-[15px] md:text-sm focus:outline-none transition-all
                     max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
-                    md:bg-slate-50/70 md: md:border-slate-200 md: md:text-slate-900 md: md:placeholder:text-slate-400 md: md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15"
+                    md:bg-slate-50/70 md:border-slate-200 md:text-slate-900 md:placeholder:text-slate-400 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15"
                 />
                 <button
                   type="button"
@@ -147,11 +147,11 @@ export function UploadPerksRulesTab({
                     e.stopPropagation();
                     onAddFacility?.(e);
                   }}
-                  className="h-11 sm:h-12 md:h-10 px-5 md:px-4 rounded-xl text-xs sm:text-sm md:text-xs font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 shadow-xs active:scale-98
+                  className="h-11 max-md:h-12 md:h-9 px-6 sm:px-8 md:px-6 rounded-full text-sm md:text-xs font-extrabold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 shadow-xs active:scale-95
                     max-md:bg-purple-300 max-md:hover:bg-purple-200 max-md:text-slate-950
                     md:bg-[#006C4A] md:hover:bg-[#005a3e] md:text-white"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-4 h-4 stroke-[2.5]" />
                   <span>Add</span>
                 </button>
               </form>
@@ -159,7 +159,7 @@ export function UploadPerksRulesTab({
 
             {/* Added Facilities: Support Manual Add, Inline Update, and Remove with Zero Refresh */}
             {activeFacilities.length > 0 && (
-              <div className="flex flex-wrap gap-2 pt-1">
+              <div className="flex flex-wrap gap-2 sm:gap-2.5 max-md:gap-2.5 pt-1">
                 {activeFacilities.map((fac, idx) => {
                   const isEditing = editingFacilityIdx === idx;
 
@@ -167,9 +167,9 @@ export function UploadPerksRulesTab({
                     return (
                       <div
                         key={idx}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs md:text-[11px] shadow-sm transition-all
+                        className="inline-flex items-center gap-1.5 max-md:gap-2 px-3.5 sm:px-4 max-md:px-4.5 py-1.5 sm:py-2 max-md:py-2.5 rounded-full border text-sm sm:text-[14px] max-md:text-[15.5px] shadow-sm transition-all
                           max-md:bg-white/20 max-md:border-purple-300 max-md:text-white
-                          md:bg-white md: md:border-[#006C4A] md:text-slate-900 md:"
+                          md:bg-white md:border-[#006C4A] md:text-slate-900"
                       >
                         <input
                           type="text"
@@ -190,23 +190,23 @@ export function UploadPerksRulesTab({
                               handleCancelEditFacility(e);
                             }
                           }}
-                          className="w-28 sm:w-36 bg-transparent outline-none text-xs md:text-[11px] font-medium"
+                          className="w-32 sm:w-40 max-md:w-36 bg-transparent outline-none text-sm sm:text-[14px] max-md:text-[15.5px] font-medium"
                         />
                         <button
                           type="button"
                           onClick={(e) => handleSaveEditFacility(idx, e)}
-                          className="w-4 h-4 rounded-full flex items-center justify-center transition-colors cursor-pointer text-emerald-600 hover:scale-110"
+                          className="w-5 h-5 max-md:w-6 max-md:h-6 rounded-full flex items-center justify-center transition-colors cursor-pointer text-emerald-600 max-md:text-emerald-300 hover:scale-110"
                           title="Save facility"
                         >
-                          <Check className="w-3 h-3" />
+                          <Check className="w-3.5 h-3.5 max-md:w-4 max-md:h-4 stroke-[2.5]" />
                         </button>
                         <button
                           type="button"
                           onClick={handleCancelEditFacility}
-                          className="w-4 h-4 rounded-full flex items-center justify-center transition-colors cursor-pointer text-slate-400 hover:text-slate-600"
+                          className="w-5 h-5 max-md:w-6 max-md:h-6 rounded-full flex items-center justify-center transition-colors cursor-pointer text-slate-400 max-md:text-purple-200 hover:text-slate-600"
                           title="Cancel edit"
                         >
-                          <X className="w-3 h-3" />
+                          <X className="w-3.5 h-3.5 max-md:w-4 max-md:h-4 stroke-[2.5]" />
                         </button>
                       </div>
                     );
@@ -215,11 +215,11 @@ export function UploadPerksRulesTab({
                   return (
                     <span
                       key={idx}
-                      className="group inline-flex items-center gap-1.5 px-3 py-1.5 md:px-2.5 md:py-1 rounded-full border text-xs md:text-[11px] font-medium transition-all shadow-2xs
+                      className="group inline-flex items-center gap-2 max-md:gap-2.5 px-3.5 sm:px-4 max-md:px-4.5 py-2 sm:py-2.5 max-md:py-2.5 rounded-full border text-sm sm:text-[14.5px] max-md:text-[15.5px] font-semibold max-md:font-bold transition-all shadow-2xs
                         max-md:bg-white/15 max-md:border-white/20 max-md:text-white
-                        md:bg-slate-100 md: md:border-slate-200 md: md:text-slate-800 md:"
+                        md:bg-slate-100 md:border-slate-200 md:text-slate-800"
                     >
-                      <span className="w-1.5 h-1.5 rounded-full max-md:bg-purple-300 md:bg-emerald-500 shrink-0" />
+                      <span className="w-2 h-2 max-md:w-2.5 max-md:h-2.5 rounded-full max-md:bg-purple-300 md:bg-emerald-500 shrink-0" />
                       
                       {/* Clickable text to trigger update */}
                       <span
@@ -234,10 +234,10 @@ export function UploadPerksRulesTab({
                       <button
                         type="button"
                         onClick={(e) => handleStartEditFacility(fac, idx, e)}
-                        className="w-3.5 h-3.5 flex items-center justify-center opacity-40 group-hover:opacity-100 transition-opacity cursor-pointer hover:text-emerald-600"
+                        className="w-5 h-5 max-md:w-6 max-md:h-6 flex items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity cursor-pointer hover:text-emerald-300"
                         title="Edit facility"
                       >
-                        <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg className="w-3.5 h-3.5 max-md:w-4 max-md:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
                           <path d="m15 5 4 4" />
                         </svg>
@@ -251,12 +251,12 @@ export function UploadPerksRulesTab({
                           e.stopPropagation();
                           onRemoveFacility?.(fac, e);
                         }}
-                        className="w-4 h-4 rounded-full flex items-center justify-center transition-colors ml-0.5 cursor-pointer
+                        className="w-5 h-5 max-md:w-6 max-md:h-6 rounded-full flex items-center justify-center transition-colors ml-0.5 cursor-pointer
                           max-md:text-purple-200 max-md:hover:bg-white/20 max-md:hover:text-rose-300
-                          md:hover:bg-slate-200 md: md:text-slate-400 md:hover:text-rose-500"
+                          md:hover:bg-slate-200 md:text-slate-400 md:hover:text-rose-500"
                         title={`Remove ${fac}`}
                       >
-                        <X className="w-3 h-3" />
+                        <X className="w-3.5 h-3.5 max-md:w-4 max-md:h-4 stroke-[2.5]" />
                       </button>
                     </span>
                   );
@@ -271,7 +271,7 @@ export function UploadPerksRulesTab({
       <div className="space-y-2.5 sm:space-y-3">
         {/* Mobile-Only Heading (Outside, Centered) */}
         <div className="md:hidden text-center px-1 mb-2 mt-4">
-          <h2 className="text-xl font-black text-white tracking-tight">
+          <h2 className="text-[22px] sm:text-2xl font-black text-white tracking-tight">
             House Rules & Policies
           </h2>
         </div>
@@ -279,7 +279,7 @@ export function UploadPerksRulesTab({
         {/* Card Body: Purple on Mobile, Clean White/Dark on Desktop */}
         <section className="rounded-2xl sm:rounded-3xl border shadow-lg space-y-4 sm:space-y-5 transition-colors
           max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:p-4 max-md:shadow-black/20
-          md:bg-white md: md:border-slate-200/90 md: md:p-4 md:sm:p-4.5 md:shadow-black/5 md:(255,255,255,0.04)]"
+          md:bg-white md:border-slate-200/90 md:p-4 md:sm:p-4.5 md:shadow-black/5"
         >
           {/* Desktop-Only Heading Inside Card */}
           <div className="hidden md:block pb-4 border-b border-slate-100 text-center">
@@ -314,9 +314,9 @@ export function UploadPerksRulesTab({
                     }
                   }}
                   placeholder="Add House Rule (e.g. Gate closes at 10:30 PM, No Smoking)..."
-                  className="flex-1 h-11 sm:h-12 md:h-10 px-4 md:px-3 rounded-xl border text-xs sm:text-sm md:text-xs focus:outline-none transition-all
+                  className="flex-1 h-11 max-md:h-12 md:h-9 px-4 sm:px-4.5 rounded-full border text-[14px] sm:text-[15px] md:text-sm focus:outline-none transition-all
                     max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
-                    md:bg-slate-50/70 md: md:border-slate-200 md: md:text-slate-900 md: md:placeholder:text-slate-400 md: md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15"
+                    md:bg-slate-50/70 md:border-slate-200 md:text-slate-900 md:placeholder:text-slate-400 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15"
                 />
                 <button
                   type="button"
@@ -325,11 +325,11 @@ export function UploadPerksRulesTab({
                     e.stopPropagation();
                     onAddRule?.(e);
                   }}
-                  className="h-11 sm:h-12 md:h-10 px-5 md:px-4 rounded-xl text-xs sm:text-sm md:text-xs font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 shadow-xs active:scale-98
+                  className="h-11 max-md:h-12 md:h-9 px-6 sm:px-8 md:px-6 rounded-full text-sm md:text-xs font-extrabold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 shadow-xs active:scale-95
                     max-md:bg-purple-300 max-md:hover:bg-purple-200 max-md:text-slate-950
                     md:bg-[#006C4A] md:hover:bg-[#005a3e] md:text-white"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-4 h-4 stroke-[2.5]" />
                   <span>Add</span>
                 </button>
               </form>
@@ -337,7 +337,7 @@ export function UploadPerksRulesTab({
 
             {/* Added Rules: Support Manual Add, Inline Update, and Remove with Zero Refresh */}
             {activeRules.length > 0 && (
-              <div className="flex flex-wrap gap-2 pt-1">
+              <div className="flex flex-wrap gap-2 sm:gap-2.5 max-md:gap-2.5 pt-1">
                 {activeRules.map((rule, idx) => {
                   const isEditing = editingRuleIdx === idx;
 
@@ -345,9 +345,9 @@ export function UploadPerksRulesTab({
                     return (
                       <div
                         key={idx}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs md:text-[11px] shadow-sm transition-all
+                        className="inline-flex items-center gap-1.5 max-md:gap-2 px-3.5 sm:px-4 max-md:px-4.5 py-1.5 sm:py-2 max-md:py-2.5 rounded-full border text-sm sm:text-[14px] max-md:text-[15.5px] shadow-sm transition-all
                           max-md:bg-white/20 max-md:border-purple-300 max-md:text-white
-                          md:bg-white md: md:border-indigo-500 md:text-slate-900 md:"
+                          md:bg-white md:border-indigo-500 md:text-slate-900"
                       >
                         <input
                           type="text"
@@ -368,23 +368,23 @@ export function UploadPerksRulesTab({
                               handleCancelEditRule(e);
                             }
                           }}
-                          className="w-32 sm:w-44 bg-transparent outline-none text-xs md:text-[11px] font-medium"
+                          className="w-32 sm:w-44 max-md:w-36 bg-transparent outline-none text-sm sm:text-[14px] max-md:text-[15.5px] font-medium"
                         />
                         <button
                           type="button"
                           onClick={(e) => handleSaveEditRule(idx, e)}
-                          className="w-4 h-4 rounded-full flex items-center justify-center transition-colors cursor-pointer text-indigo-600 hover:scale-110"
+                          className="w-5 h-5 max-md:w-6 max-md:h-6 rounded-full flex items-center justify-center transition-colors cursor-pointer text-indigo-600 max-md:text-indigo-300 hover:scale-110"
                           title="Save rule"
                         >
-                          <Check className="w-3 h-3" />
+                          <Check className="w-3.5 h-3.5 max-md:w-4 max-md:h-4 stroke-[2.5]" />
                         </button>
                         <button
                           type="button"
                           onClick={handleCancelEditRule}
-                          className="w-4 h-4 rounded-full flex items-center justify-center transition-colors cursor-pointer text-slate-400 hover:text-slate-600"
+                          className="w-5 h-5 max-md:w-6 max-md:h-6 rounded-full flex items-center justify-center transition-colors cursor-pointer text-slate-400 max-md:text-purple-200 hover:text-slate-600"
                           title="Cancel edit"
                         >
-                          <X className="w-3 h-3" />
+                          <X className="w-3.5 h-3.5 max-md:w-4 max-md:h-4 stroke-[2.5]" />
                         </button>
                       </div>
                     );
@@ -393,11 +393,11 @@ export function UploadPerksRulesTab({
                   return (
                     <span
                       key={idx}
-                      className="group inline-flex items-center gap-1.5 px-3 py-1.5 md:px-2.5 md:py-1 rounded-full border text-xs md:text-[11px] font-medium transition-all shadow-2xs
+                      className="group inline-flex items-center gap-2 max-md:gap-2.5 px-3.5 sm:px-4 max-md:px-4.5 py-2 sm:py-2.5 max-md:py-2.5 rounded-full border text-sm sm:text-[14.5px] max-md:text-[15.5px] font-semibold max-md:font-bold transition-all shadow-2xs
                         max-md:bg-white/15 max-md:border-white/20 max-md:text-white
-                        md:bg-slate-100 md: md:border-slate-200 md: md:text-slate-800 md:"
+                        md:bg-slate-100 md:border-slate-200 md:text-slate-800"
                     >
-                      <span className="w-1.5 h-1.5 rounded-full max-md:bg-purple-300 md:bg-indigo-500 shrink-0" />
+                      <span className="w-2 h-2 max-md:w-2.5 max-md:h-2.5 rounded-full max-md:bg-purple-300 md:bg-indigo-500 shrink-0" />
                       
                       {/* Clickable text to trigger update */}
                       <span
@@ -412,10 +412,10 @@ export function UploadPerksRulesTab({
                       <button
                         type="button"
                         onClick={(e) => handleStartEditRule(rule, idx, e)}
-                        className="w-3.5 h-3.5 flex items-center justify-center opacity-40 group-hover:opacity-100 transition-opacity cursor-pointer hover:text-indigo-600"
+                        className="w-5 h-5 max-md:w-6 max-md:h-6 flex items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity cursor-pointer hover:text-indigo-300"
                         title="Edit rule"
                       >
-                        <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg className="w-3.5 h-3.5 max-md:w-4 max-md:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
                           <path d="m15 5 4 4" />
                         </svg>
@@ -429,12 +429,12 @@ export function UploadPerksRulesTab({
                           e.stopPropagation();
                           onRemoveRule?.(idx, e);
                         }}
-                        className="w-4 h-4 rounded-full flex items-center justify-center transition-colors ml-0.5 cursor-pointer
+                        className="w-5 h-5 max-md:w-6 max-md:h-6 rounded-full flex items-center justify-center transition-colors ml-0.5 cursor-pointer
                           max-md:text-purple-200 max-md:hover:bg-white/20 max-md:hover:text-rose-300
-                          md:hover:bg-slate-200 md: md:text-slate-400 md:hover:text-rose-500"
+                          md:hover:bg-slate-200 md:text-slate-400 md:hover:text-rose-500"
                         title={`Remove ${rule}`}
                       >
-                        <X className="w-3 h-3" />
+                        <X className="w-3.5 h-3.5 max-md:w-4 max-md:h-4 stroke-[2.5]" />
                       </button>
                     </span>
                   );

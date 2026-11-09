@@ -65,6 +65,18 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
   const [activeCategories, setActiveCategories] = useState(ALL_CATEGORIES);
   const [typeCounts, setTypeCounts] = useState({});
 
+  // Close smoothly on Escape key press (matching WishlistDrawer)
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
   useEffect(() => {
     window.dispatchEvent(new CustomEvent('leftpanel:toggle', { detail: { open: isOpen } }));
   }, [isOpen]);
@@ -91,9 +103,6 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
 
         if (mounted) {
           setTypeCounts(counts);
-          const filtered = ALL_CATEGORIES.filter((cat) =>
-            cat.matchTypes.some((t) => availableTypes.has(t))
-          );
           setActiveCategories(ALL_CATEGORIES);
         }
       } catch (err) {
@@ -137,6 +146,13 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
     };
   }, []);
 
+  const handleSelect = (categoryId) => {
+    setIsOpen(false);
+    if (onSelectCategory) {
+      onSelectCategory(categoryId);
+    }
+  };
+
   return (
     <>
       {/* ── Collapsed Toggle Handle (When Panel is Closed) ── */}
@@ -167,126 +183,154 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
         )}
       </AnimatePresence>
 
-      {/* ── Left Side Properties Panel (Strictly No Left Border) ── */}
+      {/* ── Left Side Properties Drawer (Matching WishlistDrawer Architecture) ── */}
       <AnimatePresence>
         {isOpen && (
-          <>
-            {/* Backdrop on mobile/tablet to close on tap outside */}
+          <div className="fixed inset-0 z-[9999] overflow-hidden">
+            {/* Backdrop */}
             <motion.div
+              key="properties-backdrop"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.28, ease: 'easeOut' }}
+              className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
               onClick={() => setIsOpen(false)}
-              className="fixed inset-0 bg-black/40 backdrop-blur-[1px] z-39"
             />
 
-            <motion.aside
-              key="properties-left-panel"
-              initial={{ opacity: 0, x: -340 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -340 }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="fixed inset-y-0 left-0 z-40 w-80 sm:w-88 max-w-[85vw] flex flex-col bg-white/85 backdrop-blur-2xl border-l-0 border-r border-t-0 border-b-0 border-white/80 shadow-[12px_0_36px_rgba(31,38,135,0.08)] select-none"
-              style={{ borderLeft: 'none' }}
-            >
-            {/* Header Area */}
-            <div className="pt-20 sm:pt-24 px-4 pb-3 border-b border-slate-200/70 flex items-center justify-between gap-2 shrink-0">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-[18px] font-medium text-slate-900 tracking-tight">
-                    Properties
-                  </h2>
-                  <span className="text-[12px] font-mono font-normal px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-                    {activeCategories.length} {activeCategories.length === 1 ? 'Type' : 'Types'}
-                  </span>
-                </div>
-                <p className="text-[14px] text-slate-500 font-normal mt-0.5">
-                  Added website listings & categories
-                </p>
-              </div>
-
-              {/* Close / Collapse Toggle */}
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="w-7 h-7 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-800 hover:bg-black/5 transition-colors cursor-pointer text-xs font-normal active:scale-95"
-                title="Collapse Panel"
+            {/* Drawer Wrapper */}
+            <div className="fixed inset-y-0 left-0 flex pr-0 sm:pr-10 max-w-full pointer-events-none">
+              <motion.div
+                key="properties-drawer-panel"
+                initial={{ x: '-100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '-100%' }}
+                transition={{
+                  duration: 0.32,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                className="pointer-events-auto w-80 sm:w-88 max-w-[85vw] flex flex-col bg-white border-r border-slate-200 shadow-2xl h-full will-change-transform select-none"
               >
-                ✕
-              </button>
-            </div>
-
-            {/* Scrollable Properties Cards List */}
-            <div className="flex-1 overflow-y-auto p-3.5 space-y-2.5 no-scrollbar">
-              {activeCategories.map((cat) => {
-                const isSelected = selectedCategory === cat.id;
-
-                // Calculate count of stays in this category
-                const catCount = cat.matchTypes.reduce(
-                  (sum, t) => sum + (typeCounts[t] || 0),
-                  0
-                );
-
-                return (
-                  <div
-                    key={cat.id}
-                    onClick={() => onSelectCategory && onSelectCategory(cat.id)}
-                    className={`p-3 sm:p-3.5 rounded-2xl cursor-pointer transition-colors duration-150 border ${
-                      isSelected
-                        ? 'bg-sky-50 border-sky-300'
-                        : 'bg-white/60 hover:bg-slate-100 border-slate-200/60 hover:border-slate-300'
-                    } flex items-center justify-between gap-3 select-none`}
-                  >
-                    {/* Left: Premium SVG Icon + Property Type + Count */}
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200/70 flex items-center justify-center shrink-0">
-                        {renderCategoryIcon(cat.id)}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-sm font-medium text-slate-800 tracking-tight truncate">
-                          {cat.title}
-                        </div>
-                        <div className="text-[11px] font-normal text-slate-500 mt-0.5">
-                          {catCount} {catCount === 1 ? 'stay' : 'stays'}
-                        </div>
-                      </div>
+                {/* Header (Clean, Compact, matching WishlistDrawer) */}
+                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-sm font-semibold text-slate-900 tracking-tight">
+                        Properties
+                      </h2>
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-700 border border-amber-500/25 whitespace-nowrap">
+                        {activeCategories.length} Types
+                      </span>
                     </div>
-
-                    {/* Right: Browse Button with Premium Icon */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (onSelectCategory) onSelectCategory(cat.id);
-                      }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 border border-blue-700 text-white text-xs font-medium transition-colors duration-150 cursor-pointer active:scale-95 shrink-0 select-none"
-                    >
-                      <span>Browse</span>
-                      <svg
-                        className="w-3.5 h-3.5 text-white"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={1.75}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M5 12h14M12 5l7 7-7 7" />
-                      </svg>
-                    </button>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Added website listings & categories
+                    </p>
                   </div>
-                );
-              })}
-            </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsOpen(false)}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                    title="Close Properties"
+                    aria-label="Close Properties"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
 
-            
-          </motion.aside>
-        </>
-      )}
-    </AnimatePresence>
-  </>
-);
+                {/* List of Category Cards (Exact Wishlist item card style) */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                  {activeCategories.map((cat) => {
+                    const isSelected = selectedCategory === cat.id;
+                    const catCount = cat.matchTypes.reduce(
+                      (sum, t) => sum + (typeCounts[t] || 0),
+                      0
+                    );
+
+                    return (
+                      <div
+                        key={cat.id}
+                        className={`rounded-xl border transition-colors duration-150 overflow-hidden ${
+                          isSelected
+                            ? 'border-slate-400 bg-slate-50/60 shadow-xs'
+                            : 'border-slate-200 bg-white hover:border-slate-300'
+                        }`}
+                      >
+                        {/* Top: Thumbnail / Icon + Info (Clicking selects & navigates) */}
+                        <div
+                          className="flex gap-3 p-3 cursor-pointer"
+                          onClick={() => handleSelect(cat.id)}
+                        >
+                          {/* Thumbnail / Icon container */}
+                          <div className="w-[52px] h-[52px] rounded-lg overflow-hidden shrink-0 bg-slate-100 border border-slate-200/60 flex items-center justify-center">
+                            {renderCategoryIcon(cat.id)}
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <span className="text-[13px] font-semibold text-slate-900 leading-snug truncate">
+                                {cat.title}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-700 border border-amber-500/25 whitespace-nowrap">
+                                {cat.title} Category
+                              </span>
+                              <span className="text-slate-300 text-[11px]">·</span>
+                              <span className="text-[11px] text-slate-400 truncate">
+                                {catCount} {catCount === 1 ? 'stay' : 'stays'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Action Row: Sleek Slate-900 Action Button */}
+                        <div
+                          className="flex items-center justify-between px-3 pb-2.5 pt-2 border-t border-slate-100"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <span className="text-[11px] text-slate-400">
+                            {catCount > 0 ? `${catCount} verified ${catCount === 1 ? 'stay' : 'stays'}` : 'Listing updates soon'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleSelect(cat.id)}
+                            className="text-xs font-bold px-3.5 py-1.5 min-h-[30px] rounded-lg bg-slate-900 text-white hover:opacity-90 active:scale-95 transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-xs"
+                          >
+                            <span>Browse</span>
+                            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Footer (Matching WishlistDrawer) */}
+                <div className="px-5 py-3.5 border-t border-slate-100 flex items-center justify-between shrink-0">
+                  <span className="text-[11px] text-slate-400">
+                    {activeCategories.length} categories available
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsOpen(false)}
+                    className="text-[11px] font-semibold text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
+    </>
+  );
 }
 
 export default LeftPropertiesPanel;

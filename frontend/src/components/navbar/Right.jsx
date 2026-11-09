@@ -15,7 +15,7 @@ export function Right({ onLoginClick, onOpenBookings, bookingsCount, onSelectUpl
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="fixed top-2.5 sm:top-5 right-6 z-50 flex items-center gap-2 sm:gap-2.5 pointer-events-auto h-11 sm:h-[46px]">
+    <div className="fixed top-2.5 sm:top-5 right-6 z-50 flex items-center gap-2 sm:gap-2.5 pointer-events-auto h-13 sm:h-[54px]">
       {/* ===================================================================== */}
       {/* 💻 DESKTOP ACTIONS ROW (SHOWN ON md+ SCREENS)                          */}
       {/* ===================================================================== */}
@@ -24,12 +24,12 @@ export function Right({ onLoginClick, onOpenBookings, bookingsCount, onSelectUpl
         <button
           type="button"
           onClick={() => setIsWishlistOpen(true)}
-          className="apple-liquid-nav relative w-11 h-11 sm:w-11.5 sm:h-11.5 rounded-full text-slate-700 border border-slate-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0"
+          className="apple-liquid-nav relative w-12 h-12 sm:w-13 sm:h-13 rounded-full text-slate-700 border border-slate-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0"
           title="Saved Wishlist"
           aria-label="Open Wishlist"
         >
           <svg
-            className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-rose-500"
+            className="w-5.5 h-5.5 sm:w-6 sm:h-6 text-rose-500"
             viewBox="0 0 24 24"
             fill={wishlist.length > 0 ? 'currentColor' : 'none'}
             stroke="currentColor"
@@ -51,12 +51,12 @@ export function Right({ onLoginClick, onOpenBookings, bookingsCount, onSelectUpl
         <button
           type="button"
           onClick={() => (typeof onOpenBookings === 'function' ? onOpenBookings() : setIsBookingsOpen(true))}
-          className="apple-liquid-nav relative w-11 h-11 sm:w-11.5 sm:h-11.5 rounded-full text-slate-700 border border-slate-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0"
+          className="apple-liquid-nav relative w-12 h-12 sm:w-13 sm:h-13 rounded-full text-slate-700 border border-slate-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0"
           title="Booked Places"
           aria-label="Open Booked Places"
         >
           <svg
-            className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-emerald-600"
+            className="w-5.5 h-5.5 sm:w-6 sm:h-6 text-emerald-600"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -89,22 +89,22 @@ export function Right({ onLoginClick, onOpenBookings, bookingsCount, onSelectUpl
         <button
           type="button"
           onClick={() => setMobileMenuOpen((prev) => !prev)}
-          className="relative w-11 h-11 rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-sm flex items-center justify-center font-bold transition-all cursor-pointer active:scale-95 shrink-0 hover:bg-slate-50"
+          className="relative w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-sm flex items-center justify-center font-bold transition-all cursor-pointer active:scale-95 shrink-0 hover:bg-slate-50"
           title="Toggle Navigation Menu"
         >
           {wishlist.length > 0 && !mobileMenuOpen && (
-            <span className="absolute -top-1 -right-1 px-1.5 min-w-4 h-4 rounded-full bg-rose-500 text-white font-bold text-[9px] flex items-center justify-center shadow-xs">
+            <span className="absolute -top-1 -right-1 px-1.5 min-w-4.5 h-4.5 rounded-full bg-rose-500 text-white font-bold text-[10px] flex items-center justify-center shadow-xs">
               {wishlist.length}
             </span>
           )}
 
           {mobileMenuOpen ? (
-            <svg className="w-5 h-5 text-slate-700 stroke-[2.2]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="w-7 h-7 text-slate-700 stroke-[2.2]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           ) : (
-            <svg className="w-5 h-5 text-slate-700 stroke-[2.2]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="w-7 h-7 text-slate-700 stroke-[2.2]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
               <line x1="3" y1="12" x2="21" y2="12" />
               <line x1="3" y1="6" x2="21" y2="6" />
               <line x1="3" y1="18" x2="21" y2="18" />
@@ -131,7 +131,7 @@ export function Right({ onLoginClick, onOpenBookings, bookingsCount, onSelectUpl
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -8, scale: 0.96 }}
                 transition={{ duration: 0.15, ease: "easeOut" }}
-                className="md:hidden absolute top-13 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-3 p-2.5 rounded-[28px] bg-white border border-slate-200/90 shadow-2xl"
+                className="md:hidden absolute top-15 sm:top-16 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-4 sm:gap-4.5 p-3 sm:p-3.5 rounded-[32px] sm:rounded-[36px] bg-white border border-slate-200/90 shadow-2xl"
               >
                 {/* 1. Profile / Login Button (TOP POSITION - Blue & Visible) */}
                 <Login
@@ -149,12 +149,12 @@ export function Right({ onLoginClick, onOpenBookings, bookingsCount, onSelectUpl
                     setIsWishlistOpen(true);
                     setMobileMenuOpen(false);
                   }}
-                  className="relative w-11 h-11 rounded-full bg-rose-50 text-rose-600 border border-rose-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0"
+                  className="relative w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-rose-50 text-rose-600 border border-rose-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0"
                   title="Saved Wishlist"
                   aria-label="Open Wishlist"
                 >
                   <svg
-                    className="w-5 h-5 text-rose-500"
+                    className="w-6.5 h-6.5 text-rose-500"
                     viewBox="0 0 24 24"
                     fill={wishlist.length > 0 ? 'currentColor' : 'none'}
                     stroke="currentColor"
@@ -166,7 +166,7 @@ export function Right({ onLoginClick, onOpenBookings, bookingsCount, onSelectUpl
                   </svg>
 
                   {wishlist.length > 0 && (
-                    <span className="absolute -top-1 -right-1 px-1.5 min-w-4.5 h-4.5 rounded-full bg-rose-500 text-white font-black text-[9px] flex items-center justify-center shadow-xs border border-white">
+                    <span className="absolute -top-1 -right-1 px-1.5 min-w-5 h-5 rounded-full bg-rose-500 text-white font-black text-[10px] flex items-center justify-center shadow-xs border border-white">
                       {wishlist.length}
                     </span>
                   )}
@@ -183,12 +183,12 @@ export function Right({ onLoginClick, onOpenBookings, bookingsCount, onSelectUpl
                     }
                     setMobileMenuOpen(false);
                   }}
-                  className="relative w-11 h-11 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0"
+                  className="relative w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0"
                   title="Booked Places"
                   aria-label="Open Booked Places"
                 >
                   <svg
-                    className="w-5 h-5 text-emerald-600"
+                    className="w-6.5 h-6.5 text-emerald-600"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -203,7 +203,7 @@ export function Right({ onLoginClick, onOpenBookings, bookingsCount, onSelectUpl
                   </svg>
 
                   {(bookingsCount ?? bookings.length) > 0 && (
-                    <span className="absolute -top-1 -right-1 px-1.5 min-w-4.5 h-4.5 rounded-full bg-emerald-600 text-white font-black text-[9px] flex items-center justify-center shadow-xs border border-white">
+                    <span className="absolute -top-1 -right-1 px-1.5 min-w-5 h-5 rounded-full bg-emerald-600 text-white font-black text-[10px] flex items-center justify-center shadow-xs border border-white">
                       {bookingsCount ?? bookings.length}
                     </span>
                   )}
@@ -217,11 +217,11 @@ export function Right({ onLoginClick, onOpenBookings, bookingsCount, onSelectUpl
                       navigate('/host/dashboard');
                       setMobileMenuOpen(false);
                     }}
-                    className="relative w-11 h-11 rounded-full bg-purple-50 text-purple-600 border border-purple-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95"
+                    className="relative w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-purple-50 text-purple-600 border border-purple-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95"
                     title="Host Dashboard"
                     aria-label="Host Dashboard"
                   >
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className="w-6.5 h-6.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                       <polyline points="9 22 9 12 15 12 15 22" />
                     </svg>
@@ -237,11 +237,11 @@ export function Right({ onLoginClick, onOpenBookings, bookingsCount, onSelectUpl
                       }
                       setMobileMenuOpen(false);
                     }}
-                    className="relative w-11 h-11 rounded-full bg-teal-50 text-teal-600 border border-teal-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95"
+                    className="relative w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-teal-50 text-teal-600 border border-teal-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95"
                     title="Upload Property"
                     aria-label="Upload Property"
                   >
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className="w-6.5 h-6.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                       <polyline points="17 8 12 3 7 8" />
                       <line x1="12" y1="3" x2="12" y2="15" />

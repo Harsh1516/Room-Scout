@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { subscriptionsAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
-import { formatValidityDate } from '../utils/dateUtils';
 
 // Local storage caching helpers to prevent any reload, flash, or blank frame
 const getStoredSubscriptionInfo = () => {
@@ -56,14 +55,12 @@ export function HostSubscriptionPage() {
   useEffect(() => {
     loadSubscriptionData();
 
-    // Event-driven reactive update listener instead of continuous polling loop
     const handleSubscriptionUpdate = () => {
       loadSubscriptionData(true);
     };
 
     window.addEventListener('stayhub_subscription_updated', handleSubscriptionUpdate);
 
-    // Prevent browser back from performing an unhandled hard reload
     const handlePopState = (e) => {
       if (e && e.preventDefault) e.preventDefault();
       navigate('/host/dashboard');
@@ -89,271 +86,316 @@ export function HostSubscriptionPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-purple-500/30 host-font-scope host-page-scope">
-      {/* ── Top Header Navigation Bar (Matching Host Dashboard) ── */}
-      <header className="relative w-full h-14 sm:h-16 pointer-events-none select-none z-50 font-body-md host-font-scope antialiased">
-        {/* ── 1. LEFT FLOATING ISLAND: BACK BUTTON (Exact match to Host Dashboard) ── */}
-        <div className="fixed top-3.5 left-2.5 sm:top-5 sm:left-6 z-50 flex items-center gap-1.5 sm:gap-2 pointer-events-auto select-none">
+    <div className="min-h-screen bg-[#f5f2ea] text-slate-900 flex flex-col font-sans selection:bg-purple-500/20 host-font-scope host-page-scope">
+      {/* ── Top Header Navigation Bar (Matches Host Dashboard & Bottom Console size) ── */}
+      <header className="relative w-full h-16 sm:h-20 pointer-events-none select-none z-50 font-body-md host-font-scope antialiased">
+        {/* Left Floating Island: Back Button */}
+        <div className="fixed top-2.5 sm:top-5 left-2.5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none h-12 sm:h-13">
           <button
             type="button"
             onClick={handleBack}
             data-no-hover="true"
-            className="apple-liquid-nav flex items-center justify-center px-3 py-1.5 sm:px-4 sm:py-2 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 shadow-xs cursor-pointer text-slate-800 font-semibold text-xs sm:text-sm select-none active:scale-95 transition-transform shrink-0"
+            className="inline-flex items-center justify-center h-12 sm:h-13 px-4.5 sm:px-5.5 gap-2 rounded-full bg-white text-slate-700 text-[14.5px] sm:text-base font-medium shadow-md border border-slate-200/90 hover:bg-slate-50 transition-colors cursor-pointer select-none active:scale-95 shrink-0"
             title="Return to Dashboard"
           >
             <svg
-              className="w-4 h-4 text-slate-600 stroke-[2.5]"
+              className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-slate-600 stroke-[2] shrink-0"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <line x1="19" y1="12" x2="5" y2="12" />
-              <polyline points="12 19 5 12 12 5" />
+              <path d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
-            <span className="hidden min-[380px]:inline">Back</span>
+            <span className="flex items-center justify-center leading-none tracking-tight">Back</span>
           </button>
         </div>
 
-        {/* ── 2. RIGHT FLOATING ISLAND: BUY OR RENEW PLAN BUTTON ── */}
-        <div className="fixed top-3.5 right-3 sm:top-5 sm:right-6 z-50 flex items-center gap-2 pointer-events-auto select-none">
+        {/* Right Floating Island: Buy / Renew Plan Button */}
+        <div className="fixed top-2.5 sm:top-5 right-2.5 sm:right-6 z-50 flex items-center gap-2 pointer-events-auto select-none h-12 sm:h-13">
           <button
             type="button"
             onClick={() => navigate('/host/subscription/buy')}
-            className="apple-liquid-nav host-buy-btn flex items-center justify-center h-8 sm:h-9 px-3.5 sm:px-4 gap-1.5 sm:gap-2 rounded-full border border-slate-200/80 text-slate-800 font-semibold text-xs sm:text-sm shadow-xs active:scale-95 transition-all cursor-pointer select-none"
+            className="inline-flex items-center justify-center h-12 sm:h-13 px-4.5 sm:px-5.5 gap-2 rounded-full bg-sky-600 hover:bg-sky-500 text-white text-[14px] sm:text-base font-medium shadow-md shadow-sky-600/25 transition-all cursor-pointer select-none active:scale-95 shrink-0"
             title="Buy or Renew Subscription Plan"
           >
-            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <circle cx="9" cy="21" r="1" />
-              <circle cx="20" cy="21" r="1" />
-              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+            <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[1.8]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
             </svg>
-            <span>Buy or Renew Plan</span>
+            <span className="flex items-center justify-center leading-none tracking-tight">Buy Plan</span>
           </button>
         </div>
       </header>
 
-      {/* ── MAIN CONTENT CONTAINER ── */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 pt-3 sm:pt-4 pb-16 flex flex-col gap-8">
-        {/* Title & Introduction */}
-        <div className="flex flex-col gap-2">
-          <div className="inline-flex items-center gap-2 text-xs font-normal tracking-wide text-purple-400">
-            <span>Property Visibility & Access</span>
+      {/* ── MAIN CONTENT CONTAINER (Spaced Below Navbar with 100% Full Width) ── */}
+      <main className="flex-1 w-full max-w-none px-0 pt-4 sm:pt-8 pb-0 flex flex-col">
+        {/* ── CARD 1: FULL WIDTH DEEP PURPLE SHEET (Matches Property Overview UI) ── */}
+        <section className="w-full rounded-t-[28px] sm:rounded-t-[36px] rounded-b-none border-t border-x border-purple-400/30 bg-[#3d0c40] shadow-[0_12px_40px_rgba(61,12,64,0.35)] p-4 sm:p-7 pb-14 sm:pb-16 space-y-4 relative overflow-hidden">
+          {/* Centered Heading */}
+          <div className="flex flex-col items-center justify-center pt-1 pb-1 w-full text-center relative">
+            <h2 className="text-[22px] sm:text-2xl font-black text-white tracking-tight text-center drop-shadow-xs">
+              Subscription Overview
+            </h2>
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <h1 className="text-2xl sm:text-4xl font-normal text-white flex items-center gap-3">
-              <span>Host Subscription Plans</span>
-              <span className="text-xl sm:text-2xl">✨</span>
-            </h1>
-          </div>
-          <p className="text-slate-400 text-sm sm:text-base max-w-2xl leading-relaxed font-normal">
-            Keep your stay actively live on RoomScout so travelers and students can find, explore, and request direct bookings for your property.
-          </p>
-        </div>
 
-        {/* ── SECTION 1: CURRENT STATUS HERO CARD ── */}
-        <div className="relative rounded-3xl border border-white/10 bg-slate-900/60 backdrop-blur-xl p-5 sm:p-7 shadow-2xl overflow-hidden flex flex-col md:flex-row gap-6 items-stretch justify-between">
-          <div className="absolute -top-24 -right-24 w-72 h-72 bg-purple-600/15 rounded-full blur-3xl pointer-events-none" />
-
-          {/* Left info column */}
-          <div className="flex flex-col justify-between gap-5 flex-1">
-            <div className="flex flex-col gap-2.5">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-normal text-slate-400">Current Status</span>
+          {/* ── Inner Vibrant Purple Card (Matches #5a1060 from Property Overview) ── */}
+          <div className="w-full rounded-2xl sm:rounded-3xl border border-purple-300/20 bg-[#5a1060] p-4 sm:p-6 space-y-4 shadow-xl relative overflow-hidden">
+            {/* Top Property Name Strip & Live Status Pill */}
+            <div className="w-full min-h-[50px] flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl border border-white/20 bg-white/10 text-white font-bold text-base shadow-xs backdrop-blur-md">
+              <span className="truncate">{stay?.title || 'Just Checking The First Host'}</span>
+              <div className="shrink-0">
                 {isLive ? (
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-normal bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-emerald-500/20 text-emerald-100 border border-emerald-300/40 flex items-center gap-1.5 shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
                     ACTIVELY LIVE
                   </span>
                 ) : status === 'PENDING_VERIFICATION' ? (
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-normal bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                    VERIFICATION IN PROGRESS
+                  <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-500/20 text-amber-100 border border-amber-300/40 flex items-center gap-1.5 shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-amber-300" />
+                    PENDING
                   </span>
                 ) : (
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-normal bg-rose-500/20 text-rose-300 border border-rose-500/40 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                  <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-rose-500/20 text-rose-100 border border-rose-300/40 flex items-center gap-1.5 shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-rose-300" />
                     EXPIRED / NOT LIVE
                   </span>
                 )}
               </div>
-
-              <h2 className="text-xl sm:text-2xl font-normal text-white">
-                {subscription?.planLabel || 'No Active Subscription'}
-              </h2>
-
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xl font-normal">
-                {isLive
-                  ? `Your property listing is live on RoomScout search and explore. Valid until ${
-                      subscription?.expiresAt ? formatValidityDate(subscription.expiresAt) : 'N/A'
-                    } (${subscription?.daysRemaining} days remaining).`
-                  : status === 'PENDING_VERIFICATION'
-                  ? 'Your payment reference has been submitted. Admin is currently verifying the 12-digit UTR against platform records. Your stay will become live immediately upon confirmation.'
-                  : 'Your stay is currently hidden from public search results because you do not have an active subscription plan. Click the Buy button above to purchase a plan and make your stay actively live.'}
-              </p>
             </div>
 
-            {/* Quick Metrics */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
-              <div className="bg-slate-800/50 rounded-2xl p-3 border border-white/5 flex flex-col">
-                <span className="text-[11px] text-slate-400 font-normal">Days Left</span>
-                <span className="text-xl sm:text-2xl font-normal text-white">
-                  {isLive ? subscription?.daysRemaining : 0}
-                </span>
-              </div>
-              <div className="bg-slate-800/50 rounded-2xl p-3 border border-white/5 flex flex-col">
-                <span className="text-[11px] text-slate-400 font-normal">Public Visibility</span>
-                <span className={`text-sm sm:text-base font-normal ${isLive ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  {isLive ? '🟢 Live' : '🔴 Hidden'}
-                </span>
-              </div>
-              <div className="bg-slate-800/50 rounded-2xl p-3 border border-white/5 flex flex-col col-span-2 sm:col-span-1">
-                <span className="text-[11px] text-slate-400 font-normal">Expires On</span>
-                <span className="text-xs sm:text-sm font-normal text-slate-200">
-                  {subscription?.expiresAt
-                    ? `Until ${formatValidityDate(subscription.expiresAt)}`
-                    : 'Not Subscribed'}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Right stay preview box */}
-          {stay && (
-            <div className="w-full md:w-64 bg-slate-950/80 rounded-2xl border border-white/10 p-3.5 flex flex-col gap-3 shrink-0">
-              <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-800">
-                {stay.image ? (
-                  <img decoding="async" loading="lazy" src={stay.image} alt={stay.title} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-xs text-slate-500 font-normal">
-                    No Property Image
-                  </div>
-                )}
-                <div className="absolute top-2 right-2">
+            {/* ── Section 1: PLAN STATUS (Only 3 Essential Tiles: Days Left, Visibility, Expires On) ── */}
+            <div className="space-y-2">
+              <label className="block text-xs sm:text-[13px] font-extrabold uppercase tracking-wider text-purple-200">
+                Plan Status *
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                {/* Tile 1: Days Left */}
+                <div
+                  className={`group relative aspect-square p-3 rounded-2xl border transition-all flex flex-col items-center justify-center text-center gap-2 select-none ${
+                    isLive
+                      ? 'bg-white/25 border-2 border-white/60 shadow-sm'
+                      : 'bg-white/10 border-white/15'
+                  }`}
+                >
                   <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-normal border shadow-md ${
+                    className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${
                       isLive
-                        ? 'bg-emerald-500/90 text-white border-emerald-400'
-                        : 'bg-rose-500/90 text-white border-rose-400'
+                        ? 'bg-white text-[#3d0c40] shadow-xs'
+                        : 'bg-white/15 text-white border border-white/20'
                     }`}
                   >
-                    {isLive ? 'Live' : 'Hidden'}
+                    <svg className="w-6 h-6 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
                   </span>
+                  <div className="flex flex-col items-center leading-tight">
+                    <span className="text-base sm:text-lg font-black text-white">
+                      {isLive ? subscription?.daysRemaining : 0}
+                    </span>
+                    <span className="text-[11px] font-bold text-purple-200 uppercase tracking-tight">
+                      Days Left
+                    </span>
+                  </div>
+                </div>
+
+                {/* Tile 2: Public Visibility */}
+                <div
+                  className={`group relative aspect-square p-3 rounded-2xl border transition-all flex flex-col items-center justify-center text-center gap-2 select-none ${
+                    isLive
+                      ? 'bg-white/25 border-2 border-white/60 shadow-sm'
+                      : 'bg-white/10 border-white/15'
+                  }`}
+                >
+                  <span
+                    className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${
+                      isLive
+                        ? 'bg-white text-emerald-600 shadow-xs'
+                        : 'bg-white/15 text-rose-200 border border-white/20'
+                    }`}
+                  >
+                    <svg className="w-6 h-6 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </span>
+                  <div className="flex flex-col items-center leading-tight">
+                    <span className={`text-sm sm:text-base font-black ${isLive ? 'text-emerald-200' : 'text-rose-200'}`}>
+                      {isLive ? 'Live' : 'Hidden'}
+                    </span>
+                    <span className="text-[11px] font-bold text-purple-200 uppercase tracking-tight">
+                      Visibility
+                    </span>
+                  </div>
+                </div>
+
+                {/* Tile 3: Expires On */}
+                <div
+                  className={`group relative aspect-square p-3 rounded-2xl border transition-all flex flex-col items-center justify-center text-center gap-2 select-none ${
+                    isLive
+                      ? 'bg-white/25 border-2 border-white/60 shadow-sm'
+                      : 'bg-white/10 border-white/15'
+                  }`}
+                >
+                  <span
+                    className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${
+                      isLive
+                        ? 'bg-white text-[#3d0c40] shadow-xs'
+                        : 'bg-white/15 text-white border border-white/20'
+                    }`}
+                  >
+                    <svg className="w-6 h-6 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <rect x="3" y="4" width="18" height="18" rx="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                  </span>
+                  <div className="flex flex-col items-center leading-tight">
+                    <span className="text-xs sm:text-sm font-black text-white truncate max-w-[85px]">
+                      {subscription?.expiresAt
+                        ? new Date(subscription.expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+                        : 'Unsubscribed'}
+                    </span>
+                    <span className="text-[11px] font-bold text-purple-200 uppercase tracking-tight">
+                      Expires On
+                    </span>
+                  </div>
                 </div>
               </div>
+            </div>
 
-              <div className="flex flex-col">
-                <h3 className="font-normal text-sm text-white truncate">{stay.title}</h3>
-                <span className="text-xs text-slate-400 truncate font-normal">{stay.location || 'Location Not Set'}</span>
+            {/* ── Section 3: Property Preview Card ── */}
+            {stay && (
+              <div className="space-y-2 pt-1">
+                <label className="block text-xs sm:text-[13px] font-extrabold uppercase tracking-wider text-purple-200">
+                  Property Preview *
+                </label>
+                <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-slate-900 border border-white/20 shadow-md">
+                  {stay.image ? (
+                    <img
+                      decoding="async"
+                      loading="lazy"
+                      src={stay.image}
+                      alt={stay.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-xs text-purple-200 font-bold">
+                      No Property Image
+                    </div>
+                  )}
+                  {/* Subtle Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent flex flex-col justify-between p-4" />
+
+                  {/* Top-Right Visibility Badge */}
+                  <div className="absolute top-3 right-3 z-10">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-extrabold border shadow-md ${
+                        isLive
+                          ? 'bg-emerald-500 text-white border-emerald-400'
+                          : 'bg-rose-500 text-white border-rose-400'
+                      }`}
+                    >
+                      {isLive ? 'Live' : 'Hidden'}
+                    </span>
+                  </div>
+
+                  {/* Bottom Info Strip */}
+                  <div className="absolute bottom-3 left-4 right-4 z-10">
+                    <h3 className="font-extrabold text-base text-white truncate drop-shadow-sm">
+                      {stay.title || 'Just Checking The First Host'}
+                    </h3>
+                    <span className="text-xs text-purple-200 font-bold truncate drop-shadow-sm block">
+                      {stay.location || 'Bhimtal, Uttarakhand'}
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        </section>
 
-        {/* ── SECTION 2: PAYMENT & VERIFICATION HISTORY ── */}
-        <div className="flex flex-col gap-4 pt-2">
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col">
-              <h2 className="text-xl sm:text-2xl font-normal text-white">Payment & Verification History</h2>
-              <span className="text-xs text-slate-400 font-normal">Track the status of your submitted subscription payments</span>
+        {/* ── CARD 2: FULL WIDTH GRAY PAYMENT HISTORY (Rounded Top, Flat Bottom till Screen Border) ── */}
+        <section className="w-full relative z-10 -mt-10 sm:-mt-12 flex-1 rounded-t-[28px] sm:rounded-t-[36px] rounded-b-none border-t border-x border-slate-700/60 bg-slate-800 shadow-[0_-8px_30px_rgba(0,0,0,0.25)] p-4 sm:p-7 pt-5 sm:pt-6 pb-8 sm:pb-12 space-y-4">
+          <div className="relative flex items-center justify-center pt-1 pb-1 w-full text-center">
+            <h2 className="text-[22px] sm:text-2xl font-black text-white tracking-tight text-center drop-shadow-xs">
+              Payment History
+            </h2>
+            <div className="absolute right-0 top-1/2 -translate-y-1/2">
+              <button
+                type="button"
+                onClick={() => loadSubscriptionData(false)}
+                className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/15 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0"
+              >
+                <svg className="w-3.5 h-3.5 stroke-[2.2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                </svg>
+                <span>Refresh</span>
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => loadSubscriptionData(false)}
-              className="px-3 py-1.5 rounded-xl text-xs font-normal bg-white/10 hover:bg-white/15 text-slate-200 border border-white/10 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
-            >
-              <svg className="w-3.5 h-3.5 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
-              </svg>
-              <span>Refresh</span>
-            </button>
           </div>
 
           {history.length === 0 ? (
-            <div className="rounded-3xl border border-white/10 bg-slate-900/40 p-8 sm:p-12 text-center flex flex-col items-center justify-center gap-3">
-              <svg className="w-10 h-10 stroke-[1.5] text-purple-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <rect x="2" y="5" width="20" height="14" rx="2" />
-                <line x1="2" y1="10" x2="22" y2="10" />
-              </svg>
-              <span className="text-sm font-normal text-slate-200">No payment history yet</span>
-              <p className="text-xs text-slate-400 max-w-sm font-normal">
-                When you make a payment and submit your 12-digit UTR on the Buy page, the verification records will appear here live.
-              </p>
+            <div className="rounded-2xl border border-slate-700/70 bg-slate-900/80 p-6 text-center flex flex-col items-center justify-center gap-2 shadow-xs">
+              <span className="text-xs sm:text-sm font-bold text-slate-300">No payment history yet</span>
               <button
                 type="button"
                 onClick={() => navigate('/host/subscription/buy')}
-                className="mt-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-normal transition-all"
+                className="mt-1 px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-900 text-xs font-extrabold transition-all shadow-md active:scale-95 cursor-pointer"
               >
-                Go to Buy Page
+                Buy Subscription Plan
               </button>
             </div>
           ) : (
-            <div className="rounded-3xl border border-white/10 bg-slate-900/60 overflow-hidden shadow-xl">
+            <div className="rounded-2xl border border-slate-700/70 bg-slate-900/80 overflow-hidden shadow-md">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-950/80 text-slate-400 font-normal border-b border-white/10">
+                  <thead className="bg-slate-900 text-slate-200 font-extrabold border-b border-slate-700/70">
                     <tr>
-                      <th className="py-3 px-4 font-normal">Date</th>
-                      <th className="py-3 px-4 font-normal">Plan</th>
-                      <th className="py-3 px-4 font-normal">Amount</th>
-                      <th className="py-3 px-4 font-normal">12-Digit UTR</th>
-                      <th className="py-3 px-4 font-normal">Status</th>
-                      <th className="py-3 px-4 font-normal">Validity</th>
+                      <th className="py-3 px-3.5 font-bold">Date</th>
+                      <th className="py-3 px-3.5 font-bold">Plan</th>
+                      <th className="py-3 px-3.5 font-bold">Amount</th>
+                      <th className="py-3 px-3.5 font-bold">UTR</th>
+                      <th className="py-3 px-3.5 font-bold">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5 text-slate-300 font-normal">
+                  <tbody className="divide-y divide-slate-700/50 text-slate-200 font-medium">
                     {history.map((item) => (
-                      <tr key={item._id} className="hover:bg-white/[0.02] transition-colors">
-                        <td className="py-3.5 px-4 text-slate-400">
+                      <tr key={item._id} className="hover:bg-white/[0.04] transition-colors">
+                        <td className="py-3 px-3.5 text-slate-300 font-bold">
                           {new Date(item.createdAt).toLocaleDateString('en-IN', {
                             day: 'numeric',
                             month: 'short',
-                            year: 'numeric',
                           })}
                         </td>
-                        <td className="py-3.5 px-4 font-normal text-white">
-                          <div>{item.planLabel}</div>
-                          {item.startOption === 'NEXT' ? (
-                            <span className="text-[10px] text-indigo-400 font-normal block mt-0.5">
-                              {item.startMonthLabel || 'Next Month'}
-                            </span>
-                          ) : item.startMonthLabel ? (
-                            <span className="text-[10px] text-purple-300/80 font-normal block mt-0.5">
-                              {item.startMonthLabel}
-                            </span>
-                          ) : null}
+                        <td className="py-3 px-3.5 font-bold text-white">
+                          {item.planLabel}
                         </td>
-                        <td className="py-3.5 px-4 font-normal text-emerald-400">
+                        <td className="py-3 px-3.5 font-bold text-emerald-400">
                           ₹{Number(item.amount).toLocaleString('en-IN')}
                         </td>
-                        <td className="py-3.5 px-4 font-mono font-normal text-purple-300">
+                        <td className="py-3 px-3.5 font-mono text-[11px] text-slate-400 font-bold">
                           {item.transactionRef}
                         </td>
-                        <td className="py-3.5 px-4">
+                        <td className="py-3 px-3.5">
                           {item.status === 'VERIFIED' ? (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-normal bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
                               VERIFIED
                             </span>
                           ) : item.status === 'REJECTED' ? (
                             <span
-                              className="px-2 py-0.5 rounded-full text-[10px] font-normal bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                              className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/20 text-rose-300 border border-rose-400/40"
                               title={item.rejectionReason}
                             >
                               REJECTED
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-normal bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-400/40 animate-pulse">
                               PENDING
                             </span>
                           )}
-                        </td>
-                        <td className="py-3.5 px-4 text-slate-400 font-normal">
-                          {item.activatedExpiresAt
-                            ? `Until ${formatValidityDate(item.activatedExpiresAt)}`
-                            : item.status === 'PENDING'
-                            ? 'Awaiting admin verification'
-                            : 'N/A'}
                         </td>
                       </tr>
                     ))}
@@ -362,7 +404,7 @@ export function HostSubscriptionPage() {
               </div>
             </div>
           )}
-        </div>
+        </section>
       </main>
     </div>
   );

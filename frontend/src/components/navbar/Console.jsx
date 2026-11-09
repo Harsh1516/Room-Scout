@@ -85,7 +85,7 @@ export function Console({
   return (
     <div ref={consoleRef} className="relative select-none">
       <nav
-        className="relative flex items-center p-0.5 sm:p-1 rounded-full bg-white/95 border border-slate-200/90 shadow-sm select-none max-w-[calc(100vw-96px)] sm:max-w-none h-9 sm:h-[46px]"
+        className="relative flex items-center p-1 sm:p-1.5 rounded-full bg-white/95 border border-slate-200/90 shadow-sm select-none max-w-[calc(100vw-96px)] sm:max-w-none h-13 sm:h-[54px]"
         style={{ borderRadius: 9999 }}
       >
         {/* 1. Expandable 3-Segment Controls (What, Where, Who) */}
@@ -166,11 +166,11 @@ export function Console({
             }
           }}
           title={!isExpanded ? 'Click to expand search options' : (canSearch ? 'Search verified stays' : 'Select filters or search')}
-          className="relative font-bold text-xs sm:text-[13px] px-3.5 sm:px-4 h-8 sm:h-[38px] rounded-full shrink-0 select-none flex items-center justify-center gap-1.5 sm:gap-2 bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 text-white shadow-xs cursor-pointer active:scale-95 focus:outline-none transition-transform"
+          className="relative font-bold text-sm sm:text-base px-4.5 sm:px-5.5 h-11 sm:h-12 rounded-full shrink-0 select-none flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 text-white shadow-xs cursor-pointer active:scale-95 focus:outline-none transition-transform"
         >
           {/* Search Magnifying Glass or Spinner */}
           <svg
-            className={`w-3.5 h-3.5 shrink-0 text-white ${isSearching ? 'animate-spin' : ''}`}
+            className={`w-5 h-5 shrink-0 text-white ${isSearching ? 'animate-spin' : ''}`}
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -189,17 +189,17 @@ export function Console({
           </svg>
 
           {/* Label */}
-          <span className="font-bold tracking-tight text-[11px] sm:text-xs">
+          <span className="font-bold tracking-tight text-sm sm:text-base">
             {isSearching ? '...' : 'Search'}
           </span>
 
           {/* Quick Active Filter Preview or Prompt */}
           {!isExpanded && activeSummary ? (
-            <span className="max-w-20 sm:max-w-32 truncate text-[9px] sm:text-[10px] font-medium bg-white/20 px-1.5 py-0.5 rounded-full text-cyan-100">
+            <span className="max-w-24 sm:max-w-36 truncate text-xs font-medium bg-white/20 px-2 py-0.5 rounded-full text-cyan-100">
               {activeSummary}
             </span>
           ) : !isExpanded ? (
-            <span className="hidden sm:inline text-[10px] font-medium text-cyan-100/80 pl-0.5">
+            <span className="hidden sm:inline text-xs font-medium text-cyan-100/80 pl-0.5">
               Stays
             </span>
           ) : null}
@@ -216,7 +216,7 @@ export function Console({
               transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
               style={{ willChange: 'width, opacity', transform: 'translate3d(0, 0, 0)' }}
               onClick={handleClearAndGoHome}
-              className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white border border-rose-500/80 shadow-xs transition-all cursor-pointer shrink-0 overflow-hidden active:scale-95"
+              className="flex items-center gap-1.5 px-3 sm:px-3.5 h-11 sm:h-12 rounded-full text-sm sm:text-base font-bold bg-rose-600 hover:bg-rose-700 text-white border border-rose-500/80 shadow-xs transition-all cursor-pointer shrink-0 overflow-hidden active:scale-95"
               title="Reset all search filters"
             >
               <span>✕</span>

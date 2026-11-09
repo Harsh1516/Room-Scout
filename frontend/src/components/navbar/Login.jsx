@@ -104,12 +104,12 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
         <button
           type="button"
           onClick={handleLoginClick}
-          className="relative w-11 h-11 rounded-full bg-[#4E75FF] hover:bg-[#3D64EE] text-white shadow-sm flex items-center justify-center transition-all cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0"
+          className="relative w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-[#4E75FF] hover:bg-[#3D64EE] text-white shadow-md flex items-center justify-center transition-all cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0"
           title="Login"
           aria-label="Login"
         >
           <svg
-            className="w-5 h-5 text-white stroke-[2.2]"
+            className="w-7 h-7 text-white stroke-[2.2]"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -127,7 +127,7 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
       <button
         type="button"
         onClick={handleLoginClick}
-        className="apple-liquid-nav border border-slate-200/90 bg-white text-slate-900 font-extrabold text-xs sm:text-[14px] md:text-[15px] tracking-wider h-9 sm:h-[46px] px-3.5 sm:px-5 rounded-full shadow-[0_4px_16px_rgba(0,0,0,0.14)] hover:shadow-[0_6px_22px_rgba(0,0,0,0.22)] transition-none cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none active:scale-95 focus:outline-none focus:ring-0"
+        className="apple-liquid-nav border border-slate-200/90 bg-white text-slate-900 font-extrabold text-[14px] sm:text-[15px] md:text-[16px] tracking-wider h-12 sm:h-13 px-5 sm:px-6 rounded-full shadow-[0_4px_16px_rgba(0,0,0,0.14)] hover:shadow-[0_6px_22px_rgba(0,0,0,0.22)] transition-none cursor-pointer flex items-center gap-2 select-none active:scale-95 focus:outline-none focus:ring-0"
       >
         <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
         <span>LOGIN</span>
@@ -145,15 +145,13 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
         <button
           type="button"
           onClick={() => setDropdownOpen((prev) => !prev)}
-          className={`relative ${
-            iconOnly ? 'w-11 h-11' : 'w-8 h-8 sm:w-10 sm:h-10'
-          } rounded-full text-white font-bold text-xs sm:text-sm shadow-sm border border-white/20 hover:shadow-md transition-all flex items-center justify-center cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 touch-manipulation bg-[#4E75FF] shrink-0`}
+          className="relative w-13 h-13 sm:w-14 sm:h-14 rounded-full text-white font-black text-sm sm:text-base shadow-md border-2 border-white/40 hover:shadow-lg transition-all flex items-center justify-center cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 touch-manipulation bg-[#4E75FF] shrink-0"
           title={`Logged in as ${user.name}`}
           aria-label="User profile menu"
         >
-          <span className="flex items-center justify-center leading-none select-none tracking-tight font-bold text-xs">{initials}</span>
+          <span className="flex items-center justify-center leading-none select-none tracking-tight font-black text-sm sm:text-base">{initials}</span>
           {/* Online indicator dot with white ring */}
-          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#10B981] ring-2 ring-white" />
+          <span className="absolute bottom-0 right-0 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-[#10B981] ring-2 ring-white" />
         </button>
 
         {/* Small Sleek Dropdown Menu Tab (Pure White Background with No Transparency) */}
@@ -291,9 +289,28 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
                 </button>
               </div>
 
-              {/* 5. Switch Account & Logout */}
-              {/* Logout Button */}
-              <div className="pt-1 border-t border-slate-200">
+              {/* 5. Switch to User Dashboard & Logout */}
+              <div className="pt-1 border-t border-slate-200 space-y-1">
+                {/* User Dashboard Switch */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    navigate('/');
+                  }}
+                  className="group w-full text-left px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg sm:rounded-xl text-[10.5px] sm:text-[11.5px] font-bold transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-transparent hover:bg-purple-50 border border-transparent hover:border-purple-200/80 text-purple-700 hover:text-purple-800 hover:shadow-2xs"
+                  title="Switch to User Dashboard"
+                >
+                  <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-purple-500/10 text-purple-600 flex items-center justify-center border border-purple-500/20 group-hover:scale-105 group-hover:bg-purple-500/20 transition-all duration-150 shrink-0">
+                    <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                      <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                  </div>
+                  <span className="truncate">User Dashboard</span>
+                </button>
+
+                {/* Logout Button */}
                 <button
                   type="button"
                   onClick={() => {

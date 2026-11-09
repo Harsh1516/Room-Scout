@@ -618,7 +618,7 @@ export function useHostRoomManagement({
     setSelectedRoomNumber(newCard.roomNumber);
     selectedRoomNumberRef.current = newCard.roomNumber;
     selectedRoomCardIdRef.current = newCard._id;
-    toast.info(`Room ${nextNum} added to preview. Click "Update" on the category tab to save changes.`);
+    toast.info(`Room ${nextNum} added`);
   };
 
   const handleUpdateRoomCapacity = (roomId, newCapacity, cIdx, card) => {
@@ -773,7 +773,7 @@ export function useHostRoomManagement({
       selectedRoomIndexRef.current = 0;
     }
 
-    toast.info('Room removed from preview. Click "Update" on the category tab to apply changes.');
+    toast.info(targetRoom?.roomNumber ? `Room ${targetRoom.roomNumber} removed` : 'Room removed');
   };
 
   return {

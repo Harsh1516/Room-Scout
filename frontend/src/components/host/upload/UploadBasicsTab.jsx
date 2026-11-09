@@ -79,7 +79,7 @@ export function UploadBasicsTab({
       <div className="space-y-2.5 sm:space-y-3">
         {/* Mobile-Only Heading (Outside, Centered with Email Badge Below) */}
         <div className="md:hidden flex flex-col items-center justify-center text-center gap-1.5 px-1 mb-2">
-          <h2 className="text-xl font-black text-white tracking-tight">
+          <h2 className="text-[22px] font-black text-white tracking-tight">
             Host Details
           </h2>
           {formData.email && (
@@ -139,7 +139,7 @@ export function UploadBasicsTab({
                     }
                   }}
                   placeholder="Host Name *"
-                  className={`w-full h-11 sm:h-11.5 md:h-10 pl-11 md:pl-10 pr-4 rounded-xl border text-base sm:text-lg md:text-xs focus:outline-none transition-all
+                  className={`w-full h-11 sm:h-11.5 md:h-10 pl-11 md:pl-10 pr-4 rounded-xl border text-[14px] sm:text-lg md:text-xs focus:outline-none transition-all
                     max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
                     md:bg-slate-50/70 md: md:border-slate-200 md: md:text-slate-900 md: md:placeholder:text-slate-400 md: md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 md:focus:bg-white md: ${
                     fieldErrors.name
@@ -180,7 +180,7 @@ export function UploadBasicsTab({
                     }
                   }}
                   placeholder="Mobile Number *"
-                  className={`w-full h-11 sm:h-11.5 md:h-10 pl-19 md:pl-17 pr-4 rounded-xl border text-base sm:text-lg md:text-xs focus:outline-none transition-all
+                  className={`w-full h-11 sm:h-11.5 md:h-10 pl-19 md:pl-17 pr-4 rounded-xl border text-[14px] sm:text-lg md:text-xs focus:outline-none transition-all
                     max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
                     md:bg-slate-50/70 md: md:border-slate-200 md: md:text-slate-900 md: md:placeholder:text-slate-400 md: md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 md:focus:bg-white md: ${
                     fieldErrors.phone
@@ -201,7 +201,7 @@ export function UploadBasicsTab({
       <div className="space-y-2.5 sm:space-y-3 md:pt-1">
         {/* Mobile-Only Heading (Outside, Centered) */}
         <div className="md:hidden text-center px-1 mb-2 mt-4">
-          <h2 className="text-xl font-black text-white tracking-tight">
+          <h2 className="text-[22px] font-black text-white tracking-tight">
             Property Overview
           </h2>
         </div>
@@ -237,7 +237,7 @@ export function UploadBasicsTab({
                 }
               }}
               placeholder="Property Name *"
-              className={`w-full h-11 sm:h-11.5 md:h-10 px-4 md:px-3.5 rounded-xl border text-base sm:text-lg md:text-xs focus:outline-none transition-all
+              className={`w-full h-11 sm:h-11.5 md:h-10 px-4 md:px-3.5 rounded-xl border text-[14px] sm:text-lg md:text-xs focus:outline-none transition-all
                 max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
                 md:bg-slate-50/70 md: md:border-slate-200 md: md:text-slate-900 md: md:placeholder:text-slate-400 md: md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 md:focus:bg-white md: ${
                 fieldErrors.propertyName

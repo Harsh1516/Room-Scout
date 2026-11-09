@@ -67,6 +67,12 @@ export function ToastProvider({ children }) {
               className="pointer-events-auto flex items-center justify-center px-5 py-2.5 rounded-full bg-slate-950/95 text-white border border-white/15 shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-2xl text-xs sm:text-sm font-semibold select-none cursor-pointer text-center max-w-[90vw] sm:max-w-xl"
               onClick={() => removeToast(t.id)}
             >
+              {t.type === 'error' && (
+                <span className="w-2 h-2 rounded-full bg-rose-500 mr-2 shrink-0 animate-pulse" />
+              )}
+              {t.type === 'success' && (
+                <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2 shrink-0" />
+              )}
               {/* Message Text */}
               <span className="text-slate-100 tracking-tight text-center leading-snug whitespace-normal">
                 {t.message}

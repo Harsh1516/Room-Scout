@@ -111,6 +111,7 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
   const refCode = guest.bookingReferenceId || guest.bookingId || (isOnline ? '#RES-ONLINE' : '#RES-WALKIN');
 
   const displayCheckInCode = useMemo(() => {
+    if (!isOnline) return '';
     if (guest.checkInCode && String(guest.checkInCode).trim()) {
       return String(guest.checkInCode).trim();
     }
@@ -119,7 +120,7 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
       return digits.slice(-8);
     }
     return (digits + '84920153').slice(0, 8);
-  }, [guest.checkInCode, guest.bookingReferenceId, guest._id]);
+  }, [isOnline, guest.checkInCode, guest.bookingReferenceId, guest._id]);
 
   // Clicking an inactive card lifts it upward. Clicking an already lifted card body lowers it.
   const handleCardClick = () => {
@@ -299,7 +300,7 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
           </div>
 
           {/* Dates & Guests OR 8-Digit Entry Code for Check-In page */}
-          {subTab === 'checkin' ? (
+          {subTab === 'checkin' && isOnline ? (
             <div className="flex items-center justify-between gap-1.5 py-0.5">
               <span className="text-[10px] sm:text-[10.5px] font-semibold text-slate-500 shrink-0">
                 Entry Pass Code:

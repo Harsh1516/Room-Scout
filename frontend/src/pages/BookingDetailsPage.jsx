@@ -544,6 +544,8 @@ export function BookingDetailsPage() {
   };
 
   const displayCheckInCode = useMemo(() => {
+    const isOffline = booking?.bookingSource === 'OFFLINE_HOST' || booking?.paymentMethod === 'OFFLINE' || booking?.source === 'offline';
+    if (isOffline) return '';
     if (booking?.checkInCode && String(booking.checkInCode).trim()) {
       return String(booking.checkInCode).trim();
     }
@@ -552,7 +554,7 @@ export function BookingDetailsPage() {
       return digits.slice(-8);
     }
     return (digits + '84920153').slice(0, 8);
-  }, [booking?.checkInCode, booking?.bookingReferenceId, booking?._id]);
+  }, [booking?.checkInCode, booking?.bookingReferenceId, booking?._id, booking?.bookingSource, booking?.paymentMethod, booking?.source]);
 
   const handleDownloadPassPdf = () => {
     try {
@@ -1270,17 +1272,19 @@ export function BookingDetailsPage() {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] uppercase font-black tracking-wider text-emerald-800 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                          Official Entry Pass Code
+                          {displayCheckInCode ? 'Official Entry Pass Code' : 'Official Resident Pass'}
                         </span>
                         <span className="text-[10.5px] font-semibold text-emerald-700">
-                          ● Present at Check-in
+                          {displayCheckInCode ? '● Present at Check-in' : '● In-Person Verified Entry'}
                         </span>
                       </div>
-                      <div className="font-mono text-3xl sm:text-4xl font-black tracking-widest text-emerald-900 select-all mt-1.5">
-                        {displayCheckInCode}
+                      <div className={displayCheckInCode ? "font-mono text-3xl sm:text-4xl font-black tracking-widest text-emerald-900 select-all mt-1.5" : "text-xl sm:text-2xl font-black text-emerald-900 mt-1.5"}>
+                        {displayCheckInCode || 'Direct Host Entry'}
                       </div>
                       <p className="text-[11.5px] text-slate-600 mt-1 max-w-md">
-                        Show this exact 8-digit verification code or download the official PDF pass to present to host at physical check-in.
+                        {displayCheckInCode
+                          ? 'Show this exact 8-digit verification code or download the official PDF pass to present to host at physical check-in.'
+                          : 'Download the official PDF pass or show this confirmed reservation to the host on premises.'}
                       </p>
                     </div>
 

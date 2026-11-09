@@ -93,84 +93,78 @@ export function HostOccupantsList({
   };
 
   return (
-    <section className="w-full flex flex-col rounded-[26px] overflow-hidden transition-all bg-white border border-slate-200/90 shadow-sm select-none relative text-slate-900">
-      {/* Header: Exact match to Mid Tab (HostScheduleCalendar) Header (Pic 2 Liquid Glass Theme in Light Mode, Luna Dark in Dark Mode) */}
-      <div className="px-4 sm:px-5 py-3 min-h-[60px] border-b border-slate-200/90 bg-white text-slate-900 relative z-10 flex items-center justify-between gap-3">
-        <h3 className="text-slate-900 truncate font-extrabold tracking-tight text-base sm:text-lg lg:text-[18px] leading-normal">
-          Occupants
-        </h3>
+    <section className="w-full flex flex-col max-xl:rounded-t-[28px] max-xl:sm:rounded-t-[36px] max-xl:rounded-b-none xl:rounded-[26px] overflow-hidden transition-all max-xl:bg-gradient-to-b max-xl:from-[#064e3b] max-xl:to-[#022c22] max-xl:backdrop-blur-2xl max-xl:border-t max-xl:border-x max-xl:border-emerald-500/30 max-xl:border-b-0 max-xl:text-white max-xl:min-h-[520px] max-xl:pb-32 sm:max-xl:pb-36 bg-white border border-slate-200/90 shadow-[0_16px_40px_rgba(2,44,34,0.35)] select-none relative text-slate-900">
+      {/* Header: Clean 2-row layout matching Guest Entry Details */}
+      <div className="px-4 sm:px-5 py-3.5 border-b max-xl:border-emerald-500/20 max-xl:bg-black/15 max-xl:backdrop-blur-xl max-xl:text-white border-slate-200/90 bg-white text-slate-900 relative z-10">
+        <div className="flex flex-col gap-2 w-full">
+          {/* Row 1: Title on Left, Add Guest on Right */}
+          <div className="flex items-center justify-between gap-3 w-full">
+            <h3 className="max-xl:text-white text-slate-900 truncate font-black tracking-tight text-xl sm:text-2xl leading-none">
+              Occupants
+            </h3>
 
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <div className="flex items-center gap-2 shrink-0">
+              {onAddGuestClick && (
+                <button
+                  type="button"
+                  onClick={onAddGuestClick}
+                  className="h-8.5 px-4 rounded-full max-xl:bg-white max-xl:text-emerald-950 max-xl:hover:bg-emerald-50 bg-white text-slate-950 hover:bg-slate-100 text-xs font-extrabold shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5 active:scale-95 shrink-0"
+                  title="Add a new guest to this room"
+                >
+                  <span className="material-symbols-outlined text-[16px]">person_add</span>
+                  <span>Add Guest</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Row 2: Room label on Left, Active badge on Right */}
+          <div className="flex items-center justify-between gap-2 w-full pt-1.5 border-t max-xl:border-emerald-500/20 border-slate-100 text-xs sm:text-[13px] leading-tight font-semibold max-xl:text-emerald-200/90 text-slate-500">
+            <span className="max-xl:text-white font-extrabold text-[11px] sm:text-xs uppercase tracking-wider">
+              {cleanRoomDisplay || 'Active Room Occupancy'}
+            </span>
+
             <span
-              className="h-6 px-2.5 text-[11px] rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold shadow-2xs select-none flex items-center justify-center leading-normal backdrop-blur-xs"
+              className="h-6 px-2.5 text-[11px] rounded-full max-xl:bg-black max-xl:border max-xl:border-black max-xl:text-white bg-slate-900 border border-slate-900 text-white font-bold shadow-2xs select-none flex items-center justify-center leading-normal backdrop-blur-xs"
               title={`${roomOccupantsList.length} active occupant${roomOccupantsList.length === 1 ? '' : 's'} in ${cleanRoomDisplay || 'this room'}`}
             >
               {roomOccupantsList.length} Active
             </span>
-
-            {roomOccupantsList.length > 1 && (
-              <div className="flex items-center gap-0.5">
-                <button
-                  type="button"
-                  onClick={handleScrollUp}
-                  className="w-6 h-6 rounded-lg flex items-center justify-center text-purple-600 hover:text-slate-900 hover:bg-white/40 transition-colors cursor-pointer"
-                  title="Scroll up"
-                >
-                  <span className="material-symbols-outlined text-[18px] leading-none">keyboard_arrow_up</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleScrollDown}
-                  className="w-6 h-6 rounded-lg flex items-center justify-center text-purple-600 hover:text-slate-900 hover:bg-white/40 transition-colors cursor-pointer"
-                  title="Scroll down"
-                >
-                  <span className="material-symbols-outlined text-[18px] leading-none">keyboard_arrow_down</span>
-                </button>
-              </div>
-            )}
+          </div>
         </div>
       </div>
 
-      {/* Content Area matching Mid Tab's padding and layout */}
-      <div className="px-4 sm:px-5 pb-3.5 sm:pb-4 pt-3.5 sm:pt-4 flex flex-col gap-2.5 flex-1 min-h-0 relative z-10 bg-white">
-        {/* Inner Box: Exactly matching Mid Tab's inner container bg-slate-50/50 border-slate-200/80 */}
-        <div className="p-3 sm:p-3.5 rounded-2xl sm:rounded-3xl bg-slate-50/50 border border-slate-200/80 shadow-2xs flex-1 flex flex-col min-h-0 justify-center">
+      {/* Content Area */}
+      <div className="px-4 sm:px-5 pb-3.5 sm:pb-4 pt-3.5 sm:pt-4 flex flex-col gap-2.5 flex-1 min-h-0 relative z-10 max-xl:bg-transparent bg-white">
+        {/* Inner Box */}
+        <div className="p-3.5 sm:p-4 rounded-3xl max-xl:bg-black/25 max-xl:border max-xl:border-emerald-400/20 max-xl:backdrop-blur-xl bg-slate-50/50 border border-slate-200/80 shadow-2xs flex-1 flex flex-col min-h-0 justify-center">
           {roomOccupantsList.length > 0 ? (
             <div className="relative flex items-center gap-2.5 flex-1 min-h-0">
-              {/* Scrollable list: exactly 3 occupant cards visible at a time (max-h-[336px]), rest scrollable */}
+              {/* Scrollable list */}
               <div
                 ref={carouselRef}
-                onScroll={(e) => {
-                  const scrollTop = e.currentTarget.scrollTop;
-                  const cardStep = 116;
-                  const newIdx = Math.round(scrollTop / cardStep);
-                  const clamped = Math.min(newIdx, roomOccupantsList.length - 1);
-                  setActiveCarouselIdx((prev) => (prev !== clamped ? clamped : prev));
+                onScroll={() => {
+                  if (carouselRef.current) {
+                    const top = carouselRef.current.scrollTop;
+                    const idx = Math.round(top / 116);
+                    if (idx !== activeCarouselIdx && idx >= 0 && idx < roomOccupantsList.length) {
+                      setActiveCarouselIdx(idx);
+                    }
+                  }
                 }}
-                className="flex-1 flex flex-col gap-2.5 overflow-y-auto no-scrollbar scroll-smooth snap-y snap-mandatory pr-0.5 max-h-[336px]"
+                className="flex flex-col gap-2.5 overflow-y-auto max-h-[336px] pr-1.5 flex-1 custom-scrollbar min-h-0 snap-y snap-mandatory"
               >
-                {roomOccupantsList.map((occupant) => {
+                {roomOccupantsList.map((occupant, idx) => {
                   const occId = occupant._id || occupant.bookingReferenceId;
-                  const isConfirming =
-                    (confirmAction && (confirmAction._id === occId || confirmAction._id === occupant._id)) ||
-                    (confirmDeleteId && (confirmDeleteId === occId || confirmDeleteId === occupant._id));
-                  const actionType = confirmAction?.type || (confirmDeleteId ? 'remove' : 'remove');
+                  const isSelected =
+                    selectedBookedGuest &&
+                    (selectedBookedGuest._id === occId ||
+                      selectedBookedGuest.bookingReferenceId === occId ||
+                      (selectedBookedGuest.phone && occupant.phone && selectedBookedGuest.phone === occupant.phone));
 
-                  const isSelected = Boolean(
-                    selectedBookedGuest && (
-                      (selectedBookedGuest._id && occupant._id === selectedBookedGuest._id) ||
-                      (selectedBookedGuest.bookingReferenceId && occupant.bookingReferenceId && occupant.bookingReferenceId === selectedBookedGuest.bookingReferenceId) ||
-                      (
-                        (selectedBookedGuest.phone || selectedBookedGuest.userPhone || selectedBookedGuest.guestPhone) &&
-                        occupant.phone &&
-                        String(occupant.phone).replace(/\D/g, '').slice(-10) === String(selectedBookedGuest.phone || selectedBookedGuest.userPhone || selectedBookedGuest.guestPhone).replace(/\D/g, '').slice(-10)
-                      )
-                    )
-                  );
-
-                  const rawStatus = occupant.status ? String(occupant.status).trim().toUpperCase().replace(/[-\s]/g, '_') : '';
-                  const isIgnoredStatus = !rawStatus || rawStatus === 'CHECKED_IN' || rawStatus === 'CONFIRMED';
-                  const statusBadgeText = isSelected ? 'SELECTED' : (!isIgnoredStatus ? (occupant.status || rawStatus) : null);
+                  const isConfirming = confirmAction?._id === occId || confirmDeleteId === occId;
+                  const actionType = confirmAction?.type || 'remove';
+                  const statusBadgeText = occupant.status || (occupant.paymentStatus === 'PAID' ? 'CONFIRMED' : 'RESERVED');
 
                   return (
                     <div
@@ -186,7 +180,7 @@ export function HostOccupantsList({
                       className={`h-[104px] shrink-0 flex flex-col justify-between p-3 sm:p-3.5 rounded-2xl w-full transition-all duration-200 cursor-pointer select-none group snap-start ${
                         isSelected
                           ? 'bg-slate-50 border-2 border-[#c0c1ff] shadow-room-open-selected z-10'
-                          : 'bg-slate-50/70 border border-slate-200/80 hover:border-slate-300 hover:bg-slate-100/50'
+                          : 'max-xl:bg-[#022c22]/70 max-xl:hover:bg-[#022c22]/90 max-xl:border max-xl:border-emerald-500/30 max-xl:text-white bg-slate-50/70 border border-slate-200/80 hover:border-slate-300 hover:bg-slate-100/50'
                       }`}
                       title={isSelected ? 'Selected booked guest - click to view resident pass' : 'Click to view resident details pass'}
                     >
@@ -197,7 +191,7 @@ export function HostOccupantsList({
                             className={`w-7.5 h-7.5 rounded-full flex items-center justify-center text-[10.5px] font-black shrink-0 transition-all shadow-2xs ${
                               isSelected
                                 ? 'bg-[#c0c1ff] text-[#07006c]'
-                                : 'bg-slate-200/80 border border-slate-300 text-slate-700'
+                                : 'max-xl:bg-emerald-800/80 max-xl:border max-xl:border-emerald-400/40 max-xl:text-emerald-100 bg-slate-200/80 border border-slate-300 text-slate-700'
                             }`}
                           >
                             {(occupant.name || 'G').slice(0, 2).toUpperCase()}
@@ -205,7 +199,7 @@ export function HostOccupantsList({
                           <span className={`text-[13.5px] sm:text-[14px] font-extrabold tracking-tight truncate max-w-[170px] sm:max-w-[200px] leading-tight ${
                             isSelected
                               ? 'text-[#5254cf]'
-                              : 'text-slate-900'
+                              : 'max-xl:text-white text-slate-900'
                           }`}>
                             {occupant.name}
                           </span>
@@ -216,9 +210,9 @@ export function HostOccupantsList({
                             <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-2xs leading-none ${
                               isSelected
                                 ? 'bg-[#c0c1ff] text-[#07006c]'
-                                : 'bg-white text-slate-600 border border-slate-200'
+                                : 'max-xl:bg-emerald-900/80 max-xl:border max-xl:border-emerald-500/50 max-xl:text-emerald-200 bg-white text-slate-600 border border-slate-200'
                             }`}>
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
                               <span>{statusBadgeText}</span>
                             </span>
                           )}
@@ -235,7 +229,7 @@ export function HostOccupantsList({
                                 setConfirmDeleteId((prev) => (prev === occId ? null : occId));
                               }
                             }}
-                            className="w-6 h-6 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer flex items-center justify-center shrink-0"
+                            className="w-6 h-6 rounded-lg max-xl:text-emerald-200/70 max-xl:hover:text-rose-400 max-xl:hover:bg-white/10 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer flex items-center justify-center shrink-0"
                             title="Remove Occupant"
                           >
                             <span className="material-symbols-outlined text-[14px] leading-none">close</span>
@@ -243,9 +237,9 @@ export function HostOccupantsList({
                         </div>
                       </div>
 
-                      {/* Bottom Row: Clean Price on left, Minimal & Premium Check-Out Button on right */}
-                      <div className="flex items-center justify-between gap-2.5 w-full pt-2 border-t border-slate-200/80">
-                        <span className="text-[15px] sm:text-base font-black text-emerald-600 tracking-tight leading-none">
+                      {/* Bottom Row: Clean Price on left, Check-Out Button on right */}
+                      <div className="flex items-center justify-between gap-2.5 w-full pt-2 border-t max-xl:border-emerald-500/20 border-slate-200/80">
+                        <span className="text-[15px] sm:text-base font-black max-xl:text-emerald-300 text-emerald-600 tracking-tight leading-none">
                           ₹{Number(occupant.totalAmount || occupant.price || 0).toLocaleString('en-IN')}
                         </span>
 
@@ -259,7 +253,7 @@ export function HostOccupantsList({
                                 setConfirmAction(null);
                                 if (typeof setConfirmDeleteId === 'function') setConfirmDeleteId(null);
                               }}
-                              className="h-7 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-[10.5px] font-bold cursor-pointer transition-colors flex items-center justify-center active:scale-95 leading-none"
+                              className="h-7 px-2.5 rounded-lg max-xl:bg-emerald-900/60 max-xl:text-emerald-200 max-xl:border max-xl:border-emerald-500/40 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10.5px] font-bold cursor-pointer transition-colors flex items-center justify-center leading-none"
                             >
                               Cancel
                             </button>
@@ -289,7 +283,7 @@ export function HostOccupantsList({
                               setConfirmAction({ _id: occId, type: 'checkout' });
                               if (typeof setConfirmDeleteId === 'function') setConfirmDeleteId(occId);
                             }}
-                            className="group/btn h-7 px-3.5 rounded-lg text-[11px] font-bold tracking-tight text-rose-600 hover:text-white bg-rose-50 hover:bg-rose-600 border border-rose-200 hover:border-rose-600 shadow-2xs hover:shadow-xs transition-all duration-200 active:scale-95 cursor-pointer shrink-0 leading-none flex items-center justify-center"
+                            className="group/btn h-7 px-3.5 rounded-lg text-[11px] font-bold tracking-tight max-xl:text-rose-300 max-xl:bg-rose-500/20 max-xl:border max-xl:border-rose-400/40 max-xl:hover:bg-rose-600 max-xl:hover:text-white text-rose-600 hover:text-white bg-rose-50 hover:bg-rose-600 border border-rose-200 hover:border-rose-600 shadow-2xs hover:shadow-xs transition-all duration-200 active:scale-95 cursor-pointer shrink-0 leading-none flex items-center justify-center"
                             title="Check-Out Occupant"
                           >
                             <span>Check-Out</span>
@@ -303,7 +297,7 @@ export function HostOccupantsList({
 
               {/* Vertical Direction Dots Carousel */}
               {roomOccupantsList.length > 0 && (
-                <div className="flex flex-col items-center justify-center gap-1.5 shrink-0 px-1 py-2 bg-white/80 rounded-full border border-slate-200/80 my-auto shadow-2xs">
+                <div className="flex flex-col items-center justify-center gap-1.5 shrink-0 px-1 py-2 max-xl:bg-[#022c22]/80 max-xl:border max-xl:border-emerald-500/40 bg-white/80 rounded-full border border-slate-200/80 my-auto shadow-2xs">
                   {roomOccupantsList.map((_, pIdx) => {
                     const isActive = activeCarouselIdx === pIdx;
                     return (
@@ -321,8 +315,8 @@ export function HostOccupantsList({
                         }}
                         className={`transition-all duration-200 rounded-full cursor-pointer ${
                           isActive
-                            ? 'w-1.5 h-4.5 bg-[#c0c1ff] shadow-[0_0_8px_rgba(192,193,255,0.6)]'
-                            : 'w-1.5 h-1.5 bg-slate-300 hover:bg-slate-400'
+                            ? 'w-1.5 h-4.5 bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]'
+                            : 'w-1.5 h-1.5 max-xl:bg-emerald-800/80 max-xl:hover:bg-emerald-700 bg-slate-300 hover:bg-slate-400'
                         }`}
                         title={`Occupant ${pIdx + 1}`}
                       />
@@ -332,15 +326,15 @@ export function HostOccupantsList({
               )}
             </div>
           ) : (
-            <div className="py-7 px-4 text-center space-y-3 rounded-xl sm:rounded-2xl border border-dashed border-slate-300 bg-white/50">
-              <p className="text-xs font-semibold text-slate-600">
+            <div className="py-7 px-4 text-center space-y-3 rounded-xl sm:rounded-2xl border border-dashed max-xl:border-emerald-500/30 max-xl:bg-black/20 border-slate-300 bg-white/50">
+              <p className="text-xs font-semibold max-xl:text-emerald-200/90 text-slate-600">
                 No occupants scheduled for {cleanRoomDisplay || 'this room'}.
               </p>
               {onAddGuestClick && (
                 <button
                   type="button"
                   onClick={onAddGuestClick}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-900 border border-slate-200/80 text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl max-xl:bg-white max-xl:hover:bg-emerald-50 max-xl:text-emerald-950 bg-white hover:bg-slate-100 text-slate-900 border border-slate-200/80 text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
                 >
                   <span className="material-symbols-outlined text-[15px]">person_add</span>
                   <span>Add Guest</span>
@@ -350,21 +344,6 @@ export function HostOccupantsList({
           )}
         </div>
       </div>
-
-      {/* Footer: + Add Guest Button in Solid White Color */}
-      {onAddGuestClick && (
-        <div className="pt-2 sm:pt-2.5 pb-2.5 sm:pb-3 px-4 sm:px-5 border-t border-slate-100 bg-white flex items-center relative z-10">
-          <button
-            type="button"
-            onClick={onAddGuestClick}
-            className="w-full h-8.5 px-4 rounded-xl text-xs gap-1.5 font-bold transition-all flex items-center justify-center cursor-pointer shadow-xs leading-none bg-white hover:bg-slate-100 text-slate-900 border border-slate-200/80 active:scale-95"
-            title="Add a new guest to this room"
-          >
-            <span className="material-symbols-outlined text-[16px] leading-none shrink-0 font-bold">person_add</span>
-            <span>Add Guest</span>
-          </button>
-        </div>
-      )}
     </section>
   );
 }

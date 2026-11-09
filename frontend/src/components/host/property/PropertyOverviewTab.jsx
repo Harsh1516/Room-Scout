@@ -79,7 +79,7 @@ export function PropertyOverviewTab({
     <div>
       {/* ── Centered Heading with Generous Gap ── */}
       <div className="flex flex-col items-center justify-center pt-1 mb-5 sm:mb-6 w-full text-center">
-        <h2 className="text-xl sm:text-2xl font-bold max-md:font-black max-md:text-white text-slate-900 tracking-normal text-center">
+        <h2 className="text-[22px] sm:text-2xl font-black max-md:text-white text-slate-900 tracking-tight text-center">
           Property Overview
         </h2>
       </div>
@@ -117,10 +117,10 @@ export function PropertyOverviewTab({
                 onChange={(e) => handleChange('propertyName', e.target.value)}
                 placeholder="Property Name *"
                 required
-                className="w-full h-11 px-4 rounded-xl border border-white/20 bg-white/10 text-white font-bold text-base focus:outline-none focus:border-white/60 focus:ring-2 focus:ring-white/20 transition-all placeholder:text-purple-200/50 shadow-xs"
+                className="w-full h-11 max-md:h-12 md:h-9.5 px-4 rounded-xl border border-white/20 bg-white/10 text-white font-bold text-base focus:outline-none focus:border-white/60 focus:ring-2 focus:ring-white/20 transition-all placeholder:text-purple-200/50 shadow-xs"
               />
             ) : (
-              <div className="w-full px-4 py-2.5 rounded-xl border border-white/15 bg-white/10 text-white font-bold text-base shadow-xs">
+              <div className="w-full min-h-[48px] max-md:min-h-[52px] flex items-center px-4 py-2.5 rounded-xl border border-white/15 bg-white/10 text-white font-bold text-base shadow-xs">
                 {hostProperty?.propertyName || hostProperty?.title || '—'}
               </div>
             )}
@@ -128,7 +128,7 @@ export function PropertyOverviewTab({
 
           {/* Property Category Grid */}
           <div className="space-y-2">
-            <label className="block text-xs font-bold uppercase tracking-wider text-purple-200">
+            <label className="block text-xs sm:text-[13px] font-extrabold uppercase tracking-wider text-purple-200">
               Property Category *
             </label>
             <div className="grid grid-cols-3 gap-3">
@@ -175,7 +175,7 @@ export function PropertyOverviewTab({
 
           {/* Available For (Gender Policy) Grid */}
           <div className="space-y-2">
-            <label className="block text-xs font-bold uppercase tracking-wider text-purple-200">
+            <label className="block text-xs sm:text-[13px] font-extrabold uppercase tracking-wider text-purple-200">
               Available For (Gender Policy) *
             </label>
             <div className="grid grid-cols-3 gap-3">

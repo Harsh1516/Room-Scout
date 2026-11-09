@@ -45,10 +45,10 @@ export function PropertyDescriptionTab({
     <div>
       {/* ── Centered Heading with Generous Gap ── */}
       <div className="flex flex-col items-center justify-center pt-1 mb-5 sm:mb-6 w-full text-center">
-        <h2 className="text-xl sm:text-2xl font-bold max-md:font-black text-white md:text-slate-900 tracking-normal text-center">
+        <h2 className="text-[22px] sm:text-2xl font-black max-md:text-white text-slate-900 tracking-tight text-center">
           Description
         </h2>
-        <span className="text-xs text-purple-200/80 md:hidden font-normal text-center mt-0.5">
+        <span className="text-[13px] font-medium text-purple-200/80 md:hidden text-center mt-0.5">
           {currentCharsCount} / {MAX_DESCRIPTION_CHARS} characters
         </span>
       </div>
@@ -114,7 +114,7 @@ export function PropertyDescriptionTab({
               value={localDesc}
               onChange={(e) => setLocalDesc(e.target.value.slice(0, MAX_DESCRIPTION_CHARS))}
               placeholder="Describe your property's ambiance, nearby landmarks, security features, student perks..."
-              className="w-full p-3.5 sm:p-4 rounded-xl sm:rounded-2xl max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/50 bg-slate-100/90 border border-slate-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 text-slate-900 text-xs sm:text-sm outline-none transition-all resize-y min-h-[90px] placeholder:text-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-md"
+              className="w-full p-4 rounded-xl sm:rounded-2xl max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/50 bg-slate-100/90 border border-slate-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 text-slate-900 text-sm sm:text-base md:text-xs outline-none transition-all resize-y min-h-[110px] placeholder:text-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-md font-medium leading-relaxed"
             />
 
             <div className="flex items-center justify-between gap-3 pt-1 border-t border-slate-200/80 max-md:border-white/10 flex-wrap">
@@ -139,11 +139,11 @@ export function PropertyDescriptionTab({
               <span className="material-symbols-outlined text-[17px] text-purple-600 shrink-0">description</span>
             </div>
             <div>
-              <p className="text-xs sm:text-sm font-normal max-md:text-white text-slate-900 tracking-normal leading-relaxed whitespace-pre-wrap">
+              <p className="text-sm sm:text-base md:text-xs font-medium max-md:text-white text-slate-900 tracking-normal leading-relaxed whitespace-pre-wrap">
                 {description ? (
                   description
                 ) : (
-                  <span className="text-xs sm:text-sm font-normal max-md:text-purple-200/80 text-purple-600 italic">
+                  <span className="text-sm sm:text-base md:text-xs font-normal max-md:text-purple-200/80 text-purple-600 italic">
                     No description provided yet. Click &quot;Edit&quot; to write a description (max {MAX_DESCRIPTION_CHARS} characters).
                   </span>
                 )}

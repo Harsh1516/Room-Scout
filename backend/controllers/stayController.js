@@ -1,4 +1,4 @@
-﻿import mongoose from 'mongoose';
+import mongoose from 'mongoose';
 import { v2 as cloudinary } from 'cloudinary';
 import { Stay, computeLowestStartingPrice } from '../models/Stay.js';
 import { Host } from '../models/Host.js';
@@ -601,7 +601,8 @@ export const resolveMapLink = async (req, res) => {
     }
 
     let targetUrl = cleanUrl;
-    if (hostname.includes('goo.gl')) {
+    let fetchedHtml = '';
+    if (hostname.includes('goo.gl') || hostname === 'g.page' || hostname.endsWith('.g.page') || targetUrl.includes('/url?')) {
       try {
         const redirectRes = await fetch(cleanUrl, {
           method: 'GET',
@@ -612,6 +613,9 @@ export const resolveMapLink = async (req, res) => {
           },
         });
         targetUrl = redirectRes.url || cleanUrl;
+        if (redirectRes.ok) {
+          fetchedHtml = await redirectRes.text();
+        }
       } catch (redirectErr) {
         console.warn('Google Maps redirect error:', redirectErr.message);
       }
@@ -628,8 +632,8 @@ export const resolveMapLink = async (req, res) => {
     } catch {}
 
     // 1. Exact POI / Marker coordinates in protobuf data (!3d<lat> and !4d<lng>)
-    const lat3d = targetUrl.match(/!3d(-?\d+\.\d+)/);
-    const lng4d = targetUrl.match(/!4d(-?\d+\.\d+)/);
+    const lat3d = targetUrl.match(/!3d(-?\d+\.\d+)/) || fetchedHtml.match(/!3d(-?\d+\.\d+)/);
+    const lng4d = targetUrl.match(/!4d(-?\d+\.\d+)/) || fetchedHtml.match(/!4d(-?\d+\.\d+)/);
     if (lat3d && lng4d) {
       lat = parseFloat(lat3d[1]);
       lng = parseFloat(lng4d[1]);
@@ -652,6 +656,15 @@ export const resolveMapLink = async (req, res) => {
       if (directPlaceMatch) {
         lat = parseFloat(directPlaceMatch[1]);
         lng = parseFloat(directPlaceMatch[2]);
+      }
+    }
+
+    // 3b. Google Maps HTML StaticMap fallback
+    if ((lat === null || lng === null) && fetchedHtml) {
+      const staticMapMatch = fetchedHtml.match(/center=(-?\d+\.\d+)%2C(-?\d+\.\d+)/);
+      if (staticMapMatch) {
+        lat = parseFloat(staticMapMatch[1]);
+        lng = parseFloat(staticMapMatch[2]);
       }
     }
 
@@ -725,39 +738,78 @@ export const resolveMapLink = async (req, res) => {
     if ((lat === null || lng === null) && placeName) {
       const nameParts = placeName.split(',').map((p) => p.trim()).filter(Boolean);
 
-      // Deduplicate: remove parts that are substrings of an earlier part
-      const uniqueParts = nameParts.filter(
-        (p, i) => !nameParts.some((o, j) => j < i && o.toLowerCase().includes(p.toLowerCase()))
-      );
-
       // Indian PIN codes are reliable Nominatim identifiers
       const pinMatch = placeName.match(/\b([1-9][0-9]{5})\b/);
 
-      // Build candidate queries — simpler/location-specific first for Nominatim reliability
-      const candidateQueries = [];
-
-      // Best bets: last 2-3 location parts (locality + state/PIN)
-      if (nameParts.length >= 2) candidateQueries.push(nameParts.slice(-2).join(', '));
-      if (nameParts.length >= 3) candidateQueries.push(nameParts.slice(-3).join(', '));
-
-      // PIN-code based queries (most reliable for India)
-      if (pinMatch) {
-        if (nameParts.length >= 2)
-          candidateQueries.push(`${nameParts[nameParts.length - 2]}, ${pinMatch[1]}`);
-        candidateQueries.push(`${pinMatch[1]}, India`);
+      // Extract City and State from parts
+      let city = '';
+      let state = '';
+      if (nameParts.length >= 3) {
+        const lastPart = nameParts[nameParts.length - 1];
+        state = lastPart.replace(/\b[1-9][0-9]{5}\b/, '').trim();
+        city = nameParts[nameParts.length - 2].trim();
+      } else if (nameParts.length === 2) {
+        city = nameParts[1].replace(/\b[1-9][0-9]{5}\b/, '').trim();
       }
 
-      // Deduplicated unique parts
-      if (uniqueParts.length > 0) candidateQueries.push(uniqueParts.join(', '));
+      // Build candidate queries — strictly from MOST SPECIFIC to LEAST SPECIFIC
+      const candidateQueries = [];
 
-      // Full place name as final fallback
+      // 1. Full place name
       candidateQueries.push(placeName);
+
+      // 2. Place name without PIN
+      if (pinMatch) {
+        candidateQueries.push(placeName.replace(/\b[1-9][0-9]{5}\b/, '').trim().replace(/,\s*,/g, ','));
+      }
+
+      // 3. Specific place name + City (e.g. "Zooby's Kitchen, Bhimtal")
+      if (nameParts.length > 2 && city) {
+        candidateQueries.push(`${nameParts[0]}, ${city}`);
+        if (nameParts.length > 3) {
+          candidateQueries.push(`${nameParts[0]}, ${nameParts[1]}, ${city}`);
+        }
+      }
+
+      // 4. Specific sub-locality and area parts + City (e.g. "Mehragaon, Bhimtal", "Mehra Gaon, Bhimtal")
+      for (let i = 1; i < nameParts.length - 2; i++) {
+        const part = nameParts[i];
+        if (part && part.toLowerCase() !== city.toLowerCase()) {
+          candidateQueries.push(`${part}, ${city}`);
+          // Common Indian / Kumaoni hill transliteration aliases (e.g. Mehra Gaon / Mehragaon -> Mahargaon)
+          if (/mehra\s*gaon/i.test(part)) {
+            candidateQueries.push(`Mahargaon, ${city}`);
+            candidateQueries.push(`Mahargaon, Uttarakhand`);
+          }
+        }
+      }
+
+      // 5. Locality + City + State (last 3 components)
+      if (nameParts.length >= 3) {
+        candidateQueries.push(nameParts.slice(-3).join(', '));
+      }
+
+      // 6. City + PIN code (broader area fallback)
+      if (pinMatch && city) {
+        candidateQueries.push(`${city}, ${pinMatch[1]}`);
+      }
+
+      // 7. City + State (last resort town center)
+      if (city && state) {
+        candidateQueries.push(`${city}, ${state}`);
+      } else if (city) {
+        candidateQueries.push(`${city}, India`);
+        candidateQueries.push(city);
+      } else if (nameParts.length >= 2) {
+        candidateQueries.push(nameParts.slice(-2).join(', '));
+      }
 
       // Remove duplicate queries
       const seenQueries = new Set();
       const finalQueries = candidateQueries.filter((q) => {
-        if (seenQueries.has(q)) return false;
-        seenQueries.add(q);
+        const clean = q.replace(/\s+/g, ' ').trim();
+        if (!clean || seenQueries.has(clean.toLowerCase())) return false;
+        seenQueries.add(clean.toLowerCase());
         return true;
       });
 
@@ -779,10 +831,10 @@ export const resolveMapLink = async (req, res) => {
               lng = Number(first.lon);
               const addr = first.address || {};
               addressHint = {
-                roadArea: nameParts[0] || addr.suburb || addr.neighbourhood || addr.road || ``,
-                city: addr.city || addr.town || addr.village || addr.county || ``,
-                state: addr.state || ``,
-                pincode: addr.postcode || pinMatch?.[1] || ``,
+                roadArea: nameParts.slice(0, Math.max(1, nameParts.length - 2)).join(', ') || nameParts[0] || addr.suburb || addr.neighbourhood || addr.road || ``,
+                city: city || addr.city || addr.town || addr.village || addr.county || ``,
+                state: state || addr.state || ``,
+                pincode: pinMatch?.[1] || addr.postcode || ``,
               };
               console.log(`[resolveMapLink] Geocoded "${q}" -> ${lat},${lng}`);
               break;

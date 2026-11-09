@@ -1,10 +1,31 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||
-  (typeof window !== 'undefined' &&
-  window.location.hostname !== 'localhost' &&
-  window.location.hostname !== '127.0.0.1'
-    ? 'https://room-scout-backend.onrender.com/api'
-    : 'http://localhost:5000/api');
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    const { hostname } = window.location;
+    const isLocalNetwork =
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname.startsWith('192.168.') ||
+      hostname.startsWith('10.') ||
+      /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hostname) ||
+      hostname.endsWith('.local');
+
+    if (isLocalNetwork) {
+      // When accessed on mobile or another device on the same local network (e.g. 192.168.x.x:5173),
+      // target the backend running on the same host machine at port 5000
+      return `http://${hostname}:5000/api`;
+    }
+
+    if (import.meta.env.VITE_API_URL && !import.meta.env.VITE_API_URL.includes('localhost')) {
+      return import.meta.env.VITE_API_URL;
+    }
+
+    return 'https://room-scout-backend.onrender.com/api';
+  }
+
+  return import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 // In-flight request deduplication registry for simultaneous GET calls
 const inFlightRequests = new Map();

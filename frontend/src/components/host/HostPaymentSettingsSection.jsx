@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { paymentsAPI } from '../../services/api';
 import { toast } from '../../context/ToastContext';
 
@@ -88,22 +87,13 @@ export function HostPaymentSettingsSection({ hostProperty }) {
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6 pb-12 pt-2 px-3 sm:px-6">
+    <div className="w-full max-w-4xl mx-auto space-y-4 pb-28 sm:pb-32 pt-2 px-3 sm:px-6">
       {/* Overview Banner */}
-      <div className="rounded-3xl rounded-3xl border border-slate-200/80 bg-white/80 backdrop-blur-2xl shadow-xl p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="rounded-3xl border border-slate-200/80 bg-white/80 backdrop-blur-2xl p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)] animate-pulse" />
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-900">
-              Direct Host Payment Gateway
-            </span>
-          </div>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
             Host UPI Account Configuration
           </h2>
-          <p className="text-xs sm:text-sm text-purple-600 mt-1 max-w-xl">
-            Configure your personal or property UPI VPA. Guests will scan a booking-specific QR code or use a direct UPI payment link to transfer 100% of the room fee directly to your bank account.
-          </p>
         </div>
 
         <div className="shrink-0">
@@ -128,12 +118,12 @@ export function HostPaymentSettingsSection({ hostProperty }) {
       </div>
 
       {/* Main Settings Card */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Left Form: UPI VPA & Payee Display Name */}
-        <div className="lg:col-span-7 rounded-3xl rounded-3xl border border-slate-200/80 bg-white/80 backdrop-blur-2xl shadow-xl p-6 shadow-sm space-y-5">
+        <div className="lg:col-span-7 rounded-3xl border border-slate-200/80 bg-white/80 backdrop-blur-2xl p-5 sm:p-6 shadow-sm space-y-4">
           <form onSubmit={handleSave} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-purple-600 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1.5">
                 Host / Property UPI ID (VPA) *
               </label>
               <div className="relative">
@@ -166,13 +156,10 @@ export function HostPaymentSettingsSection({ hostProperty }) {
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-slate-500 mt-1">
-                Enter your verified UPI ID from Google Pay, PhonePe, Paytm, BHIM, or your bank application.
-              </p>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-purple-600 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1.5">
                 Payee / Property Display Name *
               </label>
               <input
@@ -184,16 +171,13 @@ export function HostPaymentSettingsSection({ hostProperty }) {
                 maxLength={100}
                 className="w-full px-4 py-3 rounded-2xl text-sm font-semibold bg-slate-50 border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
-              <p className="text-[11px] text-slate-500 mt-1">
-                This name will be displayed to guests on the payment screen and in their UPI app when paying.
-              </p>
             </div>
 
             <div className="pt-2">
               <button
                 type="submit"
                 disabled={isSaving || !isValidVpa || !payeeName.trim()}
-                className="w-full py-3.5 rounded-2xl font-bold text-xs sm:text-sm bg-white hover:bg-white/90 text-slate-900 font-extrabold shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-2xl font-bold text-sm bg-slate-950 hover:bg-black text-white shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
               >
                 {isSaving ? (
                   <>
@@ -206,27 +190,14 @@ export function HostPaymentSettingsSection({ hostProperty }) {
               </button>
             </div>
           </form>
-
-          {/* Operational Policy Notes */}
-          <div className="p-4 rounded-2xl bg-white/60 border border-slate-200 text-xs space-y-2 text-purple-600">
-            <h4 className="font-bold text-slate-800">How Direct UPI Payments Work:</h4>
-            <ul className="list-disc pl-4 space-y-1 leading-relaxed text-[11px]">
-              <li>Guests pay exact room prices directly into your account with <strong>0% platform or gateway fees</strong>.</li>
-              <li>When a guest pays, they submit their 12-digit transaction reference (UTR/RRN).</li>
-              <li>You will receive an alert in your <strong>User Visited</strong> console to verify the transaction in your bank account before confirming check-in.</li>
-            </ul>
-          </div>
         </div>
 
         {/* Right Preview: Generated Scannable QR Code */}
-        <div className="lg:col-span-5 rounded-3xl rounded-3xl border border-slate-200/80 bg-white/80 backdrop-blur-2xl shadow-xl p-6 shadow-sm flex flex-col items-center justify-between text-center space-y-4">
-          <div className="space-y-1">
+        <div className="lg:col-span-5 rounded-3xl border border-slate-200/80 bg-white/80 backdrop-blur-2xl p-5 sm:p-6 shadow-sm flex flex-col items-center justify-between text-center space-y-4">
+          <div className="space-y-0.5">
             <h3 className="font-bold text-slate-900 text-sm">
               Property QR Code Preview
             </h3>
-            <p className="text-[11px] text-slate-500">
-              Automatically generated from your verified UPI configuration
-            </p>
           </div>
 
           <div className="p-3 bg-white rounded-2xl shadow-sm border border-slate-200">

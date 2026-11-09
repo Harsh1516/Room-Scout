@@ -128,7 +128,7 @@ export function Center({ onSearchSubmit }) {
           delay: shouldReduceMotion ? 0 : 0.12,
           ease: [0.16, 1, 0.3, 1],
         }}
-        className="fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[calc(100vw-96px)] sm:max-w-none flex justify-center will-change-transform h-9 sm:h-[46px]"
+        className="fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[calc(100vw-96px)] sm:max-w-none flex justify-center will-change-transform h-13 sm:h-[54px]"
         ref={navRef}
       >
         <Console

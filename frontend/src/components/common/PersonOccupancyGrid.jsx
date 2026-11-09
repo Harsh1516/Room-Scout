@@ -27,12 +27,15 @@ export function PersonOccupancyGrid({
   const row1Count = Math.min(safeCapacity, 5);
   const row2Count = safeCapacity > 5 ? safeCapacity - 5 : 0;
 
+  const hasCustomSize = iconClassName && /\bw-\S+/.test(iconClassName);
+  const sizeClass = hasCustomSize ? '' : 'w-3 h-3';
+
   const renderPersonIcon = (isOccupied, key) => {
     if (isOccupied) {
       return (
         <svg
           key={key}
-          className={`w-3 h-3 shrink-0 transition-all duration-150 ${occupiedColor} ${iconClassName}`}
+          className={`${sizeClass} shrink-0 transition-all duration-150 ${occupiedColor} ${iconClassName}`}
           viewBox="0 0 16 16"
           fill="currentColor"
           aria-hidden="true"
@@ -46,7 +49,7 @@ export function PersonOccupancyGrid({
     return (
       <svg
         key={key}
-        className={`w-3 h-3 shrink-0 transition-all duration-150 ${vacantColor} ${iconClassName}`}
+        className={`${sizeClass} shrink-0 transition-all duration-150 ${vacantColor} ${iconClassName}`}
         viewBox="0 0 16 16"
         fill="none"
         aria-hidden="true"

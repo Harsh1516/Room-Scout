@@ -45,6 +45,7 @@ export default function HostWeeklySlotSchedule({
   const [hostGender, setHostGender] = useState('Male');
   const [isUpdatingSlot, setIsUpdatingSlot] = useState(false);
   const [selectedMonthIdx, setSelectedMonthIdx] = useState(0);
+  const [isAddGuestModalOpen, setIsAddGuestModalOpen] = useState(false);
 
   const isMonthly = useMemo(
     () => isMonthlyRateUnit(selectedRoomCard?.rateUnit || activeCategory?.rateUnit || hostProperty?.rateUnit),
@@ -337,7 +338,7 @@ export default function HostWeeklySlotSchedule({
           _id: g._id || g.id,
           id: g._id || g.id || g.bookingReferenceId,
           bookingId: g.bookingId || g._id || g.bookingReferenceId,
-          checkInCode: g.checkInCode || '',
+          checkInCode: (g.bookingSource === 'OFFLINE_HOST' || g.source === 'offline' || g.paymentMethod === 'OFFLINE') ? '' : (g.checkInCode || ''),
           userName: g.userName || g.fullName || g.guestName || 'Guest User',
           name: g.userName || g.fullName || g.guestName || 'Guest User',
           userEmail: g.userEmail || g.email || g.guestEmail || '',
@@ -444,7 +445,7 @@ export default function HostWeeklySlotSchedule({
             _id: g._id || bId,
             id: bId,
             bookingId: g.bookingId || bId,
-            checkInCode: g.checkInCode || '',
+            checkInCode: (g.bookingSource === 'OFFLINE_HOST' || g.source === 'offline' || g.paymentMethod === 'OFFLINE') ? '' : (g.checkInCode || ''),
             bookingReferenceId: g.bookingReferenceId || (cleanDigits ? `BK-${cleanDigits}` : ''),
             name: g.userName || g.fullName || g.guestName || 'Guest User',
             email: mail,
@@ -1044,7 +1045,7 @@ export default function HostWeeklySlotSchedule({
     const fullOccupant = {
       ...(matchedGuest || {}),
       ...occupant,
-      checkInCode: occupant.checkInCode || matchedGuest?.checkInCode || '',
+      checkInCode: (occupant.bookingSource === 'OFFLINE_HOST' || occupant.isOffline || occupant.paymentMethod === 'OFFLINE' || matchedGuest?.bookingSource === 'OFFLINE_HOST' || matchedGuest?.paymentMethod === 'OFFLINE') ? '' : (occupant.checkInCode || matchedGuest?.checkInCode || ''),
       aadhar:
         occupant.aadhar ||
         occupant.aadharNumber ||
@@ -1506,10 +1507,11 @@ export default function HostWeeklySlotSchedule({
             isRoomSavedToDb={isRoomSavedToDb}
             selectedBookedGuest={activeBookedGuest}
             onClearBookedGuest={onClearBookedGuest}
+            onOpenAddGuestModal={() => setIsAddGuestModalOpen(true)}
           />
         </motion.div>
 
-        <div className="xl:col-span-3 w-full relative">
+        <div id="room-occupants-section" className="hidden xl:block xl:col-span-3 w-full relative">
           <AnimatePresence mode="wait" initial={false}>
             {activeRightPanelTab === 'guest' ? (
               <motion.div
@@ -1597,6 +1599,59 @@ export default function HostWeeklySlotSchedule({
           </AnimatePresence>
         </div>
       </div>
+
+      {/* "Add Guest" Pop Tab in the center of the screen with luxury white tab color and balanced text size */}
+      {isAddGuestModalOpen && (
+        <HostBookingForm
+          isModal={true}
+          theme="white"
+          onClose={() => setIsAddGuestModalOpen(false)}
+          isPropertyApproved={isPropertyApproved}
+          isRoomSavedToDb={isRoomSavedToDb}
+          isMonthly={isMonthly}
+          roomDisplay={roomDisplay}
+          roomTypeDisplay={roomTypeDisplay}
+          reservationDetails={reservationDetails}
+          hostUserName={hostUserName}
+          handleHostNameChange={handleHostNameChange}
+          hostUserPhone={hostUserPhone}
+          handleHostPhoneChange={handleHostPhoneChange}
+          hostGender={hostGender}
+          setHostGender={setHostGender}
+          hostPersonCount={hostPersonCount}
+          setHostPersonCount={handleHostPersonCountChange}
+          maxAllowedPersons={maxAllowedPersons}
+          roomCapacity={roomCapacity}
+          hostUserEmail={hostUserEmail}
+          setHostUserEmail={setHostUserEmail}
+          hostUserAadhar={hostUserAadhar}
+          setHostUserAadhar={setHostUserAadhar}
+          formatAadharNumber={formatAadharNumber}
+          hostPaidAmount={hostPaidAmount}
+          setHostPaidAmount={setHostPaidAmount}
+          isUpdatingSlot={isUpdatingSlot}
+          sortedSelected={sortedSelected}
+          handleHostMarkSlotBooked={async () => {
+            await handleHostMarkSlotBooked();
+            setIsAddGuestModalOpen(false);
+          }}
+          isUserRequestSelection={isUserRequestSelection}
+          isExpiredRequest={isExpiredRequest}
+          requestedUserBooking={activeRequestedBooking}
+          onClearRequestedBooking={onClearRequestedBooking}
+          clearForm={() => {
+            setSelectedSlotIndices([]);
+            setHostUserName('');
+            setHostUserPhone('');
+            setHostUserEmail('');
+            setHostUserAadhar('');
+            setHostPaidAmount('');
+            setHostPersonCount(1);
+            setHostGender('Male');
+            if (onClearRequestedBooking) onClearRequestedBooking();
+          }}
+        />
+      )}
 
       {selectedOccupantForModal && (
         <Suspense fallback={null}>

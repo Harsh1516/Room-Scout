@@ -95,11 +95,16 @@ export function generateEntryPassPdf({ booking = {}, stay = {}, host = {}, check
     format: 'a4',
   });
 
+  const isOffline =
+    booking.bookingSource === 'OFFLINE_HOST' ||
+    booking.source === 'offline' ||
+    booking.paymentMethod === 'OFFLINE';
+
   const refId = booking.bookingReferenceId || booking._id || 'RESERVATION';
-  const finalCode =
+  const finalCode = isOffline ? '' : (
     checkInCode ||
     booking.checkInCode ||
-    String(refId).replace(/\D/g, '').slice(-8).padStart(8, '0');
+    String(refId).replace(/\D/g, '').slice(-8).padStart(8, '0'));
 
   const guestName = booking.fullName || booking.guestName || booking.userName || 'Guest Resident';
   const rawPhone = booking.phone || booking.guestPhone || booking.userPhone || '';
@@ -201,61 +206,104 @@ export function generateEntryPassPdf({ booking = {}, stay = {}, host = {}, check
   doc.setLineWidth(0.4);
   doc.roundedRect(12, y, 186, 42, 3, 3, 'FD');
 
-  // Code Box Label
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.setTextColor(...C_NAVY);
-  doc.text('OFFICIAL 8-DIGIT ENTRY PASS CODE', 18, y + 7.2);
-
-  // Status Badge on Right
-  doc.setFillColor(...C_EMERALD_LIGHT);
-  doc.setDrawColor(...C_EMERALD_BORDER);
-  doc.setLineWidth(0.3);
-  doc.roundedRect(122, y + 3.2, 70, 6.2, 2, 2, 'FD');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.2);
-  doc.setTextColor(...C_EMERALD);
-  doc.text('PAYMENT VERIFIED • IN-HOUSE AUTHORIZED', 157, y + 7.3, { align: 'center' });
-
-  // 8 Individual Digit Capsules
-  const startX = 18;
-  const startY = y + 13;
-  const capW = 11.2;
-  const capH = 16.5;
-  const gap = 2;
-
-  for (let i = 0; i < 8; i++) {
-    const cx = startX + i * (capW + gap);
-    doc.setFillColor(...C_BG_CARD);
-    doc.setDrawColor(203, 213, 225);
-    doc.setLineWidth(0.3);
-    doc.roundedRect(cx, startY, capW, capH, 2, 2, 'FD');
-
-    // Index indicator
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(5.5);
-    doc.setTextColor(...C_TEXT_LIGHT);
-    doc.text(String(i + 1), cx + capW / 2, startY + 4, { align: 'center' });
-
-    // Big Bold Digit
+  if (isOffline) {
+    // Offline Resident Verification Card
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14.5);
+    doc.setFontSize(8.5);
     doc.setTextColor(...C_NAVY);
-    doc.text(finalCode[i] || '-', cx + capW / 2, startY + 12.5, { align: 'center' });
+    doc.text('OFFICIAL RESIDENT VERIFICATION PASS', 18, y + 7.2);
+
+    doc.setFillColor(...C_EMERALD_LIGHT);
+    doc.setDrawColor(...C_EMERALD_BORDER);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(122, y + 3.2, 70, 6.2, 2, 2, 'FD');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.2);
+    doc.setTextColor(...C_EMERALD);
+    doc.text('DIRECT OFFLINE HOST ENTRY', 157, y + 7.3, { align: 'center' });
+
+    // Host Verified Resident inner card
+    doc.setFillColor(...C_BG_CARD);
+    doc.setDrawColor(...C_BORDER);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(18, y + 13, 174, 16.5, 2, 2, 'FD');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10.5);
+    doc.setTextColor(...C_NAVY);
+    doc.text(`${String(guestName).toUpperCase()} • ROOM ${roomNumber}`, 24, y + 20.5);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...C_TEXT_MUTED);
+    doc.text(`Direct On-Premise Booking • Host In-Person Verified Registration • Ref: ${refId}`, 24, y + 25.5);
+
+    // Guidance subtext
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(71, 85, 105);
+    doc.text(
+      'This offline reservation is pre-verified directly by the property host. Present this pass at reception.',
+      18,
+      y + 36.5
+    );
+  } else {
+    // Online Guest Code & Barcode
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...C_NAVY);
+    doc.text('OFFICIAL 8-DIGIT ENTRY PASS CODE', 18, y + 7.2);
+
+    // Status Badge on Right
+    doc.setFillColor(...C_EMERALD_LIGHT);
+    doc.setDrawColor(...C_EMERALD_BORDER);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(122, y + 3.2, 70, 6.2, 2, 2, 'FD');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.2);
+    doc.setTextColor(...C_EMERALD);
+    doc.text('PAYMENT VERIFIED • IN-HOUSE AUTHORIZED', 157, y + 7.3, { align: 'center' });
+
+    // 8 Individual Digit Capsules
+    const startX = 18;
+    const startY = y + 13;
+    const capW = 11.2;
+    const capH = 16.5;
+    const gap = 2;
+
+    for (let i = 0; i < 8; i++) {
+      const cx = startX + i * (capW + gap);
+      doc.setFillColor(...C_BG_CARD);
+      doc.setDrawColor(203, 213, 225);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(cx, startY, capW, capH, 2, 2, 'FD');
+
+      // Index indicator
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(5.5);
+      doc.setTextColor(...C_TEXT_LIGHT);
+      doc.text(String(i + 1), cx + capW / 2, startY + 4, { align: 'center' });
+
+      // Big Bold Digit
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14.5);
+      doc.setTextColor(...C_NAVY);
+      doc.text(finalCode[i] || '-', cx + capW / 2, startY + 12.5, { align: 'center' });
+    }
+
+    // Security Barcode on right side of Hero Card
+    drawSecurityBarcode(doc, 134, startY, 58, capH, refId);
+
+    // Guidance subtext
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(71, 85, 105);
+    doc.text(
+      'Show this 8-digit verification code or barcode to the reception host for immediate room key handover.',
+      18,
+      y + 36.5
+    );
   }
-
-  // Security Barcode on right side of Hero Card
-  drawSecurityBarcode(doc, 134, startY, 58, capH, refId);
-
-  // Guidance subtext
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(71, 85, 105);
-  doc.text(
-    'Show this 8-digit verification code or barcode to the reception host for immediate room key handover.',
-    18,
-    y + 36.5
-  );
 
   // ──────────────────────────────────────────
   // Section 1: Stay & Accommodation Details

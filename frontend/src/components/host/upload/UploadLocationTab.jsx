@@ -23,25 +23,27 @@ export function UploadLocationTab({
       transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
       className="max-w-5xl md:max-w-4xl w-full mx-auto space-y-5 sm:space-y-6 md:space-y-3"
     >
-      {/* ── CARD 1: Google Maps Fast Import Unified Capsule ── */}
+      {/* ── CARD 1: Google Maps Fast Import Unified 1-Line Capsule ── */}
       {setGoogleMapsUrl && (
-        <section className="rounded-2xl sm:rounded-full border shadow-lg transition-colors
-          max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:p-3 max-md:shadow-black/20
-          md:bg-white md: md:border-slate-200/90 md: md:p-1.5 md:shadow-black/5 md:(255,255,255,0.04)]"
+        <section className="rounded-full border shadow-lg transition-colors
+          max-md:bg-[#5a1060] max-md:border-purple-300/25 max-md:p-1.5 max-md:shadow-black/20
+          md:bg-white md:border-slate-200/90 md:p-1.5 md:shadow-black/5"
         >
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5">
-            {/* Open Google Maps Button */}
+          <div className="flex items-center gap-1.5 sm:gap-2 w-full">
+            {/* Open Google Maps Button (Minimal & Premium) */}
             <a
               href="https://www.google.com/maps"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 h-11 sm:h-11.5 px-5 rounded-xl sm:rounded-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm sm:text-base font-bold shadow-xs active:scale-95 transition-all shrink-0 cursor-pointer"
+              className="h-9 sm:h-10 px-3 sm:px-4 rounded-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white text-xs sm:text-sm font-bold shadow-xs active:scale-95 transition-all shrink-0 cursor-pointer inline-flex items-center gap-1.5"
+              title="Open Google Maps to find your location"
             >
-              <ExternalLink className="w-5 h-5 text-white" />
-              <span>Google Maps</span>
+              <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white shrink-0" />
+              <span className="hidden xs:inline sm:inline">Google Maps</span>
+              <span className="xs:hidden sm:hidden">Maps</span>
             </a>
 
-            {/* URL Input */}
+            {/* Seamless URL Input Inside the Pill */}
             <div className="flex-1 relative flex items-center min-w-0">
               <input
                 type="url"
@@ -53,18 +55,18 @@ export function UploadLocationTab({
                     handleImportGoogleMaps?.();
                   }
                 }}
-                placeholder="Paste Google Maps link (e.g. https://maps.app.goo.gl/...)"
-                className="w-full h-11 sm:h-11.5 px-4 rounded-xl sm:rounded-full border text-sm sm:text-base focus:outline-none transition-all
-                  max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
-                  md:bg-slate-50/80 md: md:border-slate-200/90 md: md:text-slate-900 md: md:placeholder:text-slate-400 md: md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15"
+                placeholder="Paste Google Maps link..."
+                className="w-full h-9 sm:h-10 px-3 pr-7 rounded-full text-xs sm:text-sm focus:outline-none transition-all
+                  max-md:bg-white/10 max-md:text-white max-md:placeholder:text-purple-200/50 max-md:focus:bg-white/15
+                  md:bg-slate-50/80 md:border md:border-slate-200/80 md:text-slate-900 md:placeholder:text-slate-400 md:focus:border-[#006C4A]"
               />
               {googleMapsUrl && (
                 <button
                   type="button"
                   onClick={() => setGoogleMapsUrl('')}
-                  className="absolute right-3 w-5 h-5 rounded-full text-xs flex items-center justify-center cursor-pointer transition-colors
+                  className="absolute right-2 w-4.5 h-4.5 rounded-full text-[10px] flex items-center justify-center cursor-pointer transition-colors
                     max-md:bg-white/20 max-md:text-white max-md:hover:bg-white/30
-                    md:bg-slate-200 md: md:text-slate-600 md: md:hover:bg-slate-300 md:"
+                    md:bg-slate-200 md:text-slate-600 md:hover:bg-slate-300"
                   title="Clear"
                 >
                   ✕
@@ -77,17 +79,18 @@ export function UploadLocationTab({
               type="button"
               onClick={handleImportGoogleMaps}
               disabled={isImportingGMap || !googleMapsUrl?.trim()}
-              className="h-11 sm:h-11.5 px-6 sm:px-7 rounded-xl sm:rounded-full bg-[#006C4A] hover:bg-[#005a3e] active:bg-[#004d35] text-white text-sm sm:text-base font-bold shadow-xs active:scale-95 transition-all shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="h-9 sm:h-10 px-3.5 sm:px-5 rounded-full bg-[#006C4A] hover:bg-[#005a3e] active:bg-[#004d35] text-white text-xs sm:text-sm font-extrabold shadow-sm active:scale-95 transition-all shrink-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+              title="Import location coordinates and address"
             >
               {isImportingGMap ? (
                 <>
-                  <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                  <span>Importing...</span>
+                  <div className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin shrink-0" />
+                  <span className="hidden sm:inline">Importing...</span>
                 </>
               ) : (
                 <>
-                  <Download className="w-5 h-5" />
-                  <span>Import Location</span>
+                  <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                  <span>Import</span>
                 </>
               )}
             </button>
@@ -101,7 +104,7 @@ export function UploadLocationTab({
         <div className="lg:col-span-7 flex flex-col">
           {/* Mobile-Only Heading (Outside, Centered) */}
           <div className="md:hidden text-center px-1 mb-2">
-            <h2 className="text-xl font-black text-white tracking-tight">
+            <h2 className="text-[22px] font-black text-white tracking-tight">
               Pin Location on Map
             </h2>
           </div>
@@ -134,7 +137,7 @@ export function UploadLocationTab({
         <div className="lg:col-span-5 flex flex-col">
           {/* Mobile-Only Heading (Outside, Centered) */}
           <div className="md:hidden text-center px-1 mb-2">
-            <h2 className="text-xl font-black text-white tracking-tight">
+            <h2 className="text-[22px] font-black text-white tracking-tight">
               Address Details
             </h2>
           </div>
@@ -153,18 +156,17 @@ export function UploadLocationTab({
               </div>
 
               <div className="space-y-3.5 md:space-y-2.5">
-                {/* Street / Road Area */}
+                {/* Street / Road Area (Multi-line with auto-wrapping) */}
                 <div className="space-y-1">
-
-                  <input
-                    type="text"
+                  <textarea
+                    rows={2}
                     required
                     value={formData.roadArea || ''}
                     onChange={(e) => setFormData({ ...formData, roadArea: e.target.value })}
                     placeholder="Street / Area / Colony *"
-                    className={`w-full h-11 sm:h-11.5 md:h-9.5 px-3.5 md:px-3 rounded-xl border text-sm sm:text-base md:text-xs focus:outline-none transition-all
+                    className={`w-full min-h-[58px] sm:min-h-[64px] md:min-h-[52px] py-2 px-3.5 md:px-3 rounded-xl border text-[14px] sm:text-base md:text-xs focus:outline-none transition-all resize-none leading-snug
                       max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
-                      md:bg-slate-50/70 md: md:border-slate-200 md: md:text-slate-900 md: md:placeholder:text-slate-400 md: md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 ${
+                      md:bg-slate-50/70 md:border-slate-200 md:text-slate-900 md:placeholder:text-slate-400 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 ${
                       fieldErrors.roadArea
                         ? 'border-rose-400/60 focus:border-rose-400/60 ring-2 ring-rose-500/20 bg-rose-50/10'
                         : ''
@@ -185,7 +187,7 @@ export function UploadLocationTab({
                       value={formData.city || ''}
                       onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                       placeholder="City *"
-                      className={`w-full h-11 sm:h-11.5 md:h-9.5 px-3.5 md:px-3 rounded-xl border text-sm sm:text-base md:text-xs focus:outline-none transition-all
+                      className={`w-full h-11 sm:h-11.5 md:h-9.5 px-3.5 md:px-3 rounded-xl border text-[14px] sm:text-base md:text-xs focus:outline-none transition-all
                         max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
                         md:bg-slate-50/70 md: md:border-slate-200 md: md:text-slate-900 md: md:placeholder:text-slate-400 md: md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 ${
                         fieldErrors.city
@@ -206,7 +208,7 @@ export function UploadLocationTab({
                       value={formData.state || ''}
                       onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                       placeholder="State *"
-                      className={`w-full h-11 sm:h-11.5 md:h-9.5 px-3.5 md:px-3 rounded-xl border text-sm sm:text-base md:text-xs focus:outline-none transition-all
+                      className={`w-full h-11 sm:h-11.5 md:h-9.5 px-3.5 md:px-3 rounded-xl border text-[14px] sm:text-base md:text-xs focus:outline-none transition-all
                         max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
                         md:bg-slate-50/70 md: md:border-slate-200 md: md:text-slate-900 md: md:placeholder:text-slate-400 md: md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 ${
                         fieldErrors.state
@@ -230,7 +232,7 @@ export function UploadLocationTab({
                       value={formData.pincode || ''}
                       onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
                       placeholder="PIN Code *"
-                      className={`w-full h-11 sm:h-11.5 md:h-9.5 px-3.5 md:px-3 rounded-xl border text-sm sm:text-base md:text-xs focus:outline-none transition-all
+                      className={`w-full h-11 sm:h-11.5 md:h-9.5 px-3.5 md:px-3 rounded-xl border text-[14px] sm:text-base md:text-xs focus:outline-none transition-all
                         max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
                         md:bg-slate-50/70 md: md:border-slate-200 md: md:text-slate-900 md: md:placeholder:text-slate-400 md: md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 ${
                         fieldErrors.pincode
@@ -249,7 +251,7 @@ export function UploadLocationTab({
                       type="text"
                       disabled
                       value="India"
-                      className="w-full h-11 sm:h-11.5 md:h-9.5 px-3.5 md:px-3 rounded-xl border text-sm sm:text-base md:text-xs font-medium cursor-not-allowed transition-all
+                      className="w-full h-11 sm:h-11.5 md:h-9.5 px-3.5 md:px-3 rounded-xl border text-[14px] sm:text-base md:text-xs font-medium cursor-not-allowed transition-all
                         max-md:bg-white/5 max-md:border-white/10 max-md:text-purple-200/70
                         md:bg-slate-100 md: md:border-slate-200 md: md:text-slate-500 md:"
                     />

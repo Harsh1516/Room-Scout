@@ -1,6 +1,5 @@
-import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { toast } from '../context/ToastContext';
 import HostDashboardNavbar from '../components/host/HostDashboardNavbar';
@@ -64,64 +63,9 @@ export function HostDashboardPage() {
     return 'property';
   });
 
-  const TAB_ORDER = useMemo(() => ({ property: 0, room: 1, users: 2, paid: 3, payment: 4 }), []);
-  const prevTabRef = useRef(activeTab);
-  const [tabDirection, setTabDirection] = useState(1);
   const [visitedSubTab, setVisitedSubTab] = useState('requests');
   const [showPropertyTelemetry, setShowPropertyTelemetry] = useState(false);
   const [propertySubTabIndex, setPropertySubTabIndex] = useState(0);
-
-  // Support opening activity telemetry via custom event or query parameter
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('telemetry') === 'true') {
-        setShowPropertyTelemetry(true);
-        window.history.replaceState({}, '', window.location.pathname);
-      }
-      const handler = () => setShowPropertyTelemetry(true);
-      window.addEventListener('host:open_activity', handler);
-      return () => window.removeEventListener('host:open_activity', handler);
-    }
-  }, []);
-
-  useEffect(() => {
-    const prevIdx = TAB_ORDER[prevTabRef.current] ?? 0;
-    const nextIdx = TAB_ORDER[activeTab] ?? 0;
-    if (nextIdx !== prevIdx) {
-      setTabDirection(nextIdx > prevIdx ? 1 : -1);
-      prevTabRef.current = activeTab;
-    }
-  }, [activeTab, TAB_ORDER]);
-
-  const pageConsoleVariants = useMemo(
-    () => ({
-      enter: (dir) => ({
-        x: dir > 0 ? 40 : -40,
-        opacity: 0,
-        scale: 0.995,
-      }),
-      center: {
-        x: 0,
-        opacity: 1,
-        scale: 1,
-        transition: {
-          duration: 0.28,
-          ease: [0.16, 1, 0.3, 1],
-        },
-      },
-      exit: (dir) => ({
-        x: dir > 0 ? -40 : 40,
-        opacity: 0,
-        scale: 0.995,
-        transition: {
-          duration: 0.18,
-          ease: [0.16, 1, 0.3, 1],
-        },
-      }),
-    }),
-    []
-  );
 
   const handleTabSwitch = useCallback((nextTab) => {
     setActiveTab(nextTab);
@@ -323,171 +267,144 @@ export function HostDashboardPage() {
         }`}
       >
         <div className="w-full flex-1 h-full flex flex-col min-h-0">
-          <AnimatePresence mode="wait" custom={tabDirection} initial={false}>
-            {/* 1. Property Details Tab */}
-            {activeTab === 'property' && (
-              <motion.div
-                key="console-tab-property"
-                custom={tabDirection}
-                variants={pageConsoleVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                className="w-full flex-1 h-full min-h-0 flex flex-col max-md:px-0 px-3 sm:px-6 max-md:pt-0 pt-8 sm:pt-10 max-md:pb-0 pb-24 sm:pb-28 lg:pb-10 max-w-[1600px] mx-auto overflow-visible relative"
-              >
-                <ErrorBoundary>
-                  <Suspense fallback={<DashboardSkeletonLoader />}>
-                    <PropertyDetailsSection
-                      hostProperty={hostProperty || DEFAULT_HOST_PROPERTY}
-                      isPending={isPending}
-                      onEditDetails={() =>
-                        navigate('/host/upload', {
-                          state: {
-                            hostProperty: latestHostPropertyRef.current || hostProperty,
-                            fromDashboard: true,
-                          },
-                        })
-                      }
-                      onSaveProperty={handleAutoSyncProperty}
-                      guests={guests}
-                      onSwitchTab={handleTabSwitch}
-                      activeSubTabIndex={propertySubTabIndex}
-                      onSubTabChange={setPropertySubTabIndex}
-                    />
-                  </Suspense>
-                </ErrorBoundary>
-              </motion.div>
-            )}
+          {/* 1. Property Details Tab */}
+          {activeTab === 'property' && (
+            <div
+              key="console-tab-property"
+              className="w-full flex-1 h-full min-h-0 flex flex-col max-md:px-0 px-3 sm:px-6 max-md:pt-0 pt-8 sm:pt-10 max-md:pb-0 pb-24 sm:pb-28 lg:pb-10 max-w-[1600px] mx-auto overflow-visible relative"
+            >
+              <ErrorBoundary>
+                <Suspense fallback={<DashboardSkeletonLoader />}>
+                  <PropertyDetailsSection
+                    hostProperty={hostProperty || DEFAULT_HOST_PROPERTY}
+                    isPending={isPending}
+                    onEditDetails={() =>
+                      navigate('/host/upload', {
+                        state: {
+                          hostProperty: latestHostPropertyRef.current || hostProperty,
+                          fromDashboard: true,
+                        },
+                      })
+                    }
+                    onSaveProperty={handleAutoSyncProperty}
+                    guests={guests}
+                    onSwitchTab={handleTabSwitch}
+                    activeSubTabIndex={propertySubTabIndex}
+                    onSubTabChange={setPropertySubTabIndex}
+                  />
+                </Suspense>
+              </ErrorBoundary>
+            </div>
+          )}
 
-            {/* 2. Room Schedule & Bookings Tab */}
-            {activeTab === 'room' && (
-              <motion.div
-                key="console-tab-room"
-                custom={tabDirection}
-                variants={pageConsoleVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                className="w-full flex-1 flex flex-col min-h-0"
-              >
-                <HostRoomsTab
-                  HostWeeklySlotScheduleComponent={HostWeeklySlotSchedule}
-                  hostProperty={hostProperty}
+          {/* 2. Room Schedule & Bookings Tab */}
+          {activeTab === 'room' && (
+            <div
+              key="console-tab-room"
+              className="w-full flex-1 flex flex-col min-h-0"
+            >
+              <HostRoomsTab
+                HostWeeklySlotScheduleComponent={HostWeeklySlotSchedule}
+                hostProperty={hostProperty}
+                guests={guests}
+                setGuests={setGuests}
+                upcomingWeek={upcomingWeek}
+                selectedCategoryIndex={selectedCategoryIndex}
+                setSelectedCategoryIndex={setSelectedCategoryIndex}
+                handleAddNewRoomTypeRow={handleAddNewRoomTypeRow}
+                handleRemoveRoomRate={handleRemoveRoomRate}
+                handleUpdateRoomRate={handleUpdateRoomRate}
+                handleSaveCategory={handleSaveCategory}
+                collapsedCategories={collapsedCategories}
+                toggleCollapseCategory={toggleCollapseCategory}
+                selectedRoomCard={selectedRoomCard}
+                selectedRoomCardId={selectedRoomCardId}
+                selectedRoomNumber={selectedRoomNumber}
+                handleSelectRoomCard={handleSelectRoomCard}
+                handleAddRoomCard={handleAddRoomCard}
+                handleRemoveRoomCard={handleRemoveRoomCard}
+                handleUpdateRoomNumber={handleUpdateRoomNumber}
+                handleUpdateRoomCapacity={handleUpdateRoomCapacity}
+                isCurrentRoomSaved={isCurrentRoomSaved}
+                refreshGuests={refreshGuests}
+                handleAutoSyncProperty={handleAutoSyncProperty}
+                showToast={showToast}
+                activeRightPanelTab={activeRightPanelTab}
+                setActiveRightPanelTab={setActiveRightPanelTab}
+                requestedUserBooking={requestedUserBooking}
+                handleDismissOrRejectBooking={handleDismissOrRejectBooking}
+                selectedBookedGuest={selectedBookedGuest}
+                setSelectedBookedGuest={setSelectedBookedGuest}
+                activeCategory={activeCategory}
+                onGoBackToVisited={() => {
+                  setVisitedSubTab('requests');
+                  setActiveTab('users');
+                }}
+              />
+            </div>
+          )}
+
+          {/* 3. Users Visited Tab */}
+          {activeTab === 'users' && (
+            <div
+              key="console-tab-users"
+              className="w-full flex-1 min-h-0 flex flex-col px-3 sm:px-6 pt-1.5 pb-28 sm:pb-32 lg:pt-2 lg:pb-4 max-w-[1600px] mx-auto overflow-y-auto lg:overflow-hidden"
+            >
+              <Suspense fallback={<DashboardSkeletonLoader />}>
+                <HostUsersVisitedSection
                   guests={guests}
                   setGuests={setGuests}
-                  upcomingWeek={upcomingWeek}
-                  selectedCategoryIndex={selectedCategoryIndex}
-                  setSelectedCategoryIndex={setSelectedCategoryIndex}
-                  handleAddNewRoomTypeRow={handleAddNewRoomTypeRow}
-                  handleRemoveRoomRate={handleRemoveRoomRate}
-                  handleUpdateRoomRate={handleUpdateRoomRate}
-                  handleSaveCategory={handleSaveCategory}
-                  collapsedCategories={collapsedCategories}
-                  toggleCollapseCategory={toggleCollapseCategory}
-                  selectedRoomCard={selectedRoomCard}
-                  selectedRoomCardId={selectedRoomCardId}
-                  selectedRoomNumber={selectedRoomNumber}
-                  handleSelectRoomCard={handleSelectRoomCard}
-                  handleAddRoomCard={handleAddRoomCard}
-                  handleRemoveRoomCard={handleRemoveRoomCard}
-                  handleUpdateRoomNumber={handleUpdateRoomNumber}
-                  handleUpdateRoomCapacity={handleUpdateRoomCapacity}
-                  isCurrentRoomSaved={isCurrentRoomSaved}
-                  refreshGuests={refreshGuests}
-                  handleAutoSyncProperty={handleAutoSyncProperty}
+                  hostProperty={hostProperty}
+                  setHostProperty={setHostProperty}
                   showToast={showToast}
-                  activeRightPanelTab={activeRightPanelTab}
-                  setActiveRightPanelTab={setActiveRightPanelTab}
-                  requestedUserBooking={requestedUserBooking}
-                  handleDismissOrRejectBooking={handleDismissOrRejectBooking}
-                  selectedBookedGuest={selectedBookedGuest}
-                  setSelectedBookedGuest={setSelectedBookedGuest}
-                  activeCategory={activeCategory}
-                  onGoBackToVisited={() => {
+                  refreshGuests={refreshGuests}
+                  broadcastStayUpdate={broadcastStayUpdate}
+                  roomRates={hostProperty?.roomRates || []}
+                  rooms={hostProperty?.rooms || []}
+                  onSelectUserRequest={handleSelectUserRequest}
+                  subTab={visitedSubTab}
+                  setSubTab={setVisitedSubTab}
+                />
+              </Suspense>
+            </div>
+          )}
+
+          {/* 4. Dedicated Paid Users Tab */}
+          {activeTab === 'paid' && (
+            <div
+              key="console-tab-paid"
+              className="w-full flex-1 flex flex-col px-3 sm:px-6 pt-3 sm:pt-4 pb-28 sm:pb-32 lg:pb-4 max-w-[1600px] mx-auto overflow-y-auto lg:overflow-hidden"
+            >
+              <Suspense fallback={<DashboardSkeletonLoader />}>
+                <PaidUsersList
+                  guests={activePaidUsers}
+                  allGuests={guests}
+                  setGuests={setGuests}
+                  hostProperty={hostProperty}
+                  showToast={showToast}
+                  refreshGuests={refreshGuests}
+                  broadcastStayUpdate={broadcastStayUpdate}
+                  onBack={() => {
                     setVisitedSubTab('requests');
                     setActiveTab('users');
                   }}
+                  onSelectUserRequest={handleSelectUserRequest}
                 />
-              </motion.div>
-            )}
+              </Suspense>
+            </div>
+          )}
 
-            {/* 3. Users Visited Tab */}
-            {activeTab === 'users' && (
-              <motion.div
-                key="console-tab-users"
-                custom={tabDirection}
-                variants={pageConsoleVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                className="w-full flex-1 min-h-0 flex flex-col px-3 sm:px-6 pt-1.5 pb-28 sm:pb-32 lg:pt-2 lg:pb-4 max-w-[1600px] mx-auto overflow-y-auto lg:overflow-hidden"
-              >
-                <Suspense fallback={<DashboardSkeletonLoader />}>
-                  <HostUsersVisitedSection
-                    guests={guests}
-                    setGuests={setGuests}
-                    hostProperty={hostProperty}
-                    setHostProperty={setHostProperty}
-                    showToast={showToast}
-                    refreshGuests={refreshGuests}
-                    broadcastStayUpdate={broadcastStayUpdate}
-                    roomRates={hostProperty?.roomRates || []}
-                    rooms={hostProperty?.rooms || []}
-                    onSelectUserRequest={handleSelectUserRequest}
-                    subTab={visitedSubTab}
-                    setSubTab={setVisitedSubTab}
-                  />
-                </Suspense>
-              </motion.div>
-            )}
-
-            {/* 4. Dedicated Paid Users Tab */}
-            {activeTab === 'paid' && (
-              <motion.div
-                key="console-tab-paid"
-                custom={tabDirection}
-                variants={pageConsoleVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                className="w-full flex-1 flex flex-col px-3 sm:px-6 pt-3 sm:pt-4 pb-28 sm:pb-32 lg:pb-4 max-w-[1600px] mx-auto overflow-y-auto lg:overflow-hidden"
-              >
-                <Suspense fallback={<DashboardSkeletonLoader />}>
-                  <PaidUsersList
-                    guests={activePaidUsers}
-                    allGuests={guests}
-                    setGuests={setGuests}
-                    hostProperty={hostProperty}
-                    showToast={showToast}
-                    refreshGuests={refreshGuests}
-                    broadcastStayUpdate={broadcastStayUpdate}
-                    onBack={() => {
-                      setVisitedSubTab('requests');
-                      setActiveTab('users');
-                    }}
-                    onSelectUserRequest={handleSelectUserRequest}
-                  />
-                </Suspense>
-              </motion.div>
-            )}
-
-            {/* 5. UPI & Payment Settings Tab */}
-            {activeTab === 'payment' && (
-              <motion.div
-                key="console-tab-payment"
-                custom={tabDirection}
-                variants={pageConsoleVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                className="w-full flex-1 flex flex-col px-3 sm:px-6 pt-3 sm:pt-4 pb-28 sm:pb-32 lg:pb-8 max-w-[1200px] mx-auto overflow-y-auto"
-              >
-                <Suspense fallback={<DashboardSkeletonLoader />}>
-                  <HostPaymentSettingsSection hostProperty={hostProperty} />
-                </Suspense>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* 5. UPI & Payment Settings Tab */}
+          {activeTab === 'payment' && (
+            <div
+              key="console-tab-payment"
+              className="w-full flex-1 flex flex-col px-3 sm:px-6 pt-3 sm:pt-4 pb-28 sm:pb-32 lg:pb-8 max-w-[1200px] mx-auto overflow-y-auto"
+            >
+              <Suspense fallback={<DashboardSkeletonLoader />}>
+                <HostPaymentSettingsSection hostProperty={hostProperty} />
+              </Suspense>
+            </div>
+          )}
         </div>
       </main>
 

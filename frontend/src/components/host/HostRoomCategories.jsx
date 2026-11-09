@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
+import { Plus } from 'lucide-react';
 import { toast } from '../../context/ToastContext';
 import {
   isMonthlyRateUnit,
@@ -259,38 +260,32 @@ function CategoryRoomCarousel({
     <div className={`flex flex-col ${compact ? 'pt-0.5 gap-1' : 'pt-1 gap-1.5'}`}>
       <div className="relative flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 min-w-0">
-          <span className={`${compact ? 'text-[11px]' : 'text-xs'} font-extrabold max-md:text-white md:text-slate-900 md: tracking-tight truncate leading-none`}>
+          <span className="text-[14px] sm:text-[15.5px] font-extrabold max-md:text-white md:text-slate-900 tracking-tight truncate leading-none">
             Rooms ({matchingRooms.length})
           </span>
-          {rate.price && (
-            <span className={`${compact ? 'text-[10px]' : 'text-[11px]'} font-bold max-md:text-emerald-300 md:text-emerald-800 md: truncate flex items-center gap-1 leading-none`}>
-              <span>•</span>
-              <span>₹{String(rate.price).replace(/[^0-9]/g, '')}{rate.rateUnit || '/night'}</span>
-            </span>
-          )}
         </div>
 
-        {/* Center: Left/Right Arrow Navigation with a gap inbetween < and > */}
+        {/* Center: Left/Right Arrow Navigation with bigger size and full rounded corners */}
         {matchingRooms.length > 3 && (
-          <div className="absolute left-1/2 -translate-x-1/2 flex items-center z-10 pointer-events-auto">
-            <div className={`flex items-center gap-2 max-md:bg-white/15 max-md:border-white/20 md:bg-slate-100 md: ${compact ? 'rounded-lg p-0.5 px-1' : 'rounded-xl p-0.5 px-1.5'} border md:border-slate-200/80 md: shadow-2xs`}>
+          <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center z-10 pointer-events-auto">
+            <div className="flex items-center gap-4 max-md:bg-white/15 max-md:border-white/20 md:bg-slate-100 rounded-full p-1 px-2.5 border md:border-slate-200/80 shadow-xs">
               <button
                 type="button"
                 onClick={handleScrollLeft}
                 disabled={!canScrollLeft}
-                className={`${compact ? 'w-4.5 h-4.5' : 'w-5 h-5'} rounded-md flex items-center justify-center max-md:text-purple-200 max-md:hover:text-white md:text-slate-400 md: md:hover:text-slate-800 md: transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed`}
+                className="w-6 h-6 sm:w-6.5 sm:h-6.5 rounded-full flex items-center justify-center max-md:text-purple-200 max-md:hover:text-white max-md:hover:bg-white/15 md:text-slate-600 md:hover:text-slate-900 md:hover:bg-white transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                 title="Previous room"
               >
-                <span className={`material-symbols-outlined ${compact ? 'text-[12px]' : 'text-[14px]'}`}>chevron_left</span>
+                <span className="material-symbols-outlined text-[15px] sm:text-[16px]">chevron_left</span>
               </button>
               <button
                 type="button"
                 onClick={handleScrollRight}
                 disabled={!canScrollRight}
-                className={`${compact ? 'w-4.5 h-4.5' : 'w-5 h-5'} rounded-md flex items-center justify-center max-md:text-purple-200 max-md:hover:text-white md:text-slate-400 md: md:hover:text-slate-800 md: transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed`}
+                className="w-6 h-6 sm:w-6.5 sm:h-6.5 rounded-full flex items-center justify-center max-md:text-purple-200 max-md:hover:text-white max-md:hover:bg-white/15 md:text-slate-600 md:hover:text-slate-900 md:hover:bg-white transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                 title="Next room"
               >
-                <span className={`material-symbols-outlined ${compact ? 'text-[12px]' : 'text-[14px]'}`}>chevron_right</span>
+                <span className="material-symbols-outlined text-[15px] sm:text-[16px]">chevron_right</span>
               </button>
             </div>
           </div>
@@ -307,22 +302,22 @@ function CategoryRoomCarousel({
               markCategoryDirty?.(categoryIndex);
               if (typeof onAddRoomCard === 'function') onAddRoomCard({ ...rate, rateUnit: effectiveRateUnit });
             }}
-            className={`${compact ? 'h-6.5 px-2.5 rounded-lg text-[11px]' : 'h-8 px-3 rounded-xl text-xs'} flex items-center gap-1 font-bold transition-all shadow-sm leading-none ${
+            className={`h-11 max-md:h-12 md:h-9 px-6 sm:px-8 md:px-6 rounded-full text-sm md:text-xs font-extrabold transition-all shadow-xs flex items-center gap-1.5 leading-none shrink-0 ${
               isCategoryComplete
-                ? 'max-md:bg-purple-300 max-md:text-slate-950 max-md:hover:bg-purple-200 md:bg-[#c0c1ff] md:hover:bg-[#d5d4ff] md:text-[#07006c] cursor-pointer'
-                : 'max-md:bg-white/10 max-md:text-purple-300/40 md:bg-slate-200 md: md:text-slate-400 md: cursor-not-allowed opacity-60 border max-md:border-white/10 md:border-slate-300 md:'
+                ? 'max-md:bg-purple-300 max-md:text-slate-950 max-md:hover:bg-purple-200 md:bg-[#c0c1ff] md:hover:bg-[#d5d4ff] md:text-[#07006c] cursor-pointer active:scale-95'
+                : 'max-md:bg-white/10 max-md:text-purple-300/40 md:bg-slate-200 md:text-slate-400 cursor-not-allowed opacity-60 border max-md:border-white/10 md:border-slate-300'
             }`}
             title={!isCategoryComplete ? disabledTooltip : `Add new room to ${rate.type || 'this category'}`}
           >
-            <span className={`material-symbols-outlined ${compact ? 'text-[13px]' : 'text-[15px]'} leading-none`}>add</span>
+            <Plus className="w-4 h-4 stroke-[2.5] shrink-0" />
             <span className="leading-none">Add Room</span>
           </button>
         </div>
       </div>
 
       {matchingRooms.length === 0 ? (
-        <div className={`${compact ? 'p-2 rounded-xl text-[11px]' : 'p-3 rounded-2xl text-xs'} text-center border border-dashed max-md:border-white/20 max-md:bg-white/5 max-md:text-purple-200 md:border-slate-300 md: md:text-slate-500 md: md:bg-slate-50/50 md: space-y-1`}>
-          <p>0 room cards added for <span className="max-md:text-white md:text-slate-800 md: font-semibold">{rate.type || 'this category'}</span> yet.</p>
+        <div className="p-3 sm:p-4 rounded-xl text-center border border-dashed max-md:border-white/20 max-md:bg-white/5 max-md:text-purple-200 md:border-slate-300 md:text-slate-500 md:bg-slate-50/50 space-y-1.5 my-1">
+          <p className="text-xs">0 room cards added for <span className="max-md:text-white md:text-slate-800 font-semibold">{rate.type || 'this category'}</span> yet.</p>
           <button
             type="button"
             disabled={!isCategoryComplete}
@@ -333,13 +328,13 @@ function CategoryRoomCarousel({
               markCategoryDirty?.(categoryIndex);
               if (typeof onAddRoomCard === 'function') onAddRoomCard({ ...rate, rateUnit: effectiveRateUnit });
             }}
-            className={isCategoryComplete ? 'font-bold max-md:text-purple-300 max-md:hover:text-white md:text-[#006C4A] md: hover:underline cursor-pointer' : 'font-medium max-md:text-purple-300/40 md:text-slate-400 md: cursor-not-allowed opacity-75'}
+            className={isCategoryComplete ? 'font-bold max-md:text-purple-300 max-md:hover:text-white md:text-[#006C4A] hover:underline cursor-pointer text-xs' : 'font-medium max-md:text-purple-300/40 md:text-slate-400 cursor-not-allowed opacity-75 text-xs'}
             title={!isCategoryComplete ? disabledTooltip : 'Add first room'}
           >
             + Add First Room
           </button>
           {!isCategoryComplete && (
-            <p className="text-[10px] max-md:text-amber-300 md:text-amber-600 md: font-medium">
+            <p className="text-[10.5px] max-md:text-amber-300/90 md:text-amber-600 font-medium">
               Fill {missingFields.join(', ')} above to unlock room cards.
             </p>
           )}
@@ -640,19 +635,13 @@ export default function HostRoomCategories({
             return (
               <div
                 key={rowKey}
-                className={`w-full flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden transition-all ${
+                className={`w-full flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden transition-all border ${
                   isExpanded
-                    ? 'max-md:bg-white/10 max-md:border-white/20 md:bg-white/95 md: md:backdrop-blur-xl'
-                    : isCategoryDirty
-                    ? 'max-md:bg-orange-500/15 max-md:border-orange-400/40 md:bg-orange-50/20 md:'
-                    : 'max-md:bg-white/10 max-md:border-white/15 md:bg-white/95 md: md:backdrop-blur-xl'
-                } ${
-                  isCategoryDirty
-                    ? 'border-2 border-orange-500 ring-2 ring-orange-500/25 shadow-xl shadow-orange-500/15'
-                    : 'border max-md:border-white/15 md:border-slate-200/90 md: md:shadow-xl max-md:shadow-none'
+                    ? 'max-md:bg-white/[0.08] max-md:border-white/20 md:bg-white/95 md:border-slate-200/90 md:shadow-md'
+                    : 'max-md:bg-white/[0.06] max-md:border-white/15 md:bg-white/95 md:border-slate-200/90 md:shadow-xs'
                 } ${!isExpanded ? 'cursor-pointer' : ''}`}
               >
-                {/* Card Header (Accessible Toggle Trigger) */}
+                {/* Card Header (Accessible Toggle Trigger: 2 Rows) */}
                 <div
                   onClick={(e) => {
                     if (confirmDeleteCatIdx !== null && confirmDeleteCatIdx !== index) setConfirmDeleteCatIdx(null);
@@ -661,74 +650,64 @@ export default function HostRoomCategories({
                       onToggleCollapseCategory(index, e);
                     }
                   }}
-                  className={`${compact ? 'px-3.5 sm:px-4 py-2 sm:py-2.5' : 'px-4 sm:px-5 py-3'} ${
+                  className={`px-4 sm:px-5 py-3 sm:py-3.5 flex flex-col gap-2 ${
                     isExpanded
-                      ? isCategoryDirty
-                        ? 'border-b border-orange-500/30'
-                        : 'border-b max-md:border-white/15 md:border-slate-200/90 md:'
+                      ? 'border-b max-md:border-white/10 md:border-slate-100'
                       : ''
-                  } ${
-                    isCategoryDirty
-                      ? 'max-md:bg-orange-500/15 md:bg-orange-50/20 md:'
-                      : 'max-md:bg-transparent max-md:text-white md:bg-white/95 md: md:text-slate-900 md:'
-                  } flex items-center justify-between select-none cursor-pointer`}
+                  } max-md:bg-transparent max-md:text-white md:bg-white/95 md:text-slate-900 select-none cursor-pointer`}
                 >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <h2 className={`${compact ? 'text-[13.5px] sm:text-[14px]' : 'text-[15px] sm:text-[16px]'} max-md:text-white md:text-slate-900 md: truncate font-extrabold tracking-tight leading-normal pb-0.5`}>
-                        {rate.type || 'Unnamed Category'}
-                      </h2>
+                  {/* Row 1: Category Name on Left, Cross Button ONLY on Right */}
+                  <div className="flex items-center justify-between gap-3 w-full">
+                    <h2 className="text-[15px] sm:text-[16px] max-md:text-white md:text-slate-900 truncate font-extrabold tracking-tight leading-normal">
+                      {rate.type || 'Unnamed Category'}
+                    </h2>
 
-                      {!isExpanded && rate.price && (
-                        <span className={`${compact ? 'text-[11px]' : 'text-xs'} font-bold max-md:text-purple-200 md:text-slate-500 md: shrink-0 leading-normal pb-0.5`}>
-                          • ₹{rawPrice}{rate.rateUnit || '/night'}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmDeleteCatIdx(index);
+                      }}
+                      className="w-8 h-8 rounded-full flex items-center justify-center max-md:bg-white/15 max-md:text-purple-100 max-md:hover:text-white max-md:hover:bg-rose-500/30 md:text-slate-400 md:hover:text-red-500 md:hover:bg-red-500/10 transition-colors cursor-pointer shrink-0 active:scale-95"
+                      title="Remove category"
+                    >
+                      <span className="material-symbols-outlined text-[18px] leading-none flex items-center justify-center">close</span>
+                    </button>
+                  </div>
+
+                  {/* Row 2: Price on Left, All features (Unsaved, Avail, Caret) on Right */}
+                  <div className="flex items-center justify-between gap-2 w-full pt-0.5">
+                    {/* Price on Left (matching exactly the size and bold weight of Unsaved) */}
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      {rate.price ? (
+                        <span className="text-[11px] font-bold text-emerald-300 md:text-emerald-700 truncate tracking-tight">
+                          ₹{rawPrice} {rate.rateUnit === '/month' ? '/month' : (rate.rateUnit || '/night')}
+                        </span>
+                      ) : (
+                        <span className="text-[11px] font-medium text-purple-200/60 md:text-slate-400 italic">
+                          No price set
                         </span>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                    {/* Unsaved, Avail, Caret on Right */}
+                    <div className="flex items-center gap-2 shrink-0">
                       {isCategoryDirty && (
-                        <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-600 border border-orange-500/30 leading-normal">
-                          Unsaved Changes
+                        <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 md:text-amber-700 border border-amber-500/30 flex items-center gap-1 leading-normal">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
+                          <span>Unsaved</span>
                         </span>
                       )}
 
                       <span
-                        className={`${compact ? 'h-5.5 px-2 text-[10px]' : 'h-6 px-2.5 text-[11px]'} rounded-full max-md:bg-white/15 max-md:border-white/20 max-md:text-purple-100 max-md:shadow-none md:bg-slate-100 md: md:border md:border-slate-200 md: md:text-slate-700 md: font-bold shadow-2xs select-none flex items-center justify-center leading-normal`}
+                        className="h-6 px-2.5 text-[10.5px] rounded-full max-md:bg-white/15 max-md:border-white/20 max-md:text-purple-100 md:bg-slate-100 md:border md:border-slate-200 md:text-slate-700 font-bold shadow-2xs select-none flex items-center justify-center leading-normal"
                         title={`${stats.availableCount} of ${stats.totalCount} rooms are available today`}
                       >
                         {stats.availableCount}/{stats.totalCount} Avail
                       </span>
-
-                      <motion.button
-                        type="button"
-                        animate={{ rotate: isExpanded ? 180 : 0 }}
-                        transition={{ type: 'spring', stiffness: 320, damping: 30, mass: 0.8 }}
-                        className={`${compact ? 'w-5 h-5' : 'w-6 h-6'} rounded-lg flex items-center justify-center max-md:text-purple-200 max-md:hover:text-white md:text-slate-400 md:hover:text-slate-900 md: md: transition-colors cursor-pointer`}
-                        title={isExpanded ? 'Collapse category' : 'Expand category'}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSelectCategoryIndex(index);
-                          if (typeof onToggleCollapseCategory === 'function') {
-                            onToggleCollapseCategory(index, e);
-                          }
-                        }}
-                      >
-                        <span className={`material-symbols-outlined ${compact ? 'text-[18px]' : 'text-[20px]'} leading-none flex items-center justify-center`}>keyboard_arrow_down</span>
-                      </motion.button>
-
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setConfirmDeleteCatIdx(index);
-                        }}
-                        className={`${compact ? 'w-5 h-5' : 'w-6 h-6'} rounded-lg flex items-center justify-center max-md:text-purple-200 max-md:hover:text-rose-300 md:text-slate-400 md:hover:text-red-500 md: md: md:hover:bg-red-500/10 transition-colors cursor-pointer text-xs font-bold`}
-                        title="Remove category"
-                      >
-                        <span className={`material-symbols-outlined ${compact ? 'text-[14px]' : 'text-[16px]'} leading-none flex items-center justify-center`}>close</span>
-                      </button>
                     </div>
                   </div>
+                </div>
 
                   {/* Expandable Body: Only the border and container height animates, NO inner text morphing/scaling */}
                   <AnimatePresence initial={false}>
@@ -744,130 +723,111 @@ export default function HostRoomCategories({
                         }}
                         className="overflow-hidden"
                       >
-                        <div className={compact ? 'p-2.5 sm:p-3 flex flex-col gap-1.5' : 'p-4 sm:p-5 flex flex-col gap-3'}>
-                          {/* Form Fields: Static div without y-translation or scale distortion */}
-                          <div className={`flex flex-col ${compact ? 'gap-1.5' : 'gap-2.5'}`}>
-                            <div className="flex flex-col gap-0.5">
-                              <label className={`${compact ? 'h-3.5 text-[9px]' : 'h-4 text-[10px]'} flex items-center font-bold max-md:text-purple-200 md:text-slate-400 uppercase tracking-wider leading-none`}>
-                                CATEGORY NAME <span className="text-rose-500 ml-0.5">*</span>
-                              </label>
+                        <div className="p-3 sm:p-4 flex flex-col gap-2.5 sm:gap-3">
+                          {/* Form Fields: No labels above, balanced text size, Price/Cycle/Capacity in 1 row */}
+                          <div className="flex flex-col gap-2.5 mb-2 sm:mb-2.5">
+                            {/* Category Name Input (Full width, no label) */}
+                            <div className="relative flex items-center">
+                              <input
+                                type="text"
+                                value={rate.type || ''}
+                                onChange={(e) => {
+                                  const textOnly = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                                  markCategoryDirty(index);
+                                  onUpdateCategory(index, 'type', textOnly);
+                                }}
+                                onFocus={() => onSelectCategoryIndex(index)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onSelectCategoryIndex(index);
+                                }}
+                                placeholder="Category Name (e.g. Deluxe Single Bed)"
+                                className="w-full h-11.5 sm:h-12 rounded-xl px-4 text-[14px] sm:text-[15px] font-semibold max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/50 max-md:focus:border-purple-300/70 max-md:focus:ring-2 max-md:focus:ring-purple-300/15 md:bg-white/70 md:border md:border-slate-200 md:text-slate-900 transition-all shadow-2xs focus:outline-none"
+                              />
+                            </div>
+
+                            {/* Price, Billing Cycle, and Capacity in ONE ROW (no labels) */}
+                            <div className="grid grid-cols-3 gap-2 sm:gap-2.5 items-center pb-3 sm:pb-3.5 border-b max-md:border-white/10 md:border-slate-100">
+                              {/* 1. Price */}
                               <div className="relative flex items-center">
                                 <input
                                   type="text"
-                                  value={rate.type || ''}
+                                  value={rawPrice}
                                   onChange={(e) => {
-                                    const textOnly = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                                    const numOnly = e.target.value.replace(/[^0-9]/g, '');
                                     markCategoryDirty(index);
-                                    onUpdateCategory(index, 'type', textOnly);
+                                    onUpdateCategory(index, 'price', numOnly ? `₹${numOnly}` : '');
                                   }}
                                   onFocus={() => onSelectCategoryIndex(index)}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     onSelectCategoryIndex(index);
                                   }}
-                                  placeholder="e.g. Deluxe Single Bed"
-                                  className={`w-full max-md:h-8.5 ${compact ? 'h-7.5 rounded-lg text-[11.5px] px-3' : 'h-9 sm:h-9.5 rounded-xl text-xs px-3.5'} max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 md:backdrop-blur-md md:bg-white/70 md: md:border md:border-slate-200 md: font-semibold md:text-slate-900 md: focus:outline-none md:focus:border-[#00e599]/60 md: transition-all shadow-2xs md:placeholder-slate-400 md:`}
+                                  placeholder="₹ Price"
+                                  className="w-full h-11.5 sm:h-12 rounded-xl px-2.5 sm:px-3 text-[14px] sm:text-base font-black text-center max-md:bg-white/10 max-md:border-white/15 max-md:text-emerald-300 max-md:placeholder:text-purple-200/50 max-md:focus:border-purple-300/70 md:bg-white/70 md:border md:border-slate-200 md:text-emerald-700 shadow-2xs focus:outline-none transition-all"
                                 />
                               </div>
-                            </div>
 
-                            <div className={`grid grid-cols-3 ${compact ? 'gap-1.5' : 'gap-2.5'} items-end`}>
-                              <div className="flex flex-col gap-0.5">
-                                <label className={`${compact ? 'h-3.5 text-[9px]' : 'h-4 text-[10px]'} flex items-center font-bold max-md:text-purple-200 md:text-slate-400 uppercase tracking-wider leading-none`}>
-                                  PRICE (₹) <span className="text-rose-500 ml-0.5">*</span>
-                                </label>
-                                <div className="relative flex items-center">
-                                  <input
-                                    type="text"
-                                    value={rawPrice}
-                                    onChange={(e) => {
-                                      const numOnly = e.target.value.replace(/[^0-9]/g, '');
-                                      markCategoryDirty(index);
-                                      onUpdateCategory(index, 'price', numOnly ? `₹${numOnly}` : '');
-                                    }}
-                                    onFocus={() => onSelectCategoryIndex(index)}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      onSelectCategoryIndex(index);
-                                    }}
-                                    placeholder="0"
-                                    className={`w-full max-md:h-8.5 ${compact ? 'h-7.5 rounded-lg text-[11.5px] px-2' : 'h-9 sm:h-9.5 rounded-xl text-xs px-2.5'} max-md:bg-white/10 max-md:border-white/15 max-md:text-emerald-300 max-md:focus:border-purple-300/60 md:backdrop-blur-md md:bg-white/70 md: md:border md:border-slate-200 md: text-center font-black md:text-emerald-800 md: shadow-2xs focus:outline-none md:focus:border-emerald-600 transition-all flex items-center justify-center`}
-                                  />
-                                </div>
+                              {/* 2. Billing Cycle */}
+                              <div className="relative flex items-center">
+                                <select
+                                  value={rate.rateUnit || '/night'}
+                                  onChange={(e) => {
+                                    markCategoryDirty(index);
+                                    onUpdateCategory(index, 'rateUnit', e.target.value);
+                                  }}
+                                  onFocus={() => onSelectCategoryIndex(index)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onSelectCategoryIndex(index);
+                                  }}
+                                  className="w-full h-11.5 sm:h-12 rounded-xl pl-2.5 pr-6 sm:pl-3 sm:pr-7 text-[14px] sm:text-[13px] font-bold max-md:bg-[#3d0b44] max-md:border-white/15 max-md:text-white md:bg-slate-50/80 md:border md:border-slate-200 md:text-slate-800 shadow-2xs focus:outline-none transition-all appearance-none cursor-pointer truncate"
+                                >
+                                  <option value="/month">Per Month</option>
+                                  <option value="/night">Per Night</option>
+                                </select>
+                                <span className="material-symbols-outlined absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 text-[18px] sm:text-[20px] max-md:text-purple-200 md:text-slate-400 pointer-events-none select-none">
+                                  keyboard_arrow_down
+                                </span>
                               </div>
 
-                              <div className="flex flex-col gap-0.5">
-                                <label className={`${compact ? 'h-3.5 text-[9px]' : 'h-4 text-[10px]'} flex items-center gap-1 font-bold max-md:text-purple-200 md:text-slate-400 uppercase tracking-wider leading-none`}>
-                                  <span>CYCLE</span>
-                                  <span
-                                    className="material-symbols-outlined text-amber-400 leading-none select-none inline-flex items-center justify-center"
-                                    style={{ fontSize: compact ? '10px' : '11px' }}
-                                  >
-                                    lock
-                                  </span>
-                                </label>
-                                <div className="relative flex items-center">
-                                  <select
-                                    value={rate.rateUnit || '/night'}
-                                    onChange={(e) => {
+                              {/* 3. Capacity Stepper (- count + with no button background, enlarged touch buttons) */}
+                              <div className="w-full h-11.5 sm:h-12 rounded-xl px-1 sm:px-1.5 flex items-center justify-between max-md:bg-white/10 max-md:border-white/15 md:bg-slate-50/80 md:border md:border-slate-200 shadow-2xs">
+                                <button
+                                  type="button"
+                                  disabled={Number(rate.capacity || 1) <= 1}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const currentCap = Math.max(1, Number(rate.capacity) || 1);
+                                    if (currentCap > 1) {
                                       markCategoryDirty(index);
-                                      onUpdateCategory(index, 'rateUnit', e.target.value);
-                                    }}
-                                    onFocus={() => onSelectCategoryIndex(index)}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      onSelectCategoryIndex(index);
-                                    }}
-                                    className={`w-full max-md:h-8.5 ${compact ? 'h-7.5 rounded-lg text-[11.5px] pl-2.5 pr-6' : 'h-9 sm:h-9.5 rounded-xl text-xs pl-3 pr-7'} max-md:bg-[#4a0d50] max-md:border-white/15 max-md:text-white md:bg-slate-50/80 md: md:border md:border-slate-200 md: font-semibold md:text-slate-800 md: shadow-2xs focus:outline-none md:focus:border-[#00e599]/60 transition-all appearance-none cursor-pointer`}
-                                  >
-                                    <option value="/night">Per Night</option>
-                                    <option value="/month">Per Month</option>
-                                  </select>
-                                  <span className={`material-symbols-outlined absolute ${compact ? 'right-1.5 text-[16px]' : 'right-2 text-[18px]'} top-1/2 -translate-y-1/2 max-md:text-purple-200 md:text-slate-400 pointer-events-none select-none flex items-center justify-center`}>
-                                    keyboard_arrow_down
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="flex flex-col gap-0.5">
-                                <label className={`${compact ? 'h-3.5 text-[9px]' : 'h-4 text-[10px]'} flex items-center font-bold max-md:text-purple-200 md:text-slate-400 uppercase tracking-wider leading-none`}>
-                                  CAPACITY
-                                </label>
-                                <div className={`w-full max-md:h-8.5 ${compact ? 'h-7.5 rounded-lg px-1.5' : 'h-9 sm:h-9.5 rounded-xl px-2'} flex items-center justify-between max-md:bg-white/10 max-md:border-white/15 md:bg-slate-50/80 md: md:border md:border-slate-200 md: shadow-2xs`}>
-                                  <button
-                                    type="button"
-                                    disabled={Number(rate.capacity || 1) <= 1}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const currentCap = Math.max(1, Number(rate.capacity) || 1);
-                                      if (currentCap > 1) {
-                                        markCategoryDirty(index);
-                                        onUpdateCategory(index, 'capacity', currentCap - 1);
-                                      }
-                                    }}
-                                    className={`${compact ? 'w-5 h-5 rounded-md text-xs' : 'w-6 h-6 rounded-lg text-sm'} flex items-center justify-center max-md:text-purple-200 max-md:hover:text-white md:text-slate-400 md:hover:text-slate-700 md: hover:bg-slate-200/50 transition-colors cursor-pointer font-bold leading-none disabled:opacity-30 disabled:cursor-not-allowed`}
-                                  >
-                                    −
-                                  </button>
-                                  <span className={`${compact ? 'text-[11px]' : 'text-xs'} font-black max-md:text-white md:text-slate-900 md: min-w-[14px] text-center select-none leading-none`}>
-                                    {rate.capacity || 1}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    disabled={Number(rate.capacity || 1) >= 10}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const currentCap = Math.max(1, Number(rate.capacity) || 1);
-                                      if (currentCap < 10) {
-                                        markCategoryDirty(index);
-                                        onUpdateCategory(index, 'capacity', currentCap + 1);
-                                      }
-                                    }}
-                                    className={`${compact ? 'w-5 h-5 rounded-md text-xs' : 'w-6 h-6 rounded-lg text-sm'} flex items-center justify-center max-md:text-purple-200 max-md:hover:text-white md:text-slate-400 md:hover:text-slate-700 md: hover:bg-slate-200/50 transition-colors cursor-pointer font-bold leading-none disabled:opacity-30 disabled:cursor-not-allowed`}
-                                  >
-                                    +
-                                  </button>
-                                </div>
+                                      onUpdateCategory(index, 'capacity', currentCap - 1);
+                                    }
+                                  }}
+                                  className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-full bg-transparent max-md:text-purple-100 max-md:hover:text-white max-md:active:text-purple-300 md:text-slate-600 md:hover:text-slate-950 transition-all cursor-pointer font-black text-2xl sm:text-3xl leading-none active:scale-125 disabled:opacity-20 disabled:cursor-not-allowed shrink-0"
+                                  title="Decrease capacity"
+                                >
+                                  −
+                                </button>
+                                <span className="text-base sm:text-[17px] font-black max-md:text-white md:text-slate-900 text-center select-none min-w-[20px] leading-none">
+                                  {rate.capacity || 1}
+                                </span>
+                                <button
+                                  type="button"
+                                  disabled={Number(rate.capacity || 1) >= 10}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const currentCap = Math.max(1, Number(rate.capacity) || 1);
+                                    if (currentCap < 10) {
+                                      markCategoryDirty(index);
+                                      onUpdateCategory(index, 'capacity', currentCap + 1);
+                                    }
+                                  }}
+                                  className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-full bg-transparent max-md:text-purple-100 max-md:hover:text-white max-md:active:text-purple-300 md:text-slate-600 md:hover:text-slate-950 transition-all cursor-pointer font-black text-2xl sm:text-3xl leading-none active:scale-125 disabled:opacity-20 disabled:cursor-not-allowed shrink-0"
+                                  title="Increase capacity"
+                                >
+                                  +
+                                </button>
                               </div>
                             </div>
                           </div>
@@ -897,27 +857,25 @@ export default function HostRoomCategories({
                           </div>
 
                           {/* Footer Status Bar & Update Button */}
-                          <div className={`${compact ? 'pt-1.5 mt-0 min-h-[28px]' : 'pt-2.5 mt-0.5 min-h-[36px]'} border-t flex items-center justify-between text-xs ${
-                            isCategoryDirty
-                              ? 'border-orange-500/30'
-                              : 'max-md:border-white/15 md:border-slate-100 md:'
-                          }`}>
-                            <div className="flex items-center gap-1.5 min-w-0">
+                          <div className="pt-3 mt-1.5 min-h-[44px] border-t max-md:border-white/10 md:border-slate-100 flex items-center justify-between text-xs">
+                            {/* Left: Saved / Unsaved */}
+                            <div className="flex items-center gap-2 shrink-0">
                               {isCategoryDirty ? (
-                                <div className="flex items-center gap-1.5 text-orange-600">
-                                  <span className={`${compact ? 'w-1.5 h-1.5' : 'w-2 h-2'} rounded-full bg-orange-500 animate-pulse shrink-0`} />
-                                  <span className={`${compact ? 'text-[10px]' : 'text-[11px]'} font-bold truncate leading-normal pb-0.5`}>Unsaved changes — click Update to save</span>
+                                <div className="flex items-center gap-2 text-orange-400 md:text-orange-500">
+                                  <span className="w-2.5 h-2.5 rounded-full bg-orange-400 animate-pulse shrink-0" />
+                                  <span className="text-[14px] sm:text-[15px] font-extrabold leading-none">Unsaved</span>
                                 </div>
                               ) : (
-                                <div className="flex items-center gap-1.5 max-md:text-purple-200 md:text-slate-500 md:">
-                                  <span className={`material-symbols-outlined ${compact ? 'text-[15px]' : 'text-[18px]'} text-[#00e599] shrink-0 leading-none flex items-center justify-center`}>
+                                <div className="flex items-center gap-2 max-md:text-purple-200/80 md:text-slate-500">
+                                  <span className="material-symbols-outlined text-[20px] sm:text-[22px] text-emerald-400 shrink-0 leading-none flex items-center justify-center">
                                     check_circle
                                   </span>
-                                  <span className={`${compact ? 'text-[10px]' : 'text-[11px]'} font-semibold truncate leading-normal pb-0.5`}>All changes saved.</span>
+                                  <span className="text-[14px] sm:text-[15px] font-bold leading-none">Saved</span>
                                 </div>
                               )}
                             </div>
 
+                            {/* Right: Update Button */}
                             <button
                               type="button"
                               disabled={updatingCategoryIdx === index}
@@ -925,17 +883,17 @@ export default function HostRoomCategories({
                                 e.stopPropagation();
                                 await handleUpdateCategoryClick(index);
                               }}
-                              className={`${compact ? 'h-6.5 px-3 rounded-lg text-[10.5px]' : 'h-8 px-4 rounded-xl text-xs'} font-bold transition-all flex items-center justify-center cursor-pointer shadow-xs leading-none shrink-0 ${
+                              className={`h-11 max-md:h-12 md:h-9 px-6 sm:px-8 md:px-6 rounded-full text-sm md:text-xs font-extrabold transition-all flex items-center justify-center cursor-pointer shadow-sm leading-none shrink-0 ${
                                 isCategoryDirty
-                                  ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-md shadow-orange-500/25 font-black active:scale-95'
-                                  : 'max-md:bg-purple-300 max-md:text-slate-950 max-md:hover:bg-purple-200 md:border md:border-slate-200 md: md:bg-white md: md:hover:bg-slate-50 md: md:text-slate-700 md:'
+                                  ? 'bg-orange-500 hover:bg-orange-600 active:scale-95 text-white shadow-md shadow-orange-500/30'
+                                  : 'max-md:bg-white/15 max-md:text-purple-100 max-md:hover:bg-white/20 md:border md:border-slate-200 md:bg-white md:hover:bg-slate-50 md:text-slate-700'
                               }`}
                               title={isCategoryDirty ? 'Click to save all changes to database' : 'Update category details'}
                             >
                               {updatingCategoryIdx === index ? (
                                 <span className="leading-none">Saving...</span>
                               ) : recentlyUpdatedIdx === index ? (
-                                <span className="text-[#00e599] leading-none">Saved ✓</span>
+                                <span className="text-emerald-400 md:text-emerald-600 leading-none font-bold">Saved ✓</span>
                               ) : (
                                 <span className="leading-none">Update</span>
                               )}
@@ -961,9 +919,9 @@ export default function HostRoomCategories({
             <button
               type="button"
               onClick={onAddCategory}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95"
+              className="h-11 max-md:h-12 md:h-9 px-6 sm:px-8 md:px-6 rounded-full bg-slate-900 hover:bg-black text-white text-sm md:text-xs font-extrabold transition-all cursor-pointer shadow-sm active:scale-95 inline-flex items-center gap-1.5 shrink-0"
             >
-              <span className="material-symbols-outlined text-[16px]">add</span>
+              <Plus className="w-4 h-4 stroke-[2.5] shrink-0" />
               <span>Add Room Type</span>
             </button>
           </div>

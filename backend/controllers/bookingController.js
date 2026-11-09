@@ -827,6 +827,7 @@ export const createOfflineBooking = async (req, res, next) => {
       isOccupied: true,
       paymentStatus: 'PAID',
       paymentMethod: 'OFFLINE',
+      checkInCode: null,
     });
 
     // 2. Record Transaction in Payment Collection
@@ -1095,14 +1096,24 @@ export const getBookingById = async (req, res, next) => {
       }
     }
 
-    // Ensure confirmed/checked-in bookings have an 8-digit check-in pass code
+    // Ensure confirmed/checked-in ONLINE bookings have an 8-digit check-in pass code
+    const isOfflineBooking = Boolean(
+      booking.bookingSource === 'OFFLINE_HOST' ||
+      booking.source === 'offline' ||
+      booking.paymentMethod === 'OFFLINE'
+    );
     if (
+      !isOfflineBooking &&
       (booking.status === 'CONFIRMED' || booking.status === 'CHECKED_IN' || booking.upiPayment?.verificationStatus === 'VERIFIED') &&
       !booking.checkInCode
     ) {
       const generatedCode = Math.floor(10000000 + Math.random() * 90000000).toString();
       await Booking.updateOne({ _id: booking._id }, { $set: { checkInCode: generatedCode } });
       booking.checkInCode = generatedCode;
+    }
+    if (isOfflineBooking && booking.checkInCode) {
+      booking.checkInCode = '';
+      await Booking.updateOne({ _id: booking._id }, { $unset: { checkInCode: 1 } });
     }
 
     const callerId = req.user?._id?.toString();
@@ -1375,7 +1386,13 @@ export const updateBookingStatus = async (req, res, next) => {
       updateFields.personCount = Number(req.body.personCount) || 1;
     }
 
-    if ((req.body.status === 'CONFIRMED' || req.body.status === 'CHECKED_IN') && !booking.checkInCode) {
+    const isOfflineTarget = Boolean(
+      booking.bookingSource === 'OFFLINE_HOST' ||
+      booking.source === 'offline' ||
+      booking.paymentMethod === 'OFFLINE' ||
+      req.body.bookingSource === 'OFFLINE_HOST'
+    );
+    if (!isOfflineTarget && (req.body.status === 'CONFIRMED' || req.body.status === 'CHECKED_IN') && !booking.checkInCode) {
       updateFields.checkInCode = Math.floor(10000000 + Math.random() * 90000000).toString();
     }
 

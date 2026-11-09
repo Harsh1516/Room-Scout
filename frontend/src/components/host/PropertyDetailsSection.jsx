@@ -217,7 +217,7 @@ export function PropertyDetailsSection({
           <aside className="w-full flex flex-col shrink-0 relative max-md:mt-0 mt-8 transition-all duration-300 ease-in-out">
           {/* ── Upper Tab: Property Info ── */}
           {/* ── MOBILE VIEW: Matches Pic 2 Exactly ── */}
-          <div className="md:hidden w-full max-w-sm mx-auto px-3.5 pt-1 pb-1">
+          <div className="md:hidden w-full max-w-sm mx-auto px-3.5 pt-2.5 pb-1">
             <div className="bg-white rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/80">
               {/* Title */}
               <h1 className="text-xl font-bold text-slate-900 tracking-tight mb-2 truncate">

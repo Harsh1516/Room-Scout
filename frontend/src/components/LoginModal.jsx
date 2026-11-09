@@ -344,7 +344,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
               {!isForgotMode ? (
                 <nav
                   aria-label="Portal Mode Selection"
-                  className="p-1 rounded-full flex items-center shadow-lg bg-white/[0.12] backdrop-blur-[12px] border border-white/15"
+                  className="p-1 rounded-full flex items-center shadow-xl bg-white border border-slate-200/90"
                 >
                   {/* Login Pill */}
                   <button
@@ -353,13 +353,13 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                     className={`relative py-1.5 px-6 rounded-full text-xs transition-all duration-200 cursor-pointer z-10 select-none ${
                       !isRegisterMode
                         ? 'text-white font-semibold'
-                        : 'text-white/70 hover:text-white font-medium'
+                        : 'text-slate-600 hover:text-slate-900 font-medium'
                     }`}
                   >
                     {!isRegisterMode && (
                       <motion.div
                         layoutId="portalModeActivePill"
-                        className="absolute inset-0 rounded-full bg-[#0f172a] shadow-sm -z-10"
+                        className="absolute inset-0 rounded-full bg-slate-900 shadow-sm -z-10"
                         transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                       />
                     )}
@@ -373,13 +373,13 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                     className={`relative py-1.5 px-6 rounded-full text-xs transition-all duration-200 cursor-pointer z-10 select-none ${
                       isRegisterMode
                         ? 'text-white font-semibold'
-                        : 'text-white/70 hover:text-white font-medium'
+                        : 'text-slate-600 hover:text-slate-900 font-medium'
                     }`}
                   >
                     {isRegisterMode && (
                       <motion.div
                         layoutId="portalModeActivePill"
-                        className="absolute inset-0 rounded-full bg-[#0f172a] shadow-sm -z-10"
+                        className="absolute inset-0 rounded-full bg-slate-900 shadow-sm -z-10"
                         transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                       />
                     )}
@@ -387,7 +387,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                   </button>
                 </nav>
               ) : (
-                <div className="py-1.5 px-6 rounded-full text-xs font-semibold bg-[#0f172a] text-white shadow-sm border border-white/10">
+                <div className="py-1.5 px-6 rounded-full text-xs font-semibold bg-white text-slate-900 shadow-md border border-slate-200">
                   Password Recovery
                 </div>
               )}

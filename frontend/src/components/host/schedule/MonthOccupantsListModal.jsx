@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 /**
@@ -41,11 +41,39 @@ function getOccupantStayMonths(occ) {
   return '1 Month';
 }
 
+function formatOccupantMonthsRange(occ) {
+  if (Array.isArray(occ.bookedMonths) && occ.bookedMonths.length > 0) {
+    const sorted = [...occ.bookedMonths].sort();
+    const parseM = (k) => {
+      const [y, m] = k.split('-');
+      const d = new Date(Number(y), Number(m) - 1, 1);
+      return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    };
+    if (sorted.length === 1) return `${parseM(sorted[0])} (1 Month)`;
+    return `${parseM(sorted[0])} – ${parseM(sorted[sorted.length - 1])} (${sorted.length} Months)`;
+  }
+
+  // Daily / Nightly stay range formatting
+  const rawIn = occ.checkInISO || occ.checkIn;
+  const rawOut = occ.checkOutISO || occ.checkOut;
+  if (rawIn && rawOut) {
+    const inD = new Date(rawIn);
+    const outD = new Date(rawOut);
+    if (!isNaN(inD.getTime()) && !isNaN(outD.getTime())) {
+      const inStr = inD.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+      const outStr = outD.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+      const nights = Math.max(1, Math.round((outD.getTime() - inD.getTime()) / (1000 * 60 * 60 * 24)));
+      return `${inStr} – ${outStr} (${nights} ${nights === 1 ? 'Night' : 'Nights'})`;
+    }
+  }
+
+  return getOccupantStayMonths(occ);
+}
+
 /**
  * MonthOccupantsListModal
- * Displays a premium, minimalist list of all occupants booked for a specific month.
+ * Displays a clean white popup with all booked occupants for the room.
  * Uses createPortal into document.body so the modal covers the entire viewport properly.
- * Clicking on any occupant opens their Resident ID Pass.
  */
 export function MonthOccupantsListModal({
   monthData,
@@ -63,127 +91,84 @@ export function MonthOccupantsListModal({
     monthKey,
     monthShort,
     year,
+    dateTitle,
     occupiedCount = 0,
     roomCapacity = 1,
     occupants = [],
     isFullyBooked = false,
   } = monthData;
 
+  const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [monthKey]);
+
+  const ITEMS_PER_PAGE = 5;
+  const totalPages = Math.ceil(occupants.length / ITEMS_PER_PAGE) || 1;
+  const safePage = Math.min(currentPage, totalPages);
+  const displayedOccupants = occupants.slice(
+    (safePage - 1) * ITEMS_PER_PAGE,
+    safePage * ITEMS_PER_PAGE
+  );
+
   const remainingSlots = Math.max(0, roomCapacity - occupiedCount);
+
+  const cleanRoomName = roomDisplay
+    ? roomDisplay.startsWith('Room')
+      ? roomDisplay
+      : `Room ${roomDisplay}`
+    : '';
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-md transition-all overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/50 backdrop-blur-sm transition-all overflow-y-auto"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-[480px] bg-white/90 backdrop-blur-2xl text-slate-900 rounded-3xl shadow-[0_24px_48px_rgba(31,38,135,0.15),_inset_0_1px_2px_rgba(255,255,255,0.95)] border border-white/80 overflow-hidden my-6 transition-all"
+        className="relative w-full max-w-[400px] bg-white text-slate-900 rounded-[28px] shadow-[0_24px_60px_-12px_rgba(0,0,0,0.18)] border border-slate-200/90 overflow-hidden my-auto select-none transition-all"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="w-12 h-1 rounded-full bg-slate-200 mx-auto mt-2 mb-1 shrink-0" />
-
-        {/* Modal Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200/70 bg-white/60">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-[#6594B1]/15 text-[#2c536e] flex items-center justify-center text-xs font-bold shrink-0 border border-[#6594B1]/25 shadow-2xs">
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                <rect x="3" y="4" width="18" height="18" rx="2" />
-                <line x1="16" y1="2" x2="16" y2="6" />
-                <line x1="8" y1="2" x2="8" y2="6" />
-                <line x1="3" y1="10" x2="21" y2="10" />
-              </svg>
+        {/* Header: Exact style matching Pic 1 Guest Details */}
+        <div className="px-5 pt-4 pb-2.5 border-b border-slate-100 bg-white text-slate-900 relative z-10">
+          <div className="flex flex-col gap-1.5 w-full">
+            {/* Row 1: Centered "Occupants" Title */}
+            <div className="flex items-center justify-center w-full">
+              <h3 className="font-black tracking-tight text-[16px] sm:text-[17px] text-center leading-none text-slate-900">
+                Occupants
+              </h3>
             </div>
-            <div className="min-w-0">
-              <div className="text-xs font-bold uppercase tracking-wider text-slate-800 leading-tight truncate">
-                Month Occupants
-              </div>
-              <div className="text-[11px] text-slate-500 mt-0.5 truncate">
-                {monthShort} {year} • {roomDisplay} {roomTypeDisplay ? `(${roomTypeDisplay})` : ''}
-              </div>
-            </div>
-          </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <span className={`text-[10.5px] font-bold px-2.5 py-0.5 rounded-lg border uppercase tracking-wider shadow-2xs ${
-              isFullyBooked
-                ? 'bg-rose-100 text-rose-800 border-rose-200'
-                : 'bg-amber-100 text-amber-900 border-amber-200'
-            }`}>
-              {isFullyBooked ? 'Completely Booked' : `${occupiedCount}/${roomCapacity} Booked`}
-            </span>
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-              title="Close"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
+            {/* Row 2: Room info on Left, Guest count badge on Right */}
+            <div className="flex items-center justify-between gap-2 w-full pt-1.5 border-t border-slate-100 text-xs leading-tight font-semibold">
+              <span className="font-bold text-[10.5px] uppercase tracking-wider text-slate-600 truncate">
+                {cleanRoomName || 'Room'}{roomTypeDisplay ? ` (${roomTypeDisplay})` : ''}
+              </span>
 
-        {/* Occupancy Status & Dots Summary Bar */}
-        <div className="px-5 py-2.5 bg-slate-50/70 border-b border-slate-200/60 flex items-center justify-between gap-2 flex-wrap text-xs">
-          <div className="flex items-center gap-2">
-            <span className="text-[11.5px] font-semibold text-slate-700">
-              {occupiedCount} of {roomCapacity} Bed{roomCapacity > 1 ? 's' : ''} Occupied
-            </span>
-            {/* 5 5 proportion dots preview */}
-            <div className="flex items-center gap-1 shrink-0">
-              {Array.from({ length: roomCapacity }).map((_, dIdx) => (
-                <span
-                  key={dIdx}
-                  className={`w-2 h-2 rounded-full transition-all shrink-0 ${
-                    dIdx < occupiedCount
-                      ? 'bg-black ring-1 ring-black/20'
-                      : 'border-[1.5px] border-slate-900 bg-transparent'
-                  }`}
-                />
-              ))}
+              <span className="text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border border-black bg-black text-white tracking-wide shrink-0 shadow-xs">
+                {occupants.length} {occupants.length === 1 ? 'Guest' : 'Guests'}
+              </span>
             </div>
           </div>
-
-          <span className="text-[11px] text-slate-500 font-medium">
-            {isFullyBooked
-              ? 'No open slots'
-              : `${remainingSlots} open slot${remainingSlots > 1 ? 's' : ''}`}
-          </span>
         </div>
 
         {/* Occupants List Body */}
-        <div className="p-5 space-y-3 max-h-[60vh] overflow-y-auto scrollbar-thin">
-          <div className="text-[11px] font-medium text-slate-500 px-1">
-            Click an occupant below to view and manage their Resident ID Pass:
-          </div>
-
+        <div className="p-4 sm:p-5 pb-5 sm:pb-6 space-y-2.5 max-h-[60vh] overflow-y-auto custom-scrollbar">
           {occupants.length === 0 ? (
             <div className="p-8 text-center border border-dashed border-slate-200 rounded-2xl text-xs text-slate-400 space-y-1">
-              <div>No occupants booked for {monthShort} {year} yet.</div>
+              <div>No occupants booked for this room yet.</div>
             </div>
           ) : (
-            <div className="space-y-2">
-              {occupants.map((occ, idx) => {
+            <div className="space-y-2.5">
+              {displayedOccupants.map((occ, idx) => {
                 const name = occ.name || occ.userName || occ.guestName || 'Guest';
-                const phone = occ.phone || occ.userPhone || '—';
-                const stayMonths = getOccupantStayMonths(occ);
+                const stayMonths = formatOccupantMonthsRange(occ);
                 const paid = Number(occ.totalAmount || occ.paidAmount || 0);
                 const isOnline = Boolean(
                   occ.isOnline === true ||
                   occ.bookingSource === 'ONLINE_USER' ||
                   (occ.source === 'booking' && occ.bookingSource !== 'OFFLINE_HOST')
                 );
-
-                // Initials for avatar
-                const initials = name
-                  .trim()
-                  .split(/\s+/)
-                  .map((n) => n[0])
-                  .filter(Boolean)
-                  .slice(0, 2)
-                  .join('')
-                  .toUpperCase() || 'RS';
 
                 return (
                   <div
@@ -193,99 +178,105 @@ export function MonthOccupantsListModal({
                         onSelectOccupant(occ);
                       }
                     }}
-                    className="p-3.5 rounded-2xl bg-white border border-slate-200/80 hover:border-[#6594B1]/60 hover:bg-slate-50/70 hover:shadow-xs transition-all duration-150 ease-out cursor-pointer group flex items-center justify-between gap-3 select-none active:scale-[0.99]"
+                    className="p-3.5 sm:p-4 rounded-2xl bg-slate-100/90 hover:bg-slate-100 border border-slate-200/90 hover:border-slate-300 transition-all duration-150 ease-out cursor-pointer group select-none active:scale-[0.99]"
                     title={`Click to open Resident ID Pass for ${name}`}
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      {/* Initials Avatar */}
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6594B1]/20 to-[#6594B1]/10 text-[#2c536e] font-black text-sm flex items-center justify-center border border-[#6594B1]/25 shrink-0 shadow-2xs">
-                        {initials}
+                    {/* Top Row: Name | Online/Offline Tag | Price */}
+                    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                      <h4 className="text-[14.5px] sm:text-[15.5px] font-black text-slate-900 group-hover:text-slate-950 transition-colors truncate leading-snug">
+                        {name}
+                      </h4>
+
+                      {/* Center: Online / Offline Tag (Centered in Name & Price row) */}
+                      <div className="flex items-center justify-center px-1">
+                        <span className={`text-[10px] sm:text-[10.5px] font-extrabold px-2 py-0.5 rounded-full border tracking-wider uppercase whitespace-nowrap ${
+                          isOnline
+                            ? 'text-purple-600 bg-purple-50/80 border-purple-200/80'
+                            : 'text-[#9c6644] bg-[#9c6644]/10 border-[#9c6644]/25'
+                        }`}>
+                          {isOnline ? 'Online' : 'Offline'}
+                        </span>
                       </div>
 
-                      {/* Name & Booking Details */}
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h4 className="text-xs sm:text-[13px] font-bold text-slate-900 group-hover:text-[#6594B1] transition-colors truncate">
-                            {name}
-                          </h4>
-                          <span className={`text-[9.5px] font-semibold px-2 py-0.2 rounded-md uppercase tracking-wider ${
-                            isOnline
-                              ? 'bg-purple-100 text-purple-700 border border-purple-200'
-                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                          }`}>
-                            {isOnline ? 'Online User' : 'Confirmed'}
+                      {/* Right: Price */}
+                      <div className="flex justify-end items-center">
+                        {paid > 0 ? (
+                          <span className="text-[13.5px] sm:text-[14.5px] font-black text-emerald-600 tracking-tight leading-none">
+                            {`₹${paid.toLocaleString('en-IN')}`}
                           </span>
-                        </div>
-
-                        <div className="flex items-center gap-3 text-[11px] text-slate-500 mt-0.5 flex-wrap">
-                          {phone !== '—' && (
-                            <span className="flex items-center gap-1">
-                              <svg className="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                              </svg>
-                              <span>{phone}</span>
-                            </span>
-                          )}
-                          <span className="flex items-center gap-1 font-semibold text-slate-700">
-                            <svg className="w-3.5 h-3.5 text-[#6594B1]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <rect x="3" y="4" width="18" height="18" rx="2" />
-                              <line x1="16" y1="2" x2="16" y2="6" />
-                              <line x1="8" y1="2" x2="8" y2="6" />
-                              <line x1="3" y1="10" x2="21" y2="10" />
-                            </svg>
-                            <span>{stayMonths}</span>
-                          </span>
-                        </div>
+                        ) : (
+                          <span />
+                        )}
                       </div>
                     </div>
 
-                    {/* Right Price & Click Hint */}
-                    <div className="flex flex-col items-end shrink-0 gap-1">
-                      {paid > 0 && (
-                        <span className="text-xs sm:text-[13px] font-black text-emerald-700">
-                          ₹{paid.toLocaleString('en-IN')}
-                        </span>
-                      )}
-                      <span className="text-[10px] font-semibold text-[#6594B1] flex items-center gap-0.5 transition-colors group-hover:text-[#4f7791]">
+                    {/* Bottom Row: Stay Months & View Pass */}
+                    <div className="flex items-center justify-between gap-2 mt-1.5">
+                      <div className="text-[11.5px] sm:text-xs font-medium text-slate-500 truncate min-w-0">
+                        {stayMonths}
+                      </div>
+
+                      <span className="text-[13.5px] sm:text-[14.5px] font-extrabold text-sky-600 flex items-center transition-colors group-hover:text-sky-700 leading-none whitespace-nowrap shrink-0">
                         <span>View Pass</span>
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                        </svg>
+                        <span className="text-[16px] sm:text-[17px] font-bold ml-0.5 leading-none">›</span>
                       </span>
                     </div>
                   </div>
                 );
               })}
-            </div>
-          )}
 
-          {/* If there are open slots, show quick option to book remaining bed */}
-          {remainingSlots > 0 && typeof onBookOpenSlot === 'function' && (
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={onBookOpenSlot}
-                className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-[0.99]"
-              >
-                <span className="text-sm font-bold leading-none">+</span>
-                <span>Book Remaining Bed ({remainingSlots} Slot{remainingSlots > 1 ? 's' : ''} Open)</span>
-              </button>
+              {/* Pagination Controls when occupants count > 5 */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-3 px-1 select-none">
+                  <button
+                    type="button"
+                    disabled={safePage <= 1}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    className="w-11 h-11 sm:w-12 sm:h-12 rounded-full border border-slate-200 bg-white text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-2xs shrink-0 p-0"
+                    title="Previous Page"
+                  >
+                    <span className="material-symbols-outlined text-[24px] sm:text-[26px] select-none leading-none inline-flex items-center justify-center">
+                      chevron_left
+                    </span>
+                  </button>
+
+                  <span className="text-[15px] sm:text-base font-normal text-slate-700 tracking-normal">
+                    Page {safePage} of {totalPages}
+                  </span>
+
+                  <button
+                    type="button"
+                    disabled={safePage >= totalPages}
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    className="w-11 h-11 sm:w-12 sm:h-12 rounded-full border border-slate-200 bg-white text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-50 active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-2xs shrink-0 p-0"
+                    title="Next Page"
+                  >
+                    <span className="material-symbols-outlined text-[24px] sm:text-[26px] select-none leading-none inline-flex items-center justify-center">
+                      chevron_right
+                    </span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* Modal Footer */}
-        <div className="px-5 py-3 border-t border-slate-200/70 bg-slate-50/50 flex items-center justify-end">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer shadow-2xs"
-          >
-            Close
-          </button>
-        </div>
+        {/* Modal Footer: Action button if open slots remain */}
+        {remainingSlots > 0 && typeof onBookOpenSlot === 'function' && (
+          <div className="px-5 py-3.5 border-t border-slate-100 bg-white flex items-center justify-end">
+            <button
+              type="button"
+              onClick={onBookOpenSlot}
+              className="w-auto shrink-0 h-13 sm:h-14 px-6 sm:px-7 rounded-full font-black text-[15px] sm:text-[16px] shadow-md active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-700/25"
+            >
+              Book Bed
+            </button>
+          </div>
+        )}
       </div>
     </div>,
     document.body
   );
 }
+
+export default MonthOccupantsListModal;

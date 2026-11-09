@@ -314,19 +314,19 @@ export function AccountPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f2ea] text-slate-900 transition-colors duration-300 font-body-md antialiased pb-8 sm:pb-12">
-      {/* ── TOP FLOATING NAVIGATION CAPSULES (MATCHING PIC 1 SETTING) ── */}
-      <header className="relative w-full h-14 sm:h-20 pointer-events-none select-none z-50 font-body-md antialiased">
+      {/* ── TOP FLOATING NAVIGATION CAPSULES (MATCHING HOST DASHBOARD / APP NAVBAR) ── */}
+      <header className="relative w-full h-[70px] sm:h-[88px] pointer-events-none select-none z-50 font-body-md antialiased">
         {/* 1. Left Island: Back button */}
-        <div className="fixed top-2.5 sm:top-5 left-2.5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none h-8 sm:h-[46px]">
+        <div className="fixed top-2.5 sm:top-5 left-2.5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none h-12 sm:h-13">
           <button
             type="button"
             onClick={handleBack}
             data-no-hover="true"
-            className="inline-flex items-center justify-center h-8 sm:h-[46px] px-3.5 sm:px-5 gap-1.5 sm:gap-2 rounded-full bg-white text-slate-700 text-xs sm:text-[14px] font-semibold shadow-sm border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer select-none active:scale-95 shrink-0"
+            className="inline-flex items-center justify-center h-12 sm:h-13 px-4.5 sm:px-5.5 gap-2 rounded-full bg-white text-slate-700 text-[14.5px] sm:text-base font-medium shadow-md border border-slate-200/90 hover:bg-slate-50 transition-colors cursor-pointer select-none active:scale-95 shrink-0"
             title="Return"
           >
             <svg
-              className="w-3.5 h-3.5 text-slate-600 stroke-[2.2] shrink-0"
+              className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-slate-600 stroke-[2] shrink-0"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -339,20 +339,20 @@ export function AccountPage() {
           </button>
         </div>
 
-        {/* 2. Center Island: Floating Liquid Glass Segmented Tabs (matching Pic 1 positioning) */}
-        <div className="fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center pointer-events-auto max-w-[calc(100vw-130px)] sm:max-w-none h-9 sm:h-[46px] select-none">
-          <nav className="apple-liquid-nav relative flex items-center h-9 sm:h-[46px] p-1 sm:p-1.5 rounded-full border border-slate-200/90 bg-white shadow-[0_4px_14px_-2px_rgba(0,0,0,0.1),0_2px_6px_-1px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,1)] select-none">
+        {/* 2. Center Island: Floating Liquid Glass Segmented Tabs */}
+        <div className="fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center pointer-events-auto max-w-[calc(100vw-130px)] sm:max-w-none h-13 sm:h-[54px] select-none">
+          <nav className="relative flex items-center h-13 sm:h-[54px] p-1 sm:p-1.5 rounded-full border border-slate-200/90 bg-white shadow-md select-none">
             {/* Tab 1: Profile Details */}
             <button
               type="button"
               onClick={() => setActiveTab('details')}
-              className={`relative z-10 h-full py-0 px-2.5 sm:px-3.5 rounded-full text-[11px] sm:text-xs md:text-[13px] font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 select-none shrink-0 ${
+              className={`relative z-10 h-11 sm:h-12 py-0 px-3.5 sm:px-5 rounded-full text-xs sm:text-sm md:text-base font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none shrink-0 ${
                 activeTab === 'details'
                   ? 'text-white font-bold'
                   : 'text-slate-600 hover:text-slate-900 font-medium'
               }`}
             >
-              <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
@@ -370,13 +370,13 @@ export function AccountPage() {
             <button
               type="button"
               onClick={() => setActiveTab('password')}
-              className={`relative z-10 h-full py-0 px-2.5 sm:px-3.5 rounded-full text-[11px] sm:text-xs md:text-[13px] font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 select-none shrink-0 ${
+              className={`relative z-10 h-11 sm:h-12 py-0 px-3.5 sm:px-5 rounded-full text-xs sm:text-sm md:text-base font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none shrink-0 ${
                 activeTab === 'password'
                   ? 'text-white font-bold'
                   : 'text-slate-600 hover:text-slate-900 font-medium'
               }`}
             >
-              <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
@@ -394,13 +394,13 @@ export function AccountPage() {
             <button
               type="button"
               onClick={() => setActiveTab('delete')}
-              className={`relative z-10 h-full py-0 px-2.5 sm:px-3.5 rounded-full text-[11px] sm:text-xs md:text-[13px] font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 select-none shrink-0 ${
+              className={`relative z-10 h-11 sm:h-12 py-0 px-3.5 sm:px-5 rounded-full text-xs sm:text-sm md:text-base font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none shrink-0 ${
                 activeTab === 'delete'
                   ? 'text-white font-bold'
                   : 'text-rose-600 hover:text-rose-700 font-medium'
               }`}
             >
-              <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M3 6h18" />
                 <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
                 <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
@@ -418,15 +418,15 @@ export function AccountPage() {
         </div>
 
         {/* 3. Right Island: Profile / Login Avatar Button */}
-        <div className="fixed top-2.5 sm:top-5 right-2.5 sm:right-6 z-50 flex items-center gap-1.5 sm:gap-2.5 pointer-events-auto select-none h-8 sm:h-[46px]">
-          <div className="relative flex items-center justify-center h-8 sm:h-[46px]">
+        <div className="fixed top-2.5 sm:top-5 right-2.5 sm:right-6 z-50 flex items-center gap-1.5 sm:gap-2.5 pointer-events-auto select-none h-12 sm:h-13">
+          <div className="relative flex items-center justify-center h-12 sm:h-13">
             <Login />
           </div>
         </div>
       </header>
 
       {/* Main Container */}
-      <main className="max-w-3xl mx-auto px-3 sm:px-6 pt-16 sm:pt-22 lg:pt-26 pb-12 sm:pb-16 min-h-[calc(100vh-4rem)]">
+      <main className="max-w-3xl mx-auto px-3 sm:px-6 pt-20 sm:pt-24 lg:pt-28 pb-12 sm:pb-16 min-h-[calc(100vh-4rem)]">
 
         {/* ── TAB 1: PROFILE DETAILS (GREEN THEMED CARD ON MOBILE) ── */}
         {activeTab === 'details' && (
