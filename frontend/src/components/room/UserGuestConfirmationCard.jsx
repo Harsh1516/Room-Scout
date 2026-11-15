@@ -47,8 +47,36 @@ export function UserGuestConfirmationCard({
   onCancelPendingBooking = null,
   cancelling = false,
 }) {
-  const { user: authUser } = useAuth?.() || {};
+  const { user: authUser, isAuthenticated: authIsAuthenticated } = useAuth?.() || {};
   const user = propUser !== undefined ? propUser : authUser;
+  const isUserLoggedIn = Boolean((user && (user._id || user.email)) || authIsAuthenticated);
+
+  const handleFormSubmit = (e) => {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
+    if (submitting) return;
+
+    // Require user to be logged in first before requesting a slot
+    if (!isUserLoggedIn) {
+      if (isModal && typeof onClose === 'function') {
+        onClose();
+      }
+      window.dispatchEvent(
+        new CustomEvent('auth:open_login', {
+          detail: {
+            role: 'user',
+            prompt: 'Please sign in or register to request your booking slot.',
+          },
+        })
+      );
+      return;
+    }
+
+    if (typeof onSubmitBooking === 'function') {
+      onSubmitBooking(e);
+    }
+  };
 
   const isNameReadOnly = Boolean(user && user.name && String(user.name).trim().length > 0);
   const isPhoneReadOnly = Boolean(user && user.phone && String(user.phone).replace(/\D/g, '').length >= 10);
@@ -315,7 +343,7 @@ export function UserGuestConfirmationCard({
       )}
 
       {/* Guest Form (NO LABELS, UNIFORM TEXT SIZE, NO EXTRA ICONS, NO LOCK ICONS) */}
-      <form noValidate onSubmit={onSubmitBooking} className="space-y-3 pt-1">
+      <form noValidate onSubmit={handleFormSubmit} className="space-y-3 pt-1">
         {/* Full Name Pod */}
         <div className="relative flex items-center rounded-2xl bg-white border border-slate-300 shadow-2xs overflow-hidden px-4 sm:px-5 py-3.5 sm:py-4 transition-all focus-within:border-slate-800">
           <input
@@ -454,11 +482,7 @@ export function UserGuestConfirmationCard({
             <button
               type="submit"
               disabled={submitting}
-              onClick={(e) => {
-                if (!submitting && typeof onSubmitBooking === 'function') {
-                  onSubmitBooking(e);
-                }
-              }}
+              onClick={handleFormSubmit}
               className="w-full py-4 px-6 rounded-full font-extrabold text-base sm:text-[17px] transition-all cursor-pointer shadow-xl shadow-black/20 disabled:opacity-40 disabled:cursor-not-allowed bg-black hover:bg-neutral-900 text-white flex items-center justify-center gap-2.5 active:scale-[0.98]"
             >
               {submitting ? (

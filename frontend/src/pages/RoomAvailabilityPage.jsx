@@ -47,7 +47,8 @@ export function RoomAvailabilityPage({ onLoginClick }) {
   const { id } = useParams();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const pendingBookingIntentRef = useRef(false);
   const { bookings, addBooking, setIsBookingsOpen, deleteBooking } = useBookings();
   
   const [stay, setStay] = useState(() => location.state?.stay || null);
@@ -276,6 +277,15 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  }
  };
  }, [id, refreshStayData, refreshStayBookings]);
+
+ useEffect(() => {
+    if (isAuthenticated && user && pendingBookingIntentRef.current) {
+      pendingBookingIntentRef.current = false;
+      setIsGuestDetailsModalOpen(true);
+    }
+  }, [isAuthenticated, user]);
+
+
 
  useEffect(() => {
  if (user) {
@@ -1138,7 +1148,27 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  e.preventDefault();
  }
 
- const stayId = id || stay?._id;
+ // Require user to be logged in first before requesting a slot
+    if (!isAuthenticated || !user) {
+      toast.warn('Please sign in or register to request your booking slot.');
+      pendingBookingIntentRef.current = true;
+      setIsGuestDetailsModalOpen(false);
+      if (typeof onLoginClick === 'function') {
+        onLoginClick();
+      } else {
+        window.dispatchEvent(
+          new CustomEvent('auth:open_login', {
+            detail: {
+              role: 'user',
+              prompt: 'Please sign in or register to request your booking slot.',
+            },
+          })
+        );
+      }
+      return false;
+    }
+
+    const stayId = id || stay?._id;
 
  if (!selectedRoom) {
  toast.warn('Please select an available room from the left panel.');
