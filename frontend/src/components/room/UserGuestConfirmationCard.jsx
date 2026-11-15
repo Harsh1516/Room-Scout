@@ -1,25 +1,32 @@
 import React, { useMemo } from 'react';
+import { createPortal } from 'react-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 
 /**
- * UserGuestConfirmationCard (Right Tab)
- * Renders the stay summary, reservation check-in/out info,
- * guest details form (unique mobile, letters-only name, adult/child counters),
- * and the final Request Booking Approval submission button.
+ * UserGuestConfirmationCard
+ * Renders stay summary, reservation check-in/out info,
+ * premium minimal label-free guest inputs, balanced typography,
+ * large comfortable stepper controls, centered 2x header,
+ * and fully rounded black console CTA with text "Request Slot".
+ * Supports center modal popup mode or embedded desktop card.
  */
 export function UserGuestConfirmationCard({
+  isModal = false,
+  isOpen = false,
+  onClose = () => {},
   selectedRoom,
   formatRoomNo,
   upcomingWeek = [],
   upcomingDays = [],
   selectedSlotIndices = [],
   stay,
-  guestName,
-  setGuestName,
-  guestPhone,
-  setGuestPhone,
-  guestEmail,
-  setGuestEmail,
+  guestName = '',
+  setGuestName = () => {},
+  guestPhone = '',
+  setGuestPhone = () => {},
+  guestEmail = '',
+  setGuestEmail = () => {},
   guestGender = 'Male',
   setGuestGender = () => {},
   personCount = 1,
@@ -135,105 +142,109 @@ export function UserGuestConfirmationCard({
           isMonthly: true,
           isPending: true,
           durationLabel: `${monthsCount} ${monthsCount === 1 ? 'Month' : 'Months'}`,
-          checkInDate: checkInDate || 'Month-Start',
-          checkInTime: 'Move-in (12:00 AM)',
-          checkOutDate: checkOutDate || 'Month-End',
-          checkOutTime: 'Month-End (11:59 PM)',
+          checkInDate: checkInDate || 'Start of Month',
+          checkInTime: '12:00 AM',
+          checkOutDate: checkOutDate || 'End of Month',
+          checkOutTime: '11:59 PM',
           priceBreakdown: `₹${unitPrice.toLocaleString('en-IN')}/mo × ${monthsCount} mo${monthsCount > 1 ? 's' : ''}`,
           unitPrice,
           totalPrice,
           status: pendingBooking?.status || 'Pending Host Approval',
         };
       }
-
-      return null;
-    }
-
-    if (sortedSelected.length > 0) {
-      const startIdx = sortedSelected[0];
-      const lastIdx = sortedSelected[sortedSelected.length - 1];
-      const firstSlot = allDays[startIdx];
-      const lastSlot = allDays[lastIdx];
-
-      const nextDateObj = lastSlot?.dateObj ? new Date(lastSlot.dateObj) : new Date();
-      nextDateObj.setDate(nextDateObj.getDate() + 1);
-      const checkoutDayName = nextDateObj.toLocaleDateString('en-US', { weekday: 'short' });
-      const checkoutMonthDay = nextDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      const durationNights = sortedSelected.length;
-
-      // Price calculation
-      const rawPrice = selectedRoom?.price || stay?.price || 0;
-      const nightlyPrice = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/[^0-9]/g, '')) || 0;
-      const totalPrice = nightlyPrice * durationNights;
-
-      return {
-        isMonthly: false,
-        isPending: false,
-        firstSlot,
-        lastSlot,
-        durationLabel: `${durationNights} ${durationNights === 1 ? 'Night' : 'Nights'}`,
-        checkInDate: `${firstSlot?.dayName}, ${firstSlot?.monthDay}`,
-        checkInTime: '12:00 PM',
-        checkOutDate: `${checkoutDayName}, ${checkoutMonthDay}`,
-        checkOutTime: '11:59 AM',
-        priceBreakdown: `₹${nightlyPrice.toLocaleString('en-IN')} × ${durationNights} night${durationNights > 1 ? 's' : ''}`,
-        unitPrice: nightlyPrice,
-        totalPrice,
-      };
-    }
-
-    // If no slots selected, check for user's pending requested booking for this room
-    if (pendingBooking || (userRequestedSlots && userRequestedSlots.size > 0)) {
-      const rawPrice = selectedRoom?.price || stay?.price || pendingBooking?.price || 0;
-      const nightlyPrice = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/[^0-9]/g, '')) || 0;
-
-      let nightsCount = 1;
-      let checkInDate = '';
-      let checkOutDate = '';
-
-      if (pendingBooking) {
-        nightsCount = Array.isArray(pendingBooking.bookedDates) && pendingBooking.bookedDates.length > 0
-          ? pendingBooking.bookedDates.length
-          : Number(pendingBooking.selectedDaysCount) || 1;
-
-        if (pendingBooking.checkInDisplay) checkInDate = pendingBooking.checkInDisplay;
-        if (pendingBooking.checkOutDisplay) checkOutDate = pendingBooking.checkOutDisplay;
-        if (!checkInDate && pendingBooking.checkIn) {
-          const inD = new Date(pendingBooking.checkIn);
-          checkInDate = inD.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
-        }
-        if (!checkOutDate && pendingBooking.checkOut) {
-          const outD = new Date(pendingBooking.checkOut);
-          checkOutDate = outD.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
-        }
-      } else if (userRequestedSlots && userRequestedSlots.size > 0) {
-        const sortedSlots = Array.from(userRequestedSlots).sort();
-        nightsCount = sortedSlots.length;
-        const fSlot = allDays.find((d) => d.fullISO === sortedSlots[0]);
-        const lSlot = allDays.find((d) => d.fullISO === sortedSlots[sortedSlots.length - 1]);
-        if (fSlot) checkInDate = `${fSlot.dayName}, ${fSlot.monthDay}`;
-        if (lSlot) {
-          const nextDateObj = lSlot?.dateObj ? new Date(lSlot.dateObj) : new Date();
+    } else {
+      if (sortedSelected.length > 0) {
+        const firstSlot = allDays[sortedSelected[0]];
+        const lastSlot = allDays[sortedSelected[sortedSelected.length - 1]];
+        if (firstSlot && lastSlot) {
+          const nights = sortedSelected.length;
+          const nextDateObj = lastSlot?.dateObj ? new Date(lastSlot.dateObj) : new Date();
           nextDateObj.setDate(nextDateObj.getDate() + 1);
-          checkOutDate = `${nextDateObj.toLocaleDateString('en-US', { weekday: 'short' })}, ${nextDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+
+          const nextDayName = nextDateObj.toLocaleDateString('en-US', { weekday: 'short' });
+          const nextMonthDay = nextDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+          const nightlyPrice = typeof selectedRoom?.price === 'number'
+            ? selectedRoom.price
+            : typeof stay?.price === 'number'
+            ? stay.price
+            : Number(String(selectedRoom?.price || stay?.price || '0').replace(/[^0-9]/g, '')) || 0;
+
+          const totalPrice = nightlyPrice * nights;
+
+          return {
+            isMonthly: false,
+            isPending: false,
+            durationLabel: `${nights} ${nights === 1 ? 'Night' : 'Nights'}`,
+            checkInDate: `${firstSlot.dayName}, ${firstSlot.monthDay ? firstSlot.monthDay.replace('Sep', 'Sept') : ''}`,
+            checkInTime: '12:00 PM',
+            checkOutDate: `${nextDayName}, ${nextMonthDay ? nextMonthDay.replace('Sep', 'Sept') : ''}`,
+            checkOutTime: '11:59 AM',
+            priceBreakdown: `₹${nightlyPrice.toLocaleString('en-IN')} × ${nights} night${nights > 1 ? 's' : ''}`,
+            unitPrice: nightlyPrice,
+            totalPrice,
+          };
         }
       }
 
-      const totalPrice = nightlyPrice * nightsCount;
+      // If no new selection, check for user's pending requested booking for this room
+      if (pendingBooking || (userRequestedSlots && userRequestedSlots.size > 0)) {
+        const nightlyPrice = typeof selectedRoom?.price === 'number'
+          ? selectedRoom.price
+          : typeof stay?.price === 'number'
+          ? stay.price
+          : typeof pendingBooking?.price === 'number'
+          ? pendingBooking.price
+          : Number(String(selectedRoom?.price || stay?.price || pendingBooking?.price || '0').replace(/[^0-9]/g, '')) || 0;
 
-      return {
-        isMonthly: false,
-        isPending: true,
-        durationLabel: `${nightsCount} ${nightsCount === 1 ? 'Night' : 'Nights'}`,
-        checkInDate: checkInDate || 'Check-in',
-        checkInTime: '12:00 PM',
-        checkOutDate: checkOutDate || 'Check-out',
-        checkOutTime: '11:59 AM',
-        priceBreakdown: `₹${nightlyPrice.toLocaleString('en-IN')} × ${nightsCount} night${nightsCount > 1 ? 's' : ''}`,
-        unitPrice: nightlyPrice,
-        totalPrice,
-        status: pendingBooking?.status || 'Pending Host Approval',
-      };
+        let nightsCount = 1;
+        let checkInDate = '';
+        let checkOutDate = '';
+
+        if (pendingBooking) {
+          nightsCount = Array.isArray(pendingBooking.bookedDates) && pendingBooking.bookedDates.length > 0
+            ? pendingBooking.bookedDates.length
+            : Number(pendingBooking.durationDays) || 1;
+
+          if (pendingBooking.checkInDisplay) checkInDate = pendingBooking.checkInDisplay;
+          if (pendingBooking.checkOutDisplay) checkOutDate = pendingBooking.checkOutDisplay;
+          if (!checkInDate && pendingBooking.checkIn) {
+            const inD = new Date(pendingBooking.checkIn);
+            checkInDate = inD.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+          }
+          if (!checkOutDate && pendingBooking.checkOut) {
+            const outD = new Date(pendingBooking.checkOut);
+            checkOutDate = outD.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+          }
+        } else if (userRequestedSlots && userRequestedSlots.size > 0) {
+          const sortedSlots = Array.from(userRequestedSlots).sort();
+          nightsCount = sortedSlots.length;
+          const fSlot = allDays.find((d) => d.fullISO === sortedSlots[0]);
+          const lSlot = allDays.find((d) => d.fullISO === sortedSlots[sortedSlots.length - 1]);
+          if (fSlot) checkInDate = `${fSlot.dayName}, ${fSlot.monthDay}`;
+          if (lSlot) {
+            const nextDateObj = lSlot?.dateObj ? new Date(lSlot.dateObj) : new Date();
+            nextDateObj.setDate(nextDateObj.getDate() + 1);
+            checkOutDate = `${nextDateObj.toLocaleDateString('en-US', { weekday: 'short' })}, ${nextDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+          }
+        }
+
+        const totalPrice = nightlyPrice * nightsCount;
+
+        return {
+          isMonthly: false,
+          isPending: true,
+          durationLabel: `${nightsCount} ${nightsCount === 1 ? 'Night' : 'Nights'}`,
+          checkInDate: checkInDate || 'Check-in',
+          checkInTime: '12:00 PM',
+          checkOutDate: checkOutDate || 'Check-out',
+          checkOutTime: '11:59 AM',
+          priceBreakdown: `₹${nightlyPrice.toLocaleString('en-IN')} × ${nightsCount} night${nightsCount > 1 ? 's' : ''}`,
+          unitPrice: nightlyPrice,
+          totalPrice,
+          status: pendingBooking?.status || 'Pending Host Approval',
+        };
+      }
     }
 
     return null;
@@ -250,7 +261,6 @@ export function UserGuestConfirmationCard({
     userRequestedSlots,
   ]);
 
-  const hasValidSelection = isMonthly ? selectedMonthIndices.length > 0 : selectedSlotIndices.length > 0;
   const isPendingBooking = Boolean(reservationDetails?.isPending);
   const displayGuestName = isPendingBooking ? (pendingBooking?.fullName || pendingBooking?.guestName || guestName) : guestName;
   const displayGuestPhone = isPendingBooking ? (pendingBooking?.phone || pendingBooking?.guestPhone || guestPhone) : guestPhone;
@@ -260,274 +270,258 @@ export function UserGuestConfirmationCard({
   const isNameFieldReadOnly = isNameReadOnly || isPendingBooking;
   const isPhoneFieldReadOnly = isPhoneReadOnly || isPendingBooking;
 
-  return (
-    <div className="w-full flex flex-col justify-center my-auto min-h-0">
-      <section className="flex flex-col rounded-[26px] bg-white border border-slate-200/90 shadow-[0_8px_30px_rgb(0,0,0,0.06)] overflow-hidden select-none transition-all">
-        {/* Header: Month Pill Green Background (#00e599) matching Host side */}
-        <div className="px-5 py-3 border-b border-[#00c984] flex items-center justify-center bg-[#00e599] text-[#071320] shadow-xs">
-          <h3 className="text-[15px] font-black text-[#071320] tracking-tight text-center">
-            Guest Details
-          </h3>
-        </div>
-
-        <div className="p-4 sm:p-5 flex flex-col gap-3.5">
-          {/* Reservation Stay Summary */}
-          {reservationDetails ? (
-            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-2 shadow-xs">
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-xs font-bold text-slate-900">{roomDisplay}</span>
-                  <span className="text-[10px] font-medium text-slate-700 bg-white px-2 py-0.5 rounded-md border border-slate-200">
-                    {selectedRoom?.type || 'Standard Room'}
-                  </span>
-                  {reservationDetails.isPending && (
-                    <span className="text-[10px] font-bold text-blue-700 bg-blue-100/90 px-2 py-0.5 rounded-md border border-blue-300 inline-flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                      Waiting Approval
-                    </span>
-                  )}
-                </div>
-                <p className="text-[11px] text-slate-500 mt-0.5 truncate">
-                  {reservationDetails.checkInDate} → {reservationDetails.checkOutDate}
-                </p>
-              </div>
-              <div className="text-right shrink-0">
-                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-md border border-emerald-300">
-                  {reservationDetails.durationLabel}
-                </span>
-                {reservationDetails.totalPrice > 0 && (
-                  <p className="text-xs font-bold text-slate-900 mt-0.5">
-                    ₹{reservationDetails.totalPrice.toLocaleString('en-IN')}
-                  </p>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="p-3 rounded-2xl bg-slate-50/60 border border-dashed border-slate-300 text-xs flex items-center gap-2.5 text-slate-500 shadow-xs">
-              <div className="w-7 h-7 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 shrink-0">
-                <span className="material-symbols-outlined text-[16px]">calendar_today</span>
-              </div>
-              <span className="text-[11px] leading-snug">
-                {isMonthly
-                  ? 'Select month(s) in the middle schedule to view stay details.'
-                  : 'Select date slot(s) in the middle calendar to view stay details.'}
+  // The Form Body (Minimal, Premium, Label-Free, Balanced Typography, No Extra Icons, No Lock Icons)
+  const formContent = (
+    <div className="flex flex-col gap-3.5 select-none">
+      {/* Reservation Stay Summary Pod */}
+      {reservationDetails ? (
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-300 shadow-2xs flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-base sm:text-[17px] font-bold text-slate-900">{roomDisplay}</span>
+              <span className="text-xs sm:text-sm font-semibold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200">
+                {selectedRoom?.type || 'Standard Room'}
               </span>
-            </div>
-          )}
-
-          {/* Guest Form */}
-          <form noValidate onSubmit={onSubmitBooking} className="space-y-3">
-            {/* Full Name */}
-            <div>
-              <label className="block text-[11.5px] font-medium text-slate-700 mb-1">
-                Full Name *
-              </label>
-              <div className="relative flex items-center">
-                <input
-                  type="text"
-                  readOnly={isNameFieldReadOnly}
-                  value={displayGuestName}
-                  onChange={(e) => {
-                    if (isNameFieldReadOnly) return;
-                    setGuestName(e.target.value.replace(/[^a-zA-Z\s]/g, ''));
-                  }}
-                  placeholder="Guest full name"
-                  className={`w-full px-3 py-2 rounded-xl text-xs font-semibold shadow-2xs transition-all ${
-                    isNameFieldReadOnly
-                      ? 'bg-slate-100/90 border border-slate-200/90 text-slate-700 cursor-not-allowed select-none focus:outline-none pr-8'
-                      : 'bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-emerald-500'
-                  }`}
-                />
-                {isNameFieldReadOnly && (
-                  <div
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none flex items-center"
-                    title={isPendingBooking ? 'Locked while booking request is pending' : 'Pre-filled from your user account (non-editable)'}
-                  >
-                    <span className="material-symbols-outlined text-[14px]">lock</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Mobile Number */}
-            <div>
-              <label className="block text-[11.5px] font-medium text-slate-700 mb-1">
-                Mobile Number *
-              </label>
-              <div
-                className={`flex items-center rounded-xl overflow-hidden shadow-2xs transition-all ${
-                  isPhoneFieldReadOnly
-                    ? 'bg-slate-100/90 border border-slate-200/90'
-                    : 'bg-slate-50 border border-slate-200 focus-within:border-emerald-500 focus-within:bg-white'
-                }`}
-              >
-                <div
-                  className={`px-3 py-2 text-xs font-semibold select-none shrink-0 flex items-center gap-1 border-r ${
-                    isPhoneFieldReadOnly
-                      ? 'bg-slate-200/60 border-slate-200/90 text-slate-600'
-                      : 'bg-slate-100/80 border-slate-200 text-slate-700'
-                  }`}
-                >
-                  <span>🇮🇳</span>
-                  <span>+91</span>
-                </div>
-                <input
-                  type="tel"
-                  readOnly={isPhoneFieldReadOnly}
-                  maxLength={10}
-                  value={displayGuestPhone}
-                  onChange={(e) => {
-                    if (isPhoneFieldReadOnly) return;
-                    setGuestPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
-                  }}
-                  placeholder="10-digit mobile number"
-                  className={`w-full px-2.5 py-2 text-xs font-semibold focus:outline-none ${
-                    isPhoneFieldReadOnly
-                      ? 'bg-transparent text-slate-700 cursor-not-allowed select-none'
-                      : 'bg-transparent text-slate-900 placeholder:text-slate-400'
-                  }`}
-                />
-                {isPhoneFieldReadOnly && (
-                  <div
-                    className="pr-2.5 text-slate-400 pointer-events-none flex items-center"
-                    title={isPendingBooking ? 'Locked while booking request is pending' : 'Pre-filled from your user account (non-editable)'}
-                  >
-                    <span className="material-symbols-outlined text-[14px]">lock</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Person Count */}
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-[11.5px] font-medium text-slate-700">
-                  Person Count *
-                </label>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  Max: {maxAllowedPersons} {maxAllowedPersons === 1 ? 'person' : 'persons'} (Capacity: {roomCapacity})
+              {reservationDetails.isPending && (
+                <span className="text-xs sm:text-sm font-semibold text-blue-700 bg-blue-100 px-2.5 py-0.5 rounded-md border border-blue-200 inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                  Waiting Approval
                 </span>
-              </div>
-
-              <div className="flex items-center justify-between h-[38px] px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs shadow-2xs">
-                <div className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[16px] text-emerald-600">person</span>
-                  <span className="text-[11.5px] text-slate-700 font-semibold">
-                    {displayPersonCount} {displayPersonCount === 1 ? 'Person' : 'Persons'}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPersonCount((prev) => Math.max(1, prev - 1))}
-                    disabled={isPendingBooking || personCount <= 1}
-                    className="w-7 h-7 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center text-sm font-bold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition-all shadow-2xs"
-                    title="Decrease person count"
-                  >
-                    −
-                  </button>
-                  <span className="text-xs font-bold text-slate-900 w-5 text-center select-none">
-                    {displayPersonCount}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setPersonCount((prev) => Math.min(maxAllowedPersons, prev + 1))}
-                    disabled={isPendingBooking || personCount >= maxAllowedPersons}
-                    className="w-7 h-7 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center text-sm font-bold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition-all shadow-2xs"
-                    title="Increase person count"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-
-              {displayPersonCount > 1 && (
-                <p className="text-[10px] text-emerald-600 mt-1 font-medium">
-                  ✓ Occupies {displayPersonCount} of {roomCapacity} spaces in Room {roomDisplay}.
-                </p>
               )}
             </div>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium truncate">
+              {reservationDetails.checkInDate} → {reservationDetails.checkOutDate}
+            </p>
+          </div>
+          <div className="text-right shrink-0">
+            <span className="text-xs sm:text-sm font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-md border border-emerald-300 inline-block">
+              {reservationDetails.durationLabel}
+            </span>
+            {reservationDetails.totalPrice > 0 && (
+              <p className="text-base sm:text-[17px] font-extrabold text-slate-900 mt-1">
+                ₹{reservationDetails.totalPrice.toLocaleString('en-IN')}
+              </p>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-white/80 border border-slate-300 text-slate-600 shadow-2xs">
+          <span className="text-sm sm:text-base font-semibold leading-snug">
+            {isMonthly
+              ? 'Select month(s) in the schedule to view stay details.'
+              : 'Select date slot(s) in the calendar to view stay details.'}
+          </span>
+        </div>
+      )}
 
-            {/* Aadhar ID */}
-            <div>
-              <label className="block text-[11.5px] font-medium text-slate-700 mb-1">
-                Aadhar ID *
-              </label>
-              <input
-                type="text"
-                readOnly={isPendingBooking}
-                maxLength={14}
-                value={displayGuestAadhar}
-                onChange={(e) => {
-                  if (isPendingBooking) return;
-                  const digits = e.target.value.replace(/\D/g, '').slice(0, 12);
-                  const formatted = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
-                  setGuestAadhar?.(formatted);
-                }}
-                placeholder="12-digit number"
-                className={`w-full px-3 py-2 rounded-xl border text-xs font-semibold placeholder:text-slate-400 focus:outline-none shadow-2xs transition-all tracking-wide ${
-                  isPendingBooking
-                    ? 'bg-slate-100/90 border-slate-200/90 text-slate-700 cursor-not-allowed select-none'
-                    : 'bg-slate-50 border-slate-200 text-slate-900 focus:bg-white focus:border-emerald-500'
-                }`}
-              />
+      {/* Guest Form (NO LABELS, UNIFORM TEXT SIZE, NO EXTRA ICONS, NO LOCK ICONS) */}
+      <form noValidate onSubmit={onSubmitBooking} className="space-y-3 pt-1">
+        {/* Full Name Pod */}
+        <div className="relative flex items-center rounded-2xl bg-white border border-slate-300 shadow-2xs overflow-hidden px-4 sm:px-5 py-3.5 sm:py-4 transition-all focus-within:border-slate-800">
+          <input
+            type="text"
+            readOnly={isNameFieldReadOnly}
+            value={displayGuestName}
+            onChange={(e) => {
+              if (isNameFieldReadOnly) return;
+              setGuestName(e.target.value.replace(/[^a-zA-Z\s]/g, ''));
+            }}
+            placeholder="Full Name"
+            className={`w-full bg-transparent text-base sm:text-[17px] font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none ${
+              isNameFieldReadOnly ? 'cursor-not-allowed text-slate-600' : ''
+            }`}
+          />
+        </div>
+
+        {/* Mobile Number Pod */}
+        <div className="relative flex items-center rounded-2xl bg-white border border-slate-300 shadow-2xs overflow-hidden px-4 sm:px-5 py-3.5 sm:py-4 transition-all focus-within:border-slate-800">
+          <div className="flex items-center select-none shrink-0 pr-3 mr-3 border-r border-slate-200">
+            <span className="text-base sm:text-[17px] font-semibold text-slate-700">+91</span>
+          </div>
+          <input
+            type="tel"
+            readOnly={isPhoneFieldReadOnly}
+            maxLength={10}
+            value={displayGuestPhone}
+            onChange={(e) => {
+              if (isPhoneFieldReadOnly) return;
+              setGuestPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
+            }}
+            placeholder="10-digit Mobile Number"
+            className={`w-full bg-transparent text-base sm:text-[17px] font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none ${
+              isPhoneFieldReadOnly ? 'cursor-not-allowed text-slate-600' : ''
+            }`}
+          />
+        </div>
+
+        {/* Person Count Pod (Enlarged − and + buttons, no extra icon) */}
+        <div>
+          <div className="flex items-center justify-between rounded-2xl bg-white border border-slate-300 shadow-2xs px-4 sm:px-5 py-3 sm:py-3.5 select-none">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="text-base sm:text-[17px] font-semibold text-slate-900 truncate">
+                {displayPersonCount} {displayPersonCount === 1 ? 'Person' : 'Persons'}
+              </span>
+              <span className="text-xs sm:text-sm font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
+                Max {maxAllowedPersons}
+              </span>
             </div>
 
-            {/* Total Payable / Booking Amount (₹) */}
-            <div>
-              <label className="block text-[11.5px] font-medium text-slate-700 mb-1">
-                {isPendingBooking ? 'Total Amount (₹)' : 'Total Payable (₹)'}
-              </label>
-              <div className="flex items-center px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 shadow-2xs">
-                <span className="text-slate-400 mr-2 font-bold">₹</span>
-                <span>{reservationDetails?.totalPrice ? reservationDetails.totalPrice.toLocaleString('en-IN') : '0'}</span>
+            <div className="flex items-center gap-2.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setPersonCount((prev) => Math.max(1, prev - 1))}
+                disabled={isPendingBooking || personCount <= 1}
+                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-xl sm:text-2xl font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition-all shadow-xs"
+                title="Decrease person count"
+              >
+                −
+              </button>
+              <span className="text-base sm:text-[17px] font-bold text-slate-900 w-8 text-center">
+                {displayPersonCount}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPersonCount((prev) => Math.min(maxAllowedPersons, prev + 1))}
+                disabled={isPendingBooking || personCount >= maxAllowedPersons}
+                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-xl sm:text-2xl font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition-all shadow-xs"
+                title="Increase person count"
+              >
+                +
+              </button>
+            </div>
+          </div>
+          {displayPersonCount > 1 && (
+            <p className="text-xs sm:text-sm text-slate-600 mt-1.5 px-1 font-medium">
+              Occupies {displayPersonCount} of {roomCapacity} spaces in Room {roomDisplay}.
+            </p>
+          )}
+        </div>
+
+        {/* Aadhar ID Pod (No extra badge icon, same text size) */}
+        <div className="relative flex items-center rounded-2xl bg-white border border-slate-300 shadow-2xs overflow-hidden px-4 sm:px-5 py-3.5 sm:py-4 transition-all focus-within:border-slate-800">
+          <input
+            type="text"
+            readOnly={isPendingBooking}
+            maxLength={14}
+            value={displayGuestAadhar}
+            onChange={(e) => {
+              if (isPendingBooking) return;
+              const digits = e.target.value.replace(/\D/g, '').slice(0, 12);
+              const formatted = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+              setGuestAadhar?.(formatted);
+            }}
+            placeholder="12-digit Aadhar Number"
+            className={`w-full bg-transparent text-base sm:text-[17px] font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none ${
+              isPendingBooking ? 'cursor-not-allowed text-slate-600' : ''
+            }`}
+          />
+        </div>
+
+        {/* Total Payable Summary Row (Same text size) */}
+        <div className="flex items-center justify-between rounded-2xl bg-white border border-slate-300 shadow-2xs px-4 sm:px-5 py-3.5 sm:py-4">
+          <span className="text-base sm:text-[17px] font-semibold text-slate-500">
+            {isPendingBooking ? 'Total Amount' : 'Total Payable'}
+          </span>
+          <div className="flex items-baseline gap-1 text-slate-900">
+            <span className="text-base sm:text-[17px] font-semibold text-slate-400">₹</span>
+            <span className="text-base sm:text-[18px] font-extrabold">
+              {reservationDetails?.totalPrice ? reservationDetails.totalPrice.toLocaleString('en-IN') : '0'}
+            </span>
+          </div>
+        </div>
+
+        {/* Action Button: Fully Rounded Solid Black Console with text "Request Slot" */}
+        <div className="pt-2">
+          {isPendingBooking ? (
+            <div className="flex items-center gap-2">
+              <div className="flex-1 py-4 px-5 rounded-full font-bold text-sm sm:text-base bg-blue-100 border border-blue-300 text-blue-800 flex items-center justify-center gap-2 select-none">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse" />
+                <span>Waiting for Host Approval</span>
               </div>
-            </div>
-
-            {/* Action Button: Confirm & Book Slot OR Pending Host Approval status */}
-            <div className="pt-1">
-              {isPendingBooking ? (
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 py-2.5 px-3 rounded-xl font-bold text-xs bg-blue-50 border border-blue-200 text-blue-700 flex items-center justify-center gap-2 select-none shadow-xs">
-                    <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                    <span>Waiting for Host Approval</span>
-                  </div>
-                  {onCancelPendingBooking && (
-                    <button
-                      type="button"
-                      disabled={cancelling}
-                      onClick={onCancelPendingBooking}
-                      className="py-2.5 px-3 rounded-xl font-bold text-xs border border-rose-200 text-rose-600 hover:bg-rose-50 transition-all cursor-pointer shadow-xs disabled:opacity-50"
-                      title="Cancel pending booking request"
-                    >
-                      {cancelling ? 'Cancelling...' : 'Cancel'}
-                    </button>
-                  )}
-                </div>
-              ) : (
+              {onCancelPendingBooking && (
                 <button
-                  type="submit"
-                  disabled={submitting}
-                  onClick={(e) => {
-                    if (!submitting && typeof onSubmitBooking === 'function') {
-                      onSubmitBooking(e);
-                    }
-                  }}
-                  className="w-full py-2.5 px-4 rounded-xl font-black text-xs transition-all cursor-pointer shadow-sm shadow-[#00e599]/25 disabled:opacity-40 disabled:cursor-not-allowed bg-[#00e599] hover:bg-[#00d68f] text-[#071320] flex items-center justify-center gap-2 active:scale-[0.98]"
+                  type="button"
+                  disabled={cancelling}
+                  onClick={onCancelPendingBooking}
+                  className="py-4 px-6 rounded-full font-bold text-sm sm:text-base border-2 border-rose-300 text-rose-700 hover:bg-rose-50 transition-all cursor-pointer disabled:opacity-50"
+                  title="Cancel pending booking request"
                 >
-                  {submitting ? (
-                    <>
-                      <div className="w-3.5 h-3.5 border-2 border-[#071320] border-t-transparent rounded-full animate-spin" />
-                      <span>Submitting...</span>
-                    </>
-                  ) : (
-                    <span>Confirm &amp; Book Slot</span>
-                  )}
+                  {cancelling ? 'Cancelling...' : 'Cancel'}
                 </button>
               )}
             </div>
-          </form>
+          ) : (
+            <button
+              type="submit"
+              disabled={submitting}
+              onClick={(e) => {
+                if (!submitting && typeof onSubmitBooking === 'function') {
+                  onSubmitBooking(e);
+                }
+              }}
+              className="w-full py-4 px-6 rounded-full font-extrabold text-base sm:text-[17px] transition-all cursor-pointer shadow-xl shadow-black/20 disabled:opacity-40 disabled:cursor-not-allowed bg-black hover:bg-neutral-900 text-white flex items-center justify-center gap-2.5 active:scale-[0.98]"
+            >
+              {submitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Submitting...</span>
+                </>
+              ) : (
+                <span>Request Slot</span>
+              )}
+            </button>
+          )}
+        </div>
+      </form>
+    </div>
+  );
+
+  // If in Modal Mode: Render via Portal to Document Body
+  if (isModal) {
+    if (!isOpen) return null;
+
+    return createPortal(
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        {/* Solid Gray Backdrop: Instant open without animation */}
+        <div
+          onClick={onClose}
+          className="fixed inset-0 bg-[#cdd2da] md:bg-[#1f1b16]/60 cursor-pointer"
+        />
+
+        {/* Modal Card: Solid Gray Background (#e2e5ea), Instant open without animation */}
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="relative z-10 w-full max-w-lg rounded-[28px] bg-[#e2e5ea] border-2 border-slate-300 shadow-2xl overflow-hidden flex flex-col my-auto max-h-[90vh]"
+        >
+          {/* Header: Centered 2x Heading without Cross Button */}
+          <div className="p-5 sm:p-6 border-b border-slate-300 flex items-center justify-center bg-[#e2e5ea]">
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight text-center">
+              Guest Details
+            </h2>
+          </div>
+
+          {/* Modal Body */}
+          <div className="p-4 sm:p-6 overflow-y-auto bg-[#e2e5ea]">
+            {formContent}
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
+  }
+
+  // Embedded Desktop Mode (Tab 3)
+  return (
+    <div className="w-full flex flex-col justify-center my-auto min-h-0">
+      <section className="flex flex-col rounded-[26px] bg-[#e2e5ea] md:bg-white border-2 border-slate-300 md:border-slate-200 shadow-xl overflow-hidden select-none transition-all">
+        {/* Header: Centered 2x Heading */}
+        <div className="px-5 py-4 border-b border-slate-300 md:border-slate-200 flex items-center justify-center bg-[#e2e5ea] md:bg-white">
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight text-center">
+            Guest Details
+          </h2>
+        </div>
+        <div className="p-4 sm:p-5 bg-[#e2e5ea] md:bg-white">
+          {formContent}
         </div>
       </section>
     </div>

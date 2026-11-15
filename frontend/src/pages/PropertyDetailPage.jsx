@@ -11,17 +11,16 @@ import { PropertyOverviewSection } from '../components/room/PropertyOverviewSect
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { toast } from '../context/ToastContext';
 
-import { Login } from '../components/navbar/Login';
 import { Left } from '../components/navbar/Left';
 import { Right } from '../components/navbar/Right';
 
-export function PropertyDetailPage({ onBookClick, onLoginClick }) {
+export function PropertyDetailPage({ onLoginClick }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { isInWishlist, toggleWishlist, wishlist, setIsWishlistOpen } = useWishlist();
-  const { bookings, setIsBookingsOpen } = useBookings();
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const { bookings } = useBookings();
 
   const [stay, setStay] = useState(() => location.state?.stay || null);
   const [loading, setLoading] = useState(() => !location.state?.stay);
@@ -29,7 +28,6 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   const [activeCenterTab, setActiveCenterTab] = useState('property');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const targetStayId = String(id || stay?._id || '');
 
@@ -48,7 +46,6 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
 
   const handleHostTabClick = () => {
     setActiveCenterTab('host');
-    setMobileMenuOpen(false);
   };
 
   const [selectedRateIdx, setSelectedRateIdx] = useState(0);
@@ -57,66 +54,6 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
   const [newReviewText, setNewReviewText] = useState('');
   const [newRating, setNewRating] = useState(5);
   const [submittingReview, setSubmittingReview] = useState(false);
-
-  const [editingReviewId, setEditingReviewId] = useState(null);
-  const [editReviewText, setEditReviewText] = useState('');
-  const [editReviewRating, setEditReviewRating] = useState(5);
-
-  const startEditingReview = (rev) => {
-    setEditingReviewId(rev._id);
-    setEditReviewText(rev.text || rev.comment || '');
-    setEditReviewRating(rev.rating || 5);
-  };
-
-  const cancelEditingReview = () => {
-    setEditingReviewId(null);
-    setEditReviewText('');
-    setEditReviewRating(5);
-  };
-
-  const handleSaveEditReview = async (reviewId) => {
-    if (!editReviewText.trim()) return;
-
-    setReviews((prev) =>
-      prev.map((r) => {
-        if (String(r._id) === String(reviewId)) {
-          return { ...r, text: editReviewText.trim(), comment: editReviewText.trim(), rating: editReviewRating };
-        }
-        return r;
-      })
-    );
-
-    const targetId = id || stay?._id;
-    cancelEditingReview();
-
-    try {
-      await staysAPI.updateReview(targetId, reviewId, {
-        rating: editReviewRating,
-        comment: editReviewText.trim(),
-        text: editReviewText.trim(),
-      });
-      toast.success('Your review has been updated!');
-    } catch (err) {
-      console.warn('API error updating review:', err);
-      toast.success('Your review has been updated!');
-    }
-  };
-
-  const handleDeleteReview = async (reviewId) => {
-    if (!window.confirm('Are you sure you want to delete this review?')) return;
-
-    setReviews((prev) => prev.filter((r) => String(r._id) !== String(reviewId)));
-
-    const targetId = id || stay?._id;
-
-    try {
-      await staysAPI.deleteReview(targetId, reviewId);
-      toast.success('Review deleted successfully!');
-    } catch (err) {
-      console.warn('API error deleting review:', err);
-      toast.success('Review deleted successfully!');
-    }
-  };
 
   useEffect(() => {
     if (!isLightboxOpen) return;
@@ -226,7 +163,9 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
           }
         };
       }
-    } catch {}
+    } catch {
+      /* ignore broadcast channel error */
+    }
 
     return () => {
       clearInterval(interval);
@@ -239,7 +178,9 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
       if (bc) {
         try {
           bc.close();
-        } catch {}
+        } catch {
+          /* ignore close error */
+        }
       }
     };
   }, [id, fetchStayData]);
@@ -313,18 +254,6 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
 
   const hasRoomRates = Array.isArray(stay.roomRates) && stay.roomRates.length > 0;
   const activeRateObj = hasRoomRates ? (stay.roomRates[selectedRateIdx] || stay.roomRates[0]) : null;
-
-  const displayExactPrice = activeRateObj
-    ? (String(activeRateObj.price).startsWith('₹') ? activeRateObj.price : `₹${Number(activeRateObj.price).toLocaleString('en-IN')}`)
-    : (stay.price ? (String(stay.price).startsWith('₹') ? stay.price : `₹${Number(stay.price).toLocaleString('en-IN')}`) : `₹${pricing.primaryPrice}`);
-
-  const displayExactUnit = activeRateObj
-    ? (activeRateObj.rateUnit || pricing.primaryUnit)
-    : pricing.primaryUnit;
-
-  const displayRateName = activeRateObj
-    ? (activeRateObj.type || 'Standard Rate')
-    : 'Host Listed Rate';
 
   const handleNavigateToRooms = (customCategory) => {
     const rateToUse = customCategory
@@ -402,24 +331,24 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 transition-colors duration-300 font-body-md host-font-scope antialiased">
-      {/* ── TOP FLOATING NAVIGATION CAPSULES (MATCHING SEARCH / EXPLORE NAVBAR STYLE) ── */}
+      {/* â”€â”€ TOP FLOATING NAVIGATION CAPSULES (MATCHING SEARCH / EXPLORE NAVBAR STYLE) â”€â”€ */}
       <header className="relative w-full pointer-events-none select-none z-50">
         {/* 1. Left Island: Back button (Property type badge shifted to media section image) */}
         <Left showBadge={false} fallbackUrl="/explore" />
 
-        {/* 2. Center Island: Segmented Tabs (Property | Host | Reviews) - Aligned to same row on all devices */}
-        <div className="fixed top-3.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center pointer-events-auto max-w-[calc(100vw-110px)] sm:max-w-none">
-          <nav className="apple-liquid-nav relative flex items-center h-8 sm:h-9 p-0.5 sm:p-1 rounded-full border border-slate-200/80 shadow-sm">
+        {/* 2. Center Island: Segmented Tabs (Property | Host | Reviews) - Same size & height as Back Button */}
+        <div className="fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center pointer-events-auto select-none max-w-[calc(100vw-110px)] sm:max-w-none h-13 sm:h-[54px]">
+          <nav className="relative flex items-center h-13 sm:h-[54px] p-1 sm:p-1.5 rounded-full bg-white border border-slate-200/90 shadow-sm select-none">
             <button
               type="button"
               onClick={() => setActiveCenterTab('property')}
-              className={`relative z-10 h-full py-0 px-2 sm:px-3 md:px-4 rounded-full text-[11px] sm:text-xs md:text-sm font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 md:gap-2 select-none shrink-0 ${
+              className={`relative z-10 h-11 sm:h-12 px-3 sm:px-4 md:px-5 rounded-full text-sm sm:text-base font-medium tracking-tight transition-all duration-150 cursor-pointer flex items-center gap-1.5 select-none shrink-0 active:scale-95 ${
                 activeCenterTab === 'property'
-                  ? 'text-white font-semibold'
-                  : 'text-slate-600 hover:text-slate-900 font-medium'
+                  ? 'text-white'
+                  : 'text-slate-600 hover:text-[#1f1b16]'
               }`}
             >
-              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-4 h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                 <polyline points="9 22 9 12 15 12 15 22" />
               </svg>
@@ -427,7 +356,7 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
               {activeCenterTab === 'property' && (
                 <motion.div
                   layoutId="capsuleTabPillUnified"
-                  className="absolute inset-0 bg-slate-950 rounded-full -z-10 shadow-sm"
+                  className="absolute inset-0 bg-[#1f1b16] rounded-full -z-10 shadow-xs"
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
@@ -436,13 +365,13 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
             <button
               type="button"
               onClick={handleHostTabClick}
-              className={`relative z-10 h-full py-0 px-2 sm:px-3 md:px-4 rounded-full text-[11px] sm:text-xs md:text-sm font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 md:gap-2 select-none shrink-0 ${
+              className={`relative z-10 h-11 sm:h-12 px-3 sm:px-4 md:px-5 rounded-full text-sm sm:text-base font-medium tracking-tight transition-all duration-150 cursor-pointer flex items-center gap-1.5 select-none shrink-0 active:scale-95 ${
                 activeCenterTab === 'host'
-                  ? 'text-white font-semibold'
-                  : 'text-slate-600 hover:text-slate-900 font-medium'
+                  ? 'text-white'
+                  : 'text-slate-600 hover:text-[#1f1b16]'
               }`}
             >
-              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-4 h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
@@ -450,7 +379,7 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
               {activeCenterTab === 'host' && (
                 <motion.div
                   layoutId="capsuleTabPillUnified"
-                  className="absolute inset-0 bg-slate-950 rounded-full -z-10 shadow-sm"
+                  className="absolute inset-0 bg-[#1f1b16] rounded-full -z-10 shadow-xs"
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
@@ -459,20 +388,20 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
             <button
               type="button"
               onClick={() => setActiveCenterTab('reviews')}
-              className={`relative z-10 h-full py-0 px-2 sm:px-3 md:px-4 rounded-full text-[11px] sm:text-xs md:text-sm font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1 sm:gap-1.5 md:gap-2 select-none shrink-0 ${
+              className={`relative z-10 h-11 sm:h-12 px-3 sm:px-4 md:px-5 rounded-full text-sm sm:text-base font-medium tracking-tight transition-all duration-150 cursor-pointer flex items-center gap-1.5 select-none shrink-0 active:scale-95 ${
                 activeCenterTab === 'reviews'
-                  ? 'text-white font-semibold'
-                  : 'text-slate-600 hover:text-slate-900 font-medium'
+                  ? 'text-white'
+                  : 'text-slate-600 hover:text-[#1f1b16]'
               }`}
             >
-              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-4 h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
               </svg>
               <span>Reviews ({reviews.length})</span>
               {activeCenterTab === 'reviews' && (
                 <motion.div
                   layoutId="capsuleTabPillUnified"
-                  className="absolute inset-0 bg-slate-950 rounded-full -z-10 shadow-sm"
+                  className="absolute inset-0 bg-[#1f1b16] rounded-full -z-10 shadow-xs"
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
@@ -485,9 +414,9 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
       </header>
 
       {/* MAIN CONTENT DISPLAY */}
-      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 lg:pt-26 pb-24 min-h-[calc(100vh-4.5rem)]">
+      <main className={`max-w-[1600px] mx-auto px-0 sm:px-6 lg:px-8 ${activeCenterTab === 'property' ? 'pt-0' : 'pt-16'} sm:pt-20 lg:pt-26 pb-0 sm:pb-24 min-h-screen`}>
         {activeCenterTab === 'property' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-8 items-start">
             <ErrorBoundary>
               <PropertyMediaSection
                 stay={stay}
@@ -550,23 +479,6 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
         )}
       </main>
 
-      {/* FIXED BOTTOM MOBILE BOOKING BAR */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-slate-200 p-3 sm:hidden flex items-center justify-between">
-        <div>
-          <span className="text-[9px] text-slate-400 uppercase font-medium">{displayRateName}</span>
-          <div className="text-sm font-bold text-slate-900">
-            {displayExactPrice} <span className="text-[9px] text-slate-500 font-normal">{displayExactUnit}</span>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => handleNavigateToRooms(activeRateObj?.type)}
-          className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs transition-colors cursor-pointer shadow-xs active:scale-95"
-        >
-          Check Room
-        </button>
-      </div>
-
       {/* FULLSCREEN LIGHTBOX PHOTO VIEWER MODAL */}
       <AnimatePresence>
         {isLightboxOpen && (
@@ -575,42 +487,31 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
-            className="fixed inset-0 z-[99999] bg-black/94 backdrop-blur-2xl flex flex-col justify-between p-3 sm:p-6 select-none overflow-hidden cursor-pointer"
+            className="fixed inset-0 z-[99999] bg-[#22262e] flex flex-col justify-between p-3 sm:p-6 select-none overflow-hidden cursor-pointer"
             onClick={() => setIsLightboxOpen(false)}
           >
-            <div className="flex items-center justify-between z-20 w-full max-w-7xl mx-auto pt-1 sm:pt-2 pointer-events-auto">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-white/10 text-white flex items-center justify-center font-bold text-sm shrink-0 border border-white/15">
-                  🖼️
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-sm sm:text-base font-bold text-white truncate">
-                    {stay?.propertyName || stay?.title}
-                  </h3>
-                  <p className="text-xs text-slate-400 font-medium">
-                    Photo {activePhotoIdx + 1} of {allImages.length} • Click outside to exit
-                  </p>
-                </div>
-              </div>
+            {/* Top Bar with counter & close button */}
+            <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-2 pt-1 z-30">
+              <span className="px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-white font-semibold text-xs sm:text-sm tracking-wide">
+                {activePhotoIdx + 1} / {allImages.length}
+              </span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsLightboxOpen(false);
+                }}
+                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 text-white flex items-center justify-center border border-white/20 transition-all cursor-pointer backdrop-blur-md shadow-md"
+                aria-label="Close photo viewer"
+              >
+                <svg className="w-5 h-5 text-white stroke-[2.2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <line x1="18" y1="6" x2="6" y2="18" strokeLinecap="round" strokeLinejoin="round" />
+                  <line x1="6" y1="6" x2="18" y2="18" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
             </div>
 
             <div className="relative flex-1 flex items-center justify-center my-2 max-w-7xl mx-auto w-full min-h-0">
-              {allImages.length > 1 && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActivePhotoIdx((prev) => (prev === 0 ? allImages.length - 1 : prev - 1));
-                  }}
-                  className="absolute left-2 sm:left-6 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/95 hover:bg-white text-slate-800 shadow-xl border border-slate-200/80 flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95 backdrop-blur-md"
-                  title="Previous Photo"
-                >
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-slate-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="15 18 9 12 15 6" />
-                  </svg>
-                </button>
-              )}
-
               <AnimatePresence mode="wait">
                 <motion.img
                   key={activePhotoIdx}
@@ -621,29 +522,13 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.96 }}
                   transition={{ duration: 0.15, ease: 'easeOut' }}
-                  className="max-h-[70vh] sm:max-h-[76vh] max-w-[92vw] object-contain rounded-2xl shadow-2xl border border-white/10 cursor-default"
+                  className="max-h-[62vh] sm:max-h-[68vh] max-w-[92vw] object-contain rounded-2xl sm:rounded-3xl shadow-2xl border border-white/10 cursor-default"
                 />
               </AnimatePresence>
-
-              {allImages.length > 1 && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActivePhotoIdx((prev) => (prev === allImages.length - 1 ? 0 : prev + 1));
-                  }}
-                  className="absolute right-2 sm:right-6 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/95 hover:bg-white text-slate-800 shadow-xl border border-slate-200/80 flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95 backdrop-blur-md"
-                  title="Next Photo"
-                >
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-slate-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </button>
-              )}
             </div>
 
             {allImages.length > 1 && (
-              <div className="w-full max-w-4xl mx-auto flex items-center justify-center gap-2 overflow-x-auto py-2 px-2 select-none z-20 scrollbar-none">
+              <div className="w-full max-w-5xl mx-auto flex items-center justify-start sm:justify-center gap-3 sm:gap-4 overflow-x-auto py-3 sm:py-5 px-4 select-none z-20 scrollbar-none snap-x">
                 {allImages.map((imgUrl, idx) => (
                   <button
                     key={idx}
@@ -652,13 +537,13 @@ export function PropertyDetailPage({ onBookClick, onLoginClick }) {
                       e.stopPropagation();
                       setActivePhotoIdx(idx);
                     }}
-                    className={`relative w-12 h-12 sm:w-16 sm:h-16 rounded-xl overflow-hidden shrink-0 border-2 transition-all duration-200 cursor-pointer ${
+                    className={`relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl overflow-hidden shrink-0 border-2 transition-all duration-200 cursor-pointer snap-start ${
                       idx === activePhotoIdx
-                        ? 'border-cyan-400 scale-105 shadow-[0_0_15px_rgba(34,211,238,0.5)] ring-2 ring-cyan-400/50'
-                        : 'border-white/20 opacity-60 hover:opacity-100 hover:border-white/50'
+                        ? 'border-white scale-105 shadow-[0_8px_24px_rgba(0,0,0,0.5)] ring-2 ring-white/70'
+                        : 'border-white/25 opacity-60 hover:opacity-100 hover:border-white/60 hover:scale-100'
                     }`}
                   >
-                    <img decoding="async" loading="lazy" src={imgUrl} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                    <img decoding="async" loading="lazy" src={imgUrl} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover rounded-2xl" />
                   </button>
                 ))}
               </div>

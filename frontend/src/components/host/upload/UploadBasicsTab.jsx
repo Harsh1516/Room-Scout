@@ -1,8 +1,7 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { User, Phone, Mail, Building, Building2, Home } from 'lucide-react';
 
-export const PROPERTY_TYPES = [
+const PROPERTY_TYPES = [
   {
     label: 'PG',
     desc: 'Paying Guest / Student co-living stay',
@@ -20,7 +19,7 @@ export const PROPERTY_TYPES = [
   },
 ];
 
-export const GENDER_OPTIONS = [
+const GENDER_OPTIONS = [
   {
     label: 'Male',
     value: 'Male',
@@ -79,24 +78,24 @@ export function UploadBasicsTab({
       <div className="space-y-2.5 sm:space-y-3">
         {/* Mobile-Only Heading (Outside, Centered with Email Badge Below) */}
         <div className="md:hidden flex flex-col items-center justify-center text-center gap-1.5 px-1 mb-2">
-          <h2 className="text-[22px] font-black text-white tracking-tight">
+          <h2 className="text-[22px] font-bold text-slate-900 tracking-tight">
             Host Details
           </h2>
           {formData.email && (
             <span
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-white/10 text-purple-100 border border-white/15"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/90 backdrop-blur-md text-slate-800 border border-slate-200/80 shadow-xs"
               title={formData.email}
             >
-              <Mail className="w-3.5 h-3.5 text-purple-300" />
+              <Mail className="w-3.5 h-3.5 text-slate-700 shrink-0" />
               <span className="truncate max-w-[260px]">{formData.email}</span>
             </span>
           )}
         </div>
 
-        {/* Card Body: Purple on Mobile, Clean White/Dark on Desktop */}
+        {/* Card Body */}
         <section className="rounded-2xl sm:rounded-3xl border shadow-lg transition-colors
-          max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:p-4 max-md:shadow-black/20
-          md:bg-white md: md:border-slate-200/90 md: md:p-3.5 md:sm:p-4 md:shadow-black/5 md:(255,255,255,0.04)]"
+          max-md:bg-white/85 max-md:backdrop-blur-xl max-md:border max-md:border-white/95 max-md:shadow-[0_12px_32px_-4px_rgba(14,116,144,0.07),0_2px_8px_rgba(0,0,0,0.02),inset_0_1px_0_rgba(255,255,255,1)] max-md:p-4.5
+          md:bg-white md:border-slate-200/90 md:p-3.5 md:sm:p-4 md:shadow-black/5"
         >
           {/* Desktop-Only Heading Inside Card */}
           <div className="hidden md:flex flex-col items-center justify-center gap-1 pb-2 border-b border-slate-100 text-center">
@@ -118,10 +117,9 @@ export function UploadBasicsTab({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-5 md:gap-3 md:pt-3.5">
             {/* Host Full Name */}
             <div className="space-y-1.5">
-
               <div className="relative flex items-center">
-                <span className="absolute left-3.5 text-purple-300 md:text-slate-400 md: pointer-events-none">
-                  <User className="w-5 h-5" />
+                <span className="absolute left-3.5 z-10 text-slate-600 pointer-events-none flex items-center">
+                  <User className="w-4.5 h-4.5 text-slate-500 stroke-[2]" />
                 </span>
                 <input
                   type="text"
@@ -139,9 +137,9 @@ export function UploadBasicsTab({
                     }
                   }}
                   placeholder="Host Name *"
-                  className={`w-full h-11 sm:h-11.5 md:h-10 pl-11 md:pl-10 pr-4 rounded-xl border text-[14px] sm:text-lg md:text-xs focus:outline-none transition-all
-                    max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
-                    md:bg-slate-50/70 md: md:border-slate-200 md: md:text-slate-900 md: md:placeholder:text-slate-400 md: md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 md:focus:bg-white md: ${
+                  className={`w-full h-11 sm:h-11.5 md:h-10 pl-11 md:pl-10 pr-4 rounded-xl border text-[14px] sm:text-base md:text-xs focus:outline-none transition-all
+                    max-md:bg-white/90 max-md:backdrop-blur-sm max-md:border-0 max-md:text-slate-800 max-md:font-normal max-md:placeholder:text-slate-400 max-md:shadow-[0_1px_3px_rgba(0,0,0,0.04)] max-md:focus:bg-white max-md:focus:ring-2 max-md:focus:ring-sky-400/20
+                    md:bg-slate-50/70 md:border-slate-200 md:text-slate-900 md:placeholder:text-slate-400 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 md:focus:bg-white ${
                     fieldErrors.name
                       ? 'border-rose-400/60 focus:border-rose-400/60 ring-2 ring-rose-500/20 bg-rose-500/10'
                       : ''
@@ -155,11 +153,10 @@ export function UploadBasicsTab({
 
             {/* Host Mobile Number */}
             <div className="space-y-1.5">
-
               <div className="relative flex items-center">
-                <div className="absolute left-3 flex items-center gap-1.5 pointer-events-none text-purple-300 md:text-slate-500 md:">
-                  <Phone className="w-4 h-4" />
-                  <span className="text-xs sm:text-sm font-bold pr-2 border-r max-md:text-purple-200 max-md:border-purple-300/30 md:text-slate-700 md: md:border-slate-300 md:">
+                <div className="absolute left-3.5 z-10 flex items-center gap-1.5 pointer-events-none text-slate-600">
+                  <Phone className="w-4 h-4 text-slate-500 stroke-[2]" />
+                  <span className="text-xs sm:text-sm font-medium pr-2 border-r max-md:text-slate-700 max-md:border-slate-200 md:text-slate-700 md:border-slate-300">
                     +91
                   </span>
                 </div>
@@ -180,9 +177,9 @@ export function UploadBasicsTab({
                     }
                   }}
                   placeholder="Mobile Number *"
-                  className={`w-full h-11 sm:h-11.5 md:h-10 pl-19 md:pl-17 pr-4 rounded-xl border text-[14px] sm:text-lg md:text-xs focus:outline-none transition-all
-                    max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
-                    md:bg-slate-50/70 md: md:border-slate-200 md: md:text-slate-900 md: md:placeholder:text-slate-400 md: md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 md:focus:bg-white md: ${
+                  className={`w-full h-11 sm:h-11.5 md:h-10 pl-19 md:pl-17 pr-4 rounded-xl border text-[14px] sm:text-base md:text-xs focus:outline-none transition-all
+                    max-md:bg-white/90 max-md:backdrop-blur-sm max-md:border-0 max-md:text-slate-800 max-md:font-normal max-md:placeholder:text-slate-400 max-md:shadow-[0_1px_3px_rgba(0,0,0,0.04)] max-md:focus:bg-white max-md:focus:ring-2 max-md:focus:ring-sky-400/20
+                    md:bg-slate-50/70 md:border-slate-200 md:text-slate-900 md:placeholder:text-slate-400 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 md:focus:bg-white ${
                     fieldErrors.phone
                       ? 'border-rose-400/60 focus:border-rose-400/60 ring-2 ring-rose-500/20 bg-rose-500/10'
                       : ''
@@ -201,15 +198,15 @@ export function UploadBasicsTab({
       <div className="space-y-2.5 sm:space-y-3 md:pt-1">
         {/* Mobile-Only Heading (Outside, Centered) */}
         <div className="md:hidden text-center px-1 mb-2 mt-4">
-          <h2 className="text-[22px] font-black text-white tracking-tight">
+          <h2 className="text-[22px] font-bold text-slate-900 tracking-tight">
             Property Overview
           </h2>
         </div>
 
-        {/* Card Body: Purple on Mobile, Clean White/Dark on Desktop */}
+        {/* Card Body */}
         <section className="rounded-2xl sm:rounded-3xl border shadow-lg transition-colors space-y-5 sm:space-y-6 md:space-y-2.5
-          max-md:bg-[#5a1060] max-md:border-purple-300/20 max-md:p-4 max-md:shadow-black/20
-          md:bg-white md: md:border-slate-200/90 md: md:p-3.5 md:sm:p-4 md:shadow-black/5 md:(255,255,255,0.04)]"
+          max-md:bg-white/85 max-md:backdrop-blur-xl max-md:border max-md:border-white/95 max-md:shadow-[0_12px_32px_-4px_rgba(14,116,144,0.07),0_2px_8px_rgba(0,0,0,0.02),inset_0_1px_0_rgba(255,255,255,1)] max-md:p-4.5
+          md:bg-white md:border-slate-200/90 md:p-3.5 md:sm:p-4 md:shadow-black/5"
         >
           {/* Desktop-Only Heading Inside Card */}
           <div className="hidden md:block pb-2 sm:pb-2.5 border-b border-slate-100 text-center">
@@ -220,7 +217,6 @@ export function UploadBasicsTab({
 
           {/* Property Name Input */}
           <div className="space-y-1.5">
-
             <input
               type="text"
               required
@@ -237,9 +233,9 @@ export function UploadBasicsTab({
                 }
               }}
               placeholder="Property Name *"
-              className={`w-full h-11 sm:h-11.5 md:h-10 px-4 md:px-3.5 rounded-xl border text-[14px] sm:text-lg md:text-xs focus:outline-none transition-all
-                max-md:bg-white/10 max-md:border-white/15 max-md:text-white max-md:placeholder:text-purple-200/60 max-md:focus:border-purple-300/60 max-md:focus:ring-2 max-md:focus:ring-purple-300/15
-                md:bg-slate-50/70 md: md:border-slate-200 md: md:text-slate-900 md: md:placeholder:text-slate-400 md: md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 md:focus:bg-white md: ${
+              className={`w-full h-11 sm:h-11.5 md:h-10 px-4 md:px-3.5 rounded-xl border text-[14px] sm:text-base md:text-xs focus:outline-none transition-all
+                max-md:bg-white/90 max-md:backdrop-blur-sm max-md:border-0 max-md:text-slate-800 max-md:font-normal max-md:placeholder:text-slate-400 max-md:shadow-[0_1px_3px_rgba(0,0,0,0.04)] max-md:focus:bg-white max-md:focus:ring-2 max-md:focus:ring-sky-400/20
+                md:bg-slate-50/70 md:border-slate-200 md:text-slate-900 md:placeholder:text-slate-400 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 md:focus:bg-white ${
                 fieldErrors.propertyName
                   ? 'border-rose-400/60 focus:border-rose-400/60 ring-2 ring-rose-500/20 bg-rose-500/10'
                   : ''
@@ -252,7 +248,7 @@ export function UploadBasicsTab({
 
           {/* Property Type Grid */}
           <div className="space-y-2">
-            <label className="block text-xs sm:text-sm md:text-[11px] font-bold uppercase tracking-wider max-md:text-purple-200 md:text-slate-700 md:">
+            <label className="block text-xs sm:text-sm md:text-[11px] font-bold uppercase tracking-wider max-md:text-slate-800 max-md:font-bold max-md:uppercase max-md:text-xs max-md:tracking-wider md:text-slate-700">
               Property Category <span className="text-rose-300 md:text-rose-500">*</span>
             </label>
             <div className="grid grid-cols-3 gap-3 sm:gap-4">
@@ -267,21 +263,21 @@ export function UploadBasicsTab({
                     onClick={() => setFormData({ ...formData, propertyType: pt.label })}
                     className={`group relative aspect-square p-3 sm:p-5 max-md:rounded-2xl md:aspect-auto md:py-2 md:px-2 md:rounded-xl border transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center gap-2 md:gap-1 select-none active:scale-95 ${
                       isSelected
-                        ? 'max-md:bg-white/20 max-md:border-2 max-md:border-white/60 md:bg-emerald-50/70 md: md:border-2 md:border-[#006C4A] md: shadow-sm'
-                        : 'max-md:bg-white/10 max-md:border-white/15 max-md:hover:bg-white/20 md:bg-slate-50/60 md: md:hover:bg-slate-100/80 md: md:border-slate-200 md:'
+                        ? 'max-md:bg-gradient-to-br max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:border-0 max-md:shadow-[0_8px_20px_rgba(14,165,233,0.32),inset_0_1px_1px_rgba(255,255,255,0.4)] md:bg-emerald-50/70 md:border-2 md:border-[#006C4A] shadow-sm'
+                        : 'max-md:bg-white/75 max-md:backdrop-blur-md max-md:border max-md:border-slate-300/80 max-md:hover:bg-white max-md:shadow-[0_2px_8px_rgba(15,23,42,0.04)] md:bg-slate-50/60 md:hover:bg-slate-100/80 md:border-slate-200'
                     }`}
                   >
                     <span
                       className={`w-12 h-12 sm:w-14 sm:h-14 md:w-8 md:h-8 rounded-2xl md:rounded-lg flex items-center justify-center transition-colors ${
                         isSelected
-                          ? 'max-md:bg-white max-md:text-[#3d0c40] md:bg-[#006C4A] md:text-white shadow-xs'
-                          : 'max-md:bg-white/10 max-md:text-white max-md:border max-md:border-white/20 md:bg-white md: md:text-slate-700 md: md:border md:border-slate-200/80 md:'
+                          ? 'max-md:bg-white max-md:text-[#0284c7] max-md:shadow-xs md:bg-[#006C4A] md:text-white shadow-xs'
+                          : 'max-md:bg-white max-md:text-slate-800 max-md:border max-md:border-slate-200 max-md:shadow-2xs md:bg-white md:text-slate-700 md:border md:border-slate-200/80'
                       }`}
                     >
                       <IconComp className="w-6 h-6 sm:w-7 sm:h-7 md:w-4 md:h-4" />
                     </span>
 
-                    <span className="text-sm sm:text-base md:text-xs font-black max-md:text-white md:text-slate-900 md:">
+                    <span className={`text-sm sm:text-base md:text-xs ${isSelected ? "max-md:text-white font-bold" : "max-md:text-slate-900 font-bold"} md:text-slate-900`}>
                       {pt.label}
                     </span>
                   </button>
@@ -295,7 +291,7 @@ export function UploadBasicsTab({
 
           {/* Available For Gender Preference */}
           <div className="space-y-2">
-            <label className="block text-xs sm:text-sm md:text-[11px] font-bold uppercase tracking-wider max-md:text-purple-200 md:text-slate-700 md:">
+            <label className="block text-xs sm:text-sm md:text-[11px] font-bold uppercase tracking-wider max-md:text-slate-800 max-md:font-bold max-md:uppercase max-md:text-xs max-md:tracking-wider md:text-slate-700">
               Available For (Gender Policy) <span className="text-rose-300 md:text-rose-500">*</span>
             </label>
             <div className="grid grid-cols-3 gap-3 sm:gap-4">
@@ -313,21 +309,21 @@ export function UploadBasicsTab({
                     onClick={() => setFormData({ ...formData, genderType: g.value })}
                     className={`group relative aspect-square p-3 sm:p-5 max-md:rounded-2xl md:aspect-auto md:py-2 md:px-2 md:rounded-xl border transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center gap-2 md:gap-1 select-none active:scale-95 ${
                       isSelected
-                        ? 'max-md:bg-white/20 max-md:border-2 max-md:border-white/60 md:bg-emerald-50/70 md: md:border-2 md:border-[#006C4A] md: shadow-sm'
-                        : 'max-md:bg-white/10 max-md:border-white/15 max-md:hover:bg-white/20 md:bg-slate-50/60 md: md:hover:bg-slate-100/80 md: md:border-slate-200 md:'
+                        ? 'max-md:bg-gradient-to-br max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:border-0 max-md:shadow-[0_8px_20px_rgba(14,165,233,0.32),inset_0_1px_1px_rgba(255,255,255,0.4)] md:bg-emerald-50/70 md:border-2 md:border-[#006C4A] shadow-sm'
+                        : 'max-md:bg-white/75 max-md:backdrop-blur-md max-md:border max-md:border-slate-300/80 max-md:hover:bg-white max-md:shadow-[0_2px_8px_rgba(15,23,42,0.04)] md:bg-slate-50/60 md:hover:bg-slate-100/80 md:border-slate-200'
                     }`}
                   >
                     <span
                       className={`w-12 h-12 sm:w-14 sm:h-14 md:w-8 md:h-8 rounded-2xl md:rounded-lg flex items-center justify-center transition-colors ${
                         isSelected
-                          ? 'max-md:bg-white max-md:text-[#3d0c40] md:bg-[#006C4A] md:text-white shadow-xs'
-                          : 'max-md:bg-white/10 max-md:text-white max-md:border max-md:border-white/20 md:bg-white md: md:text-slate-700 md: md:border md:border-slate-200/80 md:'
+                          ? 'max-md:bg-white max-md:text-[#0284c7] max-md:shadow-xs md:bg-[#006C4A] md:text-white shadow-xs'
+                          : 'max-md:bg-white max-md:text-slate-800 max-md:border max-md:border-slate-200 max-md:shadow-2xs md:bg-white md:text-slate-700 md:border md:border-slate-200/80'
                       }`}
                     >
                       {g.icon}
                     </span>
 
-                    <span className="text-sm sm:text-base md:text-xs font-black max-md:text-white md:text-slate-900 md:">
+                    <span className={`text-sm sm:text-base md:text-xs ${isSelected ? "max-md:text-white font-bold" : "max-md:text-slate-900 font-bold"} md:text-slate-900`}>
                       {g.label}
                     </span>
                   </button>

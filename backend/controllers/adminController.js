@@ -520,6 +520,13 @@ export const createHost = async (req, res, next) => {
               price: rr.price,
               rateUnit: rr.rateUnit,
               capacity: Number(rr.capacity) || 1,
+              features: Array.isArray(rr.features) ? rr.features : [],
+              photos: Array.isArray(rr.photos)
+                ? rr.photos
+                : (rr.photos && typeof rr.photos === 'object' ? Object.entries(rr.photos).map(([label, url]) => ({ label, url })) : []),
+              images: Array.isArray(rr.images)
+                ? rr.images
+                : (Array.isArray(rr.photos) ? rr.photos.map((p) => (typeof p === 'string' ? p : p.url)).filter(Boolean) : []),
             }))
           : []
         : (existingStay?.roomRates || []);

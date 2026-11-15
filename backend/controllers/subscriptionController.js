@@ -342,7 +342,7 @@ export async function getHostSubscriptionStatus(req, res, next) {
     }
 
     const stay = await Stay.findOne({ hostId: host._id })
-      .select('title propertyName type location city images isPublished subscription roomRates rooms')
+      .select('title propertyName type location city images isPublished subscription roomRates rooms isApproved')
       .lean();
 
     // Check expiration and sync state
@@ -364,7 +364,9 @@ export async function getHostSubscriptionStatus(req, res, next) {
       }
     }
 
-    const isLive = currentStatus === 'ACTIVE' && Boolean(expiresAt && expiresAt > now) && Boolean(stay?.isApproved);
+    const hasActiveSubscription = currentStatus === 'ACTIVE' && Boolean(expiresAt && expiresAt > now);
+    const isApprovedHostOrStay = host.status === 'Approved' || Boolean(host.isApproved) || (stay ? Boolean(stay.isApproved) : true);
+    const isLive = hasActiveSubscription && isApprovedHostOrStay;
     const daysRemaining = expiresAt && expiresAt > now
       ? Math.max(0, Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
       : 0;
@@ -389,7 +391,7 @@ export async function getHostSubscriptionStatus(req, res, next) {
     return res.json({
       success: true,
       subscription: {
-        status: isLive ? 'ACTIVE' : currentStatus,
+        status: hasActiveSubscription ? 'ACTIVE' : currentStatus,
         planCode: host.subscription?.planCode || 'none',
         planLabel: host.subscription?.planLabel || 'No Active Plan',
         durationMonths: host.subscription?.durationMonths || 0,
@@ -751,6 +753,14 @@ export async function verifySubscriptionRequest(req, res, next) {
         }
       );
 
+      // Notify host instantly via Server-Sent Events (SSE)
+      notifyHostSubscriptionVerified(host._id, {
+        planCode: request.planCode,
+        planLabel: request.planLabel,
+        expiresAt: newExpiresAt,
+        status: 'ACTIVE',
+      });
+
       return res.json({
         success: true,
         message: isApprovedHost
@@ -778,6 +788,11 @@ export async function verifySubscriptionRequest(req, res, next) {
           );
         }
       }
+
+      notifyHostSubscriptionVerified(host._id, {
+        status: 'REJECTED',
+        rejectionReason: request.rejectionReason,
+      });
 
       return res.json({
         success: true,
@@ -856,6 +871,13 @@ export async function manualActivateSubscription(req, res, next) {
         },
       }
     );
+
+    notifyHostSubscriptionVerified(host._id, {
+      planCode: code,
+      planLabel: host.subscription.planLabel,
+      expiresAt: newExpiresAt,
+      status: 'ACTIVE',
+    });
 
     return res.json({
       success: true,
@@ -1067,6 +1089,14 @@ export async function bulkVerifySubscriptions(req, res, next) {
         hostName: host.name,
         expiresAt: newExpiresAt,
       });
+
+      // Notify host in real-time
+      notifyHostSubscriptionVerified(host._id, {
+        planCode: request.planCode,
+        planLabel: request.planLabel,
+        expiresAt: newExpiresAt,
+        status: 'ACTIVE',
+      });
     }
 
     return res.json({
@@ -1224,5 +1254,123 @@ export async function extractStatementUtrs(req, res, next) {
     return next(error);
   }
 }
+
+// ── Active SSE client connections map: hostId / email / userId -> Set of response objects ──
+const sseClients = new Map();
+
+export async function notifyHostSubscriptionVerified(hostIdOrIdentifier, data = {}) {
+  if (!hostIdOrIdentifier) return;
+  try {
+    const keysToNotify = new Set([String(hostIdOrIdentifier)]);
+
+    let host = null;
+    if (mongoose.Types.ObjectId.isValid(hostIdOrIdentifier)) {
+      host = await Host.findById(hostIdOrIdentifier).select('_id email userId').lean();
+    }
+    if (!host && typeof hostIdOrIdentifier === 'string' && hostIdOrIdentifier.includes('@')) {
+      host = await Host.findOne({ email: hostIdOrIdentifier.toLowerCase().trim() }).select('_id email userId').lean();
+    }
+
+    if (host) {
+      if (host._id) keysToNotify.add(String(host._id));
+      if (host.email) keysToNotify.add(host.email.toLowerCase().trim());
+      if (host.userId) keysToNotify.add(String(host.userId));
+    }
+
+    const payload = `data: ${JSON.stringify({ type: 'SUBSCRIPTION_VERIFIED', ...data })}\n\n`;
+    for (const key of keysToNotify) {
+      const clientSet = sseClients.get(key);
+      if (clientSet && clientSet.size > 0) {
+        for (const res of clientSet) {
+          try {
+            res.write(payload);
+          } catch (err) {
+            console.warn('Failed to send SSE to host:', err);
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('notifyHostSubscriptionVerified error:', err);
+  }
+}
+
+// @desc    Live Server-Sent Events (SSE) stream for real-time subscription status updates
+// @route   GET /api/subscriptions/stream
+// @access  Private (Host)
+export async function subscribeSubscriptionStream(req, res) {
+  try {
+    const callerId = req.user?._id?.toString();
+    const callerEmail = req.user?.email?.toLowerCase().trim();
+
+    if (!callerId && !callerEmail) {
+      return res.status(401).end();
+    }
+
+    let host = null;
+    try {
+      host = await Host.findOne({
+        $or: [
+          ...(callerId && mongoose.Types.ObjectId.isValid(callerId) ? [{ _id: callerId }] : []),
+          ...(callerEmail ? [{ email: callerEmail }] : []),
+        ],
+      }).select('_id email').lean();
+    } catch (e) {
+      console.warn('Error resolving host for SSE stream:', e);
+    }
+
+    const hostId = host ? host._id.toString() : callerId;
+    const clientKeys = new Set();
+    if (hostId) clientKeys.add(String(hostId));
+    if (callerId) clientKeys.add(String(callerId));
+    if (callerEmail) clientKeys.add(callerEmail);
+    if (host?.email) clientKeys.add(host.email.toLowerCase().trim());
+
+    // Set standard SSE Headers
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache, no-transform',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
+    });
+
+    // Initial connection handshake event
+    res.write(`data: ${JSON.stringify({ type: 'CONNECTED', hostId })}\n\n`);
+
+    for (const key of clientKeys) {
+      if (!sseClients.has(key)) {
+        sseClients.set(key, new Set());
+      }
+      sseClients.get(key).add(res);
+    }
+
+    // Heartbeat ping every 25 seconds to keep connection alive
+    const pingInterval = setInterval(() => {
+      try {
+        res.write(': ping\n\n');
+      } catch (e) {
+        clearInterval(pingInterval);
+      }
+    }, 25000);
+
+    req.on('close', () => {
+      clearInterval(pingInterval);
+      for (const key of clientKeys) {
+        const clientSet = sseClients.get(key);
+        if (clientSet) {
+          clientSet.delete(res);
+          if (clientSet.size === 0) {
+            sseClients.delete(key);
+          }
+        }
+      }
+      res.end();
+    });
+  } catch (err) {
+    console.error('subscribeSubscriptionStream error:', err);
+    if (!res.headersSent) res.status(500).end();
+  }
+}
+
 
 

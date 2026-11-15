@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { z } from 'zod';
-import { ArrowLeft, ChevronLeft, ChevronRight, Check, Plus, Home, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { adminAPI, staysAPI } from '../services/api';
 import { Login } from '../components/navbar/Login';
@@ -17,8 +17,9 @@ import { UploadLocationTab } from '../components/host/upload/UploadLocationTab';
 import { UploadPerksRulesTab } from '../components/host/upload/UploadPerksRulesTab';
 import { UploadPhotosTab } from '../components/host/upload/UploadPhotosTab';
 import { UploadRoomsPricingTab } from '../components/host/upload/UploadRoomsPricingTab';
+import { saveImagesToIndexedDB, loadImagesFromIndexedDB, clearImagesFromIndexedDB } from '../utils/draftStorage';
 
-const MAX_PHOTOS = 5;
+const MAX_PHOTOS = 4;
 const MAX_DESCRIPTION_CHARS = 200;
 
 
@@ -158,6 +159,11 @@ const saveDraftToStorage = (formData, activeStep, googleMapsUrl, user) => {
 
     if (!hasAnyContent) return;
 
+    // Asynchronously persist uploaded images in IndexedDB to avoid localStorage 5MB quota errors
+    if (Array.isArray(formData.images)) {
+      saveImagesToIndexedDB(formData.images);
+    }
+
     const payload = JSON.stringify({
       formData,
       activeStep,
@@ -200,6 +206,7 @@ const clearDraftFromStorage = (user) => {
     if (user?._id) localStorage.removeItem(`roomscout_upload_draft_${user._id}`);
     if (user?.email) localStorage.removeItem(`roomscout_upload_draft_${user.email}`);
     localStorage.removeItem('roomscout_upload_draft_guest');
+    clearImagesFromIndexedDB();
   } catch {
     /* ignore */
   }
@@ -427,6 +434,26 @@ export function HostUploadPage() {
 
   const hasLoadedExistingRef = useRef(false);
 
+  // Restore heavy photos from IndexedDB if not already present in memory state
+  useEffect(() => {
+    let isMounted = true;
+    loadImagesFromIndexedDB().then((idbImages) => {
+      if (isMounted && Array.isArray(idbImages) && idbImages.length > 0) {
+        setFormData((prev) => {
+          if (Array.isArray(prev.images) && prev.images.length > 0) return prev;
+          return {
+            ...prev,
+            images: idbImages,
+            image: prev.image || idbImages[0] || '',
+          };
+        });
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Synchronously auto-save draft whenever user enters any details or advances steps
   useEffect(() => {
     saveDraftToStorage(formData, activeStep, googleMapsUrl, user);
@@ -437,10 +464,28 @@ export function HostUploadPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [activeStep]);
 
-  // Window unload listener to flush latest keystrokes before browser refresh
+  // Window unload listener to flush draft and prevent accidental loss on refresh
   useEffect(() => {
-    const handleBeforeUnload = () => {
+    const handleBeforeUnload = (e) => {
       saveDraftToStorage(formData, activeStep, googleMapsUrl, user);
+      if (Array.isArray(formData.images) && formData.images.length > 0) {
+        saveImagesToIndexedDB(formData.images);
+      }
+
+      // Prompt confirmation on refresh/tab close if on photos tab or any progress made
+      const hasUnsavedWork = Boolean(
+        activeStep === 4 ||
+        (Array.isArray(formData.images) && formData.images.length > 0) ||
+        formData.propertyName?.trim() ||
+        formData.roadArea?.trim() ||
+        activeStep > 1
+      );
+
+      if (hasUnsavedWork) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
@@ -449,6 +494,7 @@ export function HostUploadPage() {
   // Hydrate user profile defaults if user is loaded and fields are still empty
   useEffect(() => {
     if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData((prev) => {
         const needsName = !prev.name && user.name;
         const needsEmail = !prev.email && user.email;
@@ -589,6 +635,7 @@ export function HostUploadPage() {
       }
     }
     loadExisting();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.email, user?.name, user?.phone]);
 
   const showToast = (msg, type = 'info') => {
@@ -679,7 +726,7 @@ export function HostUploadPage() {
       }
 
       if (lat === null || lng === null || isNaN(lat) || isNaN(lng)) {
-        toast.error('Could not extract coordinates from this link. Please check the URL or pin your location on the map.');
+        toast.error('Could not extract coordinates from this link. You can paste the coordinates directly (e.g. 29°22\'29.4"N 79°31\'39.9"E) or the full Google Maps URL.');
         return;
       }
 
@@ -861,6 +908,71 @@ export function HostUploadPage() {
     showToast('Photo removed.');
   };
 
+  const handleReplacePhoto = async (index, file) => {
+    if (!file) return;
+    const validation = await validate16x9Ratio(file);
+    if (!validation.valid) {
+      toast.error(validation.message || 'Photos must be in 16:9 aspect ratio only.');
+      return;
+    }
+    try {
+      const compressedDataUrl = await compressImage(file);
+      setFormData((prev) => {
+        const updated = [...(prev.images || [])];
+        updated[index] = compressedDataUrl;
+        return {
+          ...prev,
+          images: updated,
+          image: updated[0] || '',
+        };
+      });
+      const PHOTO_LABELS = ['Front View', 'Side View', 'Balcony', 'Parking'];
+      const label = PHOTO_LABELS[index] || `Photo ${index + 1}`;
+      showToast(`${label} photo updated!`, 'success');
+    } catch (err) {
+      console.warn('Image replace error:', err);
+    }
+  };
+
+  const handleSlotUpload = async (targetIndex, filesList) => {
+    const files = Array.from(filesList || []);
+    if (files.length === 0) return;
+
+    for (let fIdx = 0; fIdx < files.length; fIdx++) {
+      const file = files[fIdx];
+      const slotIndex = targetIndex + fIdx;
+      if (slotIndex >= MAX_PHOTOS) break;
+
+      const validation = await validate16x9Ratio(file);
+      if (!validation.valid) {
+        toast.error(validation.message || 'Photos must be in 16:9 aspect ratio only.');
+        continue;
+      }
+      try {
+        const compressedDataUrl = await compressImage(file);
+        setFormData((prev) => {
+          const updated = [...(prev.images || [])];
+          if (slotIndex < updated.length) {
+            updated[slotIndex] = compressedDataUrl;
+          } else {
+            updated.push(compressedDataUrl);
+          }
+          const trimmed = updated.slice(0, MAX_PHOTOS);
+          return {
+            ...prev,
+            images: trimmed,
+            image: trimmed[0] || '',
+          };
+        });
+        const PHOTO_LABELS = ['Front View', 'Side View', 'Balcony', 'Parking'];
+        const label = PHOTO_LABELS[slotIndex] || `Photo ${slotIndex + 1}`;
+        showToast(`${label} photo added!`, 'success');
+      } catch (err) {
+        console.warn('Slot photo upload error:', err);
+      }
+    }
+  };
+
   const handlePhotoDragStart = (e, index) => {
     setDraggedPhotoIndex(index);
     e.dataTransfer.effectAllowed = 'move';
@@ -1027,6 +1139,9 @@ export function HostUploadPage() {
         price: '',
         rateUnit: '/month',
         capacity: 1,
+        features: [],
+        photos: [],
+        images: [],
       };
       const updatedRates = [...currentRates, newRate];
       newIdx = updatedRates.length - 1;
@@ -1132,6 +1247,10 @@ export function HostUploadPage() {
   };
 
   const handleAddRoomCard = (targetCategory) => {
+    let createdRoomUid = null;
+    let createdRoomNumber = null;
+    let createdCategoryType = '';
+
     setFormData((prev) => {
       const currentRates = Array.isArray(prev.roomRates) ? prev.roomRates : [];
       const cat = targetCategory || currentRates[selectedCategoryIndex];
@@ -1174,6 +1293,10 @@ export function HostUploadPage() {
       const rateId = cat._id || `rate_${Date.now()}_${resolvedCatIndex}`;
 
       const roomUid = `room_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+      createdRoomUid = roomUid;
+      createdRoomNumber = nextNum;
+      createdCategoryType = cleanCatType;
+
       const newCard = {
         _id: roomUid,
         rateId: rateId,
@@ -1199,9 +1322,11 @@ export function HostUploadPage() {
     });
 
     // Notify & set active selection outside setState updater to prevent double firing in StrictMode
-    setSelectedRoomCardId(roomUid);
-    setSelectedRoomNumber(nextNum);
-    showToast(`Added Room ${nextNum} to ${cleanCatType}!`, 'success');
+    if (createdRoomUid) {
+      setSelectedRoomCardId(createdRoomUid);
+      setSelectedRoomNumber(createdRoomNumber);
+      showToast(`Added Room ${createdRoomNumber} to ${createdCategoryType}!`, 'success');
+    }
   };
 
   const handleRemoveRoomCard = (roomId, roomData) => {
@@ -1553,6 +1678,9 @@ export function HostUploadPage() {
         price: (r.price || '').trim(),
         rateUnit: r.rateUnit || '/month',
         capacity: Number(r.capacity) || 1,
+        features: Array.isArray(r.features) ? r.features : [],
+        photos: Array.isArray(r.photos) ? r.photos : [],
+        images: Array.isArray(r.images) ? r.images : [],
       }))
       .filter((r) => r.type !== '');
 
@@ -1659,7 +1787,7 @@ export function HostUploadPage() {
   const currentStepConfig = WIZARD_STEPS.find((s) => s.id === activeStep) || WIZARD_STEPS[0];
 
   return (
-    <div className="bg-[#f5f2ea] text-slate-800 host-page-scope font-body-md antialiased min-h-screen flex flex-col justify-between relative selection:bg-[#006C4A] selection:text-white transition-colors duration-300">
+    <div className="bg-[#F4F4F6] text-slate-800 host-page-scope font-body-md antialiased min-h-screen flex flex-col justify-between relative selection:bg-[#006C4A] selection:text-white transition-colors duration-300">
 
       {/* ── Top Header Navigation Bar (Floating Liquid Glass Islands matching Host Dashboard / Pic 2) ── */}
       <header className="relative w-full h-[70px] sm:h-[88px] pointer-events-none select-none z-50 font-body-md host-font-scope antialiased">
@@ -1890,7 +2018,7 @@ export function HostUploadPage() {
 
       {/* ── Main Viewport-Fitted Canvas (Natural Smooth Scroll, Generous Bottom Padding) ── */}
       <main
-        className="flex-1 w-full relative z-10 max-md:bg-[#3d0c40] max-md:rounded-t-[2.5rem] max-md:shadow-[0_-8px_40px_rgba(61,12,64,0.4)] max-md:px-4 max-md:py-6 max-md:pb-32 md:max-w-6xl md:mx-auto md:px-4 md:sm:px-6 md:lg:px-8 md:py-1 md:pb-36"
+        className="flex-1 w-full relative z-10 max-md:rounded-t-[2.5rem] sm:max-md:rounded-t-[3rem] max-md:bg-gradient-to-b max-md:from-[rgba(215,236,252,0.88)] max-md:via-[rgba(202,230,250,0.82)] max-md:to-[rgba(215,236,252,0.92)] max-md:backdrop-blur-2xl max-md:backdrop-saturate-[160%] max-md:border-t max-md:border-white/80 max-md:shadow-[0_-12px_40px_rgba(14,116,144,0.1),inset_0_1px_1px_rgba(255,255,255,0.9)] max-md:px-4 max-md:py-6 max-md:pb-32 md:max-w-6xl md:mx-auto md:px-4 md:sm:px-6 md:lg:px-8 md:py-1 md:pb-36"
       >
         <ErrorBoundary>
           <AnimatePresence mode="wait">
@@ -1942,6 +2070,8 @@ export function HostUploadPage() {
                 onFileUpload={handleFileUpload}
                 onRemovePhoto={handleRemovePhoto}
                 onSetCoverPhoto={handleSetCoverPhoto}
+                onReplacePhoto={handleReplacePhoto}
+                onSlotUpload={handleSlotUpload}
                 draggedPhotoIndex={draggedPhotoIndex}
                 dragOverIndex={dragOverIndex}
                 onPhotoDragStart={handlePhotoDragStart}
@@ -1982,10 +2112,10 @@ export function HostUploadPage() {
 
       {/* ── Fixed Bottom Progression Bar (Airbnb visual reference: screenshots 1 & 2) ── */}
       <footer
-        className="fixed bottom-0 inset-x-0 z-40 backdrop-blur-md max-md:bg-[#3d0c40]/95 max-md:border-t max-md:border-purple-400/20 max-md:shadow-[0_-4px_25px_rgba(61,12,64,0.4)] md:bg-[#f5f2ea]/95 md:border-t md:border-slate-200/60 shadow-[0_-4px_25px_rgba(0,0,0,0.06)]"
+        className="fixed bottom-0 inset-x-0 z-40 backdrop-blur-md max-md:bg-[rgba(255,255,255,0.88)] max-md:backdrop-blur-2xl max-md:border-t max-md:border-white/80 max-md:shadow-[0_-8px_28px_rgba(14,116,144,0.06)] md:bg-[#F4F4F6]/95 md:border-t md:border-slate-200/60 shadow-[0_-4px_25px_rgba(0,0,0,0.06)]"
       >
         {/* Hairline Continuous Progress Indicator Line */}
-        <div className="w-full h-1 relative overflow-hidden max-md:bg-purple-900/60 md:bg-slate-100 md:">
+        <div className="w-full h-1 relative overflow-hidden max-md:bg-slate-200/60 md:bg-slate-100">
           <motion.div
             className="h-full bg-gradient-to-r from-[#006C4A] to-teal-500 rounded-r-full transition-all duration-300"
             style={{ width: `${(activeStep / WIZARD_STEPS.length) * 100}%` }}
@@ -2002,7 +2132,7 @@ export function HostUploadPage() {
                   setFieldErrors({});
                   setActiveStep((prev) => Math.max(1, prev - 1));
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 md:py-1 rounded-xl font-extrabold text-sm sm:text-base md:text-xs underline underline-offset-4 cursor-pointer active:scale-95 transition-all max-md:text-purple-200 max-md:hover:text-white md:text-slate-800 md: md:hover:text-black md:"
+                className="flex items-center gap-1.5 px-3 py-1.5 md:py-1 rounded-xl font-extrabold text-sm sm:text-base md:text-xs underline underline-offset-4 cursor-pointer active:scale-95 transition-all max-md:text-sky-900 max-md:hover:text-sky-950 font-semibold md:text-slate-800 md:hover:text-black"
               >
                 <ChevronLeft className="w-4 h-4 md:w-3.5 md:h-3.5" />
                 <span>Back</span>
@@ -2029,7 +2159,7 @@ export function HostUploadPage() {
               <button
                 type="button"
                 onClick={handleNextStep}
-                className="h-11 max-md:h-12 md:h-9 px-6 sm:px-8 md:px-6 rounded-full bg-[#006C4A] hover:bg-[#005a3e] active:bg-[#004d35] text-white font-extrabold text-sm md:text-xs shadow-sm shadow-[#006C4A]/30 flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
+                className="h-11 max-md:h-12 md:h-9 px-6 sm:px-8 md:px-6 rounded-full max-md:bg-gradient-to-r max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:hover:from-[#0284c7] max-md:hover:to-[#0369a1] max-md:shadow-[0_4px_16px_rgba(14,165,233,0.32)] md:bg-[#006C4A] md:hover:bg-[#005a3e] md:active:bg-[#004d35] text-white font-bold text-sm md:text-xs shadow-sm md:shadow-[#006C4A]/30 flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
               >
                 <span>Continue</span>
                 <ChevronRight className="w-4 h-4" />
@@ -2039,7 +2169,7 @@ export function HostUploadPage() {
                 type="button"
                 disabled={isSubmitting}
                 onClick={handleSubmit}
-                className="h-11 max-md:h-12 md:h-9 px-6 sm:px-8 md:px-6 rounded-full bg-[#006C4A] hover:bg-[#005a3e] active:bg-[#004d35] text-white font-extrabold text-sm md:text-xs shadow-md shadow-[#006C4A]/30 flex items-center gap-1.5 cursor-pointer disabled:opacity-50 active:scale-95 transition-all"
+                className="h-11 max-md:h-12 md:h-9 px-6 sm:px-8 md:px-6 rounded-full max-md:bg-gradient-to-r max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:hover:from-[#0284c7] max-md:hover:to-[#0369a1] max-md:shadow-[0_4px_16px_rgba(14,165,233,0.32)] md:bg-[#006C4A] md:hover:bg-[#005a3e] md:active:bg-[#004d35] text-white font-bold text-sm md:text-xs shadow-md md:shadow-[#006C4A]/30 flex items-center gap-1.5 cursor-pointer disabled:opacity-50 active:scale-95 transition-all"
               >
                 {isSubmitting ? (
                   <>

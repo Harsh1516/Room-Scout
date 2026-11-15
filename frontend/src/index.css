@@ -4,16 +4,16 @@
 @custom-variant dark (&:is(.dark, .dark *));
 
 @theme {
-  --font-manrope: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-manrope: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-h1: 'Manrope', sans-serif;
-  --font-h2: 'Manrope', sans-serif;
-  --font-h3: 'Manrope', sans-serif;
-  --font-h4: 'Manrope', sans-serif;
-  --font-body-md: 'Plus Jakarta Sans', 'Inter', sans-serif;
-  --font-body-lg: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  --font-h1: 'DM Sans', sans-serif;
+  --font-h2: 'DM Sans', sans-serif;
+  --font-h3: 'DM Sans', sans-serif;
+  --font-h4: 'DM Sans', sans-serif;
+  --font-body-md: 'DM Sans', 'Inter', sans-serif;
+  --font-body-lg: 'DM Sans', 'Inter', sans-serif;
   --font-mono-data: 'JetBrains Mono', monospace;
-  --font-label-sm: 'Plus Jakarta Sans', sans-serif;
+  --font-label-sm: 'DM Sans', sans-serif;
   --color-custom-btn-primary: #5E6BFF;
 
   --color-outline-variant: #464554;
@@ -73,17 +73,17 @@
   --spacing-margin-desktop: 2rem;
   --spacing-gutter: 1rem;
 
-  --font-headline-md: 'Plus Jakarta Sans', sans-serif;
-  --font-title-md: 'Plus Jakarta Sans', sans-serif;
-  --font-title-sm: 'Plus Jakarta Sans', sans-serif;
-  --font-headline-lg-mobile: 'Plus Jakarta Sans', sans-serif;
-  --font-label-md: 'Plus Jakarta Sans', sans-serif;
-  --font-body-sm: 'Plus Jakarta Sans', sans-serif;
+  --font-headline-md: 'DM Sans', sans-serif;
+  --font-title-md: 'DM Sans', sans-serif;
+  --font-title-sm: 'DM Sans', sans-serif;
+  --font-headline-lg-mobile: 'DM Sans', sans-serif;
+  --font-label-md: 'DM Sans', sans-serif;
+  --font-body-sm: 'DM Sans', sans-serif;
   --font-code-sm: 'JetBrains Mono', monospace;
-  --font-headline-xl: 'Plus Jakarta Sans', sans-serif;
-  --font-headline-lg: 'Plus Jakarta Sans', sans-serif;
-  --font-headline-sm: 'Plus Jakarta Sans', sans-serif;
-  --font-headline-xl-mobile: 'Plus Jakarta Sans', sans-serif;
+  --font-headline-xl: 'DM Sans', sans-serif;
+  --font-headline-lg: 'DM Sans', sans-serif;
+  --font-headline-sm: 'DM Sans', sans-serif;
+  --font-headline-xl-mobile: 'DM Sans', sans-serif;
 
   --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
   --shadow-pill: 0 2px 14px rgba(0, 0, 0, 0.5);
@@ -128,7 +128,7 @@
 .font-h3,
 .font-h4,
 .font-manrope {
-  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
 }
 
 .font-body-md,
@@ -141,7 +141,7 @@
 .font-headline-md,
 .font-headline-lg,
 .font-headline-xl {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
 }
 
 .font-code-sm,
@@ -151,6 +151,17 @@
 
 .font-inter {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Minimal High-Tech Typography (Pic 2 Clean Aesthetic: Plus Jakarta Sans / Inter)
+   ══════════════════════════════════════════════════════════════════ */
+.font-tech-minimal,
+.font-tech-minimal * {
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif !important;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11', 'tnum';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Precise Room Dashboard Utilities */
@@ -273,7 +284,7 @@ body::-webkit-scrollbar {
 html, body {
   margin: 0;
   padding: 0;
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;

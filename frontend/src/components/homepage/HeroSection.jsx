@@ -121,9 +121,8 @@ export function HeroSection({ onSelectUpload }) {
 
   return (
     <div className="relative w-full min-h-0 lg:min-h-[calc(100vh-4rem)] flex flex-col justify-center pt-24 sm:pt-28 md:pt-32 lg:pt-36 pb-4 sm:pb-12 lg:pb-16 px-4 sm:px-8 lg:px-14 2xl:px-24 overflow-hidden">
-      {/* Mobile Subtle Background Warm Architectural Glow Elements (High performance radial gradient) */}
-      <div className="md:hidden absolute -top-20 left-1/2 -translate-x-1/2 w-80 h-56 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.12)_0%,transparent_70%)] -z-10 rounded-full pointer-events-none" />
-      <div className="md:hidden absolute top-1/3 left-1/2 -translate-x-1/2 w-72 h-44 bg-[radial-gradient(ellipse_at_center,rgba(245,158,11,0.05)_0%,transparent_70%)] -z-10 rounded-full pointer-events-none" />
+      {/* Mobile Subtle Background Architectural Light Diffuser */}
+      <div className="md:hidden absolute -top-16 left-1/2 -translate-x-1/2 w-80 h-56 bg-sky-200/20 -z-10 rounded-full blur-[80px] pointer-events-none" />
 
       <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 lg:gap-10 xl:gap-16 items-center flex-1 my-0 lg:my-auto">
 
@@ -136,11 +135,11 @@ export function HeroSection({ onSelectUpload }) {
             transition={{ duration, delay: shouldReduceMotion ? 0 : 0.05, ease }}
             className="relative will-change-transform"
           >
-            <h1 className="max-md:text-[32px] max-md:font-bold max-md:tracking-tight max-md:text-white max-md:leading-[1.12] max-md:mb-1 text-3xl sm:text-5xl md:text-6xl lg:text-[4rem] xl:text-[4.5rem] font-extrabold tracking-[-0.035em] leading-[1.1] select-none text-center lg:text-left">
-              <span className="block max-md:text-white md:text-slate-950">
+            <h1 className="max-md:text-[32px] max-md:font-bold max-md:tracking-tight max-md:leading-[1.12] max-md:mb-1 text-3xl sm:text-5xl md:text-6xl lg:text-[4rem] xl:text-[4.5rem] font-extrabold tracking-[-0.035em] leading-[1.1] select-none text-center lg:text-left">
+              <span className="block text-slate-950">
                 Find Your
               </span>
-              <span className="block max-md:text-transparent max-md:bg-clip-text max-md:bg-gradient-to-r max-md:from-emerald-300 max-md:via-white max-md:to-slate-200 md:text-slate-500 font-extrabold tracking-tight">
+              <span className="block text-slate-500 font-extrabold tracking-tight">
                 Perfect Living Space.
               </span>
             </h1>
@@ -151,9 +150,9 @@ export function HeroSection({ onSelectUpload }) {
             initial={{ opacity: shouldReduceMotion ? 1 : 0, y: offset }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration, delay: shouldReduceMotion ? 0 : (isMobile ? 0.12 : 0.18), ease }}
-            className="max-md:text-[12px] max-md:leading-relaxed max-md:text-slate-400 max-md:max-w-[310px] max-md:mx-auto max-md:mb-3 max-md:font-normal text-base sm:text-lg md:text-xl text-slate-600 max-w-xl font-normal leading-relaxed tracking-normal text-center lg:text-left will-change-transform"
+            className="max-md:text-[13px] max-md:leading-relaxed max-md:text-slate-600 max-md:max-w-[320px] max-md:mx-auto max-md:mb-3 max-md:font-normal text-base sm:text-lg md:text-xl text-slate-600 max-w-xl font-normal leading-relaxed tracking-normal text-center lg:text-left will-change-transform"
           >
-            Curated student PGs, serviced flats, and serene homestays. Book transparently directly with verified property owners — <span className="max-md:font-semibold max-md:text-slate-100 font-semibold text-slate-900">zero middlemen, zero commissions.</span>
+            Curated student PGs, serviced flats, and serene homestays. Book transparently directly with verified property owners — <span className="font-semibold text-slate-900">zero middlemen, zero commissions.</span>
           </motion.p>
 
           {/* 3. Quick CTA Action Cluster */}
@@ -167,7 +166,7 @@ export function HeroSection({ onSelectUpload }) {
             <button
               type="button"
               onClick={() => navigate('/search')}
-              className="max-md:w-full max-md:max-w-[290px] max-md:py-3.5 max-md:px-6 max-md:rounded-full max-md:bg-gradient-to-r max-md:from-emerald-600 max-md:to-teal-600 max-md:text-white max-md:font-semibold max-md:text-[11px] max-md:tracking-widest max-md:uppercase max-md:shadow-float max-md:hover:from-emerald-500 max-md:hover:to-teal-500 max-md:active:scale-[0.97] max-md:border max-md:border-emerald-400/30 inline-flex items-center justify-center gap-2.5 px-6 py-3.5 sm:px-8 sm:py-4 rounded-2xl bg-slate-950 text-white font-semibold text-xs sm:text-sm tracking-wider uppercase hover:opacity-90 active:scale-95 transition-transform duration-150 cursor-pointer select-none shadow-sm group mx-auto lg:mx-0"
+              className="max-md:w-full max-md:max-w-[290px] max-md:py-3.5 max-md:px-6 max-md:rounded-full max-md:bg-[#0B0B0B] max-md:hover:bg-[#1A1A1A] max-md:text-white max-md:font-bold max-md:text-[11px] max-md:tracking-widest max-md:uppercase max-md:shadow-md max-md:active:scale-[0.97] inline-flex items-center justify-center gap-2.5 px-6 py-3.5 sm:px-8 sm:py-4 rounded-2xl bg-slate-950 text-white font-semibold text-xs sm:text-sm tracking-wider uppercase hover:opacity-90 active:scale-95 transition-transform duration-150 cursor-pointer select-none shadow-sm group mx-auto lg:mx-0"
             >
               <span className="max-md:tracking-[0.14em]">
                 {stats.staysCount !== null && stats.staysCount !== undefined
@@ -175,7 +174,7 @@ export function HeroSection({ onSelectUpload }) {
                   : 'Explore Stays'}
               </span>
               <svg
-                className="w-3.5 h-3.5 max-md:text-emerald-100 transition-transform group-hover:translate-x-1"
+                className="w-3.5 h-3.5 max-md:text-white transition-transform group-hover:translate-x-1"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -192,7 +191,7 @@ export function HeroSection({ onSelectUpload }) {
 
         {/* ── Right Column: Staggered Metric Cards (Mobile: 3-column TrustStatsBar from design) ── */}
         <div className="lg:col-span-5 xl:col-span-4 w-full pt-1 lg:pt-0">
-          <div className="max-md:grid max-md:grid-cols-3 max-md:gap-1 max-md:bg-[#141B26] max-md:p-3.5 max-md:rounded-3xl max-md:border max-md:border-white/[0.08] max-md:shadow-card md:grid md:grid-cols-2 lg:flex lg:flex-col gap-2.5 sm:gap-3.5 w-full max-w-md lg:max-w-[320px] xl:max-w-[340px] mx-auto lg:ml-auto lg:mr-0">
+          <div className="max-md:grid max-md:grid-cols-3 max-md:gap-1 max-md:bg-white max-md:p-3.5 max-md:rounded-3xl max-md:border max-md:border-slate-200/90 max-md:shadow-[0_4px_20px_rgba(0,0,0,0.04)] md:grid md:grid-cols-2 lg:flex lg:flex-col gap-2.5 sm:gap-3.5 w-full max-w-md lg:max-w-[320px] xl:max-w-[340px] mx-auto lg:ml-auto lg:mr-0">
             {/* Metric Item 1: Verified Stays */}
             <motion.div
               initial={{ opacity: shouldReduceMotion ? 1 : 0, y: offset }}
@@ -200,14 +199,14 @@ export function HeroSection({ onSelectUpload }) {
               transition={{ duration, delay: shouldReduceMotion ? 0 : (isMobile ? 0.15 : 0.28), ease }}
               className="text-center px-1 max-md:flex max-md:flex-col max-md:items-center max-md:justify-center p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl md:bg-white/70 md:backdrop-blur-xl md:border md:border-slate-200/70 md:hover:border-slate-300 md:shadow-xs transition-colors duration-150 will-change-transform"
             >
-              <div className="max-md:text-lg max-md:font-bold max-md:text-white max-md:tracking-tight text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 tracking-tight">
+              <div className="max-md:text-lg max-md:font-extrabold max-md:text-slate-950 max-md:tracking-tight text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 tracking-tight">
                 {stats.staysCount !== null && stats.staysCount !== undefined ? (
                   stats.staysCount > 999 ? `${(stats.staysCount / 1000).toFixed(1)}k+` : stats.staysCount.toLocaleString()
                 ) : (
                   <span className="opacity-40 animate-pulse">—</span>
                 )}
               </div>
-              <div className="max-md:text-[9.5px] max-md:uppercase max-md:tracking-wider max-md:font-semibold max-md:text-slate-400 max-md:mt-0.5 text-xs sm:text-xs text-slate-600 font-medium mt-0.5">
+              <div className="max-md:text-[9.5px] max-md:uppercase max-md:tracking-wider max-md:font-semibold max-md:text-[#6B6B6B] max-md:mt-0.5 text-xs sm:text-xs text-slate-600 font-medium mt-0.5">
                 Verified Stays
               </div>
             </motion.div>
@@ -217,12 +216,12 @@ export function HeroSection({ onSelectUpload }) {
               initial={{ opacity: shouldReduceMotion ? 1 : 0, y: offset }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration, delay: shouldReduceMotion ? 0 : (isMobile ? 0.22 : 0.38), ease }}
-              className="text-center px-1 max-md:border-x max-md:border-white/[0.08] max-md:flex max-md:flex-col max-md:items-center max-md:justify-center p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl md:bg-white/70 md:backdrop-blur-xl md:border md:border-slate-200/70 md:hover:border-slate-300 md:shadow-xs transition-colors duration-150 will-change-transform"
+              className="text-center px-1 max-md:border-x max-md:border-slate-200/80 max-md:flex max-md:flex-col max-md:items-center max-md:justify-center p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl md:bg-white/70 md:backdrop-blur-xl md:border md:border-slate-200/70 md:hover:border-slate-300 md:shadow-xs transition-colors duration-150 will-change-transform"
             >
-              <div className="max-md:text-lg max-md:font-bold text-emerald-400 max-md:tracking-tight text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">
+              <div className="max-md:text-lg max-md:font-bold text-emerald-600 max-md:tracking-tight text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">
                 0%
               </div>
-              <div className="max-md:text-[9.5px] max-md:uppercase max-md:tracking-wider max-md:font-semibold max-md:text-slate-400 max-md:mt-0.5 text-xs sm:text-xs text-slate-600 font-medium mt-0.5">
+              <div className="max-md:text-[9.5px] max-md:uppercase max-md:tracking-wider max-md:font-semibold max-md:text-[#6B6B6B] max-md:mt-0.5 text-xs sm:text-xs text-slate-600 font-medium mt-0.5">
                 Brokerage Fee
               </div>
             </motion.div>
@@ -234,14 +233,14 @@ export function HeroSection({ onSelectUpload }) {
               transition={{ duration, delay: shouldReduceMotion ? 0 : (isMobile ? 0.28 : 0.46), ease }}
               className="text-center px-1 max-md:flex max-md:flex-col max-md:items-center max-md:justify-center p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl md:bg-white/70 md:backdrop-blur-xl md:border md:border-slate-200/70 md:hover:border-slate-300 md:shadow-xs transition-colors duration-150 will-change-transform md:col-span-2 lg:col-span-1"
             >
-              <div className="max-md:text-lg max-md:font-bold max-md:text-white max-md:tracking-tight text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 tracking-tight">
+              <div className="max-md:text-lg max-md:font-extrabold max-md:text-slate-950 max-md:tracking-tight text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 tracking-tight">
                 {stats.onlineUsersBooked !== null && stats.onlineUsersBooked !== undefined ? (
                   stats.onlineUsersBooked > 999 ? `${(stats.onlineUsersBooked / 1000).toFixed(1)}k+` : stats.onlineUsersBooked.toLocaleString()
                 ) : (
                   <span className="opacity-40 animate-pulse">—</span>
                 )}
               </div>
-              <div className="max-md:text-[9.5px] max-md:uppercase max-md:tracking-wider max-md:font-semibold max-md:text-slate-400 max-md:mt-0.5 text-xs sm:text-xs text-slate-600 font-medium mt-0.5">
+              <div className="max-md:text-[9.5px] max-md:uppercase max-md:tracking-wider max-md:font-semibold max-md:text-[#6B6B6B] max-md:mt-0.5 text-xs sm:text-xs text-slate-600 font-medium mt-0.5">
                 Happy Residents
               </div>
             </motion.div>

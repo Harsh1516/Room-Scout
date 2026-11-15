@@ -75,17 +75,17 @@ export function RecentlyAdded({ onStayClick, onBookClick }) {
       <ScrollReveal desktopOffset={20} mobileOffset={12} desktopDuration={0.5} mobileDuration={0.35}>
         <div className="flex items-baseline justify-between mb-4 sm:mb-8 gap-3 sm:gap-4 w-full">
           <div>
-            <h2 className="max-md:text-base max-md:font-bold max-md:text-white max-md:tracking-tight text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-slate-950 mt-1 sm:mt-2 tracking-tight">
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-slate-950 mt-1 sm:mt-2 tracking-tight">
               Featured Verified Stays
             </h2>
-            <p className="max-md:block hidden text-[11px] text-slate-400 font-normal mt-0.5">
+            <p className="max-md:block hidden text-[12px] text-slate-500 font-medium mt-0.5">
               Inspected this week for quality &amp; safety
             </p>
           </div>
 
           <button
             onClick={() => navigate('/search')}
-            className="max-md:text-xs max-md:font-semibold max-md:text-emerald-400 max-md:hover:text-emerald-300 max-md:bg-transparent max-md:border-0 max-md:shadow-none max-md:p-0 flex items-center gap-1 transition-colors self-auto text-[11px] sm:text-xs font-bold text-slate-900 hover:text-slate-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl bg-white/80 border border-slate-200 backdrop-blur-2xl cursor-pointer shadow-xs active:scale-95"
+            className="max-md:text-xs max-md:font-bold max-md:text-emerald-700 max-md:hover:text-emerald-800 max-md:bg-transparent max-md:border-0 max-md:shadow-none max-md:p-0 flex items-center gap-1 transition-colors self-auto text-[11px] sm:text-xs font-bold text-slate-900 hover:text-slate-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl bg-white/80 border border-slate-200 backdrop-blur-2xl cursor-pointer shadow-xs active:scale-95"
           >
             <span>View all</span>
             <svg className="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,17 +106,17 @@ export function RecentlyAdded({ onStayClick, onBookClick }) {
       {/* Empty State when no host has listed a stay yet */}
       {!loading && recentStays.length === 0 && (
         <ScrollReveal desktopOffset={16} mobileOffset={10}>
-          <div className="max-md:bg-[#141B26] max-md:border-white/[0.09] max-md:shadow-card bg-white/80 border border-slate-200 rounded-3xl p-6 sm:p-12 text-center backdrop-blur-xl max-w-2xl mx-auto shadow-sm">
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full max-md:bg-emerald-500/15 max-md:text-emerald-400 bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto mb-3.5 sm:mb-4">
+          <div className="max-md:bg-white max-md:border-slate-200/90 max-md:shadow-xs bg-white/80 border border-slate-200 rounded-3xl p-6 sm:p-12 text-center backdrop-blur-xl max-w-2xl mx-auto shadow-sm">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full max-md:bg-emerald-50 max-md:text-emerald-600 bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto mb-3.5 sm:mb-4">
               <svg className="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                 <polyline points="9 22 9 12 15 12 15 22" />
               </svg>
             </div>
-            <h3 className="text-base sm:text-xl font-extrabold max-md:text-white text-slate-900">
+            <h3 className="text-base sm:text-xl font-extrabold max-md:text-slate-950 text-slate-900">
               No Properties Listed Yet
             </h3>
-            <p className="text-[11px] sm:text-sm max-md:text-slate-400 text-slate-500 mt-1.5 sm:mt-2 max-w-md mx-auto leading-relaxed">
+            <p className="text-[11px] sm:text-sm max-md:text-slate-500 text-slate-500 mt-1.5 sm:mt-2 max-w-md mx-auto leading-relaxed">
               New verified listings are currently being processed. Check back soon for fresh PGs, hostels, and stays!
             </p>
           </div>

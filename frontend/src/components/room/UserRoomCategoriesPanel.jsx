@@ -1,10 +1,9 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
-  isMonthlyRateUnit,
-  isRoomMatchingCategory,
-  calculateRoomFreePercentage,
-  calculateCategoryFreePercentage,
+ isMonthlyRateUnit,
+ isRoomMatchingCategory,
+ calculateRoomFreePercentage,
+ calculateCategoryFreePercentage,
 } from '../../utils/dateUtils';
 
 /**
@@ -22,311 +21,280 @@ function UserCategoryRoomCarousel({
   onSelectRoom,
   onSelectCategoryFilter,
   todayBookedRoomIds = new Set(),
+  isMonthly = false,
   allRoomsBookedSlots = {},
   allRoomsBookedMonths = {},
   upcomingWeek = [],
   upcomingMonths = [],
 }) {
-  const scrollRef = useRef(null);
-  const tickingRef = useRef(false);
-  const [activeDotIndex, setActiveDotIndex] = useState(0);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
+ const scrollRef = useRef(null);
+ const tickingRef = useRef(false);
+ const [activeDotIndex, setActiveDotIndex] = useState(0);
+ const [canScrollLeft, setCanScrollLeft] = useState(false);
+ const [canScrollRight, setCanScrollRight] = useState(false);
 
-  const updateScrollState = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const atStart = el.scrollLeft <= 2;
-    const atEnd = el.scrollLeft >= el.scrollWidth - el.clientWidth - 2;
-    setCanScrollLeft((prev) => (prev !== !atStart ? !atStart : prev));
-    const canRight = !atEnd && el.scrollWidth > el.clientWidth;
-    setCanScrollRight((prev) => (prev !== canRight ? canRight : prev));
+ const updateScrollState = useCallback(() => {
+ const el = scrollRef.current;
+ if (!el) return;
+ const atStart = el.scrollLeft <= 2;
+ const atEnd = el.scrollLeft >= el.scrollWidth - el.clientWidth - 2;
+ setCanScrollLeft((prev) => (prev !== !atStart ? !atStart : prev));
+ const canRight = !atEnd && el.scrollWidth > el.clientWidth;
+ setCanScrollRight((prev) => (prev !== canRight ? canRight : prev));
 
-    if (matchingRooms.length > 1) {
-      const scrollLeft = el.scrollLeft;
-      let closestIdx = 0;
-      let minDiff = Infinity;
-      for (let i = 0; i < el.children.length; i++) {
-        const child = el.children[i];
-        if (!child) continue;
-        const diff = Math.abs(child.offsetLeft - el.offsetLeft - scrollLeft);
-        if (diff < minDiff) {
-          minDiff = diff;
-          closestIdx = i;
-        }
-      }
-      setActiveDotIndex((prev) => (prev !== closestIdx ? closestIdx : prev));
-    }
-  }, [matchingRooms.length]);
+ if (matchingRooms.length > 1) {
+ const scrollLeft = el.scrollLeft;
+ let closestIdx = 0;
+ let minDiff = Infinity;
+ for (let i = 0; i < el.children.length; i++) {
+ const child = el.children[i];
+ if (!child) continue;
+ const diff = Math.abs(child.offsetLeft - el.offsetLeft - scrollLeft);
+ if (diff < minDiff) {
+ minDiff = diff;
+ closestIdx = i;
+ }
+ }
+ setActiveDotIndex((prev) => (prev !== closestIdx ? closestIdx : prev));
+ }
+ }, [matchingRooms.length]);
 
-  useEffect(() => {
-    updateScrollState();
-  }, [matchingRooms.length, updateScrollState]);
+ useEffect(() => {
+ updateScrollState();
+ }, [matchingRooms.length, updateScrollState]);
 
-  const handleWheel = useCallback((e) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    if (el.scrollWidth > el.clientWidth && e.deltaY !== 0) {
-      e.preventDefault();
-      el.scrollLeft += e.deltaY;
-      updateScrollState();
-    }
-  }, [updateScrollState]);
+ const handleWheel = useCallback((e) => {
+ const el = scrollRef.current;
+ if (!el) return;
+ if (el.scrollWidth > el.clientWidth && e.deltaY !== 0) {
+ e.preventDefault();
+ el.scrollLeft += e.deltaY;
+ updateScrollState();
+ }
+ }, [updateScrollState]);
 
-  const setScrollRef = useCallback(
-    (node) => {
-      if (scrollRef.current) {
-        scrollRef.current.removeEventListener('wheel', handleWheel);
-      }
-      scrollRef.current = node;
-      if (node) {
-        node.addEventListener('wheel', handleWheel, { passive: false });
-        updateScrollState();
-      }
-    },
-    [handleWheel, updateScrollState]
+ const setScrollRef = useCallback(
+ (node) => {
+ if (scrollRef.current) {
+ scrollRef.current.removeEventListener('wheel', handleWheel);
+ }
+ scrollRef.current = node;
+ if (node) {
+ node.addEventListener('wheel', handleWheel, { passive: false });
+ updateScrollState();
+ }
+ },
+ [handleWheel, updateScrollState]
+ );
+
+ const handleScroll = () => {
+ if (tickingRef.current) return;
+ tickingRef.current = true;
+ window.requestAnimationFrame(() => {
+ updateScrollState();
+ tickingRef.current = false;
+ });
+ };
+
+ const scrollToItem = (idx, e) => {
+ if (e) e.stopPropagation();
+ const el = scrollRef.current;
+ if (!el) return;
+ const child = el.children[idx];
+ if (child) {
+ const paddingLeft = parseFloat(window.getComputedStyle(el).paddingLeft) || 0;
+ const targetScroll = Math.max(0, child.offsetLeft - el.offsetLeft - paddingLeft);
+ el.scrollTo({ left: targetScroll, behavior: 'smooth' });
+ setActiveDotIndex(idx);
+ setTimeout(updateScrollState, 150);
+ }
+ };
+
+ const handleScrollLeft = (e) => {
+ e.stopPropagation();
+ const el = scrollRef.current;
+ if (!el) return;
+ const cardWidth = el.firstElementChild ? el.firstElementChild.offsetWidth + 10 : 130;
+ el.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+ setTimeout(updateScrollState, 150);
+ };
+
+ const handleScrollRight = (e) => {
+ e.stopPropagation();
+ const el = scrollRef.current;
+ if (!el) return;
+ const cardWidth = el.firstElementChild ? el.firstElementChild.offsetWidth + 10 : 130;
+ el.scrollBy({ left: cardWidth, behavior: 'smooth' });
+ setTimeout(updateScrollState, 150);
+ };
+
+ return (
+ <div className="flex flex-col gap-1.5">
+
+ {matchingRooms.length === 0 ? (
+ <div className="p-3 rounded-2xl text-xs text-center border border-dashed border-white/20 text-white/60 bg-white/5 space-y-1">
+ <p>
+ No room cards available for <span className="text-white font-semibold">{rate.type || 'this category'}</span> yet.
+ </p>
+ </div>
+ ) : (
+ <div className="space-y-1">
+ <div
+ ref={setScrollRef}
+ onScroll={handleScroll}
+ className={`flex items-stretch gap-2.5 pt-6 pb-7 px-6 -mx-2 -mt-3 -mb-3.5 scroll-pl-6 scroll-pr-6 scroll-smooth overscroll-x-contain no-scrollbar ${
+ matchingRooms.length > 2 ? 'overflow-x-auto snap-x snap-mandatory' : 'overflow-visible'
+ }`}
+ style={{
+ scrollbarWidth: 'none',
+ msOverflowStyle: 'none',
+ }}
+ >
+ {matchingRooms.map((rm, cIdx) => {
+ const cardId = rm._id || rm.id || `room_${rm.roomNumber || cIdx}`;
+ const currentMonthKey = upcomingMonths[0]?.monthKey;
+  const isRoomBookedThisMonth = Boolean(
+    (currentMonthKey && allRoomsBookedMonths && (
+      allRoomsBookedMonths[rm._id]?.has?.(currentMonthKey) ||
+      allRoomsBookedMonths[rm.id]?.has?.(currentMonthKey) ||
+      allRoomsBookedMonths[String(rm.roomNumber)?.trim()]?.has?.(currentMonthKey)
+    )) ||
+    (todayBookedRoomIds && (
+      todayBookedRoomIds.has(rm._id) ||
+      todayBookedRoomIds.has(rm.id) ||
+      todayBookedRoomIds.has(String(rm.roomNumber).trim())
+    ))
   );
+  const isBookedToday = Boolean(
+ todayBookedRoomIds &&
+ (todayBookedRoomIds.has(rm._id) ||
+ todayBookedRoomIds.has(rm.id) ||
+ todayBookedRoomIds.has(String(rm.roomNumber).trim()))
+ );
+ const isCardBooked = isMonthly ? isRoomBookedThisMonth : isBookedToday;
+  const isCardSelected = Boolean(
+ (selectedRoom?._id && rm._id && String(selectedRoom._id) === String(rm._id)) ||
+ (selectedRoom?.id && rm.id && String(selectedRoom.id) === String(rm.id)) ||
+ (selectedRoom?.roomNumber && rm.roomNumber && String(selectedRoom.roomNumber).trim() === String(rm.roomNumber).trim())
+ );
+ const roomCapacity = Number(rm.capacity) || rate.capacity || 1;
+ const cleanRoomNum = String(rm.roomNumber || rm.roomNumInt || cIdx + 101).replace(/[^0-9]/g, '') || rm.roomNumber;
 
-  const handleScroll = () => {
-    if (tickingRef.current) return;
-    tickingRef.current = true;
-    window.requestAnimationFrame(() => {
-      updateScrollState();
-      tickingRef.current = false;
-    });
-  };
+ const roomStat = calculateRoomFreePercentage({
+ room: rm,
+ rate,
+ allRoomsBookedSlots,
+ allRoomsBookedMonths,
+ upcomingWeek,
+ upcomingMonths,
+ });
 
-  const scrollToItem = (idx, e) => {
-    if (e) e.stopPropagation();
-    const el = scrollRef.current;
-    if (!el) return;
-    const child = el.children[idx];
-    if (child) {
-      const paddingLeft = parseFloat(window.getComputedStyle(el).paddingLeft) || 0;
-      const targetScroll = Math.max(0, child.offsetLeft - el.offsetLeft - paddingLeft);
-      el.scrollTo({ left: targetScroll, behavior: 'smooth' });
-      setActiveDotIndex(idx);
-      setTimeout(updateScrollState, 150);
-    }
-  };
+ return (
+ <div
+ key={cardId}
+ onClick={(e) => {
+ e.stopPropagation();
+ onSelectRoom?.(rm);
+ setActiveDotIndex(cIdx);
+ }}
+  className={`group relative flex flex-col justify-between p-4 sm:p-5 w-[calc((100%-20px)/2.5)] min-w-[calc((100%-20px)/2.5)] max-w-[calc((100%-20px)/2.5)] h-[148px] sm:h-[158px] shrink-0 snap-start transition-opacity duration-150 select-none outline-none cursor-pointer ${
+   isCardBooked ? isCardSelected ? 'opacity-100 z-10' : 'opacity-85 hover:opacity-100'
+   : isCardSelected ? 'opacity-100 z-10' : 'opacity-90 hover:opacity-100'
+   }`}
+   style={{
+     maskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath fill='white' d='M 16 0 L 66 0 Q 72 0 76 4 L 96 28 Q 100 34 100 40 L 100 84 Q 100 100 84 100 L 16 100 Q 0 100 0 84 L 0 16 Q 0 0 16 0 Z'/%3E%3C/svg%3E")`,
+     maskSize: '100% 100%',
+     WebkitMaskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath fill='white' d='M 16 0 L 66 0 Q 72 0 76 4 L 96 28 Q 100 34 100 40 L 100 84 Q 100 100 84 100 L 16 100 Q 0 100 0 84 L 0 16 Q 0 0 16 0 Z'/%3E%3C/svg%3E")`,
+     WebkitMaskSize: '100% 100%',
+     background: isCardBooked
+        ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.04) 100%)'
+        : isCardSelected
+        ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.10) 100%)'
+        : 'linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.05) 100%)',
+     backdropFilter: 'blur(16px)',
+     WebkitBackdropFilter: 'blur(16px)',
+   }}
+ >
+   {/* Crisp SVG Glass Border Outline matching Pic 2 */}
+   <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+     <path
+       d="M 16 1.2 L 66 1.2 Q 72 1.2 75.8 4.8 L 95.2 28 Q 98.8 33.8 98.8 40 L 98.8 84 Q 98.8 98.8 84 98.8 L 16 98.8 Q 1.2 98.8 1.2 84 L 1.2 16 Q 1.2 1.2 16 1.2 Z"
+       fill="none"
+       stroke={isCardSelected ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.38)'}
+       strokeWidth={isCardSelected ? '2' : '1.2'}
+       vectorEffect="non-scaling-stroke"
+     />
+   </svg>
 
-  const handleScrollLeft = (e) => {
-    e.stopPropagation();
-    const el = scrollRef.current;
-    if (!el) return;
-    const cardWidth = el.firstElementChild ? el.firstElementChild.offsetWidth + 10 : 130;
-    el.scrollBy({ left: -cardWidth, behavior: 'smooth' });
-    setTimeout(updateScrollState, 150);
-  };
-
-  const handleScrollRight = (e) => {
-    e.stopPropagation();
-    const el = scrollRef.current;
-    if (!el) return;
-    const cardWidth = el.firstElementChild ? el.firstElementChild.offsetWidth + 10 : 130;
-    el.scrollBy({ left: cardWidth, behavior: 'smooth' });
-    setTimeout(updateScrollState, 150);
-  };
-
-  return (
-    <div className="flex flex-col gap-1.5">
-      {/* Optional carousel navigation arrows if > 3 rooms */}
-      {matchingRooms.length > 3 && (
-        <div className="flex items-center justify-between pb-0.5 px-0.5">
-          <span className="text-xs font-extrabold text-slate-900 tracking-tight leading-none">
-            Rooms ({matchingRooms.length})
-          </span>
-
-          <div className="flex items-center gap-0.5 bg-slate-100 rounded-xl p-0.5 border border-slate-200/80">
-            <button
-              type="button"
-              onClick={handleScrollLeft}
-              disabled={!canScrollLeft}
-              className="w-5 h-5 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-800 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-              title="Previous room"
-            >
-              <span className="material-symbols-outlined text-[14px]">chevron_left</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleScrollRight}
-              disabled={!canScrollRight}
-              className="w-5 h-5 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-800 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-              title="Next room"
-            >
-              <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {matchingRooms.length === 0 ? (
-        <div className="p-3 rounded-2xl text-xs text-center border border-dashed border-slate-300 text-slate-500 bg-slate-50/50 space-y-1">
-          <p>
-            No room cards available for <span className="text-slate-800 font-semibold">{rate.type || 'this category'}</span> yet.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-1">
-          <div
-            ref={setScrollRef}
-            onScroll={handleScroll}
-            className={`flex items-stretch gap-2.5 pt-6 pb-7 px-6 -mx-2 -mt-3 -mb-3.5 scroll-pl-6 scroll-pr-6 scroll-smooth overscroll-x-contain no-scrollbar ${
-              matchingRooms.length > 3
-                ? 'overflow-x-auto snap-x snap-mandatory'
-                : 'overflow-visible'
-            }`}
-            style={{
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-            }}
-          >
-            {matchingRooms.map((rm, cIdx) => {
-              const cardId = rm._id || rm.id || `room_${rm.roomNumber || cIdx}`;
-              const isBookedToday = Boolean(
-                todayBookedRoomIds &&
-                (todayBookedRoomIds.has(rm._id) ||
-                 todayBookedRoomIds.has(rm.id) ||
-                 todayBookedRoomIds.has(String(rm.roomNumber).trim()))
-              );
-              const isCardSelected = Boolean(
-                (selectedRoom?._id && rm._id && String(selectedRoom._id) === String(rm._id)) ||
-                (selectedRoom?.id && rm.id && String(selectedRoom.id) === String(rm.id)) ||
-                (selectedRoom?.roomNumber && rm.roomNumber && String(selectedRoom.roomNumber).trim() === String(rm.roomNumber).trim())
-              );
-              const roomCapacity = Number(rm.capacity) || rate.capacity || 1;
-              const cleanRoomNum = String(rm.roomNumber || rm.roomNumInt || cIdx + 101).replace(/[^0-9]/g, '') || rm.roomNumber;
-
-              const roomStat = calculateRoomFreePercentage({
-                room: rm,
-                rate,
-                allRoomsBookedSlots,
-                allRoomsBookedMonths,
-                upcomingWeek,
-                upcomingMonths,
-              });
-
-              return (
-                <div
-                  key={cardId}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSelectRoom?.(rm);
-                    setActiveDotIndex(cIdx);
-                  }}
-                  className={`group relative flex flex-col justify-between p-2 sm:p-2.5 rounded-2xl overflow-hidden w-[calc((100%-20px)/3)] min-w-[calc((100%-20px)/3)] max-w-[calc((100%-20px)/3)] h-[154px] sm:h-[158px] shrink-0 snap-start transition-[border-color,box-shadow,background-color,opacity] duration-150 select-none outline-none cursor-pointer ${
-                    isBookedToday
-                      ? isCardSelected
-                        ? 'bg-gradient-to-b from-[#ca8100] via-[#854f00] to-[#261400] text-white border-2 border-amber-400 shadow-room-booked-selected z-10'
-                        : 'bg-gradient-to-b from-[#a36800]/80 via-[#633c00]/80 to-[#1f1100]/90 text-white/95 border border-amber-700/50 shadow-xs opacity-90 hover:opacity-100 hover:border-amber-500/70 hover:shadow-md hover:shadow-amber-950/20'
-                      : isCardSelected
-                      ? 'bg-white border-2 border-[#c0c1ff] shadow-room-open-selected ring-4 ring-indigo-100/80 z-10'
-                      : 'bg-white/70 border border-slate-200 hover:border-slate-300'
-                  }`}
-                >
-                  {/* Card Header Status & Room Free % */}
-                  <div className="flex items-center justify-between w-full h-5 px-0.5">
-                    {isBookedToday ? (
-                      <span className="text-[9px] sm:text-[9.5px] font-black uppercase tracking-wider text-amber-200 leading-none">
-                        BOOKED
+       {/* Top: Status Tag with Sub-label */}
+                    <div className="flex flex-col items-start leading-none z-10">
+                      <span className="text-[13px] sm:text-[14px] font-extrabold text-white leading-tight tracking-wider">
+                        {isCardBooked ? 'BOOKED' : 'OPEN'}
                       </span>
-                    ) : (
-                      <span className="text-[9px] sm:text-[9.5px] font-black text-[#5254cf] uppercase tracking-wider leading-none">
-                        OPEN
+                      <span className="text-[9px] sm:text-[9.5px] font-semibold text-white/70 tracking-wide mt-1">
+                        {isMonthly ? 'This Month' : 'Today'}
                       </span>
-                    )}
+                    </div>
 
-                    <span
-                      className={`text-[8.5px] sm:text-[9.5px] font-black tracking-tight leading-none px-1.5 py-0.5 rounded-md shadow-2xs select-none ${
-                        isBookedToday
-                          ? 'bg-black/40 text-amber-200 border border-amber-300/20'
-                          : roomStat.percentFree >= 50
-                          ? 'bg-emerald-500/15 text-emerald-600 border border-emerald-500/25'
-                          : roomStat.percentFree > 0
-                          ? 'bg-amber-500/15 text-amber-600 border border-amber-500/25'
-                          : 'bg-rose-500/15 text-rose-600 border border-rose-500/25'
-                      }`}
-                      title={`Room ${cleanRoomNum}: ${roomStat.percentFree}% Free (${roomStat.unbookedCount} of ${roomStat.totalCount} ${roomStat.isMonthly ? 'months' : 'days'} unbooked)`}
-                    >
-                      {roomStat.percentFree}% Free
-                    </span>
+                    {/* Center: ROOM label and Room Number */}
+                    <div className="flex flex-col items-center justify-center my-auto py-0.5 text-center z-10">
+                      <span className="block text-[11px] sm:text-[12px] mb-0.5 font-bold tracking-widest text-white/80 leading-none">
+                        ROOM
+                      </span>
+                      <span className="block w-full text-center bg-transparent border-none outline-none p-0 leading-none text-[25px] sm:text-[28px] text-white font-black tracking-tight">
+                        {cleanRoomNum}
+                      </span>
+                    </div>
+
+                    {/* Bottom: CAP Pill on bottom-left, % Full on bottom-right (nightly only) */}
+                    <div className="w-full flex items-center justify-between z-10">
+                      <div
+                        className="w-fit inline-flex items-center gap-1.5 px-2 py-0.5 rounded-none bg-[#0066ff] shadow-sm select-none cursor-default"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <span className="text-[9px] sm:text-[9.5px] font-bold text-white tracking-wider leading-none">
+                          CAP
+                        </span>
+                        <span className="text-[11px] sm:text-[12px] font-black text-white leading-none">
+                          {roomCapacity}
+                        </span>
+                      </div>
+
+                      {!isMonthly && (
+                        <span className="text-[11px] sm:text-[12px] font-semibold text-white/90 leading-none select-none shrink-0">
+                          {roomStat.percentFull ?? (100 - roomStat.percentFree)}% Full
+                        </span>
+                      )}
+                    </div>
                   </div>
-
-                  {/* Room Number */}
-                  <div className="flex-1 flex flex-col items-center justify-center my-1 text-center">
-                    <span
-                      className={`block text-[9.5px] mb-1 uppercase tracking-widest font-extrabold leading-none ${
-                        isBookedToday
-                          ? 'text-amber-200/80'
-                          : 'text-slate-400'
-                      }`}
-                    >
-                      ROOM
-                    </span>
-
-                    <span
-                      className={`block w-full text-center bg-transparent border-none outline-none p-0 leading-none ${
-                        isBookedToday
-                          ? 'text-[20px] sm:text-[22px] text-white font-extrabold drop-shadow-xs tracking-tight'
-                          : 'text-[22px] sm:text-[24px] text-[#5254cf] font-black tracking-tight'
-                      }`}
-                    >
-                      {cleanRoomNum}
-                    </span>
-                  </div>
-
-                  {/* Bottom Capacity Pill */}
-                  <div
-                    className={`h-7 px-2.5 rounded-xl w-full flex items-center justify-between text-xs ${
-                      isBookedToday
-                        ? 'bg-black/35 border border-white/15 backdrop-blur-xs'
-                        : 'bg-slate-50/90 border border-slate-200/80 shadow-2xs'
-                    }`}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <span
-                      className={`text-[9px] font-extrabold uppercase tracking-wider leading-none ${
-                        isBookedToday ? 'text-amber-200' : 'text-slate-500'
-                      }`}
-                    >
-                      CAP
-                    </span>
-
-                    <span
-                      className={`text-[12px] font-black text-center select-none leading-none ${
-                        isBookedToday ? 'text-white' : 'text-[#5254cf]'
-                      }`}
-                    >
-                      {roomCapacity}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Pager Dots for carousel when more than 3 rooms */}
-          {matchingRooms.length > 3 && (
-            <div className="flex items-center justify-center gap-1.5 pt-0.5 pb-1 select-none">
-              {matchingRooms.map((rm, dotIdx) => (
-                <button
-                  key={rm._id || `dot_${dotIdx}`}
-                  type="button"
-                  onClick={(e) => scrollToItem(dotIdx, e)}
-                  className={`transition-all duration-300 rounded-full cursor-pointer ${
-                    activeDotIndex === dotIdx
-                      ? 'w-5 h-1.5 bg-[#c0c1ff]'
-                      : 'w-1.5 h-1.5 bg-slate-300 hover:bg-slate-400'
-                  }`}
-                  title={`Room ${rm.roomNumber || dotIdx + 1}`}
-                />
-              ))}
+                );
+              })}
             </div>
-          )}
+
+          {/* Centered pager dots at bottom center of room category section */}
+      {matchingRooms.length > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-2 pb-3.5 select-none">
+          {matchingRooms.map((rm, dotIdx) => (
+            <button
+              key={rm._id || rm.id || `dot_${dotIdx}`}
+              type="button"
+              onClick={(e) => scrollToItem(dotIdx, e)}
+              className={`transition-all duration-300 rounded-full cursor-pointer ${
+                activeDotIndex === dotIdx
+                  ? 'w-10 h-3 bg-[#c0c1ff]'
+                  : 'w-3 h-3 bg-white/40 hover:bg-white/60'
+              }`}
+              title={`Room ${rm.roomNumber || dotIdx + 1}`}
+              aria-label={`Go to room ${rm.roomNumber || dotIdx + 1}`}
+            />
+          ))}
         </div>
       )}
-    </div>
-  );
+
+ </div>
+ )}
+ </div>
+ );
 }
 
 /**
@@ -337,290 +305,271 @@ function UserCategoryRoomCarousel({
  * - Update button and database status bar are removed.
  * - Capsule header displays Category Name, Price (• ₹Price/unit), and [Avail] badge.
  * - Opening / Closing logic:
- *   - When NO category is expanded: all category capsules are visible stacked vertically.
- *   - When A category is expanded: ONLY that category window appears, all unselected categories disappear!
- *   - When closing/collapsing: all category capsules reappear!
+ * - When NO category is expanded: all category capsules are visible stacked vertically.
+ * - When A category is expanded: ONLY that category window appears, all unselected categories disappear!
+ * - When closing/collapsing: all category capsules reappear!
  */
 export function UserRoomCategoriesPanel({
-  stay,
+ stay,
   roomGrid = [],
-  selectedRoom,
-  onSelectRoom,
-  todayBookedRoomIds = new Set(),
-  selectedCategoryFilter,
-  onSelectCategoryFilter,
-  allRoomsBookedSlots = {},
-  allRoomsBookedMonths = {},
-  upcomingWeek = [],
-  upcomingMonths = [],
+ selectedRoom,
+ onSelectRoom,
+ todayBookedRoomIds = new Set(),
+ selectedCategoryFilter,
+ onSelectCategoryFilter,
+ allRoomsBookedSlots = {},
+ allRoomsBookedMonths = {},
+ upcomingWeek = [],
+ upcomingMonths = [],
 }) {
-  // Normalize room categories from stay.roomRates or fallback from roomGrid
-  const categories = useMemo(() => {
-    if (Array.isArray(stay?.roomRates) && stay.roomRates.length > 0) {
-      return stay.roomRates;
-    }
-    const catMap = new Map();
-    (roomGrid || []).forEach((rm) => {
-      const type = rm.type || 'Standard Room';
-      if (!catMap.has(type)) {
-        catMap.set(type, {
-          type,
-          price: rm.price || stay?.price || '3000',
-          rateUnit: rm.rateUnit || stay?.rateUnit || '/night',
-          capacity: rm.capacity || 1,
-        });
-      }
-    });
-    return Array.from(catMap.values());
-  }, [stay, roomGrid]);
+ // Normalize room categories from stay.roomRates or fallback from roomGrid
+ const categories = useMemo(() => {
+ if (Array.isArray(stay?.roomRates) && stay.roomRates.length > 0) {
+ return stay.roomRates;
+ }
+ const catMap = new Map();
+ (roomGrid || []).forEach((rm) => {
+ const type = rm.type || 'Standard Room';
+ if (!catMap.has(type)) {
+ catMap.set(type, {
+ type,
+ price: rm.price || stay?.price || '3000',
+ rateUnit: rm.rateUnit || stay?.rateUnit || '/night',
+ capacity: rm.capacity || 1,
+ });
+ }
+ });
+ return Array.from(catMap.values());
+ }, [stay, roomGrid]);
 
-  // Live availability stats per category using isRoomMatchingCategory
-  const categoryStatsMap = useMemo(() => {
-    const map = {};
-    const safeRooms = Array.isArray(roomGrid) ? roomGrid : [];
-    const safeRates = Array.isArray(categories) ? categories : [];
+ // Live availability stats per category using isRoomMatchingCategory
+ const categoryStatsMap = useMemo(() => {
+  const map = {};
+  const safeRooms = Array.isArray(roomGrid) ? roomGrid : [];
+  const safeRates = Array.isArray(categories) ? categories : [];
+  const currentMonthKey = upcomingMonths[0]?.monthKey;
 
-    safeRates.forEach((rate, idx) => {
-      if (!rate) return;
-      const matchingRooms = safeRooms.filter((r) =>
-        isRoomMatchingCategory(r, rate, idx, safeRates)
-      );
-      const totalCount = matchingRooms.length;
-      const availableCount = matchingRooms.filter((rm) => {
+  safeRates.forEach((rate, idx) => {
+    if (!rate) return;
+    const isCatMonthly = isMonthlyRateUnit(rate?.rateUnit);
+    const matchingRooms = safeRooms.filter((r) =>
+      isRoomMatchingCategory(r, rate, idx, safeRates)
+    );
+    const totalCount = matchingRooms.length;
+    const availableCount = matchingRooms.filter((rm) => {
+      if (isCatMonthly) {
+        const isMonthBooked = Boolean(
+          (currentMonthKey && allRoomsBookedMonths && (
+            allRoomsBookedMonths[rm._id]?.has?.(currentMonthKey) ||
+            allRoomsBookedMonths[rm.id]?.has?.(currentMonthKey) ||
+            allRoomsBookedMonths[String(rm.roomNumber)?.trim()]?.has?.(currentMonthKey)
+          )) ||
+          (todayBookedRoomIds && (
+            todayBookedRoomIds.has(rm._id) ||
+            todayBookedRoomIds.has(rm.id) ||
+            todayBookedRoomIds.has(String(rm.roomNumber)?.trim())
+          ))
+        );
+        return !isMonthBooked;
+      } else {
         const isBookedToday = Boolean(
           todayBookedRoomIds &&
           (todayBookedRoomIds.has(rm._id) ||
-           todayBookedRoomIds.has(rm.id) ||
-           todayBookedRoomIds.has(String(rm.roomNumber).trim()))
+          todayBookedRoomIds.has(rm.id) ||
+          todayBookedRoomIds.has(String(rm.roomNumber)?.trim()))
         );
         return !isBookedToday;
-      }).length;
+      }
+    }).length;
 
-      const freeStats = calculateCategoryFreePercentage({
-        rooms: matchingRooms,
-        rate,
-        allRoomsBookedSlots,
-        allRoomsBookedMonths,
-        upcomingWeek,
-        upcomingMonths,
-      });
-
-      map[idx] = {
-        totalCount,
-        availableCount,
-        rooms: matchingRooms,
-        percentFree: freeStats.percentFree,
-        totalUnbooked: freeStats.totalUnbooked,
-        totalPossible: freeStats.totalPossible,
-      };
+    const freeStats = calculateCategoryFreePercentage({
+      rooms: matchingRooms,
+      rate,
+      allRoomsBookedSlots,
+      allRoomsBookedMonths,
+      upcomingWeek,
+      upcomingMonths,
     });
-    return map;
-  }, [categories, roomGrid, todayBookedRoomIds, allRoomsBookedSlots, allRoomsBookedMonths, upcomingWeek, upcomingMonths]);
 
-  // Initial state: -1 (all collapsed) unless a room or filter was explicitly passed
-  const initialOpenIdx = useMemo(() => {
-    if (selectedRoom) {
-      const foundIdx = categories.findIndex((c, idx) =>
-        isRoomMatchingCategory(selectedRoom, c, idx, categories)
-      );
-      if (foundIdx !== -1) return foundIdx;
-    }
+    map[idx] = {
+      totalCount,
+      availableCount,
+      rooms: matchingRooms,
+      percentFree: freeStats.percentFree,
+      percentFull: 100 - (freeStats.percentFree ?? 0),
+      totalUnbooked: freeStats.totalUnbooked,
+      totalPossible: freeStats.totalPossible,
+    };
+  });
+  return map;
+}, [categories, roomGrid, todayBookedRoomIds, allRoomsBookedSlots, allRoomsBookedMonths, upcomingWeek, upcomingMonths]);
+
+ // Initial state: -1 (all collapsed) unless a room or filter was explicitly passed
+ const initialOpenIdx = useMemo(() => {
+ if (selectedRoom) {
+ const foundIdx = categories.findIndex((c, idx) =>
+ isRoomMatchingCategory(selectedRoom, c, idx, categories)
+ );
+ if (foundIdx !== -1) return foundIdx;
+ }
+ if (selectedCategoryFilter && selectedCategoryFilter !== 'All') {
+ const foundIdx = categories.findIndex(
+ (c) => (c.type || '').toLowerCase().trim() === selectedCategoryFilter.toLowerCase().trim()
+ );
+ if (foundIdx !== -1) return foundIdx;
+ }
+ return -1;
+ }, [categories, selectedRoom, selectedCategoryFilter]);
+
+ const [openCategoryIndex, setOpenCategoryIndex] = useState(initialOpenIdx);
+
+ // Sync open category when a valid selected room changes
+ const [prevSelectedRoom, setPrevSelectedRoom] = useState(selectedRoom);
+ if (prevSelectedRoom !== selectedRoom) {
+ setPrevSelectedRoom(selectedRoom);
+ if (selectedRoom) {
+ const foundIdx = categories.findIndex((c, idx) =>
+ isRoomMatchingCategory(selectedRoom, c, idx, categories)
+ );
+ if (foundIdx !== -1) {
+ setOpenCategoryIndex(foundIdx);
+ }
+ }
+ }
+
+ const handleToggleCategory = (idx, e) => {
+ if (e) {
+ e.preventDefault();
+ e.stopPropagation();
+ }
+ const isCurrentlyExpanded = openCategoryIndex === idx;
+ if (isCurrentlyExpanded) {
+ // Smooth collapse: closes card and makes all categories reappear
+ setOpenCategoryIndex(-1);
+ } else {
+ // Smooth expand: opens card and hides all unselected categories
+ setOpenCategoryIndex(idx);
+ const targetCat = categories[idx];
+ if (targetCat?.type && typeof onSelectCategoryFilter === 'function') {
+ onSelectCategoryFilter(targetCat.type);
+ }
+ const stats = categoryStatsMap[idx];
+ if (stats?.rooms?.length > 0) {
+ const isCurrentRoomInCat = selectedRoom && stats.rooms.some((r) =>
+ (r._id && selectedRoom._id && String(r._id) === String(selectedRoom._id)) ||
+ (r.id && selectedRoom.id && String(r.id) === String(selectedRoom.id)) ||
+ (r.roomNumber && selectedRoom.roomNumber && String(r.roomNumber).trim() === String(selectedRoom.roomNumber).trim())
+ );
+ if (!isCurrentRoomInCat) {
+ const firstAvailable = stats.rooms.find((r) => !todayBookedRoomIds?.has?.(r._id) && !todayBookedRoomIds?.has?.(r.id)) || stats.rooms[0];
+ if (typeof onSelectRoom === 'function') {
+ onSelectRoom(firstAvailable);
+ }
+ }
+ }
+ }
+ };
+
+   // Always show only the selected category from previous page
+  const categoriesToRender = (() => {
+    const all = categories.map((rate, idx) => ({ rate, originalIndex: idx }));
     if (selectedCategoryFilter && selectedCategoryFilter !== 'All') {
-      const foundIdx = categories.findIndex(
-        (c) => (c.type || '').toLowerCase().trim() === selectedCategoryFilter.toLowerCase().trim()
+      const filtered = all.filter(({ rate }) =>
+        (rate.type || '').toLowerCase().trim() === selectedCategoryFilter.toLowerCase().trim()
       );
-      if (foundIdx !== -1) return foundIdx;
+      if (filtered.length > 0) return filtered;
     }
-    return -1;
-  }, [categories, selectedRoom, selectedCategoryFilter]);
+    return all.slice(0, 1);
+  })();
 
-  const [openCategoryIndex, setOpenCategoryIndex] = useState(initialOpenIdx);
+ return (
+ <div className="w-full relative flex flex-col justify-center my-auto min-h-full overflow-hidden rounded-b-[2rem]">
+ {categories.length > 0 ? (
+ <div className="space-y-3.5 w-full flex flex-col justify-center my-auto">
+ {categoriesToRender.map(({ rate, originalIndex: index }) => {
+ const isMonthly = isMonthlyRateUnit(rate?.rateUnit);
+ const rowKey = rate._id || rate.id || `rate_${index}_${rate.type || ''}`;
+ const rawPrice = String(rate.price || '').replace(/[^0-9]/g, '');
+ const stats = categoryStatsMap[index] || { totalCount: 0, availableCount: 0, rooms: [] };
+ const matchingRooms = stats.rooms || [];
 
-  // Sync open category when a valid selected room changes
-  const [prevSelectedRoom, setPrevSelectedRoom] = useState(selectedRoom);
-  if (prevSelectedRoom !== selectedRoom) {
-    setPrevSelectedRoom(selectedRoom);
-    if (selectedRoom) {
-      const foundIdx = categories.findIndex((c, idx) =>
-        isRoomMatchingCategory(selectedRoom, c, idx, categories)
-      );
-      if (foundIdx !== -1) {
-        setOpenCategoryIndex(foundIdx);
-      }
-    }
-  }
-
-  const handleToggleCategory = (idx, e) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    const isCurrentlyExpanded = openCategoryIndex === idx;
-    if (isCurrentlyExpanded) {
-      // Smooth collapse: closes card and makes all categories reappear
-      setOpenCategoryIndex(-1);
-    } else {
-      // Smooth expand: opens card and hides all unselected categories
-      setOpenCategoryIndex(idx);
-      const targetCat = categories[idx];
-      if (targetCat?.type && typeof onSelectCategoryFilter === 'function') {
-        onSelectCategoryFilter(targetCat.type);
-      }
-      const stats = categoryStatsMap[idx];
-      if (stats?.rooms?.length > 0) {
-        const isCurrentRoomInCat = selectedRoom && stats.rooms.some((r) =>
-          (r._id && selectedRoom._id && String(r._id) === String(selectedRoom._id)) ||
-          (r.id && selectedRoom.id && String(r.id) === String(selectedRoom.id)) ||
-          (r.roomNumber && selectedRoom.roomNumber && String(r.roomNumber).trim() === String(selectedRoom.roomNumber).trim())
-        );
-        if (!isCurrentRoomInCat) {
-          const firstAvailable = stats.rooms.find((r) => !todayBookedRoomIds?.has?.(r._id) && !todayBookedRoomIds?.has?.(r.id)) || stats.rooms[0];
-          if (typeof onSelectRoom === 'function') {
-            onSelectRoom(firstAvailable);
-          }
-        }
-      }
-    }
-  };
-
-  const hasOpenCategory = openCategoryIndex !== -1;
-
-  // When a category is selected/open: ONLY that window appears, all unselected categories disappear!
-  // When no category is open: all categories are displayed in the list.
-  const categoriesToRender = hasOpenCategory
-    ? categories
-        .map((rate, idx) => ({ rate, originalIndex: idx }))
-        .filter(({ originalIndex }) => originalIndex === openCategoryIndex)
-    : categories.map((rate, idx) => ({ rate, originalIndex: idx }));
-
-  return (
-    <div className="w-full relative flex flex-col justify-center my-auto min-h-full">
-      {categories.length > 0 ? (
-        <div className="space-y-3.5 w-full flex flex-col justify-center my-auto">
-          {categoriesToRender.map(({ rate, originalIndex: index }) => {
-            const isExpanded = openCategoryIndex === index;
-            const isMonthly = isMonthlyRateUnit(rate?.rateUnit);
-            const rowKey = rate._id || rate.id || `rate_${index}_${rate.type || ''}`;
-            const rawPrice = String(rate.price || '').replace(/[^0-9]/g, '');
-            const stats = categoryStatsMap[index] || { totalCount: 0, availableCount: 0, rooms: [] };
-            const matchingRooms = stats.rooms || [];
-
-            return (
-              <div
+ return (
+ <div
                 key={rowKey}
-                className={`w-full flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden transition-all ${
-                  isExpanded
-                    ? 'bg-white'
-                    : 'bg-white'
-                } ${
-                  isExpanded
-                    ? 'border border-slate-200/90 shadow-xl'
-                    : 'border border-slate-200/90 shadow-xl'
-                } ${!isExpanded ? 'cursor-pointer' : ''}`}
+                className="w-full flex flex-col overflow-hidden"
               >
-                {/* Card Header (Accessible Toggle Trigger) - Clean Neutral Tab */}
-                <div
-                  onClick={(e) => handleToggleCategory(index, e)}
-                  className={`px-4 sm:px-5 py-3 ${
-                    isExpanded
-                      ? 'border-b border-slate-200/90 bg-white text-slate-900'
-                      : 'bg-white text-slate-900'
-                  } flex items-center justify-between select-none cursor-pointer`}
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <h2 className="text-[14px] sm:text-[16px] text-slate-900 truncate font-extrabold tracking-tight leading-normal pb-0.5">
-                      {rate.type || 'Unnamed Category'}
-                    </h2>
+                
+ {/* Card Header: Category Name on top, Pricing (no dot) and % Full aligned in bottom row */}
+      <div className="px-4 sm:px-5 py-3 sm:py-3.5 border-b border-white/15 text-white flex flex-col gap-1.5 select-none w-full">
+        {/* Row 1: Category Name */}
+        <h2 className="text-[26px] sm:text-[30px] text-white truncate font-bold tracking-tight leading-tight">
+          {rate.type || 'Unnamed Category'}
+        </h2>
 
-                    {rate.price && (
-                      <span className="text-[11px] sm:text-xs font-bold text-slate-500 shrink-0 leading-normal pb-0.5">
-                        • ₹{rawPrice}{rate.rateUnit || '/night'}
-                      </span>
-                    )}
-                  </div>
+        {/* Row 2: Pricing on left, m/n Avail (monthly) or % Full (nightly) on right */}
+        <div className="flex items-center justify-between w-full">
+          {rate.price ? (
+            <span className="text-[20px] sm:text-[22px] font-semibold text-blue-200 leading-none">
+              ₹{rawPrice}{rate.rateUnit || '/night'}
+            </span>
+          ) : <div />}
 
-                  {/* Center: Category Free Percentage (n% Free) */}
-                  <div className="flex items-center justify-center px-1.5 sm:px-2 shrink-0">
-                    <span
-                      className={`h-6 px-2.5 sm:px-3 text-[11px] sm:text-xs rounded-full font-black tracking-wide shadow-2xs select-none flex items-center justify-center leading-normal backdrop-blur-xs transition-colors ${
-                        stats.percentFree >= 50
-                          ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600'
-                          : stats.percentFree > 0
-                          ? 'bg-amber-500/10 border border-amber-500/20 text-amber-600'
-                          : 'bg-rose-500/10 border border-rose-500/20 text-rose-600'
-                      }`}
-                      title={`${stats.percentFree}% Free (${stats.totalUnbooked} of ${stats.totalPossible} ${isMonthly ? 'months' : 'days'} unbooked across all rooms in this category)`}
-                    >
-                      {stats.percentFree}% Free
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                    <span
-                      className="h-6 px-2.5 text-[11px] rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold shadow-2xs select-none flex items-center justify-center leading-normal"
-                      title={`${stats.availableCount} of ${stats.totalCount} rooms are available today`}
-                    >
-                      {stats.availableCount}/{stats.totalCount} Avail
-                    </span>
-
-                    <motion.button
-                      type="button"
-                      animate={{ rotate: isExpanded ? 180 : 0 }}
-                      transition={{ type: 'spring', stiffness: 320, damping: 30, mass: 0.8 }}
-                      className="w-6 h-6 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors cursor-pointer"
-                      title={isExpanded ? 'Collapse category' : 'Expand category'}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleToggleCategory(index, e);
-                      }}
-                    >
-                      <span className="material-symbols-outlined text-[20px] leading-none flex items-center justify-center">
-                        keyboard_arrow_down
-                      </span>
-                    </motion.button>
-                  </div>
-                </div>
-
-                {/* Expandable Body: Displays ONLY the room cards */}
-                <AnimatePresence initial={false}>
-                  {isExpanded && (
-                    <motion.div
-                      key={`body-${rowKey}`}
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{
-                        height: { type: 'spring', stiffness: 360, damping: 34, mass: 0.7 },
-                        opacity: { duration: 0.18, ease: 'easeOut' },
-                      }}
-                      className="overflow-hidden"
-                    >
-                      <div className="p-3.5 sm:p-4 flex flex-col gap-2">
-                        <UserCategoryRoomCarousel
-                          matchingRooms={matchingRooms}
-                          rate={rate}
-                          categoryIndex={index}
-                          selectedRoom={selectedRoom}
-                          onSelectRoom={onSelectRoom}
-                          onSelectCategoryFilter={onSelectCategoryFilter}
-                          todayBookedRoomIds={todayBookedRoomIds}
-                          isMonthly={isMonthly}
-                          allRoomsBookedSlots={allRoomsBookedSlots}
-                          allRoomsBookedMonths={allRoomsBookedMonths}
-                          upcomingWeek={upcomingWeek}
-                          upcomingMonths={upcomingMonths}
-                        />
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            );
-          })}
+          {isMonthly ? (
+            <span
+              className={`h-8 sm:h-9 px-3.5 sm:px-4 text-[14px] sm:text-[15px] rounded-full font-bold tracking-tight shadow-sm select-none flex items-center justify-center leading-none transition-colors ${
+                stats.availableCount === 0
+                  ? 'bg-rose-500/20 border border-rose-400/40 text-rose-300'
+                  : stats.availableCount < stats.totalCount
+                  ? 'bg-amber-500/20 border border-amber-400/40 text-amber-300'
+                  : 'bg-emerald-500/20 border border-emerald-400/40 text-emerald-300'
+              }`}
+              title={`${stats.availableCount}/${stats.totalCount} Available`}
+            >
+              {stats.availableCount}/{stats.totalCount} Avail
+            </span>
+          ) : (
+            <span
+              className={`h-8 sm:h-9 px-3.5 sm:px-4 text-[17px] sm:text-[19px] rounded-full font-bold tracking-tight shadow-sm select-none flex items-center justify-center leading-none transition-colors ${
+                (stats.percentFull ?? (100 - stats.percentFree)) >= 75
+                  ? 'bg-rose-500/20 border border-rose-400/40 text-rose-300'
+                  : (stats.percentFull ?? (100 - stats.percentFree)) >= 40
+                  ? 'bg-amber-500/20 border border-amber-400/40 text-amber-300'
+                  : 'bg-emerald-500/20 border border-emerald-400/40 text-emerald-300'
+              }`}
+              title={`${stats.percentFull ?? (100 - stats.percentFree)}% Full`}
+            >
+              {stats.percentFull ?? (100 - stats.percentFree)}% Full
+            </span>
+          )}
         </div>
-      ) : null}
-    </div>
-  );
+      </div>
+      {/* Room Cards Body - always visible */}
+  <div className="overflow-hidden">
+
+ <div className="p-3.5 sm:p-4 flex flex-col gap-2">
+ <UserCategoryRoomCarousel
+ matchingRooms={matchingRooms}
+ rate={rate}
+ categoryIndex={index}
+ selectedRoom={selectedRoom}
+ onSelectRoom={onSelectRoom}
+ onSelectCategoryFilter={onSelectCategoryFilter}
+ todayBookedRoomIds={todayBookedRoomIds}
+ isMonthly={isMonthly}
+ allRoomsBookedSlots={allRoomsBookedSlots}
+ allRoomsBookedMonths={allRoomsBookedMonths}
+ upcomingWeek={upcomingWeek}
+ upcomingMonths={upcomingMonths}
+                           />
+ </div>
+  </div>
+ </div>
+ );
+ })}
+ </div>
+ ) : null}
+ </div>
+ );
 }
 
 export default UserRoomCategoriesPanel;

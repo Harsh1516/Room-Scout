@@ -19,16 +19,17 @@ export function Homepage({ setCategoryFilter, onStayClick, onBookClick, onSelect
   };
 
   return (
-    <main className="relative min-h-screen max-md:bg-[#070A0F] max-md:text-slate-200 md:bg-white md:text-slate-900 overflow-x-hidden selection:bg-emerald-500 selection:text-neutral-950">
+    <main className="relative min-h-screen bg-[#F8FAFC] text-slate-900 overflow-x-hidden selection:bg-emerald-500 selection:text-neutral-950">
       {/* ── Fixed Screen Ambient Canvas (Locks to viewport: content scrolls THROUGH without moving) ── */}
       <div 
         aria-hidden="true" 
         className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
       >
-        {/* Mobile Background Elements (Zero-cost GPU radial gradients instead of heavy blur filters) */}
-        <div className="md:hidden absolute inset-0 bg-gradient-to-b from-[#0B0F15] via-[#070A0F] to-[#0B0F15]" />
-        <div className="md:hidden absolute -top-20 left-1/2 -translate-x-1/2 w-80 h-56 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.12)_0%,transparent_70%)] rounded-full pointer-events-none" />
-        <div className="md:hidden absolute top-1/3 left-1/2 -translate-x-1/2 w-72 h-44 bg-[radial-gradient(ellipse_at_center,rgba(245,158,11,0.05)_0%,transparent_70%)] rounded-full pointer-events-none" />
+        {/* Mobile Background Elements - Crisp Light / White Theme */}
+        <div className="md:hidden absolute inset-0 bg-gradient-to-b from-[#f8fafc] via-[#f1f5f9]/70 to-[#ffffff]" />
+        <div className="md:hidden absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(226,232,240,0.8),rgba(255,255,255,0))]" />
+        <div className="md:hidden absolute -top-16 left-1/2 -translate-x-1/2 w-80 h-56 bg-sky-200/25 rounded-full blur-[80px] pointer-events-none" />
+        <div className="md:hidden absolute top-1/3 left-1/2 -translate-x-1/2 w-72 h-44 bg-indigo-200/20 rounded-full blur-[70px] pointer-events-none" />
 
         {/* ── Desktop Light Mode Canvas ── */}
         <div 
@@ -66,40 +67,40 @@ export function Homepage({ setCategoryFilter, onStayClick, onBookClick, onSelect
         {/* 1. Clean Modern Hero Section (Staggered initial reveal) */}
         <HeroSection onSelectUpload={onSelectUpload} />
 
-        {/* Quick Category Filters for Mobile (iPhone canvas style from design) */}
+        {/* Quick Category Filters for Mobile (Clean glassmorphic pills with high text contrast) */}
         <div className="md:hidden px-4 overflow-x-auto no-scrollbar flex items-center gap-2 select-none" data-purpose="category-filters">
           <button
             type="button"
             onClick={() => handleSelectCategory('all')}
-            className="px-4 py-2 rounded-full text-xs font-semibold bg-emerald-500 text-neutral-950 whitespace-nowrap shadow-[0_0_12px_rgba(16,185,129,0.3)] active:scale-95 cursor-pointer transition-transform"
+            className="px-4 py-2 rounded-full text-xs font-semibold bg-[#0B0B0B] text-white whitespace-nowrap shadow-xs active:scale-95 cursor-pointer transition-transform"
           >
             All Stays
           </button>
           <button
             type="button"
             onClick={() => handleSelectCategory('pg')}
-            className="px-4 py-2 rounded-full text-xs font-medium bg-[#141B26] border border-white/[0.08] text-slate-300 whitespace-nowrap hover:bg-[#1A2332] hover:text-white transition-colors shadow-subtle active:scale-95 cursor-pointer"
+            className="px-4 py-2 rounded-full text-xs font-semibold bg-white border border-[#D9D9D9] text-[#333333] whitespace-nowrap hover:bg-slate-50 hover:text-black transition-colors shadow-xs active:scale-95 cursor-pointer"
           >
             Student PGs
           </button>
           <button
             type="button"
             onClick={() => handleSelectCategory('flats')}
-            className="px-4 py-2 rounded-full text-xs font-medium bg-[#141B26] border border-white/[0.08] text-slate-300 whitespace-nowrap hover:bg-[#1A2332] hover:text-white transition-colors shadow-subtle active:scale-95 cursor-pointer"
+            className="px-4 py-2 rounded-full text-xs font-semibold bg-white border border-[#D9D9D9] text-[#333333] whitespace-nowrap hover:bg-slate-50 hover:text-black transition-colors shadow-xs active:scale-95 cursor-pointer"
           >
             Co-Living Suites
           </button>
           <button
             type="button"
             onClick={() => handleSelectCategory('flats')}
-            className="px-4 py-2 rounded-full text-xs font-medium bg-[#141B26] border border-white/[0.08] text-slate-300 whitespace-nowrap hover:bg-[#1A2332] hover:text-white transition-colors shadow-subtle active:scale-95 cursor-pointer"
+            className="px-4 py-2 rounded-full text-xs font-semibold bg-white border border-[#D9D9D9] text-[#333333] whitespace-nowrap hover:bg-slate-50 hover:text-black transition-colors shadow-xs active:scale-95 cursor-pointer"
           >
             Studio Flats
           </button>
           <button
             type="button"
             onClick={() => handleSelectCategory('hotels')}
-            className="px-4 py-2 rounded-full text-xs font-medium bg-[#141B26] border border-white/[0.08] text-slate-300 whitespace-nowrap hover:bg-[#1A2332] hover:text-white transition-colors shadow-subtle active:scale-95 cursor-pointer"
+            className="px-4 py-2 rounded-full text-xs font-semibold bg-white border border-[#D9D9D9] text-[#333333] whitespace-nowrap hover:bg-slate-50 hover:text-black transition-colors shadow-xs active:scale-95 cursor-pointer"
           >
             Homestays
           </button>

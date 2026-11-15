@@ -56,6 +56,8 @@ export async function protect(req, res, next) {
     if (match) {
       token = decodeURIComponent(match[1]);
     }
+  } else if (req.query && req.query.token) {
+    token = req.query.token;
   }
 
   if (!token) {
@@ -245,6 +247,8 @@ export async function optionalProtect(req, res, next) {
     if (match) {
       token = decodeURIComponent(match[1]);
     }
+  } else if (req.query && req.query.token) {
+    token = req.query.token;
   }
 
   if (!token) {

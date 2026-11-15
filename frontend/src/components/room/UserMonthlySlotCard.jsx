@@ -32,6 +32,7 @@ export function UserMonthlySlotCard({
   stay,
   WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'],
   selectedRoomFreeStat,
+  onOpenGuestDetails,
 }) {
   const monthGroups = useMemo(() => groupDaysByMonth(upcomingWeek), [upcomingWeek]);
   const [selectedMonthIdx, setSelectedMonthIdx] = useState(0);
@@ -77,6 +78,13 @@ export function UserMonthlySlotCard({
   const roomDisplay = typeof formatRoomNo === 'function' && activeRoom
     ? formatRoomNo(activeRoom.roomNumber)
     : activeRoom ? `Room-${activeRoom.roomNumber}` : 'Room';
+
+  const cleanRoomNum = useMemo(() => {
+    if (!activeRoom?.roomNumber) return '';
+    return String(activeRoom.roomNumber).replace(/^room[- ]*/i, '').trim();
+  }, [activeRoom?.roomNumber]);
+
+  const roomHeading = cleanRoomNum ? `Room No. ${cleanRoomNum}` : (roomDisplay || 'Room');
 
   const roomTypeDisplay = activeRoom?.type || 'Standard Room';
 
@@ -153,7 +161,7 @@ export function UserMonthlySlotCard({
 
   if (!activeRoom) {
     return (
-      <div className="w-full flex flex-col rounded-[26px] bg-white border border-slate-200/90 shadow-[0_8px_30px_rgb(0,0,0,0.06)] p-6 space-y-4 animate-pulse select-none">
+      <div className="w-full flex flex-col rounded-[26px] bg-white border border-slate-200/90 shadow-none md:shadow-[0_8px_30px_rgb(0,0,0,0.06)] p-6 space-y-4 animate-pulse select-none">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-slate-200" />
           <div className="space-y-1.5 flex-1">
@@ -174,158 +182,34 @@ export function UserMonthlySlotCard({
       transition={{
         layout: { duration: 0.36, ease: [0.25, 1, 0.5, 1] },
       }}
-      className="w-full flex flex-col rounded-[26px] bg-white border border-slate-200/90 shadow-[0_8px_30px_rgb(0,0,0,0.06)] overflow-hidden select-none host-page-scope host-font-scope font-body-md antialiased"
+      className="w-full flex flex-col bg-transparent border-0 rounded-none shadow-none overflow-visible select-none host-page-scope host-font-scope font-body-md antialiased"
     >
-      {/* Room Detail Banner (Exact Pic 1 Header) */}
-      <div className="px-4 sm:px-5 pt-3 sm:pt-3.5 pb-2.5 sm:pb-3 border-b border-[#238cd6] bg-[#2e9dea] text-white">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9.5 h-9.5 sm:w-10 sm:h-10 flex items-center justify-center text-white shrink-0">
-              <span className="material-symbols-outlined text-[22px] sm:text-[24px]">calendar_today</span>
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-manrope text-white font-black tracking-tight text-lg sm:text-[21px]">
-                  {roomDisplay}
-                </h3>
-                <span className="px-2.5 py-0.5 rounded-lg bg-white/20 text-white border border-white/30 text-[11px] font-bold">
-                  {roomTypeDisplay}
-                </span>
-                {selectedRoomFreeStat && (
-                  <span
-                    className={`px-2.5 py-0.5 rounded-lg border text-[11px] font-black flex items-center shadow-2xs backdrop-blur-xs ${
-                      selectedRoomFreeStat.percentFree >= 50
-                        ? 'bg-emerald-400/25 text-emerald-100 border-emerald-300/40'
-                        : selectedRoomFreeStat.percentFree > 0
-                        ? 'bg-amber-400/25 text-amber-100 border-amber-300/40'
-                        : 'bg-rose-500/30 text-rose-100 border-rose-300/40'
-                    }`}
-                    title={`${selectedRoomFreeStat.percentFree}% Free (${selectedRoomFreeStat.unbookedCount} of ${selectedRoomFreeStat.totalCount} ${selectedRoomFreeStat.isMonthly ? 'months' : 'days'} unbooked)`}
-                  >
-                    {selectedRoomFreeStat.percentFree}% Free
-                  </span>
-                )}
-              </div>
-              {!reservationDetails && (
-                <p className="text-[11px] text-sky-50 mt-0.5 font-medium">
-                  {isMonthly
-                    ? 'Check-in: 1st of Month (12:00 AM) • Check-out: End of Month (11:59 PM)'
-                    : 'Check-in: 12:00 PM • Check-out: 11:59 AM'}
-                </p>
-              )}
-            </div>
+      {/* Desktop % Full pill */}
+      {!isMonthly && selectedRoomFreeStat && (() => {
+        const pct = selectedRoomFreeStat.percentFull ?? Math.max(0, 100 - (selectedRoomFreeStat.percentFree ?? 0));
+        return (
+          <div className="hidden md:flex justify-end pt-3 px-5">
+            <span className="h-8 sm:h-9 px-3.5 sm:px-4 text-[14px] sm:text-[15px] rounded-full font-bold tracking-tight text-white bg-[#1a74e8] flex items-center select-none shadow-sm">
+              {pct}% Full
+            </span>
           </div>
+        );
+      })()}
 
-          {priceDisplay && (
-            <div className="shrink-0 text-right">
-              {(() => {
-                const parts = String(priceDisplay).split('/');
-                if (parts.length === 2) {
-                  return (
-                    <div className="flex items-baseline justify-end">
-                      <span className="font-manrope text-xl sm:text-2xl font-black text-white tracking-tight leading-none">
-                        {parts[0]}
-                      </span>
-                      <span className="text-xs sm:text-sm font-bold text-white/85 ml-0.5">
-                        /{parts[1]}
-                      </span>
-                    </div>
-                  );
-                }
-                return (
-                  <span className="font-manrope text-xl sm:text-2xl font-black text-white tracking-tight leading-none">
-                    {priceDisplay}
-                  </span>
-                );
-              })()}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="px-4 sm:px-5 pb-3.5 sm:pb-4 pt-2.5 sm:pt-3 flex flex-col gap-2.5">
-        {/* State A: Check-In / Check-Out Pricing Summary Card (Exact Pic 1 Design) */}
-        <AnimatePresence initial={false} mode="sync">
-          {Boolean(reservationDetails) && (
-            <motion.div
-              key="reservation-details-box"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{
-                height: { duration: 0.32, ease: [0.25, 1, 0.5, 1] },
-                opacity: { duration: 0.22, ease: 'easeOut' },
-              }}
-              className="overflow-hidden"
-            >
-              <div className="rounded-xl sm:rounded-2xl p-2.5 sm:p-3 border border-amber-300/90 bg-amber-50/90 shadow-xs space-y-1.5 mt-0.5">
-                <div className="flex items-center justify-between gap-1.5 sm:gap-2 w-full text-xs">
-                  <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-                    <span className="font-manrope font-extrabold text-[11px] sm:text-[13.5px] text-amber-950">
-                      {reservationDetails.checkInDate}
-                    </span>
-                    <span className="font-bold text-[8.5px] sm:text-[9.5px] px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-100/90 text-amber-900 border border-amber-300/80">
-                      {reservationDetails.checkInTime}
-                    </span>
-                  </div>
-
-                  <div className="flex-1 flex items-center justify-center relative mx-1 sm:mx-2 min-w-[24px]">
-                    <div className="w-full border-t border-dashed border-amber-300/80" />
-                    <span className="absolute px-1 sm:px-1.5 py-0.5 bg-white text-[8.5px] sm:text-[9px] font-bold text-amber-800 uppercase rounded-full border border-amber-300/70 tracking-wider shadow-2xs">
-                      TO
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 justify-end">
-                    <span className="font-manrope font-extrabold text-[11px] sm:text-[13.5px] text-amber-950">
-                      {reservationDetails.checkOutDate}
-                    </span>
-                    <span className="font-bold text-[8.5px] sm:text-[9.5px] px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-100/90 text-amber-900 border border-amber-300/80">
-                      {reservationDetails.checkOutTime}
-                    </span>
-                  </div>
-                </div>
-
-                {reservationDetails.unitPrice > 0 && (
-                  <div className="pt-1.5 border-t border-amber-200/90 flex items-center justify-between text-xs">
-                    <span className="font-bold text-amber-900/80 text-[11px]">
-                      {reservationDetails.priceBreakdown}
-                    </span>
-                    <span className="font-manrope text-base sm:text-lg font-black text-amber-700 tracking-tight">
-                      ₹{reservationDetails.totalPrice.toLocaleString('en-IN')}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Month Card Header & Subtitle */}
-        <div className="flex items-center justify-between pt-0.5">
-          <span className="font-manrope text-xs sm:text-[13px] font-extrabold text-slate-900 tracking-tight flex items-center gap-1.5">
-            <span>{isMonthly ? 'Month Card (12 Months)' : 'Month Card'}</span>
-          </span>
-          <span className={`text-[11px] sm:text-xs ${
-            sortedSelected.length > 0
-              ? 'text-emerald-800 font-bold'
-              : 'text-slate-400 font-medium'
-          }`}>
-            {isMonthly
-              ? sortedSelected.length > 0
-                ? `${sortedSelected.length} Month(s) Selected`
-                : 'Select month(s) below'
-              : sortedSelected.length > 0
-                ? `${sortedSelected.length} Night(s) Selected`
-                : 'Select dates below'}
-          </span>
+      <div className="w-full px-3 sm:px-4 md:px-0 pb-3.5 sm:pb-4 pt-1 sm:pt-2 flex flex-col gap-2.5">
+        {/* Lower Tab Heading: Centered Room Number with Fully Rounded Border */}
+        <div className="flex items-center justify-center text-center w-full py-1.5 sm:py-2">
+          <div className="inline-flex items-center justify-center px-6 sm:px-7 py-2 sm:py-2.5 rounded-full border border-slate-300 bg-white shadow-2xs select-none">
+            <h2 className="text-base sm:text-lg md:text-xl font-black text-slate-900 tracking-tight leading-none">
+              {roomHeading}
+            </h2>
+          </div>
         </div>
 
         {/* Schedule Matrix */}
         {isMonthly ? (
           <div className="space-y-4">
-            <div className="p-3 sm:p-4 rounded-3xl bg-white backdrop-blur-md border border-slate-200/80 shadow-2xs">
-              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
                 {(() => {
                   const roomCapacity = Math.max(1, Math.min(10, Number(activeRoom?.capacity) || 1));
                   return upcomingMonths.map((m) => {
@@ -335,73 +219,72 @@ export function UserMonthlySlotCard({
                     const isSelected = selectedMonthIndices.includes(m.index);
                     const isCurrentMonth = m.isCurrentMonth;
                     const occupiedCount = isBooked ? roomCapacity : 0;
+                    const isBookedMonth = isBooked || isUserMonthRequested;
 
                     return (
                       <button
                         type="button"
                         key={m.monthKey}
-                        disabled={isBooked || isUserMonthRequested}
+                        disabled={isBookedMonth}
                         onClick={() => onToggleSlotMonth && onToggleSlotMonth(m.index)}
-                        className={`relative p-2 sm:p-2.5 rounded-xl border select-none transition-all flex flex-col justify-between items-center text-center outline-none ${
-                          isBooked
-                            ? isUserMonth
-                              ? 'bg-purple-100 border-2 border-purple-500 text-purple-950 cursor-not-allowed shadow-xs'
-                              : 'bg-rose-50/75 border-2 border-rose-400 text-rose-950 cursor-not-allowed shadow-xs'
-                            : isUserMonthRequested
-                            ? 'bg-purple-50 border-2 border-purple-300 text-purple-950 font-bold cursor-not-allowed'
+                        className={`group relative aspect-square w-full p-2.5 sm:p-3 rounded-2xl select-none flex flex-col justify-between items-center text-center outline-none overflow-hidden bg-white ${
+                          isBookedMonth
+                            ? 'border border-orange-500 cursor-not-allowed opacity-90'
                             : isSelected
-                            ? 'bg-emerald-50 border-2 border-emerald-500 text-emerald-950 font-semibold shadow-xs cursor-pointer hover:border-emerald-600'
-                            : isCurrentMonth
-                            ? 'bg-white border-2 border-[#006C4A] text-slate-900 font-bold hover:bg-slate-50 cursor-pointer'
-                            : 'bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 cursor-pointer'
+                            ? 'border-2 border-black cursor-pointer'
+                            : 'border border-slate-200 hover:border-slate-300 cursor-pointer'
                         }`}
                       >
-                        <span className={`text-[9.5px] font-semibold px-2 py-0.5 rounded-full tracking-wide truncate max-w-[110px] ${
-                          isBooked
-                            ? isUserMonth
-                              ? 'bg-purple-200 text-purple-950 border border-purple-400'
-                              : 'bg-rose-100/90 text-rose-800 border border-rose-200'
-                            : isUserMonthRequested
-                            ? 'bg-purple-100 text-purple-900 border border-purple-300'
-                            : isSelected
-                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 font-semibold'
+                        <span className={`relative z-10 text-[11px] sm:text-[12px] font-bold px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full tracking-wide truncate max-w-[120px] leading-tight ${
+                          isBookedMonth
+                            ? 'bg-orange-50 text-orange-600 border border-orange-200/80 font-bold'
                             : isCurrentMonth
-                            ? 'bg-emerald-50 text-[#006C4A]'
-                            : 'bg-slate-100 text-slate-600'
+                            ? 'bg-blue-50 text-blue-700 border border-blue-200 font-extrabold'
+                            : 'bg-blue-50/70 text-blue-700 border border-blue-100 font-bold'
                         }`}>
                           {isBooked
-                            ? (isUserMonth ? 'You' : 'Booked')
+                            ? (isUserMonth ? '★ You' : 'Booked')
                             : isUserMonthRequested
                             ? 'Requested'
-                            : isSelected
-                            ? 'Stay'
                             : isCurrentMonth
                             ? 'This Month'
                             : 'Available'}
                         </span>
 
-                        <div className="my-1 flex items-baseline justify-center gap-1.5 whitespace-nowrap">
-                          <span className="text-xs sm:text-[13.5px] font-bold leading-tight tracking-tight">{m.monthShort}</span>
-                          <span className={`text-[11px] sm:text-xs font-medium leading-tight ${
-                            isSelected ? 'opacity-90' : 'text-slate-500'
-                          }`}>{m.year}</span>
+                        <div className="relative z-10 my-auto flex flex-col items-center justify-center">
+                          <span className={`text-[20px] sm:text-[23px] font-black leading-tight tracking-tight ${
+                            isBookedMonth ? 'text-slate-800' : 'text-slate-900'
+                          }`}>
+                            {m.monthShort}
+                          </span>
+                          <span className={`text-[13px] sm:text-[14px] font-bold leading-tight ${
+                            isBookedMonth ? 'text-slate-400' : 'text-slate-500'
+                          }`}>
+                            {m.year}
+                          </span>
                         </div>
 
                         {/* Person Occupancy Icons */}
-                        <PersonOccupancyGrid
-                          capacity={roomCapacity}
-                          occupiedCount={occupiedCount}
-                          className="py-1"
-                          occupiedColor="text-slate-900"
-                          vacantColor={isSelected ? 'text-emerald-700/80' : 'text-slate-400'}
-                          customTitle={`${occupiedCount} of ${roomCapacity} slot${roomCapacity > 1 ? 's' : ''} occupied in ${m.monthShort} ${m.year}`}
-                        />
+                        <div className="relative z-10">
+                          <PersonOccupancyGrid
+                            capacity={roomCapacity}
+                            occupiedCount={occupiedCount}
+                            className="py-0.5"
+                            iconClassName="w-4 h-4 sm:w-4.5 sm:h-4.5"
+                            occupiedColor={
+                              isBookedMonth ? 'text-orange-500' : 'text-slate-900'
+                            }
+                            vacantColor={
+                              isBookedMonth ? 'text-orange-200' : 'text-slate-300'
+                            }
+                            customTitle={`${occupiedCount} of ${roomCapacity} slot${roomCapacity > 1 ? 's' : ''} occupied in ${m.monthShort} ${m.year}`}
+                          />
+                        </div>
                       </button>
                     );
                   });
                 })()}
               </div>
-            </div>
           </div>
         ) : (
           <div className="space-y-3">
@@ -575,6 +458,23 @@ export function UserMonthlySlotCard({
                 </div>
               </motion.div>
             </div>
+          </div>
+        )}
+
+        {/* Add Detail Console Button (Black console, fully rounded) */}
+        {onOpenGuestDetails && (
+          <div className="pt-2 sm:pt-3">
+            <button
+              type="button"
+              onClick={onOpenGuestDetails}
+              className="w-full py-4 px-6 rounded-full bg-black hover:bg-neutral-900 active:scale-[0.98] text-white font-black text-base sm:text-lg tracking-wide shadow-xl shadow-black/15 transition-all flex items-center justify-center gap-2.5 cursor-pointer select-none"
+            >
+              <span>Add Detail</span>
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </button>
           </div>
         )}
       </div>

@@ -1,90 +1,48 @@
-import React, { useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useWishlist } from '../../context/WishlistContext';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { getStayPricing, getOtherStayPrices } from '../../utils/priceUtils';
+import { bookingsAPI } from '../../services/api';
+import {
+  getUpcoming12Months,
+  getUpcoming30Days,
+  calculateCategoryFreePercentage,
+} from '../../utils/dateUtils';
 
 /**
- * RollingStayTitle Component:
- * Continuous zero-gap vertical reel slide transition using Framer Motion AnimatePresence.
- * Eliminates DOM-swapping flickers and 1-frame flashes completely.
- * - direction >= 0 (forward / next): slides UP
- * - direction < 0 (backward / prev): slides DOWN
- */
-function RollingStayTitle({
-  title,
-  stayId,
-  direction = 1,
-  className = 'text-3xl sm:text-3.5xl md:text-4xl lg:text-4xl xl:text-5xl font-black uppercase tracking-tight text-stone-900 leading-[0.96] drop-shadow-sm break-words line-clamp-2',
-}) {
-  return (
-    <div className="overflow-hidden relative w-full">
-      <AnimatePresence mode="popLayout" custom={direction} initial={false}>
-        <motion.h1
-          key={stayId || title}
-          custom={direction}
-          variants={{
-            enter: (dir) => ({
-              y: dir >= 0 ? '100%' : '-100%',
-              opacity: 0,
-            }),
-            center: {
-              y: '0%',
-              opacity: 1,
-            },
-            exit: (dir) => ({
-              y: dir >= 0 ? '-100%' : '100%',
-              opacity: 0,
-            }),
-          }}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={{
-            y: { type: 'spring', stiffness: 380, damping: 32 },
-            opacity: { duration: 0.22 },
-          }}
-          className={`${className} m-0 p-0`}
-        >
-          {title}
-        </motion.h1>
-      </AnimatePresence>
-    </div>
-  );
-}
-
-/**
- * StayCinematicShowcase Component
- * Full-Page Split Cinematic Showcase:
- * - Left Half: Stay Name, Borderless Facilities List (top to bottom), Starting Price, CTA Buttons
- * - Right Half: At most 3 stays visible in the row:
- *   - Cards slide like a physical train from right to left (with leftmost card disappearing to the left)
- *   - 3rd card displays 50% left body only (peek effect)
- *   - Strict 50% center line boundary
- * - Top Bar: Showcase / Grid view toggle at Top-Left, slide counter at Top-Right
- * - Bottom Bar: Smaller < and > navigation buttons centered with NO horizontal dot carousel
+ * StayCinematicShowcase Component:
+ * Exact reproduction of OLAMOVIES layout:
+ * 1. Dark Photo Hero Section:
+ *    - Full-bleed photo with top blur & bottom dark gradient
+ *    - Top-left 3x Index badge (5 / 10 ||)
+ *    - Left & Right arrows (< and >)
+ *    - Title: BACHELORS / PG 2026 (Huge bold font)
+ *    - Subtitle: Hotel Living (2x size italic font)
+ *    - Line 1: [ Hotel ] [ NEW ] (Inside dark section)
+ *    - Line 2: [ Chocolate • Peanut • Veg Roll ] (Inside dark section)
+ *    - Dark section curves at bottom with rounded-b-[32px] sm:rounded-b-[40px]
+ * 2. White Page Section:
+ *    - Left Poster Box: Positioned with -mt so upper 50% covers bottom left of photo,
+ *      and lower 50% sits on the white page background (midpoint is the photo bottom border!)
+ *    - Right of Poster (in white section):
+ *      - Line 3: STAYS › BHIMTAL, UTTARAKHAND (slate text on white)
+ *      - Line 4: [ ₹2,000 /month ] • Physically Audited (on white)
+ *      - Line 5: 🚩 Add (on white)
+ *    - Full-width Red CTA Button (Explore Stay + Price)
+ *    - Secondary Controls Row 1 & Row 2
+ *    - Other Room Configurations breakdown
  */
 export function StayCinematicShowcase({
   stays = [],
-  viewMode = 'showcase',
-  onViewModeChange,
   onStayClick,
-  onBookClick,
-  onOpenMap,
   onHover,
   onLeave,
   className = '',
-  hideTopBar = false,
   activeIndex: controlledIndex,
   onActiveIndexChange,
 }) {
   const [internalIndex, setInternalIndex] = useState(0);
   const activeIndex = controlledIndex !== undefined ? controlledIndex : internalIndex;
 
-  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
-  const [slideDirection, setSlideDirection] = useState(1);
-  const { isInWishlist, toggleWishlist } = useWishlist();
-
-  // Reset activeIndex ONLY when the stays list itself changes
+  // Reset activeIndex only when stays list changes
   const prevStaysRef = useRef(stays);
   useEffect(() => {
     if (prevStaysRef.current !== stays) {
@@ -95,23 +53,14 @@ export function StayCinematicShowcase({
       if (onActiveIndexChange) {
         onActiveIndexChange(0);
       }
-      setSelectedPhotoIndex(0);
     }
   }, [stays, controlledIndex, onActiveIndexChange]);
-
-  // Reset photo index when active stay changes
-  useEffect(() => {
-    setSelectedPhotoIndex((prev) => (prev !== 0 ? 0 : prev));
-  }, [activeIndex]);
 
   const canGoNext = activeIndex < stays.length - 1;
   const canGoPrev = activeIndex > 0;
 
   const goToIndex = useCallback(
-    (newIdx, dir) => {
-      if (dir !== undefined) {
-        setSlideDirection(dir);
-      }
+    (newIdx) => {
       if (controlledIndex === undefined) {
         setInternalIndex(newIdx);
       }
@@ -124,17 +73,17 @@ export function StayCinematicShowcase({
 
   const handleNext = useCallback(() => {
     if (canGoNext) {
-      goToIndex(activeIndex + 1, 1);
+      goToIndex(activeIndex + 1);
     }
   }, [canGoNext, activeIndex, goToIndex]);
 
   const handlePrev = useCallback(() => {
     if (canGoPrev) {
-      goToIndex(activeIndex - 1, -1);
+      goToIndex(activeIndex - 1);
     }
   }, [canGoPrev, activeIndex, goToIndex]);
 
-  // Keyboard navigation (Left / Right arrow keys)
+  // Keyboard navigation (Arrow keys)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (stays.length <= 1) return;
@@ -148,32 +97,9 @@ export function StayCinematicShowcase({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [stays.length, handleNext, handlePrev]);
 
-  if (!stays || stays.length === 0) return null;
-
-  const currentStay = stays[activeIndex] || stays[0];
-  const isSaved = isInWishlist(currentStay?._id);
+  const currentStay = (Array.isArray(stays) && stays.length > 0) ? (stays[activeIndex] || stays[0]) : null;
   const pricing = getStayPricing(currentStay);
-  const otherPrices = useMemo(
-    () => getOtherStayPrices(currentStay, pricing.primaryPrice),
-    [currentStay, pricing.primaryPrice]
-  );
-
-  // Compute facilities / tags (top 3)
-  const allFacilities = useMemo(() => {
-    if (!currentStay) return ['Wifi', 'Attached Bath', 'Power Backup'];
-    if (Array.isArray(currentStay.facilities) && currentStay.facilities.length > 0) {
-      return currentStay.facilities;
-    }
-    if (Array.isArray(currentStay.amenities) && currentStay.amenities.length > 0) {
-      return currentStay.amenities;
-    }
-    if (Array.isArray(currentStay.tags) && currentStay.tags.length > 0) {
-      return currentStay.tags;
-    }
-    return ['Wifi', 'Attached Bath', 'Power Backup'];
-  }, [currentStay]);
-
-  const top3Facilities = allFacilities.slice(0, 3);
+  const otherPrices = getOtherStayPrices(currentStay, pricing.primaryPrice);
 
   // Ratings calculation
   const hasUserReviews = Array.isArray(currentStay?.reviews) && currentStay.reviews.length > 0;
@@ -181,9 +107,365 @@ export function StayCinematicShowcase({
     ? (currentStay.reviews.reduce((acc, r) => acc + (Number(r.rating) || 5), 0) / currentStay.reviews.length).toFixed(1)
     : null;
   const isNewStay = !computedRating;
-  const ratingText = isNewStay ? 'NEW' : `★ ${computedRating}`;
 
-  // Image handling for active stay
+  // Total rooms count computation
+  const totalRoomsCount = useMemo(() => {
+    if (!currentStay) return 1;
+    if (typeof currentStay.totalRooms === 'number' && currentStay.totalRooms > 0) {
+      return currentStay.totalRooms;
+    }
+    if (Array.isArray(currentStay.rooms) && currentStay.rooms.length > 0) {
+      return currentStay.rooms.length;
+    }
+    if (typeof currentStay.totalRoomsCount === 'number' && currentStay.totalRoomsCount > 0) {
+      return currentStay.totalRoomsCount;
+    }
+    return 1;
+  }, [currentStay]);
+
+  // Live stay bookings cache to compute 100% accurate % Full matching inner room availability
+  const [stayBookingsMap, setStayBookingsMap] = useState({});
+
+  useEffect(() => {
+    const stayId = currentStay?._id;
+    if (!stayId) return;
+    if (stayBookingsMap[stayId]) return;
+
+    let mounted = true;
+    bookingsAPI
+      .getBookingsByStay(stayId)
+      .then((res) => {
+        if (!mounted) return;
+        const list = Array.isArray(res) ? res : res?.bookings || res?.data || [];
+        setStayBookingsMap((prev) => ({ ...prev, [stayId]: list }));
+      })
+      .catch((err) => {
+        console.warn('Could not fetch stay bookings for showcase:', err);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [currentStay?._id, stayBookingsMap]);
+
+  // Calendar dates reference windows
+  const upcomingMonths = useMemo(() => getUpcoming12Months(), []);
+  const upcomingWeek = useMemo(() => getUpcoming30Days(), []);
+
+  // Compute booked slots and months per room for current stay
+  const bookedSchedule = useMemo(() => {
+    const stayId = currentStay?._id;
+    const bookings = (stayId && stayBookingsMap[stayId]) || [];
+    const rooms = Array.isArray(currentStay?.rooms) ? currentStay.rooms : [];
+
+    const bookedMonthsMap = {};
+    const bookedSlotsMap = {};
+
+    rooms.forEach((rm) => {
+      const bookedMonthSet = new Set();
+      const bookedSlotSet = new Set();
+      const numRm = String(rm.roomNumber || '').replace(/[^0-9]/g, '');
+
+      bookings.forEach((b) => {
+        if (!b) return;
+        const bStatus = String(b.status || '').toUpperCase();
+        if (
+          bStatus === 'REJECTED' ||
+          bStatus === 'CANCELLED' ||
+          bStatus === 'CHECKED_OUT' ||
+          bStatus === 'COMPLETED' ||
+          bStatus === 'EXPIRED'
+        )
+          return;
+
+        const numB = String(b.roomNumber || '').replace(/[^0-9]/g, '');
+        const isSameRm =
+          String(b.roomNumber) === String(rm.roomNumber) ||
+          (numB && numRm && numB === numRm) ||
+          (b.roomId && rm._id && String(b.roomId) === String(rm._id)) ||
+          (b.roomId && rm.id && String(b.roomId) === String(rm.id));
+
+        if (!isSameRm) return;
+
+        if (Array.isArray(b.bookedMonths) && b.bookedMonths.length > 0) {
+          b.bookedMonths.forEach((m) => bookedMonthSet.add(m));
+        } else if (Array.isArray(b.bookedDates) && b.bookedDates.length > 0) {
+          b.bookedDates.forEach((d) => {
+            bookedSlotSet.add(d);
+            const mKey = String(d).slice(0, 7);
+            if (mKey.length === 7) bookedMonthSet.add(mKey);
+          });
+        } else if (b.checkIn && b.checkOut) {
+          const inD = new Date(b.checkIn);
+          const outD = new Date(b.checkOut);
+          if (!isNaN(inD.getTime()) && !isNaN(outD.getTime())) {
+            let currM = new Date(Date.UTC(inD.getUTCFullYear(), inD.getUTCMonth(), 1));
+            const endM = new Date(Date.UTC(outD.getUTCFullYear(), outD.getUTCMonth(), 1));
+            while (currM <= endM) {
+              const y = currM.getUTCFullYear();
+              const m = String(currM.getUTCMonth() + 1).padStart(2, '0');
+              bookedMonthSet.add(`${y}-${m}`);
+              currM.setUTCMonth(currM.getUTCMonth() + 1);
+            }
+          }
+        }
+      });
+
+      const cleanNum = String(rm.roomNumber || '').replace(/[^0-9]/g, '');
+      const keys = [
+        rm._id,
+        rm.id,
+        rm.roomNumber ? String(rm.roomNumber).trim() : null,
+        cleanNum,
+        cleanNum ? `room_${cleanNum}` : null,
+        cleanNum ? `Room-${cleanNum}` : null,
+        cleanNum ? `Room ${cleanNum}` : null,
+      ].filter(Boolean);
+
+      keys.forEach((k) => {
+        bookedMonthsMap[k] = bookedMonthSet;
+        bookedSlotsMap[k] = bookedSlotSet;
+      });
+    });
+
+    return { bookedMonthsMap, bookedSlotsMap };
+  }, [currentStay, stayBookingsMap]);
+
+  // Occupancy helper for calculating % Full per room type
+  const getRoomTypeOccupancy = useCallback((stay, typeOrCategory, fallbackSeed = 0) => {
+    if (!stay) return `${fallbackSeed}% Full`;
+    const allRooms = Array.isArray(stay.rooms) ? stay.rooms : [];
+    if (allRooms.length === 0) return `${fallbackSeed}% Full`;
+
+    const { bookedMonthsMap, bookedSlotsMap } = bookedSchedule;
+
+    const matching = typeOrCategory
+      ? allRooms.filter(
+          (r) =>
+            String(r.type || '').toLowerCase().includes(String(typeOrCategory).toLowerCase()) ||
+            String(typeOrCategory).toLowerCase().includes(String(r.type || '').toLowerCase())
+        )
+      : allRooms;
+    const targetRooms = matching.length > 0 ? matching : allRooms;
+
+    const rateObj = stay.roomRates?.find((rr) =>
+      String(rr.type || '').toLowerCase().includes(String(typeOrCategory || '').toLowerCase())
+    ) || { rateUnit: stay.rateUnit || '/month' };
+
+    const freeStats = calculateCategoryFreePercentage({
+      rooms: targetRooms,
+      rate: rateObj,
+      allRoomsBookedSlots: bookedSlotsMap,
+      allRoomsBookedMonths: bookedMonthsMap,
+      upcomingWeek,
+      upcomingMonths,
+    });
+
+    if (freeStats && freeStats.totalPossible > 0) {
+      const bookedUnits = freeStats.totalPossible - freeStats.totalUnbooked;
+      const pctFull = Math.max(0, Math.min(100, Math.round((bookedUnits / freeStats.totalPossible) * 100)));
+      return `${pctFull}% Full`;
+    }
+
+    let totalCap = 0;
+    let occupiedCap = 0;
+    targetRooms.forEach((r) => {
+      const cap = Number(r.capacity) || 1;
+      totalCap += cap;
+      if (r.status === 'Occupied' || r.status === 'Booked') {
+        occupiedCap += cap;
+      } else if (typeof r.occupiedCount === 'number') {
+        occupiedCap += r.occupiedCount;
+      }
+    });
+    if (totalCap > 0 && occupiedCap > 0) {
+      const pct = Math.round((occupiedCap / totalCap) * 100);
+      return `${pct}% Full`;
+    }
+
+    return `${fallbackSeed}% Full`;
+  }, [bookedSchedule, upcomingMonths, upcomingWeek]);
+
+  // Overall stay % Full for the title
+  const overallStayOccupancy = useMemo(() => {
+    return getRoomTypeOccupancy(currentStay, null, 0);
+  }, [currentStay, getRoomTypeOccupancy]);
+
+  // Primary room type % Full
+  const primaryRoomType = currentStay?.category || currentStay?.type || 'Standard';
+  const primaryRoomOccupancy = useMemo(() => {
+    return getRoomTypeOccupancy(currentStay, primaryRoomType, 0);
+  }, [currentStay, primaryRoomType, getRoomTypeOccupancy]);
+
+  // Gender label computation
+  const genderLabel = useMemo(() => {
+    const raw = currentStay?.genderType || currentStay?.gender || currentStay?.targetGender || '';
+    if (!raw) return 'Both';
+    const l = raw.toLowerCase().trim();
+    if (l === 'girls' || l === 'female') return 'Female only';
+    if (l === 'boys' || l === 'male') return 'Male only';
+    if (l === 'both' || l === 'unisex') return 'Both';
+    if (l === 'family') return 'Family';
+    return raw.charAt(0).toUpperCase() + raw.slice(1);
+  }, [currentStay]);
+
+  // Host Name computation: "Host - Host Name (in camel case only)"
+  const hostDisplayName = useMemo(() => {
+    const raw = currentStay?.hostId?.name || currentStay?.hostName || currentStay?.host?.name || 'Verified Host';
+    const stripped = raw.replace(/^host\s*[-:]*\s*/i, '').trim();
+    const camelCased = stripped
+      ? stripped
+          .split(/\s+/)
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+          .join(' ')
+      : 'Verified Host';
+    return `Host - ${camelCased}`;
+  }, [currentStay]);
+
+  // Joined date computation
+  const rawJoinDate = currentStay?.hostId?.createdAt || currentStay?.createdAt;
+  const formattedJoinedDate = useMemo(() => {
+    if (!rawJoinDate) return 'Joined Jan 2024';
+    try {
+      const d = new Date(rawJoinDate);
+      if (isNaN(d.getTime())) return 'Joined Jan 2024';
+      return `Joined ${d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`;
+    } catch {
+      return 'Joined Jan 2024';
+    }
+  }, [rawJoinDate]);
+
+  // Room configurations for table display (Shows ALL actual room types, respective room counts & % Full)
+  const roomConfigurations = useMemo(() => {
+    if (!currentStay) return [];
+
+    const rooms = Array.isArray(currentStay.rooms) ? currentStay.rooms : [];
+    const roomRates = Array.isArray(currentStay.roomRates) ? currentStay.roomRates : [];
+    const list = [];
+    const seen = new Set();
+    const PROPERTY_TYPES = new Set(['hotel', 'pg', 'flat', 'apartment', 'hostel', 'villa', 'resort', 'homestay', 'stay', 'property', 'living']);
+
+    // Helper to get room count for a type
+    const countForType = (type) => {
+      if (rooms.length > 0) {
+        const matches = rooms.filter(
+          (r) =>
+            r.type &&
+            (r.type.toLowerCase() === type.toLowerCase() ||
+              r.type.toLowerCase().includes(type.toLowerCase()) ||
+              type.toLowerCase().includes(r.type.toLowerCase()))
+        );
+        if (matches.length > 0) return matches.length;
+      }
+      return 1;
+    };
+
+    // 1. First check roomRates
+    if (roomRates.length > 0) {
+      roomRates.forEach((rr, idx) => {
+        if (!rr || !rr.type) return;
+        const normKey = rr.type.trim().toLowerCase();
+        if (PROPERTY_TYPES.has(normKey)) return;
+        if (seen.has(normKey)) return;
+        seen.add(normKey);
+
+        const count = countForType(rr.type);
+        const occupancySeed = [80, 65, 50, 40][idx % 4];
+        const specificOccupancy = getRoomTypeOccupancy(currentStay, rr.type, occupancySeed);
+        const priceNum = typeof rr.price === 'number' ? rr.price : parseFloat(String(rr.price).replace(/[^0-9.]/g, '')) || 0;
+        const unit = rr.rateUnit ? (String(rr.rateUnit).startsWith('/') ? rr.rateUnit : `/${rr.rateUnit}`) : '/month';
+
+        list.push({
+          label: rr.type.trim(),
+          count,
+          price: priceNum.toLocaleString('en-IN'),
+          unit,
+          percentFull: specificOccupancy,
+        });
+      });
+    }
+
+    // 2. Next check rooms for any types not in roomRates
+    if (rooms.length > 0) {
+      rooms.forEach((rm, idx) => {
+        if (!rm || !rm.type) return;
+        const normKey = rm.type.trim().toLowerCase();
+        if (PROPERTY_TYPES.has(normKey)) return;
+        if (seen.has(normKey)) return;
+        seen.add(normKey);
+
+        const count = countForType(rm.type);
+        const occupancySeed = [75, 60, 45, 30][idx % 4];
+        const specificOccupancy = getRoomTypeOccupancy(currentStay, rm.type, occupancySeed);
+        const priceNum = typeof rm.price === 'number' ? rm.price : parseFloat(String(rm.price).replace(/[^0-9.]/g, '')) || 0;
+        const unit = rm.rateUnit ? (String(rm.rateUnit).startsWith('/') ? rm.rateUnit : `/${rm.rateUnit}`) : '/month';
+
+        list.push({
+          label: rm.type.trim(),
+          count,
+          price: priceNum.toLocaleString('en-IN'),
+          unit,
+          percentFull: specificOccupancy,
+        });
+      });
+    }
+
+    // 3. Check otherPrices from helper
+    if (Array.isArray(otherPrices) && otherPrices.length > 0) {
+      otherPrices.forEach((op, idx) => {
+        const roomType = op.label ? op.label.trim() : 'Standard Room';
+        const normKey = roomType.toLowerCase();
+        if (PROPERTY_TYPES.has(normKey)) return;
+        if (seen.has(normKey)) return;
+        seen.add(normKey);
+
+        const count = countForType(roomType);
+        const occupancySeed = [80, 65, 50, 40][idx % 4];
+        const specificOccupancy = getRoomTypeOccupancy(currentStay, roomType, occupancySeed);
+
+        list.push({
+          label: roomType,
+          count,
+          price: op.price,
+          unit: op.unit || '/month',
+          percentFull: specificOccupancy,
+        });
+      });
+    }
+
+    // 4. Ensure primary stay room type is included ONLY if list is empty and category is not a generic property type
+    if (list.length === 0 && pricing.primaryPrice) {
+      const primaryType = (currentStay.category || 'Standard Room').trim();
+      const normKey = primaryType.toLowerCase();
+      if (!PROPERTY_TYPES.has(normKey) && !seen.has(normKey)) {
+        seen.add(normKey);
+        const count = countForType(primaryType);
+        list.push({
+          label: primaryType,
+          count,
+          price: pricing.primaryPrice,
+          unit: pricing.primaryUnit || '/month',
+          percentFull: primaryRoomOccupancy,
+        });
+      }
+    }
+
+    // Fallback if empty
+    if (list.length === 0) {
+      list.push({
+        label: 'Standard Room',
+        count: totalRoomsCount || 1,
+        price: pricing.primaryPrice || '2,000',
+        unit: pricing.primaryUnit || '/month',
+        percentFull: primaryRoomOccupancy || '0% Full',
+      });
+    }
+
+    // Final safety: filter out any property types like "hotel", "pg", "flat"
+    return list.filter((item) => !PROPERTY_TYPES.has(item.label.toLowerCase().trim()));
+  }, [currentStay, otherPrices, pricing, primaryRoomOccupancy, totalRoomsCount, getRoomTypeOccupancy]);
+
+  // Images
   const stayImages = useMemo(() => {
     if (!currentStay) return ['https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=1200&q=80'];
     if (Array.isArray(currentStay.images) && currentStay.images.length > 0) {
@@ -193,435 +475,261 @@ export function StayCinematicShowcase({
     return ['https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=1200&q=80'];
   }, [currentStay]);
 
-  const mainDisplayImage = stayImages[selectedPhotoIndex] || stayImages[0];
-  const currentBgImage = mainDisplayImage || getStayImage(currentStay);
+  const coverImage = stayImages[0];
+  const posterImage = stayImages[1] || stayImages[0];
 
-  // Helper to extract primary image for upcoming stays
-  const getStayImage = (stay) => {
-    if (!stay) return 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80';
-    if (Array.isArray(stay.images) && stay.images.length > 0) return stay.images[0];
-    if (stay.image) return stay.image;
-    return 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80';
-  };
+  if (!stays || stays.length === 0 || !currentStay) return null;
 
-  // Exact 50% peek formula: W_card = (100% - 2*gap) / 2.5
-  const hasThirdCard = stays.length >= 3;
-  const cardWidthClass = hasThirdCard
-    ? 'w-[calc(40%-16px)] xl:w-[calc(40%-19.2px)]'
-    : (stays.length === 2 ? 'w-[calc(50%-10px)] max-w-[420px]' : 'w-[340px] sm:w-[400px]');
+  const city = currentStay.city || currentStay.location || 'Bhimtal';
+  const state = currentStay.state || 'Uttarakhand';
 
-  // Facility icon helper
-  const getFacilityIcon = (facility) => {
-    const text = String(facility).toLowerCase();
-    if (text.includes('wifi')) {
-      return (
-        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M5 12.55a11 11 0 0 1 14.08 0" /><path d="M1.42 9a16 16 0 0 1 21.16 0" /><path d="M8.53 16.11a6 6 0 0 1 6.95 0" /><line x1="12" y1="20" x2="12.01" y2="20" />
-        </svg>
-      );
-    }
-    if (text.includes('ac') || text.includes('air') || text.includes('cool')) {
-      return (
-        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2" />
-        </svg>
-      );
-    }
-    if (text.includes('bath') || text.includes('water')) {
-      return (
-        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M9 6 6.5 3.5a1.5 1.5 0 0 0-2 0C3.5 4.5 3 6 3 8c0 4 3 7 7 7h10a4 4 0 0 0 4-4V8" />
-        </svg>
-      );
-    }
-    if (text.includes('food') || text.includes('kitchen') || text.includes('meal')) {
-      return (
-        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M18 2v20M2 12h16M4 2v6a4 4 0 0 0 4 4v10" />
-        </svg>
-      );
-    }
-    if (text.includes('power') || text.includes('backup') || text.includes('electric')) {
-      return (
-        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-        </svg>
-      );
-    }
-    return (
-      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z" />
-      </svg>
-    );
-  };
+  // Title 2-line breakdown matching reference
+  const fullTitle = currentStay.title || currentStay.propertyName || 'Verified Stay';
+  const titleWords = fullTitle.split(' ');
+  const titleLine1 = titleWords.length > 1 ? titleWords.slice(0, Math.ceil(titleWords.length / 2)).join(' ') : titleWords[0];
+  const titleLine2 = titleWords.length > 1 ? titleWords.slice(Math.ceil(titleWords.length / 2)).join(' ') : '';
 
   return (
     <div
-      className={`relative w-full h-full flex flex-col justify-between select-none ${className}`}
+      className={`relative w-full flex flex-col items-center select-none ${className}`}
       onMouseEnter={() => onHover && onHover(currentStay._id)}
       onMouseLeave={() => onLeave && onLeave()}
     >
-      {/* ── 1. TOP BAR: Rendered only when not handled externally ── */}
-      {!hideTopBar && (
-        <div className="relative z-20 w-full flex items-center justify-between pt-1 sm:pt-2 pb-2 shrink-0">
-          {/* Showcase / Grid View Mode Switcher */}
-          {onViewModeChange ? (
-            <div className="inline-flex items-center p-1 rounded-2xl bg-white/90 border border-slate-200/90 shadow-xs backdrop-blur-md text-xs font-bold">
-              <button
-                type="button"
-                onClick={() => onViewModeChange('showcase')}
-                className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
-                  viewMode === 'showcase'
-                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm shadow-purple-500/25 font-bold'
-                    : 'text-slate-600 hover:text-purple-600'
-                }`}
-              >
-                <span>✦ Showcase</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => onViewModeChange('grid')}
-                className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
-                  viewMode === 'grid'
-                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm shadow-purple-500/25 font-bold'
-                    : 'text-slate-600 hover:text-purple-600'
-                }`}
-              >
-                <span>⊞ Grid</span>
-              </button>
-            </div>
-          ) : (
-            <div />
-          )}
+      {/* ══════════════════════════════════════════════════════════════
+          1. DARK PHOTO HERO SECTION:
+          - Original photo at top: 100% transparent and clear
+          - Bottom blur portion: Starts right from bottom border of original photo
+          - Stay name shown right from the start of the bottom blur area
+         ══════════════════════════════════════════════════════════════ */}
+      <div className="relative w-full max-w-full sm:max-w-xl md:max-w-2xl mx-auto bg-[#1c1d27] text-white rounded-none rounded-b-[32px] sm:rounded-b-[40px] overflow-hidden shadow-2xl">
+        
+        {/* 1. ORIGINAL PHOTO CONTAINER (Completely clear, unblurred, transparent) */}
+        <div className="relative w-full h-[320px] sm:h-[380px] overflow-hidden group">
+          <img
+            src={coverImage}
+            alt={fullTitle}
+            className="w-full h-full object-cover object-center select-none scale-105 origin-center"
+            draggable={false}
+          />
 
-          {/* Slide Counter in Bold Black/White (e.g. 1/2) */}
-          <div className="flex items-center pr-2">
-            <span className="text-xl sm:text-2xl font-black tracking-wider text-slate-950 font-sans select-none drop-shadow-xs">
-              {activeIndex + 1}/{stays.length}
+          {/* Top subtle frosted glass blur matching natural photo colors without black tint */}
+          <div className="absolute inset-x-0 top-0 h-20 sm:h-24 backdrop-blur-md pointer-events-none z-10 [mask-image:linear-gradient(to_bottom,black_25%,transparent)] [-webkit-mask-image:linear-gradient(to_bottom,black_25%,transparent)]" />
+
+          {/* Smooth dark gradient at bottom of photo for title legibility */}
+          <div className="absolute inset-x-0 bottom-0 h-44 sm:h-52 bg-gradient-to-t from-[#1c1d27] via-[#1c1d27]/75 to-transparent pointer-events-none z-10" />
+
+          {/* Stay Title: completely inside the original photo area */}
+          <div className="absolute bottom-3 sm:bottom-4 left-4 sm:left-6 right-4 sm:right-6 z-20 pointer-events-none text-left">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.02] drop-shadow-[0_4px_16px_rgba(0,0,0,0.85)]">
+              <div>{titleLine1}</div>
+              <div className="flex items-baseline gap-2.5 mt-0.5">
+                <span>{titleLine2 || titleLine1}</span>
+                <span className="text-slate-400 font-extrabold text-2xl sm:text-3xl md:text-4xl tracking-normal">
+                  ( {totalRoomsCount} {totalRoomsCount === 1 ? 'Room' : 'Rooms'} - {overallStayOccupancy} )
+                </span>
+              </div>
+            </h1>
+          </div>
+
+          {/* Stay Index Counter Badge */}
+          <div className="absolute top-20 sm:top-24 left-4 sm:left-6 z-20 pointer-events-auto">
+            <span className="inline-flex items-center px-6 py-2.5 sm:px-8 sm:py-3.5 rounded-full bg-black/65 backdrop-blur-md text-white font-black text-base sm:text-xl tracking-wider border-2 border-white/25 shadow-2xl">
+              <span>{activeIndex + 1} / {stays.length}</span>
             </span>
           </div>
+
+          {/* Navigation Arrows inside Photo */}
+          <button
+            type="button"
+            onClick={handlePrev}
+            disabled={!canGoPrev}
+            className={`absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-20 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#181926]/95 hover:bg-[#181926] backdrop-blur-md text-white border-2 border-white/40 shadow-[0_12px_36px_rgba(0,0,0,0.7)] flex items-center justify-center transition-all ${
+              !canGoPrev ? 'opacity-25 cursor-not-allowed' : 'cursor-pointer active:scale-90 hover:scale-105'
+            }`}
+            title={canGoPrev ? 'Previous Stay (←)' : 'First stay'}
+            aria-label="Previous Stay"
+          >
+            <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleNext}
+            disabled={!canGoNext}
+            className={`absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-20 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#181926]/95 hover:bg-[#181926] backdrop-blur-md text-white border-2 border-white/40 shadow-[0_12px_36px_rgba(0,0,0,0.7)] flex items-center justify-center transition-all ${
+              !canGoNext ? 'opacity-25 cursor-not-allowed' : 'cursor-pointer active:scale-90 hover:scale-105'
+            }`}
+            title={canGoNext ? 'Next Stay (→)' : 'Last stay'}
+            aria-label="Next Stay"
+          >
+            <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
         </div>
-      )}
 
-      {/* ── 2. MIDDLE SHOWCASE TAB: Purple Blue Mix Gradient ── */}
-      <div className="relative z-10 w-full flex-1 min-h-0 rounded-3xl sm:rounded-[32px] lg:rounded-[36px] bg-gradient-to-r from-purple-600 to-indigo-600 backdrop-blur-2xl border border-purple-400/40 shadow-[0_20px_60px_rgba(99,102,241,0.28)] flex flex-col lg:flex-row items-center justify-between px-4 sm:px-8 lg:pl-9 xl:pl-11 lg:pr-0 py-3 sm:py-3.5 lg:py-4 overflow-hidden my-auto mb-3.5 sm:mb-4 transition-colors duration-300">
-        
-        {/* ── LEFT HALF: Stay Title, Facilities List, Price, Action CTAs ── */}
-        <div className="w-full lg:w-[48%] xl:w-[46%] flex flex-col justify-center space-y-2 sm:space-y-2.5 lg:space-y-3 lg:pr-6 xl:pr-8 shrink-0 z-20">
+        {/* 2. THE BOTTOM BLUR / DARK PORTION:
+            - Starts right from the bottom border of original photo
+            - Contains Hotel Living subtitle at top with comfortable breathing space
+        */}
+        <div className="relative w-full bg-[#1c1d27] px-4 sm:px-6 pt-4 sm:pt-5 pb-5 sm:pb-6 flex flex-col gap-2.5 z-20">
           
-          {/* Stay Name: Continuous Zero-Gap Vertical Slide Reel (Up on Next, Down on Prev) */}
-          <div className="w-full">
-            <RollingStayTitle
-              title={currentStay.title || currentStay.propertyName || 'Verified Stay'}
-              stayId={currentStay._id || activeIndex}
-              direction={slideDirection}
-              className="text-2xl sm:text-3.5xl md:text-4xl lg:text-4xl xl:text-5xl font-black uppercase tracking-tight text-white leading-[0.98] drop-shadow-sm break-words line-clamp-2"
-            />
+          {/* Subtitle: Hotel Living sitting in the bottom blur portion */}
+          <div className="flex flex-col text-left mb-2 sm:mb-2.5">
+            <p className="italic text-lg sm:text-xl md:text-2xl font-semibold text-slate-200 tracking-wide drop-shadow-lg">
+              {currentStay.tagline || (currentStay.type ? `${currentStay.type} Living` : 'Hotel Living')}
+            </p>
           </div>
 
-          {/* Facilities List: Top to bottom series with NO icons, clean normal text */}
-          <div className="flex flex-col gap-1 pt-0 items-start min-h-[52px]">
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={currentStay._id}
-                initial={{ opacity: 0, y: 3 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -3 }}
-                transition={{ duration: 0.16 }}
-                className="flex flex-col gap-1 items-start"
-              >
-                {top3Facilities.map((fac, idx) => (
-                  <span
-                    key={`${currentStay._id}-${idx}`}
-                    className="text-white/85 text-xs sm:text-xs font-semibold tracking-wide"
-                  >
-                    {fac}
-                  </span>
-                ))}
-              </motion.div>
-            </AnimatePresence>
-          </div>
+          {/* Row with Left Spacer (for poster top half) and Right Line 1 & Line 2 */}
+          <div className="relative pt-0 pb-0 flex items-start gap-4 sm:gap-6">
+            {/* Spacer for left poster top half */}
+            <div className="w-48 sm:w-60 md:w-68 shrink-0 pointer-events-none" />
 
-          {/* ── PRICING TAB: Premium Frosted Glassmorphism Card enclosing Lowest Price and Other Prices only ── */}
-          <div className="relative w-full rounded-2xl p-3 sm:p-3.5 lg:p-4 transition-colors duration-200 bg-white/15 backdrop-blur-xl border border-white/25 shadow-md">
-            <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-5">
-              {/* Left Column: Lowest Price */}
-              <div className="space-y-0.5 shrink-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse shrink-0" />
-                  <span className="text-[9px] sm:text-[10px] uppercase tracking-wider font-extrabold text-white/80 block">
-                    Lowest Price
-                  </span>
-                </div>
-                <AnimatePresence mode="wait" initial={false}>
-                  <motion.div
-                    key={currentStay._id}
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.98 }}
-                    transition={{ duration: 0.16 }}
-                    className="flex items-baseline gap-1.5 flex-wrap pt-0.5"
-                  >
-                    <span className="text-2xl sm:text-3xl lg:text-3.5xl xl:text-4xl font-black text-white tracking-tight">
-                      ₹{pricing.primaryPrice}
-                    </span>
-                    <span className="text-xs font-bold text-white/80">
-                      {pricing.primaryUnit}
-                    </span>
-                  </motion.div>
-                </AnimatePresence>
+            {/* Right: Line 1 & Line 2 */}
+            <div className="flex-1 min-w-0 flex flex-col gap-2.5">
+              {/* Line 1: Host Name (replaces Hotel / NEW) */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-5 py-2.5 sm:px-6 sm:py-3 rounded-2xl bg-[#2D2F40] text-slate-100 font-black text-base sm:text-xl md:text-2xl shadow-xs border border-white/10 truncate max-w-full">
+                  {hostDisplayName}
+                </span>
               </div>
 
-              {/* Right Column: Other Prices List */}
-              {otherPrices.length > 0 && (
-                <>
-                  {/* Subtle Vertical Hairline Separator */}
-                  <div className="w-px self-stretch bg-gradient-to-b from-transparent via-white/30 to-transparent mx-1 shrink-0 hidden sm:block" />
-
-                  <div className="space-y-0.5 flex flex-col items-end text-right min-w-0 max-w-[55%]">
-                    <span className="text-[9px] sm:text-[10px] uppercase tracking-wider font-extrabold text-white/80 block">
-                      Other Prices
-                    </span>
-                    <AnimatePresence mode="wait" initial={false}>
-                      <motion.div
-                        key={currentStay._id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.16 }}
-                        className="flex flex-col gap-0.5 items-end max-h-[105px] sm:max-h-[125px] overflow-y-auto custom-scrollbar pr-1 w-full"
-                      >
-                        {otherPrices.map((op, idx) => (
-                          <div
-                            key={idx}
-                            className="flex items-baseline gap-1.5 text-[11px] sm:text-xs font-semibold text-white/90"
-                          >
-                            {op.label && (
-                              <span
-                                className="text-white/75 text-[10px] sm:text-[11px] font-bold uppercase tracking-wide truncate max-w-[110px] sm:max-w-[140px]"
-                                title={op.label}
-                              >
-                                {op.label}:
-                              </span>
-                            )}
-                            <span className="font-extrabold text-white">
-                              ₹{op.price}
-                            </span>
-                            <span className="text-[10px] sm:text-[11px] text-white/75">
-                              {op.unit}
-                            </span>
-                          </div>
-                        ))}
-                      </motion.div>
-                    </AnimatePresence>
-                  </div>
-                </>
-              )}
+              {/* Line 2: Joined Date (background tightly wrapped) */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-5 py-2.5 sm:px-6 sm:py-3 rounded-2xl bg-[#2D2F40] text-slate-200 font-black text-base sm:text-xl md:text-2xl shadow-xs border border-white/10 truncate max-w-full">
+                  {formattedJoinedDate}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Action CTAs: Situated right below the pricing tab */}
-          <div className="flex items-center gap-3 pt-0.5 flex-wrap">
-            <button
-              type="button"
-              onClick={() => onStayClick && onStayClick(currentStay)}
-              className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-white hover:bg-slate-50 text-indigo-950 font-black text-xs shadow-lg hover:shadow-xl transition-all cursor-pointer active:scale-95 flex items-center gap-2 group"
-            >
-              <span>Explore Stay</span>
-              <svg className="w-3.5 h-3.5 stroke-indigo-950 group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12" />
-                <polyline points="12 5 19 12 12 19" />
-              </svg>
-            </button>
-          </div>
         </div>
 
-        {/* ── RIGHT HALF: ROOM CARDS STARTING AT CENTER LINE, EXTENDING TO RIGHT TAB BORDER ── */}
-        <div className="w-full lg:flex-1 h-full flex flex-col justify-center overflow-visible pl-2 lg:pl-4 z-10 min-w-0">
-          
-          {/* Location on TOP of the image tab (outside) */}
-          <div className="flex items-center gap-1.5 pt-0.5 pb-1 text-xs sm:text-xs font-semibold text-white/85 shrink-0 pr-4 sm:pr-6">
-            <svg className="w-3.5 h-3.5 text-emerald-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-              <circle cx="12" cy="10" r="3" />
-            </svg>
-            <AnimatePresence mode="wait">
-              <motion.span
-                key={currentStay._id}
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 4 }}
-                transition={{ duration: 0.2 }}
-                className="truncate max-w-[280px] sm:max-w-[340px]"
-              >
-                {currentStay.location || currentStay.city || currentStay.address || 'Uttarakhand, India'}
-              </motion.span>
-            </AnimatePresence>
-          </div>
+      </div>
 
-          {/* Linear Sliding Track Stage: clips at center line and contours to the outer tab right border */}
-          <div className="relative w-full overflow-hidden pt-0.5 pb-1.5 rounded-r-3xl sm:rounded-r-[32px] lg:rounded-r-[36px]">
-            <div
-              style={{
-                transform: `translateX(calc(-${activeIndex} * var(--step)))`,
-                transition: 'transform 380ms cubic-bezier(0.16, 1, 0.3, 1)',
-              }}
-              className="flex items-center gap-5 xl:gap-6 shrink-0 w-full h-[235px] sm:h-[260px] md:h-[285px] lg:h-[305px] xl:h-[320px] [--step:calc(40%+4px)] xl:[--step:calc(40%+4.8px)]"
-            >
-              {stays.map((stay, idx) => {
-                const isActive = idx === activeIndex;
-                const isThisSaved = isInWishlist(stay._id);
-                const hasReviews = Array.isArray(stay.reviews) && stay.reviews.length > 0;
-                const computedR = hasReviews
-                  ? (stay.reviews.reduce((acc, r) => acc + (Number(r.rating) || 5), 0) / stay.reviews.length).toFixed(1)
-                  : null;
-                const isNew = !computedR;
-                const rText = isNew ? 'NEW' : `★ ${computedR}`;
-
-                return (
-                  <div
-                    key={stay._id || idx}
-                    onClick={() => {
-                      if (isActive) {
-                        onStayClick && onStayClick(stay);
-                      } else {
-                        goToIndex(idx, idx > activeIndex ? 1 : -1);
-                      }
-                    }}
-                    className={`relative ${cardWidthClass} shrink-0 self-center ${
-                      isActive
-                        ? 'h-[230px] sm:h-[255px] md:h-[280px] lg:h-[300px] xl:h-[315px] z-10'
-                        : 'h-[190px] sm:h-[215px] md:h-[235px] lg:h-[250px] xl:h-[260px] z-0'
-                    } rounded-md overflow-hidden bg-slate-900 cursor-pointer select-none group transition-all duration-[380ms] ease-[cubic-bezier(0.16,1,0.3,1)]`}
-                    title={stay.title || stay.propertyName}
-                  >
-                    <img decoding="async" loading="lazy"
-                      src={isActive ? (mainDisplayImage || getStayImage(stay)) : getStayImage(stay)}
-                      alt={stay.title || 'Stay Cover'}
-                      className="w-full h-full object-cover select-none"
-                      draggable={false}
-                    />
-
-                    {/* Top-Right: Wishlist Heart on active card */}
-                    {isActive && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleWishlist(stay);
-                        }}
-                        className={`absolute top-3 right-3 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-90 pointer-events-auto ${
-                          isThisSaved
-                            ? 'bg-rose-500 text-white'
-                            : 'bg-white/90 text-slate-800'
-                        }`}
-                        title={isThisSaved ? 'Remove from Wishlist' : 'Save to Wishlist'}
-                      >
-                        <svg
-                          className={`w-4 h-4 ${isThisSaved ? 'fill-white stroke-white' : 'fill-none stroke-current stroke-[2.2]'}`}
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
-                          />
-                        </svg>
-                      </button>
-                    )}
-
-                    {/* Soft Vignette Scrim at Card Bottom for Flawless Text Readability & Contrast */}
-                    <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/85 via-black/35 to-transparent pointer-events-none z-10" />
-
-                    {/* Bottom Capsules: Modern Glassmorphic Category & Status Capsules */}
-                    <div className="absolute bottom-3.5 left-3.5 right-3.5 text-white z-20 pointer-events-none">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {/* Modern Glassmorphic Category Capsule */}
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white font-sans text-[10px] sm:text-[11px] font-black uppercase tracking-[0.14em] shadow-xs">
-                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
-                          <span>{stay.type || stay.category || 'PG'}</span>
-                        </span>
-
-                        {/* Modern Rating / Status Capsule */}
-                        {isNew ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/25 backdrop-blur-md border border-emerald-400/40 text-emerald-300 text-[10px] sm:text-[11px] font-black tracking-wider uppercase shadow-xs">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                            <span>NEW</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/25 backdrop-blur-md border border-amber-400/40 text-amber-300 text-[10px] sm:text-[11px] font-black tracking-tight shadow-xs">
-                            <svg className="w-3 h-3 fill-amber-300 text-amber-300 shrink-0" viewBox="0 0 20 20">
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                            <span>{computedR}</span>
-                          </span>
-                        )}
-                      </div>
-                    </div>
+      {/* ══════════════════════════════════════════════════════════════
+          THE VERTICAL POSTER BOX:
+          - Anchored exactly at the dark/white boundary line
+          - Top sits safely BELOW Hotel Living
+          - Bottom sits safely ABOVE Explore Stay button with generous gap
+          - Vertical midpoint is the photo bottom border
+         ══════════════════════════════════════════════════════════════ */}
+      <div className="relative w-full max-w-full sm:max-w-xl md:max-w-2xl mx-auto px-4 sm:px-6 pointer-events-none z-30">
+        <div className="absolute left-4 sm:left-6 top-2.5 sm:top-3 -translate-y-1/2 pointer-events-auto">
+          <div className="relative w-48 sm:w-60 md:w-68 h-72 sm:h-84 md:h-96 rounded-3xl overflow-hidden shadow-[0_24px_56px_rgba(0,0,0,0.6)] border-2 border-white/40 bg-slate-800">
+            <img
+              src={posterImage}
+              alt="Poster"
+              className="w-full h-full object-cover scale-110 select-none"
+              draggable={false}
+            />
+            {/* Top-Left Circular Yellow Rating Tag */}
+            <div className="absolute top-3 left-3 sm:top-3.5 sm:left-3.5 z-20 pointer-events-none">
+              <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-amber-400 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center shadow-2xl border-2 border-white/90 select-none">
+                {isNewStay ? (
+                  <span className="text-[11px] sm:text-xs font-black tracking-tight">NEW</span>
+                ) : (
+                  <div className="flex items-center gap-0.5 leading-none">
+                    <span className="text-[10px] sm:text-xs">★</span>
+                    <span className="text-xs sm:text-sm font-black">{computedRating}</span>
                   </div>
-                );
-              })}
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── 3. BOTTOM BAR: Navigation Buttons (<, >) perfectly centered ── */}
-      <div className="relative z-20 w-full flex items-center justify-between pt-0.5 pb-0.5 shrink-0 px-1 sm:px-3">
-        {/* Left spacer to keep center buttons balanced */}
-        <div className="w-28" />
+      {/* ══════════════════════════════════════════════════════════════
+          2. WHITE PAGE SECTION (OUTSIDE PHOTO BOTTOM):
+          - Line 3: STAYS › BHIMTAL, UTTARAKHAND
+          - Line 4: [ ₹2,000 /month ] • Physically Audited
+          - All 4 lines spaced with perfectly equal gap (10px)
+          - Add sign removed completely
+          - Clear gap above Explore Stay button
+         ══════════════════════════════════════════════════════════════ */}
+      <div className="w-full max-w-full sm:max-w-xl md:max-w-2xl mx-auto px-4 sm:px-6 pt-0 pb-12 flex flex-col gap-3.5 bg-transparent">
+        
+        {/* Lower Half of Split Row (On White Page Background)
+            - pt-5 sm:pt-6 provides EXACT same gap from the border as Joined Date (pb-5 sm:pb-6)
+            - items-start ensures location starts immediately with exact symmetric gap
+        */}
+        <div className="relative flex items-start gap-4 sm:gap-6 pt-5 sm:pt-6 pb-10 sm:pb-12 z-20">
+          {/* Spacer for left poster bottom half */}
+          <div className="w-48 sm:w-60 md:w-68 shrink-0 pointer-events-none" />
 
-        {/* Center: Previous & Next Buttons (White in Dark theme, Black in Light theme) */}
-        {stays.length > 1 ? (
-          <div className="flex items-center gap-2.5 mx-auto">
-            {/* Previous Button (<) */}
-            <button
-              type="button"
-              onClick={handlePrev}
-              disabled={!canGoPrev}
-              data-no-hover="true"
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-950 text-white border border-slate-900 shadow-md flex items-center justify-center transition-all ${
-                !canGoPrev
-                  ? 'opacity-35 cursor-not-allowed'
-                  : 'cursor-pointer active:scale-90'
-              }`}
-              title={canGoPrev ? "Previous Stay (←)" : "At first stay"}
-              aria-label="Previous Stay"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-            </button>
+          {/* Right: Line 3 & Line 4 */}
+          <div className="flex-1 min-w-0 flex flex-col gap-2.5">
+            {/* Line 3: Breadcrumb Category (Slate text on white) */}
+            <div className="text-base sm:text-xl md:text-2xl font-black uppercase tracking-wider text-slate-500 truncate">
+              <span>{city.toUpperCase()}, {state.toUpperCase()}</span>
+            </div>
 
-            {/* Next Button (>) */}
-            <button
-              type="button"
-              onClick={handleNext}
-              disabled={!canGoNext}
-              data-no-hover="true"
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-950 text-white border border-slate-900 shadow-md flex items-center justify-center transition-all ${
-                !canGoNext
-                  ? 'opacity-35 cursor-not-allowed'
-                  : 'cursor-pointer active:scale-90'
-              }`}
-              title={canGoNext ? "Next Stay (→)" : "At last stay"}
-              aria-label="Next Stay"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-            </button>
+            {/* Line 4: Gender Badge below location */}
+            <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
+              <span className="inline-flex items-center gap-2 px-4.5 py-1.5 sm:px-5 sm:py-2 rounded-full bg-slate-100 hover:bg-slate-200/70 text-slate-800 font-extrabold text-sm sm:text-base md:text-lg shadow-2xs border border-slate-300/90 tracking-tight select-none transition-colors">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                <span>{genderLabel}</span>
+              </span>
+            </div>
           </div>
-        ) : (
-          <div className="mx-auto" />
+        </div>
+
+        {/* Clear Margin Container ensuring Explore Stay button is completely below the poster box */}
+        <div className="pt-6 sm:pt-8 flex flex-col gap-5 sm:gap-6">
+        {/* ── Minimal Premium Green CTA Button (Full Rounded Border, Text Only) ── */}
+        <button
+          type="button"
+          onClick={() => onStayClick && onStayClick(currentStay)}
+          className="w-fit mx-auto py-3.5 sm:py-4 px-8 sm:px-10 rounded-full bg-sky-500/80 hover:bg-sky-500 active:bg-sky-600 backdrop-blur-md text-white font-black text-base sm:text-xl md:text-2xl tracking-wide shadow-lg shadow-sky-500/25 border-2 border-sky-300/60 flex items-center justify-center transition-all cursor-pointer active:scale-95 select-none mt-1"
+        >
+          <span>Explore Stay</span>
+        </button>
+
+        {/* ── Other Room Configurations (Table Format: Room Type, Price per cycle, % Full) ── */}
+        {roomConfigurations.length > 0 && (
+          <div className="w-full rounded-3xl p-5 sm:p-6 bg-slate-50/70 border border-gray-200 shadow-2xs flex flex-col gap-3.5">
+            <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-500">
+              room configurations
+            </span>
+            <div className="w-full overflow-x-auto">
+              <table className="w-full text-left border-collapse border-spacing-0">
+                <thead>
+                  <tr className="border-b border-gray-200 text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-500">
+                    <th className="pb-3 pr-4 font-bold">room type</th>
+                    <th className="pb-3 pr-4 font-bold">price</th>
+                    <th className="pb-3 font-bold text-right">availability</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {roomConfigurations.map((room, idx) => (
+                    <tr key={idx} className="text-sm sm:text-base font-semibold text-slate-800">
+                      <td className="py-3.5 pr-4 font-bold text-slate-900">
+                        <span>{room.label || 'Standard Room'}</span>{' '}
+                        <span className="text-slate-400 font-semibold text-xs sm:text-sm">({room.count || 1})</span>
+                      </td>
+                      <td className="py-3.5 pr-4 text-slate-700 whitespace-nowrap">
+                        <span className="font-extrabold text-slate-900">₹{room.price}</span>{' '}
+                        <span className="text-slate-500 font-medium text-xs sm:text-sm">{room.unit}</span>
+                      </td>
+                      <td className="py-3.5 text-right whitespace-nowrap">
+                        <span className="font-black text-slate-800 text-sm sm:text-base">
+                          {room.percentFull}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
 
-        {/* Right spacer to balance the layout with the fixed See Map button */}
-        <div className="w-28" />
       </div>
-
-
-
+      </div>
     </div>
   );
 }

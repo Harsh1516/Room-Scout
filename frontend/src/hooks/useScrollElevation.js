@@ -9,38 +9,38 @@ import { useState, useEffect } from 'react';
  * @returns {boolean} isElevated - True when window.scrollY > threshold
  */
 export function useScrollElevation(threshold = 20) {
-  const [isElevated, setIsElevated] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return window.scrollY > threshold;
-    }
-    return false;
-  });
+ const [isElevated, setIsElevated] = useState(() => {
+ if (typeof window !== 'undefined') {
+ return window.scrollY > threshold;
+ }
+ return false;
+ });
 
-  useEffect(() => {
-    let ticking = false;
+ useEffect(() => {
+ let ticking = false;
 
-    const checkScroll = () => {
-      const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
-      const shouldElevate = currentScrollY > threshold;
-      setIsElevated((prev) => (prev !== shouldElevate ? shouldElevate : prev));
-      ticking = false;
-    };
+ const checkScroll = () => {
+ const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+ const shouldElevate = currentScrollY > threshold;
+ setIsElevated((prev) => (prev !== shouldElevate ? shouldElevate : prev));
+ ticking = false;
+ };
 
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(checkScroll);
-        ticking = true;
-      }
-    };
+ const handleScroll = () => {
+ if (!ticking) {
+ window.requestAnimationFrame(checkScroll);
+ ticking = true;
+ }
+ };
 
-    // Initial check
-    checkScroll();
+ // Initial check
+ checkScroll();
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [threshold]);
+ window.addEventListener('scroll', handleScroll, { passive: true });
+ return () => window.removeEventListener('scroll', handleScroll);
+ }, [threshold]);
 
-  return isElevated;
+ return isElevated;
 }
 
 export default useScrollElevation;

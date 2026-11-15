@@ -5,131 +5,131 @@ import { toast } from '../context/ToastContext';
  * Calculates remaining seconds from now to the payment deadline
  */
 export function calculateRemainingSeconds(deadline) {
-  if (!deadline) return 0;
-  const deadlineMs = new Date(deadline).getTime();
-  if (isNaN(deadlineMs)) return 0;
-  const diffSec = Math.floor((deadlineMs - Date.now()) / 1000);
-  return Math.max(0, diffSec);
+ if (!deadline) return 0;
+ const deadlineMs = new Date(deadline).getTime();
+ if (isNaN(deadlineMs)) return 0;
+ const diffSec = Math.floor((deadlineMs - Date.now()) / 1000);
+ return Math.max(0, diffSec);
 }
 
 /**
  * Formats countdown seconds into MM:SS
  */
 export function formatCountdown(totalSeconds) {
-  const mins = Math.floor(totalSeconds / 60);
-  const secs = totalSeconds % 60;
-  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+ const mins = Math.floor(totalSeconds / 60);
+ const secs = totalSeconds % 60;
+ return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
 /**
  * Validates format of standard 12-digit numeric UPI transaction reference number (UTR / RRN)
  */
 export function validateUpiReference(ref) {
-  if (!ref || typeof ref !== 'string') return false;
-  const cleaned = ref.trim().replace(/[^0-9]/g, '');
-  return cleaned.length === 12 && /^\d{12}$/.test(cleaned);
+ if (!ref || typeof ref !== 'string') return false;
+ const cleaned = ref.trim().replace(/[^0-9]/g, '');
+ return cleaned.length === 12 && /^\d{12}$/.test(cleaned);
 }
 
 /**
  * Builds standard UPI Payment URI for direct app opening / QR encoding
  */
 export function buildUpiPaymentUri({ upiId, payeeName, amount, bookingRef }) {
-  const cleanUpi = String(upiId || '').trim();
-  const cleanName = String(payeeName || 'Room Scout Stay').trim();
-  const cleanAmount = Number(amount || 0).toFixed(2);
-  const cleanNote = String(bookingRef || 'Room Reservation').trim().slice(0, 40);
+ const cleanUpi = String(upiId || '').trim();
+ const cleanName = String(payeeName || 'Room Scout Stay').trim();
+ const cleanAmount = Number(amount || 0).toFixed(2);
+ const cleanNote = String(bookingRef || 'Room Reservation').trim().slice(0, 40);
 
-  return `upi://pay?pa=${encodeURIComponent(cleanUpi)}&pn=${encodeURIComponent(cleanName)}&am=${encodeURIComponent(cleanAmount)}&cu=INR&tn=${encodeURIComponent(cleanNote)}`;
+ return `upi://pay?pa=${encodeURIComponent(cleanUpi)}&pn=${encodeURIComponent(cleanName)}&am=${encodeURIComponent(cleanAmount)}&cu=INR&tn=${encodeURIComponent(cleanNote)}`;
 }
 
 /**
  * Broadcasts booking status change across all windows, tabs, and components
  */
 export function broadcastBookingChange(detail = {}) {
-  try {
-    window.dispatchEvent(new CustomEvent('stayhub_slots_updated', { detail }));
-    window.dispatchEvent(new CustomEvent('stayhub_rooms_updated', { detail }));
-    window.dispatchEvent(new CustomEvent('stayhub_my_bookings_updated', { detail }));
-    if (typeof BroadcastChannel !== 'undefined') {
-      const bc = new BroadcastChannel('stayhub_live_channel');
-      bc.postMessage({ type: 'BOOKING_CHANGED', ...detail, timestamp: Date.now() });
-      bc.close();
-    }
-  } catch {
-    /* ignore */
-  }
+ try {
+ window.dispatchEvent(new CustomEvent('stayhub_slots_updated', { detail }));
+ window.dispatchEvent(new CustomEvent('stayhub_rooms_updated', { detail }));
+ window.dispatchEvent(new CustomEvent('stayhub_my_bookings_updated', { detail }));
+ if (typeof BroadcastChannel !== 'undefined') {
+ const bc = new BroadcastChannel('stayhub_live_channel');
+ bc.postMessage({ type: 'BOOKING_CHANGED', ...detail, timestamp: Date.now() });
+ bc.close();
+ }
+ } catch {
+ /* ignore */
+ }
 }
 
 /**
  * Submits guest UPI payment reference to backend for host verification
  */
 export async function submitBookingUpiPayment({
-  bookingId,
-  bookingReferenceId,
-  transactionRef,
-  receiptImage,
-  onSuccess,
-  onError,
+ bookingId,
+ bookingReferenceId,
+ transactionRef,
+ receiptImage,
+ onSuccess,
+ onError,
 }) {
-  const cleanedRef = String(transactionRef || '').trim().replace(/[^0-9]/g, '');
+ const cleanedRef = String(transactionRef || '').trim().replace(/[^0-9]/g, '');
 
-  if (!validateUpiReference(cleanedRef)) {
-    const msg = 'Please enter a valid 12-digit numeric UPI transaction reference number (UTR / RRN).';
-    toast.error(msg);
-    if (onError) onError(new Error(msg));
-    return;
-  }
+ if (!validateUpiReference(cleanedRef)) {
+ const msg = 'Please enter a valid 12-digit numeric UPI transaction reference number (UTR / RRN).';
+ toast.error(msg);
+ if (onError) onError(new Error(msg));
+ return;
+ }
 
-  try {
-    const res = await paymentsAPI.submitUpiReference({
-      bookingId,
-      bookingReferenceId,
-      transactionRef: cleanedRef,
-      receiptImage: receiptImage || undefined,
-    });
+ try {
+ const res = await paymentsAPI.submitUpiReference({
+ bookingId,
+ bookingReferenceId,
+ transactionRef: cleanedRef,
+ receiptImage: receiptImage || undefined,
+ });
 
-    toast.success('🎉 Payment reference submitted! The host has been notified to verify your transaction.');
+ toast.success(' Payment reference submitted! The host has been notified to verify your transaction.');
 
-    // Broadcast refresh events across tabs and components
-    broadcastBookingChange({
-      bookingId: bookingId || bookingReferenceId,
-      status: 'PENDING_VERIFICATION',
-      sender: 'GuestUPI',
-    });
+ // Broadcast refresh events across tabs and components
+ broadcastBookingChange({
+ bookingId: bookingId || bookingReferenceId,
+ status: 'PENDING_VERIFICATION',
+ sender: 'GuestUPI',
+ });
 
-    if (onSuccess) onSuccess(res);
-    return res;
-  } catch (err) {
-    console.error('Submit UPI Payment Error:', err);
-    toast.error(err.message || 'Failed to submit payment reference. Please check your reference.');
-    if (onError) onError(err);
-    throw err;
-  }
+ if (onSuccess) onSuccess(res);
+ return res;
+ } catch (err) {
+ console.error('Submit UPI Payment Error:', err);
+ toast.error(err.message || 'Failed to submit payment reference. Please check your reference.');
+ if (onError) onError(err);
+ throw err;
+ }
 }
 
 /**
  * Cancels a user booking and releases room reservation
  */
 export async function cancelUserBooking({ booking, onCancelled, onError }) {
-  const bookingId = booking._id || booking.bookingReferenceId;
-  if (!bookingId) return;
+ const bookingId = booking._id || booking.bookingReferenceId;
+ if (!bookingId) return;
 
-  try {
-    await bookingsAPI.updateBookingStatus(bookingId, { status: 'CANCELLED' }).catch(() => {});
-    await bookingsAPI.deleteBooking(bookingId).catch(() => {});
+ try {
+ await bookingsAPI.updateBookingStatus(bookingId, { status: 'CANCELLED' }).catch(() => {});
+ await bookingsAPI.deleteBooking(bookingId).catch(() => {});
 
-    toast.success(`Booking for Room ${booking.roomNumber || ''} has been cancelled.`);
+ toast.success(`Booking for Room ${booking.roomNumber || ''} has been cancelled.`);
 
-    broadcastBookingChange({
-      bookingId,
-      status: 'CANCELLED',
-      sender: 'GuestCancel',
-    });
+ broadcastBookingChange({
+ bookingId,
+ status: 'CANCELLED',
+ sender: 'GuestCancel',
+ });
 
-    if (onCancelled) onCancelled(booking);
-  } catch (err) {
-    console.error('Error cancelling booking:', err);
-    toast.error(err.message || 'Failed to cancel booking.');
-    if (onError) onError(err);
-  }
+ if (onCancelled) onCancelled(booking);
+ } catch (err) {
+ console.error('Error cancelling booking:', err);
+ toast.error(err.message || 'Failed to cancel booking.');
+ if (onError) onError(err);
+ }
 }

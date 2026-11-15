@@ -7,298 +7,298 @@ import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
  * for category-wise room browsing within Visited Requests, Check-in, and Checkout tabs.
  */
 export function RoomCategoryCarousel({
-  rooms = [],
-  catType,
-  selectedCategory,
-  selectedRoomNumber,
-  onSelectRoom,
-  getRoomRequestCount,
-  subTab = 'requests',
+ rooms = [],
+ catType,
+ selectedCategory,
+ selectedRoomNumber,
+ onSelectRoom,
+ getRoomRequestCount,
+ subTab = 'requests',
 }) {
-  const scrollRef = useRef(null);
-  const tickingRef = useRef(false);
-  const [activePage, setActivePage] = useState(0);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(rooms.length > 2);
+ const scrollRef = useRef(null);
+ const tickingRef = useRef(false);
+ const [activePage, setActivePage] = useState(0);
+ const [canScrollLeft, setCanScrollLeft] = useState(false);
+ const [canScrollRight, setCanScrollRight] = useState(rooms.length > 2);
 
-  const CARDS_VISIBLE = 2;
-  const totalPages = Math.max(1, Math.ceil(rooms.length / CARDS_VISIBLE));
+ const CARDS_VISIBLE = 2;
+ const totalPages = Math.max(1, Math.ceil(rooms.length / CARDS_VISIBLE));
 
-  const updateScrollState = useCallback(() => {
-    if (!scrollRef.current) return;
-    const { scrollLeft, clientWidth, scrollWidth } = scrollRef.current;
-    const isAtStart = scrollLeft <= 4;
-    const isAtEnd = scrollLeft >= scrollWidth - clientWidth - 4;
-    setCanScrollLeft((prev) => (prev !== !isAtStart ? !isAtStart : prev));
-    const canRight = !isAtEnd && rooms.length > CARDS_VISIBLE;
-    setCanScrollRight((prev) => (prev !== canRight ? canRight : prev));
+ const updateScrollState = useCallback(() => {
+ if (!scrollRef.current) return;
+ const { scrollLeft, clientWidth, scrollWidth } = scrollRef.current;
+ const isAtStart = scrollLeft <= 4;
+ const isAtEnd = scrollLeft >= scrollWidth - clientWidth - 4;
+ setCanScrollLeft((prev) => (prev !== !isAtStart ? !isAtStart : prev));
+ const canRight = !isAtEnd && rooms.length > CARDS_VISIBLE;
+ setCanScrollRight((prev) => (prev !== canRight ? canRight : prev));
 
-    if (isAtEnd) {
-      setActivePage((prev) => (prev !== totalPages - 1 ? totalPages - 1 : prev));
-    } else if (isAtStart) {
-      setActivePage((prev) => (prev !== 0 ? 0 : prev));
-    } else {
-      const cardWidth = scrollRef.current.firstElementChild?.offsetWidth || (clientWidth / CARDS_VISIBLE);
-      const cardStep = cardWidth + 8; // 8px gap
-      const firstVisibleIdx = Math.round(scrollLeft / cardStep);
-      const computedPage = Math.floor(firstVisibleIdx / CARDS_VISIBLE);
-      const clampedPage = Math.min(totalPages - 1, Math.max(0, computedPage));
-      setActivePage((prev) => (prev !== clampedPage ? clampedPage : prev));
-    }
-  }, [rooms.length, totalPages]);
+ if (isAtEnd) {
+ setActivePage((prev) => (prev !== totalPages - 1 ? totalPages - 1 : prev));
+ } else if (isAtStart) {
+ setActivePage((prev) => (prev !== 0 ? 0 : prev));
+ } else {
+ const cardWidth = scrollRef.current.firstElementChild?.offsetWidth || (clientWidth / CARDS_VISIBLE);
+ const cardStep = cardWidth + 8; // 8px gap
+ const firstVisibleIdx = Math.round(scrollLeft / cardStep);
+ const computedPage = Math.floor(firstVisibleIdx / CARDS_VISIBLE);
+ const clampedPage = Math.min(totalPages - 1, Math.max(0, computedPage));
+ setActivePage((prev) => (prev !== clampedPage ? clampedPage : prev));
+ }
+ }, [rooms.length, totalPages]);
 
-  const handleScroll = () => {
-    if (tickingRef.current) return;
-    tickingRef.current = true;
-    window.requestAnimationFrame(() => {
-      updateScrollState();
-      tickingRef.current = false;
-    });
-  };
+ const handleScroll = () => {
+ if (tickingRef.current) return;
+ tickingRef.current = true;
+ window.requestAnimationFrame(() => {
+ updateScrollState();
+ tickingRef.current = false;
+ });
+ };
 
-  const handleScrollLeft = (e) => {
-    e.stopPropagation();
-    if (!scrollRef.current) return;
-    const container = scrollRef.current;
-    const cardWidth = container.firstElementChild?.offsetWidth || (container.clientWidth / CARDS_VISIBLE);
-    const scrollStep = (cardWidth + 8) * CARDS_VISIBLE;
-    container.scrollBy({ left: -scrollStep, behavior: 'smooth' });
-  };
+ const handleScrollLeft = (e) => {
+ e.stopPropagation();
+ if (!scrollRef.current) return;
+ const container = scrollRef.current;
+ const cardWidth = container.firstElementChild?.offsetWidth || (container.clientWidth / CARDS_VISIBLE);
+ const scrollStep = (cardWidth + 8) * CARDS_VISIBLE;
+ container.scrollBy({ left: -scrollStep, behavior: 'smooth' });
+ };
 
-  const handleScrollRight = (e) => {
-    e.stopPropagation();
-    if (!scrollRef.current) return;
-    const container = scrollRef.current;
-    const cardWidth = container.firstElementChild?.offsetWidth || (container.clientWidth / CARDS_VISIBLE);
-    const scrollStep = (cardWidth + 8) * CARDS_VISIBLE;
-    container.scrollBy({ left: scrollStep, behavior: 'smooth' });
-  };
+ const handleScrollRight = (e) => {
+ e.stopPropagation();
+ if (!scrollRef.current) return;
+ const container = scrollRef.current;
+ const cardWidth = container.firstElementChild?.offsetWidth || (container.clientWidth / CARDS_VISIBLE);
+ const scrollStep = (cardWidth + 8) * CARDS_VISIBLE;
+ container.scrollBy({ left: scrollStep, behavior: 'smooth' });
+ };
 
-  const scrollToPage = useCallback((pIdx, e) => {
-    e?.stopPropagation?.();
-    if (!scrollRef.current) return;
-    const container = scrollRef.current;
-    if (pIdx === 0) {
-      container.scrollTo({ left: 0, behavior: 'smooth' });
-    } else if (pIdx === totalPages - 1) {
-      container.scrollTo({ left: container.scrollWidth - container.clientWidth, behavior: 'smooth' });
-    } else {
-      const cardWidth = container.firstElementChild?.offsetWidth || (container.clientWidth / CARDS_VISIBLE);
-      container.scrollTo({ left: pIdx * (cardWidth + 8) * CARDS_VISIBLE, behavior: 'smooth' });
-    }
-  }, [totalPages]);
+ const scrollToPage = useCallback((pIdx, e) => {
+ e?.stopPropagation?.();
+ if (!scrollRef.current) return;
+ const container = scrollRef.current;
+ if (pIdx === 0) {
+ container.scrollTo({ left: 0, behavior: 'smooth' });
+ } else if (pIdx === totalPages - 1) {
+ container.scrollTo({ left: container.scrollWidth - container.clientWidth, behavior: 'smooth' });
+ } else {
+ const cardWidth = container.firstElementChild?.offsetWidth || (container.clientWidth / CARDS_VISIBLE);
+ container.scrollTo({ left: pIdx * (cardWidth + 8) * CARDS_VISIBLE, behavior: 'smooth' });
+ }
+ }, [totalPages]);
 
-  // Sync scroll state on mount and rooms change
-  useEffect(() => {
-    updateScrollState();
-  }, [updateScrollState]);
+ // Sync scroll state on mount and rooms change
+ useEffect(() => {
+ updateScrollState();
+ }, [updateScrollState]);
 
-  // Sync scroll position if room in this category is selected
-  useEffect(() => {
-    if (
-      selectedCategory.trim().toLowerCase() === catType.trim().toLowerCase() &&
-      selectedRoomNumber !== 'ALL' &&
-      scrollRef.current
-    ) {
-      const roomIdx = rooms.findIndex(
-        (rm) =>
-          String(rm.roomNumber).replace(/[^0-9]/g, '') ===
-          String(selectedRoomNumber).replace(/[^0-9]/g, '')
-      );
-      if (roomIdx !== -1) {
-        const targetPage = Math.floor(roomIdx / CARDS_VISIBLE);
-        scrollToPage(targetPage);
-      }
-    }
-  }, [selectedCategory, selectedRoomNumber, catType, rooms, scrollToPage]);
+ // Sync scroll position if room in this category is selected
+ useEffect(() => {
+ if (
+ selectedCategory.trim().toLowerCase() === catType.trim().toLowerCase() &&
+ selectedRoomNumber !== 'ALL' &&
+ scrollRef.current
+ ) {
+ const roomIdx = rooms.findIndex(
+ (rm) =>
+ String(rm.roomNumber).replace(/[^0-9]/g, '') ===
+ String(selectedRoomNumber).replace(/[^0-9]/g, '')
+ );
+ if (roomIdx !== -1) {
+ const targetPage = Math.floor(roomIdx / CARDS_VISIBLE);
+ scrollToPage(targetPage);
+ }
+ }
+ }, [selectedCategory, selectedRoomNumber, catType, rooms, scrollToPage]);
 
-  // Smooth wheel scroll support for horizontal browsing
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
+ // Smooth wheel scroll support for horizontal browsing
+ useEffect(() => {
+ const el = scrollRef.current;
+ if (!el) return;
 
-    const handleWheel = (e) => {
-      if (el.scrollWidth > el.clientWidth && e.deltaY !== 0) {
-        e.preventDefault();
-        el.scrollLeft += e.deltaY;
-        updateScrollState();
-      }
-    };
+ const handleWheel = (e) => {
+ if (el.scrollWidth > el.clientWidth && e.deltaY !== 0) {
+ e.preventDefault();
+ el.scrollLeft += e.deltaY;
+ updateScrollState();
+ }
+ };
 
-    el.addEventListener('wheel', handleWheel, { passive: false });
-    return () => {
-      el.removeEventListener('wheel', handleWheel);
-    };
-  }, [updateScrollState]);
+ el.addEventListener('wheel', handleWheel, { passive: false });
+ return () => {
+ el.removeEventListener('wheel', handleWheel);
+ };
+ }, [updateScrollState]);
 
-  return (
-    <>
-      {/* Horizontal Scroll Track */}
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        className="flex items-center gap-2 overflow-x-auto snap-x snap-mandatory pt-1.5 pb-1 sm:pt-2.5 sm:pb-2 px-1 sm:px-1.5 [&::-webkit-scrollbar]:hidden overscroll-x-contain scroll-smooth"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-      >
-        {rooms.map((rm, idx) => {
-          const isSelectedRoom =
-            selectedRoomNumber === rm.roomNumber &&
-            selectedCategory.trim().toLowerCase() === catType.trim().toLowerCase();
-          const reqCount = getRoomRequestCount(rm.roomNumber, catType);
+ return (
+ <>
+ {/* Horizontal Scroll Track */}
+ <div
+ ref={scrollRef}
+ onScroll={handleScroll}
+ className="flex items-center gap-2 overflow-x-auto snap-x snap-mandatory pt-1.5 pb-1 sm:pt-2.5 sm:pb-2 px-1 sm:px-1.5 [&::-webkit-scrollbar]:hidden overscroll-x-contain scroll-smooth"
+ style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+ >
+ {rooms.map((rm, idx) => {
+ const isSelectedRoom =
+ selectedRoomNumber === rm.roomNumber &&
+ selectedCategory.trim().toLowerCase() === catType.trim().toLowerCase();
+ const reqCount = getRoomRequestCount(rm.roomNumber, catType);
 
-          return (
-            <div
-              key={rm._id || rm.roomNumber || idx}
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelectRoom(catType, rm.roomNumber);
-              }}
-              className={`snap-start shrink-0 w-[calc((100%-8px)/2)] min-w-0 h-[68px] sm:h-[78px] lg:h-auto lg:aspect-square rounded-xl sm:rounded-2xl border transition-colors cursor-pointer flex flex-col items-center justify-center p-1.5 sm:p-2 text-center select-none relative group ${
-                isSelectedRoom
-                  ? subTab === 'checkout'
-                    ? 'bg-sky-50 border-2 border-sky-500 ring-2 ring-sky-500/25 shadow-md shadow-sky-500/10'
-                    : subTab === 'checkin'
-                    ? 'bg-emerald-50 border-2 border-emerald-500 ring-2 ring-emerald-500/25 shadow-md shadow-emerald-500/10'
-                    : 'bg-orange-50 border-2 border-orange-500 ring-2 ring-orange-500/25 shadow-md shadow-orange-500/10'
-                  : subTab === 'checkout'
-                  ? 'bg-white border-slate-200/90 shadow-xs hover:border-sky-500 hover:shadow-md'
-                  : subTab === 'checkin'
-                  ? 'bg-white border-slate-200/90 shadow-xs hover:border-emerald-500 hover:shadow-md'
-                  : 'bg-white border-slate-200/90 shadow-xs hover:border-orange-500 hover:shadow-md'
-              }`}
-            >
-              {/* Selected checkmark indicator */}
-              {isSelectedRoom && (
-                <div
-                  className={`absolute top-1.5 right-1.5 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full text-white flex items-center justify-center shadow-2xs ${
-                    subTab === 'checkout'
-                      ? 'bg-sky-600'
-                      : subTab === 'checkin'
-                      ? 'bg-emerald-600'
-                      : 'bg-orange-600'
-                  }`}
-                >
-                  <Check className="w-2 h-2 sm:w-2.5 sm:h-2.5 stroke-[3]" />
-                </div>
-              )}
+ return (
+ <div
+ key={rm._id || rm.roomNumber || idx}
+ onClick={(e) => {
+ e.stopPropagation();
+ onSelectRoom(catType, rm.roomNumber);
+ }}
+ className={`snap-start shrink-0 w-[calc((100%-8px)/2)] min-w-0 h-[68px] sm:h-[78px] lg:h-auto lg:aspect-square rounded-xl sm:rounded-2xl border transition-colors cursor-pointer flex flex-col items-center justify-center p-1.5 sm:p-2 text-center select-none relative group ${
+ isSelectedRoom
+ ? subTab === 'checkout'
+ ? 'bg-sky-50 border-2 border-sky-500 ring-2 ring-sky-500/25 shadow-md shadow-sky-500/10'
+ : subTab === 'checkin'
+ ? 'bg-emerald-50 border-2 border-emerald-500 ring-2 ring-emerald-500/25 shadow-md shadow-emerald-500/10'
+ : 'bg-orange-50 border-2 border-orange-500 ring-2 ring-orange-500/25 shadow-md shadow-orange-500/10'
+ : subTab === 'checkout'
+ ? 'bg-white border-slate-200/90 shadow-xs hover:border-sky-500 hover:shadow-md'
+ : subTab === 'checkin'
+ ? 'bg-white border-slate-200/90 shadow-xs hover:border-emerald-500 hover:shadow-md'
+ : 'bg-white border-slate-200/90 shadow-xs hover:border-orange-500 hover:shadow-md'
+ }`}
+ >
+ {/* Selected checkmark indicator */}
+ {isSelectedRoom && (
+ <div
+ className={`absolute top-1.5 right-1.5 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full text-white flex items-center justify-center shadow-2xs ${
+ subTab === 'checkout'
+ ? 'bg-sky-600'
+ : subTab === 'checkin'
+ ? 'bg-[#0f766e]'
+ : 'bg-orange-600'
+ }`}
+ >
+ <Check className="w-2 h-2 sm:w-2.5 sm:h-2.5 stroke-[3]" />
+ </div>
+ )}
 
-              {/* Room Number */}
-              <span
-                className={`text-sm sm:text-base lg:text-lg font-black tracking-tight leading-none ${
-                  isSelectedRoom
-                    ? subTab === 'checkout'
-                      ? 'text-sky-950'
-                      : subTab === 'checkin'
-                      ? 'text-emerald-950'
-                      : 'text-orange-950'
-                    : subTab === 'checkout'
-                    ? 'text-slate-900 group-hover:text-sky-600 transition-colors'
-                    : subTab === 'checkin'
-                    ? 'text-slate-900 group-hover:text-emerald-600 transition-colors'
-                    : 'text-slate-900 group-hover:text-orange-600 transition-colors'
-                }`}
-              >
-                {rm.roomNumber}
-              </span>
+ {/* Room Number */}
+ <span
+ className={`text-sm sm:text-base lg:text-lg font-medium tracking-tight leading-none ${
+ isSelectedRoom
+ ? subTab === 'checkout'
+ ? 'text-sky-950'
+ : subTab === 'checkin'
+ ? 'text-emerald-950'
+ : 'text-orange-950'
+ : subTab === 'checkout'
+ ? 'text-[#1f1b16] group-hover:text-sky-600 transition-colors'
+ : subTab === 'checkin'
+ ? 'text-[#1f1b16] group-hover:text-emerald-600 transition-colors'
+ : 'text-[#1f1b16] group-hover:text-orange-600 transition-colors'
+ }`}
+ >
+ {rm.roomNumber}
+ </span>
 
-              {/* Requests / Check-ins / Departures Count */}
-              {reqCount > 0 ? (
-                <div
-                  className={`mt-1 sm:mt-1.5 flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold shadow-2xs leading-none ${
-                    subTab === 'checkout'
-                      ? 'bg-sky-500/15 text-sky-800 border border-sky-500/30'
-                      : subTab === 'checkin'
-                      ? 'bg-emerald-500/15 text-emerald-800 border border-emerald-500/30'
-                      : 'bg-orange-500/15 text-orange-800 border border-orange-500/30'
-                  }`}
-                >
-                  <span
-                    className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full shrink-0 ${
-                      subTab === 'checkout'
-                        ? 'bg-sky-500'
-                        : subTab === 'checkin'
-                        ? 'bg-emerald-500'
-                        : 'bg-orange-500'
-                    }`}
-                  />
-                  <span>
-                    {reqCount}{' '}
-                    {subTab === 'checkout'
-                      ? reqCount === 1 ? 'Departure' : 'Departures'
-                      : subTab === 'checkin'
-                      ? reqCount === 1 ? 'Check-in' : 'Check-ins'
-                      : reqCount === 1 ? 'Request' : 'Requests'}
-                  </span>
-                </div>
-              ) : (
-                <div
-                  className={`mt-1 sm:mt-1.5 px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold border leading-none ${
-                    isSelectedRoom
-                      ? subTab === 'checkout'
-                        ? 'bg-sky-500/15 text-sky-800 border-sky-500/30'
-                        : subTab === 'checkin'
-                        ? 'bg-emerald-500/15 text-emerald-800 border-emerald-500/30'
-                        : 'bg-orange-500/15 text-orange-800 border-orange-500/30'
-                      : 'bg-slate-100 text-slate-400 border-slate-200/60'
-                  }`}
-                >
-                  <span>
-                    0{' '}
-                    {subTab === 'checkout'
-                      ? 'Departures'
-                      : subTab === 'checkin'
-                      ? 'Check-ins'
-                      : 'Requests'}
-                  </span>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+ {/* Requests / Check-ins / Departures Count */}
+ {reqCount > 0 ? (
+ <div
+ className={`mt-1 sm:mt-1.5 flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-medium shadow-2xs leading-none ${
+ subTab === 'checkout'
+ ? 'bg-sky-500/15 text-sky-800 border border-sky-500/30'
+ : subTab === 'checkin'
+ ? 'bg-emerald-500/15 text-emerald-800 border border-emerald-500/30'
+ : 'bg-orange-500/15 text-orange-800 border border-orange-500/30'
+ }`}
+ >
+ <span
+ className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full shrink-0 ${
+ subTab === 'checkout'
+ ? 'bg-sky-500'
+ : subTab === 'checkin'
+ ? 'bg-emerald-500'
+ : 'bg-orange-500'
+ }`}
+ />
+ <span>
+ {reqCount}{' '}
+ {subTab === 'checkout'
+ ? reqCount === 1 ? 'Departure' : 'Departures'
+ : subTab === 'checkin'
+ ? reqCount === 1 ? 'Check-in' : 'Check-ins'
+ : reqCount === 1 ? 'Request' : 'Requests'}
+ </span>
+ </div>
+ ) : (
+ <div
+ className={`mt-1 sm:mt-1.5 px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold border leading-none ${
+ isSelectedRoom
+ ? subTab === 'checkout'
+ ? 'bg-sky-500/15 text-sky-800 border-sky-500/30'
+ : subTab === 'checkin'
+ ? 'bg-emerald-500/15 text-emerald-800 border-emerald-500/30'
+ : 'bg-orange-500/15 text-orange-800 border-orange-500/30'
+ : 'bg-slate-100 text-slate-400 border-slate-200/60'
+ }`}
+ >
+ <span>
+ 0{' '}
+ {subTab === 'checkout'
+ ? 'Departures'
+ : subTab === 'checkin'
+ ? 'Check-ins'
+ : 'Requests'}
+ </span>
+ </div>
+ )}
+ </div>
+ );
+ })}
+ </div>
 
-      {/* Horizontal Dots Carousel Navigation with < > Buttons */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-1.5 sm:gap-2 pt-1 pb-0.5">
-          <button
-            type="button"
-            disabled={!canScrollLeft}
-            onClick={handleScrollLeft}
-            className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 active:scale-90 disabled:opacity-20 cursor-pointer disabled:pointer-events-none transition-all shadow-2xs"
-            aria-label="Previous rooms"
-          >
-            <ChevronLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-          </button>
+ {/* Horizontal Dots Carousel Navigation with < > Buttons */}
+ {totalPages > 1 && (
+ <div className="flex items-center justify-center gap-1.5 sm:gap-2 pt-1 pb-0.5">
+ <button
+ type="button"
+ disabled={!canScrollLeft}
+ onClick={handleScrollLeft}
+ className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 active:scale-90 disabled:opacity-20 cursor-pointer disabled:pointer-events-none transition-all shadow-2xs"
+ aria-label="Previous rooms"
+ >
+ <ChevronLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+ </button>
 
-          <div className="flex items-center gap-1.5 px-1">
-            {Array.from({ length: totalPages }).map((_, pIdx) => (
-              <button
-                key={pIdx}
-                type="button"
-                onClick={(e) => scrollToPage(pIdx, e)}
-                aria-label={`Go to room page ${pIdx + 1}`}
-                className={`transition-all duration-300 rounded-full cursor-pointer ${
-                  activePage === pIdx
-                    ? 'w-3.5 sm:w-4 h-1.5 bg-indigo-600 shadow-xs'
-                    : 'w-1.5 h-1.5 bg-slate-300 hover:bg-slate-400'
-                }`}
-              />
-            ))}
-          </div>
+ <div className="flex items-center gap-1.5 px-1">
+ {Array.from({ length: totalPages }).map((_, pIdx) => (
+ <button
+ key={pIdx}
+ type="button"
+ onClick={(e) => scrollToPage(pIdx, e)}
+ aria-label={`Go to room page ${pIdx + 1}`}
+ className={`transition-all duration-300 rounded-full cursor-pointer ${
+ activePage === pIdx
+ ? 'w-3.5 sm:w-4 h-1.5 bg-indigo-600 shadow-xs'
+ : 'w-1.5 h-1.5 bg-slate-300 hover:bg-slate-400'
+ }`}
+ />
+ ))}
+ </div>
 
-          <button
-            type="button"
-            disabled={!canScrollRight}
-            onClick={handleScrollRight}
-            className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 active:scale-90 disabled:opacity-20 cursor-pointer disabled:pointer-events-none transition-all shadow-2xs"
-            aria-label="Next rooms"
-          >
-            <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-          </button>
-        </div>
-      )}
-    </>
-  );
+ <button
+ type="button"
+ disabled={!canScrollRight}
+ onClick={handleScrollRight}
+ className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 active:scale-90 disabled:opacity-20 cursor-pointer disabled:pointer-events-none transition-all shadow-2xs"
+ aria-label="Next rooms"
+ >
+ <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+ </button>
+ </div>
+ )}
+ </>
+ );
 }
 
 export default RoomCategoryCarousel;

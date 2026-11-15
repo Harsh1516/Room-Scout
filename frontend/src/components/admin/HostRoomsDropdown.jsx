@@ -2,98 +2,98 @@ import React, { useMemo } from 'react';
 import { isMonthlyRateUnit } from '../../utils/dateUtils';
 
 export const HostRoomsDropdown = React.memo(function HostRoomsDropdown({ host }) {
-  const categories = useMemo(() => {
-    if (!host) return [];
+ const categories = useMemo(() => {
+ if (!host) return [];
 
-    if (!Array.isArray(host.roomRates) || host.roomRates.length === 0) {
-      return [];
-    }
+ if (!Array.isArray(host.roomRates) || host.roomRates.length === 0) {
+ return [];
+ }
 
-    const rawRates = host.roomRates.filter(
-      (rate) => rate && String(rate.type || rate.name || '').trim() !== ''
-    );
+ const rawRates = host.roomRates.filter(
+ (rate) => rate && String(rate.type || rate.name || '').trim() !== ''
+ );
 
-    if (rawRates.length === 0) {
-      return [];
-    }
+ if (rawRates.length === 0) {
+ return [];
+ }
 
-    const allRooms = Array.isArray(host.rooms) ? host.rooms : [];
+ const allRooms = Array.isArray(host.rooms) ? host.rooms : [];
 
-    return rawRates.map((rate, rIdx) => {
-      const typeName = String(rate.type || rate.name || `Category ${rIdx + 1}`).trim();
-      const matchingRooms = allRooms.filter(
-        (r) => r.type && String(r.type).trim().toLowerCase() === typeName.toLowerCase()
-      );
+ return rawRates.map((rate, rIdx) => {
+ const typeName = String(rate.type || rate.name || `Category ${rIdx + 1}`).trim();
+ const matchingRooms = allRooms.filter(
+ (r) => r.type && String(r.type).trim().toLowerCase() === typeName.toLowerCase()
+ );
 
-      let count = matchingRooms.length;
-      if (count === 0 && rate.roomsCount) {
-        count = Number(rate.roomsCount);
-      }
+ let count = matchingRooms.length;
+ if (count === 0 && rate.roomsCount) {
+ count = Number(rate.roomsCount);
+ }
 
-      let priceStr = String(rate.price || '₹4,000').trim();
-      if (!priceStr.startsWith('₹') && !priceStr.startsWith('Rs')) {
-        priceStr = `₹${priceStr}`;
-      }
+ let priceStr = String(rate.price || '₹4,000').trim();
+ if (!priceStr.startsWith('₹') && !priceStr.startsWith('Rs')) {
+ priceStr = `₹${priceStr}`;
+ }
 
-      // Strictly normalize rate unit to '/month' or '/night'
-      const isMonthly = typeof isMonthlyRateUnit === 'function'
-        ? isMonthlyRateUnit(rate.rateUnit)
-        : String(rate.rateUnit || '').toLowerCase().includes('month');
+ // Strictly normalize rate unit to '/month' or '/night'
+ const isMonthly = typeof isMonthlyRateUnit === 'function'
+ ? isMonthlyRateUnit(rate.rateUnit)
+ : String(rate.rateUnit || '').toLowerCase().includes('month');
 
-      const rateUnitStr = isMonthly ? '/month' : '/night';
+ const rateUnitStr = isMonthly ? '/month' : '/night';
 
-      return {
-        _id: rate._id || `rate_${rIdx}`,
-        type: typeName,
-        price: priceStr,
-        rateUnit: rateUnitStr,
-        count: count,
-        roomNumbers: matchingRooms.map((r) => r.roomNumber || r.roomNumInt).filter(Boolean),
-      };
-    });
-  }, [host]);
+ return {
+ _id: rate._id || `rate_${rIdx}`,
+ type: typeName,
+ price: priceStr,
+ rateUnit: rateUnitStr,
+ count: count,
+ roomNumbers: matchingRooms.map((r) => r.roomNumber || r.roomNumInt).filter(Boolean),
+ };
+ });
+ }, [host]);
 
-  if (!categories || categories.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-2">
-        <span className="inline-block px-3 py-1 rounded-lg bg-slate-100/90 text-slate-400 border border-slate-200 text-[11px] font-medium shadow-2xs select-none">
-          No room categories
-        </span>
-      </div>
-    );
-  }
+ if (!categories || categories.length === 0) {
+ return (
+ <div className="flex items-center justify-center py-2">
+ <span className="inline-block px-3 py-1 rounded-lg bg-slate-100/90 text-slate-400 border border-slate-200 text-[11px] font-medium shadow-2xs select-none">
+ No room categories
+ </span>
+ </div>
+ );
+ }
 
-  return (
-    <div className="w-full divide-y divide-slate-200/80 px-1">
-      {categories.map((cat, idx) => (
-        <div
-          key={cat._id || idx}
-          className="grid grid-cols-12 items-center gap-1.5 py-2 px-1 text-xs"
-        >
-          {/* Left Side: Room Category Name */}
-          <div
-            className="col-span-5 text-left font-normal text-slate-900 truncate"
-            title={cat.type}
-          >
-            {cat.type}
-          </div>
+ return (
+ <div className="w-full divide-y divide-slate-200/80 px-1">
+ {categories.map((cat, idx) => (
+ <div
+ key={cat._id || idx}
+ className="grid grid-cols-12 items-center gap-1.5 py-2 px-1 text-xs"
+ >
+ {/* Left Side: Room Category Name */}
+ <div
+ className="col-span-5 text-left font-normal text-[#1f1b16] truncate"
+ title={cat.type}
+ >
+ {cat.type}
+ </div>
 
-          {/* Mid Side: Price Details with Billing Cycle */}
-          <div className="col-span-4 text-center font-normal text-slate-800 whitespace-nowrap">
-            <span>{cat.price}</span>
-            <span className="text-[10px] font-normal text-slate-500 ml-0.5">
-              {cat.rateUnit}
-            </span>
-          </div>
+ {/* Mid Side: Price Details with Billing Cycle */}
+ <div className="col-span-4 text-center font-normal text-slate-800 whitespace-nowrap">
+ <span>{cat.price}</span>
+ <span className="text-[10px] font-normal text-slate-500 ml-0.5">
+ {cat.rateUnit}
+ </span>
+ </div>
 
-          {/* Right Side: Room Count inside Category */}
-          <div className="col-span-3 text-right whitespace-nowrap">
-            <span className="inline-block px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200/60 text-[10px] font-normal">
-              {cat.count} {cat.count === 1 ? 'Room' : 'Rooms'}
-            </span>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+ {/* Right Side: Room Count inside Category */}
+ <div className="col-span-3 text-right whitespace-nowrap">
+ <span className="inline-block px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200/60 text-[10px] font-normal">
+ {cat.count} {cat.count === 1 ? 'Room' : 'Rooms'}
+ </span>
+ </div>
+ </div>
+ ))}
+ </div>
+ );
 });

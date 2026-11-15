@@ -1,554 +1,554 @@
 const getApiBaseUrl = () => {
-  if (typeof window !== 'undefined') {
-    const { hostname } = window.location;
-    const isLocalNetwork =
-      hostname === 'localhost' ||
-      hostname === '127.0.0.1' ||
-      hostname.startsWith('192.168.') ||
-      hostname.startsWith('10.') ||
-      /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hostname) ||
-      hostname.endsWith('.local');
+ if (typeof window !== 'undefined') {
+ const { hostname } = window.location;
+ const isLocalNetwork =
+ hostname === 'localhost' ||
+ hostname === '127.0.0.1' ||
+ hostname.startsWith('192.168.') ||
+ hostname.startsWith('10.') ||
+ /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hostname) ||
+ hostname.endsWith('.local');
 
-    if (isLocalNetwork) {
-      // When accessed on mobile or another device on the same local network (e.g. 192.168.x.x:5173),
-      // target the backend running on the same host machine at port 5000
-      return `http://${hostname}:5000/api`;
-    }
+ if (isLocalNetwork) {
+ // When accessed on mobile or another device on the same local network (e.g. 192.168.x.x:5173),
+ // target the backend running on the same host machine at port 5000
+ return `http://${hostname}:5000/api`;
+ }
 
-    if (import.meta.env.VITE_API_URL && !import.meta.env.VITE_API_URL.includes('localhost')) {
-      return import.meta.env.VITE_API_URL;
-    }
+ if (import.meta.env.VITE_API_URL && !import.meta.env.VITE_API_URL.includes('localhost')) {
+ return import.meta.env.VITE_API_URL;
+ }
 
-    return 'https://room-scout-backend.onrender.com/api';
-  }
+ return 'https://room-scout-backend.onrender.com/api';
+ }
 
-  return import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+ return import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 };
 
-const API_BASE_URL = getApiBaseUrl();
+export const API_BASE_URL = getApiBaseUrl();
 
 // In-flight request deduplication registry for simultaneous GET calls
 const inFlightRequests = new Map();
 
 async function request(endpoint, options = {}) {
-  const method = (options.method || 'GET').toUpperCase();
-  const isGet = method === 'GET';
-  const dedupeKey = isGet && !options.skipDedupe ? `${method}:${endpoint}` : null;
+ const method = (options.method || 'GET').toUpperCase();
+ const isGet = method === 'GET';
+ const dedupeKey = isGet && !options.skipDedupe ? `${method}:${endpoint}` : null;
 
-  if (dedupeKey && inFlightRequests.has(dedupeKey)) {
-    return inFlightRequests.get(dedupeKey);
-  }
+ if (dedupeKey && inFlightRequests.has(dedupeKey)) {
+ return inFlightRequests.get(dedupeKey);
+ }
 
-  const executeRequest = async () => {
-    const token = localStorage.getItem('roomscout_token') || localStorage.getItem('stayhub_jwt_token');
-    const adminKey = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('roomscout_admin_key') : null;
+ const executeRequest = async () => {
+ const token = localStorage.getItem('roomscout_token') || localStorage.getItem('stayhub_jwt_token');
+ const adminKey = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('roomscout_admin_key') : null;
 
-    const headers = {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(adminKey ? { 'x-admin-key': adminKey } : {}),
-      ...options.headers,
-    };
+ const headers = {
+ 'Content-Type': 'application/json',
+ ...(token ? { Authorization: `Bearer ${token}` } : {}),
+ ...(adminKey ? { 'x-admin-key': adminKey } : {}),
+ ...options.headers,
+ };
 
-    // Prevent hanging requests with a 15-second timeout signal
-    const timeoutSignal =
-      typeof AbortSignal !== 'undefined' && AbortSignal.timeout
-        ? AbortSignal.timeout(45000)
-        : undefined;
+ // Prevent hanging requests with a 15-second timeout signal
+ const timeoutSignal =
+ typeof AbortSignal !== 'undefined' && AbortSignal.timeout
+ ? AbortSignal.timeout(45000)
+ : undefined;
 
-    const config = {
-      credentials: 'include',
-      ...options,
-      headers,
-      signal: options.signal || timeoutSignal,
-    };
+ const config = {
+ credentials: 'include',
+ ...options,
+ headers,
+ signal: options.signal || timeoutSignal,
+ };
 
-  try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+ try {
+ const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
-    let data = {};
-    const contentType = response.headers.get('content-type') || '';
-    if (contentType.includes('application/json')) {
-      try {
-        data = await response.json();
-      } catch {
-        data = {};
-      }
-    } else {
-      const text = await response.text();
-      data = { message: text };
-    }
+ let data = {};
+ const contentType = response.headers.get('content-type') || '';
+ if (contentType.includes('application/json')) {
+ try {
+ data = await response.json();
+ } catch {
+ data = {};
+ }
+ } else {
+ const text = await response.text();
+ data = { message: text };
+ }
 
-    if (!response.ok) {
-      if (response.status === 429) {
-        const rateLimitMessage = data.message || 'Too many requests from this IP. Please slow down.';
-        const error = new Error(rateLimitMessage);
-        error.status = 429;
-        error.data = data;
-        throw error;
-      }
+ if (!response.ok) {
+ if (response.status === 429) {
+ const rateLimitMessage = data.message || 'Too many requests from this IP. Please slow down.';
+ const error = new Error(rateLimitMessage);
+ error.status = 429;
+ error.data = data;
+ throw error;
+ }
 
-      if (data.status === 'ACCOUNT_DELETED' || response.status === 401) {
-        if (data.status === 'ACCOUNT_DELETED' || (data.message && data.message.includes('Account not found'))) {
-          localStorage.removeItem('roomscout_token');
-          localStorage.removeItem('stayhub_jwt_token');
-          localStorage.removeItem('mal_practice_user');
-          localStorage.removeItem('roomscout_user');
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(
-              new CustomEvent('auth:account_deleted', {
-                detail: {
-                  message: data.message || 'Account not found in database. Please log in.',
-                },
-              })
-            );
-          }
-        }
-      }
+ if (data.status === 'ACCOUNT_DELETED' || response.status === 401) {
+ if (data.status === 'ACCOUNT_DELETED' || (data.message && data.message.includes('Account not found'))) {
+ localStorage.removeItem('roomscout_token');
+ localStorage.removeItem('stayhub_jwt_token');
+ localStorage.removeItem('mal_practice_user');
+ localStorage.removeItem('roomscout_user');
+ if (typeof window !== 'undefined') {
+ window.dispatchEvent(
+ new CustomEvent('auth:account_deleted', {
+ detail: {
+ message: data.message || 'Account not found in database. Please log in.',
+ },
+ })
+ );
+ }
+ }
+ }
 
-      let errorMessage = data.extraDetails || data.message || 'API request failed';
-      if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
-        errorMessage = data.errors.map((err) => err.message || `${err.field}: invalid`).join(', ');
-      }
-      const error = new Error(errorMessage);
-      error.status = response.status;
-      error.data = data;
-      throw error;
-    }
+ let errorMessage = data.extraDetails || data.message || 'API request failed';
+ if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+ errorMessage = data.errors.map((err) => err.message || `${err.field}: invalid`).join(', ');
+ }
+ const error = new Error(errorMessage);
+ error.status = response.status;
+ error.data = data;
+ throw error;
+ }
 
-    return data;
-    } catch (error) {
-      if (
-        error.name === 'TimeoutError' ||
-        error.name === 'AbortError' ||
-        error.message?.includes('timed out') ||
-        error.message?.includes('timeout')
-      ) {
-        const timeoutError = new Error('Server is waking up from sleep (cold start). Please try again in a few seconds.');
-        timeoutError.status = 504;
-        throw timeoutError;
-      }
-      if (
-        (error.name === 'TypeError' && error.message && error.message.toLowerCase().includes('fetch')) ||
-        error.message?.includes('NetworkError') ||
-        error.message?.includes('Failed to fetch')
-      ) {
-        const friendlyError = new Error('Cannot connect to server. Please verify the backend is running on port 5000.');
-        friendlyError.status = 503;
-        throw friendlyError;
-      }
-      console.error(`API Error [${endpoint}]:`, error.message);
-      throw error;
-    }
-  };
+ return data;
+ } catch (error) {
+ if (
+ error.name === 'TimeoutError' ||
+ error.name === 'AbortError' ||
+ error.message?.includes('timed out') ||
+ error.message?.includes('timeout')
+ ) {
+ const timeoutError = new Error('Server is waking up from sleep (cold start). Please try again in a few seconds.');
+ timeoutError.status = 504;
+ throw timeoutError;
+ }
+ if (
+ (error.name === 'TypeError' && error.message && error.message.toLowerCase().includes('fetch')) ||
+ error.message?.includes('NetworkError') ||
+ error.message?.includes('Failed to fetch')
+ ) {
+ const friendlyError = new Error('Cannot connect to server. Please verify the backend is running on port 5000.');
+ friendlyError.status = 503;
+ throw friendlyError;
+ }
+ console.error(`API Error [${endpoint}]:`, error.message);
+ throw error;
+ }
+ };
 
-  const reqPromise = executeRequest();
+ const reqPromise = executeRequest();
 
-  if (dedupeKey) {
-    inFlightRequests.set(dedupeKey, reqPromise);
-    reqPromise.finally(() => {
-      inFlightRequests.delete(dedupeKey);
-    });
-  }
+ if (dedupeKey) {
+ inFlightRequests.set(dedupeKey, reqPromise);
+ reqPromise.finally(() => {
+ inFlightRequests.delete(dedupeKey);
+ });
+ }
 
-  return reqPromise;
+ return reqPromise;
 }
 
 export const authAPI = {
-  login: (credentials) =>
-    request('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(credentials),
-    }),
+ login: (credentials) =>
+ request('/auth/login', {
+ method: 'POST',
+ body: JSON.stringify(credentials),
+ }),
 
-  googleAuth: ({ credential, accessToken, role }) =>
-    request('/auth/google', {
-      method: 'POST',
-      body: JSON.stringify({ credential, accessToken, role }),
-    }),
+ googleAuth: ({ credential, accessToken, role }) =>
+ request('/auth/google', {
+ method: 'POST',
+ body: JSON.stringify({ credential, accessToken, role }),
+ }),
 
-  googleLogin: ({ credential, accessToken, role }) =>
-    request('/auth/google', {
-      method: 'POST',
-      body: JSON.stringify({ credential, accessToken, role }),
-    }),
+ googleLogin: ({ credential, accessToken, role }) =>
+ request('/auth/google', {
+ method: 'POST',
+ body: JSON.stringify({ credential, accessToken, role }),
+ }),
 
-  register: (userData) =>
-    request('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    }),
+ register: (userData) =>
+ request('/auth/register', {
+ method: 'POST',
+ body: JSON.stringify(userData),
+ }),
 
-  forgotPassword: ({ email, role }) =>
-    request('/auth/forgot-password', {
-      method: 'POST',
-      body: JSON.stringify({ email, role }),
-    }),
+ forgotPassword: ({ email, role }) =>
+ request('/auth/forgot-password', {
+ method: 'POST',
+ body: JSON.stringify({ email, role }),
+ }),
 
-  updateProfile: (profileData) =>
-    request('/auth/profile', {
-      method: 'PUT',
-      body: JSON.stringify(profileData),
-    }),
+ updateProfile: (profileData) =>
+ request('/auth/profile', {
+ method: 'PUT',
+ body: JSON.stringify(profileData),
+ }),
 
-  changePassword: ({ oldPassword, newPassword }) =>
-    request('/auth/change-password', {
-      method: 'PUT',
-      body: JSON.stringify({ oldPassword, newPassword }),
-    }),
+ changePassword: ({ oldPassword, newPassword }) =>
+ request('/auth/change-password', {
+ method: 'PUT',
+ body: JSON.stringify({ oldPassword, newPassword }),
+ }),
 
-  setPassword: ({ newPassword }) =>
-    request('/auth/set-password', {
-      method: 'POST',
-      body: JSON.stringify({ newPassword }),
-    }),
+ setPassword: ({ newPassword }) =>
+ request('/auth/set-password', {
+ method: 'POST',
+ body: JSON.stringify({ newPassword }),
+ }),
 
-  deleteAccount: () =>
-    request('/auth/delete-account', {
-      method: 'DELETE',
-    }),
+ deleteAccount: () =>
+ request('/auth/delete-account', {
+ method: 'DELETE',
+ }),
 
-  getProfile: () => request('/auth/me'),
+ getProfile: () => request('/auth/me'),
 };
 
 export const staysAPI = {
-  getStays: (queryParams = {}) => {
-    const params = new URLSearchParams(queryParams).toString();
-    return request(`/stays${params ? `?${params}` : ''}`);
-  },
+ getStays: (queryParams = {}) => {
+ const params = new URLSearchParams(queryParams).toString();
+ return request(`/stays${params ? `?${params}` : ''}`);
+ },
 
-  getStayById: (id) => request(`/stays/${id}`),
+ getStayById: (id) => request(`/stays/${id}`),
 
-  checkAvailability: (stayId, checkIn, checkOut) =>
-    request(
-      `/stays/${encodeURIComponent(stayId)}/availability?checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}`
-    ),
+ checkAvailability: (stayId, checkIn, checkOut) =>
+ request(
+ `/stays/${encodeURIComponent(stayId)}/availability?checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}`
+ ),
 
-  createStay: (stayData) =>
-    request('/stays', {
-      method: 'POST',
-      body: JSON.stringify(stayData),
-    }),
+ createStay: (stayData) =>
+ request('/stays', {
+ method: 'POST',
+ body: JSON.stringify(stayData),
+ }),
 
-  addReview: (stayId, reviewData) =>
-    request(`/stays/${stayId}/reviews`, {
-      method: 'POST',
-      body: JSON.stringify(reviewData),
-    }),
+ addReview: (stayId, reviewData) =>
+ request(`/stays/${stayId}/reviews`, {
+ method: 'POST',
+ body: JSON.stringify(reviewData),
+ }),
 
-  updateReview: (stayId, reviewId, reviewData) =>
-    request(`/stays/${stayId}/reviews/${reviewId}`, {
-      method: 'PUT',
-      body: JSON.stringify(reviewData),
-    }),
+ updateReview: (stayId, reviewId, reviewData) =>
+ request(`/stays/${stayId}/reviews/${reviewId}`, {
+ method: 'PUT',
+ body: JSON.stringify(reviewData),
+ }),
 
-  deleteReview: (stayId, reviewId) =>
-    request(`/stays/${stayId}/reviews/${reviewId}`, {
-      method: 'DELETE',
-    }),
+ deleteReview: (stayId, reviewId) =>
+ request(`/stays/${stayId}/reviews/${reviewId}`, {
+ method: 'DELETE',
+ }),
 
-  updateRooms: (stayId, data) =>
-    request(`/stays/${stayId}/rooms`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    }),
+ updateRooms: (stayId, data) =>
+ request(`/stays/${stayId}/rooms`, {
+ method: 'PUT',
+ body: JSON.stringify(data),
+ }),
 
-  resolveMapLink: (url) =>
-    request('/stays/resolve-map-link', {
-      method: 'POST',
-      body: JSON.stringify({ url }),
-    }),
+ resolveMapLink: (url) =>
+ request('/stays/resolve-map-link', {
+ method: 'POST',
+ body: JSON.stringify({ url }),
+ }),
 
-  // Add this new method:
-  getHostProperties: () => request('/stays/host/my-properties'),
+ // Add this new method:
+ getHostProperties: () => request('/stays/host/my-properties'),
 
-  getPublicStats: () => request('/stays/public-stats'),
+ getPublicStats: () => request('/stays/public-stats'),
 
-  resetRevenue: (stayId, data = {}) =>
-    request(`/stays/${stayId}/reset-revenue`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
+ resetRevenue: (stayId, data = {}) =>
+ request(`/stays/${stayId}/reset-revenue`, {
+ method: 'POST',
+ body: JSON.stringify(data),
+ }),
 };
 
 
 export const bookingsAPI = {
-  createBooking: (bookingData) =>
-    request('/bookings', {
-      method: 'POST',
-      body: JSON.stringify(bookingData),
-    }),
+ createBooking: (bookingData) =>
+ request('/bookings', {
+ method: 'POST',
+ body: JSON.stringify(bookingData),
+ }),
 
-  createOfflineBooking: (bookingData) =>
-    request('/bookings/offline', {
-      method: 'POST',
-      body: JSON.stringify(bookingData),
-    }),
+ createOfflineBooking: (bookingData) =>
+ request('/bookings/offline', {
+ method: 'POST',
+ body: JSON.stringify(bookingData),
+ }),
 
-  checkAvailability: (stayId, checkIn, checkOut) =>
-    request(
-      `/bookings/check-availability?stayId=${encodeURIComponent(stayId)}&checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}`
-    ),
+ checkAvailability: (stayId, checkIn, checkOut) =>
+ request(
+ `/bookings/check-availability?stayId=${encodeURIComponent(stayId)}&checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}`
+ ),
 
-  getBookingsByStay: (stayId) =>
-    request(`/bookings/stay/${encodeURIComponent(stayId)}`),
+ getBookingsByStay: (stayId) =>
+ request(`/bookings/stay/${encodeURIComponent(stayId)}`),
 
-  getMyBookings: () => request('/bookings/my-bookings'),
+ getMyBookings: () => request('/bookings/my-bookings'),
 
-  getBookingById: (id) => request(`/bookings/${encodeURIComponent(id)}`),
+ getBookingById: (id) => request(`/bookings/${encodeURIComponent(id)}`),
 
-  getHostBookings: (email) => {
-    if (email) {
-      return request(`/bookings/host/${encodeURIComponent(email)}`);
-    }
-    return request('/bookings/host-bookings');
-  },
+ getHostBookings: (email) => {
+ if (email) {
+ return request(`/bookings/host/${encodeURIComponent(email)}`);
+ }
+ return request('/bookings/host-bookings');
+ },
 
-  updateBookingStatus: (id, statusData) =>
-    request(`/bookings/${id}/status`, {
-      method: 'PATCH',
-      body: JSON.stringify(statusData),
-    }),
+ updateBookingStatus: (id, statusData) =>
+ request(`/bookings/${id}/status`, {
+ method: 'PATCH',
+ body: JSON.stringify(statusData),
+ }),
 
-  reRequestPayment: (id) =>
-    request(`/bookings/${encodeURIComponent(id)}/re-request-payment`, {
-      method: 'POST',
-    }),
+ reRequestPayment: (id) =>
+ request(`/bookings/${encodeURIComponent(id)}/re-request-payment`, {
+ method: 'POST',
+ }),
 
-  markTimedOut: (id) =>
-    request(`/bookings/${encodeURIComponent(id)}/timeout`, {
-      method: 'POST',
-    }),
+ markTimedOut: (id) =>
+ request(`/bookings/${encodeURIComponent(id)}/timeout`, {
+ method: 'POST',
+ }),
 
-  deleteBooking: (id) =>
-    request(`/bookings/${encodeURIComponent(id)}`, {
-      method: 'DELETE',
-    }),
+ deleteBooking: (id) =>
+ request(`/bookings/${encodeURIComponent(id)}`, {
+ method: 'DELETE',
+ }),
 
-  removeOccupantBooking: (payload) =>
-    request('/bookings/occupant/remove', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+ removeOccupantBooking: (payload) =>
+ request('/bookings/occupant/remove', {
+ method: 'POST',
+ body: JSON.stringify(payload),
+ }),
 
-  checkoutOccupant: (payload) =>
-    request('/bookings/occupant/checkout', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+ checkoutOccupant: (payload) =>
+ request('/bookings/occupant/checkout', {
+ method: 'POST',
+ body: JSON.stringify(payload),
+ }),
 
-  checkoutBooking: (id) =>
-    request(`/bookings/${encodeURIComponent(id)}/checkout`, {
-      method: 'POST',
-    }),
+ checkoutBooking: (id) =>
+ request(`/bookings/${encodeURIComponent(id)}/checkout`, {
+ method: 'POST',
+ }),
 
-  cascadeDeleteRoomBookings: (payload) =>
-    request('/bookings/room/cascade-delete', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+ cascadeDeleteRoomBookings: (payload) =>
+ request('/bookings/room/cascade-delete', {
+ method: 'POST',
+ body: JSON.stringify(payload),
+ }),
 
-  getBookingUpiDetails: (bookingId) =>
-    request(`/payments/booking-upi-details/${encodeURIComponent(bookingId)}`),
+ getBookingUpiDetails: (bookingId) =>
+ request(`/payments/booking-upi-details/${encodeURIComponent(bookingId)}`),
 
-  submitUpiReference: (payload) =>
-    request('/payments/submit-upi-reference', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+ submitUpiReference: (payload) =>
+ request('/payments/submit-upi-reference', {
+ method: 'POST',
+ body: JSON.stringify(payload),
+ }),
 
-  verifyReference: (payload) =>
-    request('/payments/verify-reference', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+ verifyReference: (payload) =>
+ request('/payments/verify-reference', {
+ method: 'POST',
+ body: JSON.stringify(payload),
+ }),
 };
 
 export const paymentsAPI = {
-  getBookingUpiDetails: (bookingId) =>
-    request(`/payments/booking-upi-details/${encodeURIComponent(bookingId)}`),
+ getBookingUpiDetails: (bookingId) =>
+ request(`/payments/booking-upi-details/${encodeURIComponent(bookingId)}`),
 
-  submitUpiReference: (payload) =>
-    request('/payments/submit-upi-reference', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+ submitUpiReference: (payload) =>
+ request('/payments/submit-upi-reference', {
+ method: 'POST',
+ body: JSON.stringify(payload),
+ }),
 
-  verifyReference: (payload) =>
-    request('/payments/verify-reference', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+ verifyReference: (payload) =>
+ request('/payments/verify-reference', {
+ method: 'POST',
+ body: JSON.stringify(payload),
+ }),
 
-  recordRefund: (payload) =>
-    request('/payments/record-refund', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+ recordRefund: (payload) =>
+ request('/payments/record-refund', {
+ method: 'POST',
+ body: JSON.stringify(payload),
+ }),
 
-  getHostPaymentSettings: () =>
-    request('/payments/host-payment-settings'),
+ getHostPaymentSettings: () =>
+ request('/payments/host-payment-settings'),
 
-  updateHostPaymentSettings: (payload) =>
-    request('/payments/host-payment-settings', {
-      method: 'PUT',
-      body: JSON.stringify(payload),
-    }),
+ updateHostPaymentSettings: (payload) =>
+ request('/payments/host-payment-settings', {
+ method: 'PUT',
+ body: JSON.stringify(payload),
+ }),
 
-  getHostPayments: (hostId) =>
-    request(`/payments/host/${encodeURIComponent(hostId)}`),
+ getHostPayments: (hostId) =>
+ request(`/payments/host/${encodeURIComponent(hostId)}`),
 
-  getMyPayments: () => request('/payments/my-payments'),
+ getMyPayments: () => request('/payments/my-payments'),
 };
 
 export const wishlistAPI = {
-  getWishlist: () => request('/wishlist'),
+ getWishlist: () => request('/wishlist'),
 
-  toggleWishlist: (stayOrId) => {
-    const targetStayId = typeof stayOrId === 'string' ? stayOrId : stayOrId?._id;
-    return request('/wishlist/toggle', {
-      method: 'POST',
-      body: JSON.stringify({
-        stay: typeof stayOrId === 'object' ? stayOrId : undefined,
-        stayId: targetStayId,
-      }),
-    });
-  },
+ toggleWishlist: (stayOrId) => {
+ const targetStayId = typeof stayOrId === 'string' ? stayOrId : stayOrId?._id;
+ return request('/wishlist/toggle', {
+ method: 'POST',
+ body: JSON.stringify({
+ stay: typeof stayOrId === 'object' ? stayOrId : undefined,
+ stayId: targetStayId,
+ }),
+ });
+ },
 
-  removeFromWishlist: (stayId) =>
-    request(`/wishlist/${encodeURIComponent(stayId)}`, {
-      method: 'DELETE',
-    }),
+ removeFromWishlist: (stayId) =>
+ request(`/wishlist/${encodeURIComponent(stayId)}`, {
+ method: 'DELETE',
+ }),
 };
 
 export const subscriptionsAPI = {
-  getPlans: (params = {}) => {
-    const q = new URLSearchParams(params).toString();
-    return request(`/subscriptions/plans${q ? `?${q}` : ''}`);
-  },
+ getPlans: (params = {}) => {
+ const q = new URLSearchParams(params).toString();
+ return request(`/subscriptions/plans${q ? `?${q}` : ''}`);
+ },
 
-  getMySubscription: () => request('/subscriptions/my-subscription'),
+ getMySubscription: () => request('/subscriptions/my-subscription'),
 
-  lockPlan: (payload) =>
-    request('/subscriptions/lock-plan', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+ lockPlan: (payload) =>
+ request('/subscriptions/lock-plan', {
+ method: 'POST',
+ body: JSON.stringify(payload),
+ }),
 
-  submitPayment: (payload) =>
-    request('/subscriptions/submit-payment', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+ submitPayment: (payload) =>
+ request('/subscriptions/submit-payment', {
+ method: 'POST',
+ body: JSON.stringify(payload),
+ }),
 };
 
 export const adminAPI = {
-  getUsers: () => request('/enter/users'),
+ getUsers: () => request('/enter/users'),
 
-  deleteUser: (id) =>
-    request(`/enter/users/${encodeURIComponent(id)}`, {
-      method: 'DELETE',
-    }),
+ deleteUser: (id) =>
+ request(`/enter/users/${encodeURIComponent(id)}`, {
+ method: 'DELETE',
+ }),
 
-  getHosts: () => request('/enter/hosts'),
+ getHosts: () => request('/enter/hosts'),
 
-  getHostByEmail: (email) => request(`/enter/hosts/by-email/${encodeURIComponent(email)}`),
+ getHostByEmail: (email) => request(`/enter/hosts/by-email/${encodeURIComponent(email)}`),
 
-  createHost: (hostData) =>
-    request('/enter/hosts', {
-      method: 'POST',
-      body: JSON.stringify(hostData),
-    }),
+ createHost: (hostData) =>
+ request('/enter/hosts', {
+ method: 'POST',
+ body: JSON.stringify(hostData),
+ }),
 
-  bulkApproveHosts: (hostIds) =>
-    request('/enter/hosts/bulk-approve', {
-      method: 'PUT',
-      body: JSON.stringify({ hostIds }),
-    }),
+ bulkApproveHosts: (hostIds) =>
+ request('/enter/hosts/bulk-approve', {
+ method: 'PUT',
+ body: JSON.stringify({ hostIds }),
+ }),
 
-  approveHost: (id) =>
-    request(`/enter/hosts/${id}/approve`, {
-      method: 'PUT',
-    }),
+ approveHost: (id) =>
+ request(`/enter/hosts/${id}/approve`, {
+ method: 'PUT',
+ }),
 
-  rejectHost: (id) =>
-    request(`/enter/hosts/${id}/reject`, {
-      method: 'PUT',
-    }),
+ rejectHost: (id) =>
+ request(`/enter/hosts/${id}/reject`, {
+ method: 'PUT',
+ }),
 
-  getHostGuests: (email) =>
-    request(`/enter/hosts/my-guests/${encodeURIComponent(email)}`),
+ getHostGuests: (email) =>
+ request(`/enter/hosts/my-guests/${encodeURIComponent(email)}`),
 
-  deleteHost: (id) =>
-    request(`/enter/hosts/${id}`, {
-      method: 'DELETE',
-    }),
+ deleteHost: (id) =>
+ request(`/enter/hosts/${id}`, {
+ method: 'DELETE',
+ }),
 
-  getStats: () => request('/enter/stats'),
+ getStats: () => request('/enter/stats'),
 
-  impersonate: ({ email, role, id }) =>
-    request('/enter/impersonate', {
-      method: 'POST',
-      body: JSON.stringify({ email, role, id }),
-    }),
+ impersonate: ({ email, role, id }) =>
+ request('/enter/impersonate', {
+ method: 'POST',
+ body: JSON.stringify({ email, role, id }),
+ }),
 
-  getPlatformPaymentSettings: () => request('/enter/payment-settings'),
+ getPlatformPaymentSettings: () => request('/enter/payment-settings'),
 
-  updatePlatformPaymentSettings: (payload) =>
-    request('/enter/payment-settings', {
-      method: 'PUT',
-      body: JSON.stringify(payload),
-    }),
+ updatePlatformPaymentSettings: (payload) =>
+ request('/enter/payment-settings', {
+ method: 'PUT',
+ body: JSON.stringify(payload),
+ }),
 
-  getSubscriptionRequests: (status) =>
-    request('/enter/subscriptions' + (status && status !== 'ALL' ? `?status=${encodeURIComponent(status)}` : '')),
+ getSubscriptionRequests: (status) =>
+ request('/enter/subscriptions' + (status && status !== 'ALL' ? `?status=${encodeURIComponent(status)}` : '')),
 
-  verifySubscriptionRequest: (id, payload) =>
-    request(`/enter/subscriptions/${encodeURIComponent(id)}/verify`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+ verifySubscriptionRequest: (id, payload) =>
+ request(`/enter/subscriptions/${encodeURIComponent(id)}/verify`, {
+ method: 'POST',
+ body: JSON.stringify(payload),
+ }),
 
-  manualActivateHostSubscription: (hostId, payload) =>
-    request(`/enter/hosts/${encodeURIComponent(hostId)}/subscription/manual-activate`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+ manualActivateHostSubscription: (hostId, payload) =>
+ request(`/enter/hosts/${encodeURIComponent(hostId)}/subscription/manual-activate`, {
+ method: 'POST',
+ body: JSON.stringify(payload),
+ }),
 
-  deleteAllSubscriptionRequests: () =>
-    request('/enter/subscriptions', {
-      method: 'DELETE',
-    }),
+ deleteAllSubscriptionRequests: () =>
+ request('/enter/subscriptions', {
+ method: 'DELETE',
+ }),
 
-  deleteSubscriptionRequest: (id) =>
-    request(`/enter/subscriptions/${encodeURIComponent(id)}`, {
-      method: 'DELETE',
-    }),
+ deleteSubscriptionRequest: (id) =>
+ request(`/enter/subscriptions/${encodeURIComponent(id)}`, {
+ method: 'DELETE',
+ }),
 
-  bulkRejectSubscriptions: (payload) =>
-    request('/enter/subscriptions/bulk-reject', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+ bulkRejectSubscriptions: (payload) =>
+ request('/enter/subscriptions/bulk-reject', {
+ method: 'POST',
+ body: JSON.stringify(payload),
+ }),
 
-  bulkVerifySubscriptions: (payload) =>
-    request('/enter/subscriptions/bulk-verify', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+ bulkVerifySubscriptions: (payload) =>
+ request('/enter/subscriptions/bulk-verify', {
+ method: 'POST',
+ body: JSON.stringify(payload),
+ }),
 
-  extractStatementUtrs: (payload) =>
-    request('/enter/subscriptions/extract-statement', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+ extractStatementUtrs: (payload) =>
+ request('/enter/subscriptions/extract-statement', {
+ method: 'POST',
+ body: JSON.stringify(payload),
+ }),
 
-  setAdminKey: (key) => {
-    if (typeof sessionStorage !== 'undefined') {
-      if (key) sessionStorage.setItem('roomscout_admin_key', key.trim());
-      else sessionStorage.removeItem('roomscout_admin_key');
-    }
-  },
+ setAdminKey: (key) => {
+ if (typeof sessionStorage !== 'undefined') {
+ if (key) sessionStorage.setItem('roomscout_admin_key', key.trim());
+ else sessionStorage.removeItem('roomscout_admin_key');
+ }
+ },
 
-  getAdminKey: () => (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('roomscout_admin_key') : null),
+ getAdminKey: () => (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('roomscout_admin_key') : null),
 };

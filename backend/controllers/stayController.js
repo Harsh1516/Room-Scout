@@ -335,6 +335,13 @@ export const createStay = async (req, res, next) => {
             price: rr?.price,
             rateUnit: rr?.rateUnit,
             capacity: Number(rr?.capacity) || 1,
+            features: Array.isArray(rr?.features) ? rr.features : [],
+            photos: Array.isArray(rr?.photos)
+              ? rr.photos
+              : (rr?.photos && typeof rr.photos === 'object' ? Object.entries(rr.photos).map(([label, url]) => ({ label, url })) : []),
+            images: Array.isArray(rr?.images)
+              ? rr.images
+              : (Array.isArray(rr?.photos) ? rr.photos.map((p) => (typeof p === 'string' ? p : p.url)).filter(Boolean) : []),
           }))
         : [],
       rooms: Array.isArray(rooms) ? rooms : [],
@@ -569,6 +576,34 @@ export const updateStayRooms = async (req, res, next) => {
 // @desc    Resolve Google Maps coordinates
 // @route   POST /api/stays/resolve-map
 // @access  Public
+function parseDMSString(str) {
+  if (!str || typeof str !== 'string') return null;
+  let decoded = str;
+  try {
+    decoded = decodeURIComponent(str).replace(/\+/g, ' ');
+  } catch {}
+
+  const dmsRegex = /(\d+(?:\.\d+)?)[°\s]+(?:(\d+(?:\.\d+)?)['′\s]+)?(?:(\d+(?:\.\d+)?)["″\s]+)?([NSEW])/gi;
+  const matches = [...decoded.matchAll(dmsRegex)];
+  if (matches.length >= 2) {
+    let lat = null;
+    let lng = null;
+    for (const m of matches) {
+      const deg = parseFloat(m[1]) || 0;
+      const min = parseFloat(m[2]) || 0;
+      const sec = parseFloat(m[3]) || 0;
+      const dir = m[4].toUpperCase();
+      const val = (deg + min / 60 + sec / 3600) * (dir === 'S' || dir === 'W' ? -1 : 1);
+      if (dir === 'N' || dir === 'S') lat = val;
+      if (dir === 'E' || dir === 'W') lng = val;
+    }
+    if (lat !== null && lng !== null) {
+      return { latitude: Number(lat.toFixed(7)), longitude: Number(lng.toFixed(7)) };
+    }
+  }
+  return null;
+}
+
 export const resolveMapLink = async (req, res) => {
   try {
     const { url } = req.body;
@@ -577,6 +612,27 @@ export const resolveMapLink = async (req, res) => {
     }
 
     const trimmed = url.trim();
+
+    // 0a. Check if input is directly DMS coordinates (e.g. "29°22'29.4\"N 79°31'39.9\"E")
+    const directDms = parseDMSString(trimmed);
+    if (directDms) {
+      return res.json({
+        success: true,
+        latitude: directDms.latitude,
+        longitude: directDms.longitude,
+      });
+    }
+
+    // 0b. Check if input is directly decimal coordinates (e.g. "29.374833, 79.52775")
+    const directCoord = trimmed.match(/^(-?\d+(?:\.\d+)?)[,\s]+(-?\d+(?:\.\d+)?)$/);
+    if (directCoord) {
+      return res.json({
+        success: true,
+        latitude: Number(directCoord[1]),
+        longitude: Number(directCoord[2]),
+      });
+    }
+
     // Extract URL from input text (mobile apps may prepend place name before the link)
     const urlExtractMatch = trimmed.match(/https?:\/\/[^\s]+/i);
     const cleanUrl = urlExtractMatch ? urlExtractMatch[0] : trimmed;
@@ -584,7 +640,7 @@ export const resolveMapLink = async (req, res) => {
     try {
       parsedUrl = new URL(cleanUrl);
     } catch {
-      return res.status(400).json({ success: false, message: 'Invalid URL format' });
+      return res.status(400).json({ success: false, message: 'Please enter a valid Google Maps link or coordinates (e.g. 29°22\'29.4"N 79°31\'39.9"E)' });
     }
 
     const hostname = parsedUrl.hostname.toLowerCase();
@@ -631,6 +687,13 @@ export const resolveMapLink = async (req, res) => {
       decodedUrl = decodeURIComponent(targetUrl);
     } catch {}
 
+    // 0c. DMS coordinates in place path or query
+    const urlDms = parseDMSString(decodedUrl) || parseDMSString(targetUrl);
+    if (urlDms) {
+      lat = urlDms.latitude;
+      lng = urlDms.longitude;
+    }
+
     // 1. Exact POI / Marker coordinates in protobuf data (!3d<lat> and !4d<lng>)
     const lat3d = targetUrl.match(/!3d(-?\d+\.\d+)/) || fetchedHtml.match(/!3d(-?\d+\.\d+)/);
     const lng4d = targetUrl.match(/!4d(-?\d+\.\d+)/) || fetchedHtml.match(/!4d(-?\d+\.\d+)/);
@@ -650,21 +713,14 @@ export const resolveMapLink = async (req, res) => {
       }
     }
 
-    // 3. Direct coordinates in place path: /maps/place/lat,lng
+    // 3. Direct coordinates in place or search path: /maps/place/lat,lng or /maps/search/lat,lng
     if (lat === null || lng === null) {
-      const directPlaceMatch = targetUrl.match(/\/maps\/place\/(-?\d+\.\d+),(-?\d+\.\d+)/);
-      if (directPlaceMatch) {
-        lat = parseFloat(directPlaceMatch[1]);
-        lng = parseFloat(directPlaceMatch[2]);
-      }
-    }
-
-    // 3b. Google Maps HTML StaticMap fallback
-    if ((lat === null || lng === null) && fetchedHtml) {
-      const staticMapMatch = fetchedHtml.match(/center=(-?\d+\.\d+)%2C(-?\d+\.\d+)/);
-      if (staticMapMatch) {
-        lat = parseFloat(staticMapMatch[1]);
-        lng = parseFloat(staticMapMatch[2]);
+      const directCoordMatch =
+        decodedUrl.match(/\/maps\/(?:place|search)\/(-?\d+(?:\.\d+)?)[,+\s]+(-?\d+(?:\.\d+)?)/) ||
+        targetUrl.match(/\/maps\/(?:place|search)\/(-?\d+(?:\.\d+)?)[,+\s]+(-?\d+(?:\.\d+)?)/);
+      if (directCoordMatch) {
+        lat = parseFloat(directCoordMatch[1]);
+        lng = parseFloat(directCoordMatch[2]);
       }
     }
 
@@ -726,7 +782,7 @@ export const resolveMapLink = async (req, res) => {
     // 5. Fallback to viewport center (@lat,lng) ONLY if no specific pin, POI, or Plus Code exists
     //    Skip viewport center for /place/ URLs because @lat,lng is the viewport, not the pin
     if (lat === null || lng === null) {
-      if (atLat !== null && atLng !== null && !targetUrl.includes('/maps/place/')) {
+      if (atLat !== null && atLng !== null) {
         lat = atLat;
         lng = atLng;
       }
