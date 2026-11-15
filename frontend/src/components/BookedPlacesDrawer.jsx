@@ -231,7 +231,7 @@ export function BookedPlacesDrawer({ onLoginClick }) {
  animate={{ opacity: 1 }}
  exit={{ opacity: 0 }}
  transition={{ duration: 0.28, ease: 'easeOut' }}
- className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+ className="absolute inset-0 bg-[#121418]/80 backdrop-blur-xs cursor-pointer"
  onClick={() => setIsBookingsOpen(false)}
  />
 
@@ -246,7 +246,7 @@ export function BookedPlacesDrawer({ onLoginClick }) {
  duration: 0.32,
  ease: [0.16, 1, 0.3, 1],
  }}
- className="pointer-events-auto w-80 sm:w-88 max-w-[85vw] flex flex-col bg-white border-l border-slate-200 shadow-2xl h-full will-change-transform">
+ className="pointer-events-auto w-80 sm:w-88 max-w-[85vw] flex flex-col bg-white border-l-2 border-slate-300 md:border-slate-200 shadow-2xl h-full will-change-transform rounded-l-[32px] sm:rounded-l-[36px] overflow-hidden">
 
  {/* Header */}
  <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">

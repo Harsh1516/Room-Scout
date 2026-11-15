@@ -194,7 +194,7 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
  animate={{ opacity: 1 }}
  exit={{ opacity: 0 }}
  transition={{ duration: 0.28, ease: 'easeOut' }}
- className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+ className="absolute inset-0 bg-[#121418]/80 backdrop-blur-xs cursor-pointer"
  onClick={() => setIsOpen(false)}
  />
 
@@ -209,7 +209,7 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
  duration: 0.32,
  ease: [0.16, 1, 0.3, 1],
  }}
- className="pointer-events-auto w-80 sm:w-88 max-w-[85vw] flex flex-col bg-white border-r border-slate-200 shadow-2xl h-full will-change-transform select-none"
+ className="pointer-events-auto w-80 sm:w-88 max-w-[85vw] flex flex-col bg-white border-r-2 border-slate-300 md:border-slate-200 shadow-2xl h-full will-change-transform select-none rounded-r-[32px] sm:rounded-r-[36px] overflow-hidden"
  >
  {/* Header (Clean, Compact, matching WishlistDrawer) */}
  <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
