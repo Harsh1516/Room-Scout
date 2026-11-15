@@ -336,60 +336,59 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
  data-purpose="mobile-viewport"
  onClick={(e) => e.stopPropagation()}
  >
+  {/* ── Top Bar: Segmented Switcher (Login / Register) - Enlarged 2x ── */}
+  <header className="relative z-20 pb-3.5 sm:pb-4 flex flex-col items-center shrink-0">
+  {!isForgotMode ? (
+  <nav
+  aria-label="Portal Mode Selection"
+  className="p-1.5 sm:p-2 rounded-full flex items-center shadow-2xl bg-white border-2 border-slate-200/90"
+  >
+  {/* Login Pill */}
+  <button
+  type="button"
+  onClick={() => switchMode(false)}
+  className={`relative py-3 px-8 sm:py-3.5 sm:px-10 rounded-full text-base sm:text-lg font-bold tracking-tight transition-all duration-200 cursor-pointer z-10 select-none ${
+  !isRegisterMode
+  ? 'text-white'
+  : 'text-slate-600 hover:text-slate-900'
+  }`}
+  >
+  {!isRegisterMode && (
+  <motion.div
+  layoutId="portalModeActivePill"
+  className="absolute inset-0 rounded-full bg-slate-900 shadow-md -z-10"
+  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+  />
+  )}
+  <span>Login</span>
+  </button>
 
- {/* ── Top Bar: Segmented Switcher (Login / Register) ── */}
- <header className="relative z-20 pb-3 sm:pb-3.5 flex flex-col items-center shrink-0">
- {!isForgotMode ? (
- <nav
- aria-label="Portal Mode Selection"
- className="p-1 rounded-full flex items-center shadow-xl bg-white border border-slate-200/90"
- >
- {/* Login Pill */}
- <button
- type="button"
- onClick={() => switchMode(false)}
- className={`relative py-1.5 px-6 rounded-full text-xs transition-all duration-200 cursor-pointer z-10 select-none ${
- !isRegisterMode
- ? 'text-white font-semibold'
- : 'text-slate-600 hover:text-[#1f1b16] font-medium'
- }`}
- >
- {!isRegisterMode && (
- <motion.div
- layoutId="portalModeActivePill"
- className="absolute inset-0 rounded-full bg-slate-900 shadow-sm -z-10"
- transition={{ type: 'spring', stiffness: 450, damping: 32 }}
- />
- )}
- <span>Login</span>
- </button>
-
- {/* Register Pill */}
- <button
- type="button"
- onClick={() => switchMode(true)}
- className={`relative py-1.5 px-6 rounded-full text-xs transition-all duration-200 cursor-pointer z-10 select-none ${
- isRegisterMode
- ? 'text-white font-semibold'
- : 'text-slate-600 hover:text-[#1f1b16] font-medium'
- }`}
- >
- {isRegisterMode && (
- <motion.div
- layoutId="portalModeActivePill"
- className="absolute inset-0 rounded-full bg-slate-900 shadow-sm -z-10"
- transition={{ type: 'spring', stiffness: 450, damping: 32 }}
- />
- )}
- <span>Register</span>
- </button>
- </nav>
- ) : (
- <div className="py-1.5 px-6 rounded-full text-xs font-semibold bg-white text-[#1f1b16] shadow-md border border-slate-200">
- Password Recovery
- </div>
- )}
- </header>
+  {/* Register Pill */}
+  <button
+  type="button"
+  onClick={() => switchMode(true)}
+  className={`relative py-3 px-8 sm:py-3.5 sm:px-10 rounded-full text-base sm:text-lg font-bold tracking-tight transition-all duration-200 cursor-pointer z-10 select-none ${
+  isRegisterMode
+  ? 'text-white'
+  : 'text-slate-600 hover:text-slate-900'
+  }`}
+  >
+  {isRegisterMode && (
+  <motion.div
+  layoutId="portalModeActivePill"
+  className="absolute inset-0 rounded-full bg-slate-900 shadow-md -z-10"
+  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+  />
+  )}
+  <span>Register</span>
+  </button>
+  </nav>
+  ) : (
+  <div className="py-3 px-8 sm:py-3.5 sm:px-10 rounded-full text-base sm:text-lg font-bold bg-white text-[#1f1b16] shadow-xl border-2 border-slate-200">
+  Password Recovery
+  </div>
+  )}
+  </header>
 
  {/* ── Floating White Card / Tab ── */}
  <section aria-labelledby="modal-heading" className="relative z-20 px-0 w-full">
