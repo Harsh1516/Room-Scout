@@ -200,7 +200,7 @@ export function PropertyOverviewSection({
           <button
             type="button"
             onClick={() => setActiveModalTab('facilities')}
-            className="group relative overflow-hidden inline-flex items-center gap-3 px-6 py-3.5 sm:px-7 sm:py-4 rounded-2xl sm:rounded-3xl bg-[#e2e5ea] md:bg-white hover:bg-slate-900 text-slate-800 hover:text-white border-2 border-slate-300 md:border-slate-200 font-bold text-sm sm:text-base transition-all duration-200 cursor-pointer shadow-sm hover:shadow-lg active:scale-[0.98] select-none"
+            className="group relative overflow-hidden inline-flex items-center gap-3 px-6 py-3.5 sm:px-7 sm:py-4 rounded-2xl sm:rounded-3xl bg-[#e2e5ea] hover:bg-slate-900 text-slate-800 hover:text-white border-2 border-slate-300 font-bold text-sm sm:text-base transition-all duration-200 cursor-pointer shadow-sm hover:shadow-lg active:scale-[0.98] select-none"
           >
             {/* Premium flash type sweep line passing from left to right */}
             <span className="button-flash-sweep pointer-events-none" />
@@ -210,7 +210,7 @@ export function PropertyOverviewSection({
               <path d="m9 12 2 2 4-4" />
             </svg>
             <span className="relative z-10">Check Facilities</span>
-            <span className="relative z-10 text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-slate-300 md:bg-slate-100 text-slate-800 md:text-slate-600 group-hover:bg-white/20 group-hover:text-inherit transition-colors duration-200 border border-slate-400/50 md:border-transparent">
+            <span className="relative z-10 text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-slate-300 text-slate-800 group-hover:bg-white/20 group-hover:text-inherit transition-colors duration-200 border border-slate-400/50">
               {actualAmenities.length}
             </span>
           </button>
@@ -218,7 +218,7 @@ export function PropertyOverviewSection({
           <button
             type="button"
             onClick={() => setActiveModalTab('rules')}
-            className="group relative overflow-hidden inline-flex items-center gap-3 px-6 py-3.5 sm:px-7 sm:py-4 rounded-2xl sm:rounded-3xl bg-[#e2e5ea] md:bg-white hover:bg-slate-900 text-slate-800 hover:text-white border-2 border-slate-300 md:border-slate-200 font-bold text-sm sm:text-base transition-all duration-200 cursor-pointer shadow-sm hover:shadow-lg active:scale-[0.98] select-none"
+            className="group relative overflow-hidden inline-flex items-center gap-3 px-6 py-3.5 sm:px-7 sm:py-4 rounded-2xl sm:rounded-3xl bg-[#e2e5ea] hover:bg-slate-900 text-slate-800 hover:text-white border-2 border-slate-300 font-bold text-sm sm:text-base transition-all duration-200 cursor-pointer shadow-sm hover:shadow-lg active:scale-[0.98] select-none"
           >
             {/* Premium flash type sweep line passing from left to right */}
             <span className="button-flash-sweep pointer-events-none" />
@@ -230,7 +230,7 @@ export function PropertyOverviewSection({
               <line x1="16" y1="17" x2="8" y2="17" />
             </svg>
             <span className="relative z-10">Check Rules</span>
-            <span className="relative z-10 text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-slate-300 md:bg-slate-100 text-slate-800 md:text-slate-600 group-hover:bg-white/20 group-hover:text-inherit transition-colors duration-200 border border-slate-400/50 md:border-transparent">
+            <span className="relative z-10 text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-slate-300 text-slate-800 group-hover:bg-white/20 group-hover:text-inherit transition-colors duration-200 border border-slate-400/50">
               {houseRules.length}
             </span>
           </button>
@@ -570,7 +570,7 @@ export function PropertyOverviewSection({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               onClick={() => setActiveModalTab(null)}
-              className="absolute inset-0 bg-[#cdd2da] md:bg-[#1f1b16]/60 cursor-pointer"
+              className="absolute inset-0 bg-[#cdd2da] cursor-pointer"
             />
 
             {/* Modal Card */}
@@ -579,10 +579,10 @@ export function PropertyOverviewSection({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 16 }}
               transition={{ type: 'spring', damping: 26, stiffness: 320 }}
-              className="relative z-10 w-full max-w-lg rounded-[28px] md:rounded-3xl bg-[#e2e5ea] md:bg-white border-2 border-slate-300 md:border-slate-200/90 shadow-2xl overflow-hidden flex flex-col max-h-[88vh] md:max-h-[85vh]"
+              className="relative z-10 w-full max-w-lg rounded-[28px] bg-[#e2e5ea] border-2 border-slate-300 shadow-2xl overflow-hidden flex flex-col max-h-[88vh]"
             >
               {/* Top Header with Direct Title & Close Button */}
-              <div className="p-4 sm:p-5 border-b border-slate-300 md:border-slate-200/80 flex items-center justify-between gap-3 bg-[#e2e5ea] md:bg-white">
+              <div className="p-4 sm:p-5 border-b border-slate-300 flex items-center justify-between gap-3 bg-[#e2e5ea]">
                 <div className="flex items-center gap-2.5">
                   {activeModalTab === 'rules' ? (
                     <svg className="w-5 h-5 sm:w-6 sm:h-6 text-slate-800 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -609,7 +609,7 @@ export function PropertyOverviewSection({
                 <button
                   type="button"
                   onClick={() => setActiveModalTab(null)}
-                  className="w-9 h-9 md:w-8 md:h-8 rounded-full bg-slate-300 md:bg-slate-100 hover:bg-slate-400 md:hover:bg-slate-200 text-slate-800 md:text-slate-600 flex items-center justify-center transition-all cursor-pointer active:scale-95"
+                  className="w-9 h-9 rounded-full bg-slate-300 hover:bg-slate-400 text-slate-800 flex items-center justify-center transition-all cursor-pointer active:scale-95"
                   title="Close"
                   aria-label="Close modal"
                 >
@@ -621,13 +621,13 @@ export function PropertyOverviewSection({
               </div>
 
               {/* Modal Content List (Numbered points with gray background & 2x text size on mobile) */}
-              <div className="p-4 sm:p-6 pb-6 overflow-y-auto space-y-3 md:space-y-2.5 flex-1 bg-[#e2e5ea] md:bg-white">
+              <div className="p-4 sm:p-6 pb-6 overflow-y-auto space-y-3 flex-1 bg-[#e2e5ea]">
                 {activeModalTab === 'facilities' ? (
                   actualAmenities.length > 0 ? (
                     actualAmenities.map((item, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center gap-3.5 p-4 sm:p-5 md:p-3.5 bg-[#d2d7df] md:bg-[#f7f4ee] border border-slate-300 md:border-slate-200/80 rounded-[18px] md:rounded-none shadow-2xs md:shadow-none hover:bg-[#c8cfd8] md:hover:bg-slate-100/70 transition-all"
+                        className="flex items-center gap-3.5 p-4 sm:p-5 bg-white border border-slate-300 rounded-2xl shadow-2xs hover:border-slate-400 transition-all"
                       >
                         <span className="font-mono font-bold md:font-medium text-xl sm:text-2xl md:text-base text-slate-900 md:text-[#1f1b16] shrink-0 min-w-8 md:min-w-5">
                           {idx + 1}.
@@ -647,7 +647,7 @@ export function PropertyOverviewSection({
                     houseRules.map((rule, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center gap-3.5 p-4 sm:p-5 md:p-3.5 bg-[#d2d7df] md:bg-[#f7f4ee] border border-slate-300 md:border-slate-200/80 rounded-[18px] md:rounded-none shadow-2xs md:shadow-none hover:bg-[#c8cfd8] md:hover:bg-slate-100/70 transition-all"
+                        className="flex items-center gap-3.5 p-4 sm:p-5 bg-white border border-slate-300 rounded-2xl shadow-2xs hover:border-slate-400 transition-all"
                       >
                         <span className="font-mono font-bold md:font-medium text-xl sm:text-2xl md:text-base text-slate-900 md:text-[#1f1b16] shrink-0 min-w-8 md:min-w-5">
                           {idx + 1}.

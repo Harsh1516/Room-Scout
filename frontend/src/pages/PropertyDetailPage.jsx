@@ -479,7 +479,7 @@ export function PropertyDetailPage({ onLoginClick }) {
         )}
       </main>
 
-      {/* FULLSCREEN LIGHTBOX PHOTO VIEWER MODAL */}
+      {/* FULLSCREEN LIGHTBOX PHOTO VIEWER MODAL (Solid Gray #cdd2da Background) */}
       <AnimatePresence>
         {isLightboxOpen && (
           <motion.div
@@ -487,12 +487,12 @@ export function PropertyDetailPage({ onLoginClick }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
-            className="fixed inset-0 z-[99999] bg-[#22262e] flex flex-col justify-between p-3 sm:p-6 select-none overflow-hidden cursor-pointer"
+            className="fixed inset-0 z-[99999] bg-[#cdd2da] flex flex-col justify-between p-3 sm:p-6 select-none overflow-hidden cursor-pointer"
             onClick={() => setIsLightboxOpen(false)}
           >
             {/* Top Bar with counter & close button */}
             <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-2 pt-1 z-30">
-              <span className="px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-white font-semibold text-xs sm:text-sm tracking-wide">
+              <span className="px-4 py-1.5 rounded-full bg-slate-900 text-white font-bold text-xs sm:text-sm tracking-wide shadow-md">
                 {activePhotoIdx + 1} / {allImages.length}
               </span>
               <button
@@ -501,10 +501,10 @@ export function PropertyDetailPage({ onLoginClick }) {
                   e.stopPropagation();
                   setIsLightboxOpen(false);
                 }}
-                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 text-white flex items-center justify-center border border-white/20 transition-all cursor-pointer backdrop-blur-md shadow-md"
+                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-slate-300 hover:bg-slate-400 active:scale-95 text-slate-800 flex items-center justify-center border border-slate-400/50 transition-all cursor-pointer shadow-md select-none"
                 aria-label="Close photo viewer"
               >
-                <svg className="w-5 h-5 text-white stroke-[2.2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <svg className="w-5 h-5 text-slate-800 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <line x1="18" y1="6" x2="6" y2="18" strokeLinecap="round" strokeLinejoin="round" />
                   <line x1="6" y1="6" x2="18" y2="18" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -522,7 +522,7 @@ export function PropertyDetailPage({ onLoginClick }) {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.96 }}
                   transition={{ duration: 0.15, ease: 'easeOut' }}
-                  className="max-h-[62vh] sm:max-h-[68vh] max-w-[92vw] object-contain rounded-2xl sm:rounded-3xl shadow-2xl border border-white/10 cursor-default"
+                  className="max-h-[62vh] sm:max-h-[68vh] max-w-[92vw] object-contain rounded-2xl sm:rounded-3xl shadow-2xl border-2 border-slate-300/80 cursor-default bg-white"
                 />
               </AnimatePresence>
             </div>
@@ -539,8 +539,8 @@ export function PropertyDetailPage({ onLoginClick }) {
                     }}
                     className={`relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl overflow-hidden shrink-0 border-2 transition-all duration-200 cursor-pointer snap-start ${
                       idx === activePhotoIdx
-                        ? 'border-white scale-105 shadow-[0_8px_24px_rgba(0,0,0,0.5)] ring-2 ring-white/70'
-                        : 'border-white/25 opacity-60 hover:opacity-100 hover:border-white/60 hover:scale-100'
+                        ? 'border-2 border-black scale-105 shadow-xl ring-2 ring-black/40'
+                        : 'border border-slate-300/80 opacity-70 hover:opacity-100 hover:border-slate-500 hover:scale-100 shadow-md'
                     }`}
                   >
                     <img decoding="async" loading="lazy" src={imgUrl} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover rounded-2xl" />
