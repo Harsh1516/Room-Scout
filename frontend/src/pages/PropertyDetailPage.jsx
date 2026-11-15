@@ -528,24 +528,29 @@ export function PropertyDetailPage({ onLoginClick }) {
             </div>
 
             {allImages.length > 1 && (
-              <div className="w-full max-w-5xl mx-auto flex items-center justify-start sm:justify-center gap-3 sm:gap-4 overflow-x-auto py-3 sm:py-5 px-4 select-none z-20 scrollbar-none snap-x">
-                {allImages.map((imgUrl, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActivePhotoIdx(idx);
-                    }}
-                    className={`relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl overflow-hidden shrink-0 border-2 transition-all duration-200 cursor-pointer snap-start ${
-                      idx === activePhotoIdx
-                        ? 'border-2 border-white scale-105 shadow-2xl ring-2 ring-white/60'
-                        : 'border border-white/20 opacity-60 hover:opacity-100 hover:border-white/50 hover:scale-100 shadow-md'
-                    }`}
-                  >
-                    <img decoding="async" loading="lazy" src={imgUrl} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover rounded-2xl" />
-                  </button>
-                ))}
+              <div
+                className="w-full max-w-5xl mx-auto overflow-x-auto no-scrollbar py-3 sm:py-5 px-3 select-none z-20 flex justify-center"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-center gap-2.5 sm:gap-3.5 min-w-max mx-auto snap-x">
+                  {allImages.map((imgUrl, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActivePhotoIdx(idx);
+                      }}
+                      className={`relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl overflow-hidden shrink-0 border-2 transition-all duration-200 cursor-pointer snap-start ${
+                        idx === activePhotoIdx
+                          ? 'border-2 border-white scale-105 shadow-2xl ring-2 ring-white/60'
+                          : 'border border-white/20 opacity-60 hover:opacity-100 hover:border-white/50 hover:scale-100 shadow-md'
+                      }`}
+                    >
+                      <img decoding="async" loading="lazy" src={imgUrl} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover rounded-2xl" />
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </motion.div>
