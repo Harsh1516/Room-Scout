@@ -273,7 +273,7 @@ export function PropertyRoomCategoriesCard({
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                   onClick={() => setShowPicsModal(false)}
-                  className="absolute inset-0 bg-[#cdd2da] cursor-pointer"
+                  className="absolute inset-0 bg-[#121418] cursor-pointer"
                 />
 
                 {/* Modal Card (Solid Gray Background with NO transparency) */}
@@ -282,10 +282,10 @@ export function PropertyRoomCategoriesCard({
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 16 }}
                   transition={{ type: 'spring', damping: 26, stiffness: 320 }}
-                  className="relative z-10 w-full max-w-lg rounded-[28px] bg-[#e2e5ea] border-2 border-slate-300 shadow-2xl overflow-hidden flex flex-col max-h-[88vh]"
+                  className="relative z-10 w-full max-w-lg rounded-[28px] bg-white border border-slate-200/80 shadow-2xl overflow-hidden flex flex-col max-h-[88vh]"
                 >
                   {/* Modal Header */}
-                  <div className="p-4 sm:p-5 border-b border-slate-300 flex items-center justify-between gap-3 bg-[#e2e5ea]">
+                  <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between gap-3 bg-white">
                     <div className="flex items-center gap-2.5">
                       <svg
                         className="w-5 h-5 sm:w-6 sm:h-6 text-slate-800 shrink-0"
@@ -311,7 +311,7 @@ export function PropertyRoomCategoriesCard({
                     <button
                       type="button"
                       onClick={() => setShowPicsModal(false)}
-                      className="w-9 h-9 rounded-full bg-slate-300 hover:bg-slate-400 text-slate-800 flex items-center justify-center transition-all cursor-pointer active:scale-95"
+                      className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-all cursor-pointer active:scale-95"
                       title="Close"
                       aria-label="Close modal"
                     >
@@ -330,7 +330,7 @@ export function PropertyRoomCategoriesCard({
                   </div>
 
                   {/* Modal Content List */}
-                  <div className="p-4 sm:p-6 pb-6 overflow-y-auto space-y-3.5 flex-1 bg-[#e2e5ea]">
+                  <div className="p-4 sm:p-6 pb-6 overflow-y-auto space-y-3.5 flex-1 bg-slate-50/70">
                     {categoryPics.length > 0 ? (
                       categoryPics.map((pic, idx) => (
                         <div

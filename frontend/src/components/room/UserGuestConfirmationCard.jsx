@@ -485,23 +485,23 @@ export function UserGuestConfirmationCard({
         {/* Solid Gray Backdrop: Instant open without animation */}
         <div
           onClick={onClose}
-          className="fixed inset-0 bg-[#cdd2da] md:bg-[#1f1b16]/60 cursor-pointer"
+          className="fixed inset-0 bg-[#121418] cursor-pointer"
         />
 
         {/* Modal Card: Solid Gray Background (#e2e5ea), Instant open without animation */}
         <div
           onClick={(e) => e.stopPropagation()}
-          className="relative z-10 w-full max-w-lg rounded-[28px] bg-[#e2e5ea] border-2 border-slate-300 shadow-2xl overflow-hidden flex flex-col my-auto max-h-[90vh]"
+          className="relative z-10 w-full max-w-lg rounded-[28px] bg-white border border-slate-200/90 shadow-2xl overflow-hidden flex flex-col my-auto max-h-[90vh]"
         >
           {/* Header: Centered 2x Heading without Cross Button */}
-          <div className="p-5 sm:p-6 border-b border-slate-300 flex items-center justify-center bg-[#e2e5ea]">
+          <div className="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-center bg-white">
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight text-center">
               Guest Details
             </h2>
           </div>
 
           {/* Modal Body */}
-          <div className="p-4 sm:p-6 overflow-y-auto bg-[#e2e5ea]">
+          <div className="p-4 sm:p-6 overflow-y-auto bg-slate-50/70">
             {formContent}
           </div>
         </div>
@@ -513,14 +513,14 @@ export function UserGuestConfirmationCard({
   // Embedded Desktop Mode (Tab 3)
   return (
     <div className="w-full flex flex-col justify-center my-auto min-h-0">
-      <section className="flex flex-col rounded-[26px] bg-[#e2e5ea] md:bg-white border-2 border-slate-300 md:border-slate-200 shadow-xl overflow-hidden select-none transition-all">
+      <section className="flex flex-col rounded-[26px] bg-white border border-slate-200/90 shadow-xl overflow-hidden select-none transition-all">
         {/* Header: Centered 2x Heading */}
-        <div className="px-5 py-4 border-b border-slate-300 md:border-slate-200 flex items-center justify-center bg-[#e2e5ea] md:bg-white">
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-center bg-white">
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight text-center">
             Guest Details
           </h2>
         </div>
-        <div className="p-4 sm:p-5 bg-[#e2e5ea] md:bg-white">
+        <div className="p-4 sm:p-5 bg-white">
           {formContent}
         </div>
       </section>
