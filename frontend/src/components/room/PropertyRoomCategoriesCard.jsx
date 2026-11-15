@@ -16,17 +16,12 @@ export function PropertyRoomCategoriesCard({
   onNavigateToRooms,
 }) {
   const [showPicsModal, setShowPicsModal] = useState(false);
+  const [activeCategoryPicIdx, setActiveCategoryPicIdx] = useState(0);
 
-  // Close popup on Escape key
+  // Reset active photo index when category changes or modal opens
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') setShowPicsModal(false);
-    };
-    if (showPicsModal) {
-      window.addEventListener('keydown', handleKeyDown);
-      return () => window.removeEventListener('keydown', handleKeyDown);
-    }
-  }, [showPicsModal]);
+    setActiveCategoryPicIdx(0);
+  }, [selectedRateIdx, showPicsModal]);
 
   const roomRates = Array.isArray(stay?.roomRates) ? stay.roomRates : [];
   const hasRoomRates = roomRates.length > 0;
@@ -94,8 +89,33 @@ export function PropertyRoomCategoriesCard({
       }
     }
 
+    // 4. Fallback to stay overview images if category has no specific images
+    if (list.length === 0 && Array.isArray(stay?.images) && stay.images.length > 0) {
+      stay.images.forEach((img, i) => {
+        if (typeof img === 'string' && img.trim()) {
+          list.push({ url: img.trim(), label: `Overview Photo ${i + 1}` });
+        }
+      });
+    }
+
     return list;
   }, [activeRateObj, stay]);
+
+  // Keyboard navigation for photo viewer (Escape, ArrowLeft, ArrowRight)
+  useEffect(() => {
+    if (!showPicsModal) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setShowPicsModal(false);
+      } else if (e.key === 'ArrowLeft') {
+        setActiveCategoryPicIdx((prev) => (prev === 0 ? Math.max(0, categoryPics.length - 1) : prev - 1));
+      } else if (e.key === 'ArrowRight') {
+        setActiveCategoryPicIdx((prev) => (prev >= categoryPics.length - 1 ? 0 : prev + 1));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showPicsModal, categoryPics.length]);
 
   // Extract facilities/features associated with active room category
   const categoryFacilities = useMemo(() => {
@@ -260,123 +280,104 @@ export function PropertyRoomCategoriesCard({
         </div>
       </div>
 
-      {/* ── ROOM PICS MODAL (Same solid gray background tab, no transparency) ── */}
+            {/* ── ROOM PICS PHOTO VIEWER / DRAWER (Matching Upper "View Full" Lightbox Style) ── */}
       {typeof document !== 'undefined' &&
         createPortal(
           <AnimatePresence>
             {showPicsModal && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 font-tech-minimal md:font-sans">
-                {/* Backdrop: Solid/Opaque Gray on mobile with NO transparency */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  onClick={() => setShowPicsModal(false)}
-                  className="absolute inset-0 bg-[#121418] cursor-pointer"
-                />
-
-                {/* Modal Card (Solid Gray Background with NO transparency) */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: 16 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: 16 }}
-                  transition={{ type: 'spring', damping: 26, stiffness: 320 }}
-                  className="relative z-10 w-full max-w-lg rounded-[28px] bg-white border border-slate-200/80 shadow-2xl overflow-hidden flex flex-col max-h-[88vh]"
-                >
-                  {/* Modal Header */}
-                  <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between gap-3 bg-white">
-                    <div className="flex items-center gap-2.5">
-                      <svg
-                        className="w-5 h-5 sm:w-6 sm:h-6 text-slate-800 shrink-0"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                        <circle cx="12" cy="13" r="4" />
-                      </svg>
-                      <h3 className="text-xl sm:text-2xl md:text-lg font-semibold md:font-medium tracking-[-0.03em] md:tracking-tight text-slate-900 md:text-[#1f1b16]">
-                        {displayRateName} Pics
-                      </h3>
-                      <span className="text-xs sm:text-sm md:text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-300 md:bg-slate-100 text-slate-800 md:text-slate-600 border border-slate-400/60 md:border-slate-200/80">
-                        {categoryPics.length}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.18 }}
+                className="fixed inset-0 z-[99999] bg-[#121418] flex flex-col justify-between p-3 sm:p-6 select-none overflow-hidden cursor-pointer"
+                onClick={() => setShowPicsModal(false)}
+              >
+                {/* Top Bar with category badge, counter & close button */}
+                <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-2 pt-1 z-30">
+                  <div className="flex items-center gap-2">
+                    <span className="px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white font-bold text-xs sm:text-sm tracking-wide shadow-md">
+                      {displayRateName}
+                    </span>
+                    {categoryPics.length > 0 && (
+                      <span className="px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/90 font-semibold text-xs sm:text-sm tracking-wide shadow-md">
+                        {activeCategoryPicIdx + 1} / {categoryPics.length}
                       </span>
-                    </div>
-
-                    {/* Close Button */}
-                    <button
-                      type="button"
-                      onClick={() => setShowPicsModal(false)}
-                      className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-all cursor-pointer active:scale-95"
-                      title="Close"
-                      aria-label="Close modal"
-                    >
-                      <svg
-                        className="w-4.5 h-4.5 md:w-4 md:h-4 stroke-[2.2]"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <line x1="18" y1="6" x2="6" y2="18" />
-                        <line x1="6" y1="6" x2="18" y2="18" />
-                      </svg>
-                    </button>
-                  </div>
-
-                  {/* Modal Content List */}
-                  <div className="p-4 sm:p-6 pb-6 overflow-y-auto space-y-3.5 flex-1 bg-slate-50/70">
-                    {categoryPics.length > 0 ? (
-                      categoryPics.map((pic, idx) => (
-                        <div
-                          key={idx}
-                          className="relative aspect-video w-full overflow-hidden rounded-2xl shadow-md border-0 bg-slate-900"
-                        >
-                          <img
-                            src={getSafeImgSrc(pic.url)}
-                            alt={pic.label || `${displayRateName} Photo ${idx + 1}`}
-                            className="w-full h-full object-cover select-none"
-                            loading="lazy"
-                          />
-                          {pic.label && (
-                            <span className="absolute top-3 left-3 px-3.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-xs font-bold shadow-sm border border-white/20">
-                              {pic.label}
-                            </span>
-                          )}
-                        </div>
-                      ))
-                    ) : (
-                      <div className="py-12 px-4 text-center space-y-3 bg-[#d2d7df] md:bg-[#f7f4ee] border border-slate-300 md:border-slate-200/80 rounded-[20px]">
-                        <div className="w-12 h-12 rounded-full bg-slate-300 flex items-center justify-center mx-auto text-slate-700">
-                          <svg
-                            className="w-6 h-6"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                            <circle cx="12" cy="13" r="4" />
-                          </svg>
-                        </div>
-                        <p className="text-lg font-bold text-slate-900">
-                          No photos uploaded for {displayRateName}
-                        </p>
-                        <p className="text-sm font-medium text-slate-600 max-w-xs mx-auto">
-                          The host has not added specific category photos yet. You can inspect property overview photos above.
-                        </p>
-                      </div>
                     )}
                   </div>
-                </motion.div>
-              </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowPicsModal(false);
+                    }}
+                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center border border-white/15 transition-all cursor-pointer shadow-md select-none"
+                    aria-label="Close photo viewer"
+                  >
+                    <svg className="w-5 h-5 text-white stroke-[2.2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <line x1="18" y1="6" x2="6" y2="18" strokeLinecap="round" strokeLinejoin="round" />
+                      <line x1="6" y1="6" x2="18" y2="18" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Main Stage Image */}
+                <div className="flex-1 flex items-center justify-center p-2 sm:p-4 min-h-0 z-20">
+                  <AnimatePresence mode="wait">
+                    {categoryPics.length > 0 ? (
+                      <motion.img
+                        key={`${activeCategoryPicIdx}-${categoryPics[activeCategoryPicIdx]?.url}`}
+                        src={getSafeImgSrc(categoryPics[activeCategoryPicIdx]?.url)}
+                        alt={categoryPics[activeCategoryPicIdx]?.label || `${displayRateName} Photo ${activeCategoryPicIdx + 1}`}
+                        initial={{ opacity: 0, scale: 0.96 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.96 }}
+                        transition={{ duration: 0.15, ease: 'easeOut' }}
+                        className="max-h-[62vh] sm:max-h-[68vh] max-w-[92vw] object-contain rounded-2xl sm:rounded-3xl shadow-2xl border border-white/15 cursor-default bg-black/40"
+                      />
+                    ) : (
+                      <div className="text-white/80 text-sm font-semibold text-center py-10">
+                        No photos available for {displayRateName}
+                      </div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Bottom Thumbnail Strip */}
+                {categoryPics.length > 1 && (
+                  <div
+                    className="w-full max-w-5xl mx-auto flex items-center justify-center gap-2.5 sm:gap-3 px-2 py-2 overflow-x-auto no-scrollbar z-30 snap-x"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {categoryPics.map((pic, idx) => {
+                      const imgUrl = getSafeImgSrc(pic.url);
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveCategoryPicIdx(idx);
+                          }}
+                          className={`relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl overflow-hidden shrink-0 border-2 transition-all duration-200 cursor-pointer snap-start ${
+                            idx === activeCategoryPicIdx
+                              ? 'border-2 border-white scale-105 shadow-2xl ring-2 ring-white/60'
+                              : 'border border-white/20 opacity-60 hover:opacity-100 hover:border-white/50 hover:scale-100 shadow-md'
+                          }`}
+                        >
+                          <img
+                            decoding="async"
+                            loading="lazy"
+                            src={imgUrl}
+                            alt={pic.label || `${displayRateName} Thumbnail ${idx + 1}`}
+                            className="w-full h-full object-cover rounded-2xl"
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </motion.div>
             )}
           </AnimatePresence>,
           document.body
