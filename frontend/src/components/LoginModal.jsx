@@ -321,7 +321,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
  animate={{ opacity: 1 }}
  exit={{ opacity: 0 }}
  transition={{ duration: 0.2 }}
- className="fixed inset-0 bg-black"
+ className="fixed inset-0 bg-[#cdd2da]"
  onClick={onClose}
  aria-hidden="true"
  />
@@ -332,12 +332,12 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
  animate={{ opacity: 1, scale: 1, y: 0 }}
  exit={{ opacity: 0, scale: 0.96, y: 14 }}
  transition={{ type: 'spring', damping: 28, stiffness: 360 }}
- className="relative w-full max-w-[420px] max-h-[92vh] overflow-y-auto no-scrollbar rounded-[36px] sm:rounded-[44px] flex flex-col justify-between shadow-2xl bg-black border border-white/10 z-10 my-auto text-slate-800 antialiased select-none"
+ className="relative w-full max-w-[420px] max-h-[92vh] overflow-y-auto no-scrollbar rounded-[36px] sm:rounded-[44px] flex flex-col justify-between shadow-2xl bg-[#e2e5ea] border-2 border-slate-300 z-10 my-auto text-slate-800 antialiased select-none"
  data-purpose="mobile-viewport"
  onClick={(e) => e.stopPropagation()}
  >
  {/* ── Atmospheric Pure Black Background ── */}
- <div className="absolute inset-0 bg-black pointer-events-none" data-purpose="ambient-lighting" />
+ <div className="absolute inset-0 bg-[#e2e5ea] pointer-events-none" data-purpose="ambient-lighting" />
 
  {/* ── Top Bar: Segmented Switcher (Login / Register) ── */}
  <header className="relative z-20 pt-7 sm:pt-8 px-6 flex flex-col items-center gap-3 pb-0 shrink-0">
@@ -395,7 +395,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
 
  {/* ── Floating White Card / Tab ── */}
  <section aria-labelledby="modal-heading" className="relative z-20 px-3.5 sm:px-4 py-4 w-full">
- <div className="rounded-[30px] sm:rounded-[32px] p-5 sm:p-7 relative border border-slate-100 bg-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)]">
+ <div className="rounded-[30px] sm:rounded-[32px] p-5 sm:p-7 relative border border-slate-100 bg-white shadow-xl">
  {/* Dismiss / Close Button */}
  <button
  aria-label="Dismiss login modal"
@@ -810,7 +810,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
 
  {/* Mobile Home Indicator Bar */}
  <div className="relative z-20 pb-2.5 flex justify-center shrink-0">
- <div className="w-28 h-1 bg-white/20 rounded-full" />
+ <div className="w-28 h-1 bg-slate-400/60 rounded-full" />
  </div>
  </motion.div>
  </div>
