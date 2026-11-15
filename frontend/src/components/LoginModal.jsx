@@ -321,7 +321,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
  animate={{ opacity: 1 }}
  exit={{ opacity: 0 }}
  transition={{ duration: 0.2 }}
- className="fixed inset-0 bg-[#121418]"
+ className="fixed inset-0 bg-black"
  onClick={onClose}
  aria-hidden="true"
  />
@@ -332,15 +332,13 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
  animate={{ opacity: 1, scale: 1, y: 0 }}
  exit={{ opacity: 0, scale: 0.96, y: 14 }}
  transition={{ type: 'spring', damping: 28, stiffness: 360 }}
- className="relative w-full max-w-[420px] max-h-[92vh] overflow-y-auto no-scrollbar rounded-[36px] sm:rounded-[44px] flex flex-col justify-between shadow-2xl bg-[#16181d] border border-white/10 z-10 my-auto text-slate-800 antialiased select-none"
+ className="relative w-full max-w-[420px] max-h-[92vh] overflow-y-auto no-scrollbar flex flex-col justify-center z-10 my-auto text-slate-800 antialiased select-none"
  data-purpose="mobile-viewport"
  onClick={(e) => e.stopPropagation()}
  >
- {/* ── Atmospheric Pure Black Background ── */}
- <div className="absolute inset-0 bg-[#16181d] pointer-events-none" data-purpose="ambient-lighting" />
 
  {/* ── Top Bar: Segmented Switcher (Login / Register) ── */}
- <header className="relative z-20 pt-7 sm:pt-8 px-6 flex flex-col items-center gap-3 pb-0 shrink-0">
+ <header className="relative z-20 pb-3 sm:pb-3.5 flex flex-col items-center shrink-0">
  {!isForgotMode ? (
  <nav
  aria-label="Portal Mode Selection"
@@ -394,7 +392,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
  </header>
 
  {/* ── Floating White Card / Tab ── */}
- <section aria-labelledby="modal-heading" className="relative z-20 px-3.5 sm:px-4 py-4 w-full">
+ <section aria-labelledby="modal-heading" className="relative z-20 px-0 w-full">
  <div className="rounded-[30px] sm:rounded-[32px] p-5 sm:p-7 relative border border-slate-100 bg-white shadow-xl">
  {/* Dismiss / Close Button */}
  <button
@@ -807,11 +805,6 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
  </footer>
  </div>
  </section>
-
- {/* Mobile Home Indicator Bar */}
- <div className="relative z-20 pb-2.5 flex justify-center shrink-0">
- <div className="w-28 h-1 bg-white/20 rounded-full" />
- </div>
  </motion.div>
  </div>
  )}
