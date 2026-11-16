@@ -103,41 +103,6 @@ export const PropertyCard = memo(function PropertyCard({
             className="absolute inset-0 w-full h-full object-cover"
           />
 
-          {/* Top-left badges: Stay Category + Gender right next to it */}
-          <div className="absolute top-3.5 left-3.5 flex items-center gap-1.5 z-10">
-            <span className="text-xs sm:text-sm font-bold text-white bg-slate-900/85 backdrop-blur-md px-2.5 py-1 rounded-md shadow-sm border border-white/20">
-              {propertyType}
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-white bg-slate-900/85 backdrop-blur-md px-2.5 py-1 rounded-md shadow-sm border border-white/20">
-              {genderCategory === 'boys' ? (
-                <svg className="w-3.5 h-3.5 text-blue-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="10" cy="14" r="5" />
-                  <line x1="19" y1="5" x2="13.6" y2="10.4" />
-                  <polyline points="15 5 19 5 19 9" />
-                </svg>
-              ) : genderCategory === 'girls' ? (
-                <svg className="w-3.5 h-3.5 text-pink-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="9" r="5" />
-                  <line x1="12" y1="14" x2="12" y2="21" />
-                  <line x1="9" y1="18" x2="15" y2="18" />
-                </svg>
-              ) : genderCategory === 'family' ? (
-                <svg className="w-3.5 h-3.5 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                  <polyline points="9 22 9 12 15 12 15 22" />
-                </svg>
-              ) : (
-                <svg className="w-3.5 h-3.5 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-              )}
-              <span>{genderLabel}</span>
-            </span>
-          </div>
-
           {/* Premium Luxury Wishlist Heart Button */}
           <button
             type="button"
@@ -149,7 +114,7 @@ export const PropertyCard = memo(function PropertyCard({
             title={saved ? 'Remove from Wishlist' : 'Save to Wishlist'}
           >
             <svg
-              className="w-7 h-7 sm:w-[28px] sm:h-[28px] transition-all duration-200 drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]"
+              className="w-8 h-8 sm:w-[32px] sm:h-[32px] transition-all duration-200"
               viewBox="0 0 32 32"
               fill={saved ? "#FF385C" : "rgba(255, 56, 92, 0.08)"}
               stroke="#FF385C"
@@ -170,13 +135,12 @@ export const PropertyCard = memo(function PropertyCard({
             {/* Rating / New tag shifted to bottom right corner of pic */}
             <div className="shrink-0 mb-0.5 pointer-events-auto">
               {isNewStay ? (
-                <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-white bg-emerald-600/95 backdrop-blur-md px-2.5 py-1 rounded-md shadow-sm border border-emerald-400/40">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                <span className="inline-flex items-center text-xs sm:text-sm font-bold text-slate-950 bg-amber-400 px-2.5 py-1 rounded-md shadow-xs border border-amber-300/80">
                   New
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-white bg-slate-900/85 backdrop-blur-md px-2.5 py-1 rounded-md shadow-sm border border-white/20">
-                  <svg className="w-3.5 h-3.5 text-amber-400 fill-amber-400" viewBox="0 0 20 20">
+                <span className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-slate-950 bg-amber-400 px-2.5 py-1 rounded-md shadow-xs border border-amber-300/80">
+                  <svg className="w-3.5 h-3.5 text-slate-950 fill-slate-950" viewBox="0 0 20 20">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
                   <span>{computedRating}</span>
@@ -188,6 +152,42 @@ export const PropertyCard = memo(function PropertyCard({
 
         {/* Info Area Below Photo */}
         <div className="p-4 sm:p-4.5 space-y-2">
+          {/* Category & Gender Badges (Shifted above location, transparent background) */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs sm:text-[13px] font-bold text-slate-900">
+              {propertyType}
+            </span>
+            <span className="text-slate-300 text-xs select-none">•</span>
+            <span className="inline-flex items-center gap-1.5 text-xs sm:text-[13px] font-semibold text-slate-700">
+              {genderCategory === 'boys' ? (
+                <svg className="w-3.5 h-3.5 text-blue-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="10" cy="14" r="5" />
+                  <line x1="19" y1="5" x2="13.6" y2="10.4" />
+                  <polyline points="15 5 19 5 19 9" />
+                </svg>
+              ) : genderCategory === 'girls' ? (
+                <svg className="w-3.5 h-3.5 text-pink-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="9" r="5" />
+                  <line x1="12" y1="14" x2="12" y2="21" />
+                  <line x1="9" y1="18" x2="15" y2="18" />
+                </svg>
+              ) : genderCategory === 'family' ? (
+                <svg className="w-3.5 h-3.5 text-amber-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                  <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+              ) : (
+                <svg className="w-3.5 h-3.5 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+              )}
+              <span>{genderLabel}</span>
+            </span>
+          </div>
+
           {/* Location */}
           <div className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-600 font-medium">
             <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

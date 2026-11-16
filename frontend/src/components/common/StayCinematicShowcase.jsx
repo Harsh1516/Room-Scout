@@ -5,6 +5,9 @@ import {
   getUpcoming12Months,
   getUpcoming30Days,
   calculateCategoryFreePercentage,
+  isMonthlyRateUnit,
+  isRoomMatchingCategory,
+  isBookingRequestExpired,
 } from '../../utils/dateUtils';
 
 /**
@@ -174,9 +177,22 @@ export function StayCinematicShowcase({
           bStatus === 'CANCELLED' ||
           bStatus === 'CHECKED_OUT' ||
           bStatus === 'COMPLETED' ||
-          bStatus === 'EXPIRED'
+          bStatus === 'EXPIRED' ||
+          isBookingRequestExpired(b)
         )
           return;
+
+        const isOnlineBooking = b.bookingSource === 'ONLINE' || b.isOnline === true;
+        const isUnpaid = b.paymentStatus !== 'PAID';
+        const isPending =
+          bStatus.includes('PENDING') ||
+          bStatus.includes('APPROVAL') ||
+          bStatus === 'AWAITING_PAYMENT' ||
+          bStatus === 'PAYMENT_PENDING' ||
+          (isOnlineBooking && isUnpaid && bStatus !== 'CHECKED_IN');
+
+        // Only confirmed/paid bookings block calendar room availability (matching RoomAvailabilityPage)
+        if (isPending) return;
 
         const numB = String(b.roomNumber || '').replace(/[^0-9]/g, '');
         const isSameRm =
@@ -231,27 +247,72 @@ export function StayCinematicShowcase({
     return { bookedMonthsMap, bookedSlotsMap };
   }, [currentStay, stayBookingsMap]);
 
-  // Occupancy helper for calculating % Full per room type
-  const getRoomTypeOccupancy = useCallback((stay, typeOrCategory, fallbackSeed = 0) => {
-    if (!stay) return `${fallbackSeed}% Full`;
+  // Availability / Occupancy helper per room type or overall stay (supports m/n Avail for monthly/PG and % Full for nightly)
+  const getRoomTypeAvailability = useCallback((stay, typeOrCategory, fallbackSeed = 0) => {
+    if (!stay) return { display: `${fallbackSeed}% Full`, availableCount: 0, totalCount: 0, isMonthly: false };
     const allRooms = Array.isArray(stay.rooms) ? stay.rooms : [];
-    if (allRooms.length === 0) return `${fallbackSeed}% Full`;
+    const roomRates = Array.isArray(stay.roomRates) ? stay.roomRates : [];
 
     const { bookedMonthsMap, bookedSlotsMap } = bookedSchedule;
+    const currentMonthKey = upcomingMonths[0]?.monthKey || new Date().toISOString().slice(0, 7);
 
-    const matching = typeOrCategory
-      ? allRooms.filter(
-          (r) =>
-            String(r.type || '').toLowerCase().includes(String(typeOrCategory).toLowerCase()) ||
-            String(typeOrCategory).toLowerCase().includes(String(r.type || '').toLowerCase())
-        )
-      : allRooms;
+    // Matching rooms for this category/type
+    let matching = [];
+    if (typeOrCategory) {
+      const targetRateIdx = roomRates.findIndex(
+        (rr) => String(rr.type || '').trim().toLowerCase() === String(typeOrCategory).trim().toLowerCase()
+      );
+      const targetRate = targetRateIdx !== -1 ? roomRates[targetRateIdx] : { type: typeOrCategory };
+
+      matching = allRooms.filter((r) =>
+        isRoomMatchingCategory(r, targetRate, targetRateIdx, roomRates) ||
+        (r.type && (
+          String(r.type).toLowerCase().includes(String(typeOrCategory).toLowerCase()) ||
+          String(typeOrCategory).toLowerCase().includes(String(r.type).toLowerCase())
+        ))
+      );
+    } else {
+      matching = allRooms;
+    }
     const targetRooms = matching.length > 0 ? matching : allRooms;
 
-    const rateObj = stay.roomRates?.find((rr) =>
+    const rateObj = roomRates.find((rr) =>
       String(rr.type || '').toLowerCase().includes(String(typeOrCategory || '').toLowerCase())
     ) || { rateUnit: stay.rateUnit || '/month' };
 
+    const isMonthly = isMonthlyRateUnit(rateObj?.rateUnit || stay?.rateUnit) ||
+      String(stay?.type || stay?.propertyType || stay?.category || '').toLowerCase().includes('pg');
+
+    // MONTHLY / PG AVAILABILITY FORMAT: e.g. "3/3 Avail", "4/4 Avail"
+    if (isMonthly) {
+      const totalCount = targetRooms.length > 0 ? targetRooms.length : (typeof stay.totalRooms === 'number' ? stay.totalRooms : 1);
+      let availableCount = totalCount;
+
+      if (targetRooms.length > 0) {
+        availableCount = targetRooms.filter((rm) => {
+          const isMonthBooked = Boolean(
+            currentMonthKey && bookedMonthsMap && (
+              bookedMonthsMap[rm._id]?.has?.(currentMonthKey) ||
+              bookedMonthsMap[rm.id]?.has?.(currentMonthKey) ||
+              bookedMonthsMap[String(rm.roomNumber)?.trim()]?.has?.(currentMonthKey) ||
+              bookedMonthsMap[String(rm.roomNumber)?.replace(/[^0-9]/g, '')]?.has?.(currentMonthKey)
+            )
+          );
+          return !isMonthBooked;
+        }).length;
+      } else if (typeof stay.availableRooms === 'number') {
+        availableCount = stay.availableRooms;
+      }
+
+      return {
+        display: `${availableCount}/${totalCount} Avail`,
+        availableCount,
+        totalCount,
+        isMonthly: true,
+      };
+    }
+
+    // NIGHTLY (HOTEL) OCCUPANCY FORMAT: "% Full"
     const freeStats = calculateCategoryFreePercentage({
       rooms: targetRooms,
       rate: rateObj,
@@ -264,7 +325,12 @@ export function StayCinematicShowcase({
     if (freeStats && freeStats.totalPossible > 0) {
       const bookedUnits = freeStats.totalPossible - freeStats.totalUnbooked;
       const pctFull = Math.max(0, Math.min(100, Math.round((bookedUnits / freeStats.totalPossible) * 100)));
-      return `${pctFull}% Full`;
+      return {
+        display: `${pctFull}% Full`,
+        availableCount: freeStats.totalUnbooked,
+        totalCount: freeStats.totalPossible,
+        isMonthly: false,
+      };
     }
 
     let totalCap = 0;
@@ -280,22 +346,34 @@ export function StayCinematicShowcase({
     });
     if (totalCap > 0 && occupiedCap > 0) {
       const pct = Math.round((occupiedCap / totalCap) * 100);
-      return `${pct}% Full`;
+      return {
+        display: `${pct}% Full`,
+        availableCount: totalCap - occupiedCap,
+        totalCount: totalCap,
+        isMonthly: false,
+      };
     }
 
-    return `${fallbackSeed}% Full`;
+    return {
+      display: `${fallbackSeed}% Full`,
+      availableCount: targetRooms.length,
+      totalCount: targetRooms.length || 1,
+      isMonthly: false,
+    };
   }, [bookedSchedule, upcomingMonths, upcomingWeek]);
 
-  // Overall stay % Full for the title
+  // Overall stay availability for the title
   const overallStayOccupancy = useMemo(() => {
-    return getRoomTypeOccupancy(currentStay, null, 0);
-  }, [currentStay, getRoomTypeOccupancy]);
+    const res = getRoomTypeAvailability(currentStay, null, 0);
+    return res.display;
+  }, [currentStay, getRoomTypeAvailability]);
 
-  // Primary room type % Full
+  // Primary room type availability
   const primaryRoomType = currentStay?.category || currentStay?.type || 'Standard';
   const primaryRoomOccupancy = useMemo(() => {
-    return getRoomTypeOccupancy(currentStay, primaryRoomType, 0);
-  }, [currentStay, primaryRoomType, getRoomTypeOccupancy]);
+    const res = getRoomTypeAvailability(currentStay, primaryRoomType, 0);
+    return res.display;
+  }, [currentStay, primaryRoomType, getRoomTypeAvailability]);
 
   // Gender label computation
   const genderLabel = useMemo(() => {
@@ -369,9 +447,11 @@ export function StayCinematicShowcase({
         if (seen.has(normKey)) return;
         seen.add(normKey);
 
-        const count = countForType(rr.type);
         const occupancySeed = [80, 65, 50, 40][idx % 4];
-        const specificOccupancy = getRoomTypeOccupancy(currentStay, rr.type, occupancySeed);
+        const specificAvailability = getRoomTypeAvailability(currentStay, rr.type, occupancySeed);
+        const count = specificAvailability.isMonthly && specificAvailability.totalCount > 0
+          ? specificAvailability.totalCount
+          : countForType(rr.type);
         const priceNum = typeof rr.price === 'number' ? rr.price : parseFloat(String(rr.price).replace(/[^0-9.]/g, '')) || 0;
         const unit = rr.rateUnit ? (String(rr.rateUnit).startsWith('/') ? rr.rateUnit : `/${rr.rateUnit}`) : '/month';
 
@@ -380,7 +460,7 @@ export function StayCinematicShowcase({
           count,
           price: priceNum.toLocaleString('en-IN'),
           unit,
-          percentFull: specificOccupancy,
+          percentFull: specificAvailability.display,
         });
       });
     }
@@ -394,9 +474,11 @@ export function StayCinematicShowcase({
         if (seen.has(normKey)) return;
         seen.add(normKey);
 
-        const count = countForType(rm.type);
         const occupancySeed = [75, 60, 45, 30][idx % 4];
-        const specificOccupancy = getRoomTypeOccupancy(currentStay, rm.type, occupancySeed);
+        const specificAvailability = getRoomTypeAvailability(currentStay, rm.type, occupancySeed);
+        const count = specificAvailability.isMonthly && specificAvailability.totalCount > 0
+          ? specificAvailability.totalCount
+          : countForType(rm.type);
         const priceNum = typeof rm.price === 'number' ? rm.price : parseFloat(String(rm.price).replace(/[^0-9.]/g, '')) || 0;
         const unit = rm.rateUnit ? (String(rm.rateUnit).startsWith('/') ? rm.rateUnit : `/${rm.rateUnit}`) : '/month';
 
@@ -405,7 +487,7 @@ export function StayCinematicShowcase({
           count,
           price: priceNum.toLocaleString('en-IN'),
           unit,
-          percentFull: specificOccupancy,
+          percentFull: specificAvailability.display,
         });
       });
     }
@@ -419,16 +501,18 @@ export function StayCinematicShowcase({
         if (seen.has(normKey)) return;
         seen.add(normKey);
 
-        const count = countForType(roomType);
         const occupancySeed = [80, 65, 50, 40][idx % 4];
-        const specificOccupancy = getRoomTypeOccupancy(currentStay, roomType, occupancySeed);
+        const specificAvailability = getRoomTypeAvailability(currentStay, roomType, occupancySeed);
+        const count = specificAvailability.isMonthly && specificAvailability.totalCount > 0
+          ? specificAvailability.totalCount
+          : countForType(roomType);
 
         list.push({
           label: roomType,
           count,
           price: op.price,
           unit: op.unit || '/month',
-          percentFull: specificOccupancy,
+          percentFull: specificAvailability.display,
         });
       });
     }
@@ -439,31 +523,35 @@ export function StayCinematicShowcase({
       const normKey = primaryType.toLowerCase();
       if (!PROPERTY_TYPES.has(normKey) && !seen.has(normKey)) {
         seen.add(normKey);
-        const count = countForType(primaryType);
+        const specificAvailability = getRoomTypeAvailability(currentStay, primaryType, 0);
+        const count = specificAvailability.isMonthly && specificAvailability.totalCount > 0
+          ? specificAvailability.totalCount
+          : countForType(primaryType);
         list.push({
           label: primaryType,
           count,
           price: pricing.primaryPrice,
           unit: pricing.primaryUnit || '/month',
-          percentFull: primaryRoomOccupancy,
+          percentFull: specificAvailability.display,
         });
       }
     }
 
     // Fallback if empty
     if (list.length === 0) {
+      const specificAvailability = getRoomTypeAvailability(currentStay, 'Standard Room', 0);
       list.push({
         label: 'Standard Room',
-        count: totalRoomsCount || 1,
+        count: specificAvailability.totalCount || totalRoomsCount || 1,
         price: pricing.primaryPrice || '2,000',
         unit: pricing.primaryUnit || '/month',
-        percentFull: primaryRoomOccupancy || '0% Full',
+        percentFull: specificAvailability.display,
       });
     }
 
     // Final safety: filter out any property types like "hotel", "pg", "flat"
     return list.filter((item) => !PROPERTY_TYPES.has(item.label.toLowerCase().trim()));
-  }, [currentStay, otherPrices, pricing, primaryRoomOccupancy, totalRoomsCount, getRoomTypeOccupancy]);
+  }, [currentStay, otherPrices, pricing, totalRoomsCount, getRoomTypeAvailability]);
 
   // Images
   const stayImages = useMemo(() => {

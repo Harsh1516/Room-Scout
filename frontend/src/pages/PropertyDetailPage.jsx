@@ -333,12 +333,6 @@ export function PropertyDetailPage({ onLoginClick }) {
     <div className="min-h-screen bg-slate-50 text-slate-900 transition-colors duration-300 font-body-md host-font-scope antialiased">
       {/* ── TOP FLOATING NAVIGATION CAPSULES (MATCHING SEARCH / EXPLORE NAVBAR STYLE) ── */}
       <header className="relative w-full pointer-events-none select-none z-50">
-        {/* ── Dark-to-Transparent Progressive Blur Navbar Backdrop (Blends with lower photo) ── */}
-        <div
-          aria-hidden="true"
-          className="fixed top-0 inset-x-0 h-[96px] sm:h-[110px] z-40 pointer-events-none navbar-gradient-blur transition-all duration-300"
-        />
-
         {/* 1. Left Island: Back button (Property type badge shifted to media section image) */}
         <Left showBadge={false} fallbackUrl="/explore" />
 

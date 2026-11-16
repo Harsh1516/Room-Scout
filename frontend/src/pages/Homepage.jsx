@@ -21,7 +21,7 @@ export function Homepage({ setCategoryFilter, onStayClick, onBookClick, onSelect
   return (
     <main className="relative min-h-screen bg-[#F8FAFC] text-slate-900 overflow-x-clip selection:bg-emerald-500 selection:text-neutral-950">
       {/* ── Dedicated Left Properties Panel (With Left Side Non-Border) ── */}
-      <LeftPropertiesPanel onSelectCategory={handleSelectCategory} />
+      <LeftPropertiesPanel onSelectCategory={handleSelectCategory} onSelectUpload={onSelectUpload} />
 
       {/* ── Page Content Layer ── */}
       <div className="relative z-10">

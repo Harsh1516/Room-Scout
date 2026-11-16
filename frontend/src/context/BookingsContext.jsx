@@ -26,7 +26,7 @@ export function BookingsProvider({ children }) {
  }, []);
 
  const fetchBookings = useCallback(async () => {
- if (!isAuthenticated || !user || user.role === 'host') {
+ if (!isAuthenticated || !user) {
  setBookings([]);
  return;
  }
@@ -38,7 +38,29 @@ export function BookingsProvider({ children }) {
  const list = Array.isArray(res)
  ? res
  : (Array.isArray(res?.bookings) ? res.bookings : (Array.isArray(res?.data) ? res.data : []));
- setBookings(list);
+
+ let recentFallback = [];
+ try {
+ recentFallback = JSON.parse(sessionStorage.getItem('stayhub_recent_bookings') || '[]');
+ } catch {}
+
+ const map = new Map();
+ list.forEach((b) => {
+ const k = String(b.bookingReferenceId || b._id || '');
+ if (k) map.set(k, b);
+ });
+
+ // Merge any recent bookings that haven't been indexed by DB query yet
+ const combined = [...list];
+ recentFallback.forEach((rb) => {
+ const rk = String(rb.bookingReferenceId || rb._id || '');
+ if (rk && !map.has(rk)) {
+ combined.push(rb);
+ map.set(rk, rb);
+ }
+ });
+
+ setBookings(combined);
  } catch (err) {
  console.warn('Failed to fetch personal bookings from database:', err);
  } finally {
@@ -53,14 +75,14 @@ export function BookingsProvider({ children }) {
 
  // Immediately refresh bookings whenever the Booked Places drawer is opened
  useEffect(() => {
- if (isBookingsOpen && isAuthenticated && user && user.role !== 'host') {
+ if (isBookingsOpen && isAuthenticated && user) {
  fetchBookings();
  }
  }, [isBookingsOpen, isAuthenticated, user, fetchBookings]);
 
  // Real-time synchronization across tabs and host actions (approvals/rejections/payments)
  useEffect(() => {
- if (!isAuthenticated || !user || user.role === 'host') return;
+ if (!isAuthenticated || !user) return;
 
  const handleSync = () => {
  fetchBookings();
@@ -116,6 +138,19 @@ export function BookingsProvider({ children }) {
  const addBooking = (newBooking) => {
  if (!newBooking) return;
 
+ try {
+ const existingRecent = JSON.parse(sessionStorage.getItem('stayhub_recent_bookings') || '[]');
+ const updatedRecent = [
+ newBooking,
+ ...existingRecent.filter(
+ (b) =>
+ String(b.bookingReferenceId || b._id || '') !==
+ String(newBooking.bookingReferenceId || newBooking._id || '')
+ ),
+ ].slice(0, 10);
+ sessionStorage.setItem('stayhub_recent_bookings', JSON.stringify(updatedRecent));
+ } catch {}
+
  const resolveStayId = (item) =>
  String(item?.stayId?._id || item?.stayId || item?.stay?._id || item?.stay || '');
 
@@ -170,6 +205,15 @@ export function BookingsProvider({ children }) {
  const deleteBooking = async (bookingId) => {
  if (!bookingId) return false;
  const strBookingId = String(bookingId);
+
+ try {
+ const existingRecent = JSON.parse(sessionStorage.getItem('stayhub_recent_bookings') || '[]');
+ const updatedRecent = existingRecent.filter(
+ (b) =>
+ String(b._id || b.bookingReferenceId || b.slotBookingId || '') !== strBookingId
+ );
+ sessionStorage.setItem('stayhub_recent_bookings', JSON.stringify(updatedRecent));
+ } catch {}
 
  // Keep snapshot for state rollback if deletion fails
  const prevBookings = [...bookings];

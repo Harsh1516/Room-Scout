@@ -17,11 +17,13 @@ export function Navbar({ onSearchSubmit, onLoginClick, onSelectUpload, onOpenBoo
 
   return (
     <header className="relative w-full bg-transparent">
-      {/* ── Dark-to-Transparent Progressive Blur Navbar Backdrop (Blends with lower photo) ── */}
-      <div
-        aria-hidden="true"
-        className="fixed top-0 inset-x-0 h-[96px] sm:h-[110px] z-35 pointer-events-none navbar-gradient-blur transition-all duration-300"
-      />
+      {/* ── Dark-to-Transparent Progressive Blur Navbar Backdrop (Only on Search / Explore Stays showcase page) ── */}
+      {isSearchPage && (
+        <div
+          aria-hidden="true"
+          className="fixed top-0 inset-x-0 h-[96px] sm:h-[110px] z-35 pointer-events-none navbar-gradient-blur transition-all duration-300"
+        />
+      )}
 
       <Left
         showBrand={true}

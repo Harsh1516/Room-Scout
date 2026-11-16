@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { staysAPI } from '../../services/api';
 
 const ALL_CATEGORIES = [
@@ -60,7 +62,9 @@ function renderCategoryIcon(id) {
  }
 }
 
-export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
+export function LeftPropertiesPanel({ onSelectCategory, selectedCategory, onSelectUpload }) {
+  const navigate = useNavigate();
+  const { isHost } = useAuth();
  const [isOpen, setIsOpen] = useState(false);
  const [activeCategories, setActiveCategories] = useState(ALL_CATEGORIES);
  const [typeCounts, setTypeCounts] = useState({});
@@ -162,7 +166,22 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
  };
  }, []);
 
- const handleSelect = (categoryId) => {
+   const handleHostAction = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setIsOpen(false);
+    if (isHost) {
+      navigate('/host/dashboard');
+    } else if (typeof onSelectUpload === 'function') {
+      onSelectUpload();
+    } else {
+      navigate('/host/upload');
+    }
+  };
+
+  const handleSelect = (categoryId) => {
  setIsOpen(false);
  if (onSelectCategory) {
  onSelectCategory(categoryId);
@@ -276,7 +295,33 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
  })}
  </div>
 
- </motion.div>
+             {/* ── Bottom Section: Upload Property / Host Dashboard Button ── */}
+            <div className="p-3 sm:p-3.5 pt-2.5 border-t border-slate-100 shrink-0 bg-[#faf8f5]/60">
+              <button
+                type="button"
+                onClick={handleHostAction}
+                className="w-full min-h-[48px] rounded-full bg-[#6e258a] hover:bg-[#5f1f77] active:bg-[#521966] text-white shadow-xs flex items-center gap-3 px-2.5 sm:px-3 font-semibold text-sm sm:text-[15px] transition-all cursor-pointer select-none active:scale-[0.98]"
+              >
+                <div className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-[#2a2b38] text-white flex items-center justify-center shrink-0 shadow-xs">
+                  {isHost ? (
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                      <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                  )}
+                </div>
+                <span className="tracking-tight text-white font-semibold text-sm sm:text-[15px]">
+                  {isHost ? 'Host Dashboard' : 'Upload Property'}
+                </span>
+              </button>
+            </div>
+</motion.div>
  </div>
  </div>
  )}

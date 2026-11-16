@@ -224,45 +224,6 @@ export function Right({ onLoginClick, onOpenBookings, bookingsCount, onSelectUpl
  )}
  </button>
 
- {/* 4. Host Dashboard / Upload Property Button (LAST POSITION) */}
- {isHost ? (
- <button
- type="button"
- onClick={() => {
- navigate('/host/dashboard');
- setMobileMenuOpen(false);
- }}
- className="relative w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-purple-50 text-purple-600 border border-purple-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95"
- title="Host Dashboard"
- aria-label="Host Dashboard"
- >
- <svg className="w-6.5 h-6.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
- <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
- <polyline points="9 22 9 12 15 12 15 22" />
- </svg>
- </button>
- ) : (
- <button
- type="button"
- onClick={() => {
- if (typeof onSelectUpload === 'function') {
- onSelectUpload();
- } else {
- navigate('/host/upload');
- }
- setMobileMenuOpen(false);
- }}
- className="relative w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-purple-50 text-purple-600 border border-purple-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95"
- title="Upload Property"
- aria-label="Upload Property"
- >
- <svg className="w-6.5 h-6.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
- <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
- <polyline points="17 8 12 3 7 8" />
- <line x1="12" y1="3" x2="12" y2="15" />
- </svg>
- </button>
- )}
  </motion.div>
  </>
  )}
