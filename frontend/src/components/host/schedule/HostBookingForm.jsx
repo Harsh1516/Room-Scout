@@ -202,7 +202,7 @@ export function HostBookingForm({
  <form onSubmit={(e) => { e.preventDefault(); handleHostMarkSlotBooked(); }} className="space-y-2.5">
  <fieldset disabled={!isPropertyApproved || !isRoomSavedToDb} className="space-y-2 sm:space-y-2.5 disabled:opacity-50">
  {/* Field 1: Guest Full Name */}
- <div className={`relative flex items-center h-10.5 sm:h-11 px-4 rounded-xl transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)] ${
+ <div className={`relative flex items-center min-h-[50px] sm:min-h-[52px] px-4 rounded-xl transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)] ${
  isUserRequestSelection
  ? 'bg-slate-100 border border-slate-200 cursor-not-allowed select-none'
  : isWhite
@@ -217,7 +217,7 @@ export function HostBookingForm({
  value={hostUserName}
  onChange={handleHostNameChange}
  placeholder="Guest full name"
- className={`w-full bg-transparent text-[13px] sm:text-[14px] font-medium placeholder:font-normal focus:outline-none ${
+ className={`w-full bg-transparent text-base font-medium placeholder:font-normal focus:outline-none ${
  isWhite
  ? 'text-[#1f1b16] placeholder:text-slate-400'
  : 'text-white placeholder:text-zinc-400'
@@ -231,7 +231,7 @@ export function HostBookingForm({
  </div>
 
  {/* Field 2: Mobile Number */}
- <div className={`relative flex items-center h-10.5 sm:h-11 px-4 rounded-xl transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)] ${
+ <div className={`relative flex items-center min-h-[50px] sm:min-h-[52px] px-4 rounded-xl transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)] ${
  isUserRequestSelection
  ? 'bg-slate-100 border border-slate-200 cursor-not-allowed select-none'
  : isWhite
@@ -254,7 +254,7 @@ export function HostBookingForm({
  value={hostUserPhone}
  onChange={handleHostPhoneChange}
  placeholder="10-digit mobile number"
- className={`w-full bg-transparent text-[13px] sm:text-[14px] font-medium placeholder:font-normal focus:outline-none ${
+ className={`w-full bg-transparent text-base font-medium placeholder:font-normal focus:outline-none ${
  isWhite
  ? 'text-[#1f1b16] placeholder:text-slate-400'
  : 'text-white placeholder:text-zinc-400'
@@ -319,7 +319,7 @@ export function HostBookingForm({
  </div>
 
  {/* Field 4: Aadhar ID */}
- <div className={`relative flex items-center h-10.5 sm:h-11 px-4 rounded-xl transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)] ${
+ <div className={`relative flex items-center min-h-[50px] sm:min-h-[52px] px-4 rounded-xl transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)] ${
  isUserRequestSelection
  ? 'bg-slate-100 border border-slate-200 cursor-not-allowed select-none'
  : isWhite
@@ -335,7 +335,7 @@ export function HostBookingForm({
  value={hostUserAadhar}
  onChange={(e) => setHostUserAadhar(typeof formatAadharNumber === 'function' ? formatAadharNumber(e.target.value) : e.target.value)}
  placeholder="12-digit Aadhar number"
- className={`w-full bg-transparent text-[13px] sm:text-[14px] font-medium placeholder:font-normal focus:outline-none tracking-wide ${
+ className={`w-full bg-transparent text-base font-medium placeholder:font-normal focus:outline-none tracking-wide ${
  isWhite
  ? 'text-[#1f1b16] placeholder:text-slate-400'
  : 'text-white placeholder:text-zinc-400'
@@ -360,7 +360,7 @@ export function HostBookingForm({
  value={hostPaidAmount}
  onChange={(e) => setHostPaidAmount(e.target.value.replace(/\D/g, ''))}
  placeholder="Paid Amount (₹)"
- className={`w-full bg-transparent text-[13px] sm:text-[14px] font-medium placeholder:font-normal focus:outline-none ${
+ className={`w-full bg-transparent text-base font-medium placeholder:font-normal focus:outline-none ${
  isWhite
  ? 'text-[#1f1b16] placeholder:text-slate-400'
  : 'text-white placeholder:text-zinc-400'

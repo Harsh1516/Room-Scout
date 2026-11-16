@@ -1506,18 +1506,18 @@ export function BookingDetailsPage() {
  <span className="text-[10px] font-medium text-slate-400 ">
  Price Breakdown
  </span>
- <div className="flex justify-between text-xs">
+ <div className="flex justify-between text-sm font-medium text-slate-700">
  <span className="text-slate-500">Base Room Amount:</span>
  <span className="font-semibold">₹{(booking.taxBreakdown?.baseAmount || totalAmount).toLocaleString('en-IN')}</span>
  </div>
  {booking.taxBreakdown?.cleaningFee > 0 && (
- <div className="flex justify-between text-xs">
+ <div className="flex justify-between text-sm font-medium text-slate-700">
  <span className="text-slate-500">Cleaning & Maintenance:</span>
  <span className="font-semibold">₹{booking.taxBreakdown.cleaningFee.toLocaleString('en-IN')}</span>
  </div>
  )}
  {booking.taxBreakdown?.cgst > 0 && (
- <div className="flex justify-between text-xs">
+ <div className="flex justify-between text-sm font-medium text-slate-700">
  <span className="text-slate-500">Taxes & GST:</span>
  <span className="font-semibold">₹{(booking.taxBreakdown.cgst + booking.taxBreakdown.sgst).toLocaleString('en-IN')}</span>
  </div>
@@ -1570,7 +1570,7 @@ export function BookingDetailsPage() {
  <button
  type="button"
  onClick={() => setShowCancelModal(false)}
- className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+ className="min-h-[44px] px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer"
  >
  Keep Booking
  </button>
@@ -1578,7 +1578,7 @@ export function BookingDetailsPage() {
  type="button"
  disabled={isCancelling}
  onClick={handleCancelBooking}
- className="px-4 py-2 rounded-xl text-xs font-medium bg-rose-600 hover:bg-rose-700 text-white cursor-pointer disabled:opacity-50"
+ className="min-h-[44px] px-4 py-2.5 rounded-xl text-sm font-semibold bg-rose-600 hover:bg-rose-700 text-white cursor-pointer disabled:opacity-50"
  >
  {isCancelling ? 'Cancelling...' : 'Yes, Cancel'}
  </button>

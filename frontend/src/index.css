@@ -4,6 +4,7 @@
 @custom-variant dark (&:is(.dark, .dark *));
 
 @theme {
+  --breakpoint-xs: 380px;
   --font-manrope: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-h1: 'DM Sans', sans-serif;
@@ -95,6 +96,15 @@
 /* ══════════════════════════════════════════════════════════════════
    Global High-Contrast Text Selection (Eliminates illegible green/white selection)
    ══════════════════════════════════════════════════════════════════ */
+/* Prevent native browser purple/blue outline on input focus */
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 ::selection {
   background-color: #5E6BFF !important;
   color: #ffffff !important;
@@ -190,75 +200,111 @@
 .-mx-space-md { margin-left: -1rem !important; margin-right: -1rem !important; }
 .-mb-space-md { margin-bottom: -1rem !important; }
 .mt-space-xs { margin-top: 0.25rem !important; }
-.text-title-md { font-size: 16px !important; line-height: 22px !important; letter-spacing: -0.01em !important; font-weight: 600 !important; }
-.text-title-sm { font-size: 14px !important; line-height: 20px !important; letter-spacing: 0em !important; font-weight: 600 !important; }
-.text-label-md { font-size: 12px !important; line-height: 16px !important; letter-spacing: 0.04em !important; font-weight: 600 !important; }
-.text-label-sm { font-size: 11px !important; line-height: 14px !important; letter-spacing: 0.06em !important; font-weight: 600 !important; }
-.text-code-sm { font-size: 12px !important; line-height: 16px !important; letter-spacing: 0em !important; font-weight: 500 !important; }
-.text-body-md { font-size: 14px !important; line-height: 20px !important; letter-spacing: 0em !important; }
-.text-body-sm { font-size: 13px !important; line-height: 18px !important; letter-spacing: 0.01em !important; }
+.text-title-md { font-size: clamp(1rem, 0.95rem + 0.4vw, 1.125rem) !important; line-height: 1.4 !important; letter-spacing: -0.01em !important; font-weight: 600 !important; }
+.text-title-sm { font-size: 0.9375rem !important; line-height: 1.4 !important; letter-spacing: 0em !important; font-weight: 600 !important; }
+.text-label-md { font-size: 0.9375rem !important; line-height: 1.35 !important; letter-spacing: 0.01em !important; font-weight: 600 !important; }
+.text-label-sm { font-size: 0.875rem !important; line-height: 1.35 !important; letter-spacing: 0.01em !important; font-weight: 500 !important; }
+.text-code-sm { font-size: 0.875rem !important; line-height: 1.4 !important; letter-spacing: 0em !important; font-weight: 500 !important; }
+.text-body-md { font-size: clamp(0.9375rem, 0.9rem + 0.25vw, 1rem) !important; line-height: 1.5 !important; letter-spacing: 0em !important; font-weight: 400 !important; }
+.text-body-sm { font-size: 0.875rem !important; line-height: 1.45 !important; letter-spacing: 0.01em !important; font-weight: 400 !important; }
+
+/* Enforce 14px minimum standard for mobile accessibility on text-xs */
+.text-xs {
+  font-size: 0.875rem !important;
+  line-height: 1.45 !important;
+}
 
 .text-hero-headline {
-  font-size: 76px;
+  font-size: clamp(2.5rem, 2rem + 2.5vw, 4.75rem);
   line-height: 1.1;
   letter-spacing: -0.055em;
-  font-weight: 520;
+  font-weight: 600;
 }
 
 .text-h1 {
-  font-size: 48px;
-  line-height: 1.1;
-  letter-spacing: -0.05em;
-  font-weight: 520;
+  font-size: clamp(1.75rem, 1.5rem + 1.25vw, 3rem);
+  line-height: 1.15;
+  letter-spacing: -0.04em;
+  font-weight: 600;
 }
 
 .text-h2 {
-  font-size: 32px;
+  font-size: clamp(1.5rem, 1.35rem + 0.75vw, 2rem);
   line-height: 1.2;
-  letter-spacing: -0.05em;
-  font-weight: 520;
+  letter-spacing: -0.03em;
+  font-weight: 600;
 }
 
 .text-h3 {
-  font-size: 24px;
-  line-height: 1.2;
-  letter-spacing: -0.04em;
-  font-weight: 520;
+  font-size: clamp(1.25rem, 1.15rem + 0.5vw, 1.5rem);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  font-weight: 600;
 }
 
 .text-h4 {
-  font-size: 18px;
+  font-size: clamp(1.125rem, 1.05rem + 0.35vw, 1.25rem);
   line-height: 1.4;
-  letter-spacing: -0.02em;
-  font-weight: 520;
+  letter-spacing: -0.01em;
+  font-weight: 600;
 }
 
 .text-body-lg {
-  font-size: 16px;
+  font-size: clamp(1rem, 0.95rem + 0.4vw, 1.125rem);
   line-height: 1.6;
   letter-spacing: 0em;
   font-weight: 400;
 }
 
-.text-body-md {
-  font-size: 14px;
-  line-height: 1.5;
-  letter-spacing: 0em;
-  font-weight: 400;
-}
-
 .text-mono-data {
-  font-size: 13px;
-  line-height: 1;
-  letter-spacing: -0.01em;
-  font-weight: 400;
+  font-size: 0.875rem;
+  line-height: 1.3;
+  letter-spacing: 0em;
+  font-weight: 500;
 }
 
-.text-label-sm {
-  font-size: 12px;
-  line-height: 1;
-  letter-spacing: 0.02em;
-  font-weight: 500;
+/* Touch manipulation and accessibility utilities */
+button,
+[role="button"],
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+:focus-visible:not(input):not(textarea):not(select) {
+  outline: 2px solid #5E6BFF;
+  outline-offset: 2px;
+}
+
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+}
+
+.tap-target-48 {
+  min-height: 48px !important;
+  min-width: 48px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tap-target-44 {
+  min-height: 44px !important;
+  min-width: 44px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
 }
 
 :root {
@@ -284,6 +330,8 @@ body::-webkit-scrollbar {
 html, body {
   margin: 0;
   padding: 0;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -456,6 +504,15 @@ input:autofill:active {
     inset 0 -1px 1.5px rgba(0, 0, 0, 0.2) !important;
 }
 
+/* Apple Liquid Glass with Defined Thin Light Gray Border */
+.apple-liquid-nav.liquid-gray-border {
+  border: 1px solid #cbd5e1 !important;
+}
+
+.apple-liquid-nav.liquid-gray-border:hover {
+  border-color: #94a3b8 !important;
+}
+
 /* Blue Hover effect for Buy or Renew Plan button */
 .apple-liquid-nav.host-buy-btn:hover,
 .dark .apple-liquid-nav.host-buy-btn:hover {
@@ -463,6 +520,38 @@ input:autofill:active {
   border-color: #3b82f6 !important;
   color: #ffffff !important;
   box-shadow: 0 10px 25px -3px rgba(37, 99, 235, 0.45), inset 0 1px 1.5px rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Progressive Blur Navbar Backdrop: Dark black at top, seamlessly fading to transparent at bottom */
+.navbar-gradient-blur {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.88) 0%,
+    rgba(0, 0, 0, 0.70) 35%,
+    rgba(0, 0, 0, 0.35) 65%,
+    rgba(0, 0, 0, 0.10) 85%,
+    rgba(0, 0, 0, 0) 100%
+  ) !important;
+  backdrop-filter: blur(16px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(140%) !important;
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.9) 35%,
+    rgba(0, 0, 0, 0.4) 65%,
+    rgba(0, 0, 0, 0.1) 85%,
+    rgba(0, 0, 0, 0) 100%
+  ) !important;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.9) 35%,
+    rgba(0, 0, 0, 0.4) 65%,
+    rgba(0, 0, 0, 0.1) 85%,
+    rgba(0, 0, 0, 0) 100%
+  ) !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
 }
 
 /* Apple iOS Crystal Glass Console Capsule with Defined Floating Shadow */

@@ -90,12 +90,12 @@ export function Categories({ selectedCategory, onSelectCategory }) {
  <div className="text-lg sm:text-2xl lg:text-3xl select-none p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white/70 border border-white/80 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9)] group-hover:scale-105 transition-transform self-start sm:self-auto">
  {cat.icon}
  </div>
- <span className="text-[9px] sm:text-xs font-mono font-medium text-slate-700 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/70 border border-white/80 shadow-[0_2px_6px_rgba(31,38,135,0.04),_inset_0_1px_1px_rgba(255,255,255,0.9)] self-start sm:self-auto truncate max-w-full">
+ <span className="text-xs sm:text-sm font-semibold text-slate-700 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/70 border border-white/80 shadow-[0_2px_6px_rgba(31,38,135,0.04),_inset_0_1px_1px_rgba(255,255,255,0.9)] self-start sm:self-auto truncate max-w-full">
  {cat.tag}
  </span>
  </div>
 
- <h3 className="text-sm sm:text-base lg:text-xl font-medium text-[#1f1b16] mb-1 sm:mb-2 group-hover:text-sky-600 transition-colors leading-tight truncate sm:whitespace-normal">
+ <h3 className="text-base sm:text-lg lg:text-xl font-bold text-[#1f1b16] mb-1 sm:mb-2 group-hover:text-sky-600 transition-colors leading-tight truncate sm:whitespace-normal">
  {cat.title}
  </h3>
  <p className="line-clamp-2 text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">

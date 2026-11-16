@@ -152,10 +152,10 @@ export function AdminUsersTable({
  <div className="absolute inset-x-0 top-0 h-[1px] pointer-events-none" />
 
  <div className="overflow-x-auto min-w-full">
- <table className="w-full text-left border-collapse text-xs" id="users-directory-table">
+ <table className="w-full text-left border-collapse text-sm min-w-[700px]" id="users-directory-table">
  {/* Table Headings */}
  <thead>
- <tr className="border-b border-slate-200/80 bg-[#f7f4ee]/80 text-slate-500 font-normal text-xs">
+ <tr className="border-b border-slate-200/80 bg-[#f7f4ee]/80 text-slate-700 font-semibold text-xs sm:text-sm uppercase tracking-wider">
  <th className="py-3.5 pl-6 pr-3 w-12 text-slate-400 font-normal" scope="col">#</th>
  <th className="py-3.5 px-4 font-normal" scope="col">User details</th>
  {isOfflineView ? (
@@ -215,7 +215,7 @@ export function AdminUsersTable({
  </span>
 
  {u.email && u.email !== '—' && (
- <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 mt-0.5 font-normal">
+ <span className="inline-flex items-center gap-1.5 text-sm text-slate-600 mt-0.5 font-medium">
  <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
  <path d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" strokeLinecap="round" strokeLinejoin="round" />
  </svg>
@@ -224,7 +224,7 @@ export function AdminUsersTable({
  )}
 
  {u.phone && (
- <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 mt-0.5 font-normal">
+ <span className="inline-flex items-center gap-1.5 text-sm text-slate-600 mt-0.5 font-medium">
  <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
  <path d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" strokeLinecap="round" strokeLinejoin="round" />
  </svg>
@@ -347,7 +347,7 @@ export function AdminUsersTable({
  <button
  type="button"
  onClick={() => onOpenUserPortal(u)}
- className="group/btn inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-normal text-slate-700 bg-white border border-slate-200 hover:border-purple-200/80 hover:bg-purple-50/80 hover:text-purple-700 transition-all shadow-2xs active:scale-95 cursor-pointer"
+ className="group/btn inline-flex items-center gap-1.5 min-h-[40px] px-3.5 py-2 rounded-xl text-sm font-semibold text-slate-700 bg-white border border-slate-200 hover:border-purple-200/80 hover:bg-purple-50/80 hover:text-purple-700 transition-all shadow-2xs active:scale-95 cursor-pointer"
  title="Direct User Portal Login"
  >
  <span>User Portal</span>
@@ -363,14 +363,14 @@ export function AdminUsersTable({
  type="button"
  onClick={() => onDeleteUser(currentUserId, u.name)}
  disabled={deletingUserId === currentUserId}
- className="px-2.5 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-normal hover:bg-rose-700 transition-colors cursor-pointer shadow-2xs"
+ className="min-h-[40px] px-3.5 py-2 rounded-xl bg-rose-600 text-white text-sm font-semibold hover:bg-rose-700 transition-colors cursor-pointer shadow-2xs"
  >
  {deletingUserId === currentUserId ? '...' : 'Confirm'}
  </button>
  <button
  type="button"
  onClick={() => setConfirmDeleteUserId(null)}
- className="px-2.5 py-1.5 rounded-lg bg-slate-200 text-xs font-normal text-slate-700 hover:bg-slate-300 transition-colors cursor-pointer"
+ className="min-h-[40px] px-3.5 py-2 rounded-xl bg-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-300 transition-colors cursor-pointer"
  >
  Cancel
  </button>
@@ -379,7 +379,7 @@ export function AdminUsersTable({
  <button
  type="button"
  onClick={() => setConfirmDeleteUserId(currentUserId)}
- className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-normal text-rose-600 bg-white border border-rose-200/80 hover:bg-rose-50/60 hover:text-rose-700 hover:border-rose-300 transition-all shadow-2xs active:scale-95 cursor-pointer"
+ className="inline-flex items-center gap-1 min-h-[40px] px-3.5 py-2 rounded-xl text-sm font-semibold text-rose-600 bg-white border border-rose-200/80 hover:bg-rose-50/60 hover:text-rose-700 hover:border-rose-300 transition-all shadow-2xs active:scale-95 cursor-pointer"
  title="Delete User"
  >
  <svg className="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">

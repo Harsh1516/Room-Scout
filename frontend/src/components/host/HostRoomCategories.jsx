@@ -13,6 +13,22 @@ import {
 } from '../../utils/dateUtils';
 import HostRoomCardItem from './HostRoomCardItem';
 
+const CATEGORY_NAME_PRESETS = [
+  'Single Bed',
+  'Double Bed',
+  'Tripple Bed',
+  'Four Bed',
+  'Five Bed',
+];
+
+const PRESET_CAPACITY_MAP = {
+  'Single Bed': 1,
+  'Double Bed': 2,
+  'Tripple Bed': 3,
+  'Four Bed': 4,
+  'Five Bed': 5,
+};
+
 /**
  * Checks if a specific room is booked/occupied on a target date (YYYY-MM-DD)
  * using interval overlap matching:
@@ -456,6 +472,7 @@ export default function HostRoomCategories({
 }) {
  const [confirmDeleteCatIdx, setConfirmDeleteCatIdx] = useState(null);
  const [dirtyCategories, setDirtyCategories] = useState({});
+ const [customModeMap, setCustomModeMap] = useState({});
  const [updatingCategoryIdx, setUpdatingCategoryIdx] = useState(null);
  const [recentlyUpdatedIdx, setRecentlyUpdatedIdx] = useState(null);
  const [savedSnapshots, setSavedSnapshots] = useState({});
@@ -626,7 +643,22 @@ export default function HostRoomCategories({
  const isExpanded = isCategoryOpen(index);
  const isMonthly = isMonthlyRateUnit(rate?.rateUnit);
  const rawPrice = String(rate?.price || '').replace(/[^0-9]/g, '');
- const rowKey = rate._id || `rate_${index}_${rate.type || ''}`;
+ const rowKey = rate._id || `rate_${index}`;
+ const categoryIdKey = rate?._id ? String(rate._id) : `cat_${index}`;
+ const normalizedType = String(rate?.type || '').trim();
+ const matchedPreset = CATEGORY_NAME_PRESETS.find(
+ (preset) => preset.toLowerCase() === normalizedType.toLowerCase()
+ );
+ const isPreset = Boolean(matchedPreset);
+ const isCustom = customModeMap[categoryIdKey] ?? customModeMap[index] ?? (!isPreset && Boolean(normalizedType));
+
+ let selectValue = '';
+ if (isCustom) {
+ selectValue = 'Custom';
+ } else if (isPreset) {
+ selectValue = matchedPreset;
+ }
+
  const stats = categoryStatsMap[index] || { totalCount: 0, availableCount: 0, occupiedCount: 0 };
  const matchingRooms = (Array.isArray(rooms) ? rooms : []).filter((r) =>
  isRoomMatchingCategory(r, rate, index, safeRoomRates)
@@ -740,13 +772,68 @@ export default function HostRoomCategories({
  <div className="p-3 sm:p-4 flex flex-col gap-2.5 sm:gap-3">
  {/* Form Fields: No labels above, balanced text size, Price/Cycle/Capacity in 1 row */}
  <div className="flex flex-col gap-2.5 mb-2 sm:mb-2.5">
- {/* Category Name Input (Full width, no label) */}
- <div className="relative flex items-center">
+ {/* Category Name Dropdown & Custom Input (Full width, no label) */}
+ <div className="flex flex-col gap-2">
+ <div className="relative flex items-center w-full">
+ <select
+ value={selectValue}
+ onChange={(e) => {
+ const selectedVal = e.target.value;
+ if (selectedVal === 'Custom') {
+ setCustomModeMap((prev) => ({ ...prev, [categoryIdKey]: true, [index]: true }));
+ if (isPreset) {
+ onUpdateCategory(index, 'type', '');
+ }
+ markCategoryDirty(index);
+ } else {
+ setCustomModeMap((prev) => ({ ...prev, [categoryIdKey]: false, [index]: false }));
+ markCategoryDirty(index);
+ onUpdateCategory(index, 'type', selectedVal);
+ if (PRESET_CAPACITY_MAP[selectedVal]) {
+ onUpdateCategory(index, 'capacity', PRESET_CAPACITY_MAP[selectedVal]);
+ }
+ }
+ }}
+ onFocus={() => onSelectCategoryIndex(index)}
+ onClick={(e) => {
+ e.stopPropagation();
+ onSelectCategoryIndex(index);
+ }}
+ className={`w-full h-11.5 sm:h-12 rounded-xl pl-4 pr-10 text-[14px] sm:text-[15px] font-semibold max-md:bg-white max-md:border max-md:border-slate-200/80 ${
+ !selectValue ? 'text-slate-400 max-md:text-slate-400 font-normal' : 'text-[#0b0b0b] md:text-[#1f1b16]'
+ } md:bg-white/70 md:border md:border-slate-200 transition-all shadow-2xs focus:outline-none appearance-none cursor-pointer`}
+ >
+ <option value="" disabled className="text-slate-400">
+ Select Category (e.g. Single Bed, Double Bed...)
+ </option>
+ {CATEGORY_NAME_PRESETS.map((preset) => (
+ <option key={preset} value={preset} className="text-slate-900 bg-white">
+ {preset}
+ </option>
+ ))}
+ <option value="Custom" className="text-slate-900 bg-white font-medium">
+ Custom
+ </option>
+ </select>
+ <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[20px] sm:text-[22px] max-md:text-slate-400 md:text-slate-400 pointer-events-none select-none">
+ keyboard_arrow_down
+ </span>
+ </div>
+
+ {/* Custom Category Name Input (Rendered when Custom is selected) */}
+ {isCustom && (
+ <motion.div
+ initial={{ opacity: 0, y: -4 }}
+ animate={{ opacity: 1, y: 0 }}
+ exit={{ opacity: 0, y: -4 }}
+ transition={{ duration: 0.15 }}
+ className="relative flex items-center w-full"
+ >
  <input
  type="text"
  value={rate.type || ''}
  onChange={(e) => {
- const textOnly = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+ const textOnly = e.target.value.replace(/[^a-zA-Z0-9\s-]/g, '');
  markCategoryDirty(index);
  onUpdateCategory(index, 'type', textOnly);
  }}
@@ -755,9 +842,12 @@ export default function HostRoomCategories({
  e.stopPropagation();
  onSelectCategoryIndex(index);
  }}
- placeholder="Category Name (e.g. Deluxe Single Bed)"
- className="w-full h-11.5 sm:h-12 rounded-xl px-4 text-[14px] sm:text-[15px] font-semibold max-md:bg-white max-md:border max-md:border-slate-200/80 max-md:text-[#0b0b0b] max-md:font-normal max-md:placeholder:text-slate-400 max-md:shadow-xs max-md:focus:border-black/30 md:bg-white/70 md:border md:border-slate-200 md:text-[#1f1b16] transition-all shadow-2xs focus:outline-none"
+ placeholder="Enter Custom Category Name (e.g. Deluxe Suite)"
+ className="w-full h-11.5 sm:h-12 rounded-xl px-4 text-[14px] sm:text-[15px] font-semibold max-md:bg-white max-md:border max-md:border-slate-200/80 max-md:text-[#0b0b0b] max-md:placeholder:text-slate-400 max-md:shadow-xs max-md:focus:border-black/30 md:bg-white/70 md:border md:border-slate-200 md:text-[#1f1b16] transition-all shadow-2xs focus:outline-none"
+ autoFocus
  />
+ </motion.div>
+ )}
  </div>
 
  {/* Price, Billing Cycle, and Capacity in ONE ROW (no labels) */}

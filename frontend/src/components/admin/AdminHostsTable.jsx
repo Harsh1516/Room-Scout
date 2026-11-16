@@ -359,7 +359,7 @@ export function AdminHostsTable({
  </span>
  </div>
 
- <div className="text-xs text-slate-600 font-normal">
+ <div className="text-sm text-slate-700 font-medium">
  {hasPropertyDetails ? (
  <>
  <div className="font-normal text-slate-800">{host.propertyName}</div>
@@ -384,7 +384,7 @@ export function AdminHostsTable({
  <button
  type="button"
  onClick={() => onOpenHostPortal(host)}
- className="px-3 py-1.5 text-xs text-emerald-700 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 rounded-md font-medium flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-2xs"
+ className="min-h-[40px] px-3.5 py-2 text-sm font-semibold text-emerald-700 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 rounded-md font-medium flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-2xs"
  >
  <span>Host Portal</span>
  <svg className="w-2.5 h-2.5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -397,7 +397,7 @@ export function AdminHostsTable({
  type="button"
  onClick={() => onApproveHost(hostId, host.name)}
  disabled={approvingHostId === hostId}
- className="px-3 py-1.5 text-xs text-amber-700 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-md font-medium cursor-pointer disabled:opacity-50"
+ className="min-h-[40px] px-3.5 py-2 text-sm font-semibold text-amber-700 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-md font-medium cursor-pointer disabled:opacity-50"
  >
  {approvingHostId === hostId ? 'Approving...' : 'Approve'}
  </button>
@@ -406,7 +406,7 @@ export function AdminHostsTable({
  <button
  type="button"
  onClick={() => onDeleteHost(hostId, host.name)}
- className="px-3 py-1.5 text-xs text-red-600 border border-red-200 rounded-md cursor-pointer"
+ className="min-h-[40px] px-3.5 py-2 text-sm font-semibold text-red-600 border border-red-200 rounded-xl cursor-pointer"
  >
  Delete
  </button>

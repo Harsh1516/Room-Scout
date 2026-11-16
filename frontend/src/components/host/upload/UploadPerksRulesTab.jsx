@@ -135,7 +135,7 @@ export function UploadPerksRulesTab({
  }
  }}
  placeholder="Add Facility / Amenity (e.g. High-Speed Wi-Fi, Attached Bathroom)..."
- className="flex-1 h-11 max-md:h-12 md:h-9 px-4 sm:px-4.5 rounded-full border text-[14px] sm:text-base md:text-xs focus:outline-none transition-all
+ className="flex-1 min-h-[50px] sm:min-h-[52px] px-4 sm:px-5 rounded-full border text-base focus:outline-none transition-all
  max-md:bg-white/90 max-md:backdrop-blur-sm max-md:border-0 max-md:text-slate-800 max-md:font-normal max-md:placeholder:text-slate-400 max-md:shadow-[0_1px_3px_rgba(0,0,0,0.04)] max-md:focus:bg-white max-md:focus:ring-2 max-md:focus:ring-sky-400/20
  md:bg-[#f7f4ee]/70 md:border-slate-200 md:text-[#1f1b16] md:placeholder:text-slate-400 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15"
  />
@@ -146,7 +146,7 @@ export function UploadPerksRulesTab({
  e.stopPropagation();
  onAddFacility?.(e);
  }}
- className="h-11 max-md:h-12 md:h-9 px-6 sm:px-8 md:px-6 rounded-full text-sm md:text-xs font-medium transition-all cursor-pointer shrink-0 flex items-center gap-1.5 shadow-xs active:scale-95
+ className="min-h-[50px] sm:min-h-[52px] px-6 sm:px-8 rounded-full text-base font-semibold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 shadow-xs active:scale-95
  max-md:bg-gradient-to-r max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:hover:from-[#0284c7] max-md:hover:to-[#0369a1] max-md:text-white max-md:font-semibold max-md:shadow-[0_2px_8px_rgba(14,165,233,0.3)]
  md:bg-[#006C4A] md:hover:bg-[#005a3e] md:text-white"
  >
@@ -313,7 +313,7 @@ export function UploadPerksRulesTab({
  }
  }}
  placeholder="Add House Rule (e.g. Gate closes at 10:30 PM, No Smoking)..."
- className="flex-1 h-11 max-md:h-12 md:h-9 px-4 sm:px-4.5 rounded-full border text-[14px] sm:text-base md:text-xs font-normal focus:outline-none transition-all
+ className="flex-1 min-h-[50px] sm:min-h-[52px] px-4 sm:px-5 rounded-full border text-base font-normal focus:outline-none transition-all
  max-md:bg-white/90 max-md:backdrop-blur-sm max-md:border-0 max-md:text-slate-800 max-md:font-normal max-md:placeholder:text-slate-400 max-md:shadow-[0_1px_3px_rgba(0,0,0,0.04)] max-md:focus:bg-white max-md:focus:ring-2 max-md:focus:ring-sky-400/20
  md:bg-[#f7f4ee]/70 md:border-slate-200 md:text-[#1f1b16] md:placeholder:text-slate-400 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15"
  />
@@ -324,7 +324,7 @@ export function UploadPerksRulesTab({
  e.stopPropagation();
  onAddRule?.(e);
  }}
- className="h-11 max-md:h-12 md:h-9 px-6 sm:px-8 md:px-6 rounded-full text-sm md:text-xs font-medium transition-all cursor-pointer shrink-0 flex items-center gap-1.5 shadow-xs active:scale-95
+ className="min-h-[50px] sm:min-h-[52px] px-6 sm:px-8 rounded-full text-base font-semibold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 shadow-xs active:scale-95
  max-md:bg-gradient-to-r max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:hover:from-[#0284c7] max-md:hover:to-[#0369a1] max-md:text-white max-md:font-semibold max-md:shadow-[0_2px_8px_rgba(14,165,233,0.3)]
  md:bg-[#006C4A] md:hover:bg-[#005a3e] md:text-white"
  >

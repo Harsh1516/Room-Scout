@@ -403,7 +403,7 @@ export function CheckInVerificationModal({
  <button
  type="button"
  onClick={onClose}
- className="p-1.5 sm:p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer shrink-0 ml-2"
+ className="w-11 h-11 sm:w-12 sm:h-12 rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-200/70 flex items-center justify-center transition-colors cursor-pointer shrink-0 ml-2"
  title="Close modal (Esc)"
  >
  <X className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.2]" />
@@ -933,7 +933,7 @@ export function CheckInVerificationModal({
  <button
  type="button"
  onClick={onClose}
- className="flex-1 py-3 px-4 rounded-2xl font-medium border border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer text-xs sm:text-sm"
+ className="flex-1 min-h-[50px] sm:min-h-[54px] py-3.5 px-4 rounded-2xl font-semibold border border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer text-sm sm:text-base"
  >
  Close
  </button>
@@ -942,7 +942,7 @@ export function CheckInVerificationModal({
  type="button"
  disabled={!canCheckIn || isSubmitting}
  onClick={handleConfirmCheckIn}
- className={`flex-1 py-3 px-4 rounded-2xl font-manrope font-medium text-xs sm:text-sm text-white transition-all cursor-pointer flex items-center justify-center gap-2 ${
+ className={`flex-1 min-h-[50px] sm:min-h-[54px] py-3.5 px-4 rounded-2xl font-manrope font-semibold text-sm sm:text-base text-white transition-all cursor-pointer flex items-center justify-center gap-2 ${
  canCheckIn
  ? ' active:scale-[0.98] shadow-lg shadow-emerald-600/30'
  : 'bg-slate-400 opacity-60 cursor-not-allowed'
@@ -1019,7 +1019,7 @@ export function CheckInVerificationModal({
  <button
  type="button"
  onClick={() => setIsLightboxOpen(false)}
- className="p-1.5 rounded-xl bg-white/10 hover:bg-rose-500/80 hover:text-white text-slate-300 transition-colors cursor-pointer"
+ className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-white/10 hover:bg-rose-500/80 hover:text-white text-slate-300 flex items-center justify-center transition-colors cursor-pointer"
  title="Close (Esc)"
  >
  <X className="w-4 h-4 stroke-[2.5]" />

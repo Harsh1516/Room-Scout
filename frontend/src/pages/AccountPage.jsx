@@ -499,7 +499,7 @@ export function AccountPage() {
  type="email"
  disabled
  value={personalForm.email}
- className="w-full h-11 px-4 rounded-xl border max-md:bg-white/5 max-md:border-white/10 max-md:text-white/60 md:bg-slate-100 md:border-slate-200 md:text-slate-500 text-sm font-medium cursor-not-allowed shadow-xs"
+ className="w-full min-h-[52px] px-4 rounded-xl border max-md:bg-white/5 max-md:border-white/10 max-md:text-white/80 md:bg-slate-100 md:border-slate-200 md:text-slate-600 text-base font-medium cursor-not-allowed shadow-xs"
  />
  </div>
 
@@ -509,7 +509,7 @@ export function AccountPage() {
  Phone Number *
  </label>
  <div
- className={`relative flex items-center h-11 rounded-xl border overflow-hidden transition-all shadow-xs ${
+ className={`relative flex items-center min-h-[52px] rounded-xl border overflow-hidden transition-all shadow-xs ${
  personalErrors.phone
  ? 'border-rose-500 focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-500/20'
  : 'max-md:bg-white/10 max-md:border-white/20 max-md:focus-within:border-white/60 max-md:focus-within:ring-2 max-md:focus-within:ring-white/20 md:bg-[#f7f4ee] md:border-slate-300 md:focus-within:border-emerald-500 md:focus-within:ring-2 md:focus-within:ring-emerald-500/20'
@@ -546,7 +546,7 @@ export function AccountPage() {
  }}
  onBlur={(e) => validatePersonalField('phone', personalForm.phone)}
  placeholder="Enter 10-digit mobile number"
- className="w-full flex-1 bg-transparent px-3 py-2 text-xs sm:text-sm font-medium max-md:text-white max-md:placeholder:text-emerald-200/40 md:text-[#1f1b16] md:placeholder:text-slate-400 focus:outline-none rounded-r-xl"
+ className="w-full flex-1 bg-transparent px-3 py-2 text-base font-medium max-md:text-white max-md:placeholder:text-emerald-200/40 md:text-[#1f1b16] md:placeholder:text-slate-400 focus:outline-none rounded-r-xl"
  />
  </div>
  {personalErrors.phone && (
@@ -564,7 +564,7 @@ export function AccountPage() {
  <button
  type="submit"
  disabled={!canSaveProfile || loading}
- className={`w-full h-11 sm:h-12 rounded-xl sm:rounded-2xl font-medium text-xs sm:text-sm tracking-tight transition-all flex items-center justify-center gap-2 ${
+ className={`w-full min-h-[52px] sm:min-h-[54px] rounded-xl sm:rounded-2xl font-semibold text-base tracking-tight transition-all flex items-center justify-center gap-2 ${
  !canSaveProfile || loading
  ? 'max-md:bg-white/10 max-md:text-white/40 md:bg-slate-200 md:text-slate-400 cursor-not-allowed opacity-60'
  : 'max-md:bg-emerald-400 max-md:hover:bg-emerald-300 max-md:text-emerald-950 max-md:shadow-lg max-md:shadow-emerald-950/40 md:bg-[#0f766e] md:hover:bg-emerald-500 md:text-white md:shadow-md md:shadow-emerald-600/20 cursor-pointer active:scale-95'
@@ -956,7 +956,7 @@ export function AccountPage() {
  <button
  type="button"
  onClick={() => setShowDeleteModal(true)}
- className="w-full h-11 sm:h-12 rounded-xl sm:rounded-2xl max-md:bg-rose-500 max-md:hover:bg-rose-400 max-md:text-white max-md:shadow-lg max-md:shadow-rose-950/40 md:bg-rose-600 md:hover:bg-rose-700 md:text-white font-medium text-xs sm:text-sm tracking-tight md:shadow-md md:shadow-rose-600/20 transition-all cursor-pointer active:scale-95"
+ className="w-full min-h-[52px] sm:min-h-[54px] rounded-xl sm:rounded-2xl max-md:bg-rose-500 max-md:hover:bg-rose-400 max-md:text-white max-md:shadow-lg max-md:shadow-rose-950/40 md:bg-rose-600 md:hover:bg-rose-700 md:text-white font-medium text-xs sm:text-sm tracking-tight md:shadow-md md:shadow-rose-600/20 transition-all cursor-pointer active:scale-95"
  >
  Permanently Delete My Account
  </button>

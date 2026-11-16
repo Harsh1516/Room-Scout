@@ -45,11 +45,11 @@ export function MapPickerModal({ isOpen, onClose, onSelectLocation }) {
     }
   }, [isOpen]);
 
-  const handleApply = (finalLocation, coords = pinPos, isNearby = false) => {
+  const handleApply = (finalLocation, coords = pinPos) => {
     const loc = finalLocation || extractedCity;
     const finalCoords = coords || pinPos;
     if (onSelectLocation) {
-      onSelectLocation(loc, finalCoords, isNearby);
+      onSelectLocation(loc, finalCoords, false);
     }
     onClose();
   };
@@ -81,24 +81,23 @@ export function MapPickerModal({ isOpen, onClose, onSelectLocation }) {
     // Initial marker
     let marker = window.L.marker([pinPos.lat, pinPos.lon], { draggable: true }).addTo(map);
     const getPopupHtml = (cName, lPos) => `
-      <div style="min-width: 140px; padding: 4px; font-family: inherit;">
+      <div style="min-width: 130px; padding: 4px; font-family: inherit;">
         <b style="font-size: 13px; color: #0f172a; display: block; margin-bottom: 2px;">${cName}</b>
         <div style="font-size: 10px; color: #64748b; margin-bottom: 8px;">${lPos.lat.toFixed(3)}, ${lPos.lon.toFixed(3)}</div>
-        <button id="leaflet-popup-nearby-btn" style="width: 100%; padding: 6px 12px; background: #0f172a; color: #fff; font-size: 11px; font-weight: 600; border-radius: 9999px; border: 1px solid rgba(255,255,255,0.15); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
-          <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#10b981;"></span>
-          <span>Filter Nearby Stays</span>
+        <button id="leaflet-popup-select-btn" style="width: 100%; padding: 6px 12px; background: #2b2c37; color: #fff; font-size: 11px; font-weight: 600; border-radius: 9999px; border: 1px solid #3b3d4d; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+          <span>Confirm This Point</span>
         </button>
       </div>
     `;
     marker.bindPopup(getPopupHtml(extractedCity, pinPos)).openPopup();
 
-    // Attach click handler to popup nearby button
+    // Attach click handler to popup select button
     const wirePopupBtn = (currentCName, currentPos) => {
       setTimeout(() => {
-        const btn = document.getElementById('leaflet-popup-nearby-btn');
+        const btn = document.getElementById('leaflet-popup-select-btn');
         if (btn) {
           btn.onclick = () => {
-            handleApply(currentCName, currentPos, true);
+            handleApply(currentCName, currentPos);
           };
         }
       }, 50);
@@ -158,7 +157,7 @@ export function MapPickerModal({ isOpen, onClose, onSelectLocation }) {
       handleLocationSelect(position.lat, position.lng);
     });
 
-    // Invalidate size to guarantee smooth tile rendering in 2x height
+    // Invalidate size to guarantee smooth tile rendering
     const resizeTimer = setTimeout(() => {
       map.invalidateSize();
     }, 250);
@@ -177,27 +176,20 @@ export function MapPickerModal({ isOpen, onClose, onSelectLocation }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#1f1b16]/70 flex items-center justify-center p-3 sm:p-4">
-      <div className="fixed inset-0" onClick={onClose} />
+    <div className="fixed inset-0 z-50 bg-[#121418]/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5">
+      <div className="fixed inset-0 cursor-pointer" onClick={onClose} />
 
-      {/* Modal Container */}
-      <div className="relative w-full max-w-xl sm:max-w-2xl bg-[#fbf7f4] text-[#2e1b10] rounded-2xl shadow-2xl overflow-hidden border border-[#e2d2c5] z-10 animate-in fade-in zoom-in-95 duration-150">
-        {/* Compact Modal Header */}
-        <div className="relative px-4 py-3 border-b border-[#ebdcd0] flex items-center justify-center bg-[#f4ece5]">
-          <h2 className="text-sm font-semibold text-[#2e1b10] text-center">
+      {/* Modal Container with Left Panel Settings: Rounded [28px]/[36px], White, Border, Shadow */}
+      <div className="relative w-full max-w-xl sm:max-w-2xl bg-white text-[#1f1b16] rounded-[28px] sm:rounded-[36px] shadow-[0_20px_50px_rgba(0,0,0,0.22)] overflow-hidden border border-slate-200/90 z-10 animate-in fade-in zoom-in-95 duration-150">
+        {/* Header: Centered Choose Location, No cross button (matching left panel) */}
+        <div className="relative px-4 py-3.5 sm:py-4 border-b border-slate-100 flex items-center justify-center bg-white">
+          <h2 className="text-[24px] font-bold text-[#1f1b16] tracking-tight leading-none">
             Choose Location
           </h2>
-
-          <button
-            onClick={onClose}
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-[#7d5740] hover:text-[#2e1b10] hover:bg-[#ebdcd0] transition-colors text-xs font-semibold cursor-pointer"
-          >
-            ✕
-          </button>
         </div>
 
         {/* Modal Body */}
-        <div className="p-3.5 space-y-3">
+        <div className="p-4 space-y-3">
           {/* Quick Destination Hotspot Chips */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none no-scrollbar">
             {CITY_HOTSPOTS.map((city) => {
@@ -207,10 +199,10 @@ export function MapPickerModal({ isOpen, onClose, onSelectLocation }) {
                   key={city.name}
                   type="button"
                   onClick={() => handleSelectHotspot(city)}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all border shrink-0 cursor-pointer active:scale-95 ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border shrink-0 cursor-pointer active:scale-95 ${
                     isSelected
-                      ? 'bg-[#824a25] text-white border-[#824a25] shadow-xs'
-                      : 'bg-[#f0e4db] border-[#ddcbbe] text-[#54331e] hover:border-[#824a25]/60'
+                      ? 'bg-[#2b2c37] text-white border-[#3b3d4d] shadow-xs'
+                      : 'bg-slate-100 border-slate-200/80 text-slate-700 hover:bg-slate-200/80'
                   }`}
                 >
                   {city.name}
@@ -219,61 +211,38 @@ export function MapPickerModal({ isOpen, onClose, onSelectLocation }) {
             })}
           </div>
 
-          {/* Interactive Map View with 2x Height */}
-          <div className="relative w-full h-[460px] sm:h-[500px] rounded-2xl overflow-hidden border border-[#e2d2c5] shadow-inner bg-[#f0e4db]">
+          {/* Interactive Map View */}
+          <div className="relative w-full h-[440px] sm:h-[480px] rounded-2xl overflow-hidden border border-slate-200/90 shadow-inner bg-slate-100">
             <div id="interactive-picker-map" className="w-full h-full z-0" />
 
             {/* Extracted City Overlay Badge */}
-            <div className="absolute top-3 left-3 z-10 bg-slate-900/90 text-white px-3 py-1.5 rounded-xl border border-white/15 shadow-md flex items-center gap-2 max-w-[55%] backdrop-blur-md">
-              <div className="w-2 h-2 rounded-full bg-[#e08b52] shrink-0" />
+            <div className="absolute top-3 left-3 z-10 bg-[#2b2c37]/90 text-white px-3.5 py-1.5 rounded-full border border-white/15 shadow-md flex items-center gap-2 max-w-[65%] backdrop-blur-md">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
               <span className="font-semibold text-xs text-white truncate">
                 {isGeocoding ? 'Detecting...' : extractedCity}
               </span>
             </div>
-
-            {/* Premium Minimal Floating Nearby Button inside Map */}
-            <button
-              type="button"
-              onClick={() => handleApply(extractedCity, pinPos, true)}
-              className="absolute top-3 right-3 z-10 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/90 hover:bg-slate-950 text-white text-xs font-semibold shadow-lg shadow-black/20 border border-white/20 backdrop-blur-md transition-all cursor-pointer active:scale-95"
-              title="Filter stays near this pinpoint location"
-            >
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span>Nearby</span>
-            </button>
           </div>
         </div>
 
         {/* Modal Footer */}
-        <div className="p-3 px-4 border-t border-[#ebdcd0] bg-[#f4ece5]/90 flex items-center justify-between">
-          <div className="text-xs text-[#7d5740]">
-            Location: <span className="font-semibold text-[#824a25]">{extractedCity}</span>
+        <div className="p-3.5 px-5 border-t border-slate-100 bg-white flex items-center justify-between">
+          <div className="text-xs text-slate-500">
+            Location: <span className="font-semibold text-slate-900">{extractedCity}</span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <button
               type="button"
               onClick={onClose}
-              className="px-3 py-1.5 text-xs font-semibold text-[#7d5740] hover:text-[#2e1b10] cursor-pointer"
+              className="px-3.5 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="button"
-              onClick={() => handleApply(extractedCity, pinPos, true)}
-              className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 font-semibold text-xs transition-all cursor-pointer active:scale-95 flex items-center gap-1.5 shadow-2xs"
-              title="Filter stays near this pinpoint location"
-            >
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span>Nearby</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleApply(extractedCity, pinPos, false)}
-              className="px-4 py-1.5 rounded-xl bg-[#1f1b16] text-white font-semibold text-xs hover:bg-[#0f766e] transition-colors cursor-pointer active:scale-95"
+              onClick={() => handleApply(extractedCity, pinPos)}
+              className="min-h-[42px] px-5 py-2 rounded-full bg-[#2b2c37] hover:bg-[#343542] text-white border border-[#3b3d4d] font-semibold text-sm transition-all cursor-pointer active:scale-95 shadow-xs"
             >
               Confirm Location
             </button>

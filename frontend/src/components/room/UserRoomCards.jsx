@@ -228,7 +228,7 @@ export function UserRoomCards({
  {/* Top Badge: Available / Requested / Occupied */}
  <div className="w-full flex items-center justify-start min-h-[22px]">
  <span
- className={`text-[8.5px] font-semibold px-1.5 py-0.5 rounded-lg tracking-tight leading-snug whitespace-nowrap truncate max-w-[85px] ${
+ className={`text-xs font-bold px-2 py-0.5 rounded-lg tracking-tight leading-snug whitespace-nowrap truncate max-w-[100px] ${
  isRoomRequested
  ? 'bg-amber-500/25 text-amber-900 font-medium border border-amber-500/30'
  : isCardOccupied
@@ -255,7 +255,7 @@ export function UserRoomCards({
  {/* Room Number */}
  <div className="my-0.5 text-center px-0.5 w-full">
  <span
- className={`text-sm font-medium tracking-tight block truncate ${
+ className={`text-base font-bold tracking-tight block truncate ${
  isRoomRequested
  ? 'text-amber-950'
  : isCardOccupied

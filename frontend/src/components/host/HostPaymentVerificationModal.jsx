@@ -142,7 +142,7 @@ export function HostPaymentVerificationModal({
  <button
  type="button"
  onClick={onClose}
- className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors shrink-0"
+ className="w-11 h-11 sm:w-12 sm:h-12 rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-200/70 flex items-center justify-center transition-colors shrink-0"
  >
  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
  <line x1="18" y1="6" x2="6" y2="18" />
@@ -348,7 +348,7 @@ export function HostPaymentVerificationModal({
  <button
  type="button"
  onClick={() => setIsLightboxOpen(false)}
- className="p-1.5 rounded-xl bg-white/10 hover:bg-rose-500/80 hover:text-white text-slate-300 transition-colors cursor-pointer"
+ className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-white/10 hover:bg-rose-500/80 hover:text-white text-slate-300 flex items-center justify-center transition-colors cursor-pointer"
  title="Close (Esc)"
  >
  <X className="w-4 h-4 stroke-[2.5]" />

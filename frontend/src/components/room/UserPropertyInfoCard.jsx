@@ -17,13 +17,13 @@ export function UserPropertyInfoCard({
  return (
  <div className="p-5 rounded-3xl bg-white/70 border border-white/80 shadow-[0_12px_32px_rgba(31,38,135,0.06),_inset_0_1px_2px_rgba(255,255,255,0.95)] space-y-3 text-slate-800 transition-all">
  <div className="space-y-1">
- <span className="text-[10px] font-medium text-slate-500">
+ <span className="text-xs sm:text-sm font-semibold text-slate-600">
  {stay.type || 'Property'} • {stay.city || stay.location || 'Location'}
  </span>
- <h1 className="text-xl font-medium text-[#1f1b16] tracking-tight">
+ <h1 className="text-xl sm:text-2xl font-bold text-[#1f1b16] tracking-tight">
  {stay.propertyName || stay.title}
  </h1>
- <p className="text-xs text-slate-500 font-normal">
+ <p className="text-sm sm:text-base text-slate-700 font-medium">
  {stay.address || stay.location}
  </p>
  </div>
@@ -31,11 +31,11 @@ export function UserPropertyInfoCard({
  {/* Category Name, Price & Availability */}
  <div className="pt-2.5 border-t border-white/60 flex items-center justify-between gap-2">
  <div>
- <span className="text-[10px] font-medium text-slate-500 block">
+ <span className="text-xs sm:text-sm font-semibold text-slate-600 block">
  {displayCategoryName}
  </span>
  <div className="flex items-baseline gap-1 mt-0.5">
- <span className="text-xl font-medium text-[#1f1b16] tracking-tight">
+ <span className="text-xl sm:text-2xl font-bold text-[#1f1b16] tracking-tight">
  {displayCategoryPrice}
  </span>
  <span className="text-xs font-normal text-slate-500">

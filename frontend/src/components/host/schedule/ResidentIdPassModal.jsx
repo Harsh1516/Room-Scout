@@ -215,7 +215,7 @@ export function ResidentIdPassModal({
  required
  value={modalName}
  onChange={handleModalNameChange}
- className="w-full h-11 sm:h-12 px-3.5 sm:px-4 rounded-xl bg-slate-100/90 border border-slate-200/90 text-[13.5px] sm:text-[14.5px] font-medium text-[#1f1b16] focus:outline-none focus:bg-white focus:border-slate-800 transition-colors shadow-2xs"
+ className="w-full min-h-[52px] px-4 rounded-xl bg-slate-100/90 border border-slate-200/90 text-base font-medium text-[#1f1b16] focus:outline-none focus:bg-white focus:border-slate-800 transition-colors shadow-2xs"
  />
  </div>
 
@@ -242,7 +242,7 @@ export function ResidentIdPassModal({
  type="text"
  value={modalPaidAmount}
  onChange={(e) => setModalPaidAmount(e.target.value.replace(/\D/g, ''))}
- className="w-full h-11 sm:h-12 px-3.5 sm:px-4 rounded-xl bg-slate-100/90 border border-slate-200/90 text-[13.5px] sm:text-[14.5px] font-medium text-[#1f1b16] focus:outline-none focus:bg-white focus:border-slate-800 transition-colors shadow-2xs"
+ className="w-full min-h-[52px] px-4 rounded-xl bg-slate-100/90 border border-slate-200/90 text-base font-medium text-[#1f1b16] focus:outline-none focus:bg-white focus:border-slate-800 transition-colors shadow-2xs"
  />
  </div>
 
@@ -254,7 +254,7 @@ export function ResidentIdPassModal({
  maxLength={14}
  value={modalAadhar}
  onChange={handleModalAadharChange}
- className="w-full h-11 sm:h-12 px-3.5 sm:px-4 rounded-xl bg-slate-100/90 border border-slate-200/90 text-[13.5px] sm:text-[14.5px] font-medium text-[#1f1b16] focus:outline-none focus:bg-white focus:border-slate-800 transition-colors shadow-2xs"
+ className="w-full min-h-[52px] px-4 rounded-xl bg-slate-100/90 border border-slate-200/90 text-base font-medium text-[#1f1b16] focus:outline-none focus:bg-white focus:border-slate-800 transition-colors shadow-2xs"
  />
  </div>
 
@@ -269,7 +269,7 @@ export function ResidentIdPassModal({
  <button
  type="submit"
  disabled={isSavingModalOccupant}
- className="h-11 sm:h-12 px-5 rounded-full bg-[#0f766e] hover:bg-emerald-500 text-white text-xs sm:text-[13px] font-medium cursor-pointer transition-all shadow-md active:scale-95"
+ className="min-h-[48px] px-5 rounded-full bg-[#0f766e] hover:bg-emerald-500 text-white text-sm sm:text-base font-semibold cursor-pointer transition-all shadow-md active:scale-95"
  >
  {isSavingModalOccupant ? 'Updating...' : 'Update Database'}
  </button>
@@ -458,7 +458,7 @@ export function ResidentIdPassModal({
  type="button"
  disabled={isUpdatingSlot}
  onClick={() => setConfirmModalDelete(false)}
- className="h-11 sm:h-12 px-4.5 rounded-full border border-slate-200 bg-white text-slate-700 text-xs sm:text-[13px] font-medium cursor-pointer shadow-2xs hover:bg-[#f7f4ee] disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
+ className="min-h-[48px] px-5 rounded-full border border-slate-200 bg-white text-slate-700 text-sm sm:text-base font-semibold cursor-pointer shadow-2xs hover:bg-[#f7f4ee] disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
  >
  Cancel
  </button>
@@ -466,7 +466,7 @@ export function ResidentIdPassModal({
  type="button"
  disabled={isUpdatingSlot}
  onClick={() => handleRemoveOccupant(selectedOccupantForModal)}
- className="h-11 sm:h-12 px-5 rounded-full bg-rose-600 hover:bg-rose-700 disabled:bg-rose-600/80 text-white text-xs sm:text-[13px] font-medium cursor-pointer shadow-md disabled:cursor-not-allowed flex items-center gap-1.5 transition-all active:scale-95"
+ className="min-h-[48px] px-5 rounded-full bg-rose-600 hover:bg-rose-700 disabled:bg-rose-600/80 text-white text-sm sm:text-base font-semibold cursor-pointer shadow-md disabled:cursor-not-allowed flex items-center gap-1.5 transition-all active:scale-95"
  >
  {isUpdatingSlot ? (
  <>
@@ -486,7 +486,7 @@ export function ResidentIdPassModal({
  type="button"
  disabled={isUpdatingSlot}
  onClick={() => setConfirmModalDelete(true)}
- className="h-11 sm:h-12 px-4.5 sm:px-5 rounded-full border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 text-xs sm:text-[13px] font-medium cursor-pointer transition-all shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+ className="min-h-[48px] px-5 rounded-full border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 text-sm sm:text-base font-semibold cursor-pointer transition-all shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
  >
  Remove Occupant
  </button>
@@ -497,7 +497,7 @@ export function ResidentIdPassModal({
  type="button"
  disabled={isUpdatingSlot}
  onClick={handleCloseOccupantModal}
- className="h-11 sm:h-12 px-5 rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-[#f7f4ee] text-xs sm:text-[13px] font-medium cursor-pointer transition-all shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+ className="min-h-[48px] px-5 rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-[#f7f4ee] text-sm sm:text-base font-semibold cursor-pointer transition-all shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
  >
  Close
  </button>
@@ -505,7 +505,7 @@ export function ResidentIdPassModal({
  type="button"
  disabled={isUpdatingSlot}
  onClick={handleStartEditFromModal}
- className="h-11 sm:h-12 px-5 rounded-full bg-[#0f766e] hover:bg-emerald-500 text-white text-xs sm:text-[13px] font-medium cursor-pointer shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+ className="min-h-[48px] px-5 rounded-full bg-[#0f766e] hover:bg-emerald-500 text-white text-sm sm:text-base font-semibold cursor-pointer shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
  >
  Edit Details
  </button>

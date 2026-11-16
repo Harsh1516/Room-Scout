@@ -25,12 +25,35 @@ export const PropertyCard = memo(function PropertyCard({
  const saved = isInWishlist(stayId);
  const pricing = getStayPricing(stay);
 
- // Check tags, facilities, or amenities dynamically
- const tags = Array.isArray(stay.tags) && stay.tags.length > 0
- ? stay.tags
- : (Array.isArray(stay.facilities) && stay.facilities.length > 0
- ? stay.facilities
- : (stay.amenities || ['Wifi', 'Attached Bath']));
+ // Resolve Gender policy / preference
+  const rawGender = stay.genderType || stay.gender || stay.targetGender || '';
+  const normalizedGender = String(rawGender).toLowerCase().trim();
+
+  let genderLabel = 'Both (Boys & Girls)';
+  let genderCategory = 'both';
+
+  if (['boys', 'male', 'boy', 'men'].includes(normalizedGender)) {
+    genderLabel = 'Boys Only';
+    genderCategory = 'boys';
+  } else if (['girls', 'female', 'girl', 'women'].includes(normalizedGender)) {
+    genderLabel = 'Girls Only';
+    genderCategory = 'girls';
+  } else if (['family', 'families'].includes(normalizedGender)) {
+    genderLabel = 'Family';
+    genderCategory = 'family';
+  } else if (['both', 'unisex', 'co-ed', 'coed', 'all'].includes(normalizedGender)) {
+    genderLabel = 'Both (Boys & Girls)';
+    genderCategory = 'both';
+  } else if (rawGender) {
+    genderLabel = rawGender;
+    genderCategory = 'custom';
+  } else if (stay.title && /bachelor|boys/i.test(stay.title)) {
+    genderLabel = 'Boys Only';
+    genderCategory = 'boys';
+  } else if (stay.title && /girls|female/i.test(stay.title)) {
+    genderLabel = 'Girls Only';
+    genderCategory = 'girls';
+  }
 
  const propertyType = stay.type || stay.propertyType || stay.category || 'PG';
 
@@ -58,108 +81,146 @@ export const PropertyCard = memo(function PropertyCard({
  return url;
  };
 
- return (
- <div
- onMouseEnter={() => onHover && onHover(stayId)}
- onMouseLeave={() => onLeave && onLeave()}
- onClick={() => onStayClick && onStayClick(stay)}
- className={`group relative cursor-pointer select-none bg-white border border-[#1f1b16]/10 rounded-xl overflow-hidden transition-colors duration-150 hover:border-[#1f1b16]/25 ${className}`}
- >
- {/* Foreground Content Stack */}
- <div className="relative z-10 flex flex-col h-full justify-between">
- {/* 1. TOP SECTION: Media Box */}
- <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#efe9df]">
- {/* Background Image */}
- <img
- src={getOptimizedImageUrl(displayImage, 640)}
- srcSet={`${getOptimizedImageUrl(displayImage, 420)} 420w, ${getOptimizedImageUrl(displayImage, 768)} 768w`}
- sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
- alt={stay.title || stay.propertyName || 'Property'}
- loading="lazy"
- decoding="async"
- className="absolute inset-0 w-full h-full object-cover"
- />
+  return (
+    <div
+      onMouseEnter={() => onHover && onHover(stayId)}
+      onMouseLeave={() => onLeave && onLeave()}
+      onClick={() => onStayClick && onStayClick(stay)}
+      className={`group relative cursor-pointer select-none bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-200 ${className}`}
+    >
+      {/* Foreground Content Stack */}
+      <div className="relative z-10 flex flex-col h-full justify-between">
+        {/* 1. TOP SECTION: Media Box */}
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#efe9df]">
+          {/* Background Image */}
+          <img
+            src={getOptimizedImageUrl(displayImage, 640)}
+            srcSet={`${getOptimizedImageUrl(displayImage, 420)} 420w, ${getOptimizedImageUrl(displayImage, 768)} 768w`}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            alt={stay.title || stay.propertyName || 'Property'}
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
 
- {/* Top-left badges */}
- <div className="absolute top-3 left-3 flex items-center gap-2">
- <span className="text-xs font-medium text-[#1f1b16] bg-white/90 px-2 py-1 rounded-md">
- {propertyType}
- </span>
- {isNewStay ? (
- <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0f766e] bg-white/90 px-2 py-1 rounded-md">
- <span className="w-1.5 h-1.5 rounded-full bg-[#0f766e]" />
- New
- </span>
- ) : (
- <span className="text-xs font-medium text-[#1f1b16] bg-white/90 px-2 py-1 rounded-md">
- {ratingText}
- </span>
- )}
- </div>
+          {/* Top-left badges: Stay Category + Gender right next to it */}
+          <div className="absolute top-3.5 left-3.5 flex items-center gap-1.5 z-10">
+            <span className="text-xs sm:text-sm font-bold text-white bg-slate-900/85 backdrop-blur-md px-2.5 py-1 rounded-md shadow-sm border border-white/20">
+              {propertyType}
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-white bg-slate-900/85 backdrop-blur-md px-2.5 py-1 rounded-md shadow-sm border border-white/20">
+              {genderCategory === 'boys' ? (
+                <svg className="w-3.5 h-3.5 text-blue-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="10" cy="14" r="5" />
+                  <line x1="19" y1="5" x2="13.6" y2="10.4" />
+                  <polyline points="15 5 19 5 19 9" />
+                </svg>
+              ) : genderCategory === 'girls' ? (
+                <svg className="w-3.5 h-3.5 text-pink-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="9" r="5" />
+                  <line x1="12" y1="14" x2="12" y2="21" />
+                  <line x1="9" y1="18" x2="15" y2="18" />
+                </svg>
+              ) : genderCategory === 'family' ? (
+                <svg className="w-3.5 h-3.5 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                  <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+              ) : (
+                <svg className="w-3.5 h-3.5 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+              )}
+              <span>{genderLabel}</span>
+            </span>
+          </div>
 
- {/* Wishlist */}
- <button
- type="button"
- onClick={(e) => {
- e.stopPropagation();
- toggleWishlist(stay);
- }}
- className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
- saved ? 'bg-[#0f766e] text-white' : 'bg-white/90 text-[#1f1b16] hover:bg-white'
- }`}
- title={saved ? 'Remove from Wishlist' : 'Save to Wishlist'}
- >
- <svg className="w-4 h-4" viewBox="0 0 24 24" fill={saved ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
- <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
- </svg>
- </button>
- </div>
+          {/* Premium Luxury Wishlist Heart Button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleWishlist(stay);
+            }}
+            className="absolute top-3.5 right-3.5 p-1 flex items-center justify-center hover:scale-115 active:scale-90 transition-transform duration-150 z-20 cursor-pointer"
+            title={saved ? 'Remove from Wishlist' : 'Save to Wishlist'}
+          >
+            <svg
+              className="w-7 h-7 sm:w-[28px] sm:h-[28px] transition-all duration-200 drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]"
+              viewBox="0 0 32 32"
+              fill={saved ? "#FF385C" : "rgba(255, 56, 92, 0.08)"}
+              stroke="#FF385C"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M16 28c7-4.73 14-10 14-17a6.98 6.98 0 0 0-7-7c-1.8 0-3.58.68-4.95 2.05L16 8.1l-2.05-2.05a6.98 6.98 0 0 0-9.9 0A6.98 6.98 0 0 0 2 11c0 7 7 12.27 14 17z" />
+            </svg>
+          </button>
 
- {/* Info */}
- <div className="p-4 space-y-2">
- <div className="flex items-center gap-1.5 text-xs text-[#7b7266]">
- <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
- <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
- <circle cx="12" cy="10" r="3" />
- </svg>
- <span className="truncate">{stay.location || stay.city || stay.address || 'Uttarakhand'}</span>
- </div>
+          {/* Bottom Overlay: Stay name on left, Rating tag on bottom right corner */}
+          <div className="absolute inset-x-0 bottom-0 pt-10 pb-3.5 px-3.5 sm:px-4 bg-gradient-to-t from-black/90 via-black/45 to-transparent flex items-end justify-between gap-2 z-10 pointer-events-none">
+            <h3 className="text-[16px] sm:text-[17px] font-bold text-white line-clamp-1 leading-tight tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">
+              {stay.title || stay.propertyName}
+            </h3>
 
- <h3 className="text-sm font-medium text-[#1f1b16] line-clamp-1 leading-snug">
- {stay.title || stay.propertyName}
- </h3>
+            {/* Rating / New tag shifted to bottom right corner of pic */}
+            <div className="shrink-0 mb-0.5 pointer-events-auto">
+              {isNewStay ? (
+                <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-white bg-emerald-600/95 backdrop-blur-md px-2.5 py-1 rounded-md shadow-sm border border-emerald-400/40">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                  New
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-white bg-slate-900/85 backdrop-blur-md px-2.5 py-1 rounded-md shadow-sm border border-white/20">
+                  <svg className="w-3.5 h-3.5 text-amber-400 fill-amber-400" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  <span>{computedRating}</span>
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
 
- <div className="flex items-center gap-1.5 flex-wrap">
- {tags.slice(0, 3).map((tag, tIdx) => (
- <span key={tIdx} className="text-xs text-[#5e554a] bg-[#efe9df] px-2 py-0.5 rounded">
- {tag}
- </span>
- ))}
- </div>
+        {/* Info Area Below Photo */}
+        <div className="p-4 sm:p-4.5 space-y-2">
+          {/* Location */}
+          <div className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-600 font-medium">
+            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            <span className="truncate">{stay.location || stay.city || stay.address || 'Uttarakhand'}</span>
+          </div>
 
- <div className="flex items-center justify-between pt-2 border-t border-[#1f1b16]/10">
- <div>
- <div className="text-xs text-[#7b7266]">Starting price</div>
- <div className="text-base font-medium text-[#1f1b16]">
- ₹{pricing.primaryPrice}
- <span className="text-xs text-[#7b7266] ml-1">{pricing.primaryUnit}</span>
- </div>
- </div>
- <button
- type="button"
- onClick={(e) => {
- e.stopPropagation();
- if (onStayClick) onStayClick(stay);
- }}
- className="text-sm font-medium px-3 py-1.5 rounded-lg bg-[#1f1b16] text-white hover:bg-[#0f766e] transition-colors cursor-pointer"
- >
- Details
- </button>
- </div>
- </div>
- </div>
- </div>
- );
+          {/* Pricing & Fully Rounded Details Button */}
+          <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-slate-100">
+            <div>
+              <div className="text-[11px] sm:text-xs font-medium text-slate-500 mb-0.5">Starting price</div>
+              <div className="text-[25px] sm:text-[28px] font-black text-[#1f1b16] tracking-tight leading-none">
+                ₹{pricing.primaryPrice}
+                <span className="text-xs sm:text-sm font-semibold text-slate-500 ml-1.5 align-baseline">{pricing.primaryUnit}</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onStayClick) onStayClick(stay);
+              }}
+              className="min-h-[44px] min-w-[98px] sm:min-w-[106px] px-6.5 sm:px-7 py-2.5 rounded-full bg-[#1f1b16] text-white font-bold text-[16px] sm:text-[17px] hover:bg-[#0f766e] transition-all cursor-pointer inline-flex items-center justify-center shadow-xs active:scale-95 shrink-0"
+            >
+              Details
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 });
 
 export default PropertyCard;

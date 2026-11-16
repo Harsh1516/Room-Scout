@@ -169,7 +169,7 @@ export function DirectUpiPaymentModal({
  <button
  type="button"
  onClick={onClose}
- className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors shrink-0"
+ className="w-11 h-11 sm:w-12 sm:h-12 rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-200/70 flex items-center justify-center transition-colors shrink-0"
  title="Close modal"
  >
  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -391,7 +391,7 @@ export function DirectUpiPaymentModal({
  }}
  placeholder="Enter 12-digit UPI reference (e.g. 430219882711)"
  required
- className="w-full px-3.5 py-2.5 rounded-xl text-xs font-mono font-semibold bg-white border border-slate-300 text-[#1f1b16] focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder:normal-case placeholder:font-sans placeholder:text-slate-400"
+ className="w-full min-h-[52px] px-4 py-3 rounded-xl text-base font-mono font-semibold bg-white border border-slate-300 text-[#1f1b16] focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder:normal-case placeholder:font-sans placeholder:text-slate-400"
  />
  <p className="text-[11px] text-slate-500 mt-1">
  {statusState === 'REJECTED'
@@ -433,7 +433,7 @@ export function DirectUpiPaymentModal({
  <button
  type="submit"
  disabled={isSubmitting || transactionRef.trim().length !== 12}
- className="w-full py-3 rounded-xl font-medium text-xs bg-[#1f1b16] hover:bg-slate-800 text-white shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+ className="w-full min-h-[52px] py-3.5 rounded-2xl font-bold text-base bg-[#1f1b16] hover:bg-slate-800 text-white shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
  >
  {isSubmitting ? (
  <>

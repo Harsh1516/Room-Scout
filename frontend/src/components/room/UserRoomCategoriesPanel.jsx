@@ -231,14 +231,14 @@ function UserCategoryRoomCarousel({
                       <span className="text-[13px] sm:text-[14px] font-extrabold text-white leading-tight tracking-wider">
                         {isCardBooked ? 'BOOKED' : 'OPEN'}
                       </span>
-                      <span className="text-[9px] sm:text-[9.5px] font-semibold text-white/70 tracking-wide mt-1">
+                      <span className="text-xs font-semibold text-white/85 tracking-wide mt-1">
                         {isMonthly ? 'This Month' : 'Today'}
                       </span>
                     </div>
 
                     {/* Center: ROOM label and Room Number */}
                     <div className="flex flex-col items-center justify-center my-auto py-0.5 text-center z-10">
-                      <span className="block text-[11px] sm:text-[12px] mb-0.5 font-bold tracking-widest text-white/80 leading-none">
+                      <span className="block text-xs mb-0.5 font-bold tracking-wider text-white/90 leading-none">
                         ROOM
                       </span>
                       <span className="block w-full text-center bg-transparent border-none outline-none p-0 leading-none text-[25px] sm:text-[28px] text-white font-black tracking-tight">
@@ -252,16 +252,16 @@ function UserCategoryRoomCarousel({
                         className="w-fit inline-flex items-center gap-1.5 px-2 py-0.5 rounded-none bg-[#0066ff] shadow-sm select-none cursor-default"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <span className="text-[9px] sm:text-[9.5px] font-bold text-white tracking-wider leading-none">
+                        <span className="text-xs font-bold text-white tracking-wider leading-none">
                           CAP
                         </span>
-                        <span className="text-[11px] sm:text-[12px] font-black text-white leading-none">
+                        <span className="text-xs font-black text-white leading-none">
                           {roomCapacity}
                         </span>
                       </div>
 
                       {!isMonthly && (
-                        <span className="text-[11px] sm:text-[12px] font-semibold text-white/90 leading-none select-none shrink-0">
+                        <span className="text-xs font-semibold text-white leading-none select-none shrink-0">
                           {roomStat.percentFull ?? (100 - roomStat.percentFree)}% Full
                         </span>
                       )}
@@ -279,14 +279,12 @@ function UserCategoryRoomCarousel({
               key={rm._id || rm.id || `dot_${dotIdx}`}
               type="button"
               onClick={(e) => scrollToItem(dotIdx, e)}
-              className={`transition-all duration-300 rounded-full cursor-pointer ${
-                activeDotIndex === dotIdx
-                  ? 'w-10 h-3 bg-[#c0c1ff]'
-                  : 'w-3 h-3 bg-white/40 hover:bg-white/60'
-              }`}
+              className="p-2 inline-flex items-center justify-center cursor-pointer"
               title={`Room ${rm.roomNumber || dotIdx + 1}`}
               aria-label={`Go to room ${rm.roomNumber || dotIdx + 1}`}
-            />
+            >
+              <span className={`transition-all duration-300 rounded-full ${activeDotIndex === dotIdx ? "w-10 h-3 bg-[#c0c1ff]" : "w-3 h-3 bg-white/40 hover:bg-white/60"}`} />
+            </button>
           ))}
         </div>
       )}

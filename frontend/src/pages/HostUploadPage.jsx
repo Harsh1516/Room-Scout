@@ -1928,7 +1928,7 @@ export function HostUploadPage() {
                           handleSelectStep(step.id);
                           setMobileNavOpen(false);
                         }}
-                        className={`w-full text-left p-3 rounded-2xl flex items-center gap-3 transition-all cursor-pointer ${
+                        className={`w-full min-h-[48px] text-left p-3.5 rounded-2xl flex items-center gap-3 transition-all cursor-pointer ${
                           isActive
                             ? 'bg-emerald-50 border border-emerald-500/30 text-emerald-950 shadow-xs font-bold'
                             : 'hover:bg-slate-100/70 border border-transparent text-slate-700'
@@ -2132,7 +2132,7 @@ export function HostUploadPage() {
                   setFieldErrors({});
                   setActiveStep((prev) => Math.max(1, prev - 1));
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 md:py-1 rounded-xl font-extrabold text-sm sm:text-base md:text-xs underline underline-offset-4 cursor-pointer active:scale-95 transition-all max-md:text-sky-900 max-md:hover:text-sky-950 font-semibold md:text-slate-800 md:hover:text-black"
+                className="flex items-center gap-1.5 min-h-[44px] px-4 py-2.5 rounded-xl font-extrabold text-base underline underline-offset-4 cursor-pointer active:scale-95 transition-all max-md:text-sky-900 max-md:hover:text-sky-950 font-semibold md:text-slate-800 md:hover:text-black"
               >
                 <ChevronLeft className="w-4 h-4 md:w-3.5 md:h-3.5" />
                 <span>Back</span>
@@ -2159,7 +2159,7 @@ export function HostUploadPage() {
               <button
                 type="button"
                 onClick={handleNextStep}
-                className="h-11 max-md:h-12 md:h-9 px-6 sm:px-8 md:px-6 rounded-full max-md:bg-gradient-to-r max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:hover:from-[#0284c7] max-md:hover:to-[#0369a1] max-md:shadow-[0_4px_16px_rgba(14,165,233,0.32)] md:bg-[#006C4A] md:hover:bg-[#005a3e] md:active:bg-[#004d35] text-white font-bold text-sm md:text-xs shadow-sm md:shadow-[#006C4A]/30 flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
+                className="min-h-[48px] sm:min-h-[52px] px-7 sm:px-8 rounded-full max-md:bg-gradient-to-r max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:hover:from-[#0284c7] max-md:hover:to-[#0369a1] max-md:shadow-[0_4px_16px_rgba(14,165,233,0.32)] md:bg-[#006C4A] md:hover:bg-[#005a3e] md:active:bg-[#004d35] text-white font-bold text-sm md:text-xs shadow-sm md:shadow-[#006C4A]/30 flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
               >
                 <span>Continue</span>
                 <ChevronRight className="w-4 h-4" />
@@ -2169,7 +2169,7 @@ export function HostUploadPage() {
                 type="button"
                 disabled={isSubmitting}
                 onClick={handleSubmit}
-                className="h-11 max-md:h-12 md:h-9 px-6 sm:px-8 md:px-6 rounded-full max-md:bg-gradient-to-r max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:hover:from-[#0284c7] max-md:hover:to-[#0369a1] max-md:shadow-[0_4px_16px_rgba(14,165,233,0.32)] md:bg-[#006C4A] md:hover:bg-[#005a3e] md:active:bg-[#004d35] text-white font-bold text-sm md:text-xs shadow-md md:shadow-[#006C4A]/30 flex items-center gap-1.5 cursor-pointer disabled:opacity-50 active:scale-95 transition-all"
+                className="min-h-[48px] sm:min-h-[52px] px-7 sm:px-8 rounded-full max-md:bg-gradient-to-r max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:hover:from-[#0284c7] max-md:hover:to-[#0369a1] max-md:shadow-[0_4px_16px_rgba(14,165,233,0.32)] md:bg-[#006C4A] md:hover:bg-[#005a3e] md:active:bg-[#004d35] text-white font-bold text-sm md:text-xs shadow-md md:shadow-[#006C4A]/30 flex items-center gap-1.5 cursor-pointer disabled:opacity-50 active:scale-95 transition-all"
               >
                 {isSubmitting ? (
                   <>

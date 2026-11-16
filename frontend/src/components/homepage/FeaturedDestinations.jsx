@@ -115,7 +115,7 @@ export function FeaturedDestinations() {
  <button
  key={tab.id}
  onClick={() => setActiveFilter(tab.id)}
- className={`px-2 py-1 sm:px-4 sm:py-2 rounded-md sm:rounded-xl text-[10px] sm:text-xs font-medium transition-all duration-200 cursor-pointer whitespace-nowrap shrink-0 select-none active:scale-95 ${
+ className={`min-h-[44px] px-3.5 py-2 sm:px-4 sm:py-2 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap shrink-0 select-none active:scale-95 ${
  isSelected
  ? 'bg-[#1f1b16] text-white shadow-sm'
  : 'text-slate-600 hover:text-[#1f1b16] hover:bg-slate-100 border border-transparent'
@@ -182,7 +182,7 @@ export function FeaturedDestinations() {
  </span>
 
  {/* Title */}
- <h3 className="text-[10px] sm:text-xs md:text-sm font-medium text-[#1f1b16] line-clamp-1 group-hover:text-[#1f1b16] transition-colors leading-snug">
+ <h3 className="text-base sm:text-lg font-bold text-[#1f1b16] line-clamp-1 group-hover:text-[#1f1b16] transition-colors leading-snug">
  {hub.name}
  </h3>
 

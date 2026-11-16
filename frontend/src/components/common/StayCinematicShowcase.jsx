@@ -501,10 +501,10 @@ export function StayCinematicShowcase({
           - Bottom blur portion: Starts right from bottom border of original photo
           - Stay name shown right from the start of the bottom blur area
          ══════════════════════════════════════════════════════════════ */}
-      <div className="relative w-full max-w-full sm:max-w-xl md:max-w-2xl mx-auto bg-[#1c1d27] text-white rounded-none rounded-b-[32px] sm:rounded-b-[40px] overflow-hidden shadow-2xl">
+      <div className="relative w-full max-w-full sm:max-w-xl md:max-w-2xl mx-auto bg-[#1c1d27] text-white rounded-t-none rounded-b-[36px] sm:rounded-b-[44px] overflow-hidden shadow-2xl">
         
-        {/* 1. ORIGINAL PHOTO CONTAINER (Completely clear, unblurred, transparent) */}
-        <div className="relative w-full h-[320px] sm:h-[380px] overflow-hidden group">
+        {/* 1. ORIGINAL PHOTO CONTAINER (Full bleed to top behind navbar) */}
+        <div className="relative w-full h-[390px] sm:h-[450px] rounded-t-none overflow-hidden group">
           <img
             src={coverImage}
             alt={fullTitle}
@@ -512,8 +512,8 @@ export function StayCinematicShowcase({
             draggable={false}
           />
 
-          {/* Top subtle frosted glass blur matching natural photo colors without black tint */}
-          <div className="absolute inset-x-0 top-0 h-20 sm:h-24 backdrop-blur-md pointer-events-none z-10 [mask-image:linear-gradient(to_bottom,black_25%,transparent)] [-webkit-mask-image:linear-gradient(to_bottom,black_25%,transparent)]" />
+          {/* Smooth dark gradient at top of photo for seamless navbar blending */}
+          <div className="absolute inset-x-0 top-0 h-36 sm:h-44 bg-gradient-to-b from-black/85 via-black/45 to-transparent pointer-events-none z-10" />
 
           {/* Smooth dark gradient at bottom of photo for title legibility */}
           <div className="absolute inset-x-0 bottom-0 h-44 sm:h-52 bg-gradient-to-t from-[#1c1d27] via-[#1c1d27]/75 to-transparent pointer-events-none z-10" />
@@ -532,7 +532,7 @@ export function StayCinematicShowcase({
           </div>
 
           {/* Stay Index Counter Badge */}
-          <div className="absolute top-20 sm:top-24 left-4 sm:left-6 z-20 pointer-events-auto">
+          <div className="absolute top-[76px] sm:top-[86px] left-3.5 sm:left-5 z-20 pointer-events-auto">
             <span className="inline-flex items-center px-6 py-2.5 sm:px-8 sm:py-3.5 rounded-full bg-black/65 backdrop-blur-md text-white font-black text-base sm:text-xl tracking-wider border-2 border-white/25 shadow-2xl">
               <span>{activeIndex + 1} / {stays.length}</span>
             </span>
@@ -630,10 +630,10 @@ export function StayCinematicShowcase({
             <div className="absolute top-3 left-3 sm:top-3.5 sm:left-3.5 z-20 pointer-events-none">
               <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-amber-400 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center shadow-2xl border-2 border-white/90 select-none">
                 {isNewStay ? (
-                  <span className="text-[11px] sm:text-xs font-black tracking-tight">NEW</span>
+                  <span className="text-xs sm:text-sm font-bold tracking-tight">NEW</span>
                 ) : (
                   <div className="flex items-center gap-0.5 leading-none">
-                    <span className="text-[10px] sm:text-xs">★</span>
+                    <span className="text-xs sm:text-sm">★</span>
                     <span className="text-xs sm:text-sm font-black">{computedRating}</span>
                   </div>
                 )}
@@ -664,7 +664,7 @@ export function StayCinematicShowcase({
           {/* Right: Line 3 & Line 4 */}
           <div className="flex-1 min-w-0 flex flex-col gap-2.5">
             {/* Line 3: Breadcrumb Category (Slate text on white) */}
-            <div className="text-base sm:text-xl md:text-2xl font-black uppercase tracking-wider text-slate-500 truncate">
+            <div className="text-base sm:text-xl md:text-2xl font-bold tracking-normal text-slate-700 truncate capitalize">
               <span>{city.toUpperCase()}, {state.toUpperCase()}</span>
             </div>
 
@@ -692,13 +692,13 @@ export function StayCinematicShowcase({
         {/* ── Other Room Configurations (Table Format: Room Type, Price per cycle, % Full) ── */}
         {roomConfigurations.length > 0 && (
           <div className="w-full rounded-3xl p-5 sm:p-6 bg-slate-50/70 border border-gray-200 shadow-2xs flex flex-col gap-3.5">
-            <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-500">
+            <span className="text-[15px] sm:text-[16px] font-black uppercase tracking-wider text-slate-800">
               room configurations
             </span>
             <div className="w-full overflow-x-auto">
               <table className="w-full text-left border-collapse border-spacing-0">
                 <thead>
-                  <tr className="border-b border-gray-200 text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-500">
+                  <tr className="border-b border-gray-200 text-[12px] sm:text-[13px] font-bold uppercase tracking-wider text-slate-500">
                     <th className="pb-3 pr-4 font-bold">room type</th>
                     <th className="pb-3 pr-4 font-bold">price</th>
                     <th className="pb-3 font-bold text-right">availability</th>
@@ -706,17 +706,17 @@ export function StayCinematicShowcase({
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {roomConfigurations.map((room, idx) => (
-                    <tr key={idx} className="text-sm sm:text-base font-semibold text-slate-800">
-                      <td className="py-3.5 pr-4 font-bold text-slate-900">
-                        <span>{room.label || 'Standard Room'}</span>{' '}
-                        <span className="text-slate-400 font-semibold text-xs sm:text-sm">({room.count || 1})</span>
+                    <tr key={idx} className="text-[15px] sm:text-[16px] font-semibold text-slate-800">
+                      <td className="py-3.5 pr-4 text-slate-900">
+                        <span className="text-[15px] sm:text-[16px] font-bold text-slate-900">{room.label || 'Standard Room'}</span>{' '}
+                        <span className="text-slate-400 font-semibold text-[13px] sm:text-[14px]">({room.count || 1})</span>
                       </td>
                       <td className="py-3.5 pr-4 text-slate-700 whitespace-nowrap">
-                        <span className="font-extrabold text-slate-900">₹{room.price}</span>{' '}
-                        <span className="text-slate-500 font-medium text-xs sm:text-sm">{room.unit}</span>
+                        <span className="text-[15px] sm:text-[16px] font-extrabold text-slate-900">₹{room.price}</span>{' '}
+                        <span className="text-slate-500 font-medium text-[13px] sm:text-[14px]">{room.unit}</span>
                       </td>
                       <td className="py-3.5 text-right whitespace-nowrap">
-                        <span className="font-black text-slate-800 text-sm sm:text-base">
+                        <span className="text-[15px] sm:text-[16px] font-black text-slate-800">
                           {room.percentFull}
                         </span>
                       </td>

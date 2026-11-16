@@ -425,7 +425,7 @@ export function UserWeeklySlotSchedule({
  type="button"
  onClick={() => handleUpdatePersonCount(currentPersonCount - 1)}
  disabled={currentPersonCount <= 1}
- className="w-6 h-6 rounded flex items-center justify-center font-medium text-xs bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+ className="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-base bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shadow-2xs"
  title="Decrease person count"
  >
  −
@@ -437,7 +437,7 @@ export function UserWeeklySlotSchedule({
  type="button"
  onClick={() => handleUpdatePersonCount(currentPersonCount + 1)}
  disabled={currentPersonCount >= effectiveMax}
- className="w-6 h-6 rounded flex items-center justify-center font-medium text-xs bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+ className="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-base bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shadow-2xs"
  title="Increase person count"
  >
  +
@@ -463,7 +463,7 @@ export function UserWeeklySlotSchedule({
  <button
  type="submit"
  disabled={submitting || selectedSlotIndices.length === 0}
- className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-xs transition-all cursor-pointer shrink-0 shadow-xs active:scale-[0.98]"
+ className="w-full sm:w-auto min-h-[50px] sm:min-h-[52px] px-8 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-base transition-all cursor-pointer shrink-0 shadow-md active:scale-[0.98]"
  >
  {submitting ? 'Sending Request...' : 'Request Booking Approval'}
  </button>

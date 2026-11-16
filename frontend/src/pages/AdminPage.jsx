@@ -680,7 +680,7 @@ export function AdminPage() {
  setPasskeyError('');
  }}
  placeholder="Enter Master Admin Passkey..."
- className="w-full px-4 py-3 rounded-2xl bg-slate-100 border border-slate-200 text-[#1f1b16] placeholder-slate-400 text-sm font-normal focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 transition-all"
+ className="w-full min-h-[52px] px-4 py-3.5 rounded-2xl bg-slate-100 border border-slate-200 text-[#1f1b16] placeholder-slate-400 text-base font-normal focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
  autoFocus
  />
 
@@ -693,7 +693,7 @@ export function AdminPage() {
  <button
  type="submit"
  disabled={isVerifyingKey || !passkeyInput.trim()}
- className="w-full py-3 px-4 rounded-2xl bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm font-normal transition-all cursor-pointer active:scale-[0.98] shadow-md shadow-purple-600/20 mt-1"
+ className="w-full min-h-[52px] py-3.5 px-4 rounded-2xl bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-base font-semibold transition-all cursor-pointer active:scale-[0.98] shadow-md shadow-purple-600/20 mt-1"
  >
  {isVerifyingKey ? 'Verifying credentials...' : 'Unlock dashboard'}
  </button>
@@ -702,7 +702,7 @@ export function AdminPage() {
  <button
  type="button"
  onClick={() => navigate('/explore')}
- className="mt-4 text-xs font-normal text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+ className="mt-4 min-h-[44px] flex items-center justify-center px-4 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
  >
  ← Return to Explore
  </button>
@@ -787,7 +787,7 @@ export function AdminPage() {
  setActiveTab('users');
  setSearchQuery('');
  }}
- className={`relative z-10 px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none font-normal transition-colors duration-150 ${
+ className={`relative z-10 px-3 sm:px-4 py-1.5 rounded-full text-sm cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none font-semibold min-h-[44px] transition-colors duration-150 ${
  activeTab === 'users'
  ? 'text-[#1f1b16]'
  : 'text-slate-600 hover:text-[#1f1b16]'
@@ -810,7 +810,7 @@ export function AdminPage() {
  </svg>
  <span className="relative z-10 tracking-tight font-normal">Users</span>
  <span
- className={`relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-normal leading-none transition-colors ${
+ className={`relative z-10 text-xs px-2 py-0.5 rounded-full font-bold leading-none transition-colors ${
  activeTab === 'users'
  ? 'bg-purple-500/15 text-purple-700'
  : 'bg-slate-200/80 text-slate-600'
@@ -827,7 +827,7 @@ export function AdminPage() {
  setActiveTab('hosts');
  setSearchQuery('');
  }}
- className={`relative z-10 px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none font-normal transition-colors duration-150 ${
+ className={`relative z-10 px-3 sm:px-4 py-1.5 rounded-full text-sm cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none font-semibold min-h-[44px] transition-colors duration-150 ${
  activeTab === 'hosts'
  ? 'text-[#1f1b16]'
  : 'text-slate-600 hover:text-[#1f1b16]'
@@ -850,7 +850,7 @@ export function AdminPage() {
  </svg>
  <span className="relative z-10 tracking-tight font-normal">Hosts</span>
  <span
- className={`relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-normal leading-none transition-colors ${
+ className={`relative z-10 text-xs px-2 py-0.5 rounded-full font-bold leading-none transition-colors ${
  activeTab === 'hosts'
  ? 'bg-purple-500/15 text-purple-700'
  : 'bg-slate-200/80 text-slate-600'
@@ -867,7 +867,7 @@ export function AdminPage() {
  setActiveTab('subscriptions');
  setSearchQuery('');
  }}
- className={`relative z-10 px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none font-normal transition-colors duration-150 ${
+ className={`relative z-10 px-3 sm:px-4 py-1.5 rounded-full text-sm cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none font-semibold min-h-[44px] transition-colors duration-150 ${
  activeTab === 'subscriptions'
  ? 'text-[#1f1b16]'
  : 'text-slate-600 hover:text-[#1f1b16]'
@@ -890,12 +890,12 @@ export function AdminPage() {
  </svg>
  <span className="relative z-10 tracking-tight font-normal">Subscriptions</span>
  {subscriptionCounts.pending > 0 ? (
- <span className="relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-normal leading-none bg-amber-500 text-[#1f1b16] ">
+ <span className="relative z-10 text-xs px-2 py-0.5 rounded-full font-bold leading-none bg-amber-500 text-[#1f1b16] ">
  {subscriptionCounts.pending}
  </span>
  ) : (
  <span
- className={`relative z-10 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-normal leading-none transition-colors ${
+ className={`relative z-10 text-xs px-2 py-0.5 rounded-full font-bold leading-none transition-colors ${
  activeTab === 'subscriptions'
  ? 'bg-purple-500/15 text-purple-700'
  : 'bg-slate-200/80 text-slate-600'
@@ -913,7 +913,7 @@ export function AdminPage() {
  setActiveTab('upi');
  setSearchQuery('');
  }}
- className={`relative z-10 px-3 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none font-normal transition-colors duration-150 ${
+ className={`relative z-10 px-3 sm:px-4 py-1.5 rounded-full text-sm cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none font-semibold min-h-[44px] transition-colors duration-150 ${
  activeTab === 'upi'
  ? 'text-[#1f1b16]'
  : 'text-slate-600 hover:text-[#1f1b16]'

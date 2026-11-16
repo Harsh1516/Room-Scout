@@ -686,7 +686,7 @@ export function AdminSubscriptionsView({
  title={card.title}
  >
  <div className="flex items-center justify-between">
- <span className="text-xs font-normal text-slate-500">
+ <span className="text-sm font-medium text-slate-700">
  {card.label}
  </span>
  <div className={`w-7 h-7 rounded-xl border flex items-center justify-center shrink-0 ${card.iconColor}`}>
@@ -696,7 +696,7 @@ export function AdminSubscriptionsView({
  <div className="text-2xl sm:text-3xl font-normal text-[#1f1b16] mt-2">
  {card.count}
  </div>
- <div className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-400 font-normal">
+ <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-600 font-medium">
  <span className={`w-1.5 h-1.5 rounded-full ${card.dotColor}`} />
  <span>{card.subText}</span>
  </div>
@@ -722,7 +722,7 @@ export function AdminSubscriptionsView({
  <button
  type="button"
  onClick={() => fileInputRef.current?.click()}
- className="px-3.5 py-1.5 rounded-xl text-xs font-normal border border-slate-200 bg-[#f7f4ee]/80 text-slate-700 hover:border-purple-500/50 hover:text-purple-500 flex items-center gap-2 shadow-xs cursor-pointer transition-all active:scale-95"
+ className="min-h-[44px] px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-200 bg-[#f7f4ee]/80 text-slate-700 hover:border-purple-500/50 hover:text-purple-500 flex items-center gap-2 shadow-xs cursor-pointer transition-all active:scale-95"
  title="Attach credit bank statement (.csv, .pdf) containing 12-digit UTR numbers"
  >
  <svg className="w-4 h-4 text-purple-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -981,7 +981,7 @@ export function AdminSubscriptionsView({
 
  {/* 4-Column Balanced Statement Reconciliation Table */}
  <div className="overflow-x-auto rounded-2xl border border-white/10 bg-[#1f1b16]/80 shadow-inner">
- <table className="w-full text-left text-xs border-collapse">
+ <table className="w-full text-left text-sm border-collapse min-w-[720px]">
  <thead className="bg-[#1f1b16]/90 text-slate-400 font-normal border-b border-white/10 text-xs select-none">
  <tr>
  <th className="py-3 px-4 sm:px-5 font-normal text-slate-300 w-[24%]">
@@ -1422,7 +1422,7 @@ export function AdminSubscriptionsView({
  </div>
  ) : (
  <div className="overflow-x-auto">
- <table className="w-full text-left text-xs border-collapse">
+ <table className="w-full text-left text-sm border-collapse min-w-[720px]">
  <thead className="bg-[#f7f4ee]/90 text-slate-500 font-normal border-b border-slate-200/80 text-xs">
  <tr>
  <th className="py-3 px-3.5 font-normal">Host & stay</th>
@@ -1723,7 +1723,7 @@ export function AdminSubscriptionsView({
 
  {/* Admin Notes */}
  <div className="flex flex-col gap-1">
- <label className="text-xs font-normal text-slate-500">
+ <label className="text-sm font-medium text-slate-700">
  Admin notes (optional):
  </label>
  <input
@@ -1892,7 +1892,7 @@ export function AdminSubscriptionsView({
 
  {/* Note */}
  <div className="flex flex-col gap-1">
- <label className="text-xs font-normal text-slate-500">Reason / note:</label>
+ <label className="text-sm font-medium text-slate-700">Reason / note:</label>
  <input
  type="text"
  value={manualNote}

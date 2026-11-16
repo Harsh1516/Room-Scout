@@ -119,110 +119,112 @@ export function HeroSection({ onSelectUpload }) {
   const duration = shouldReduceMotion ? 0 : (isMobile ? 0.35 : 0.55);
   const ease = isMobile ? [0.25, 0.1, 0.25, 1] : [0.16, 1, 0.3, 1];
 
-  return (
-    <div className="relative w-full min-h-0 lg:min-h-[calc(100vh-4rem)] flex flex-col justify-center pt-24 sm:pt-28 md:pt-32 lg:pt-36 pb-4 sm:pb-12 lg:pb-16 px-4 sm:px-8 lg:px-14 2xl:px-24 overflow-hidden">
-      {/* Mobile Subtle Background Architectural Light Diffuser */}
-      <div className="md:hidden absolute -top-16 left-1/2 -translate-x-1/2 w-80 h-56 bg-sky-200/20 -z-10 rounded-full blur-[80px] pointer-events-none" />
+  const exploreButton = (
+    <button
+      type="button"
+      onClick={() => navigate('/search')}
+      className="w-auto inline-flex items-center justify-center gap-2 py-3 px-6 sm:py-3.5 sm:px-7 min-h-[44px] sm:min-h-[48px] rounded-full bg-sky-500 hover:bg-sky-400 active:bg-sky-600 text-white font-bold text-xs sm:text-sm tracking-wider uppercase border-2 border-white/50 shadow-lg shadow-sky-500/30 backdrop-blur-xs active:scale-95 transition-all duration-150 cursor-pointer select-none group mx-auto lg:mx-0"
+    >
+      <span className="tracking-[0.14em]">
+        {stats.staysCount !== null && stats.staysCount !== undefined
+          ? `Explore ${stats.staysCount > 999 ? `${(stats.staysCount / 1000).toFixed(1)}k+` : stats.staysCount.toLocaleString()} ${stats.staysCount === 1 ? 'Stay' : 'Stays'}`
+          : 'Explore Stays'}
+      </span>
+      <svg
+        className="w-4 h-4 text-white transition-transform group-hover:translate-x-1"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2.2}
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+      </svg>
+    </button>
+  );
 
-      <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 lg:gap-10 xl:gap-16 items-center flex-1 my-0 lg:my-auto">
+  return (
+    <div className="relative w-full min-h-0 lg:min-h-[calc(100vh-4rem)] flex flex-col justify-center pt-24 sm:pt-28 md:pt-32 lg:pt-36 pb-8 sm:pb-12 lg:pb-16 px-4 sm:px-8 lg:px-14 2xl:px-24">
+      {/* ── Upper Section Wallpaper Background (Extended height so rounded corners gap is 100% filled) ── */}
+      <div 
+        aria-hidden="true" 
+        className="absolute inset-x-0 top-0 -bottom-16 sm:-bottom-24 pointer-events-none z-0 overflow-hidden"
+      >
+        {/* Full Rich Visibility Mountain Wallpaper (No white brightness haze) */}
+        <img
+          src="/mountain_hero.jpg"
+          alt="Alpine Mountain Valley Landscape"
+          className="w-full h-full object-cover object-[center_25%] md:object-[center_35%] select-none"
+        />
+      </div>
+
+      <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 lg:gap-10 xl:gap-16 items-center flex-1 my-0 lg:my-auto relative z-10">
 
         {/* ── Left Column: Staggered Headline, Subtitle, CTA Actions ── */}
-        <div className="lg:col-span-7 xl:col-span-8 space-y-3 sm:space-y-6 text-center lg:text-left flex flex-col items-center lg:items-start">
-          {/* 1. Main Architectural Headline */}
+        <div className="lg:col-span-7 xl:col-span-8 space-y-3 sm:space-y-6 text-left flex flex-col items-start w-full">
+          {/* 1. Main Architectural Headline (Alpine White) */}
           <motion.div
             initial={{ opacity: shouldReduceMotion ? 1 : 0, y: offset }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration, delay: shouldReduceMotion ? 0 : 0.05, ease }}
-            className="relative will-change-transform"
+            className="relative will-change-transform w-full text-left"
           >
-            <h1 className="max-md:text-[32px] max-md:font-bold max-md:tracking-tight max-md:leading-[1.12] max-md:mb-1 text-3xl sm:text-5xl md:text-6xl lg:text-[4rem] xl:text-[4.5rem] font-extrabold tracking-[-0.035em] leading-[1.1] select-none text-center lg:text-left">
-              <span className="block text-slate-950">
-                Find Your
+            <h1 className="text-[48px] xs:text-[52px] sm:text-6xl md:text-7xl lg:text-[4.75rem] xl:text-[5.5rem] font-extrabold tracking-[-0.035em] leading-[1.04] select-none text-left w-full mb-1">
+              <span className="block text-white text-left drop-shadow-[0_4px_18px_rgba(0,0,0,0.55)]">
+                <span className="inline-block underline decoration-1 sm:decoration-[1.5px] underline-offset-[6px] sm:underline-offset-[10px] decoration-white/80">
+                  Find Your
+                </span>
               </span>
-              <span className="block text-slate-500 font-extrabold tracking-tight">
+              <span className="block text-white/75 font-extrabold tracking-tight text-left drop-shadow-[0_4px_18px_rgba(0,0,0,0.55)]">
                 Perfect Living Space.
               </span>
             </h1>
           </motion.div>
 
-          {/* 2. Subtitle with refined editorial cadence */}
-          <motion.p
-            initial={{ opacity: shouldReduceMotion ? 1 : 0, y: offset }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration, delay: shouldReduceMotion ? 0 : (isMobile ? 0.12 : 0.18), ease }}
-            className="max-md:text-[13px] max-md:leading-relaxed max-md:text-slate-600 max-md:max-w-[320px] max-md:mx-auto max-md:mb-3 max-md:font-normal text-base sm:text-lg md:text-xl text-slate-600 max-w-xl font-normal leading-relaxed tracking-normal text-center lg:text-left will-change-transform"
-          >
-            Curated student PGs, serviced flats, and serene homestays. Book transparently directly with verified property owners — <span className="font-semibold text-slate-900">zero middlemen, zero commissions.</span>
-          </motion.p>
-
-          {/* 3. Quick CTA Action Cluster */}
+          {/* Desktop CTA Action Button (Shown on desktop lg+) */}
           <motion.div
             initial={{ opacity: shouldReduceMotion ? 1 : 0, y: offset }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration, delay: shouldReduceMotion ? 0 : (isMobile ? 0.2 : 0.3), ease }}
-            className="flex flex-col items-center lg:items-start gap-2 sm:gap-4 pt-1 sm:pt-2 will-change-transform w-full"
+            transition={{ duration, delay: shouldReduceMotion ? 0 : 0.25, ease }}
+            className="hidden lg:flex flex-col items-start gap-4 pt-1 sm:pt-2 will-change-transform w-full"
           >
-            {/* Primary Button: Explore Stays */}
-            <button
-              type="button"
-              onClick={() => navigate('/search')}
-              className="max-md:w-full max-md:max-w-[290px] max-md:py-3.5 max-md:px-6 max-md:rounded-full max-md:bg-[#0B0B0B] max-md:hover:bg-[#1A1A1A] max-md:text-white max-md:font-bold max-md:text-[11px] max-md:tracking-widest max-md:uppercase max-md:shadow-md max-md:active:scale-[0.97] inline-flex items-center justify-center gap-2.5 px-6 py-3.5 sm:px-8 sm:py-4 rounded-2xl bg-slate-950 text-white font-semibold text-xs sm:text-sm tracking-wider uppercase hover:opacity-90 active:scale-95 transition-transform duration-150 cursor-pointer select-none shadow-sm group mx-auto lg:mx-0"
-            >
-              <span className="max-md:tracking-[0.14em]">
-                {stats.staysCount !== null && stats.staysCount !== undefined
-                  ? `Explore ${stats.staysCount > 999 ? `${(stats.staysCount / 1000).toFixed(1)}k+` : stats.staysCount.toLocaleString()} ${stats.staysCount === 1 ? 'Stay' : 'Stays'}`
-                  : 'Explore Stays'}
-              </span>
-              <svg
-                className="w-3.5 h-3.5 max-md:text-white transition-transform group-hover:translate-x-1"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </button>
-            <span className="md:hidden text-[10px] text-slate-500 font-medium tracking-wide">
-              100% Physically Audited &amp; 3D Mapped
-            </span>
+            {exploreButton}
           </motion.div>
         </div>
 
         {/* ── Right Column: Staggered Metric Cards (Mobile: 3-column TrustStatsBar from design) ── */}
         <div className="lg:col-span-5 xl:col-span-4 w-full pt-1 lg:pt-0">
-          <div className="max-md:grid max-md:grid-cols-3 max-md:gap-1 max-md:bg-white max-md:p-3.5 max-md:rounded-3xl max-md:border max-md:border-slate-200/90 max-md:shadow-[0_4px_20px_rgba(0,0,0,0.04)] md:grid md:grid-cols-2 lg:flex lg:flex-col gap-2.5 sm:gap-3.5 w-full max-w-md lg:max-w-[320px] xl:max-w-[340px] mx-auto lg:ml-auto lg:mr-0">
+          <div className="max-md:grid max-md:grid-cols-3 max-md:gap-3 max-md:bg-white/75 max-md:backdrop-blur-2xl max-md:p-2.5 sm:max-md:p-3.5 max-md:rounded-3xl max-md:border max-md:border-white/90 max-md:shadow-[0_12px_32px_rgba(0,0,0,0.08)] md:grid md:grid-cols-2 lg:flex lg:flex-col gap-2.5 sm:gap-3.5 w-full max-w-md lg:max-w-[320px] xl:max-w-[340px] mx-auto lg:ml-auto lg:mr-0">
             {/* Metric Item 1: Verified Stays */}
             <motion.div
               initial={{ opacity: shouldReduceMotion ? 1 : 0, y: offset }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration, delay: shouldReduceMotion ? 0 : (isMobile ? 0.15 : 0.28), ease }}
-              className="text-center px-1 max-md:flex max-md:flex-col max-md:items-center max-md:justify-center p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl md:bg-white/70 md:backdrop-blur-xl md:border md:border-slate-200/70 md:hover:border-slate-300 md:shadow-xs transition-colors duration-150 will-change-transform"
+              className="text-center px-1 max-md:flex max-md:flex-col max-md:items-center max-md:justify-center p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl md:bg-white/75 md:backdrop-blur-xl md:border md:border-white/90 md:shadow-[0_8px_24px_rgba(0,0,0,0.06)] transition-all duration-150 will-change-transform"
             >
               <div className="max-md:text-lg max-md:font-extrabold max-md:text-slate-950 max-md:tracking-tight text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 tracking-tight">
                 {stats.staysCount !== null && stats.staysCount !== undefined ? (
                   stats.staysCount > 999 ? `${(stats.staysCount / 1000).toFixed(1)}k+` : stats.staysCount.toLocaleString()
                 ) : (
-                  <span className="opacity-40 animate-pulse">—</span>
+                  <span className="opacity-40 animate-pulse text-slate-400">—</span>
                 )}
               </div>
-              <div className="max-md:text-[9.5px] max-md:uppercase max-md:tracking-wider max-md:font-semibold max-md:text-[#6B6B6B] max-md:mt-0.5 text-xs sm:text-xs text-slate-600 font-medium mt-0.5">
+              <div className="text-xs sm:text-sm text-slate-600 font-semibold mt-0.5">
                 Verified Stays
               </div>
             </motion.div>
 
-            {/* Metric Item 2: Brokerage Fees */}
+            {/* Metric Item 2: Commissions (Centered - Subtle Glass Inset) */}
             <motion.div
               initial={{ opacity: shouldReduceMotion ? 1 : 0, y: offset }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration, delay: shouldReduceMotion ? 0 : (isMobile ? 0.22 : 0.38), ease }}
-              className="text-center px-1 max-md:border-x max-md:border-slate-200/80 max-md:flex max-md:flex-col max-md:items-center max-md:justify-center p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl md:bg-white/70 md:backdrop-blur-xl md:border md:border-slate-200/70 md:hover:border-slate-300 md:shadow-xs transition-colors duration-150 will-change-transform"
+              className="text-center px-1 max-md:flex max-md:flex-col max-md:items-center max-md:justify-center p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-white/95 border border-slate-200/90 shadow-xs backdrop-blur-xl transition-all duration-150 will-change-transform"
             >
-              <div className="max-md:text-lg max-md:font-bold text-emerald-600 max-md:tracking-tight text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">
+              <div className="max-md:text-lg max-md:font-extrabold text-emerald-600 max-md:tracking-tight text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">
                 0%
               </div>
-              <div className="max-md:text-[9.5px] max-md:uppercase max-md:tracking-wider max-md:font-semibold max-md:text-[#6B6B6B] max-md:mt-0.5 text-xs sm:text-xs text-slate-600 font-medium mt-0.5">
-                Brokerage Fee
+              <div className="text-xs sm:text-sm text-slate-700 font-semibold mt-0.5">
+                Commission
               </div>
             </motion.div>
 
@@ -231,20 +233,30 @@ export function HeroSection({ onSelectUpload }) {
               initial={{ opacity: shouldReduceMotion ? 1 : 0, y: offset }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration, delay: shouldReduceMotion ? 0 : (isMobile ? 0.28 : 0.46), ease }}
-              className="text-center px-1 max-md:flex max-md:flex-col max-md:items-center max-md:justify-center p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl md:bg-white/70 md:backdrop-blur-xl md:border md:border-slate-200/70 md:hover:border-slate-300 md:shadow-xs transition-colors duration-150 will-change-transform md:col-span-2 lg:col-span-1"
+              className="text-center px-1 max-md:flex max-md:flex-col max-md:items-center max-md:justify-center p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl md:bg-white/75 md:backdrop-blur-xl md:border md:border-white/90 md:shadow-[0_8px_24px_rgba(0,0,0,0.06)] transition-all duration-150 will-change-transform md:col-span-2 lg:col-span-1"
             >
               <div className="max-md:text-lg max-md:font-extrabold max-md:text-slate-950 max-md:tracking-tight text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-950 tracking-tight">
                 {stats.onlineUsersBooked !== null && stats.onlineUsersBooked !== undefined ? (
                   stats.onlineUsersBooked > 999 ? `${(stats.onlineUsersBooked / 1000).toFixed(1)}k+` : stats.onlineUsersBooked.toLocaleString()
                 ) : (
-                  <span className="opacity-40 animate-pulse">—</span>
+                  <span className="opacity-40 animate-pulse text-slate-400">—</span>
                 )}
               </div>
-              <div className="max-md:text-[9.5px] max-md:uppercase max-md:tracking-wider max-md:font-semibold max-md:text-[#6B6B6B] max-md:mt-0.5 text-xs sm:text-xs text-slate-600 font-medium mt-0.5">
+              <div className="text-xs sm:text-sm text-slate-600 font-semibold mt-0.5">
                 Happy Residents
               </div>
             </motion.div>
           </div>
+
+          {/* Mobile CTA Action Button (Exchanged Position: Directly Below Metric Section) */}
+          <motion.div
+            initial={{ opacity: shouldReduceMotion ? 1 : 0, y: offset }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration, delay: shouldReduceMotion ? 0 : (isMobile ? 0.35 : 0.45), ease }}
+            className="lg:hidden w-full flex justify-center pt-6 sm:pt-8 pb-2 sm:pb-3 relative z-20"
+          >
+            {exploreButton}
+          </motion.div>
         </div>
 
       </div>

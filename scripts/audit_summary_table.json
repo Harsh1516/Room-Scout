@@ -1,0 +1,472 @@
+[
+  {
+    "file": "components/admin/AdminSubscriptionsView.jsx",
+    "issues": "76x sub-14px font (text-xs); 4x small tap target (w-4 h-4, p-1); 23x low contrast text",
+    "count": 103
+  },
+  {
+    "file": "pages/BookingDetailsPage.jsx",
+    "issues": "52x sub-14px font (text-xs); 32x low contrast text",
+    "count": 84
+  },
+  {
+    "file": "pages/HostSubscriptionBuyPage.jsx",
+    "issues": "35x sub-14px font (text-xs); 19x low contrast text; 7x ALL-CAPS wide tracking",
+    "count": 61
+  },
+  {
+    "file": "components/host/paid/PaidUsersList.jsx",
+    "issues": "34x sub-14px font (text-xs); 3x small tap target (w-7 h-7, w-8 h-8); 13x low contrast text",
+    "count": 50
+  },
+  {
+    "file": "components/host/CheckInVerificationModal.jsx",
+    "issues": "25x sub-14px font (text-xs); 4x small tap target (p-1); 19x low contrast text",
+    "count": 48
+  },
+  {
+    "file": "pages/AccountPage.jsx",
+    "issues": "37x sub-14px font (text-xs); 8x low contrast text",
+    "count": 45
+  },
+  {
+    "file": "pages/AdminPage.jsx",
+    "issues": "32x sub-14px font (text-xs); 12x low contrast text",
+    "count": 44
+  },
+  {
+    "file": "components/room/PropertyOverviewSection.jsx",
+    "issues": "25x sub-14px font (text-xs, text-xs, text-xs); 8x low contrast text; 5x ALL-CAPS wide tracking",
+    "count": 38
+  },
+  {
+    "file": "components/host/schedule/ResidentIdPassModal.jsx",
+    "issues": "29x sub-14px font (text-xs); 1x small tap target (h-8); 7x low contrast text",
+    "count": 37
+  },
+  {
+    "file": "pages/PlatformPaymentSettingsPage.jsx",
+    "issues": "25x sub-14px font (text-xs); 9x low contrast text",
+    "count": 34
+  },
+  {
+    "file": "components/PropertyModal.jsx",
+    "issues": "20x sub-14px font (text-xs); 13x low contrast text",
+    "count": 33
+  },
+  {
+    "file": "components/admin/AdminUsersTable.jsx",
+    "issues": "23x sub-14px font (text-xs); 7x low contrast text",
+    "count": 30
+  },
+  {
+    "file": "components/host/property/PropertyLocationTab.jsx",
+    "issues": "12x sub-14px font (text-xs); 18x low contrast text",
+    "count": 30
+  },
+  {
+    "file": "components/room/UserWeeklySlotSchedule.jsx",
+    "issues": "20x sub-14px font (text-xs); 2x small tap target (w-6 h-6); 8x low contrast text",
+    "count": 30
+  },
+  {
+    "file": "components/admin/AdminHostsTable.jsx",
+    "issues": "17x sub-14px font (text-xs); 3x small tap target (w-4 h-4); 9x low contrast text",
+    "count": 29
+  },
+  {
+    "file": "pages/HostSubscriptionPage.jsx",
+    "issues": "16x sub-14px font (text-xs); 10x low contrast text; 3x ALL-CAPS wide tracking",
+    "count": 29
+  },
+  {
+    "file": "components/BookingModal.jsx",
+    "issues": "20x sub-14px font (text-xs); 7x low contrast text",
+    "count": 27
+  },
+  {
+    "file": "components/payment/DirectUpiPaymentModal.jsx",
+    "issues": "19x sub-14px font (text-xs); 6x low contrast text",
+    "count": 25
+  },
+  {
+    "file": "pages/DataPage.jsx",
+    "issues": "15x sub-14px font (text-xs); 1x small tap target (w-8 h-8); 9x low contrast text",
+    "count": 25
+  },
+  {
+    "file": "components/host/upload/UploadPerksRulesTab.jsx",
+    "issues": "6x sub-14px font (text-xs); 8x small tap target (w-5 h-5); 10x low contrast text",
+    "count": 24
+  },
+  {
+    "file": "components/LoginModal.jsx",
+    "issues": "7x sub-14px font (text-xs); 2x small tap target (w-7 h-7, w-4 h-4); 15x low contrast text",
+    "count": 24
+  },
+  {
+    "file": "components/BookedPlacesDrawer.jsx",
+    "issues": "7x sub-14px font (text-xs); 2x small tap target (w-7 h-7, w-5 h-5); 14x low contrast text",
+    "count": 23
+  },
+  {
+    "file": "components/host/HostRoomCategories.jsx",
+    "issues": "11x sub-14px font (text-xs, text-xs, text-xs); 3x small tap target (w-6 h-6, w-8 h-8); 8x low contrast text",
+    "count": 22
+  },
+  {
+    "file": "components/host/upload/UploadBasicsTab.jsx",
+    "issues": "14x sub-14px font (text-xs, text-xs, text-xs); 6x low contrast text; 2x ALL-CAPS wide tracking",
+    "count": 22
+  },
+  {
+    "file": "components/host/schedule/HostBookingForm.jsx",
+    "issues": "4x sub-14px font (text-xs); 17x low contrast text",
+    "count": 21
+  },
+  {
+    "file": "components/host/HostPaymentVerificationModal.jsx",
+    "issues": "14x sub-14px font (text-xs); 1x small tap target (p-1); 4x low contrast text",
+    "count": 19
+  },
+  {
+    "file": "components/host/property/PropertyPhotosTab.jsx",
+    "issues": "12x sub-14px font (text-xs); 1x small tap target (p-1); 6x low contrast text",
+    "count": 19
+  },
+  {
+    "file": "components/host/upload/UploadLocationTab.jsx",
+    "issues": "9x sub-14px font (text-xs); 10x low contrast text",
+    "count": 19
+  },
+  {
+    "file": "components/host/property/PropertyOverviewTab.jsx",
+    "issues": "11x sub-14px font (text-xs); 6x low contrast text",
+    "count": 17
+  },
+  {
+    "file": "components/host/PropertyDetailsSection.jsx",
+    "issues": "14x sub-14px font (text-xs); 3x low contrast text",
+    "count": 17
+  },
+  {
+    "file": "components/host/schedule/HostScheduleCalendar.jsx",
+    "issues": "10x sub-14px font (text-xs); 7x low contrast text",
+    "count": 17
+  },
+  {
+    "file": "components/navbar/Login.jsx",
+    "issues": "13x sub-14px font (text-xs); 4x low contrast text",
+    "count": 17
+  },
+  {
+    "file": "components/host/property/PropertyRulesTab.jsx",
+    "issues": "6x sub-14px font (text-xs); 1x small tap target (p-1); 8x low contrast text; 1x ALL-CAPS wide tracking",
+    "count": 16
+  },
+  {
+    "file": "components/homepage/HostRevenueCalculator.jsx",
+    "issues": "15x sub-14px font (text-xs)",
+    "count": 15
+  },
+  {
+    "file": "components/host/upload/UploadPhotosTab.jsx",
+    "issues": "7x sub-14px font (text-xs); 2x small tap target (w-7, h-7); 6x low contrast text",
+    "count": 15
+  },
+  {
+    "file": "components/common/StayCinematicShowcase.jsx",
+    "issues": "8x sub-14px font (text-xs); 2x low contrast text; 3x ALL-CAPS wide tracking",
+    "count": 13
+  },
+  {
+    "file": "pages/HostRoomsPage.jsx",
+    "issues": "10x sub-14px font (text-xs); 1x small tap target (w-6 h-6); 2x low contrast text",
+    "count": 13
+  },
+  {
+    "file": "components/homepage/HomepageFooter.jsx",
+    "issues": "9x sub-14px font (text-xs); 3x ALL-CAPS wide tracking",
+    "count": 12
+  },
+  {
+    "file": "components/host/property/PropertyFacilitiesTab.jsx",
+    "issues": "4x sub-14px font (text-xs); 7x low contrast text; 1x ALL-CAPS wide tracking",
+    "count": 12
+  },
+  {
+    "file": "components/WishlistDrawer.jsx",
+    "issues": "2x sub-14px font (text-xs); 2x small tap target (w-7 h-7, w-5 h-5); 8x low contrast text",
+    "count": 12
+  },
+  {
+    "file": "components/host/HostPaymentSettingsSection.jsx",
+    "issues": "8x sub-14px font (text-xs); 3x low contrast text",
+    "count": 11
+  },
+  {
+    "file": "components/host/schedule/HostOccupantsList.jsx",
+    "issues": "5x sub-14px font (text-xs); 5x small tap target (h-8, w-6 h-6, h-7); 1x low contrast text",
+    "count": 11
+  },
+  {
+    "file": "pages/HostUploadPage.jsx",
+    "issues": "9x sub-14px font (text-xs, text-xs, text-xs); 1x small tap target (w-8 h-8); 1x ALL-CAPS wide tracking",
+    "count": 11
+  },
+  {
+    "file": "components/host/tabs/HostRoomsTab.jsx",
+    "issues": "6x sub-14px font (text-xs); 4x low contrast text",
+    "count": 10
+  },
+  {
+    "file": "components/room/UserGuestConfirmationCard.jsx",
+    "issues": "6x sub-14px font (text-xs); 4x low contrast text",
+    "count": 10
+  },
+  {
+    "file": "components/homepage/VerificationPipeline.jsx",
+    "issues": "9x sub-14px font (text-xs)",
+    "count": 9
+  },
+  {
+    "file": "components/host/HostDashboardNavbar.jsx",
+    "issues": "3x sub-14px font (text-xs); 6x low contrast text",
+    "count": 9
+  },
+  {
+    "file": "components/host/visited/VisitedCategoriesPanel.jsx",
+    "issues": "5x sub-14px font (text-xs); 4x low contrast text",
+    "count": 9
+  },
+  {
+    "file": "components/host/visited/VisitedRequestsView.jsx",
+    "issues": "5x sub-14px font (text-xs); 2x small tap target (w-7 h-7); 2x low contrast text",
+    "count": 9
+  },
+  {
+    "file": "components/MapPickerModal.jsx",
+    "issues": "8x sub-14px font (text-xs); 1x small tap target (w-7 h-7)",
+    "count": 9
+  },
+  {
+    "file": "components/homepage/LeftPropertiesPanel.jsx",
+    "issues": "2x sub-14px font (text-xs); 1x small tap target (w-7 h-7); 5x low contrast text",
+    "count": 8
+  },
+  {
+    "file": "components/host/HostCategoryMediaFeatures.jsx",
+    "issues": "1x small tap target (w-4 h-4); 7x low contrast text",
+    "count": 8
+  },
+  {
+    "file": "components/host/visited/VisitedGuestCard.jsx",
+    "issues": "5x sub-14px font (text-xs); 2x small tap target (w-5 h-5, w-6 h-6); 1x low contrast text",
+    "count": 8
+  },
+  {
+    "file": "components/common/PropertyCard.jsx",
+    "issues": "7x sub-14px font (text-xs)",
+    "count": 7
+  },
+  {
+    "file": "components/host/property/PropertyDescriptionTab.jsx",
+    "issues": "4x sub-14px font (text-xs); 3x low contrast text",
+    "count": 7
+  },
+  {
+    "file": "components/host/upload/UploadRoomsPricingTab.jsx",
+    "issues": "5x sub-14px font (text-xs); 2x low contrast text",
+    "count": 7
+  },
+  {
+    "file": "components/host/visited/VisitedSubNavbar.jsx",
+    "issues": "7x sub-14px font (text-xs)",
+    "count": 7
+  },
+  {
+    "file": "components/room/PaymentCountdownBanner.jsx",
+    "issues": "7x sub-14px font (text-xs)",
+    "count": 7
+  },
+  {
+    "file": "components/room/PropertyRoomCategoriesCard.jsx",
+    "issues": "6x sub-14px font (text-xs); 1x ALL-CAPS wide tracking",
+    "count": 7
+  },
+  {
+    "file": "pages/SearchResultsPage.jsx",
+    "issues": "6x sub-14px font (text-xs); 1x small tap target (w-7 h-7)",
+    "count": 7
+  },
+  {
+    "file": "components/homepage/FeaturedDestinations.jsx",
+    "issues": "5x sub-14px font (text-xs); 1x small tap target (p-1)",
+    "count": 6
+  },
+  {
+    "file": "components/navbar/controls/WhereControl.jsx",
+    "issues": "4x sub-14px font (text-xs); 2x low contrast text",
+    "count": 6
+  },
+  {
+    "file": "pages/NotFoundPage.jsx",
+    "issues": "4x sub-14px font (text-xs); 2x low contrast text",
+    "count": 6
+  },
+  {
+    "file": "components/homepage/HeroSection.jsx",
+    "issues": "4x sub-14px font (text-xs, text-xs, text-xs); 1x ALL-CAPS wide tracking",
+    "count": 5
+  },
+  {
+    "file": "components/host/property/PropertyTabHeaderActions.jsx",
+    "issues": "4x sub-14px font (text-xs); 1x small tap target (h-8)",
+    "count": 5
+  },
+  {
+    "file": "components/navbar/controls/WhenControl.jsx",
+    "issues": "5x sub-14px font (text-xs)",
+    "count": 5
+  },
+  {
+    "file": "components/room/PropertyMediaSection.jsx",
+    "issues": "3x sub-14px font (text-xs); 1x small tap target (w-8 h-8); 1x low contrast text",
+    "count": 5
+  },
+  {
+    "file": "pages/Homepage.jsx",
+    "issues": "5x sub-14px font (text-xs)",
+    "count": 5
+  },
+  {
+    "file": "components/homepage/Categories.jsx",
+    "issues": "4x sub-14px font (text-xs)",
+    "count": 4
+  },
+  {
+    "file": "components/host/schedule/MonthOccupantsListModal.jsx",
+    "issues": "3x sub-14px font (text-xs); 1x low contrast text",
+    "count": 4
+  },
+  {
+    "file": "components/host/visited/RoomCategoryCarousel.jsx",
+    "issues": "3x small tap target (p-1, w-5 h-5); 1x low contrast text",
+    "count": 4
+  },
+  {
+    "file": "components/room/UserMonthlySlotCard.jsx",
+    "issues": "2x sub-14px font (text-xs); 1x low contrast text; 1x ALL-CAPS wide tracking",
+    "count": 4
+  },
+  {
+    "file": "components/room/UserRoomCards.jsx",
+    "issues": "2x sub-14px font (text-xs); 2x small tap target (w-5 h-5)",
+    "count": 4
+  },
+  {
+    "file": "components/common/ErrorBoundary.jsx",
+    "issues": "3x sub-14px font (text-xs)",
+    "count": 3
+  },
+  {
+    "file": "components/homepage/RecentlyAdded.jsx",
+    "issues": "2x sub-14px font (text-xs, text-xs, text-xs); 1x low contrast text",
+    "count": 3
+  },
+  {
+    "file": "components/host/HostRoomCardItem.jsx",
+    "issues": "1x small tap target (w-5 h-5); 2x low contrast text",
+    "count": 3
+  },
+  {
+    "file": "components/host/property/PropertyTelemetryModal.jsx",
+    "issues": "2x sub-14px font (text-xs); 1x small tap target (w-8 h-8)",
+    "count": 3
+  },
+  {
+    "file": "components/navbar/Console.jsx",
+    "issues": "2x sub-14px font (text-xs); 1x small tap target (w-8 h-8)",
+    "count": 3
+  },
+  {
+    "file": "components/room/UserPropertyInfoCard.jsx",
+    "issues": "3x sub-14px font (text-xs)",
+    "count": 3
+  },
+  {
+    "file": "components/admin/HostRoomsDropdown.jsx",
+    "issues": "1x sub-14px font (text-xs); 1x low contrast text",
+    "count": 2
+  },
+  {
+    "file": "components/common/IntroPreloader.jsx",
+    "issues": "1x sub-14px font (text-xs); 1x low contrast text",
+    "count": 2
+  },
+  {
+    "file": "components/host/HostUploadTabs.jsx",
+    "issues": "2x sub-14px font (text-xs)",
+    "count": 2
+  },
+  {
+    "file": "components/MapLocationPicker.jsx",
+    "issues": "1x sub-14px font (text-xs); 1x small tap target (h-8)",
+    "count": 2
+  },
+  {
+    "file": "components/navbar/controls/WhatControl.jsx",
+    "issues": "2x sub-14px font (text-xs)",
+    "count": 2
+  },
+  {
+    "file": "components/room/UserRoomCategoriesPanel.jsx",
+    "issues": "1x sub-14px font (text-xs); 1x low contrast text",
+    "count": 2
+  },
+  {
+    "file": "pages/HostDashboardPage.jsx",
+    "issues": "1x sub-14px font (text-xs); 1x low contrast text",
+    "count": 2
+  },
+  {
+    "file": "pages/PropertyDetailPage.jsx",
+    "issues": "2x sub-14px font (text-xs)",
+    "count": 2
+  },
+  {
+    "file": "App.jsx",
+    "issues": "1x low contrast text",
+    "count": 1
+  },
+  {
+    "file": "components/common/PersonOccupancyGrid.jsx",
+    "issues": "1x low contrast text",
+    "count": 1
+  },
+  {
+    "file": "components/navbar/controls/WhoControl.jsx",
+    "issues": "1x sub-14px font (text-xs)",
+    "count": 1
+  },
+  {
+    "file": "components/navbar/Left.jsx",
+    "issues": "1x sub-14px font (text-xs)",
+    "count": 1
+  },
+  {
+    "file": "components/SearchInteractiveMap.jsx",
+    "issues": "1x sub-14px font (text-xs)",
+    "count": 1
+  },
+  {
+    "file": "context/ToastContext.jsx",
+    "issues": "1x sub-14px font (text-xs)",
+    "count": 1
+  },
+  {
+    "file": "pages/RoomAvailabilityPage.jsx",
+    "issues": "1x sub-14px font (text-xs)",
+    "count": 1
+  }
+]

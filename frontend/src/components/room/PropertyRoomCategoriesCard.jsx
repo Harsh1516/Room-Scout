@@ -157,14 +157,14 @@ export function PropertyRoomCategoriesCard({
 
         {/* 1. Category selector */}
         {hasRoomRates && roomRates.length > 1 && (
-          <div className="relative space-y-3">
-            {/* Title (2x) */}
-            <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white drop-shadow-sm">
+          <div className="relative space-y-4 sm:space-y-5">
+            {/* Title (24px bold centered, matching LeftPropertiesPanel "Properties") */}
+            <h3 className="text-[24px] font-bold tracking-tight text-white leading-none text-center drop-shadow-sm">
               Select Room Type
             </h3>
 
-            {/* Pill category buttons (2x) */}
-            <div className="flex flex-wrap gap-2.5">
+            {/* Pill category buttons (comfortable spacing & gap) */}
+            <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
               {roomRates.map((rate, idx) => {
                 const isSelected = selectedRateIdx === idx;
                 return (
@@ -172,11 +172,7 @@ export function PropertyRoomCategoriesCard({
                     key={idx}
                     type="button"
                     onClick={() => onSelectRateIdx?.(idx)}
-                    className={`px-6 py-3 rounded-full text-sm sm:text-base font-bold tracking-tight cursor-pointer select-none outline-none transition-colors duration-150 ${
-                      isSelected
-                        ? 'bg-white text-blue-700 shadow-md'
-                        : 'bg-white/20 hover:bg-white/30 text-white border border-white/30'
-                    }`}
+                    className={`h-[38px] sm:h-[40px] px-4 sm:px-4.5 rounded-full text-[13px] sm:text-[14px] font-semibold tracking-tight cursor-pointer select-none outline-none transition-all duration-150 inline-flex items-center justify-center active:scale-95 ${isSelected ? "bg-white text-blue-900 border-2 border-white shadow-md ring-2 ring-blue-400/40" : "bg-white/25 hover:bg-white/35 text-white border-2 border-white/40 shadow-xs"}`}
                   >
                     {rate.type || `Type ${idx + 1}`}
                   </button>
@@ -189,21 +185,34 @@ export function PropertyRoomCategoriesCard({
         {/* 2. Price display with View Room Pic button on the right side */}
         <div className="relative bg-white/25 backdrop-blur-md rounded-3xl px-5 py-4 sm:px-7 sm:py-5 min-h-[76px] sm:min-h-[88px] flex items-center justify-between gap-3 shadow-inner border-2 border-white/40">
           <div className="flex items-baseline gap-2 min-w-0">
-            <span className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight drop-shadow-xs">
+            <span className="text-[28px] sm:text-[32px] md:text-4xl font-extrabold text-white tracking-tight drop-shadow-xs">
               {displayExactPrice}
             </span>
-            <span className="text-sm sm:text-base md:text-lg font-bold text-blue-100 tracking-normal whitespace-nowrap">
+            <span className="text-base sm:text-lg font-semibold text-white/95 tracking-normal whitespace-nowrap">
               {displayExactUnit}
             </span>
           </div>
 
-          {/* View Room Pic button console: Deep Midnight Navy, 2x height, highly readable text size, fully rounded */}
+          {/* View Room Pic button matching View Full button settings */}
           <button
             type="button"
             onClick={() => setShowPicsModal(true)}
-            className="w-auto shrink-0 inline-flex items-center justify-center px-4 sm:px-6 py-3.5 sm:py-4 rounded-full bg-[#0f172a] hover:bg-[#1e293b] active:scale-95 text-white font-extrabold text-sm sm:text-base border-2 border-white/25 shadow-[0_8px_20px_rgba(15,23,42,0.35)] cursor-pointer transition-all duration-150 select-none group"
+            className="w-auto shrink-0 inline-flex items-center gap-2 h-[36px] sm:h-[38px] px-4 sm:px-4.5 rounded-full bg-slate-950/80 hover:bg-slate-950 text-white text-xs sm:text-[13px] font-medium tracking-tight shadow-[0_2px_14px_rgba(0,0,0,0.35)] backdrop-blur-md border border-white/25 transition-all duration-200 cursor-pointer active:scale-95 hover:scale-105 select-none"
             title="View Room Photos"
           >
+            <svg
+              className="w-3.5 h-3.5 text-white stroke-[2]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="15 3 21 3 21 9" />
+              <polyline points="9 21 3 21 3 15" />
+              <line x1="21" y1="3" x2="14" y2="10" />
+              <line x1="3" y1="21" x2="10" y2="14" />
+            </svg>
             <span className="whitespace-nowrap tracking-tight">View Room Pic</span>
           </button>
         </div>
@@ -212,10 +221,10 @@ export function PropertyRoomCategoriesCard({
         {categoryFacilities.length > 0 && (
           <div className="space-y-2 pt-0.5">
             <div className="flex items-center justify-between text-xs sm:text-sm font-bold tracking-tight text-white/95">
-              <span className="uppercase tracking-wider text-[11px] sm:text-xs text-blue-100 font-extrabold flex items-center gap-1.5">
+              <span className="uppercase tracking-wider text-sm sm:text-[15px] text-white font-bold flex items-center gap-1.5">
                 Room Facilities
               </span>
-              <span className="text-[11px] sm:text-xs text-blue-100/80 font-medium">
+              <span className="text-sm sm:text-[15px] text-white/90 font-semibold">
                 {categoryFacilities.length} items
               </span>
             </div>
@@ -225,12 +234,12 @@ export function PropertyRoomCategoriesCard({
               {categoryFacilities.map((facility, fIdx) => (
                 <div
                   key={fIdx}
-                  className="flex items-center px-4 py-2.5 sm:py-3 text-white text-xs sm:text-sm font-bold select-none hover:bg-white/10 transition-colors"
+                  className="flex items-center min-h-[52px] px-4 py-3 text-white text-base font-medium select-none hover:bg-white/10 transition-colors"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="w-5 h-5 rounded-md bg-white/20 flex items-center justify-center shrink-0 border border-white/30">
+                    <span className="w-6 h-6 rounded-md bg-white/25 flex items-center justify-center shrink-0 border border-white/40">
                       <svg
-                        className="w-3.5 h-3.5 text-white"
+                        className="w-4 h-4 text-white stroke-[2.5]"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -311,10 +320,10 @@ export function PropertyRoomCategoriesCard({
                       e.stopPropagation();
                       setShowPicsModal(false);
                     }}
-                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center border border-white/15 transition-all cursor-pointer shadow-md select-none"
+                    className="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-white/15 hover:bg-white/25 active:scale-95 text-white flex items-center justify-center border border-white/20 transition-all cursor-pointer shadow-md select-none"
                     aria-label="Close photo viewer"
                   >
-                    <svg className="w-5 h-5 text-white stroke-[2.2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <svg className="w-6 h-6 text-white stroke-[2.2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <line x1="18" y1="6" x2="6" y2="18" strokeLinecap="round" strokeLinejoin="round" />
                       <line x1="6" y1="6" x2="18" y2="18" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>

@@ -70,28 +70,13 @@ export function RecentlyAdded({ onStayClick, onBookClick }) {
   }, []);
 
   return (
-    <section className="w-full py-4 sm:py-12 px-4 sm:px-8 lg:px-16 2xl:px-24" id="listings">
+    <section className="w-full bg-white rounded-t-[36px] sm:rounded-t-[48px] shadow-[0_-12px_36px_rgba(0,0,0,0.08),0_-4px_14px_rgba(0,0,0,0.04)] pt-6 sm:pt-10 pb-8 sm:pb-16 px-4 sm:px-8 lg:px-16 2xl:px-24 relative z-20" id="listings">
       {/* Section Header with Scroll-Triggered Reveal */}
       <ScrollReveal desktopOffset={20} mobileOffset={12} desktopDuration={0.5} mobileDuration={0.35}>
-        <div className="flex items-baseline justify-between mb-4 sm:mb-8 gap-3 sm:gap-4 w-full">
-          <div>
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-slate-950 mt-1 sm:mt-2 tracking-tight">
-              Featured Verified Stays
-            </h2>
-            <p className="max-md:block hidden text-[12px] text-slate-500 font-medium mt-0.5">
-              Inspected this week for quality &amp; safety
-            </p>
-          </div>
-
-          <button
-            onClick={() => navigate('/search')}
-            className="max-md:text-xs max-md:font-bold max-md:text-emerald-700 max-md:hover:text-emerald-800 max-md:bg-transparent max-md:border-0 max-md:shadow-none max-md:p-0 flex items-center gap-1 transition-colors self-auto text-[11px] sm:text-xs font-bold text-slate-900 hover:text-slate-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl bg-white/80 border border-slate-200 backdrop-blur-2xl cursor-pointer shadow-xs active:scale-95"
-          >
-            <span>View all</span>
-            <svg className="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-            </svg>
-          </button>
+        <div className="flex items-center justify-center mb-5 sm:mb-8 w-full text-center">
+          <h2 className="text-[24px] font-bold text-[#1f1b16] tracking-tight leading-none text-center">
+            Recently Added
+          </h2>
         </div>
       </ScrollReveal>
 
@@ -123,9 +108,21 @@ export function RecentlyAdded({ onStayClick, onBookClick }) {
         </ScrollReveal>
       )}
 
-      {/* Horizontal Carousel with Staggered Scroll-Triggered Card Reveals */}
+      {/* Horizontal Carousel with Staggered Scroll-Triggered Card Reveals & Bottom Right "View all" */}
       {!loading && recentStays.length > 0 && (
-        <HorizontalCarousel itemCount={recentStays.length} gapClass="gap-3 sm:gap-4">
+        <HorizontalCarousel
+          itemCount={recentStays.length}
+          gapClass="gap-3 sm:gap-4"
+          rightAction={
+            <button
+              type="button"
+              onClick={() => navigate('/search')}
+              className="text-[17px] sm:text-[19px] md:text-[20px] font-bold text-slate-900 hover:text-slate-700 underline underline-offset-4 decoration-2 decoration-slate-900/60 hover:decoration-slate-900 transition-colors cursor-pointer shrink-0 active:opacity-70 py-1"
+            >
+              View all
+            </button>
+          }
+        >
           {recentStays.map((room, idx) => (
             <ScrollReveal
               key={room._id || idx}
@@ -134,7 +131,7 @@ export function RecentlyAdded({ onStayClick, onBookClick }) {
               mobileOffset={12}
               desktopDuration={0.55}
               mobileDuration={0.35}
-              className="w-[270px] sm:w-[310px] md:w-[330px] max-w-[340px] shrink-0 snap-start"
+              className="w-[295px] sm:w-[330px] md:w-[350px] max-w-[360px] shrink-0 snap-start"
             >
               <PropertyCard
                 stay={room}

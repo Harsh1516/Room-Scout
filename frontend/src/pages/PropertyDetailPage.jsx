@@ -232,7 +232,7 @@ export function PropertyDetailPage({ onLoginClick }) {
         <p className="text-sm text-slate-600 mb-6">The requested stay could not be located.</p>
         <button
           onClick={() => navigate('/explore')}
-          className="px-5 py-2.5 rounded-full bg-slate-900 text-white font-bold text-xs shadow-xs hover:opacity-90 transition-opacity cursor-pointer"
+          className="min-h-[48px] px-6 py-3 rounded-full bg-slate-900 text-white font-bold text-base shadow-xs hover:opacity-90 transition-opacity cursor-pointer inline-flex items-center justify-center"
         >
           Return to Explore
         </button>
@@ -331,24 +331,30 @@ export function PropertyDetailPage({ onLoginClick }) {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 transition-colors duration-300 font-body-md host-font-scope antialiased">
-      {/* â”€â”€ TOP FLOATING NAVIGATION CAPSULES (MATCHING SEARCH / EXPLORE NAVBAR STYLE) â”€â”€ */}
+      {/* ── TOP FLOATING NAVIGATION CAPSULES (MATCHING SEARCH / EXPLORE NAVBAR STYLE) ── */}
       <header className="relative w-full pointer-events-none select-none z-50">
+        {/* ── Dark-to-Transparent Progressive Blur Navbar Backdrop (Blends with lower photo) ── */}
+        <div
+          aria-hidden="true"
+          className="fixed top-0 inset-x-0 h-[96px] sm:h-[110px] z-40 pointer-events-none navbar-gradient-blur transition-all duration-300"
+        />
+
         {/* 1. Left Island: Back button (Property type badge shifted to media section image) */}
         <Left showBadge={false} fallbackUrl="/explore" />
 
-        {/* 2. Center Island: Segmented Tabs (Property | Host | Reviews) - Same size & height as Back Button */}
-        <div className="fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center pointer-events-auto select-none max-w-[calc(100vw-110px)] sm:max-w-none h-13 sm:h-[54px]">
-          <nav className="relative flex items-center h-13 sm:h-[54px] p-1 sm:p-1.5 rounded-full bg-white border border-slate-200/90 shadow-sm select-none">
+        {/* 2. Center Island: Segmented Tabs (Property | Host | Reviews) - Dynamic wide capsule with sleek lesser height */}
+        <div className="fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center pointer-events-auto select-none w-max max-w-[calc(100vw-120px)] sm:max-w-none h-[54px] sm:h-[56px]">
+          <nav className="relative flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-full bg-white border border-slate-200/90 shadow-sm select-none w-fit">
             <button
               type="button"
               onClick={() => setActiveCenterTab('property')}
-              className={`relative z-10 h-11 sm:h-12 px-3 sm:px-4 md:px-5 rounded-full text-sm sm:text-base font-medium tracking-tight transition-all duration-150 cursor-pointer flex items-center gap-1.5 select-none shrink-0 active:scale-95 ${
+              className={`relative z-10 h-[36px] sm:h-[38px] min-w-[84px] sm:min-w-[115px] md:min-w-[130px] px-3.5 sm:px-6 md:px-8 rounded-full text-[13px] sm:text-sm font-semibold tracking-tight transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
                 activeCenterTab === 'property'
                   ? 'text-white'
-                  : 'text-slate-600 hover:text-[#1f1b16]'
+                  : 'text-slate-700 hover:text-[#1f1b16]'
               }`}
             >
-              <svg className="w-4 h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-4 h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                 <polyline points="9 22 9 12 15 12 15 22" />
               </svg>
@@ -365,13 +371,13 @@ export function PropertyDetailPage({ onLoginClick }) {
             <button
               type="button"
               onClick={handleHostTabClick}
-              className={`relative z-10 h-11 sm:h-12 px-3 sm:px-4 md:px-5 rounded-full text-sm sm:text-base font-medium tracking-tight transition-all duration-150 cursor-pointer flex items-center gap-1.5 select-none shrink-0 active:scale-95 ${
+              className={`relative z-10 h-[36px] sm:h-[38px] min-w-[76px] sm:min-w-[105px] md:min-w-[120px] px-3.5 sm:px-6 md:px-8 rounded-full text-[13px] sm:text-sm font-semibold tracking-tight transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
                 activeCenterTab === 'host'
                   ? 'text-white'
-                  : 'text-slate-600 hover:text-[#1f1b16]'
+                  : 'text-slate-700 hover:text-[#1f1b16]'
               }`}
             >
-              <svg className="w-4 h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-4 h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
@@ -388,13 +394,13 @@ export function PropertyDetailPage({ onLoginClick }) {
             <button
               type="button"
               onClick={() => setActiveCenterTab('reviews')}
-              className={`relative z-10 h-11 sm:h-12 px-3 sm:px-4 md:px-5 rounded-full text-sm sm:text-base font-medium tracking-tight transition-all duration-150 cursor-pointer flex items-center gap-1.5 select-none shrink-0 active:scale-95 ${
+              className={`relative z-10 h-[36px] sm:h-[38px] min-w-[96px] sm:min-w-[130px] md:min-w-[150px] px-3.5 sm:px-6 md:px-8 rounded-full text-[13px] sm:text-sm font-semibold tracking-tight transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
                 activeCenterTab === 'reviews'
                   ? 'text-white'
-                  : 'text-slate-600 hover:text-[#1f1b16]'
+                  : 'text-slate-700 hover:text-[#1f1b16]'
               }`}
             >
-              <svg className="w-4 h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-4 h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
               </svg>
               <span>Reviews ({reviews.length})</span>
@@ -414,7 +420,13 @@ export function PropertyDetailPage({ onLoginClick }) {
       </header>
 
       {/* MAIN CONTENT DISPLAY */}
-      <main className={`max-w-[1600px] mx-auto px-0 sm:px-6 lg:px-8 ${activeCenterTab === 'property' ? 'pt-0' : 'pt-16'} sm:pt-20 lg:pt-26 pb-0 sm:pb-24 min-h-screen`}>
+      <main
+        className={`max-w-[1600px] mx-auto ${
+          activeCenterTab === 'property'
+            ? 'px-0 sm:px-6 lg:px-8 pt-0 pb-0 sm:pb-24'
+            : 'px-3.5 sm:px-6 lg:px-8 pt-[96px] sm:pt-[112px] lg:pt-[124px] pb-8 sm:pb-24'
+        } min-h-screen`}
+      >
         {activeCenterTab === 'property' ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-8 items-start">
             <ErrorBoundary>
@@ -492,7 +504,7 @@ export function PropertyDetailPage({ onLoginClick }) {
           >
             {/* Top Bar with counter & close button */}
             <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-2 pt-1 z-30">
-              <span className="px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white font-semibold text-xs sm:text-sm tracking-wide shadow-md">
+              <span className="px-5 py-2 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-white font-bold text-sm sm:text-base tracking-wide shadow-md">
                 {activePhotoIdx + 1} / {allImages.length}
               </span>
               <button
@@ -501,10 +513,10 @@ export function PropertyDetailPage({ onLoginClick }) {
                   e.stopPropagation();
                   setIsLightboxOpen(false);
                 }}
-                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center border border-white/15 transition-all cursor-pointer shadow-md select-none"
+                className="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-white/15 hover:bg-white/25 active:scale-95 text-white flex items-center justify-center border border-white/20 transition-all cursor-pointer shadow-md select-none"
                 aria-label="Close photo viewer"
               >
-                <svg className="w-5 h-5 text-white stroke-[2.2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <svg className="w-6 h-6 text-white stroke-[2.2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <line x1="18" y1="6" x2="6" y2="18" strokeLinecap="round" strokeLinejoin="round" />
                   <line x1="6" y1="6" x2="18" y2="18" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>

@@ -74,14 +74,14 @@ export function WhatControl({
           e.stopPropagation();
           onToggle();
         }}
-        className={`flex items-center px-3 sm:px-4 h-11 sm:h-12 rounded-full text-sm sm:text-base font-medium tracking-tight transition-all duration-150 cursor-pointer select-none active:scale-95 border focus:outline-none focus:ring-0 focus-visible:outline-none shadow-xs ${
+        className={`flex items-center justify-center px-5 sm:px-6 h-11 sm:h-12 min-w-[78px] sm:min-w-[92px] rounded-full text-[14px] sm:text-[15px] font-bold tracking-tight leading-none transition-all duration-150 cursor-pointer select-none active:scale-95 border focus:outline-none focus:ring-0 focus-visible:outline-none shadow-xs ${
           isTypeActive
-            ? 'bg-cyan-600 text-white border-cyan-400 font-medium'
-            : 'bg-[#1f1b16] text-white hover:bg-slate-900 border-slate-800'
+            ? 'bg-[#0078d4] hover:bg-[#006bbd] text-white border-[#0078d4] font-bold'
+            : 'bg-[#2b2c37] text-white hover:bg-[#343542] border-[#3b3d4d]'
         }`}
         title="Filter by stay type"
       >
-        <span className="max-w-12 sm:max-w-20 truncate">{displayLabel}</span>
+        <span className="max-w-20 sm:max-w-28 truncate text-center font-bold text-[14px] sm:text-[15px] tracking-tight leading-none text-white">{displayLabel}</span>
       </button>
 
       {/* Minimal Pop-up Tab (No Heading) */}
@@ -101,16 +101,16 @@ export function WhatControl({
                     key={t.id}
                     type="button"
                     onClick={() => handleSelect(t.id)}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs rounded-xl font-medium transition-all cursor-pointer text-left focus:outline-none focus:ring-0 active:scale-95 border ${
+                    className={`w-full min-h-[44px] flex items-center justify-between px-4 py-2.5 text-sm rounded-xl font-semibold transition-all cursor-pointer text-left focus:outline-none focus:ring-0 active:scale-95 border ${
                       isSelected
-                        ? 'bg-cyan-50 border-cyan-500/50 text-cyan-900 shadow-xs'
+                        ? 'bg-blue-50 border-[#0078d4]/40 text-[#005ba3] shadow-xs'
                         : 'bg-[#f7f4ee] hover:bg-slate-100 border-slate-200/80 text-slate-800'
                     }`}
                   >
                     <span className="tracking-tight">{t.label}</span>
                     {isSelected && (
                       <svg
-                        className="w-3.5 h-3.5 text-cyan-600 shrink-0"
+                        className="w-3.5 h-3.5 text-[#0078d4] shrink-0"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"

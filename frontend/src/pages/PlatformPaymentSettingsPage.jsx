@@ -205,7 +205,7 @@ export default function PlatformPaymentSettingsPage() {
  }
 
  const inputClass =
- 'w-full rounded-xl border border-slate-200/90 bg-[#f7f4ee]/80 px-3.5 py-2.5 text-xs text-[#1f1b16] outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all shadow-inner';
+ 'w-full min-h-[52px] rounded-xl border border-slate-200/90 bg-[#f7f4ee]/80 px-4 py-3 text-base text-[#1f1b16] outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all shadow-inner';
 
  return (
  <section className="mx-auto w-full max-w-4xl space-y-6 animate-in fade-in duration-300">
@@ -254,7 +254,7 @@ export default function PlatformPaymentSettingsPage() {
 
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
  <label className="block space-y-1.5">
- <span className="text-xs font-normal text-slate-700">
+ <span className="text-sm font-semibold text-slate-700">
  Payee / Account Holder Name
  </span>
  <input
@@ -267,7 +267,7 @@ export default function PlatformPaymentSettingsPage() {
  </label>
 
  <label className="block space-y-1.5">
- <span className="text-xs font-normal text-slate-700">
+ <span className="text-sm font-semibold text-slate-700">
  Platform UPI ID (VPA)
  </span>
  <input

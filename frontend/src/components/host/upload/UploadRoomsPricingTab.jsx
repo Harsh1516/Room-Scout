@@ -56,7 +56,7 @@ export function UploadRoomsPricingTab({
  <button
  type="button"
  onClick={onAddCategory}
- className="h-11 max-md:h-12 md:h-9 px-6 sm:px-8 md:px-6 rounded-full bg-gradient-to-r from-[#0ea5e9] to-[#0284c7] hover:from-[#0284c7] hover:to-[#0369a1] active:scale-95 text-white font-semibold shadow-xs text-sm md:text-xs font-medium shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5 shrink-0"
+ className="min-h-[48px] sm:min-h-[52px] px-7 rounded-full bg-gradient-to-r from-[#0ea5e9] to-[#0284c7] hover:from-[#0284c7] hover:to-[#0369a1] active:scale-95 text-white font-semibold shadow-xs text-sm md:text-xs font-medium shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5 shrink-0"
  >
  <Plus className="w-4 h-4 stroke-[2.5]" />
  <span>Add Room Type</span>
@@ -72,7 +72,7 @@ export function UploadRoomsPricingTab({
  <button
  type="button"
  onClick={onAddCategory}
- className="h-11 max-md:h-12 md:h-9 px-6 sm:px-8 md:px-6 rounded-full bg-[#006C4A] hover:bg-[#005a3e] text-white text-sm md:text-xs font-medium shadow-xs transition-all active:scale-95 cursor-pointer shrink-0 absolute right-0 top-0 inline-flex items-center gap-1.5"
+ className="min-h-[48px] sm:min-h-[52px] px-7 rounded-full bg-[#006C4A] hover:bg-[#005a3e] text-white text-sm md:text-xs font-medium shadow-xs transition-all active:scale-95 cursor-pointer shrink-0 absolute right-0 top-0 inline-flex items-center gap-1.5"
  title="Add a new room category"
  >
  <Plus className="w-4 h-4 stroke-[2.5]" />

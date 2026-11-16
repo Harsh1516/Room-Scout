@@ -35,7 +35,7 @@ export function UploadLocationTab({
  href="https://www.google.com/maps"
  target="_blank"
  rel="noopener noreferrer"
- className="h-9 sm:h-10 px-3 sm:px-4 rounded-full bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs sm:text-sm font-semibold shadow-xs active:scale-95 transition-all shrink-0 cursor-pointer inline-flex items-center gap-1.5"
+ className="min-h-[44px] sm:min-h-[48px] px-4 sm:px-5 rounded-full bg-[#0284c7] hover:bg-[#0369a1] text-white text-sm sm:text-base font-semibold shadow-xs active:scale-95 transition-all shrink-0 cursor-pointer inline-flex items-center gap-1.5"
  title="Open Google Maps to find your location"
  >
  <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white shrink-0" />
@@ -56,7 +56,7 @@ export function UploadLocationTab({
  }
  }}
  placeholder={'Paste Google Maps link or coordinates (e.g. 29°22\'29.4"N 79°31\'39.9"E)...'}
- className="w-full h-9 sm:h-10 px-3 pr-7 rounded-full text-[14px] sm:text-base md:text-xs font-normal focus:outline-none transition-all
+ className="w-full min-h-[48px] sm:min-h-[52px] px-4 pr-8 rounded-full text-base font-normal focus:outline-none transition-all
  max-md:bg-white/90 max-md:border-0 max-md:text-slate-800 max-md:placeholder:text-slate-400 max-md:focus:bg-white max-md:shadow-xs
  md:bg-[#f7f4ee]/80 md:border md:border-slate-200/80 md:text-[#1f1b16] md:placeholder:text-slate-400 md:focus:border-[#006C4A]"
  />

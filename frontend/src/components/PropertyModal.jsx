@@ -135,7 +135,7 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
 
  <button
  onClick={onClose}
- className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+ className="w-11 h-11 sm:w-12 sm:h-12 rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-200/70 flex items-center justify-center transition-colors"
  >
  
  </button>
@@ -454,7 +454,7 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
  });
  }
  }}
- className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-medium text-xs sm:text-sm transition-all shadow-lg shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+ className="min-h-[50px] sm:min-h-[54px] px-6 sm:px-8 py-3.5 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-base transition-all shadow-lg shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
  >
  Book Now 
  </button>

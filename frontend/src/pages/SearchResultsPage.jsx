@@ -11,9 +11,7 @@ function MapSkeletonLoader() {
  return (
  <div className="w-full h-full min-h-[360px] sm:min-h-[380px] rounded-3xl bg-slate-200/70 border border-slate-300/40 flex flex-col items-center justify-center gap-3">
  <div className="w-9 h-9 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin" />
- <span className="text-xs text-slate-500">
- Loading map
- </span>
+ <span className="text-sm font-medium text-slate-600">Loading map...</span>
  </div>
  );
 }
@@ -132,14 +130,14 @@ export function SearchResultsPage({
  >
  {/* Map Window Header */}
  <div className="relative px-4 py-3 border-b border-[#ebdcd0] flex items-center justify-center bg-[#f4ece5]">
- <h2 className="text-sm font-semibold text-[#2e1b10] text-center">
+ <h2 className="text-base font-bold text-[#2e1b10] text-center">
  Map Explorer
  </h2>
 
  <button
  type="button"
  onClick={() => setIsMapModalOpen(false)}
- className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-[#7d5740] hover:text-[#2e1b10] hover:bg-[#ebdcd0] transition-colors text-xs font-semibold cursor-pointer"
+ className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-[#7d5740] hover:text-[#2e1b10] hover:bg-[#ebdcd0] transition-colors text-base font-bold cursor-pointer"
  title="Close Map Window"
  >
  ✕
@@ -165,14 +163,14 @@ export function SearchResultsPage({
 
  {/* Map Window Footer */}
  <div className="p-3 px-4 border-t border-[#ebdcd0] bg-[#f4ece5]/90 flex items-center justify-between">
- <div className="text-xs text-[#7d5740]">
+ <div className="text-sm font-medium text-slate-700">
  Showing <span className="font-semibold text-[#824a25]">{stays.length}</span> properties on map
  </div>
 
  <button
  type="button"
  onClick={() => setIsMapModalOpen(false)}
- className="px-4 py-1.5 rounded-xl bg-[#1f1b16] text-white font-semibold text-xs hover:bg-[#0f766e] transition-colors cursor-pointer active:scale-95"
+ className="min-h-[44px] px-5 py-2 rounded-xl bg-[#1f1b16] text-white font-bold text-sm hover:bg-[#0f766e] transition-colors cursor-pointer active:scale-95 inline-flex items-center justify-center"
  >
  Close
  </button>
@@ -223,12 +221,12 @@ export function SearchResultsPage({
             <p className="text-base font-bold text-slate-900">
               No properties match your search.
             </p>
-            <p className="text-xs text-slate-500 max-w-xs mx-auto">
+            <p className="text-sm sm:text-base text-slate-600 max-w-xs mx-auto font-medium">
               Try adjusting your filters or location to explore more stays.
             </p>
             <button
               onClick={() => resetFilters && resetFilters()}
-              className="mt-2 px-5 py-2 rounded-xl bg-[#0B0B0B] hover:bg-[#1A1A1A] text-white text-xs font-semibold transition-all cursor-pointer shadow-xs active:scale-95"
+              className="mt-2 min-h-[48px] px-6 py-2.5 rounded-xl bg-[#0B0B0B] hover:bg-[#1A1A1A] text-white text-base font-semibold transition-all cursor-pointer shadow-xs active:scale-95 inline-flex items-center justify-center"
             >
               Reset filters
             </button>

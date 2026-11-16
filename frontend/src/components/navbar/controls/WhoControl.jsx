@@ -41,14 +41,14 @@ export function WhoControl({
           e.stopPropagation();
           onToggle();
         }}
-        className={`flex items-center px-3 sm:px-4 h-11 sm:h-12 rounded-full text-sm sm:text-base font-medium tracking-tight transition-all duration-150 cursor-pointer select-none active:scale-95 border focus:outline-none focus:ring-0 focus-visible:outline-none shadow-xs ${
+        className={`flex items-center justify-center px-5 sm:px-6 h-11 sm:h-12 min-w-[78px] sm:min-w-[92px] rounded-full text-[14px] sm:text-[15px] font-bold tracking-tight leading-none transition-all duration-150 cursor-pointer select-none active:scale-95 border focus:outline-none focus:ring-0 focus-visible:outline-none shadow-xs ${
           isWhoActive
-            ? 'bg-cyan-600 text-white border-cyan-400 font-medium'
-            : 'bg-[#1f1b16] text-white hover:bg-slate-900 border-slate-800'
+            ? 'bg-[#0078d4] hover:bg-[#006bbd] text-white border-[#0078d4] font-bold'
+            : 'bg-[#2b2c37] text-white hover:bg-[#343542] border-[#3b3d4d]'
         }`}
         title="Select occupancy and gender preference"
       >
-        <span className="max-w-10 sm:max-w-20 truncate">{displayLabel}</span>
+        <span className="max-w-18 sm:max-w-26 truncate text-center font-bold text-[14px] sm:text-[15px] tracking-tight leading-none text-white">{displayLabel}</span>
       </button>
 
       {/* Minimal Pop-up Tab (Just Male, Female, Both - No extra text) */}
@@ -62,7 +62,7 @@ export function WhoControl({
               <button
                 type="button"
                 onClick={handleReset}
-                className="text-[11px] font-semibold text-rose-500 hover:underline cursor-pointer"
+                className="min-h-[36px] px-2 text-xs font-bold text-rose-500 hover:underline cursor-pointer flex items-center"
               >
                 Reset
               </button>
@@ -84,15 +84,15 @@ export function WhoControl({
                   key={o.id}
                   type="button"
                   onClick={() => handleSelect(o.label)}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer focus:outline-none focus:ring-0 active:scale-98 border ${
+                  className={`w-full min-h-[44px] flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer focus:outline-none focus:ring-0 active:scale-98 border ${
                     isSelected
-                      ? 'bg-cyan-50 border-cyan-500/50 text-cyan-900 shadow-xs'
+                      ? 'bg-blue-50 border-[#0078d4]/40 text-[#005ba3] shadow-xs'
                       : 'bg-[#f7f4ee] hover:bg-slate-100 border-slate-200/80 text-slate-800'
                   }`}
                 >
                   <span>{o.label}</span>
                   {isSelected && (
-                    <svg className="w-4 h-4 text-cyan-600 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <svg className="w-4 h-4 text-[#0078d4] stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
                   )}

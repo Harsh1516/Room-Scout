@@ -17,14 +17,10 @@ export function Navbar({ onSearchSubmit, onLoginClick, onSelectUpload, onOpenBoo
 
   return (
     <header className="relative w-full bg-transparent">
-      {/* ── Frosted Glass Blur Navbar Backdrop (Matching Top Portion of Photo / Sky Blue) ── */}
+      {/* ── Dark-to-Transparent Progressive Blur Navbar Backdrop (Blends with lower photo) ── */}
       <div
         aria-hidden="true"
-        className={`fixed top-0 inset-x-0 h-20 sm:h-24 z-35 pointer-events-none transition-all duration-300 ${
-          isSearchPage ? 'bg-transparent border-none shadow-none' : isElevated
-            ? 'bg-white/80 backdrop-blur-md border-b border-slate-200/80 shadow-xs'
-            : 'bg-transparent border-none shadow-none'
-        }`}
+        className="fixed top-0 inset-x-0 h-[96px] sm:h-[110px] z-35 pointer-events-none navbar-gradient-blur transition-all duration-300"
       />
 
       <Left

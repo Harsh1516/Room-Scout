@@ -137,7 +137,7 @@ export function UploadBasicsTab({
                     }
                   }}
                   placeholder="Host Name *"
-                  className={`w-full h-11 sm:h-11.5 md:h-10 pl-11 md:pl-10 pr-4 rounded-xl border text-[14px] sm:text-base md:text-xs focus:outline-none transition-all
+                  className={`w-full min-h-[50px] sm:min-h-[52px] pl-11 md:pl-10 pr-4 rounded-xl border text-base focus:outline-none transition-all
                     max-md:bg-white/90 max-md:backdrop-blur-sm max-md:border-0 max-md:text-slate-800 max-md:font-normal max-md:placeholder:text-slate-400 max-md:shadow-[0_1px_3px_rgba(0,0,0,0.04)] max-md:focus:bg-white max-md:focus:ring-2 max-md:focus:ring-sky-400/20
                     md:bg-slate-50/70 md:border-slate-200 md:text-slate-900 md:placeholder:text-slate-400 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 md:focus:bg-white ${
                     fieldErrors.name
@@ -177,7 +177,7 @@ export function UploadBasicsTab({
                     }
                   }}
                   placeholder="Mobile Number *"
-                  className={`w-full h-11 sm:h-11.5 md:h-10 pl-19 md:pl-17 pr-4 rounded-xl border text-[14px] sm:text-base md:text-xs focus:outline-none transition-all
+                  className={`w-full min-h-[50px] sm:min-h-[52px] pl-19 md:pl-17 pr-4 rounded-xl border text-base focus:outline-none transition-all
                     max-md:bg-white/90 max-md:backdrop-blur-sm max-md:border-0 max-md:text-slate-800 max-md:font-normal max-md:placeholder:text-slate-400 max-md:shadow-[0_1px_3px_rgba(0,0,0,0.04)] max-md:focus:bg-white max-md:focus:ring-2 max-md:focus:ring-sky-400/20
                     md:bg-slate-50/70 md:border-slate-200 md:text-slate-900 md:placeholder:text-slate-400 md:focus:border-[#006C4A] md:focus:ring-2 md:focus:ring-[#006C4A]/15 md:focus:bg-white ${
                     fieldErrors.phone

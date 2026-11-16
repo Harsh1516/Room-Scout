@@ -78,8 +78,24 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
  }, [isOpen]);
 
  useEffect(() => {
- window.dispatchEvent(new CustomEvent('leftpanel:toggle', { detail: { open: isOpen } }));
- }, [isOpen]);
+    window.dispatchEvent(new CustomEvent('leftpanel:toggle', { detail: { open: isOpen } }));
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handleOpen = () => setIsOpen(true);
+    const handleClose = () => setIsOpen(false);
+    const handleToggle = () => setIsOpen((prev) => !prev);
+
+    window.addEventListener('leftpanel:open', handleOpen);
+    window.addEventListener('leftpanel:close', handleClose);
+    window.addEventListener('leftpanel:toggle_request', handleToggle);
+
+    return () => {
+      window.removeEventListener('leftpanel:open', handleOpen);
+      window.removeEventListener('leftpanel:close', handleClose);
+      window.removeEventListener('leftpanel:toggle_request', handleToggle);
+    };
+  }, []);
 
  useEffect(() => {
  let mounted = true;
@@ -155,92 +171,45 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
 
  return (
  <>
- {/* ── Collapsed Toggle Handle (When Panel is Closed) ── */}
- <AnimatePresence>
- {!isOpen && (
- <motion.button
- key="properties-panel-handle"
- initial={{ opacity: 0, x: -30 }}
- animate={{ opacity: 1, x: 0 }}
- exit={{ opacity: 0, x: -30 }}
- transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
- onClick={() => setIsOpen(true)}
- className="fixed left-0 top-1/2 -translate-y-1/2 z-40 rounded-r-2xl border-l-0 border-r border-y border-slate-200/90 bg-white/95 backdrop-blur-md shadow-[0_4px_16px_rgba(0,0,0,0.06)] px-2.5 py-4 flex flex-col items-center gap-2 cursor-pointer hover:bg-white transition-colors duration-150 select-none"
- title="Open Properties Panel"
- >
- <svg className="w-4 h-4 max-md:text-emerald-400 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
- <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
- <path d="M10 6h4" />
- <path d="M10 10h4" />
- </svg>
- <span className="[writing-mode:vertical-lr] text-[11px] font-bold text-slate-800 rotate-180">
- Stays
- </span>
- <span className="text-xs max-md:text-emerald-400 text-sky-600 font-medium">
- ›
- </span>
- </motion.button>
- )}
- </AnimatePresence>
+ {/* ── Collapsed Toggle Handle replaced by Navbar Leftmost Stays Button ── */}
 
- {/* ── Left Side Properties Drawer (Matching WishlistDrawer Architecture) ── */}
- <AnimatePresence>
- {isOpen && (
- <div className="fixed inset-0 z-[9999] overflow-hidden">
- {/* Backdrop */}
- <motion.div
- key="properties-backdrop"
- initial={{ opacity: 0 }}
- animate={{ opacity: 1 }}
- exit={{ opacity: 0 }}
- transition={{ duration: 0.28, ease: 'easeOut' }}
- className="absolute inset-0 bg-[#121418]/80 backdrop-blur-xs cursor-pointer"
- onClick={() => setIsOpen(false)}
- />
+ {/* ── Left Side Properties Panel (Height fits stays list, centered heading) ── */}
+  <AnimatePresence>
+    {isOpen && (
+      <div className="fixed inset-0 z-[9999] overflow-hidden">
+        {/* Backdrop */}
+        <motion.div
+          key="properties-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
+          className="absolute inset-0 bg-[#121418]/60 backdrop-blur-xs cursor-pointer"
+          onClick={() => setIsOpen(false)}
+        />
 
- {/* Drawer Wrapper */}
- <div className="fixed inset-y-0 left-0 flex pr-0 sm:pr-10 max-w-full pointer-events-none">
- <motion.div
- key="properties-drawer-panel"
- initial={{ x: '-100%' }}
- animate={{ x: 0 }}
- exit={{ x: '-100%' }}
- transition={{
- duration: 0.32,
- ease: [0.16, 1, 0.3, 1],
- }}
- className="pointer-events-auto w-80 sm:w-88 max-w-[85vw] flex flex-col bg-white border-r-2 border-slate-300 md:border-slate-200 shadow-2xl h-full will-change-transform select-none rounded-r-[32px] sm:rounded-r-[36px] overflow-hidden"
- >
- {/* Header (Clean, Compact, matching WishlistDrawer) */}
- <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
- <div>
- <div className="flex items-center gap-2">
- <h2 className="text-sm font-semibold text-[#1f1b16] tracking-tight">
- Properties
- </h2>
- <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-700 border border-amber-500/25 whitespace-nowrap">
- {activeCategories.length} Types
- </span>
- </div>
- <p className="text-[11px] text-slate-400 mt-0.5">
- Added website listings & categories
- </p>
- </div>
- <button
- type="button"
- onClick={() => setIsOpen(false)}
- className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
- title="Close Properties"
- aria-label="Close Properties"
- >
- <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
- <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
- </svg>
- </button>
- </div>
+        {/* Floating Panel positioned at top-left with height fitting stays list */}
+        <div className="fixed top-2.5 sm:top-5 left-2.5 sm:left-6 pointer-events-none z-10 max-w-[calc(100vw-20px)]">
+          <motion.div
+            key="properties-drawer-panel"
+            initial={{ opacity: 0, x: -28, scale: 0.98 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: -28, scale: 0.98 }}
+            transition={{
+              duration: 0.28,
+              ease: [0.16, 1, 0.3, 1],
+            }}
+            className="pointer-events-auto w-80 sm:w-88 max-w-[calc(100vw-24px)] flex flex-col bg-white border border-slate-200/90 shadow-[0_20px_50px_rgba(0,0,0,0.22)] max-h-[calc(100dvh-24px)] sm:max-h-[calc(100dvh-40px)] will-change-transform select-none rounded-[28px] sm:rounded-[32px] overflow-hidden"
+          >
+            {/* Header: Centered Properties title */}
+            <div className="flex items-center justify-center px-4 py-3.5 sm:py-4 border-b border-slate-100 shrink-0">
+              <h2 className="text-[24px] font-bold text-[#1f1b16] tracking-tight leading-none">
+                Properties
+              </h2>
+            </div>
 
- {/* List of Category Cards (Exact Wishlist item card style) */}
- <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            {/* List of Category Cards (Height fits the stays in the list) */}
+            <div className="overflow-y-auto p-3.5 space-y-2.5">
  {activeCategories.map((cat) => {
  const isSelected = selectedCategory === cat.id;
  const catCount = cat.matchTypes.reduce(
@@ -276,14 +245,10 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
  </div>
 
  <div className="flex items-center gap-1.5 mt-1 flex-wrap">
- <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-700 border border-amber-500/25 whitespace-nowrap">
- {cat.title} Category
- </span>
- <span className="text-slate-300 text-[11px]">·</span>
- <span className="text-[11px] text-slate-400 truncate">
- {catCount} {catCount === 1 ? 'stay' : 'stays'}
- </span>
- </div>
+                      <span className="text-[12px] text-slate-400 truncate">
+                        {catCount} {catCount === 1 ? 'stay' : 'stays'}
+                      </span>
+                    </div>
  </div>
  </div>
 
@@ -296,10 +261,10 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
  {catCount > 0 ? `${catCount} verified ${catCount === 1 ? 'stay' : 'stays'}` : 'Listing updates soon'}
  </span>
  <button
- type="button"
- onClick={() => handleSelect(cat.id)}
- className="text-xs font-medium px-3.5 py-1.5 min-h-[30px] rounded-lg bg-slate-900 text-white hover:opacity-90 active:scale-95 transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-xs"
- >
+                    type="button"
+                    onClick={() => handleSelect(cat.id)}
+                    className="text-xs font-medium px-4 py-1.5 min-h-[30px] rounded-full bg-[#2b2c37] hover:bg-[#343542] text-white border border-[#3b3d4d] active:scale-95 transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-xs"
+                  >
  <span>Browse</span>
  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
@@ -311,19 +276,6 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory }) {
  })}
  </div>
 
- {/* Footer (Matching WishlistDrawer) */}
- <div className="px-5 py-3.5 border-t border-slate-100 flex items-center justify-between shrink-0">
- <span className="text-[11px] text-slate-400">
- {activeCategories.length} categories available
- </span>
- <button
- type="button"
- onClick={() => setIsOpen(false)}
- className="text-[11px] font-semibold text-slate-500 hover:text-[#1f1b16] transition-colors cursor-pointer"
- >
- Close
- </button>
- </div>
  </motion.div>
  </div>
  </div>

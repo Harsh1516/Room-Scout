@@ -203,7 +203,7 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
  <button
  type="button"
  onClick={handleResetAndClose}
- className="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors shrink-0"
+ className="w-11 h-11 sm:w-12 sm:h-12 rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-200/70 flex items-center justify-center transition-colors shrink-0"
  >
  
  </button>
@@ -308,7 +308,7 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
  placeholder="e.g. Harsh Kumar"
  value={formData.fullName}
  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
- className="w-full p-2.5 text-xs rounded-xl bg-[#f7f4ee] border border-slate-200 text-[#1f1b16] focus:outline-none focus:ring-2 focus:ring-emerald-500"
+ className="w-full min-h-[50px] sm:min-h-[52px] p-3 text-base rounded-xl bg-[#f7f4ee] border border-slate-200 text-[#1f1b16] focus:outline-none focus:ring-2 focus:ring-emerald-500"
  />
  </div>
 
@@ -349,7 +349,7 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
  required
  value={formData.moveInDate}
  onChange={(e) => setFormData({ ...formData, moveInDate: e.target.value })}
- className="w-full p-2.5 text-xs rounded-xl bg-[#f7f4ee] border border-slate-200 text-[#1f1b16] focus:outline-none focus:ring-2 focus:ring-emerald-500"
+ className="w-full min-h-[50px] sm:min-h-[52px] p-3 text-base rounded-xl bg-[#f7f4ee] border border-slate-200 text-[#1f1b16] focus:outline-none focus:ring-2 focus:ring-emerald-500"
  />
  </div>
 
@@ -361,7 +361,7 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
  <select
  value={formData.durationUnits}
  onChange={(e) => setFormData({ ...formData, durationUnits: Number(e.target.value) })}
- className="w-full p-2.5 text-xs rounded-xl bg-[#f7f4ee] border border-slate-200 text-[#1f1b16] focus:outline-none focus:ring-2 focus:ring-emerald-500"
+ className="w-full min-h-[50px] sm:min-h-[52px] p-3 text-base rounded-xl bg-[#f7f4ee] border border-slate-200 text-[#1f1b16] focus:outline-none focus:ring-2 focus:ring-emerald-500"
  >
  <option value={1}>1 Month</option>
  <option value={3}>3 Months</option>
@@ -372,7 +372,7 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
  <select
  value={formData.durationUnits}
  onChange={(e) => setFormData({ ...formData, durationUnits: Number(e.target.value) })}
- className="w-full p-2.5 text-xs rounded-xl bg-[#f7f4ee] border border-slate-200 text-[#1f1b16] focus:outline-none focus:ring-2 focus:ring-emerald-500"
+ className="w-full min-h-[50px] sm:min-h-[52px] p-3 text-base rounded-xl bg-[#f7f4ee] border border-slate-200 text-[#1f1b16] focus:outline-none focus:ring-2 focus:ring-emerald-500"
  >
  <option value={1}>1 Night</option>
  <option value={2}>2 Nights</option>
@@ -504,7 +504,7 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
  <button
  type="submit"
  disabled={isSubmitting}
- className="w-full py-3.5 bg-[#0f766e] text-white rounded-lg font-medium text-xs sm:text-sm hover:bg-[#115e59] transition-colors disabled:opacity-50 cursor-pointer"
+ className="w-full min-h-[52px] py-4 bg-[#0f766e] text-white rounded-2xl font-bold text-base hover:bg-[#115e59] transition-colors disabled:opacity-50 cursor-pointer shadow-lg shadow-teal-700/20 active:scale-[0.98]"
  >
  {isSubmitting
  ? 'Processing Reservation...'

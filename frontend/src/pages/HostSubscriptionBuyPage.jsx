@@ -407,7 +407,7 @@ export function HostSubscriptionBuyPage() {
                           Save ₹{originalTotal - Number(plan.price)}
                         </span>
                       ) : (
-                        <span className="text-[10px] sm:text-xs text-slate-400 md:text-slate-500 font-normal mt-0.5 tracking-tight">
+                        <span className="text-[10px] sm:text-sm text-slate-600 md:text-slate-600 font-medium mt-0.5 tracking-tight">
                           Standard
                         </span>
                       )}
@@ -472,7 +472,7 @@ export function HostSubscriptionBuyPage() {
                           Till {currentTillFormatted}
                         </span>
                       </div>
-                      <span className="text-xs text-slate-400 md:text-slate-500 font-normal mt-0.5 tracking-tight">
+                      <span className="text-sm text-slate-600 md:text-slate-600 font-medium mt-0.5 tracking-tight">
                         Starts immediately upon verification
                       </span>
                     </div>
@@ -515,7 +515,7 @@ export function HostSubscriptionBuyPage() {
                           Till {nextTillFormatted}
                         </span>
                       </div>
-                      <span className="text-xs text-slate-400 md:text-slate-500 font-normal mt-0.5 tracking-tight">
+                      <span className="text-sm text-slate-600 md:text-slate-600 font-medium mt-0.5 tracking-tight">
                         Starts from 1st of {monthDetails.nextMonthName}
                       </span>
                     </div>
@@ -550,7 +550,7 @@ export function HostSubscriptionBuyPage() {
                   setCurrentStep(2);
                   window.scrollTo({ top: 0, behavior: window.innerWidth < 768 ? 'instant' : 'smooth' });
                 }}
-                className="w-full sm:w-auto px-8 py-3.5 rounded-full md:rounded-2xl bg-slate-900 hover:bg-black active:scale-[0.98] md:bg-purple-600 md:hover:bg-purple-700 md:active:scale-98 text-white font-medium text-sm sm:text-base shadow-[0_10px_25px_-5px_rgba(15,23,42,0.25)] md:shadow-lg md:shadow-purple-600/30 transition-all flex items-center justify-center gap-2.5 cursor-pointer group tracking-tight"
+                className="w-full sm:w-auto min-h-[52px] px-8 py-3.5 rounded-full md:rounded-2xl bg-slate-900 hover:bg-black active:scale-[0.98] md:bg-purple-600 md:hover:bg-purple-700 md:active:scale-98 text-white font-semibold text-base sm:text-lg shadow-[0_10px_25px_-5px_rgba(15,23,42,0.25)] md:shadow-lg md:shadow-purple-600/30 transition-all flex items-center justify-center gap-2.5 cursor-pointer group tracking-tight"
               >
                 <span>Confirm & Proceed to Payment</span>
                 <svg className="w-4.5 h-4.5 group-hover:translate-x-1 transition-transform stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -558,7 +558,7 @@ export function HostSubscriptionBuyPage() {
                 </svg>
               </button>
 
-              <span className="text-[11px] text-slate-400 md:text-slate-500 font-normal tracking-tight">
+              <span className="text-xs text-slate-600 md:text-slate-600 font-medium tracking-tight">
                 You can return and switch your plan anytime before final submission.
               </span>
             </div>
@@ -816,7 +816,7 @@ export function HostSubscriptionBuyPage() {
                   <button
                     type="submit"
                     disabled={submitting || transactionRef.length !== 12}
-                    className="w-full py-3.5 rounded-full md:rounded-2xl font-medium text-sm sm:text-lg bg-slate-900 hover:bg-black md:bg-purple-600 md:hover:bg-purple-500 disabled:bg-slate-200 md:disabled:bg-slate-100 disabled:text-slate-400 disabled:border disabled:border-slate-200 text-white shadow-[0_10px_25px_-5px_rgba(15,23,42,0.25)] md:shadow-lg md:shadow-purple-600/20 active:scale-[0.98] md:active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed disabled:shadow-none tracking-tight"
+                    className="w-full min-h-[52px] py-3.5 rounded-full md:rounded-2xl font-semibold text-base sm:text-lg bg-slate-900 hover:bg-black md:bg-purple-600 md:hover:bg-purple-500 disabled:bg-slate-200 md:disabled:bg-slate-100 disabled:text-slate-400 disabled:border disabled:border-slate-200 text-white shadow-[0_10px_25px_-5px_rgba(15,23,42,0.25)] md:shadow-lg md:shadow-purple-600/20 active:scale-[0.98] md:active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed disabled:shadow-none tracking-tight"
                   >
                     {submitting ? (
                       <>

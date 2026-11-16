@@ -83,7 +83,7 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
  e.stopPropagation();
  setConfirmDelete(false);
  }}
- className="flex-1 h-12 py-3 px-4 rounded-full border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-medium transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+ className="flex-1 min-h-[48px] px-5 py-3 rounded-full border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-800 text-base font-semibold transition-all cursor-pointer active:scale-95 disabled:opacity-50"
  >
  Cancel
  </button>
@@ -102,7 +102,7 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
  setConfirmDelete(false);
  }
  }}
- className="flex-1 h-12 py-3 px-4 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium transition-all cursor-pointer shadow-lg shadow-rose-600/30 flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-75"
+ className="flex-1 min-h-[48px] px-5 py-3 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-base font-semibold transition-all cursor-pointer shadow-lg shadow-rose-600/30 flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-75"
  >
  {isDeleting ? 'Deleting...' : 'Delete'}
  </button>
