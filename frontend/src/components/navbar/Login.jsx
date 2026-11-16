@@ -163,24 +163,18 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
  exit={{ opacity: 0, y: -2, transition: { duration: 0.05, ease: 'easeIn' } }}
  transition={{ duration: 0.08, ease: 'easeOut' }}
  style={{ transformOrigin: 'top right' }}
- className="apple-profile-dropdown absolute right-0 top-10 sm:top-12 w-[200px] sm:w-[220px] max-w-[calc(100vw-20px)] rounded-xl sm:rounded-2xl p-2 sm:p-2.5 z-50 space-y-1 sm:space-y-1.5 select-none origin-top-right will-change-transform bg-white border border-slate-200/90 shadow-2xl"
+ className="apple-profile-dropdown absolute right-0 top-12 sm:top-14 w-[265px] sm:w-[285px] max-w-[calc(100vw-20px)] rounded-[28px] sm:rounded-[32px] p-3.5 sm:p-4 z-50 space-y-1.5 select-none origin-top-right will-change-transform bg-white border border-slate-200/90 shadow-2xl"
  >
  {/* User Header Profile Card */}
- <div className="flex items-center gap-2 sm:gap-2.5 pb-2 border-b border-slate-200">
- <div
- className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl text-white font-medium text-[10px] sm:text-xs flex items-center justify-center shadow-xs shrink-0 ${
- isHost
- ? 'r '
- : 'r '
- }`}
- >
+ <div className="flex items-center gap-3 pb-2.5 border-b border-slate-100">
+ <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#4E75FF] text-white font-bold text-sm sm:text-base flex items-center justify-center shadow-xs shrink-0">
  {initials}
  </div>
  <div className="min-w-0 flex-1">
- <div className="font-bold text-sm text-[#1f1b16] truncate leading-tight">
+ <div className="font-bold text-[16px] sm:text-[17px] text-[#1f1b16] truncate leading-tight">
  {user.name}
  </div>
- <div className="text-xs text-slate-600 truncate font-medium leading-tight mt-0.5">
+ <div className="text-[13px] sm:text-[14px] text-slate-500 truncate font-medium leading-tight mt-0.5">
  {user.email}
  </div>
  </div>
@@ -195,10 +189,10 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
  setDropdownOpen(false);
  navigate('/account');
  }}
- className="group w-full text-left px-3 py-2.5 sm:px-3 sm:py-2.5 min-h-[44px] rounded-xl text-sm font-semibold transition-all duration-150 flex items-center gap-2.5 cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-transparent hover:bg-slate-100 border border-transparent hover:border-slate-200/80 text-slate-800 hover:text-[#1f1b16]"
+ className="group w-full text-left px-3.5 py-2.5 min-h-[48px] rounded-2xl text-[16px] sm:text-[17px] font-semibold transition-all duration-150 flex items-center gap-3 cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-transparent hover:bg-slate-100 border border-transparent hover:border-slate-200/80 text-slate-800 hover:text-[#1f1b16]"
  >
- <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-cyan-500/10 text-cyan-600 flex items-center justify-center border border-cyan-500/20 group-hover:scale-105 group-hover:bg-cyan-500/20 transition-all duration-150 shrink-0">
- <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+ <div className="w-8 h-8 rounded-xl bg-cyan-500/10 text-cyan-600 flex items-center justify-center border border-cyan-500/20 group-hover:scale-105 group-hover:bg-cyan-500/20 transition-all duration-150 shrink-0">
+ <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
  <circle cx="12" cy="7" r="4" />
  </svg>
@@ -220,10 +214,10 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
  window.dispatchEvent(new CustomEvent('host:open_activity'));
  }
  }}
- className="group w-full text-left px-3 py-2.5 sm:px-3 sm:py-2.5 min-h-[44px] rounded-xl text-sm font-semibold transition-all duration-150 flex items-center gap-2.5 cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-transparent hover:bg-slate-100 border border-transparent hover:border-slate-200/80 text-slate-800 hover:text-[#1f1b16]"
+ className="group w-full text-left px-3.5 py-2.5 min-h-[48px] rounded-2xl text-[16px] sm:text-[17px] font-semibold transition-all duration-150 flex items-center gap-3 cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-transparent hover:bg-slate-100 border border-transparent hover:border-slate-200/80 text-slate-800 hover:text-[#1f1b16]"
  >
- <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center border border-emerald-500/20 group-hover:scale-105 group-hover:bg-emerald-500/20 transition-all duration-150 shrink-0">
- <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+ <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center border border-emerald-500/20 group-hover:scale-105 group-hover:bg-emerald-500/20 transition-all duration-150 shrink-0">
+ <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
  </svg>
  </div>
@@ -238,10 +232,10 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
  setDropdownOpen(false);
  setActiveModal('settings');
  }}
- className="group w-full text-left px-3 py-2.5 sm:px-3 sm:py-2.5 min-h-[44px] rounded-xl text-sm font-semibold transition-all duration-150 flex items-center gap-2.5 cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-transparent hover:bg-slate-100 border border-transparent hover:border-slate-200/80 text-slate-800 hover:text-[#1f1b16]"
+ className="group w-full text-left px-3.5 py-2.5 min-h-[48px] rounded-2xl text-[16px] sm:text-[17px] font-semibold transition-all duration-150 flex items-center gap-3 cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-transparent hover:bg-slate-100 border border-transparent hover:border-slate-200/80 text-slate-800 hover:text-[#1f1b16]"
  >
- <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-[#f7f4ee]0/10 text-slate-600 flex items-center justify-center border border-slate-400/20 group-hover:rotate-45 group-hover:scale-105 transition-all duration-200 shrink-0">
- <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+ <div className="w-8 h-8 rounded-xl bg-slate-500/10 text-slate-600 flex items-center justify-center border border-slate-400/20 group-hover:rotate-45 group-hover:scale-105 transition-all duration-200 shrink-0">
+ <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
  <circle cx="12" cy="12" r="3" />
  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
  </svg>
@@ -256,10 +250,10 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
  setDropdownOpen(false);
  setActiveModal('updates');
  }}
- className="group w-full text-left px-3 py-2.5 sm:px-3 sm:py-2.5 min-h-[44px] rounded-xl text-sm font-semibold transition-all duration-150 flex items-center gap-2.5 cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-transparent hover:bg-slate-100 border border-transparent hover:border-slate-200/80 text-slate-800 hover:text-[#1f1b16]"
+ className="group w-full text-left px-3.5 py-2.5 min-h-[48px] rounded-2xl text-[16px] sm:text-[17px] font-semibold transition-all duration-150 flex items-center gap-3 cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-transparent hover:bg-slate-100 border border-transparent hover:border-slate-200/80 text-slate-800 hover:text-[#1f1b16]"
  >
- <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center border border-emerald-500/20 group-hover:scale-105 group-hover:bg-emerald-500/20 transition-all duration-150 shrink-0">
- <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+ <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center border border-emerald-500/20 group-hover:scale-105 group-hover:bg-emerald-500/20 transition-all duration-150 shrink-0">
+ <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
  <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
  <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
  </svg>
@@ -274,15 +268,15 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
  setDropdownOpen(false);
  setActiveModal('notifications');
  }}
- className="group w-full text-left px-3 py-2.5 sm:px-3 sm:py-2.5 min-h-[44px] rounded-xl text-sm font-semibold transition-all duration-150 flex items-center gap-2.5 cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-transparent hover:bg-slate-100 border border-transparent hover:border-slate-200/80 text-slate-800 hover:text-[#1f1b16]"
+ className="group w-full text-left px-3.5 py-2.5 min-h-[48px] rounded-2xl text-[16px] sm:text-[17px] font-semibold transition-all duration-150 flex items-center gap-3 cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-transparent hover:bg-slate-100 border border-transparent hover:border-slate-200/80 text-slate-800 hover:text-[#1f1b16]"
  >
- <div className="relative w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center border border-amber-500/20 group-hover:scale-105 group-hover:bg-amber-500/20 transition-all duration-150 shrink-0">
- <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+ <div className="relative w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center border border-amber-500/20 group-hover:scale-105 group-hover:bg-amber-500/20 transition-all duration-150 shrink-0">
+ <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
  <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
  <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
  </svg>
  {unreadCount > 0 && (
- <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-rose-500 border border-white" />
+ <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-rose-500 border border-white" />
  )}
  </div>
  <span className="truncate">Notifications</span>
@@ -290,7 +284,7 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
  </div>
 
  {/* 5. Switch to User Dashboard & Logout */}
- <div className="pt-1 border-t border-slate-200 space-y-1">
+ <div className="pt-2 border-t border-slate-100 space-y-1">
  {/* User Dashboard Switch */}
  <button
  type="button"
@@ -298,11 +292,11 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
  setDropdownOpen(false);
  navigate('/');
  }}
- className="group w-full text-left px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg sm:rounded-xl text-[10.5px] sm:text-[11.5px] font-medium transition-all duration-150 flex items-center gap-2 cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-transparent hover:bg-purple-50 border border-transparent hover:border-purple-200/80 text-purple-700 hover:text-purple-800 hover:shadow-2xs"
+ className="group w-full text-left px-3.5 py-2.5 min-h-[46px] rounded-2xl text-[15px] sm:text-[16px] font-semibold transition-all duration-150 flex items-center gap-3 cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-transparent hover:bg-purple-50 border border-transparent hover:border-purple-200/80 text-purple-700 hover:text-purple-800"
  title="Switch to User Dashboard"
  >
- <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-purple-500/10 text-purple-600 flex items-center justify-center border border-purple-500/20 group-hover:scale-105 group-hover:bg-purple-500/20 transition-all duration-150 shrink-0">
- <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+ <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center border border-purple-500/20 group-hover:scale-105 group-hover:bg-purple-500/20 transition-all duration-150 shrink-0">
+ <svg className="w-4.5 h-4.5 stroke-[2.2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
  <polyline points="9 22 9 12 15 12 15 22" />
  </svg>
@@ -317,10 +311,10 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
  setDropdownOpen(false);
  setActiveModal('logout');
  }}
- className="group w-full px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg sm:rounded-xl text-[10.5px] sm:text-[11.5px] font-medium text-rose-600 bg-transparent hover:bg-rose-50 border border-transparent hover:border-rose-200 flex items-center gap-2 cursor-pointer active:scale-98 hover:shadow-2xs transition-all duration-150 focus:outline-none focus:ring-0"
+ className="group w-full text-left px-3.5 py-2.5 min-h-[46px] rounded-2xl text-[15px] sm:text-[16px] font-semibold text-rose-600 bg-transparent hover:bg-rose-50 border border-transparent hover:border-rose-200 flex items-center gap-3 cursor-pointer active:scale-98 transition-all duration-150 focus:outline-none focus:ring-0"
  >
- <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-rose-500/15 text-rose-600 flex items-center justify-center border border-rose-500/25 group-hover:scale-105 group-hover:bg-rose-500/25 transition-all duration-150 shrink-0">
- <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+ <div className="w-8 h-8 rounded-xl bg-rose-500/15 text-rose-600 flex items-center justify-center border border-rose-500/25 group-hover:scale-105 group-hover:bg-rose-500/25 transition-all duration-150 shrink-0">
+ <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
  <polyline points="16 17 21 12 16 7" />
  <line x1="21" y1="12" x2="9" y2="12" />

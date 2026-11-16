@@ -295,29 +295,20 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory, onSele
  })}
  </div>
 
-             {/* ── Bottom Section: Upload Property / Host Dashboard Button ── */}
+            {/* ── Bottom Section: Upload Your Property Button (Premium Minimalist) ── */}
             <div className="p-3 sm:p-3.5 pt-2.5 border-t border-slate-100 shrink-0 bg-[#faf8f5]/60">
               <button
                 type="button"
                 onClick={handleHostAction}
-                className="w-full min-h-[48px] rounded-full bg-[#6e258a] hover:bg-[#5f1f77] active:bg-[#521966] text-white shadow-xs flex items-center gap-3 px-2.5 sm:px-3 font-semibold text-sm sm:text-[15px] transition-all cursor-pointer select-none active:scale-[0.98]"
+                className="w-full min-h-[46px] rounded-full bg-[#181920] hover:bg-[#252733] active:bg-[#101116] text-white border border-slate-800/70 shadow-xs flex items-center justify-center gap-2.5 px-4 font-medium text-sm tracking-tight transition-all duration-200 cursor-pointer select-none active:scale-[0.98] group"
               >
-                <div className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-[#2a2b38] text-white flex items-center justify-center shrink-0 shadow-xs">
-                  {isHost ? (
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                      <polyline points="9 22 9 12 15 12 15 22" />
-                    </svg>
-                  ) : (
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                      <polyline points="17 8 12 3 7 8" />
-                      <line x1="12" y1="3" x2="12" y2="15" />
-                    </svg>
-                  )}
-                </div>
-                <span className="tracking-tight text-white font-semibold text-sm sm:text-[15px]">
-                  {isHost ? 'Host Dashboard' : 'Upload Property'}
+                <svg className="w-4.5 h-4.5 text-slate-400 group-hover:text-white transition-colors shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                <span className="text-white font-medium text-sm tracking-tight">
+                  Upload Your Property
                 </span>
               </button>
             </div>

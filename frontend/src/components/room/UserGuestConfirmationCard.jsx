@@ -95,6 +95,11 @@ export function UserGuestConfirmationCard({
 
   // Calculate check-in date, check-out date, and duration/price (supports monthly or nightly)
   const reservationDetails = useMemo(() => {
+    const formatMonthObj = (m) => {
+      if (!m) return '';
+      return m.monthYearShort || (m.monthShort && m.year ? `${m.monthShort} ${m.year}` : m.monthLong || m.monthName || m.label || m.monthKey || '');
+    };
+
     if (isMonthly) {
       if (sortedSelectedMonths.length > 0 && upcomingMonths.length > 0) {
         const firstM = upcomingMonths[sortedSelectedMonths[0]];
@@ -110,13 +115,16 @@ export function UserGuestConfirmationCard({
           const monthsCount = sortedSelectedMonths.length;
           const totalPrice = monthlyPrice * monthsCount;
 
+          const checkInDate = formatMonthObj(firstM);
+          const checkOutDate = formatMonthObj(lastM);
+
           return {
             isMonthly: true,
             isPending: false,
             durationLabel: `${monthsCount} ${monthsCount === 1 ? 'Month' : 'Months'}`,
-            checkInDate: firstM.monthName,
+            checkInDate,
             checkInTime: '12:00 PM',
-            checkOutDate: lastM.monthName,
+            checkOutDate,
             checkOutTime: '11:59 AM',
             priceBreakdown: `₹${monthlyPrice.toLocaleString('en-IN')} × ${monthsCount} month${monthsCount > 1 ? 's' : ''}`,
             unitPrice: monthlyPrice,
@@ -148,19 +156,33 @@ export function UserGuestConfirmationCard({
           if (pendingBooking.checkOutDisplay) checkOutDate = pendingBooking.checkOutDisplay;
           if (!checkInDate && pendingBooking.checkIn) {
             const inD = new Date(pendingBooking.checkIn);
-            checkInDate = inD.toLocaleDateString('en-IN', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+            if (!isNaN(inD.getTime())) {
+              checkInDate = inD.toLocaleDateString('en-IN', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+            }
           }
           if (!checkOutDate && pendingBooking.checkOut) {
             const outD = new Date(pendingBooking.checkOut);
-            checkOutDate = outD.toLocaleDateString('en-IN', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+            if (!isNaN(outD.getTime())) {
+              checkOutDate = outD.toLocaleDateString('en-IN', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+            }
+          }
+
+          if ((!checkInDate || !checkOutDate) && Array.isArray(pendingBooking.bookedMonths) && pendingBooking.bookedMonths.length > 0) {
+            const bMonths = pendingBooking.bookedMonths;
+            const parseM = (mStr) => {
+              const match = upcomingMonths.find((m) => m.monthKey === mStr || m.monthYearShort === mStr || m.monthShort === mStr);
+              return formatMonthObj(match) || mStr;
+            };
+            if (!checkInDate) checkInDate = parseM(bMonths[0]);
+            if (!checkOutDate) checkOutDate = parseM(bMonths[bMonths.length - 1]);
           }
         } else if (userRequestedMonths && userRequestedMonths.size > 0) {
           const sortedMonths = Array.from(userRequestedMonths).sort();
           monthsCount = sortedMonths.length;
           const firstM = upcomingMonths.find((m) => m.monthKey === sortedMonths[0]);
           const lastM = upcomingMonths.find((m) => m.monthKey === sortedMonths[sortedMonths.length - 1]);
-          checkInDate = firstM?.monthName || sortedMonths[0];
-          checkOutDate = lastM?.monthName || sortedMonths[sortedMonths.length - 1];
+          checkInDate = formatMonthObj(firstM) || sortedMonths[0];
+          checkOutDate = formatMonthObj(lastM) || sortedMonths[sortedMonths.length - 1];
         }
 
         const totalPrice = monthlyPrice * monthsCount;
@@ -318,7 +340,15 @@ export function UserGuestConfirmationCard({
               )}
             </div>
             <p className="text-xs sm:text-[13px] text-slate-500 mt-1 font-medium truncate">
-              {reservationDetails.checkInDate} → {reservationDetails.checkOutDate}
+              {reservationDetails.checkInDate && reservationDetails.checkOutDate ? (
+                reservationDetails.checkInDate === reservationDetails.checkOutDate ? (
+                  reservationDetails.checkInDate
+                ) : (
+                  `${reservationDetails.checkInDate} → ${reservationDetails.checkOutDate}`
+                )
+              ) : (
+                reservationDetails.checkInDate || reservationDetails.checkOutDate || (isMonthly ? 'Selected Months' : 'Selected Dates')
+              )}
             </p>
           </div>
           <div className="text-right shrink-0">

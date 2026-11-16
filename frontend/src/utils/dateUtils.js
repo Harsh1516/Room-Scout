@@ -100,6 +100,7 @@ export function getUpcoming12Months() {
  monthKey,
  monthNum,
  year,
+ monthName: monthShort,
  monthShort,
  monthLong,
  monthYear,
