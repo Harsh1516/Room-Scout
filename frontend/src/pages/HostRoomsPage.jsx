@@ -136,7 +136,6 @@ export function HostRoomsPage() {
  };
 
  setRooms((prev) => [...prev, newCard]);
- toast.success(`Added Room ${nextNum}`);
  };
 
  // Inline edit room number
@@ -159,7 +158,6 @@ export function HostRoomsPage() {
  // Remove a room card
  const handleRemoveCard = (roomId) => {
  setRooms((prev) => prev.filter((r) => r._id !== roomId));
- toast.info('Room card removed');
  };
 
  // Save changes to backend and return to dashboard

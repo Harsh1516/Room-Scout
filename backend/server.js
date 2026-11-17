@@ -1,8 +1,9 @@
+import http from 'http';
+import { initSocketServer } from './services/socketService.js';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
-import dotenv from 'dotenv';
 import { connectDB } from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import stayRoutes from './routes/stayRoutes.js';
@@ -215,10 +216,12 @@ app.use(errorMiddleware);
 const PORT = env.PORT;
 
 // Connect to MongoDB Database and initialize HTTP server
-let server;
+const server = http.createServer(app);
+const io = initSocketServer(server);
+
 connectDB().then(() => {
-  server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Backend Server running on port ${PORT}`);
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Backend Server running on port ${PORT} with real-time WebSockets`);
   });
 
   // Run initial booking request expiry check & schedule recurring 60s background sweep

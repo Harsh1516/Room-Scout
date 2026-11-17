@@ -17,7 +17,7 @@ export const getSafeImgSrc = (src) => {
 // Calculate exact byte size of base64 data URL without heavy regex
 export const getBase64ByteSize = (dataUrl) => {
   if (!dataUrl || typeof dataUrl !== 'string') return 0;
-  let b64 = dataUrl;
+  let b64;
   if (dataUrl.startsWith('data:') || dataUrl.startsWith('image/')) {
     const commaIdx = dataUrl.indexOf(',');
     b64 = commaIdx !== -1 ? dataUrl.slice(commaIdx + 1) : dataUrl;
@@ -51,7 +51,9 @@ export const getImageSize = (imgUrl) => {
       const perfSize = entry.encodedBodySize || entry.transferSize || entry.decodedBodySize;
       if (perfSize > 0) return perfSize;
     }
-  } catch {}
+  } catch {
+    /* ignore performance api error */
+  }
   return 180 * 1024;
 };
 

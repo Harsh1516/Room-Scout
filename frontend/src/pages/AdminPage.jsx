@@ -1,3 +1,4 @@
+import { getSocket } from '../services/socket';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -180,6 +181,50 @@ export function AdminPage() {
 
  fetchData();
 
+    // ── Real-Time WebSockets Listener (Instant 0ms surgical sync for Admin Panel) ──
+    const socket = getSocket();
+
+    const handleHostApproved = (payload) => {
+      const hId = payload?.hostId;
+      if (!hId) return;
+      setHosts((prev) =>
+        prev.map((h) =>
+          String(h._id) === String(hId)
+            ? { ...h, status: 'Approved', isApproved: true }
+            : h
+        )
+      );
+    };
+
+    const handleHostUpdated = (payload) => {
+      const hId = payload?.hostId;
+      if (!hId) {
+        fetchData(true);
+        return;
+      }
+      setHosts((prev) =>
+        prev.map((h) =>
+          String(h._id) === String(hId)
+            ? {
+                ...h,
+                status: payload.status || h.status,
+                propertyName: payload.propertyName || h.propertyName,
+                location: payload.location || h.location,
+                hasProperty: true,
+              }
+            : h
+        )
+      );
+    };
+
+    const handleAdminSync = () => fetchData(true);
+
+    socket.on('admin:host_updated', handleHostUpdated);
+    socket.on('admin:host_approved', handleHostApproved);
+    socket.on('admin:hosts_bulk_approved', handleAdminSync);
+    socket.on('admin:host_rejected', handleAdminSync);
+    socket.on('stay:updated', handleAdminSync);
+
  const handleFocus = () => fetchData(true);
  window.addEventListener('focus', handleFocus);
 
@@ -199,6 +244,13 @@ export function AdminPage() {
  window.addEventListener('stayhub_admin_sync', handleCustomSync);
 
  return () => {
+      socket.off('admin:host_updated', handleHostUpdated);
+      socket.off('admin:host_approved', handleHostApproved);
+      socket.off('admin:hosts_bulk_approved', handleAdminSync);
+      socket.off('admin:host_rejected', handleAdminSync);
+      socket.off('stay:updated', handleAdminSync);
+ window.removeEventListener('focus', handleFocus);
+ document.removeEventListener('visibilitychange', handleVisibility);
  window.removeEventListener('storage', handleStorage);
  window.removeEventListener('stayhub_admin_sync', handleCustomSync);
  };
@@ -334,24 +386,39 @@ export function AdminPage() {
  };
 
  const handleApproveHost = async (hostId, hostName) => {
- try {
- setApprovingHostId(hostId);
- await adminAPI.approveHost(hostId);
- setHosts((prev) =>
- prev.map((h) =>
- String(h._id) === String(hostId)
- ? { ...h, status: 'Approved' }
- : h
- )
- );
- broadcastUpdate();
- showToast(`Property for ${hostName || 'Host'} approved & published live!`);
- } catch (err) {
- console.error('Failed to approve host:', err);
- showToast(`Error approving host: ${err.message}`);
- } finally {
- setApprovingHostId(null);
- }
+ const targetHost = hosts.find((h) => String(h._id) === String(hostId));
+  const hasProp = Boolean(targetHost && (targetHost.hasProperty || targetHost.location) && targetHost.propertyName && targetHost.propertyName !== 'Host Property' && !targetHost.propertyName.endsWith("'s Stay") && targetHost.location);
+  if (!hasProp) {
+    showToast(`Cannot approve ${hostName || 'host'}: Property details have not been added yet.`);
+    return;
+  }
+  // 1. Instant optimistic state update: approve immediately on UI
+  setHosts((prev) =>
+    prev.map((h) =>
+      String(h._id) === String(hostId)
+        ? { ...h, status: 'Approved', isApproved: true }
+        : h
+    )
+  );
+  showToast(`Property for ${hostName || 'Host'} approved & published live!`);
+
+  try {
+    setApprovingHostId(hostId);
+    await adminAPI.approveHost(hostId);
+  } catch (err) {
+    console.error('Failed to approve host:', err);
+    // Revert on error
+    setHosts((prev) =>
+      prev.map((h) =>
+        String(h._id) === String(hostId)
+          ? { ...h, status: targetHost.status, isApproved: targetHost.isApproved }
+          : h
+      )
+    );
+    showToast(`Error approving host: ${err.message}`);
+  } finally {
+    setApprovingHostId(null);
+  }
  };
 
  const handleToggleSelectHost = (hostId) => {
@@ -375,9 +442,15 @@ export function AdminPage() {
  }
 
  const pendingSelectedIds = selectedHostIds.filter((id) => {
- const host = hosts.find((h) => String(h._id) === String(id));
- return host && host.status !== 'Approved';
- });
+  const host = hosts.find((h) => String(h._id) === String(id));
+  const hasProp = Boolean(host && (host.hasProperty || host.location) && host.propertyName && host.propertyName !== 'Host Property' && !host.propertyName.endsWith("'s Stay") && host.location);
+  return host && host.status !== 'Approved' && hasProp;
+  });
+
+  if (pendingSelectedIds.length === 0) {
+    toast.info('None of the selected hosts have property details added yet.');
+    return;
+  }
 
  const idsToApprove = pendingSelectedIds.length > 0 ? pendingSelectedIds : selectedHostIds;
 

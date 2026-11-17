@@ -148,7 +148,7 @@ export const extractDateKey = (val) => {
  const str = String(val).trim();
  const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
  if (isoMatch) {
- let [_, y, m, d] = isoMatch;
+ let [, y, m, d] = isoMatch;
  if (parseInt(y, 10) < 2025) y = '2026';
  return `${y}-${m}-${d}`;
  }

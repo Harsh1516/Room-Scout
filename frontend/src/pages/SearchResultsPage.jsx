@@ -1,8 +1,6 @@
-import { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useMemo, useEffect, useRef, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { StayCinematicShowcase } from '../components/common/StayCinematicShowcase';
-import { ScrollReveal } from '../components/common/ScrollReveal';
 
 const SearchInteractiveMap = lazy(() =>
  import('../components/SearchInteractiveMap').then((m) => ({ default: m.SearchInteractiveMap }))
@@ -34,7 +32,6 @@ export function SearchResultsPage({
  onStayClick,
  onBookClick,
 }) {
- const navigate = useNavigate();
  const [showcaseIndex, setShowcaseIndex] = useState(0);
  const [hoveredStayId, setHoveredStayId] = useState(null);
  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
@@ -58,27 +55,6 @@ export function SearchResultsPage({
  window.addEventListener('keydown', handleKeyDown);
  return () => window.removeEventListener('keydown', handleKeyDown);
  }, [isMapModalOpen]);
-
- const categories = ['All', 'PG', 'Hotel', 'Flat'];
- const genders = ['All', 'Male', 'Female', 'Both'];
- const budgetPresets = [
- { label: 'All Budgets', min: null, max: null },
- { label: 'Under ₹3k', min: null, max: 3000 },
- { label: '₹3k - ₹6k', min: 3000, max: 6000 },
- { label: '₹6k - ₹12k', min: 6000, max: 12000 },
- { label: '₹12k+', min: 12000, max: null },
- ];
- const amenityOptions = [
- 'Power Backup',
- 'AC',
- 'Attached Bath',
- 'Food Included',
- 'Wifi',
- 'Security',
- 'Kitchen',
- 'Gym',
- 'Balcony',
- ];
 
  // Compute active filters count
  const activeFiltersCount = useMemo(() => {
@@ -222,120 +198,33 @@ export function SearchResultsPage({
           </div>
         )}
 
-        {/* Empty State: Ultra-Premium Minimalist Card */}
+        {/* Minimal Premium Empty State (Direct on Canvas, No Window Format) */}
         {!isLoading && stays.length === 0 && (
-          <div className="w-full flex-1 flex flex-col items-center justify-center my-auto py-6 sm:py-10 z-10 relative">
+          <div className="w-full flex-1 flex flex-col items-center justify-center my-auto py-16 px-6 z-10 relative">
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full max-w-lg bg-white border border-slate-200/90 rounded-[28px] sm:rounded-[32px] p-6 sm:p-8 sm:py-9 shadow-[0_12px_44px_-10px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.02)] text-center flex flex-col items-center gap-4 mx-auto"
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              className="max-w-md w-full mx-auto text-center flex flex-col items-center select-none"
             >
-              {/* Minimal Dual-Layer Icon */}
-              <div className="relative">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200/80 shadow-2xs flex items-center justify-center text-slate-800">
-                  <span className="material-symbols-outlined text-[32px] sm:text-[38px] text-slate-800">
-                    {isFlatSearch ? 'apartment' : 'home_work'}
-                  </span>
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-slate-900 text-white flex items-center justify-center shadow-xs border-2 border-white">
-                  <span className="material-symbols-outlined text-[13px] sm:text-[14px]">search</span>
-                </div>
-              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+                {isFlatSearch ? 'No flats found' : 'No properties found'}
+              </h2>
+              <p className="mt-3 text-sm sm:text-base text-slate-500 font-normal leading-relaxed max-w-sm">
+                {isFlatSearch
+                  ? 'We could not find any verified flats in this area. Try searching nearby locations or explore other stay types.'
+                  : 'We could not find any properties matching your search. Try adjusting your filters or search terms.'}
+              </p>
 
-              {/* Status Pill Badge */}
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-200/80 text-[11.5px] sm:text-[12px] font-semibold text-slate-700 tracking-wide">
-                <span className={`w-1.5 h-1.5 rounded-full ${isFlatSearch ? 'bg-amber-500 animate-pulse' : 'bg-slate-400'}`} />
-                <span>{isFlatSearch ? 'Flats Coming Soon' : 'No Direct Matches'}</span>
-              </div>
-
-              {/* Title & Explanation (Explicit High-Contrast Colors) */}
-              <div className="space-y-2 max-w-sm">
-                <h2 className="text-[20px] sm:text-[23px] font-extrabold text-slate-900 tracking-tight leading-snug">
-                  {isFlatSearch
-                    ? 'No flats listed in this location yet'
-                    : 'No properties match your search'}
-                </h2>
-                <p className="text-[13.5px] sm:text-[14.5px] text-slate-600 leading-relaxed font-normal">
-                  {isFlatSearch
-                    ? "We're currently onboarding verified flats & apartments here. In the meantime, explore verified PGs and rooms nearby."
-                    : 'Try clearing your filters or exploring our other verified stay categories below.'}
-                </p>
-              </div>
-
-              {/* Active Filter Chips (if any) */}
               {activeFiltersCount > 0 && (
-                <div className="flex flex-wrap items-center justify-center gap-1.5 pt-0.5">
-                  {filters.type && filters.type !== 'All' && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-semibold border border-slate-200">
-                      Category: {filters.type}
-                    </span>
-                  )}
-                  {filters.query && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-semibold border border-slate-200">
-                      Query: &quot;{filters.query}&quot;
-                    </span>
-                  )}
-                  {filters.gender && filters.gender !== 'All' && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-semibold border border-slate-200">
-                      {filters.gender}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* Quick Category Switcher */}
-              <div className="w-full pt-1 pb-1">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-2.5">
-                  Explore Available Categories
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-2">
-                  {['All', 'PG', 'Hotel'].map((cat) => {
-                    const isActive = (filters.type || 'All') === cat;
-                    return (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() => {
-                          if (typeof setCategoryFilter === 'function') {
-                            setCategoryFilter(cat);
-                          }
-                        }}
-                        className={`h-9 px-4.5 rounded-full text-xs font-bold transition-all cursor-pointer active:scale-95 flex items-center gap-1.5 ${
-                          isActive
-                            ? 'bg-slate-900 text-white shadow-xs'
-                            : 'bg-slate-100 hover:bg-slate-200/90 text-slate-700 border border-slate-200/80'
-                        }`}
-                      >
-                        <span className="material-symbols-outlined text-[15px]">
-                          {cat === 'All' ? 'grid_view' : cat === 'PG' ? 'bed' : 'apartment'}
-                        </span>
-                        <span>{cat === 'All' ? 'All Stays' : cat}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full pt-2">
                 <button
                   type="button"
                   onClick={() => resetFilters && resetFilters()}
-                  className="w-full sm:w-auto flex-1 min-h-[46px] px-6 rounded-full bg-slate-950 hover:bg-black text-white text-[13.5px] font-bold transition-all cursor-pointer shadow-sm active:scale-95 inline-flex items-center justify-center gap-2"
+                  className="mt-6 px-6 py-2.5 rounded-full bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold tracking-wide transition-all cursor-pointer active:scale-95 shadow-sm"
                 >
-                  <span className="material-symbols-outlined text-[17px]">restart_alt</span>
-                  <span>Reset Filters</span>
+                  Reset filters
                 </button>
-                <button
-                  type="button"
-                  onClick={() => navigate('/')}
-                  className="w-full sm:w-auto flex-1 min-h-[46px] px-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-[13.5px] font-bold border border-slate-200/80 transition-all cursor-pointer active:scale-95 inline-flex items-center justify-center gap-1.5"
-                >
-                  <span className="material-symbols-outlined text-[17px]">home</span>
-                  <span>Back to Home</span>
-                </button>
-              </div>
+              )}
             </motion.div>
           </div>
         )}

@@ -146,7 +146,7 @@ export function Right({ onLoginClick, onOpenBookings, bookingsCount, onSelectUpl
  animate={{ opacity: 1, y: 0, scale: 1 }}
  exit={{ opacity: 0, y: -8, scale: 0.96 }}
  transition={{ duration: 0.15, ease: "easeOut" }}
- className="md:hidden absolute top-[68px] sm:top-[72px] left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-4 sm:gap-4.5 p-3 sm:p-3.5 rounded-[32px] sm:rounded-[36px] bg-white border border-slate-200/90 shadow-2xl"
+ className="md:hidden absolute top-[62px] sm:top-[64px] left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-3 sm:gap-3.5 px-1.5 py-2.5 sm:px-2 sm:py-3 rounded-full bg-white border border-slate-200/90 shadow-2xl"
  >
  {/* 1. Profile / Login Button (TOP POSITION - Blue & Visible) */}
  <Login
@@ -164,12 +164,12 @@ export function Right({ onLoginClick, onOpenBookings, bookingsCount, onSelectUpl
  setIsWishlistOpen(true);
  setMobileMenuOpen(false);
  }}
- className="relative w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-rose-50 text-rose-600 border border-rose-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0"
+ className="relative w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] rounded-full bg-rose-50 text-rose-600 border border-rose-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0"
  title="Saved Wishlist"
  aria-label="Open Wishlist"
  >
  <svg
- className="w-6.5 h-6.5 text-rose-500"
+ className="w-6.5 h-6.5 sm:w-7 sm:h-7 text-rose-500"
  viewBox="0 0 24 24"
  fill={wishlist.length > 0 ? 'currentColor' : 'none'}
  stroke="currentColor"
@@ -181,7 +181,7 @@ export function Right({ onLoginClick, onOpenBookings, bookingsCount, onSelectUpl
  </svg>
 
  {wishlist.length > 0 && (
- <span className="absolute -top-1 -right-1 px-1.5 min-w-5 h-5 rounded-full bg-rose-500 text-white font-medium text-[10px] flex items-center justify-center shadow-xs border border-white">
+ <span className="absolute -top-1 -right-1 px-1 min-w-5 h-5 rounded-full bg-rose-500 text-white font-medium text-[10px] flex items-center justify-center shadow-xs border-2 border-white">
  {wishlist.length}
  </span>
  )}
@@ -198,12 +198,12 @@ export function Right({ onLoginClick, onOpenBookings, bookingsCount, onSelectUpl
  }
  setMobileMenuOpen(false);
  }}
- className="relative w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0"
+ className="relative w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0"
  title="Booked Places"
  aria-label="Open Booked Places"
  >
  <svg
- className="w-6.5 h-6.5 text-emerald-600"
+ className="w-6.5 h-6.5 sm:w-7 sm:h-7 text-emerald-600"
  viewBox="0 0 24 24"
  fill="none"
  stroke="currentColor"
@@ -218,7 +218,7 @@ export function Right({ onLoginClick, onOpenBookings, bookingsCount, onSelectUpl
  </svg>
 
  {(bookingsCount ?? bookings.length) > 0 && (
- <span className="absolute -top-1 -right-1 px-1.5 min-w-5 h-5 rounded-full bg-[#0f766e] text-white font-medium text-[10px] flex items-center justify-center shadow-xs border border-white">
+ <span className="absolute -top-1 -right-1 px-1 min-w-5 h-5 rounded-full bg-[#0f766e] text-white font-medium text-[10px] flex items-center justify-center shadow-xs border-2 border-white">
  {bookingsCount ?? bookings.length}
  </span>
  )}

@@ -1,3 +1,4 @@
+import { emitToHost, emitToAdmin, emitToGlobal } from '../services/socketService.js';
 /**
  * Intelligently extracts the credited deposit amount from a bank statement line
  */
@@ -1276,6 +1277,13 @@ export async function notifyHostSubscriptionVerified(hostIdOrIdentifier, data = 
       if (host.email) keysToNotify.add(host.email.toLowerCase().trim());
       if (host.userId) keysToNotify.add(String(host.userId));
     }
+
+    // Real-time WebSockets notification to host and admin
+    for (const key of keysToNotify) {
+      emitToHost(key, 'subscription:verified', data);
+    }
+    emitToAdmin('admin:subscription_verified', data);
+    emitToGlobal('stay:updated', {});
 
     const payload = `data: ${JSON.stringify({ type: 'SUBSCRIPTION_VERIFIED', ...data })}\n\n`;
     for (const key of keysToNotify) {

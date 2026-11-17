@@ -1,8 +1,9 @@
+import { getSocket } from '../../services/socket';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { staysAPI } from '../../services/api';
+import { staysAPI, adminAPI } from '../../services/api';
 
 const ALL_CATEGORIES = [
  {
@@ -64,7 +65,32 @@ function renderCategoryIcon(id) {
 
 export function LeftPropertiesPanel({ onSelectCategory, selectedCategory, onSelectUpload }) {
   const navigate = useNavigate();
-  const { isHost } = useAuth();
+  const { isHost, user, isAuthenticated } = useAuth();
+  const [hasHostProperty, setHasHostProperty] = useState(Boolean(user?.hasProperty || isHost));
+
+  useEffect(() => {
+    let mounted = true;
+    if (isAuthenticated && user?.email) {
+      if (user?.hasProperty || isHost) {
+        setHasHostProperty(true);
+      }
+      adminAPI.getHostByEmail(user.email)
+        .then((check) => {
+          if (!mounted) return;
+          if (check?.hasProperty || check?.host?.isApproved || check?.host?.status === 'Approved') {
+            setHasHostProperty(true);
+          }
+        })
+        .catch(() => {});
+    } else {
+      setHasHostProperty(false);
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [isAuthenticated, user?.email, user?.hasProperty, user?.role, isHost]);
+
+  const isHostWithProperty = Boolean(hasHostProperty || user?.hasProperty || isHost);
  const [isOpen, setIsOpen] = useState(false);
  const [activeCategories, setActiveCategories] = useState(ALL_CATEGORIES);
  const [typeCounts, setTypeCounts] = useState({});
@@ -134,12 +160,26 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory, onSele
  fetchTypes();
 
  const handleSync = () => {
- if (mounted) fetchTypes();
- };
+    if (mounted) {
+      fetchTypes();
+      if (user?.email) {
+        adminAPI.getHostByEmail(user.email)
+          .then((check) => {
+            if (check?.hasProperty || check?.host?.isApproved || check?.host?.status === 'Approved') {
+              setHasHostProperty(true);
+            }
+          })
+          .catch(() => {});
+      }
+    }
+  };
 
  window.addEventListener('stayhub_rooms_updated', handleSync);
  window.addEventListener('stayhub_admin_sync', handleSync);
  window.addEventListener('focus', handleSync);
+    const socket = getSocket();
+    socket.on('stay:updated', handleSync);
+    socket.on('stay:approved', handleSync);
 
  let bc = null;
  try {
@@ -162,6 +202,8 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory, onSele
  window.removeEventListener('stayhub_rooms_updated', handleSync);
  window.removeEventListener('stayhub_admin_sync', handleSync);
  window.removeEventListener('focus', handleSync);
+    socket.off('stay:updated', handleSync);
+    socket.off('stay:approved', handleSync);
  if (bc) bc.close();
  };
  }, []);
@@ -172,7 +214,7 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory, onSele
       e.stopPropagation();
     }
     setIsOpen(false);
-    if (isHost) {
+    if (isHostWithProperty) {
       navigate('/host/dashboard');
     } else if (typeof onSelectUpload === 'function') {
       onSelectUpload();
@@ -295,21 +337,36 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory, onSele
  })}
  </div>
 
-            {/* ── Bottom Section: Upload Your Property Button (Premium Minimalist) ── */}
+            {/* ── Bottom Section: Host Dashboard or Upload Your Property ── */}
             <div className="p-3 sm:p-3.5 pt-2.5 border-t border-slate-100 shrink-0 bg-[#faf8f5]/60">
               <button
                 type="button"
                 onClick={handleHostAction}
                 className="w-full min-h-[46px] rounded-full bg-[#181920] hover:bg-[#252733] active:bg-[#101116] text-white border border-slate-800/70 shadow-xs flex items-center justify-center gap-2.5 px-4 font-medium text-sm tracking-tight transition-all duration-200 cursor-pointer select-none active:scale-[0.98] group"
+                title={isHostWithProperty ? 'Open Host Dashboard' : 'Upload Your Property'}
               >
-                <svg className="w-4.5 h-4.5 text-slate-400 group-hover:text-white transition-colors shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="17 8 12 3 7 8" />
-                  <line x1="12" y1="3" x2="12" y2="15" />
-                </svg>
-                <span className="text-white font-medium text-sm tracking-tight">
-                  Upload Your Property
-                </span>
+                {isHostWithProperty ? (
+                  <>
+                    <svg className="w-4.5 h-4.5 text-purple-400 group-hover:text-purple-300 transition-colors shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                      <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                    <span className="text-white font-medium text-sm tracking-tight">
+                      Host Dashboard
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4.5 h-4.5 text-slate-400 group-hover:text-white transition-colors shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    <span className="text-white font-medium text-sm tracking-tight">
+                      Upload Your Property
+                    </span>
+                  </>
+                )}
               </button>
             </div>
 </motion.div>

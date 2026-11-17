@@ -120,6 +120,7 @@ export function HostDashboardPage() {
  guests,
  setGuests,
  loading,
+    hasInitialFetched,
  latestHostPropertyRef,
  hasUnsavedChangesRef,
  savedRoomNumbers,
@@ -134,6 +135,13 @@ export function HostDashboardPage() {
  activeTab,
  setActiveTab,
  });
+
+  // Guard: If host has not registered any property yet, redirect to upload flow
+  useEffect(() => {
+    if (!loading && hasInitialFetched && !user?.hasProperty && !hostProperty?.propertyName && !hostProperty?._id) {
+      navigate('/host/upload', { replace: true });
+    }
+  }, [loading, hasInitialFetched, user?.hasProperty, hostProperty?.propertyName, hostProperty?._id, navigate]);
 
  // 2. Room & Category CRUD Hook
  const {

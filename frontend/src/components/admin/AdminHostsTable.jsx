@@ -19,7 +19,7 @@ export const AdminHostRow = React.memo(function AdminHostRow({
  const formattedDateTime = formatDateTime(host.createdAt || host.joinedDate);
  const isApproved = host.status === 'Approved';
 
- const hasPropertyDetails = Boolean(host.propertyName && host.propertyName !== 'Host Property' && host.location);
+ const hasPropertyDetails = Boolean((host.hasProperty || host.location) && host.propertyName && host.propertyName !== 'Host Property' && !host.propertyName.endsWith("'s Stay") && host.location);
 
  return (
  <tr
@@ -141,7 +141,7 @@ export const AdminHostRow = React.memo(function AdminHostRow({
  </svg>
  </button>
 
- {!isApproved && (
+ {!isApproved && hasPropertyDetails && (
  <button
  type="button"
  onClick={() => onApproveHost(hostId, host.name)}
@@ -322,7 +322,7 @@ export function AdminHostsTable({
  hosts.map((host, idx) => {
  const hostId = host._id;
  const isPending = host.status === 'Pending Approval' || host.status !== 'Approved';
- const hasPropertyDetails = Boolean(host.propertyName && host.propertyName !== 'Host Property' && host.location);
+ const hasPropertyDetails = Boolean((host.hasProperty || host.location) && host.propertyName && host.propertyName !== 'Host Property' && !host.propertyName.endsWith("'s Stay") && host.location);
  const isSelected = selectedHostIds.includes(hostId);
 
  return (
@@ -392,7 +392,7 @@ export function AdminHostsTable({
  </svg>
  </button>
 
- {isPending && (
+ {isPending && hasPropertyDetails && (
  <button
  type="button"
  onClick={() => onApproveHost(hostId, host.name)}

@@ -156,26 +156,51 @@ export async function requireHost(req, res, next) {
   });
 }
 
+// Fast in-memory cache for verified admin keys (avoids expensive synchronous bcrypt on every request)
+const verifiedAdminKeyCache = new Map();
+
 export function adminKeyIsValid(req) {
+  if (req && req._adminKeyValid !== undefined) {
+    return req._adminKeyValid;
+  }
+
   const adminKeyHeader = req.headers?.['x-admin-key'];
   const validAdminKey = env.ADMIN_KEY || process.env.ADMIN_KEY;
-  if (!validAdminKey || !adminKeyHeader) return false;
+  if (!validAdminKey || !adminKeyHeader) {
+    if (req) req._adminKeyValid = false;
+    return false;
+  }
 
   const enteredKey = adminKeyHeader.trim();
   const storedKey = validAdminKey.trim();
 
+  // Check in-memory cache first
+  if (verifiedAdminKeyCache.has(enteredKey)) {
+    const isCachedValid = verifiedAdminKeyCache.get(enteredKey);
+    if (req) req._adminKeyValid = isCachedValid;
+    return isCachedValid;
+  }
+
+  let isValid = false;
   // If stored key is a Bcrypt hash ($2a$, $2b$, $2y$, $2x$)
   if (/^\$2[abxy]\$\d+\$/.test(storedKey)) {
     try {
-      return bcrypt.compareSync(enteredKey, storedKey);
+      isValid = bcrypt.compareSync(enteredKey, storedKey);
     } catch (err) {
       console.error('[Admin Key Auth Error]:', err.message);
-      return false;
+      isValid = false;
     }
+  } else {
+    // Graceful fallback for legacy plaintext stored passkey
+    isValid = enteredKey === storedKey;
   }
 
-  // Graceful fallback for legacy plaintext stored passkey
-  return enteredKey === storedKey;
+  // Cache verified result
+  if (verifiedAdminKeyCache.size > 50) verifiedAdminKeyCache.clear();
+  verifiedAdminKeyCache.set(enteredKey, isValid);
+
+  if (req) req._adminKeyValid = isValid;
+  return isValid;
 }
 
 // Require Admin Privileges (JWT admin role or master key header)
@@ -183,6 +208,19 @@ export function requireAdmin(req, res, next) {
   if (adminKeyIsValid(req)) {
     req.isAdminKey = true;
     return next();
+  }
+
+  // Fallback: If protect was not mounted in front, decode JWT Bearer token directly
+  if (!req.user && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    try {
+      const token = req.headers.authorization.split(' ')[1];
+      const decoded = jwt.verify(token, env.JWT_SECRET || process.env.JWT_SECRET);
+      if (decoded) {
+        req.user = decoded;
+      }
+    } catch {
+      /* ignore */
+    }
   }
 
   if (isAdminUser(req)) {

@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-import nodemailer from 'nodemailer';
 import { User } from '../models/User.js';
 import { Host } from '../models/Host.js';
 import { Stay } from '../models/Stay.js';
@@ -11,19 +10,6 @@ import { generateToken } from '../middleware/authMiddleware.js';
 import { sendPasswordResetEmail, testEmailConnection } from '../services/emailService.js';
 import { uploadSecureImage } from '../utils/imageSecurity.js';
 import { OAuth2Client } from 'google-auth-library';
-
-// Helper to create Nodemailer Gmail Transporter
-function getMailTransporter() {
-  const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/\s+/g, '') : null;
-
-  if (!user || !pass) return null;
-
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user, pass },
-  });
-}
 
 // Generate random 10-character password
 function generateRandom10DigitPassword() {
@@ -893,18 +879,6 @@ export const testEmailService = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'No target email provided.' });
     }
 
-    const transporter = getMailTransporter();
-    if (transporter) {
-      await transporter.verify();
-      await transporter.sendMail({
-        from: `"RoomScout Test" <${process.env.EMAIL_USER}>`,
-        to: targetEmail,
-        subject: 'RoomScout SMTP Test',
-        text: 'Your SMTP configuration is active and working perfectly!',
-      });
-      return res.json({ success: true, message: `Test email sent successfully to ${targetEmail}` });
-    }
-
     if (typeof testEmailConnection === 'function') {
       const result = await testEmailConnection(targetEmail);
       return res.json(result);
@@ -912,7 +886,7 @@ export const testEmailService = async (req, res, next) => {
 
     return res.status(400).json({
       success: false,
-      message: 'Missing EMAIL_USER and EMAIL_PASS environment variables.',
+      message: 'Email service is not available.',
     });
   } catch (error) {
     console.error('Diagnostic Email Test Error:', error);

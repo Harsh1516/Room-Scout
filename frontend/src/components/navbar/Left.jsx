@@ -14,24 +14,32 @@ export function Left({
  isHidden = false,
 }) {
  const navigate = useNavigate();
- const { isAuthenticated, user } = useAuth();
- const [hasHostProperty, setHasHostProperty] = useState(Boolean(user?.hasProperty));
+ const { isAuthenticated, user, isHost } = useAuth();
+  const [hasHostProperty, setHasHostProperty] = useState(Boolean(user?.hasProperty || isHost));
 
- useEffect(() => {
- if (isAuthenticated && (user?.role === 'host' || user?.role === 'admin')) {
- if (user?.hasProperty) {
- setHasHostProperty(true);
- return;
- }
- adminAPI.getHostByEmail(user.email)
- .then((check) => setHasHostProperty(Boolean(check?.hasProperty)))
- .catch(() => setHasHostProperty(false));
- } else {
- setHasHostProperty(false);
- }
- }, [isAuthenticated, user?.email, user?.role, user?.hasProperty]);
+  useEffect(() => {
+    let mounted = true;
+    if (isAuthenticated && user?.email) {
+      if (user?.hasProperty || isHost) {
+        setHasHostProperty(true);
+      }
+      adminAPI.getHostByEmail(user.email)
+        .then((check) => {
+          if (!mounted) return;
+          if (check?.hasProperty || check?.host?.isApproved || check?.host?.status === 'Approved') {
+            setHasHostProperty(true);
+          }
+        })
+        .catch(() => {});
+    } else {
+      setHasHostProperty(false);
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [isAuthenticated, user?.email, user?.role, user?.hasProperty, isHost]);
 
- const isHostWithProperty = isAuthenticated && (user?.role === 'host' || user?.role === 'admin') && hasHostProperty;
+  const isHostWithProperty = isAuthenticated && (hasHostProperty || user?.hasProperty || user?.role === 'host' || user?.role === 'admin' || isHost);
 
  const handleBack = () => {
  if (typeof onBack === 'function') {

@@ -1,3 +1,4 @@
+import { getSocket } from '../../services/socket';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { adminAPI, staysAPI } from '../../services/api';
 import { toast } from '../../context/ToastContext';
@@ -245,6 +246,7 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
  const savedRoomNumbersRef = useRef(new Set());
  const prevStatusRef = useRef(null);
  const hasInitialFetchedRef = useRef(false);
+ const [hasInitialFetched, setHasInitialFetched] = useState(false);
 
  useEffect(() => {
  latestHostPropertyRef.current = hostProperty;
@@ -555,6 +557,8 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
  } catch (err) {
  console.error('Error fetching host dashboard data:', err);
  } finally {
+ hasInitialFetchedRef.current = true;
+ setHasInitialFetched(true);
  setLoading(false);
  }
  }, [user?.email, user?._id, user?.name, user?.phone, user?.status, user?.isApproved, updateUserSession]);
@@ -622,6 +626,30 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
 
  // Sync event listeners: storage, custom events, focus, visibility, BroadcastChannel
  useEffect(() => {
+    // ── Real-Time WebSockets Listener (Instant 0ms sync across devices) ──
+    const socket = getSocket();
+    const handleHostApproved = (payload) => {
+      setHostProperty((prev) => (prev ? { ...prev, status: 'Approved', isApproved: true, hasBeenApproved: true } : prev));
+      fetchHostData();
+      toast.success('🎉 Property approved by Admin! Room scheduling is now unlocked.');
+    };
+    const handleHostStatus = (payload) => {
+      if (payload?.status) {
+        setHostProperty((prev) => (prev ? { ...prev, status: payload.status, isApproved: payload.status === 'Approved' } : prev));
+      }
+      fetchHostData();
+    };
+    const handleRealtimeRefresh = () => {
+      fetchHostData();
+    };
+    socket.on('host:approved', handleHostApproved);
+    socket.on('host:status_updated', handleHostStatus);
+    socket.on('host:property_saved', handleRealtimeRefresh);
+    socket.on('stay:updated', handleRealtimeRefresh);
+    socket.on('subscription:verified', handleRealtimeRefresh);
+    socket.on('booking:new', handleRealtimeRefresh);
+    socket.on('booking:updated', handleRealtimeRefresh);
+
  const handleStorage = (e) => {
  if (
  e.key === 'stayhub_admin_sync_ts' ||
@@ -674,6 +702,13 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
  document.addEventListener('visibilitychange', handleVisibilityChange);
 
  return () => {
+      socket.off('host:approved', handleHostApproved);
+      socket.off('host:status_updated', handleHostStatus);
+      socket.off('host:property_saved', handleRealtimeRefresh);
+      socket.off('stay:updated', handleRealtimeRefresh);
+      socket.off('subscription:verified', handleRealtimeRefresh);
+      socket.off('booking:new', handleRealtimeRefresh);
+      socket.off('booking:updated', handleRealtimeRefresh);
  window.removeEventListener('storage', handleStorage);
  window.removeEventListener('stayhub_admin_sync', handleCustomSync);
  window.removeEventListener('stayhub_slots_updated', handleCustomSync);
@@ -702,5 +737,6 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
  savedRoomNumbersRef,
  fetchHostData,
  refreshGuests,
+ hasInitialFetched,
  };
 }

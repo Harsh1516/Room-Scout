@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useStaySearch } from './hooks/useStaySearch';
 import { Navbar } from './components/Navbar';
 import { WishlistProvider, useWishlist } from './context/WishlistContext';
@@ -295,8 +295,9 @@ function AppContent() {
  onLoginClick={() => handleOpenLoginModal('user', '')}
  onOpenBookings={() => setIsBookingsOpen(true)}
  bookingsCount={bookings.length}
- onSelectUpload={handleSelectUpload}
- />
+					onSelectUpload={handleSelectUpload}
+					hasResults={normalizedPath === '/search' ? (isLoadingStays || (paginatedStays && paginatedStays.length > 0)) : true}
+				/>
  )}
 
  <Suspense fallback={<PageFallback />}>
@@ -419,7 +420,7 @@ function AppContent() {
  path="/booking/:id"
  element={
  <ProtectedRoute>
- <BookingDetailsPage />
+ <BookingDetailsPage onLoginClick={() => handleOpenLoginModal('user', '')} />
  </ProtectedRoute>
  }
  />

@@ -1,3 +1,4 @@
+import { emitToHost, emitToAdmin, emitToGlobal } from '../services/socketService.js';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { v2 as cloudinary } from 'cloudinary';
@@ -144,7 +145,9 @@ export const getHosts = async (req, res, next) => {
     const hosts = await Host.find(query).sort({ createdAt: -1 }).lean();
 
     const hostIds = hosts.map((h) => h._id);
-    const stays = await Stay.find({ hostId: { $in: hostIds } }).lean();
+    const stays = await Stay.find({ hostId: { $in: hostIds } })
+      .select('-images -description -rules -facilities -roomRates.photos -roomRates.images')
+      .lean();
 
     const stayMap = new Map();
     stays.forEach((s) => stayMap.set(s.hostId.toString(), s));
@@ -164,9 +167,10 @@ export const getHosts = async (req, res, next) => {
         status: h.status,
         isApproved: h.status === 'Approved' || Boolean(h.isApproved),
         hasBeenApproved: Boolean(h.hasBeenApproved || h.status === 'Approved'),
-        propertyName: s.title || `${h.name}'s Stay`,
-        propertyType: s.type || 'PG',
-        genderType: s.genderType || 'Both',
+        hasProperty: Boolean(s._id || s.title),
+        propertyName: s.title || '',
+        propertyType: s.type || '',
+        genderType: s.genderType || '',
         location: s.location || '',
         address: s.address || '',
         city: s.city || '',
@@ -183,9 +187,23 @@ export const getHosts = async (req, res, next) => {
         rateUnit: s.rateUnit || '/month',
         rating: s.rating || 0,
         image: s.image || '',
-        images: s.images || [],
-        rooms: s.rooms || [],
-        roomRates: s.roomRates || [],
+        images: [],
+        rooms: (s.rooms || []).map((rm) => ({
+          _id: rm._id,
+          roomNumber: rm.roomNumber,
+          type: rm.type,
+          price: rm.price,
+          rateUnit: rm.rateUnit,
+          capacity: rm.capacity,
+          status: rm.status,
+        })),
+        roomRates: (s.roomRates || []).map((rr) => ({
+          _id: rr._id,
+          type: rr.type,
+          price: rr.price,
+          rateUnit: rr.rateUnit,
+          capacity: rr.capacity,
+        })),
         facilities: s.facilities || [],
         rules: s.rules || [],
         subscription: h.subscription || { status: 'NONE' },
@@ -441,26 +459,27 @@ export const createHost = async (req, res, next) => {
 
     const existingStay = await Stay.findOne({ hostId: host._id });
 
-    const cleanPrimaryImage = await uploadSecureImage(image, 'roomscout/properties');
     let processedImages = [];
-    if (Array.isArray(images)) {
-      if (images.length > 0) {
-        for (const img of images) {
-          if (img) {
-            const uploadedUrl = await uploadSecureImage(img, 'roomscout/properties');
-            if (uploadedUrl) processedImages.push(uploadedUrl);
-          }
-        }
-      } else if (cleanPrimaryImage) {
-        processedImages = [cleanPrimaryImage];
-      }
-    } else if (cleanPrimaryImage) {
-      processedImages = [cleanPrimaryImage];
+    if (Array.isArray(images) && images.length > 0) {
+      // Parallelize cloud uploads for all property showcase images simultaneously
+      const validImages = images.filter((img) => img && typeof img === 'string');
+      processedImages = (
+        await Promise.all(
+          validImages.map((img) => uploadSecureImage(img, 'roomscout/properties'))
+        )
+      ).filter(Boolean);
+    } else if (image && typeof image === 'string' && image.trim()) {
+      const cleanPrimaryImage = await uploadSecureImage(image.trim(), 'roomscout/properties');
+      if (cleanPrimaryImage) processedImages = [cleanPrimaryImage];
     } else if (existingStay?.images?.length > 0) {
       processedImages = existingStay.images;
     }
 
-    const resolvedPrimaryImage = processedImages[0] || cleanPrimaryImage || (images !== undefined ? '' : existingStay?.image) || '';
+    const resolvedPrimaryImage =
+      processedImages[0] ||
+      (image && typeof image === 'string' && (image.startsWith('http://') || image.startsWith('https://')) ? image : '') ||
+      (images !== undefined ? '' : existingStay?.image) ||
+      '';
 
     const resolvedTitle = propertyName || title || existingStay?.title || `${host.name}'s Stay`;
     const resolvedType = propertyType || type || existingStay?.type || 'PG';
@@ -513,21 +532,22 @@ export const createHost = async (req, res, next) => {
     const resolvedRoomRates =
       roomRates !== undefined
         ? Array.isArray(roomRates)
-          ? roomRates.map((rr) => ({
-              ...(rr._id && mongoose.Types.ObjectId.isValid(rr._id) ? { _id: rr._id } : {}),
-              id: rr.id || (rr._id ? String(rr._id) : undefined),
-              type: rr.type,
-              price: rr.price,
-              rateUnit: rr.rateUnit,
-              capacity: Number(rr.capacity) || 1,
-              features: Array.isArray(rr.features) ? rr.features : [],
-              photos: Array.isArray(rr.photos)
+          ? roomRates.map((rr) => {
+              const normalizedPhotos = Array.isArray(rr.photos)
                 ? rr.photos
-                : (rr.photos && typeof rr.photos === 'object' ? Object.entries(rr.photos).map(([label, url]) => ({ label, url })) : []),
-              images: Array.isArray(rr.images)
-                ? rr.images
-                : (Array.isArray(rr.photos) ? rr.photos.map((p) => (typeof p === 'string' ? p : p.url)).filter(Boolean) : []),
-            }))
+                : (rr.photos && typeof rr.photos === 'object' ? Object.entries(rr.photos).map(([label, url]) => ({ label, url })) : []);
+              return {
+                ...(rr._id && mongoose.Types.ObjectId.isValid(rr._id) ? { _id: rr._id } : {}),
+                id: rr.id || (rr._id ? String(rr._id) : undefined),
+                type: rr.type,
+                price: rr.price,
+                rateUnit: rr.rateUnit,
+                capacity: Number(rr.capacity) || 1,
+                features: Array.isArray(rr.features) ? rr.features : [],
+                photos: normalizedPhotos,
+                images: [],
+              };
+            })
           : []
         : (existingStay?.roomRates || []);
 
@@ -651,6 +671,15 @@ export const createHost = async (req, res, next) => {
       property: updatedStay,
     };
 
+    emitToHost(cleanEmail, 'host:property_saved', { host: mergedHost, stay: updatedStay });
+    emitToAdmin('admin:host_updated', {
+      hostId: host._id.toString(),
+      status: host.status,
+      propertyName: updatedStay?.title || resolvedTitle,
+      location: updatedStay?.location || resolvedLocation,
+    });
+    emitToGlobal('stay:updated', { stayId: updatedStay?._id, hostId: host._id });
+
     return res.status(200).json({
       success: true,
       message: 'Property details saved successfully!',
@@ -673,39 +702,28 @@ export const bulkApproveHosts = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Please provide hostIds array' });
     }
 
-    const updatedHosts = [];
-    for (const id of hostIds) {
-      const host = await Host.findByIdAndUpdate(
-        id,
-        { $set: { status: 'Approved', isApproved: true, hasBeenApproved: true } },
-        { new: true }
-      );
-      if (host) {
-        const hasActiveSub = Boolean(
-          host.subscription?.status === 'ACTIVE' &&
-          host.subscription?.expiresAt &&
-          new Date(host.subscription.expiresAt) > new Date()
-        );
+    // High performance parallel bulk update without downloading large documents
+    await Promise.all([
+      Host.updateMany(
+        { _id: { $in: hostIds } },
+        { $set: { status: 'Approved', isApproved: true, hasBeenApproved: true } }
+      ),
+      Stay.updateMany(
+        { hostId: { $in: hostIds } },
+        { $set: { isApproved: true } }
+      ),
+    ]);
 
-        await Stay.findOneAndUpdate(
-          { hostId: host._id },
-          { 
-            $set: { 
-              isApproved: true, 
-              isPublished: hasActiveSub 
-            } 
-          },
-          { new: true }
-        );
-        updatedHosts.push(host);
-      }
-    }
+    hostIds.forEach((hId) => {
+      emitToHost(hId, 'host:approved', { status: 'Approved', isApproved: true, hasBeenApproved: true });
+    });
+    emitToAdmin('admin:hosts_bulk_approved', { hostIds });
+    emitToGlobal('stay:updated', { hostIds });
 
     return res.json({
       success: true,
-      message: `Successfully approved ${updatedHosts.length} host${updatedHosts.length === 1 ? '' : 's'}!`,
-      count: updatedHosts.length,
-      hosts: updatedHosts,
+      message: `Successfully approved ${hostIds.length} host${hostIds.length === 1 ? '' : 's'}!`,
+      count: hostIds.length,
     });
   } catch (error) {
     console.error('Error bulk approving hosts:', error);
@@ -718,32 +736,58 @@ export const bulkApproveHosts = async (req, res, next) => {
 export const approveHost = async (req, res, next) => {
   try {
     const { id } = req.params;
+    // Fast lightweight verification selecting only _id without transferring large stay documents
+    const existingStay = await Stay.findOne({ hostId: id }).select('_id').lean();
+    if (!existingStay) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot approve host: Property details have not been submitted by the host yet.',
+      });
+    }
+
     const host = await Host.findByIdAndUpdate(
       id,
       { $set: { status: 'Approved', isApproved: true, hasBeenApproved: true } },
       { new: true }
-    );
+    ).select('-password');
 
     if (!host) return res.status(404).json({ success: false, message: 'Host not found' });
 
-    // Host approval strictly stores the approved stay in the database.
-    // It only becomes published (live on the website) if an active subscription plan is verified!
+    // Ensure corresponding User account role is upgraded to 'host'
+    if (host.email) {
+      await User.updateOne({ email: host.email.toLowerCase() }, { $set: { role: 'host' } });
+    }
+
     const hasActiveSub = Boolean(
       host.subscription?.status === 'ACTIVE' &&
       host.subscription?.expiresAt &&
       new Date(host.subscription.expiresAt) > new Date()
     );
 
-    const stay = await Stay.findOneAndUpdate(
+    // Fast update without serializing or downloading multi-megabyte stay media
+    await Stay.updateOne(
       { hostId: host._id },
       { 
         $set: { 
           isApproved: true,
           isPublished: hasActiveSub 
         } 
-      },
-      { new: true }
+      }
     );
+
+    emitToHost(host.email, 'host:approved', {
+      status: 'Approved',
+      isApproved: true,
+      hasBeenApproved: true,
+      isLive: hasActiveSub,
+      hostId: host._id.toString(),
+    });
+    emitToAdmin('admin:host_approved', {
+      hostId: host._id.toString(),
+      status: 'Approved',
+      isApproved: true,
+    });
+    emitToGlobal('stay:updated', { stayId: existingStay._id, hostId: host._id });
 
     return res.json({
       success: true,
@@ -751,7 +795,6 @@ export const approveHost = async (req, res, next) => {
         ? 'Property approved and live on website!'
         : 'Property approved and saved in database! It will go live once an active subscription plan is purchased and verified.',
       host,
-      stay,
       isLive: hasActiveSub,
     });
   } catch (error) {
@@ -773,6 +816,11 @@ export const rejectHost = async (req, res, next) => {
     );
 
     if (!host) return res.status(404).json({ success: false, message: 'Host not found' });
+
+    // Ensure corresponding User account role is upgraded to 'host'
+    if (host.email) {
+      await User.updateOne({ email: host.email.toLowerCase() }, { $set: { role: 'host' } });
+    }
 
     await Stay.updateMany({ hostId: host._id }, { $set: { isApproved: false, isPublished: false } });
 

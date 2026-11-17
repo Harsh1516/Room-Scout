@@ -1,6 +1,8 @@
+import { authenticateSocket, getSocket } from '../services/socket';
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { authAPI } from '../services/api';
+import { authAPI, adminAPI } from '../services/api';
 import { clearAllHostCaches } from '../hooks/host/useHostDashboardData';
+import { clearImagesFromIndexedDB } from '../utils/draftStorage';
 
 const AuthContext = createContext();
 
@@ -167,20 +169,85 @@ export function AuthProvider({ children }) {
  }
 
  const cleanUser = sanitizeUserSession(userData);
- if (cleanUser) {
- try {
- localStorage.setItem('roomscout_user', JSON.stringify(cleanUser));
- } catch {}
- setUser(cleanUser);
- } else {
- localStorage.removeItem('roomscout_user');
- setUser(null);
- clearAllHostCaches();
- }
- } catch (e) {
+      if (cleanUser) {
+        try {
+          const prevUserRaw = localStorage.getItem('roomscout_user');
+          if (prevUserRaw) {
+            const prevUser = JSON.parse(prevUserRaw);
+            const prevEmail = (prevUser?.email || '').trim().toLowerCase();
+            const nextEmail = (cleanUser.email || '').trim().toLowerCase();
+            if (prevEmail && nextEmail && prevEmail !== nextEmail) {
+              clearAllHostCaches();
+              localStorage.removeItem('roomscout_host_upload_draft');
+              localStorage.removeItem('roomscout_upload_draft_guest');
+              const keysToRemove = [];
+              for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && k.startsWith('roomscout_upload_draft_')) {
+                  keysToRemove.push(k);
+                }
+              }
+              keysToRemove.forEach((k) => localStorage.removeItem(k));
+              clearImagesFromIndexedDB();
+            }
+          }
+        } catch {}
+
+        try {
+          localStorage.setItem('roomscout_user', JSON.stringify(cleanUser));
+        } catch {}
+        setUser(cleanUser);
+      } else {
+        localStorage.removeItem('roomscout_user');
+        setUser(null);
+        clearAllHostCaches();
+        try {
+          localStorage.removeItem('roomscout_host_upload_draft');
+          localStorage.removeItem('roomscout_upload_draft_guest');
+          const keysToRemove = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith('roomscout_upload_draft_')) {
+              keysToRemove.push(k);
+            }
+          }
+          keysToRemove.forEach((k) => localStorage.removeItem(k));
+          clearImagesFromIndexedDB();
+        } catch {}
+      }
+    } catch (e) {
  console.error('Failed to sync auth state:', e);
  }
  }, []);
+
+  // Real-time WebSocket connection sync
+  useEffect(() => {
+    authenticateSocket(user);
+    if (!user?.email) return;
+
+    const socket = getSocket();
+    const handleHostApproved = (payload) => {
+      setUser((prev) => {
+        if (!prev) return prev;
+        const updated = {
+          ...prev,
+          role: 'host',
+          status: 'Approved',
+          isApproved: true,
+          hasProperty: true,
+        };
+        try {
+          localStorage.setItem('roomscout_user', JSON.stringify(updated));
+        } catch {}
+        return updated;
+      });
+    };
+
+    socket.on('host:approved', handleHostApproved);
+    return () => {
+      socket.off('host:approved', handleHostApproved);
+    };
+  }, [user?.email, user?._id, user?.status]);
 
  // Verify JWT token on initial load, on focus, and listen to session invalidation
  useEffect(() => {
@@ -229,14 +296,35 @@ export function AuthProvider({ children }) {
  const resolvedProfile = profile?.user || profile;
 
  if (resolvedProfile && (resolvedProfile._id || resolvedProfile.email)) {
- const cleanProfile = sanitizeUserSession(resolvedProfile);
- setUser((prev) => {
- const updated = sanitizeUserSession({ ...(prev || {}), ...cleanProfile });
- try {
- localStorage.setItem('roomscout_user', JSON.stringify(updated));
- } catch {}
- return updated;
- });
+         const cleanProfile = sanitizeUserSession(resolvedProfile);
+        setUser((prev) => {
+          const updated = sanitizeUserSession({ ...(prev || {}), ...cleanProfile });
+          try {
+            localStorage.setItem('roomscout_user', JSON.stringify(updated));
+          } catch {}
+          return updated;
+        });
+
+        if (cleanProfile?.email) {
+          adminAPI.getHostByEmail(cleanProfile.email).then((hCheck) => {
+            if (hCheck?.hasProperty || hCheck?.host?.isApproved || hCheck?.host?.status === 'Approved') {
+              setUser((prev) => {
+                if (!prev) return prev;
+                const nextUser = {
+                  ...prev,
+                  role: 'host',
+                  status: 'Approved',
+                  isApproved: true,
+                  hasProperty: true,
+                };
+                try {
+                  localStorage.setItem('roomscout_user', JSON.stringify(nextUser));
+                } catch {}
+                return nextUser;
+              });
+            }
+          }).catch(() => {});
+        }
  } else {
  syncAuthState(null, null);
  window.dispatchEvent(
@@ -439,7 +527,7 @@ export function AuthProvider({ children }) {
  user: currentUser,
  token,
  isAuthenticated: Boolean(currentUser && token),
- isHost: currentUser?.role === 'host',
+ isHost: currentUser?.role === 'host' || Boolean(currentUser?.hasProperty),
  isGuest: currentUser?.role === 'user',
  isAdmin: currentUser?.role === 'admin',
  loading,

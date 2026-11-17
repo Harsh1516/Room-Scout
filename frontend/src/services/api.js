@@ -167,12 +167,6 @@ export const authAPI = {
  body: JSON.stringify({ credential, accessToken, role }),
  }),
 
- googleLogin: ({ credential, accessToken, role }) =>
- request('/auth/google', {
- method: 'POST',
- body: JSON.stringify({ credential, accessToken, role }),
- }),
-
  register: (userData) =>
  request('/auth/register', {
  method: 'POST',
@@ -344,21 +338,6 @@ export const bookingsAPI = {
 
  cascadeDeleteRoomBookings: (payload) =>
  request('/bookings/room/cascade-delete', {
- method: 'POST',
- body: JSON.stringify(payload),
- }),
-
- getBookingUpiDetails: (bookingId) =>
- request(`/payments/booking-upi-details/${encodeURIComponent(bookingId)}`),
-
- submitUpiReference: (payload) =>
- request('/payments/submit-upi-reference', {
- method: 'POST',
- body: JSON.stringify(payload),
- }),
-
- verifyReference: (payload) =>
- request('/payments/verify-reference', {
  method: 'POST',
  body: JSON.stringify(payload),
  }),

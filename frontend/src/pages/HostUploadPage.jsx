@@ -1,3 +1,4 @@
+import { getSocket } from '../services/socket';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -124,12 +125,10 @@ const DEFAULT_HOST_FORM_DATA = {
 
 const CANONICAL_DRAFT_KEY = 'roomscout_host_upload_draft';
 
-const getDraftStorageKeys = (user) => {
-  const keys = [CANONICAL_DRAFT_KEY];
-  if (user?._id) keys.push(`roomscout_upload_draft_${user._id}`);
-  if (user?.email) keys.push(`roomscout_upload_draft_${user.email}`);
-  keys.push('roomscout_upload_draft_guest');
-  return keys;
+const getDraftStorageKey = (user) => {
+  if (user?.email) return `roomscout_upload_draft_${user.email.trim().toLowerCase()}`;
+  if (user?._id) return `roomscout_upload_draft_${user._id}`;
+  return 'roomscout_upload_draft_guest';
 };
 
 const saveDraftToStorage = (formData, activeStep, googleMapsUrl, user) => {
@@ -159,23 +158,28 @@ const saveDraftToStorage = (formData, activeStep, googleMapsUrl, user) => {
 
     if (!hasAnyContent) return;
 
-    // Asynchronously persist uploaded images in IndexedDB to avoid localStorage 5MB quota errors
+    const email = (user?.email || '').trim().toLowerCase();
+    const id = (user?._id || '').toString();
+
+    // Asynchronously persist uploaded images in IndexedDB strictly scoped to this user
     if (Array.isArray(formData.images)) {
-      saveImagesToIndexedDB(formData.images);
+      saveImagesToIndexedDB(formData.images, email || id || 'guest');
     }
 
     const payload = JSON.stringify({
       formData,
       activeStep,
       googleMapsUrl,
-      userEmail: user?.email || '',
-      userId: user?._id || '',
+      userEmail: email,
+      userId: id,
       updatedAt: Date.now(),
     });
 
+    const primaryKey = getDraftStorageKey(user);
+    localStorage.setItem(primaryKey, payload);
+    if (email) localStorage.setItem(`roomscout_upload_draft_${email}`, payload);
+    if (id) localStorage.setItem(`roomscout_upload_draft_${id}`, payload);
     localStorage.setItem(CANONICAL_DRAFT_KEY, payload);
-    if (user?._id) localStorage.setItem(`roomscout_upload_draft_${user._id}`, payload);
-    if (user?.email) localStorage.setItem(`roomscout_upload_draft_${user.email}`, payload);
   } catch (storageErr) {
     if (storageErr && (storageErr.name === 'QuotaExceededError' || storageErr.code === 22)) {
       try {
@@ -184,15 +188,18 @@ const saveDraftToStorage = (formData, activeStep, googleMapsUrl, user) => {
           images: (formData.images || []).filter((img) => typeof img === 'string' && img.startsWith('http')),
           image: typeof formData.image === 'string' && formData.image.startsWith('http') ? formData.image : '',
         };
+        const email = (user?.email || '').trim().toLowerCase();
+        const id = (user?._id || '').toString();
         const safePayload = JSON.stringify({
           formData: safeData,
           activeStep,
           googleMapsUrl,
-          userEmail: user?.email || '',
-          userId: user?._id || '',
+          userEmail: email,
+          userId: id,
           updatedAt: Date.now(),
         });
-        localStorage.setItem(CANONICAL_DRAFT_KEY, safePayload);
+        const primaryKey = getDraftStorageKey(user);
+        localStorage.setItem(primaryKey, safePayload);
       } catch {
         /* ignore */
       }
@@ -204,9 +211,12 @@ const clearDraftFromStorage = (user) => {
   try {
     localStorage.removeItem(CANONICAL_DRAFT_KEY);
     if (user?._id) localStorage.removeItem(`roomscout_upload_draft_${user._id}`);
-    if (user?.email) localStorage.removeItem(`roomscout_upload_draft_${user.email}`);
+    if (user?.email) {
+      localStorage.removeItem(`roomscout_upload_draft_${user.email}`);
+      localStorage.removeItem(`roomscout_upload_draft_${user.email.trim().toLowerCase()}`);
+    }
     localStorage.removeItem('roomscout_upload_draft_guest');
-    clearImagesFromIndexedDB();
+    clearImagesFromIndexedDB(user?.email || user?._id || 'guest');
   } catch {
     /* ignore */
   }
@@ -214,17 +224,60 @@ const clearDraftFromStorage = (user) => {
 
 const loadDraftFromStorage = (user) => {
   try {
-    const candidateKeys = getDraftStorageKeys(user);
-    for (const key of candidateKeys) {
-      const raw = localStorage.getItem(key);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === 'object' && parsed.formData) {
-          if (user?.email && parsed.userEmail && parsed.userEmail.toLowerCase() !== user.email.toLowerCase()) {
-            continue;
+    const targetEmail = (user?.email || '').trim().toLowerCase();
+    const targetId = (user?._id || '').toString();
+
+    // 1. If user is authenticated, search only user-scoped keys
+    if (targetEmail || targetId) {
+      const candidateKeys = [];
+      if (targetEmail) candidateKeys.push(`roomscout_upload_draft_${targetEmail}`);
+      if (targetId) candidateKeys.push(`roomscout_upload_draft_${targetId}`);
+
+      for (const key of candidateKeys) {
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object' && parsed.formData) {
+            const draftEmail = (parsed.userEmail || '').trim().toLowerCase();
+            const draftId = (parsed.userId || '').toString();
+            if (
+              (targetEmail && draftEmail && draftEmail === targetEmail) ||
+              (targetId && draftId && draftId === targetId)
+            ) {
+              return parsed;
+            }
           }
-          return parsed;
         }
+      }
+
+      // Check canonical key ONLY if it strictly belongs to this logged-in user
+      const rawCanonical = localStorage.getItem(CANONICAL_DRAFT_KEY);
+      if (rawCanonical) {
+        const parsedCanonical = JSON.parse(rawCanonical);
+        if (parsedCanonical && typeof parsedCanonical === 'object' && parsedCanonical.formData) {
+          const draftEmail = (parsedCanonical.userEmail || '').trim().toLowerCase();
+          const draftId = (parsedCanonical.userId || '').toString();
+          if (
+            (targetEmail && draftEmail && draftEmail === targetEmail) ||
+            (targetId && draftId && draftId === targetId)
+          ) {
+            return parsedCanonical;
+          } else {
+            // Discard stale canonical draft from another user
+            localStorage.removeItem(CANONICAL_DRAFT_KEY);
+          }
+        }
+      }
+
+      return null;
+    }
+
+    // 2. Unauthenticated guest fallback
+    const rawGuest = localStorage.getItem('roomscout_upload_draft_guest');
+    if (rawGuest) {
+      const parsed = JSON.parse(rawGuest);
+      if (parsed && typeof parsed === 'object' && parsed.formData && !parsed.userEmail && !parsed.userId) {
+        return parsed;
       }
     }
   } catch (err) {
@@ -291,7 +344,24 @@ export function HostUploadPage() {
     return 1;
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(() => {
+    const passed = location.state?.hostProperty;
+    return Boolean(
+      location.state?.fromDashboard &&
+      passed &&
+      typeof passed === 'object' &&
+      (passed.propertyName || passed.title)
+    );
+  });
+  const [hasUploadedProperty, setHasUploadedProperty] = useState(() => {
+    const passed = location.state?.hostProperty;
+    return Boolean(
+      location.state?.fromDashboard &&
+      passed &&
+      typeof passed === 'object' &&
+      (passed.propertyName || passed.title)
+    );
+  });
   const [fieldErrors, setFieldErrors] = useState({});
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -326,14 +396,34 @@ export function HostUploadPage() {
 
   // Form State initialized from draft (persists across reload), live dashboard navigation state, or default
   const [formData, setFormData] = useState(() => {
-    // 1. Prioritize draft from localStorage so refresh NEVER wipes user-entered details (facilities, rules, etc.)
+    // 1. Prioritize draft from localStorage strictly for THIS user
     const draft = loadDraftFromStorage(user);
     const passedProp = location.state?.hostProperty;
+
+    const targetEmail = (user?.email || '').trim().toLowerCase();
+    const targetId = (user?._id || '').toString();
+
+    // Verify passedProp strictly belongs to this authenticated user
+    const isPassedPropValid = Boolean(
+      passedProp &&
+      typeof passedProp === 'object' &&
+      (
+        (targetEmail && (
+          (passedProp.email && passedProp.email.trim().toLowerCase() === targetEmail) ||
+          (passedProp.hostEmail && passedProp.hostEmail.trim().toLowerCase() === targetEmail)
+        )) ||
+        (targetId && (
+          (passedProp.hostId && String(passedProp.hostId?._id || passedProp.hostId) === targetId) ||
+          (passedProp._id && String(passedProp._id) === targetId)
+        ))
+      )
+    );
+    const safePassedProp = isPassedPropValid ? passedProp : null;
 
     if (draft?.formData && typeof draft.formData === 'object') {
       const merged = {
         ...DEFAULT_HOST_FORM_DATA,
-        ...(passedProp && typeof passedProp === 'object' ? passedProp : {}),
+        ...(safePassedProp || {}),
         ...draft.formData,
       };
 
@@ -341,7 +431,6 @@ export function HostUploadPage() {
       if (!merged.email && user?.email) merged.email = user.email;
       if (!merged.phone && user?.phone) merged.phone = user.phone;
 
-      // Ensure manual facilities and rules entered by user are strictly preserved from draft
       const draftFacs = Array.isArray(draft.formData.facilities)
         ? draft.formData.facilities
         : (Array.isArray(draft.formData.amenities) ? draft.formData.amenities : []);
@@ -363,16 +452,16 @@ export function HostUploadPage() {
       return merged;
     }
 
-    // 2. If no draft exists yet, use hostProperty passed from dashboard navigation
-    if (passedProp && typeof passedProp === 'object') {
+    // 2. If no draft exists yet, use verified safe hostProperty passed from dashboard navigation
+    if (safePassedProp) {
       const { rates: loadedRates, rooms: loadedRooms } = reconcileRoomsWithRates(
-        passedProp.rooms,
-        passedProp.roomRates
+        safePassedProp.rooms,
+        safePassedProp.roomRates
       );
 
-      const rawImgs = Array.isArray(passedProp.images) && passedProp.images.length > 0
-        ? passedProp.images
-        : (passedProp.image ? [passedProp.image] : []);
+      const rawImgs = Array.isArray(safePassedProp.images) && safePassedProp.images.length > 0
+        ? safePassedProp.images
+        : (safePassedProp.image ? [safePassedProp.image] : []);
       const cleanImgs = rawImgs
         .map((img) => {
           const str = String(img || '').trim();
@@ -386,41 +475,41 @@ export function HostUploadPage() {
 
       const hydrated = {
         ...DEFAULT_HOST_FORM_DATA,
-        name: passedProp.name || user?.name || '',
-        email: passedProp.email || user?.email || '',
-        phone: passedProp.phone || user?.phone || '',
-        propertyName: passedProp.propertyName || passedProp.title || '',
-        propertyType: passedProp.propertyType || passedProp.type || 'PG',
-        genderType: passedProp.genderType || 'Both',
-        price: passedProp.price ? String(passedProp.price).replace(/[^0-9]/g, '') : (loadedRates[0]?.price ? String(loadedRates[0].price).replace(/[^0-9]/g, '') : ''),
-        rateUnit: passedProp.rateUnit || loadedRates[0]?.rateUnit || '/month',
-        roadArea: passedProp.roadArea || '',
-        pincode: passedProp.pincode || '',
-        city: passedProp.city || '',
-        state: passedProp.state || '',
-        latitude: Number(passedProp.latitude) || 29.3919,
-        longitude: Number(passedProp.longitude) || 79.4542,
-        totalRooms: passedProp.totalRooms || loadedRooms.length || 0,
-        availableRooms: passedProp.availableRooms !== undefined ? passedProp.availableRooms : loadedRooms.length,
-        rating: Number(passedProp.rating) || 5.0,
-        image: cleanImgs[0] || passedProp.image || '',
+        name: safePassedProp.name || user?.name || '',
+        email: safePassedProp.email || user?.email || '',
+        phone: safePassedProp.phone || user?.phone || '',
+        propertyName: safePassedProp.propertyName || safePassedProp.title || '',
+        propertyType: safePassedProp.propertyType || safePassedProp.type || 'PG',
+        genderType: safePassedProp.genderType || 'Both',
+        price: safePassedProp.price ? String(safePassedProp.price).replace(/[^0-9]/g, '') : (loadedRates[0]?.price ? String(loadedRates[0].price).replace(/[^0-9]/g, '') : ''),
+        rateUnit: safePassedProp.rateUnit || loadedRates[0]?.rateUnit || '/month',
+        roadArea: safePassedProp.roadArea || '',
+        pincode: safePassedProp.pincode || '',
+        city: safePassedProp.city || '',
+        state: safePassedProp.state || '',
+        latitude: Number(safePassedProp.latitude) || 29.3919,
+        longitude: Number(safePassedProp.longitude) || 79.4542,
+        totalRooms: safePassedProp.totalRooms || loadedRooms.length || 0,
+        availableRooms: safePassedProp.availableRooms !== undefined ? safePassedProp.availableRooms : loadedRooms.length,
+        rating: Number(safePassedProp.rating) || 5.0,
+        image: cleanImgs[0] || safePassedProp.image || '',
         images: cleanImgs,
-        instagramVideoUrl: passedProp.instagramVideoUrl || '',
-        description: passedProp.description || passedProp.bio || '',
-        facilities: Array.isArray(passedProp.facilities) ? passedProp.facilities : (Array.isArray(passedProp.amenities) ? passedProp.amenities : []),
-        amenities: Array.isArray(passedProp.amenities) ? passedProp.amenities : (Array.isArray(passedProp.facilities) ? passedProp.facilities : []),
-        rules: Array.isArray(passedProp.rules) ? passedProp.rules : [],
+        instagramVideoUrl: safePassedProp.instagramVideoUrl || '',
+        description: safePassedProp.description || safePassedProp.bio || '',
+        facilities: Array.isArray(safePassedProp.facilities) ? safePassedProp.facilities : (Array.isArray(safePassedProp.amenities) ? safePassedProp.amenities : []),
+        amenities: Array.isArray(safePassedProp.amenities) ? safePassedProp.amenities : (Array.isArray(safePassedProp.facilities) ? safePassedProp.facilities : []),
+        rules: Array.isArray(safePassedProp.rules) ? safePassedProp.rules : [],
         roomRates: loadedRates,
         rooms: loadedRooms,
-        status: passedProp.status || 'Pending Approval',
-        isApproved: passedProp.status === 'Approved' || Boolean(passedProp.isApproved),
+        status: safePassedProp.status || 'Pending Approval',
+        isApproved: safePassedProp.status === 'Approved' || Boolean(safePassedProp.isApproved),
       };
 
       saveDraftToStorage(hydrated, 1, '', user);
       return hydrated;
     }
 
-    // 3. Default fresh state
+    // 3. Default fresh state for this host
     return {
       ...DEFAULT_HOST_FORM_DATA,
       name: user?.name || '',
@@ -429,15 +518,18 @@ export function HostUploadPage() {
       facilities: [],
       amenities: [],
       rules: [],
+      rooms: [],
+      roomRates: [],
     };
   });
 
-  const hasLoadedExistingRef = useRef(false);
+  const loadedEmailRef = useRef('');
 
-  // Restore heavy photos from IndexedDB if not already present in memory state
+  // Restore heavy photos from IndexedDB strictly scoped to this host
   useEffect(() => {
     let isMounted = true;
-    loadImagesFromIndexedDB().then((idbImages) => {
+    const userKey = (user?.email || user?._id || 'guest');
+    loadImagesFromIndexedDB(userKey).then((idbImages) => {
       if (isMounted && Array.isArray(idbImages) && idbImages.length > 0) {
         setFormData((prev) => {
           if (Array.isArray(prev.images) && prev.images.length > 0) return prev;
@@ -452,12 +544,25 @@ export function HostUploadPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [user?.email, user?._id]);
 
   // Synchronously auto-save draft whenever user enters any details or advances steps
   useEffect(() => {
     saveDraftToStorage(formData, activeStep, googleMapsUrl, user);
   }, [formData, activeStep, googleMapsUrl, user]);
+
+  // Real-time socket sync for host approval state
+  useEffect(() => {
+    const socket = getSocket();
+    const handleHostApproved = () => {
+      setHasUploadedProperty(true);
+      setFormData((prev) => ({ ...prev, status: 'Approved', isApproved: true }));
+    };
+    socket.on('host:approved', handleHostApproved);
+    return () => {
+      socket.off('host:approved', handleHostApproved);
+    };
+  }, []);
 
   // Smoothly scroll to top when user changes tabs
   useEffect(() => {
@@ -491,11 +596,28 @@ export function HostUploadPage() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [formData, activeStep, googleMapsUrl, user]);
 
-  // Hydrate user profile defaults if user is loaded and fields are still empty
+  // Hydrate user profile defaults if user is loaded and ensure cross-tenant sanitization
   useEffect(() => {
     if (user) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData((prev) => {
+        const prevEmail = (prev.email || '').trim().toLowerCase();
+        const userEmail = (user.email || '').trim().toLowerCase();
+
+        // Cross-tenant check: If prev form held another host's data, reset immediately!
+        if (prevEmail && userEmail && prevEmail !== userEmail) {
+          return {
+            ...DEFAULT_HOST_FORM_DATA,
+            name: user.name || '',
+            email: user.email || '',
+            phone: user.phone || '',
+            facilities: [],
+            amenities: [],
+            rules: [],
+            rooms: [],
+            roomRates: [],
+          };
+        }
+
         const needsName = !prev.name && user.name;
         const needsEmail = !prev.email && user.email;
         const needsPhone = !prev.phone && user.phone;
@@ -512,18 +634,44 @@ export function HostUploadPage() {
     }
   }, [user]);
 
-  // Load existing property details if already registered (loaded once on mount)
+  // Load existing property details if already registered (strictly scoped to this host)
   useEffect(() => {
     async function loadExisting() {
-      if (!user?.email || hasLoadedExistingRef.current) return;
-      hasLoadedExistingRef.current = true;
+      const targetEmail = (user?.email || '').trim().toLowerCase();
+      if (!targetEmail || loadedEmailRef.current === targetEmail) return;
+      loadedEmailRef.current = targetEmail;
       try {
+        const targetEmail = (user.email || '').trim().toLowerCase();
+        const targetId = (user._id || '').toString();
+
         const [hostRes, staysRes] = await Promise.all([
           adminAPI.getHostByEmail(user.email).catch(() => null),
           staysAPI.getHostProperties().catch(() => []),
         ]);
 
-        const stayProp = Array.isArray(staysRes) && staysRes.length > 0 ? staysRes[0] : null;
+        // STRICT MULTI-TENANT FILTER: Stays must strictly match targetEmail or user._id
+        const matchingStays = (Array.isArray(staysRes) ? staysRes : []).filter((s) => {
+          const stayEmail = (s.email || s.hostEmail || '').trim().toLowerCase();
+          const stayHostId = (s.hostId?._id || s.hostId || '').toString();
+          if (stayEmail && targetEmail && stayEmail === targetEmail) return true;
+          if (stayHostId && targetId && stayHostId === targetId) return true;
+          return false;
+        });
+
+        const stayProp = matchingStays.length > 0 ? matchingStays[0] : null;
+
+        // Check if host profile has a verified stay belonging to this host
+        const hostHasStay = Boolean(
+          hostRes?.hasProperty &&
+          hostRes?.stay &&
+          (
+            !hostRes.stay.email ||
+            hostRes.stay.email.trim().toLowerCase() === targetEmail ||
+            (hostRes.stay.hostEmail && hostRes.stay.hostEmail.trim().toLowerCase() === targetEmail) ||
+            (targetId && (String(hostRes.stay.hostId?._id || hostRes.stay.hostId) === targetId))
+          )
+        );
+
         let prop = null;
         if (stayProp) {
           prop = {
@@ -537,7 +685,7 @@ export function HostUploadPage() {
               ? stayProp.rooms
               : (hostRes?.stay?.rooms || hostRes?.host?.rooms || []),
           };
-        } else if (hostRes?.hasProperty && (hostRes.host || hostRes.stay)) {
+        } else if (hostHasStay) {
           prop = {
             ...(hostRes.stay || {}),
             ...(hostRes.host || {}),
@@ -546,8 +694,9 @@ export function HostUploadPage() {
           };
         }
 
-        if (prop) {
+        if (prop && (prop.propertyName || prop.title || (Array.isArray(prop.rooms) && prop.rooms.length > 0))) {
           setIsEditing(true);
+          setHasUploadedProperty(true);
 
           const { rates: loadedRates, rooms: loadedRooms } = reconcileRoomsWithRates(
             prop.rooms,
@@ -569,18 +718,16 @@ export function HostUploadPage() {
             .slice(0, MAX_PHOTOS);
 
           setFormData((prev) => {
-            // Check draft as well to strictly preserve user-entered manual perks & rules
             const currentDraft = loadDraftFromStorage(user);
             const draftFormData = currentDraft?.formData || {};
 
-            // Keep strictly user-manually entered rules and facilities; do not auto-attach default backend points
             const mergedRules = (Array.isArray(prev.rules) && prev.rules.length > 0)
               ? prev.rules
-              : (Array.isArray(draftFormData.rules) ? draftFormData.rules : []);
+              : (Array.isArray(draftFormData.rules) ? draftFormData.rules : (prop.rules || []));
 
             const mergedFacilities = (Array.isArray(prev.facilities) && prev.facilities.length > 0)
               ? prev.facilities
-              : (Array.isArray(draftFormData.facilities) ? draftFormData.facilities : (Array.isArray(draftFormData.amenities) ? draftFormData.amenities : []));
+              : (Array.isArray(draftFormData.facilities) ? draftFormData.facilities : (prop.facilities || prop.amenities || []));
 
             const prevImages = (Array.isArray(prev.images) && prev.images.length > 0) ? prev.images : [];
             const mergedImages = prevImages.length > 0 ? prevImages : cleanExistingImages;
@@ -593,10 +740,10 @@ export function HostUploadPage() {
 
             const updated = {
               ...prev,
-              name: prev.name || prop.name || user?.name || '',
-              email: prev.email || prop.email || user?.email || '',
-              phone: prev.phone || prop.phone || user?.phone || '',
-              propertyName: prev.propertyName || prop.propertyName || prop.title || prop.properties?.[0] || '',
+              name: prop.name || user?.name || prev.name || '',
+              email: prop.email || user?.email || prev.email || '',
+              phone: prop.phone || user?.phone || prev.phone || '',
+              propertyName: prev.propertyName || prop.propertyName || prop.title || '',
               propertyType: prev.propertyType || prop.propertyType || prop.type || 'PG',
               genderType: prev.genderType || prop.genderType || 'Both',
               price: prev.price || (prop.price ? String(prop.price).replace(/[^0-9]/g, '') : (mergedRates[0]?.price ? String(mergedRates[0].price).replace(/[^0-9]/g, '') : '')),
@@ -607,13 +754,13 @@ export function HostUploadPage() {
               state: prev.state || prop.state || '',
               latitude: (prev.latitude && prev.latitude !== 29.3919) ? prev.latitude : (Number(prop.latitude) || 29.3919),
               longitude: (prev.longitude && prev.longitude !== 79.4542) ? prev.longitude : (Number(prop.longitude) || 79.4542),
-              totalRooms: (mergedRooms && mergedRooms.length > 0) ? mergedRooms.length : (prop.totalRooms || loadedRooms.length || prev.totalRooms || 0),
+              totalRooms: (mergedRooms && mergedRooms.length > 0) ? mergedRooms.length : (prop.totalRooms || loadedRooms.length || 0),
               availableRooms: (mergedRooms && mergedRooms.length > 0) ? mergedRooms.filter((r) => r.status === 'Available').length : (prop.availableRooms !== undefined ? prop.availableRooms : loadedRooms.filter((r) => r.status === 'Available').length),
               rating: Number(prop.rating) || prev.rating || 5.0,
               image: mergedImages[0] || prev.image || prop.image || '',
               images: mergedImages,
               instagramVideoUrl: prev.instagramVideoUrl || prop.instagramVideoUrl || '',
-              description: prev.description || prop.description || prop.bio || '',
+              description: prev.description || prop.description || '',
               facilities: mergedFacilities,
               amenities: mergedFacilities,
               rules: mergedRules,
@@ -629,34 +776,51 @@ export function HostUploadPage() {
             saveDraftToStorage(updated, preservedStep, googleMapsUrl, user);
             return updated;
           });
+        } else {
+          // THIS HOST HAS NO REGISTERED PROPERTY YET
+          setIsEditing(false);
+          setHasUploadedProperty(false);
+          const currentDraft = loadDraftFromStorage(user);
+          if (!currentDraft) {
+            setActiveStep(1);
+            setFormData((prev) => {
+              const prevEmail = (prev.email || '').trim().toLowerCase();
+              if ((prevEmail && prevEmail !== targetEmail) || prev._id || prev.id || prev.propertyName) {
+                return {
+                  ...DEFAULT_HOST_FORM_DATA,
+                  name: user?.name || '',
+                  email: user?.email || '',
+                  phone: user?.phone || '',
+                  facilities: [],
+                  amenities: [],
+                  rules: [],
+                  rooms: [],
+                  roomRates: [],
+                };
+              }
+              return {
+                ...prev,
+                name: user?.name || prev.name || '',
+                email: user?.email || prev.email || '',
+                phone: user?.phone || prev.phone || '',
+              };
+            });
+          }
         }
       } catch (err) {
         console.warn('Could not prefill host:', err);
       }
     }
     loadExisting();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.email, user?.name, user?.phone]);
 
   const showToast = (msg, type = 'info') => {
     if (!msg) return;
-    // Explicitly allow 16:9 photo aspect ratio alerts to pass through to toast.error
-    if (msg.includes('16:9')) {
+    if (type === 'error') {
       toast.error(msg);
-      return;
-    }
-    // Suppress error toasts on upload form as each error is already highlighted inline with the fields
-    if (
-      type === 'error' ||
-      msg.toLowerCase().includes('error') ||
-      msg.toLowerCase().includes('correct') ||
-      msg.toLowerCase().includes('must') ||
-      msg.toLowerCase().includes('required') ||
-      msg.toLowerCase().includes('please')
-    ) {
-      return;
-    }
-    if (type === 'success' || msg.toLowerCase().includes('success') || msg.toLowerCase().includes('⭐')) {
+    } else if (type === 'warn') {
+      toast.warn(msg);
+    } else if (type === 'success' || msg.toLowerCase().includes('success') || msg.toLowerCase().includes('⭐')) {
       toast.success(msg);
     } else {
       toast.info(msg);
@@ -1325,7 +1489,6 @@ export function HostUploadPage() {
     if (createdRoomUid) {
       setSelectedRoomCardId(createdRoomUid);
       setSelectedRoomNumber(createdRoomNumber);
-      showToast(`Added Room ${createdRoomNumber} to ${createdCategoryType}!`, 'success');
     }
   };
 
@@ -1372,7 +1535,6 @@ export function HostUploadPage() {
       setSelectedRoomCardId(null);
       setSelectedRoomNumber(null);
     }
-    showToast(`Room ${card?.roomNumber || targetRoomNumber || ''} deleted successfully.`, 'info');
   };
 
   const handleUpdateRoomNumber = (roomId, newNumber, idx, roomData) => {
@@ -1445,6 +1607,7 @@ export function HostUploadPage() {
       if (!formData.name || formData.name.trim().length < 2) {
         if (shouldSetErrors) {
           setFieldErrors((prev) => ({ ...prev, name: 'Host name is required (min 2 characters).' }));
+          toast.error('Please enter the host name (min 2 characters).');
         }
         return false;
       }
@@ -1452,6 +1615,7 @@ export function HostUploadPage() {
       if (!raw10Phone || raw10Phone.length < 10) {
         if (shouldSetErrors) {
           setFieldErrors((prev) => ({ ...prev, phone: 'Host contact number must be at least 10 digits.' }));
+          toast.error('Host contact number must be at least 10 digits.');
         }
         return false;
       }
@@ -1459,18 +1623,21 @@ export function HostUploadPage() {
       if (!formData.propertyName || formData.propertyName.trim().length < 3) {
         if (shouldSetErrors) {
           setFieldErrors((prev) => ({ ...prev, propertyName: 'Property name must be at least 3 characters long.' }));
+          toast.error('Property name must be at least 3 characters long.');
         }
         return false;
       }
       if (!formData.propertyType) {
         if (shouldSetErrors) {
           setFieldErrors((prev) => ({ ...prev, propertyType: 'Please select a property category (e.g. PG, Hotel, Flat).' }));
+          toast.error('Please select a property category (e.g. PG, Hotel, Flat).');
         }
         return false;
       }
       if (!formData.genderType) {
         if (shouldSetErrors) {
           setFieldErrors((prev) => ({ ...prev, genderType: 'Please select who this stay is available for.' }));
+          toast.error('Please select who this stay is available for.');
         }
         return false;
       }
@@ -1487,6 +1654,8 @@ export function HostUploadPage() {
       if (Object.keys(errors).length > 0) {
         if (shouldSetErrors) {
           setFieldErrors((prev) => ({ ...prev, ...errors }));
+          const firstMsg = Object.values(errors)[0] || 'Please complete all address details.';
+          toast.error(firstMsg);
         }
         return false;
       }
@@ -1498,12 +1667,14 @@ export function HostUploadPage() {
       if (!facilities || facilities.length === 0) {
         if (shouldSetErrors) {
           setFieldErrors((prev) => ({ ...prev, facilities: 'Please select at least 1 facility/amenity.' }));
+          toast.error('Please select at least 1 facility/amenity.');
         }
         return false;
       }
       if (!formData.rules || formData.rules.length === 0) {
         if (shouldSetErrors) {
           setFieldErrors((prev) => ({ ...prev, rules: 'Please select at least 1 house rule.' }));
+          toast.error('Please select at least 1 house rule.');
         }
         return false;
       }
@@ -1514,6 +1685,7 @@ export function HostUploadPage() {
       if (!formData.images || formData.images.length === 0) {
         if (shouldSetErrors) {
           setFieldErrors((prev) => ({ ...prev, images: 'Please upload at least 1 showcase photo.' }));
+          toast.error('Please upload at least 1 showcase photo before proceeding.');
         }
         return false;
       }
@@ -1524,6 +1696,7 @@ export function HostUploadPage() {
       if (!formData.description || formData.description.trim().length < 10) {
         if (shouldSetErrors) {
           setFieldErrors((prev) => ({ ...prev, description: 'Description must be at least 10 characters long.' }));
+          toast.error('Property description must be at least 10 characters long.');
         }
         return false;
       }
@@ -1531,6 +1704,7 @@ export function HostUploadPage() {
       if (validRates.length === 0) {
         if (shouldSetErrors) {
           setFieldErrors((prev) => ({ ...prev, roomRates: 'Please configure at least 1 room category.' }));
+          toast.error('Please configure at least 1 room category rate.');
         }
         return false;
       }
@@ -1538,12 +1712,24 @@ export function HostUploadPage() {
       if (validRooms.length === 0) {
         if (shouldSetErrors) {
           setFieldErrors((prev) => ({ ...prev, rooms: 'Please add at least 1 room card.' }));
+          toast.error('Please add at least 1 room card with room number.');
         }
         return false;
       }
       return true;
     }
 
+    return true;
+  };
+
+  // Determines whether a wizard step is unlocked and can be navigated to
+  const canAccessStep = (targetStepId) => {
+    if (targetStepId <= 1) return true;
+    for (let s = 1; s < targetStepId; s++) {
+      if (!validateStep(s, false)) {
+        return false;
+      }
+    }
     return true;
   };
 
@@ -1589,12 +1775,38 @@ export function HostUploadPage() {
 
     if (activeStep < 5) {
       setActiveStep((prev) => prev + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handleSelectStep = (targetStepId) => {
     if (targetStepId === activeStep) return;
+
+    // Moving backward is always allowed to view or edit previous steps
+    if (targetStepId < activeStep) {
+      setFieldErrors({});
+      setActiveStep(targetStepId);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    // Moving forward: ensure all steps up to targetStepId - 1 are valid
+    for (let s = 1; s < targetStepId; s++) {
+      const isValid = validateStep(s, s === activeStep);
+      if (!isValid) {
+        if (s !== activeStep) {
+          setActiveStep(s);
+          validateStep(s, true);
+        }
+        const stepMeta = WIZARD_STEPS.find((st) => st.id === s);
+        toast.error(`Please complete "${stepMeta?.shortTitle || stepMeta?.title || `Step ${s}`}" details first.`);
+        return;
+      }
+    }
+
+    setFieldErrors({});
     setActiveStep(targetStepId);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
 
@@ -1622,8 +1834,10 @@ export function HostUploadPage() {
 
     // Verify all 5 steps are completely filled before submitting
     for (let s = 1; s <= 5; s++) {
-      if (!validateStep(s)) {
+      if (!validateStep(s, true)) {
         setActiveStep(s);
+        const stepMeta = WIZARD_STEPS.find((st) => st.id === s);
+        toast.error(`Please complete all required details in "${stepMeta?.shortTitle || stepMeta?.title || `Step ${s}`}" before requesting upload.`);
         return;
       }
     }
@@ -1758,6 +1972,8 @@ export function HostUploadPage() {
           /* ignore */
         }
 
+        setIsEditing(true);
+        setHasUploadedProperty(true);
         if (user && updateUserSession) {
           updateUserSession({
             ...user,
@@ -1767,9 +1983,7 @@ export function HostUploadPage() {
           });
         }
         showToast('Property Saved');
-        setTimeout(() => {
-          navigate('/host/dashboard', { state: { updatedHost: res.host || formData } });
-        }, 1200);
+        navigate('/host/dashboard', { state: { updatedHost: res.host || formData } });
       } else {
         showToast(res?.message || 'Error submitting property request.');
       }
@@ -1785,37 +1999,40 @@ export function HostUploadPage() {
   // (No hard block here — the upload flow handles the conversion.)
 
   const currentStepConfig = WIZARD_STEPS.find((s) => s.id === activeStep) || WIZARD_STEPS[0];
+  
 
   return (
     <div className="bg-[#F4F4F6] text-slate-800 host-page-scope font-body-md antialiased min-h-screen flex flex-col justify-between relative selection:bg-[#006C4A] selection:text-white transition-colors duration-300">
 
       {/* ── Top Header Navigation Bar (Floating Liquid Glass Islands matching Host Dashboard / Pic 2) ── */}
       <header className="relative w-full h-[70px] sm:h-[88px] pointer-events-none select-none z-50 font-body-md host-font-scope antialiased">
-        {/* ── 1. LEFT FLOATING ISLAND: BACK BUTTON ── */}
-        <div className="fixed top-2.5 sm:top-5 left-2.5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none h-13 sm:h-[54px]">
-          <button
-            type="button"
-            onClick={() => {
-              saveDraftToStorage(formData, activeStep, googleMapsUrl, user);
-              navigate('/host/dashboard');
-            }}
-            data-no-hover="true"
-            className="inline-flex items-center justify-center h-13 sm:h-[54px] px-4 sm:px-5.5 gap-2 rounded-full bg-white text-slate-800 text-sm sm:text-base font-semibold shadow-sm border border-slate-200/90 hover:bg-slate-50 transition-colors cursor-pointer select-none active:scale-95 shrink-0"
-            title="Return to Host Dashboard"
-          >
-            <svg
-              className="w-4.5 h-4.5 text-slate-700 stroke-[2.2] shrink-0"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+        {/* ── 1. LEFT FLOATING ISLAND: BACK BUTTON (Only visible after host registers a property) ── */}
+        {hasUploadedProperty && (
+          <div className="fixed top-2.5 sm:top-5 left-2.5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none h-13 sm:h-[54px]">
+            <button
+              type="button"
+              onClick={() => {
+                saveDraftToStorage(formData, activeStep, googleMapsUrl, user);
+                navigate('/host/dashboard');
+              }}
+              data-no-hover="true"
+              className="inline-flex items-center justify-center h-13 sm:h-[54px] px-4 sm:px-5.5 gap-2 rounded-full bg-white text-slate-800 text-sm sm:text-base font-semibold shadow-sm border border-slate-200/90 hover:bg-slate-50 transition-colors cursor-pointer select-none active:scale-95 shrink-0"
+              title="Return to Host Dashboard"
             >
-              <path d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
-            <span className="flex items-center justify-center leading-none tracking-tight">Back</span>
-          </button>
-        </div>
+              <svg
+                className="w-4.5 h-4.5 text-slate-700 stroke-[2.2] shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
+              <span className="flex items-center justify-center leading-none tracking-tight">Back</span>
+            </button>
+          </div>
+        )}
 
         {/* ── 2. CENTER FLOATING ISLAND: NAVIGATION TABS (DESKTOP) & STEP COUNTER (MOBILE) ── */}
         <div className="hidden md:flex fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 items-center pointer-events-auto select-none h-13 sm:h-[54px]">
@@ -1824,6 +2041,7 @@ export function HostUploadPage() {
             activeStep={activeStep}
             onSelectStep={handleSelectStep}
             isStepCompleted={(stepId) => validateStep(stepId, false)}
+            canAccessStep={canAccessStep}
           />
         </div>
 
@@ -1919,6 +2137,7 @@ export function HostUploadPage() {
                   {WIZARD_STEPS.map((step) => {
                     const isActive = step.id === activeStep;
                     const isCompleted = validateStep(step.id, false);
+                    const isAccessible = canAccessStep(step.id);
 
                     return (
                       <button
@@ -1926,13 +2145,18 @@ export function HostUploadPage() {
                         type="button"
                         onClick={() => {
                           handleSelectStep(step.id);
-                          setMobileNavOpen(false);
+                          if (canAccessStep(step.id)) {
+                            setMobileNavOpen(false);
+                          }
                         }}
-                        className={`w-full min-h-[48px] text-left p-3.5 rounded-2xl flex items-center gap-3 transition-all cursor-pointer ${
+                        className={`w-full min-h-[48px] text-left p-3.5 rounded-2xl flex items-center gap-3 transition-all ${
                           isActive
-                            ? 'bg-emerald-50 border border-emerald-500/30 text-emerald-950 shadow-xs font-bold'
-                            : 'hover:bg-slate-100/70 border border-transparent text-slate-700'
+                            ? 'bg-emerald-50 border border-emerald-500/30 text-emerald-950 shadow-xs font-bold cursor-default'
+                            : isAccessible
+                            ? 'hover:bg-slate-100/70 border border-transparent text-slate-700 cursor-pointer'
+                            : 'opacity-50 text-slate-400 border border-transparent cursor-not-allowed hover:text-slate-400'
                         }`}
+                        title={!isAccessible ? `Complete previous steps to unlock ${step.title}` : step.title}
                       >
                         <div
                           className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
@@ -2184,7 +2408,7 @@ export function HostUploadPage() {
                 ) : (
                   <>
                     <Check className="w-4 h-4 stroke-[3]" />
-                    <span>Publish Listing</span>
+                    <span>Request Upload</span>
                   </>
                 )}
               </button>

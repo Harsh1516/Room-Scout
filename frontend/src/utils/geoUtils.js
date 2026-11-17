@@ -218,7 +218,9 @@ export function parseDMSCoordinates(str) {
   let decoded = str;
   try {
     decoded = decodeURIComponent(str).replace(/\+/g, ' ');
-  } catch {}
+  } catch {
+    /* ignore malformed URI */
+  }
 
   // Match DMS patterns like: 29°22'29.4"N 79°31'39.9"E or 29° 22' 29.4" N, 79° 31' 39.9" E
   const dmsRegex = /(\d+(?:\.\d+)?)[°\s]+(?:(\d+(?:\.\d+)?)['′\s]+)?(?:(\d+(?:\.\d+)?)["″\s]+)?([NSEW])/gi;
@@ -257,7 +259,9 @@ export function parseGoogleMapsUrl(rawUrl) {
   let decoded = trimmed;
   try {
     decoded = decodeURIComponent(trimmed);
-  } catch {}
+  } catch {
+    /* ignore malformed URI */
+  }
 
   const directDms = parseDMSCoordinates(trimmed) || parseDMSCoordinates(decoded);
   if (directDms) {

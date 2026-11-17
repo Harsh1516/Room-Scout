@@ -1035,7 +1035,8 @@ export const getMyBookings = async (req, res, next) => {
     await autoExpireAwaitingBookings();
 
     const bookings = await Booking.find({ $or: query })
-      .populate('stayId', 'title location images address rooms roomRates')
+      .populate('stayId', 'title location images address rooms roomRates hostId hostName')
+      .populate('hostId', 'name phone email')
       .sort({ createdAt: -1 })
       .lean();
 

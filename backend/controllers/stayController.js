@@ -43,7 +43,6 @@ export const getAllStays = async (req, res, next) => {
       const t = type.toLowerCase().trim();
       if (t === 'flat') {
         mongoFilter.type = { $in: ['PG', 'Flat', 'Apartment'] };
-      } else if (false) {
       } else {
         mongoFilter.type = { $regex: new RegExp(`^${t}$`, 'i') };
       }
@@ -284,14 +283,19 @@ export const createStay = async (req, res, next) => {
     }
 
     const parsedPrice = parseInt(String(price).replace(/[^0-9]/g, ''), 10) || 0;
-    const cleanPrimaryImage = await uploadSecureImage(image, 'roomscout/stays');
-
     let processedImages = [];
     if (Array.isArray(images) && images.length > 0) {
-      processedImages = await Promise.all(images.map((img) => uploadSecureImage(img, 'roomscout/stays')));
-    } else if (cleanPrimaryImage) {
-      processedImages = [cleanPrimaryImage];
+      processedImages = (
+        await Promise.all(
+          images.filter(Boolean).map((img) => uploadSecureImage(img, 'roomscout/stays'))
+        )
+      ).filter(Boolean);
+    } else if (image && typeof image === 'string' && image.trim()) {
+      const cleanImg = await uploadSecureImage(image.trim(), 'roomscout/stays');
+      if (cleanImg) processedImages = [cleanImg];
     }
+
+    const cleanPrimaryImage = processedImages[0] || '';
 
     const latNum = latitude ? parseFloat(latitude) : undefined;
     const lngNum = longitude ? parseFloat(longitude) : undefined;

@@ -9,7 +9,7 @@ import { Right } from './navbar/Right';
  * Navbar with responsive scroll-triggered elevation.
  * On search page, renders the frosted glass blur matching the top portion of the photo below (clear sky azure).
  */
-export function Navbar({ onSearchSubmit, onLoginClick, onSelectUpload, onOpenBookings, bookingsCount }) {
+export function Navbar({ onSearchSubmit, onLoginClick, onSelectUpload, onOpenBookings, bookingsCount, hasResults = true }) {
   const isElevated = useScrollElevation(20);
   const location = useLocation();
   const isSearchPage = location.pathname.startsWith('/search');
@@ -17,8 +17,8 @@ export function Navbar({ onSearchSubmit, onLoginClick, onSelectUpload, onOpenBoo
 
   return (
     <header className="relative w-full bg-transparent">
-      {/* ── Dark-to-Transparent Progressive Blur Navbar Backdrop (Only on Search / Explore Stays showcase page) ── */}
-      {isSearchPage && (
+      {/* ── Dark-to-Transparent Progressive Blur Navbar Backdrop (Only on Search when records exist) ── */}
+      {isSearchPage && hasResults && (
         <div
           aria-hidden="true"
           className="fixed top-0 inset-x-0 h-[96px] sm:h-[110px] z-35 pointer-events-none navbar-gradient-blur transition-all duration-300"
