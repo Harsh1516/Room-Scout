@@ -55,12 +55,14 @@ export const envSchema = z
     // Caching & Distributed Rate Limiting (Redis)
     REDIS_URL: z.string().trim().optional(),
 
-    // SMTP Mail Service
+    // SMTP & Transactional Mail Service
     EMAIL_HOST: z.string().trim().optional(),
     EMAIL_PORT: z.string().trim().optional(),
     EMAIL_USER: z.string().trim().optional(),
     EMAIL_PASS: z.string().trim().optional(),
     EMAIL_FROM: z.string().trim().optional(),
+    RESEND_API_KEY: z.string().trim().optional(),
+    BREVO_API_KEY: z.string().trim().optional(),
 
     // Google OAuth
     GOOGLE_CLIENT_ID: z.string().trim().optional(),

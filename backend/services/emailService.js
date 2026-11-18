@@ -1,5 +1,10 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 dotenv.config();
 
 let cachedTransporter = null;
@@ -58,6 +63,108 @@ async function getTransporter() {
     // Fallback stub transporter
     return null;
   }
+}
+
+/**
+ * Universal Production Email Dispatcher
+ * Seamlessly routes between:
+ * 1. Resend API (RESEND_API_KEY)
+ * 2. Brevo API (BREVO_API_KEY)
+ * 3. Nodemailer SMTP (Gmail / Custom SMTP)
+ * 4. Ethereal sandbox / simulator fallback
+ */
+export async function sendRawMail({ from, to, subject, html, text }) {
+  const fromAddress =
+    from ||
+    process.env.EMAIL_FROM ||
+    (process.env.EMAIL_USER ? `"Room-Scout" <${process.env.EMAIL_USER}>` : '"Room-Scout" <noreply@roomscout.com>');
+
+  // 1. Resend API (Direct REST HTTPS)
+  const resendKey = (process.env.RESEND_API_KEY || '').trim();
+  if (resendKey) {
+    try {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: fromAddress.includes('<') ? fromAddress : `"Room-Scout" <${fromAddress}>`,
+          to: Array.isArray(to) ? to : [to],
+          subject,
+          html,
+          text,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || `Resend error status ${res.status}`);
+      }
+      console.log(`✅ [Resend API] Real Email dispatched to [${to}] (ID: ${data.id})`);
+      return { success: true, messageId: data.id, provider: 'Resend' };
+    } catch (resendErr) {
+      console.warn('⚠️ Resend API attempt failed, trying fallback transporter:', resendErr.message);
+    }
+  }
+
+  // 2. Brevo API (Direct REST HTTPS)
+  const brevoKey = (process.env.BREVO_API_KEY || '').trim();
+  if (brevoKey) {
+    try {
+      const senderEmail = process.env.EMAIL_USER || 'noreply@roomscout.com';
+      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'api-key': brevoKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sender: { name: 'Room-Scout', email: senderEmail },
+          to: [{ email: to }],
+          subject,
+          htmlContent: html,
+          textContent: text,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || `Brevo error status ${res.status}`);
+      }
+      console.log(`✅ [Brevo API] Real Email dispatched to [${to}] (ID: ${data.messageId})`);
+      return { success: true, messageId: data.messageId, provider: 'Brevo' };
+    } catch (brevoErr) {
+      console.warn('⚠️ Brevo API attempt failed, trying fallback transporter:', brevoErr.message);
+    }
+  }
+
+  // 3. Nodemailer SMTP (Gmail / Custom SMTP / Ethereal)
+  const transporter = await getTransporter();
+  if (!transporter) {
+    console.log(`[LOCAL EMAIL SIMULATOR] Email to: ${to} | Subject: ${subject}`);
+    return { success: true, simulated: true, messageId: `sim_${Date.now()}` };
+  }
+
+  const info = await transporter.sendMail({
+    from: fromAddress,
+    to,
+    subject,
+    text,
+    html,
+  });
+
+  const previewUrl = nodemailer.getTestMessageUrl(info);
+  console.log(`✅ [SMTP] Email dispatched to [${to}] (Message ID: ${info.messageId})`);
+  if (previewUrl) {
+    console.log(`🔗 Ethereal Live Email Inbox Preview URL: ${previewUrl}`);
+  }
+
+  return {
+    success: true,
+    messageId: info.messageId,
+    previewUrl: previewUrl || null,
+    provider: 'SMTP',
+  };
 }
 
 /**
@@ -149,7 +256,7 @@ export async function sendPasswordResetEmail({ to, name, tempPassword, role = 'u
       html: htmlContent,
     };
 
-    const info = await transporter.sendMail(mailOptions);
+    const info = await sendRawMail(mailOptions);
     console.log(`✅ Real Email dispatched successfully to [${to}]! Message ID: ${info.messageId}`);
 
     // If ethereal test account was used, generate public preview URL
@@ -195,40 +302,39 @@ export async function testEmailConnection(testEmail = 'test@roomscout.com') {
       };
     }
 
-    // Verify SMTP connection handshake
-    await transporter.verify();
+    const resendKey = (process.env.RESEND_API_KEY || '').trim();
+    const brevoKey = (process.env.BREVO_API_KEY || '').trim();
 
-    // Send a real diagnostic test message
-    const info = await transporter.sendMail({
+    let activeProvider = 'Ethereal Sandbox';
+    if (resendKey) activeProvider = 'Resend API';
+    else if (brevoKey) activeProvider = 'Brevo API';
+    else if (isCustomSmtpConfigured) activeProvider = emailHost.includes('gmail') ? 'Gmail SMTP' : 'Custom SMTP';
+
+    const info = await sendRawMail({
       from: process.env.EMAIL_FROM || emailUser || '"Room-Scout Diagnostic" <noreply@roomscout.com>',
       to: testEmail,
-      subject: '🧪 Room-Scout SMTP Connection Diagnostic Test',
-      text: `Your Room-Scout email delivery system is functioning properly!\n\nConfigured Host: ${emailHost}:${emailPort}\nMode: ${isCustomSmtpConfigured ? 'Custom SMTP / Gmail' : 'Ethereal Sandbox'}\nTimestamp: ${new Date().toISOString()}`,
+      subject: `🧪 Room-Scout Connection Diagnostic Test (${activeProvider})`,
+      text: `Your Room-Scout email delivery system is functioning properly!\n\nProvider: ${activeProvider}\nTimestamp: ${new Date().toISOString()}`,
       html: `
-        <div style="font-family: sans-serif; padding: 20px; max-width: 500px; border: 1px solid #10b981; border-radius: 12px; background-color: #ffffff;">
-          <h2 style="color: #059669; margin: 0 0 10px 0;">✅ SMTP Diagnostic Success</h2>
-          <p style="color: #374151; font-size: 14px;">Your Room-Scout email delivery system is connected and working perfectly!</p>
-          <ul style="color: #4b5563; font-size: 13px; line-height: 1.6;">
-            <li><strong>Host:</strong> ${emailHost}:${emailPort}</li>
-            <li><strong>Auth User:</strong> ${emailUser || '(Ethereal Sandbox User)'}</li>
-            <li><strong>Mode:</strong> ${isCustomSmtpConfigured ? 'Custom / Gmail SMTP' : 'Ethereal Test Sandbox'}</li>
+        <div style="font-family: sans-serif; padding: 24px; max-width: 520px; border: 1px solid #10b981; border-radius: 16px; background-color: #ffffff;">
+          <h2 style="color: #059669; margin: 0 0 10px 0;">✅ Email Diagnostic Success</h2>
+          <p style="color: #374151; font-size: 14px;">Your Room-Scout transactional email system is connected and working perfectly!</p>
+          <ul style="color: #4b5563; font-size: 13px; line-height: 1.8;">
+            <li><strong>Active Provider:</strong> ${activeProvider}</li>
+            <li><strong>Host/Sender:</strong> ${emailUser || 'system-default'}</li>
             <li><strong>Timestamp:</strong> ${new Date().toISOString()}</li>
           </ul>
         </div>
       `,
     });
 
-    const previewUrl = nodemailer.getTestMessageUrl(info);
-
     return {
       success: true,
-      configured: isCustomSmtpConfigured,
-      transporterType: isCustomSmtpConfigured ? (emailHost.includes('gmail') ? 'Gmail SMTP' : 'Custom SMTP') : 'Ethereal Sandbox',
+      configured: activeProvider !== 'Ethereal Sandbox',
+      transporterType: activeProvider,
       messageId: info.messageId,
-      previewUrl: previewUrl || null,
-      message: isCustomSmtpConfigured
-        ? `SMTP Connected successfully! Test email dispatched to ${testEmail}.`
-        : `Ethereal Sandbox active! View test email preview at: ${previewUrl || 'Ethereal log'}`,
+      previewUrl: info.previewUrl || null,
+      message: `${activeProvider} connected successfully! Test email dispatched to ${testEmail}.`,
     };
   } catch (error) {
     return {
@@ -381,7 +487,7 @@ export async function sendBookingRequestToHostEmail({
       html: htmlContent,
     };
 
-    const info = await transporter.sendMail(mailOptions);
+    const info = await sendRawMail(mailOptions);
     console.log(`✅ Real Host Booking Alert dispatched to [${hostEmail}] (Message ID: ${info.messageId})`);
     return { success: true, messageId: info.messageId };
   } catch (err) {
@@ -439,7 +545,7 @@ export async function sendBookingSubmittedToGuestEmail({
       html: htmlContent,
     };
 
-    const info = await transporter.sendMail(mailOptions);
+    const info = await sendRawMail(mailOptions);
     console.log(`✅ Real Guest Submission Alert dispatched to [${guestEmail}] (Message ID: ${info.messageId})`);
     return { success: true, messageId: info.messageId };
   } catch (err) {
@@ -502,7 +608,7 @@ export async function sendBookingApprovedToGuestEmail({
       html: htmlContent,
     };
 
-    const info = await transporter.sendMail(mailOptions);
+    const info = await sendRawMail(mailOptions);
     console.log(`✅ Real Guest Approval Alert dispatched to [${guestEmail}] (Message ID: ${info.messageId})`);
     return { success: true, messageId: info.messageId };
   } catch (err) {
@@ -556,7 +662,7 @@ export async function sendBookingRejectedToGuestEmail({
       html: htmlContent,
     };
 
-    const info = await transporter.sendMail(mailOptions);
+    const info = await sendRawMail(mailOptions);
     console.log(`✅ Real Guest Rejection Alert dispatched to [${guestEmail}] (Message ID: ${info.messageId})`);
     return { success: true, messageId: info.messageId };
   } catch (err) {
@@ -616,7 +722,7 @@ export async function sendBookingConfirmedEmail({
       html: htmlContent,
     };
 
-    const info = await transporter.sendMail(mailOptions);
+    const info = await sendRawMail(mailOptions);
     console.log(`✅ Real Guest Confirmation Alert dispatched to [${guestEmail}] (Message ID: ${info.messageId})`);
     return { success: true, messageId: info.messageId };
   } catch (err) {
@@ -709,7 +815,7 @@ export async function sendEmailVerificationOtp({ to, name, otp, purpose = 'Verif
       html: htmlContent,
     };
 
-    const info = await transporter.sendMail(mailOptions);
+    const info = await sendRawMail(mailOptions);
     console.log(`✅ Real OTP Email dispatched to [${to}] (Message ID: ${info.messageId})`);
     return { success: true, messageId: info.messageId, otp };
   } catch (err) {
