@@ -352,15 +352,15 @@ export function AccountPage() {
  : 'text-slate-600 hover:text-[#1f1b16] font-medium'
  }`}
  >
- <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+ <svg className="relative z-10 w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
  <circle cx="12" cy="7" r="4" />
  </svg>
- <span>Profile<span className="hidden sm:inline"> Details</span></span>
+ <span className="relative z-10">Profile<span className="hidden sm:inline"> Details</span></span>
  {activeTab === 'details' && (
  <motion.div
  layoutId="accountTabActivePill"
- className="absolute inset-0 bg-[#1f1b16] rounded-full -z-10 shadow-xs"
+ className="absolute inset-0 bg-[#1f1b16] rounded-full z-0 pointer-events-none shadow-[0_2px_8px_rgba(31,27,22,0.3)]"
  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
  />
  )}
@@ -376,15 +376,15 @@ export function AccountPage() {
  : 'text-slate-600 hover:text-[#1f1b16] font-medium'
  }`}
  >
- <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+ <svg className="relative z-10 w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
  </svg>
- <span>Password</span>
+ <span className="relative z-10">Password</span>
  {activeTab === 'password' && (
  <motion.div
  layoutId="accountTabActivePill"
- className="absolute inset-0 bg-[#1f1b16] rounded-full -z-10 shadow-xs"
+ className="absolute inset-0 bg-[#1f1b16] rounded-full z-0 pointer-events-none shadow-[0_2px_8px_rgba(31,27,22,0.3)]"
  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
  />
  )}
@@ -400,16 +400,16 @@ export function AccountPage() {
  : 'text-rose-600 hover:text-rose-700 font-medium'
  }`}
  >
- <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+ <svg className="relative z-10 w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
  <path d="M3 6h18" />
  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
  </svg>
- <span>Delete<span className="hidden sm:inline"> Account</span></span>
+ <span className="relative z-10">Delete<span className="hidden sm:inline"> Account</span></span>
  {activeTab === 'delete' && (
  <motion.div
  layoutId="accountTabActivePill"
- className="absolute inset-0 bg-rose-600 rounded-full -z-10 shadow-xs"
+ className="absolute inset-0 bg-rose-600 rounded-full z-0 pointer-events-none shadow-[0_2px_8px_rgba(225,29,72,0.3)]"
  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
  />
  )}

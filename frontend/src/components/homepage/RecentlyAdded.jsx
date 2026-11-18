@@ -108,39 +108,36 @@ export function RecentlyAdded({ onStayClick, onBookClick }) {
         </ScrollReveal>
       )}
 
-      {/* Horizontal Carousel with Staggered Scroll-Triggered Card Reveals & Bottom Right "View all" */}
+      {/* Horizontal Carousel with Bottom Right "View all" */}
       {!loading && recentStays.length > 0 && (
-        <HorizontalCarousel
-          itemCount={recentStays.length}
-          gapClass="gap-3 sm:gap-4"
-          rightAction={
-            <button
-              type="button"
-              onClick={() => navigate('/search')}
-              className="text-[17px] sm:text-[19px] md:text-[20px] font-bold text-slate-900 hover:text-slate-700 underline underline-offset-4 decoration-2 decoration-slate-900/60 hover:decoration-slate-900 transition-colors cursor-pointer shrink-0 active:opacity-70 py-1"
-            >
-              View all
-            </button>
-          }
-        >
-          {recentStays.map((room, idx) => (
-            <ScrollReveal
-              key={room._id || idx}
-              staggerIndex={idx}
-              desktopOffset={20}
-              mobileOffset={12}
-              desktopDuration={0.55}
-              mobileDuration={0.35}
-              className="w-[295px] sm:w-[330px] md:w-[350px] max-w-[360px] shrink-0 snap-start"
-            >
-              <PropertyCard
-                stay={room}
-                onStayClick={onStayClick}
-                onBookClick={onBookClick}
-              />
-            </ScrollReveal>
-          ))}
-        </HorizontalCarousel>
+        <ScrollReveal desktopOffset={16} mobileOffset={10} desktopDuration={0.45} mobileDuration={0.3}>
+          <HorizontalCarousel
+            itemCount={recentStays.length}
+            gapClass="gap-3 sm:gap-4"
+            rightAction={
+              <button
+                type="button"
+                onClick={() => navigate('/search')}
+                className="text-[17px] sm:text-[19px] md:text-[20px] font-bold text-slate-900 hover:text-slate-700 underline underline-offset-4 decoration-2 decoration-slate-900/60 hover:decoration-slate-900 transition-colors cursor-pointer shrink-0 active:opacity-70 py-1"
+              >
+                View all
+              </button>
+            }
+          >
+            {recentStays.map((room, idx) => (
+              <div
+                key={room._id || idx}
+                className="w-[295px] sm:w-[330px] md:w-[350px] max-w-[360px] shrink-0 snap-start"
+              >
+                <PropertyCard
+                  stay={room}
+                  onStayClick={onStayClick}
+                  onBookClick={onBookClick}
+                />
+              </div>
+            ))}
+          </HorizontalCarousel>
+        </ScrollReveal>
       )}
     </section>
   );

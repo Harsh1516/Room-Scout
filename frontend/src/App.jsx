@@ -39,6 +39,7 @@ const PropertyModal = lazy(() => import('./components/PropertyModal').then((m) =
 const BookingModal = lazy(() => import('./components/BookingModal').then((m) => ({ default: m.BookingModal })));
 const WishlistDrawer = lazy(() => import('./components/WishlistDrawer').then((m) => ({ default: m.WishlistDrawer })));
 const BookedPlacesDrawer = lazy(() => import('./components/BookedPlacesDrawer').then((m) => ({ default: m.BookedPlacesDrawer })));
+const LeftPropertiesPanel = lazy(() => import('./components/homepage/LeftPropertiesPanel').then((m) => ({ default: m.LeftPropertiesPanel })));
 
 // Simple Page Fallback
 function PageFallback() {
@@ -276,14 +277,14 @@ function AppContent() {
  };
 
  const normalizedPath = location.pathname.replace(/\/+$/, '') || '/';
- const shouldShowNavbar = normalizedPath === '/explore' || normalizedPath === '/search';
+ const shouldShowNavbar = normalizedPath === '/' || normalizedPath === '/explore' || normalizedPath === '/search';
 
  const isHostPage = location.pathname.startsWith('/host');
 
  return (
  <div className={`min-h-screen ${isHostPage ? 'host-page-scope font-body-md selection:bg-custom-btn-primary selection:text-white bg-white' : (normalizedPath === '/' || normalizedPath === '/explore' || normalizedPath === '/account' ? 'bg-white' : 'bg-slate-100')} text-[#1f1b16]`}>
  <ScrollToTop />
- {shouldShowNavbar && !leftPanelOpen && (
+ {shouldShowNavbar && (
  <Navbar
  onSearchSubmit={onSearch}
  onLoginClick={() => handleOpenLoginModal('user', '')}
@@ -482,11 +483,22 @@ function AppContent() {
  />
  </Suspense>
  )}
-
- 
-
- </div>
- );
+      {/* ── Global Stays Category Panel Drawer (Accessible from Navbar on Explore & Search) ── */}
+      <Suspense fallback={null}>
+        <LeftPropertiesPanel
+          onSelectCategory={(catId) => {
+            let catName = 'All';
+            if (catId === 'pg') catName = 'PG';
+            else if (catId === 'flats') catName = 'Flat';
+            else if (catId === 'hotels') catName = 'Hotel';
+            setCategoryFilter(catName);
+            navigate('/search');
+          }}
+          onSelectUpload={handleSelectUpload}
+        />
+      </Suspense>
+    </div>
+  );
 }
 
 export default function App() {

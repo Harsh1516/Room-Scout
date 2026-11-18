@@ -342,69 +342,69 @@ export function PropertyDetailPage({ onLoginClick }) {
             <button
               type="button"
               onClick={() => setActiveCenterTab('property')}
-              className={`relative z-10 h-[36px] sm:h-[38px] min-w-[84px] sm:min-w-[115px] md:min-w-[130px] px-3.5 sm:px-6 md:px-8 rounded-full text-[13px] sm:text-sm font-semibold tracking-tight transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
+              className={`relative h-[36px] sm:h-[38px] min-w-[84px] sm:min-w-[115px] md:min-w-[130px] px-3.5 sm:px-6 md:px-8 rounded-full text-[13px] sm:text-sm font-semibold tracking-tight transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
                 activeCenterTab === 'property'
                   ? 'text-white'
                   : 'text-slate-700 hover:text-[#1f1b16]'
               }`}
             >
-              <svg className="w-4 h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
-              </svg>
-              <span>Property</span>
               {activeCenterTab === 'property' && (
                 <motion.div
                   layoutId="capsuleTabPillUnified"
-                  className="absolute inset-0 bg-[#1f1b16] rounded-full -z-10 shadow-xs"
+                  className="absolute inset-0 bg-[#1f1b16] rounded-full z-0 pointer-events-none shadow-[0_2px_8px_rgba(31,27,22,0.3)]"
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
+              <svg className="relative z-10 w-4 h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
+              </svg>
+              <span className="relative z-10">Property</span>
             </button>
 
             <button
               type="button"
               onClick={handleHostTabClick}
-              className={`relative z-10 h-[36px] sm:h-[38px] min-w-[76px] sm:min-w-[105px] md:min-w-[120px] px-3.5 sm:px-6 md:px-8 rounded-full text-[13px] sm:text-sm font-semibold tracking-tight transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
+              className={`relative h-[36px] sm:h-[38px] min-w-[76px] sm:min-w-[105px] md:min-w-[120px] px-3.5 sm:px-6 md:px-8 rounded-full text-[13px] sm:text-sm font-semibold tracking-tight transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
                 activeCenterTab === 'host'
                   ? 'text-white'
                   : 'text-slate-700 hover:text-[#1f1b16]'
               }`}
             >
-              <svg className="w-4 h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-              <span>Host</span>
               {activeCenterTab === 'host' && (
                 <motion.div
                   layoutId="capsuleTabPillUnified"
-                  className="absolute inset-0 bg-[#1f1b16] rounded-full -z-10 shadow-xs"
+                  className="absolute inset-0 bg-[#1f1b16] rounded-full z-0 pointer-events-none shadow-[0_2px_8px_rgba(31,27,22,0.3)]"
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
+              <svg className="relative z-10 w-4 h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              <span className="relative z-10">Host</span>
             </button>
 
             <button
               type="button"
               onClick={() => setActiveCenterTab('reviews')}
-              className={`relative z-10 h-[36px] sm:h-[38px] min-w-[96px] sm:min-w-[130px] md:min-w-[150px] px-3.5 sm:px-6 md:px-8 rounded-full text-[13px] sm:text-sm font-semibold tracking-tight transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
+              className={`relative h-[36px] sm:h-[38px] min-w-[96px] sm:min-w-[130px] md:min-w-[150px] px-3.5 sm:px-6 md:px-8 rounded-full text-[13px] sm:text-sm font-semibold tracking-tight transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
                 activeCenterTab === 'reviews'
                   ? 'text-white'
                   : 'text-slate-700 hover:text-[#1f1b16]'
               }`}
             >
-              <svg className="w-4 h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-              </svg>
-              <span>Reviews ({reviews.length})</span>
               {activeCenterTab === 'reviews' && (
                 <motion.div
                   layoutId="capsuleTabPillUnified"
-                  className="absolute inset-0 bg-[#1f1b16] rounded-full -z-10 shadow-xs"
+                  className="absolute inset-0 bg-[#1f1b16] rounded-full z-0 pointer-events-none shadow-[0_2px_8px_rgba(31,27,22,0.3)]"
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
+              <svg className="relative z-10 w-4 h-4 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+              <span className="relative z-10">Reviews ({reviews.length})</span>
             </button>
           </nav>
         </div>
@@ -417,12 +417,12 @@ export function PropertyDetailPage({ onLoginClick }) {
       <main
         className={`max-w-[1600px] mx-auto ${
           activeCenterTab === 'property'
-            ? 'px-0 sm:px-6 lg:px-8 pt-0 pb-0 sm:pb-24'
-            : 'px-3.5 sm:px-6 lg:px-8 pt-[96px] sm:pt-[112px] lg:pt-[124px] pb-8 sm:pb-24'
-        } min-h-screen`}
+            ? 'px-0 sm:px-6 lg:px-8 pt-0 sm:pt-24 pb-0 sm:pb-24'
+            : 'px-3.5 sm:px-6 lg:px-8 pt-[88px] sm:pt-24 pb-8 sm:pb-24'
+        } min-h-screen transition-all duration-300`}
       >
-        {activeCenterTab === 'property' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-8 items-start">
+        <div className={activeCenterTab === 'property' ? "grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-8 items-start" : "max-w-4xl mx-auto w-full"}>
+          <div className={activeCenterTab === 'property' ? "lg:col-span-4 w-full" : "hidden"}>
             <ErrorBoundary>
               <PropertyMediaSection
                 stay={stay}
@@ -435,7 +435,9 @@ export function PropertyDetailPage({ onLoginClick }) {
                 onToggleSave={() => toggleWishlist(stay)}
               />
             </ErrorBoundary>
+          </div>
 
+          <div className={activeCenterTab === 'property' ? "lg:col-span-8 w-full" : "w-full"}>
             <ErrorBoundary>
               <PropertyOverviewSection
                 stay={stay}
@@ -458,31 +460,7 @@ export function PropertyDetailPage({ onLoginClick }) {
               />
             </ErrorBoundary>
           </div>
-        ) : (
-          <div className="max-w-3xl mx-auto w-full">
-            <ErrorBoundary>
-              <PropertyOverviewSection
-                stay={stay}
-                activeCenterTab={activeCenterTab}
-                hasPaidBookingForStay={hasPaidBookingForStay}
-                reviews={reviews}
-                currentRating={currentRating}
-                googleMapsUrl={googleMapsUrl}
-                user={user}
-                navigate={navigate}
-                onAddReview={handleAddReview}
-                newRating={newRating}
-                setNewRating={setNewRating}
-                newReviewText={newReviewText}
-                setNewReviewText={setNewReviewText}
-                submittingReview={submittingReview}
-                selectedRateIdx={selectedRateIdx}
-                onSelectRateIdx={setSelectedRateIdx}
-                onNavigateToRooms={handleNavigateToRooms}
-              />
-            </ErrorBoundary>
-          </div>
-        )}
+        </div>
       </main>
 
       {/* FULLSCREEN LIGHTBOX PHOTO VIEWER MODAL (Solid Gray #cdd2da Background) */}
