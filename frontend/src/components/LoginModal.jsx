@@ -4,8 +4,8 @@ import { z } from 'zod';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
-import { GoogleLogin } from '@react-oauth/google';
-import { ErrorBoundary } from './common/ErrorBoundary';
+import { LoginFormTab } from './auth/LoginFormTab';
+import { RegisterFormTab } from './auth/RegisterFormTab';
 
 const GOOGLE_CLIENT_ID =
   import.meta.env.VITE_GOOGLE_CLIENT_ID ||
@@ -62,126 +62,17 @@ const registerSchema = z
     path: ['confirmPassword'],
   });
 
-/* ── Reusable 6-Box OTP Verification Form Component ── */
-function OtpVerificationForm({
-  email,
-  purpose,
-  onVerify,
-  onResend,
-  onBack,
-  isVerifying,
-  isResending,
-  countdown,
-  errorMessage,
-  otpDigits,
-  onDigitChange,
-  onKeyDown,
-  onPaste,
-  inputRefs,
-}) {
-  const isFilled = otpDigits.join('').length === 6;
-
-  return (
-    <div className="space-y-4 pt-1 pb-2 select-none animate-in fade-in duration-200">
-      {/* Icon & Description */}
-      <div className="text-center space-y-2">
-        <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-600 flex items-center justify-center mx-auto shadow-xs">
-          <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
-        </div>
-        <p className="text-xs sm:text-[13.5px] text-slate-600 max-w-xs mx-auto leading-relaxed">
-          We sent a 6-digit code to
-          <span className="font-bold text-slate-900 block truncate max-w-[260px] mx-auto mt-0.5">
-            {email}
-          </span>
-        </p>
-      </div>
-
-      {/* 6 Digit Input Boxes */}
-      <div className="flex justify-center items-center gap-1.5 sm:gap-2" onPaste={onPaste}>
-        {otpDigits.map((digit, idx) => (
-          <input
-            key={idx}
-            ref={(el) => (inputRefs.current[idx] = el)}
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            maxLength={1}
-            value={digit}
-            onChange={(e) => onDigitChange(idx, e.target.value)}
-            onKeyDown={(e) => onKeyDown(idx, e)}
-            className="w-10 h-12 sm:w-11 sm:h-13 text-center font-mono text-xl sm:text-2xl font-bold bg-[#f7f4ee]/80 border-2 border-slate-200 rounded-xl focus:border-emerald-600 focus:bg-white focus:ring-4 focus:ring-emerald-500/15 outline-none transition-all select-none text-slate-900 shadow-2xs"
-            autoComplete="one-time-code"
-          />
-        ))}
-      </div>
-
-      {/* Error Message */}
-      {errorMessage && (
-        <div className="flex items-center gap-2 p-2.5 text-xs rounded-xl bg-rose-50 border border-rose-200 text-rose-700 animate-in fade-in">
-          <svg className="w-4 h-4 shrink-0 text-rose-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01" />
-          </svg>
-          <span className="font-medium leading-tight">{errorMessage}</span>
-        </div>
-      )}
-
-      {/* Submit Button */}
-      <div className="pt-1 flex justify-center w-full">
-        <button
-          type="button"
-          disabled={isVerifying || !isFilled}
-          onClick={() => onVerify()}
-          className="w-[280px] h-[40px] min-h-[40px] bg-[#059669] hover:bg-[#047857] active:scale-[0.98] text-white font-semibold text-[15px] flex items-center justify-center space-x-2 shadow-md shadow-emerald-700/20 transition-all duration-200 rounded-full cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isVerifying ? (
-            <>
-              <svg className="animate-spin h-4 w-4 text-white mr-2" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-              </svg>
-              <span>Verifying Code...</span>
-            </>
-          ) : (
-            <span>{purpose === 'register' ? 'Verify & Create Account' : 'Verify & Sign In'}</span>
-          )}
-        </button>
-      </div>
-
-      {/* Resend & Back Controls */}
-      <div className="flex flex-col items-center gap-1.5 text-xs pt-1 text-slate-500">
-        <div className="flex items-center gap-1.5">
-          <span>Didn&apos;t receive code?</span>
-          {countdown > 0 ? (
-            <span className="font-mono font-semibold text-slate-600">Resend in {countdown}s</span>
-          ) : (
-            <button
-              type="button"
-              disabled={isResending}
-              onClick={onResend}
-              className="font-bold text-[#059669] hover:text-emerald-700 hover:underline cursor-pointer disabled:opacity-50"
-            >
-              {isResending ? 'Sending...' : 'Resend Code'}
-            </button>
-          )}
-        </div>
-
-        <button
-          type="button"
-          onClick={onBack}
-          className="text-slate-500 hover:text-slate-800 hover:underline cursor-pointer font-medium pt-0.5"
-        >
-          ← Back to {purpose === 'register' ? 'Registration' : 'Login'}
-        </button>
-      </div>
-    </div>
-  );
-}
-
 export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessage = '' }) {
-  const { user, isAuthenticated, login, register, loginWithGoogle, verifyLoginOtp, verifyRegisterOtp, resendOtp } = useAuth();
+  const {
+    user,
+    isAuthenticated,
+    login,
+    register,
+    loginWithGoogle,
+    verifyLoginOtp,
+    verifyRegisterOtp,
+    resendOtp,
+  } = useAuth();
 
   const [accountType, setAccountType] = useState(initialRole);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
@@ -594,7 +485,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-start p-3 sm:p-4 overflow-y-auto pt-2.5 sm:pt-5 pb-12">
-          {/* Complete Solid Black Backdrop Overlay */}
+          {/* Backdrop Overlay */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -605,7 +496,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
             aria-hidden="true"
           />
 
-          {/* ── Main Mobile / Modal Container (Anchored at Navbar Search Position) ── */}
+          {/* Modal Container */}
           <motion.div
             initial={{ opacity: 0, scale: 0.96, y: -6 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -615,7 +506,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
             data-purpose="mobile-viewport"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* ── Fixed Position Console: Matches Exact Navbar Search Position ── */}
+            {/* Header Capsule Bar */}
             <header className="relative z-30 pb-3 sm:pb-3.5 flex flex-col items-center shrink-0">
               {isOtpMode ? (
                 <div className="py-2.5 px-6 sm:py-3 sm:px-8 rounded-full text-base sm:text-lg font-bold bg-white text-[#1f1b16] shadow-xl border-2 border-slate-200 flex items-center gap-2">
@@ -632,9 +523,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                     type="button"
                     onClick={() => switchMode(false)}
                     className={`relative py-3 px-8 sm:py-3.5 sm:px-10 rounded-full text-base sm:text-lg font-bold tracking-tight transition-all duration-200 cursor-pointer z-10 select-none ${
-                      !isRegisterMode
-                        ? 'text-white'
-                        : 'text-slate-600 hover:text-slate-900'
+                      !isRegisterMode ? 'text-white' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     {!isRegisterMode && (
@@ -652,9 +541,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                     type="button"
                     onClick={() => switchMode(true)}
                     className={`relative py-3 px-8 sm:py-3.5 sm:px-10 rounded-full text-base sm:text-lg font-bold tracking-tight transition-all duration-200 cursor-pointer z-10 select-none ${
-                      isRegisterMode
-                        ? 'text-white'
-                        : 'text-slate-600 hover:text-slate-900'
+                      isRegisterMode ? 'text-white' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     {isRegisterMode && (
@@ -674,9 +561,8 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
               )}
             </header>
 
-            {/* ── Sliding Track Viewport (Natural full height, no expand/collapse) ── */}
+            {/* Sliding Track Viewport */}
             <div className="relative w-full overflow-hidden py-3 px-1 -my-3 -mx-1">
-              {/* ── 2-Panel Horizontal Sliding Track with Liquid Butter Slide ── */}
               <motion.div
                 className="flex w-[200%] items-start will-change-transform"
                 animate={{ x: isRegisterMode ? '-50%' : '0%' }}
@@ -685,593 +571,85 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                   ease: [0.16, 1, 0.3, 1],
                 }}
               >
-                {/* ════════════════════════════════════════════════════════════
-                    TAB 1: LOGIN TAB CARD
-                    ════════════════════════════════════════════════════════════ */}
-                <div
-                  className={`w-1/2 px-1 ${
-                    isRegisterMode ? 'pointer-events-none' : ''
-                  }`}
-                  aria-hidden={isRegisterMode}
-                >
-                  <div className="rounded-[30px] sm:rounded-[32px] p-5 sm:p-7 relative border border-slate-200/90 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.22)]">
-                    {/* Header */}
-                    <header className="text-center pt-2 pb-4">
-                      <h1 className="text-[30px] font-bold tracking-tight text-[#1f1b16] leading-none">
-                        {isOtpMode
-                          ? 'Security Code'
-                          : isForgotMode
-                          ? 'Reset Password'
-                          : accountType === 'host'
-                          ? 'Host Login'
-                          : 'Login'}
-                      </h1>
-                    </header>
+                {/* TAB 1: LOGIN */}
+                <LoginFormTab
+                  isRegisterMode={isRegisterMode}
+                  isOtpMode={isOtpMode}
+                  otpPurpose={otpPurpose}
+                  isForgotMode={isForgotMode}
+                  setIsForgotMode={setIsForgotMode}
+                  accountType={accountType}
+                  setAccountType={setAccountType}
+                  promptMessage={promptMessage}
+                  errorMessage={errorMessage}
+                  setErrorMessage={setErrorMessage}
+                  successMessage={successMessage}
+                  setSuccessMessage={setSuccessMessage}
+                  forgotEmail={forgotEmail}
+                  setForgotEmail={setForgotEmail}
+                  formData={formData}
+                  handleInputChange={handleInputChange}
+                  showLoginPassword={showLoginPassword}
+                  setShowLoginPassword={setShowLoginPassword}
+                  rememberDevice={rememberDevice}
+                  setRememberDevice={setRememberDevice}
+                  isSubmitting={isSubmitting}
+                  handleSubmit={handleSubmit}
+                  handleForgotPasswordSubmit={handleForgotPasswordSubmit}
+                  handleGoogleSuccess={handleGoogleSuccess}
+                  handleGoogleError={handleGoogleError}
+                  GOOGLE_CLIENT_ID={GOOGLE_CLIENT_ID}
+                  loginEmailRef={loginEmailRef}
+                  otpEmail={otpEmail}
+                  otpDigits={otpDigits}
+                  otpCountdown={otpCountdown}
+                  isResending={isResending}
+                  isVerifyingOtp={isVerifyingOtp}
+                  handleVerifyOtp={handleVerifyOtp}
+                  handleResendOtp={handleResendOtp}
+                  handleOtpDigitChange={handleOtpDigitChange}
+                  handleOtpKeyDown={handleOtpKeyDown}
+                  handleOtpPaste={handleOtpPaste}
+                  otpInputRefs={otpInputRefs}
+                  setIsOtpMode={setIsOtpMode}
+                />
 
-                    {/* Prompt Notification Banner */}
-                    {promptMessage && (
-                      <div className="mb-3 p-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-800 text-xs font-medium text-center">
-                        {promptMessage}
-                      </div>
-                    )}
-
-                    {/* Error Banner */}
-                    {!isRegisterMode && errorMessage && (
-                      <div className="mb-3 p-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-700 text-xs font-semibold text-center">
-                        {errorMessage}
-                      </div>
-                    )}
-
-                    {/* Success Banner */}
-                    {!isRegisterMode && successMessage && (
-                      <div className="mb-3 p-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 text-xs font-semibold text-center flex items-center justify-center gap-1.5">
-                        <span>{successMessage}</span>
-                      </div>
-                    )}
-
-                    {/* Tab 1 Body: OTP Form or Forgot Password or Standard Login */}
-                    {isOtpMode && otpPurpose === 'login' ? (
-                      <OtpVerificationForm
-                        email={otpEmail}
-                        purpose="login"
-                        onVerify={handleVerifyOtp}
-                        onResend={handleResendOtp}
-                        onBack={() => {
-                          setIsOtpMode(false);
-                          setErrorMessage('');
-                        }}
-                        isVerifying={isVerifyingOtp}
-                        isResending={isResending}
-                        countdown={otpCountdown}
-                        errorMessage={errorMessage}
-                        otpDigits={otpDigits}
-                        onDigitChange={handleOtpDigitChange}
-                        onKeyDown={handleOtpKeyDown}
-                        onPaste={handleOtpPaste}
-                        inputRefs={otpInputRefs}
-                      />
-                    ) : isForgotMode ? (
-                      <form onSubmit={handleForgotPasswordSubmit} className="space-y-3.5">
-                        <div className="flex items-center bg-[#f7f4ee]/80 border border-slate-200/90 py-2.5 sm:py-3 transition-all duration-200 rounded-full px-4 sm:px-5 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-200/60">
-                          <svg className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                            <path d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                          <input
-                            type="email"
-                            required
-                            autoComplete="email"
-                            value={forgotEmail}
-                            onChange={(e) => setForgotEmail(e.target.value)}
-                            placeholder="Enter registered email"
-                            className="w-full bg-transparent p-0 border-0 text-[13.5px] text-[#1f1b16] placeholder:text-slate-400 focus:ring-0 focus:outline-none outline-none focus-visible:outline-none"
-                            style={{ outline: 'none', boxShadow: 'none' }}
-                          />
-                        </div>
-
-                        <div className="pt-1 flex justify-center w-full">
-                          <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="w-[280px] h-[40px] min-h-[40px] bg-[#059669] hover:bg-[#047857] active:scale-[0.98] text-white font-semibold text-[15px] flex items-center justify-center space-x-2 shadow-md shadow-emerald-700/20 transition-all duration-200 rounded-full cursor-pointer disabled:opacity-50"
-                          >
-                            <span>{isSubmitting ? 'Sending...' : 'Send Recovery Password'}</span>
-                            <svg className="w-4 h-4 stroke-[2.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          </button>
-                        </div>
-
-                        <div className="text-center pt-1">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsForgotMode(false);
-                              setErrorMessage('');
-                              setSuccessMessage('');
-                            }}
-                            className="text-xs text-[#047857] hover:text-emerald-700 font-semibold transition-colors cursor-pointer"
-                          >
-                            ← Back to Login
-                          </button>
-                        </div>
-                      </form>
-                    ) : (
-                      /* Standard Login Form */
-                      <form onSubmit={(e) => handleSubmit(e, false)} noValidate className="space-y-3">
-                        {/* Email Input Field */}
-                        <div className="flex items-center bg-[#f7f4ee]/80 border border-slate-200/90 py-2.5 sm:py-3 transition-all duration-200 rounded-full px-4 sm:px-5 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-200/60">
-                          <svg className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                            <path d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                          <input
-                            ref={loginEmailRef}
-                            type="email"
-                            autoComplete="username email"
-                            value={formData.email}
-                            onChange={(e) => handleInputChange('email', e.target.value)}
-                            placeholder="Email address"
-                            required
-                            tabIndex={isRegisterMode ? -1 : 0}
-                            className="w-full bg-transparent p-0 border-0 text-[13.5px] text-[#1f1b16] placeholder:text-slate-400 focus:ring-0 focus:outline-none outline-none focus-visible:outline-none"
-                            style={{ outline: 'none', boxShadow: 'none' }}
-                          />
-                        </div>
-
-                        {/* Password Input Field */}
-                        <div className="flex items-center bg-[#f7f4ee]/80 border border-slate-200/90 py-2.5 sm:py-3 transition-all duration-200 rounded-full px-4 sm:px-5 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-200/60">
-                          <svg className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                            <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                          <input
-                            type={showLoginPassword ? 'text' : 'password'}
-                            autoComplete="current-password"
-                            value={formData.password}
-                            onChange={(e) => handleInputChange('password', e.target.value)}
-                            placeholder="Password (min. 8 characters)"
-                            required
-                            tabIndex={isRegisterMode ? -1 : 0}
-                            className="w-full bg-transparent p-0 border-0 text-[13.5px] text-[#1f1b16] placeholder:text-slate-400 focus:ring-0 focus:outline-none outline-none focus-visible:outline-none"
-                            style={{ outline: 'none', boxShadow: 'none' }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowLoginPassword(!showLoginPassword)}
-                            aria-label="Toggle password visibility"
-                            tabIndex={isRegisterMode ? -1 : 0}
-                            className="text-slate-400 hover:text-slate-600 focus:outline-none ml-2 transition-colors cursor-pointer"
-                          >
-                            {showLoginPassword ? (
-                              <svg className="w-5 h-5 sm:w-[22px] sm:h-[22px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
-                              </svg>
-                            ) : (
-                              <svg className="w-5 h-5 sm:w-[22px] sm:h-[22px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
-                            )}
-                          </button>
-                        </div>
-
-                        {/* Secondary Controls: Remember device & Forgot password */}
-                        <div className="flex items-center justify-between pt-1 pb-1 text-[13.5px] sm:text-sm font-medium">
-                          <label className="flex items-center space-x-2 cursor-pointer select-none text-slate-600 hover:text-slate-800 transition-colors">
-                            <input
-                              type="checkbox"
-                              checked={rememberDevice}
-                              onChange={(e) => setRememberDevice(e.target.checked)}
-                              tabIndex={isRegisterMode ? -1 : 0}
-                              className="w-4.5 h-4.5 rounded border-slate-300 text-[#059669] focus:ring-0 cursor-pointer accent-[#059669]"
-                            />
-                            <span>Remember device</span>
-                          </label>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsForgotMode(true);
-                              setForgotEmail(formData.email || '');
-                              setErrorMessage('');
-                              setSuccessMessage('');
-                            }}
-                            tabIndex={isRegisterMode ? -1 : 0}
-                            className="text-[#047857] hover:text-emerald-700 font-semibold transition-colors cursor-pointer text-[13.5px] sm:text-sm"
-                          >
-                            Forgot password?
-                          </button>
-                        </div>
-
-                        {/* Submit Button */}
-                        <div className="pt-1 flex justify-center w-full">
-                          <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            tabIndex={isRegisterMode ? -1 : 0}
-                            className="w-[280px] h-[40px] min-h-[40px] bg-[#059669] hover:bg-[#047857] active:scale-[0.98] text-white font-semibold text-[15px] flex items-center justify-center space-x-2 shadow-md shadow-emerald-700/20 transition-all duration-200 rounded-full cursor-pointer disabled:opacity-50"
-                          >
-                            {isSubmitting ? (
-                              <>
-                                <svg className="animate-spin h-4 w-4 text-white mr-2" viewBox="0 0 24 24" fill="none">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                                </svg>
-                                <span>Processing...</span>
-                              </>
-                            ) : (
-                              <>
-                                <span>
-                                  {accountType === 'host' ? 'Login to Host Portal' : 'Login'}
-                                </span>
-                                <svg className="w-4 h-4 stroke-[2.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </form>
-                    )}
-
-                    {/* Divider with Text Pill */}
-                    {!isForgotMode && !isOtpMode && GOOGLE_CLIENT_ID && (
-                      <>
-                        <div className="relative my-4 flex items-center justify-center">
-                          <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-slate-200/80" />
-                          </div>
-                          <span className="relative bg-white px-3 py-0.5 rounded-full border border-slate-100 text-[10px] font-medium text-slate-400 shadow-sm">
-                            Or continue with
-                          </span>
-                        </div>
-
-                        {/* Google OAuth Action for Login */}
-                        <div className="flex justify-center w-full">
-                          <ErrorBoundary fallback={null}>
-                            <GoogleLogin
-                              onSuccess={handleGoogleSuccess}
-                              onError={handleGoogleError}
-                              theme="outline"
-                              size="large"
-                              width="280"
-                              text="signin_with"
-                              shape="pill"
-                            />
-                          </ErrorBoundary>
-                        </div>
-                      </>
-                    )}
-
-                    {/* Footnote: Switch between Guest and Host */}
-                    <footer className="mt-4 text-center">
-                      <p className="text-[13.5px] sm:text-sm text-slate-500 font-medium">
-                        {accountType === 'host' ? (
-                          <>
-                            Looking to explore stays?{' '}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setAccountType('user');
-                                setErrorMessage('');
-                              }}
-                              tabIndex={isRegisterMode ? -1 : 0}
-                              className="text-indigo-600 hover:text-indigo-700 font-bold transition-colors cursor-pointer"
-                            >
-                              Switch to Guest
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            Are you a property owner?{' '}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setAccountType('host');
-                                setErrorMessage('');
-                              }}
-                              tabIndex={isRegisterMode ? -1 : 0}
-                              className="text-emerald-600 hover:text-emerald-700 font-bold transition-colors cursor-pointer"
-                            >
-                              Switch to Host
-                            </button>
-                          </>
-                        )}
-                      </p>
-                    </footer>
-                  </div>
-                </div>
-
-                {/* ════════════════════════════════════════════════════════════
-                    TAB 2: REGISTER TAB CARD
-                    ════════════════════════════════════════════════════════════ */}
-                <div
-                  className={`w-1/2 px-1 ${
-                    !isRegisterMode ? 'pointer-events-none' : ''
-                  }`}
-                  aria-hidden={!isRegisterMode}
-                >
-                  <div className="rounded-[30px] sm:rounded-[32px] p-5 sm:p-7 relative border border-slate-200/90 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.22)]">
-                    {/* Header */}
-                    <header className="text-center pt-2 pb-4">
-                      <h1 className="text-[30px] font-bold tracking-tight text-[#1f1b16] leading-none">
-                        {isOtpMode
-                          ? 'Verify Email'
-                          : accountType === 'host'
-                          ? 'Host Registration'
-                          : 'Create Account'}
-                      </h1>
-                    </header>
-
-                    {/* Prompt Notification Banner */}
-                    {promptMessage && (
-                      <div className="mb-3 p-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-800 text-xs font-medium text-center">
-                        {promptMessage}
-                      </div>
-                    )}
-
-                    {/* Error Banner */}
-                    {isRegisterMode && errorMessage && (
-                      <div className="mb-3 p-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-700 text-xs font-semibold text-center">
-                        {errorMessage}
-                      </div>
-                    )}
-
-                    {/* Success Banner */}
-                    {isRegisterMode && successMessage && (
-                      <div className="mb-3 p-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 text-xs font-semibold text-center flex items-center justify-center gap-1.5">
-                        <span>{successMessage}</span>
-                      </div>
-                    )}
-
-                    {/* Tab 2 Body: OTP Form or Standard Register Form */}
-                    {isOtpMode && otpPurpose === 'register' ? (
-                      <OtpVerificationForm
-                        email={otpEmail}
-                        purpose="register"
-                        onVerify={handleVerifyOtp}
-                        onResend={handleResendOtp}
-                        onBack={() => {
-                          setIsOtpMode(false);
-                          setErrorMessage('');
-                        }}
-                        isVerifying={isVerifyingOtp}
-                        isResending={isResending}
-                        countdown={otpCountdown}
-                        errorMessage={errorMessage}
-                        otpDigits={otpDigits}
-                        onDigitChange={handleOtpDigitChange}
-                        onKeyDown={handleOtpKeyDown}
-                        onPaste={handleOtpPaste}
-                        inputRefs={otpInputRefs}
-                      />
-                    ) : (
-                      <form onSubmit={(e) => handleSubmit(e, true)} noValidate className="space-y-3">
-                      {/* 1. Full Name */}
-                      <div className="flex items-center bg-[#f7f4ee]/80 border border-slate-200/90 py-2.5 sm:py-3 transition-all duration-200 rounded-full px-4 sm:px-5 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-200/60">
-                        <svg className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                          <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        <input
-                          ref={registerNameRef}
-                          type="text"
-                          autoComplete="name"
-                          value={formData.name}
-                          onChange={(e) => handleNameChange(e.target.value)}
-                          placeholder="Full name"
-                          tabIndex={!isRegisterMode ? -1 : 0}
-                          className="w-full bg-transparent p-0 border-0 text-[13.5px] text-[#1f1b16] placeholder:text-slate-400 focus:ring-0 focus:outline-none outline-none focus-visible:outline-none"
-                          style={{ outline: 'none', boxShadow: 'none' }}
-                        />
-                      </div>
-
-                      {/* 2. Mobile Number */}
-                      <div className="flex items-center bg-[#f7f4ee]/80 border border-slate-200/90 py-2.5 sm:py-3 transition-all duration-200 rounded-full px-4 sm:px-5 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-200/60">
-                        <span className="text-xs font-medium text-slate-600 select-none shrink-0 mr-1.5">+91</span>
-                        <div className="h-4 w-px bg-slate-300 mr-2 shrink-0" />
-                        <input
-                          type="tel"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          maxLength={10}
-                          value={formData.phone}
-                          onChange={(e) => {
-                            const raw = e.target.value.replace(/\D/g, '');
-                            const digits = raw.length > 10 && raw.startsWith('91') ? raw.slice(-10) : raw.slice(0, 10);
-                            handleInputChange('phone', digits);
-                          }}
-                          placeholder="Mobile number (10 digits)"
-                          tabIndex={!isRegisterMode ? -1 : 0}
-                          className="w-full bg-transparent p-0 border-0 text-[13.5px] text-[#1f1b16] placeholder:text-slate-400 focus:ring-0 focus:outline-none outline-none focus-visible:outline-none"
-                          style={{ outline: 'none', boxShadow: 'none' }}
-                        />
-                      </div>
-
-                      {/* 3. Email Address */}
-                      <div className="flex items-center bg-[#f7f4ee]/80 border border-slate-200/90 py-2.5 sm:py-3 transition-all duration-200 rounded-full px-4 sm:px-5 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-200/60">
-                        <svg className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                          <path d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        <input
-                          type="email"
-                          autoComplete="email"
-                          value={formData.email}
-                          onChange={(e) => handleInputChange('email', e.target.value)}
-                          placeholder="Email address"
-                          required
-                          tabIndex={!isRegisterMode ? -1 : 0}
-                          className="w-full bg-transparent p-0 border-0 text-[13.5px] text-[#1f1b16] placeholder:text-slate-400 focus:ring-0 focus:outline-none outline-none focus-visible:outline-none"
-                          style={{ outline: 'none', boxShadow: 'none' }}
-                        />
-                      </div>
-
-                      {/* 4. Password */}
-                      <div className="flex items-center bg-[#f7f4ee]/80 border border-slate-200/90 py-2.5 sm:py-3 transition-all duration-200 rounded-full px-4 sm:px-5 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-200/60">
-                        <svg className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                          <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        <input
-                          type={showRegisterPassword ? 'text' : 'password'}
-                          autoComplete="new-password"
-                          value={formData.password}
-                          onChange={(e) => handleInputChange('password', e.target.value)}
-                          placeholder="Password (min. 8 characters)"
-                          required
-                          tabIndex={!isRegisterMode ? -1 : 0}
-                          className="w-full bg-transparent p-0 border-0 text-[13.5px] text-[#1f1b16] placeholder:text-slate-400 focus:ring-0 focus:outline-none outline-none focus-visible:outline-none"
-                          style={{ outline: 'none', boxShadow: 'none' }}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowRegisterPassword(!showRegisterPassword)}
-                          aria-label="Toggle password visibility"
-                          tabIndex={!isRegisterMode ? -1 : 0}
-                          className="text-slate-400 hover:text-slate-600 focus:outline-none ml-2 transition-colors cursor-pointer"
-                        >
-                          {showRegisterPassword ? (
-                            <svg className="w-5 h-5 sm:w-[22px] sm:h-[22px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
-                            </svg>
-                          ) : (
-                            <svg className="w-5 h-5 sm:w-[22px] sm:h-[22px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                              <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" strokeLinecap="round" strokeLinejoin="round" />
-                              <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          )}
-                        </button>
-                      </div>
-
-                      {/* 5. Confirm Password */}
-                      <div className="flex items-center bg-[#f7f4ee]/80 border border-slate-200/90 py-2.5 sm:py-3 transition-all duration-200 rounded-full px-4 sm:px-5 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-200/60">
-                        <svg className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                          <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        <input
-                          type={showConfirmPassword ? 'text' : 'password'}
-                          autoComplete="off"
-                          value={formData.confirmPassword}
-                          onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                          placeholder="Confirm password"
-                          required
-                          tabIndex={!isRegisterMode ? -1 : 0}
-                          className="w-full bg-transparent p-0 border-0 text-[13.5px] text-[#1f1b16] placeholder:text-slate-400 focus:ring-0 focus:outline-none outline-none focus-visible:outline-none"
-                          style={{ outline: 'none', boxShadow: 'none' }}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          aria-label="Toggle confirm password visibility"
-                          tabIndex={!isRegisterMode ? -1 : 0}
-                          className="text-slate-400 hover:text-slate-600 focus:outline-none ml-2 transition-colors cursor-pointer"
-                        >
-                          {showConfirmPassword ? (
-                            <svg className="w-5 h-5 sm:w-[22px] sm:h-[22px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
-                            </svg>
-                          ) : (
-                            <svg className="w-5 h-5 sm:w-[22px] sm:h-[22px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                              <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" strokeLinecap="round" strokeLinejoin="round" />
-                              <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          )}
-                        </button>
-                      </div>
-
-                      {/* Primary Submit Button */}
-                      <div className="pt-1 flex justify-center w-full">
-                        <button
-                          type="submit"
-                          disabled={isSubmitting}
-                          tabIndex={!isRegisterMode ? -1 : 0}
-                          className="w-[280px] h-[40px] min-h-[40px] bg-[#059669] hover:bg-[#047857] active:scale-[0.98] text-white font-semibold text-[15px] flex items-center justify-center space-x-2 shadow-md shadow-emerald-700/20 transition-all duration-200 rounded-full cursor-pointer disabled:opacity-50"
-                        >
-                          {isSubmitting ? (
-                            <>
-                              <svg className="animate-spin h-4 w-4 text-white mr-2" viewBox="0 0 24 24" fill="none">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                              </svg>
-                              <span>Processing...</span>
-                            </>
-                          ) : (
-                            <>
-                              <span>
-                                {accountType === 'host' ? 'Host a Stay' : 'Create Account'}
-                              </span>
-                              <svg className="w-4 h-4 stroke-[2.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </form>
-                    )}
-
-                    {/* Divider with Text Pill */}
-                    {!isOtpMode && GOOGLE_CLIENT_ID && (
-                      <>
-                        <div className="relative my-4 flex items-center justify-center">
-                          <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-slate-200/80" />
-                          </div>
-                          <span className="relative bg-white px-3 py-0.5 rounded-full border border-slate-100 text-[10px] font-medium text-slate-400 shadow-sm">
-                            Or continue with
-                          </span>
-                        </div>
-
-                        {/* Google OAuth Action for Register */}
-                        <div className="flex justify-center w-full">
-                          <ErrorBoundary fallback={null}>
-                            <GoogleLogin
-                              onSuccess={handleGoogleSuccess}
-                              onError={handleGoogleError}
-                              theme="outline"
-                              size="large"
-                              width="280"
-                              text="signup_with"
-                              shape="pill"
-                            />
-                          </ErrorBoundary>
-                        </div>
-                      </>
-                    )}
-
-                    {/* Footnote: Switch between Guest and Host */}
-                    <footer className="mt-4 text-center">
-                      <p className="text-[13.5px] sm:text-sm text-slate-500 font-medium">
-                        {accountType === 'host' ? (
-                          <>
-                            Looking to explore stays?{' '}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setAccountType('user');
-                                setErrorMessage('');
-                              }}
-                              tabIndex={!isRegisterMode ? -1 : 0}
-                              className="text-indigo-600 hover:text-indigo-700 font-bold transition-colors cursor-pointer"
-                            >
-                              Switch to Guest
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            Are you a property owner?{' '}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setAccountType('host');
-                                setErrorMessage('');
-                              }}
-                              tabIndex={!isRegisterMode ? -1 : 0}
-                              className="text-emerald-600 hover:text-emerald-700 font-bold transition-colors cursor-pointer"
-                            >
-                              Switch to Host
-                            </button>
-                          </>
-                        )}
-                      </p>
-                    </footer>
-                  </div>
-                </div>
+                {/* TAB 2: REGISTER */}
+                <RegisterFormTab
+                  isRegisterMode={isRegisterMode}
+                  isOtpMode={isOtpMode}
+                  otpPurpose={otpPurpose}
+                  accountType={accountType}
+                  setAccountType={setAccountType}
+                  errorMessage={errorMessage}
+                  setErrorMessage={setErrorMessage}
+                  successMessage={successMessage}
+                  formData={formData}
+                  handleInputChange={handleInputChange}
+                  handleNameChange={handleNameChange}
+                  showRegisterPassword={showRegisterPassword}
+                  setShowRegisterPassword={setShowRegisterPassword}
+                  showConfirmPassword={showConfirmPassword}
+                  setShowConfirmPassword={setShowConfirmPassword}
+                  isSubmitting={isSubmitting}
+                  handleSubmit={handleSubmit}
+                  handleGoogleSuccess={handleGoogleSuccess}
+                  handleGoogleError={handleGoogleError}
+                  GOOGLE_CLIENT_ID={GOOGLE_CLIENT_ID}
+                  registerNameRef={registerNameRef}
+                  otpEmail={otpEmail}
+                  otpDigits={otpDigits}
+                  otpCountdown={otpCountdown}
+                  isResending={isResending}
+                  isVerifyingOtp={isVerifyingOtp}
+                  handleVerifyOtp={handleVerifyOtp}
+                  handleResendOtp={handleResendOtp}
+                  handleOtpDigitChange={handleOtpDigitChange}
+                  handleOtpKeyDown={handleOtpKeyDown}
+                  handleOtpPaste={handleOtpPaste}
+                  otpInputRefs={otpInputRefs}
+                  setIsOtpMode={setIsOtpMode}
+                />
               </motion.div>
             </div>
           </motion.div>

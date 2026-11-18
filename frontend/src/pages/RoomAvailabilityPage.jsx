@@ -13,6 +13,9 @@ import { cancelUserBooking } from '../utils/bookingPayment';
 import { Left } from '../components/navbar/Left';
 import { Right } from '../components/navbar/Right';
 import { getSocket } from '../services/socket';
+import { useRoomSlotSelection } from '../hooks/useRoomSlotSelection';
+import { useRoomBookingData } from '../hooks/useRoomBookingData';
+import { buildBookingPayload } from '../utils/bookingPayloadBuilder';
 import {
   getUpcoming30Days,
   getUpcoming12Months,
@@ -60,11 +63,8 @@ export function RoomAvailabilityPage({ onLoginClick }) {
 
 
 
- const upcomingWeek = useMemo(() => getUpcoming30Days(), []);
- const [roomSelectedSlotsMap, setRoomSelectedSlotsMap] = useState({});
-
- const upcomingMonths = useMemo(() => getUpcoming12Months(), []);
- const [roomSelectedMonthsMap, setRoomSelectedMonthsMap] = useState({});
+  const upcomingWeek = useMemo(() => getUpcoming30Days(), []);
+  const upcomingMonths = useMemo(() => getUpcoming12Months(), []);
 
  const [selectedRoom, setSelectedRoom] = useState(null);
   const [isGuestDetailsModalOpen, setIsGuestDetailsModalOpen] = useState(false);
@@ -97,37 +97,7 @@ export function RoomAvailabilityPage({ onLoginClick }) {
     };
   }, [selectedCategoryFilter, selectedRoom]);
 
- const selectedSlotIndices = useMemo(() => {
- if (!selectedRoom) return [];
- const rKey = getRoomKey(selectedRoom);
- return (rKey ? roomSelectedSlotsMap[rKey] : []) || [];
- }, [selectedRoom, roomSelectedSlotsMap]);
 
- const setSelectedSlotIndices = (newIndices) => {
- if (!selectedRoom) return;
- const rKey = getRoomKey(selectedRoom);
- if (!rKey) return;
- setRoomSelectedSlotsMap((prev) => ({
- ...prev,
- [rKey]: typeof newIndices === 'function' ? newIndices(prev[rKey] || []) : newIndices,
- }));
- };
-
- const selectedMonthIndices = useMemo(() => {
- if (!selectedRoom) return [];
- const rKey = getRoomKey(selectedRoom);
- return (rKey ? roomSelectedMonthsMap[rKey] : []) || [];
- }, [selectedRoom, roomSelectedMonthsMap]);
-
- const setSelectedMonthIndices = (newIndices) => {
- if (!selectedRoom) return;
- const rKey = getRoomKey(selectedRoom);
- if (!rKey) return;
- setRoomSelectedMonthsMap((prev) => ({
- ...prev,
- [rKey]: typeof newIndices === 'function' ? newIndices(prev[rKey] || []) : newIndices,
- }));
- };
 
  const [stayBookings, setStayBookings] = useState([]);
  const [isLiveSyncing, setIsLiveSyncing] = useState(false);
@@ -462,301 +432,30 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  const isMonthly = useMemo(() => isMonthlyRateUnit(displayCategoryUnit), [displayCategoryUnit]);
 
 
- // Combined bookings from global context and direct stay fetch
- const allKnownBookings = useMemo(
- () => [...(Array.isArray(bookings) ? bookings : []), ...(Array.isArray(stayBookings) ? stayBookings : [])],
- [bookings, stayBookings]
- );
-
- // Check if booking belongs to current online user
- const checkIsUserBooking = useCallback((b) => {
- if (!b) return false;
-
- // 1. Direct ID match
- const currentUserId = user?._id ? String(user._id) : '';
- const bUserId = b.userId?._id || b.userId ? String(b.userId?._id || b.userId) : '';
- if (currentUserId && bUserId && currentUserId === bUserId) return true;
-
- // 2. Email match
- const currentUserEmail = user?.email ? String(user.email).toLowerCase().trim() : '';
- const bEmail = (b.email || b.userEmail || b.guestEmail) ? String(b.email || b.userEmail || b.guestEmail).toLowerCase().trim() : '';
- if (currentUserEmail && bEmail && currentUserEmail === bEmail) return true;
- if (guestEmail && bEmail && String(guestEmail).toLowerCase().trim() === bEmail) return true;
-
- // 3. Phone match (normalized digits)
- const userPhone = user?.phone ? String(user.phone).replace(/\D/g, '') : '';
- const bPhone = (b.phone || b.userPhone || b.guestPhone) ? String(b.phone || b.userPhone || b.guestPhone).replace(/\D/g, '') : '';
- if (userPhone && bPhone && userPhone.length >= 10 && bPhone.length >= 10) {
- if (userPhone.endsWith(bPhone) || bPhone.endsWith(userPhone)) return true;
- }
- const inputPhone = guestPhone ? String(guestPhone).replace(/\D/g, '') : '';
- if (inputPhone && bPhone && inputPhone.length >= 10 && bPhone.length >= 10) {
- if (inputPhone.endsWith(bPhone) || bPhone.endsWith(inputPhone)) return true;
- }
-
- // 4. Match against BookingsContext records (strictly user's personal database bookings)
- if (Array.isArray(bookings) && bookings.length > 0) {
- const bId = b._id ? String(b._id) : '';
- if (bId && bookings.some((myB) => String(myB._id) === bId)) return true;
- if (b.bookingReferenceId && bookings.some((myB) => myB.bookingReferenceId === b.bookingReferenceId)) return true;
- if (b.slotBookingId && bookings.some((myB) => myB.slotBookingId === b.slotBookingId)) return true;
- }
-
- return false;
- }, [user, guestEmail, guestPhone, bookings]);
-
- // Identify if current user has an active booking awaiting payment or awaiting approval
- const userAwaitingPaymentBooking = useMemo(() => {
- return allKnownBookings.find((b) => {
- if (!b) return false;
- const bStatus = String(b.status || '').toUpperCase();
- if (bStatus === 'EXPIRED' || isBookingRequestExpired(b)) return false;
- if (bStatus !== 'AWAITING_PAYMENT' && bStatus !== 'APPROVED - PAYMENT PENDING') return false;
- const isUser = checkIsUserBooking(b);
- if (!isUser) return false;
- const stayId = String(id || stay?._id || '');
- const bStayId = String(b.stayId?._id || b.stayId || '');
- return !stayId || !bStayId || stayId === bStayId;
- });
- }, [allKnownBookings, checkIsUserBooking, id, stay]);
-
-
- // Identify if current user has an active confirmed booking for this stay
- const userConfirmedBooking = useMemo(() => {
- return allKnownBookings.find((b) => {
- if (!b) return false;
- const bStatus = String(b.status || '').toUpperCase();
- if (bStatus === 'EXPIRED' || bStatus === 'CANCELLED' || bStatus === 'REJECTED' || bStatus === 'CHECKED_OUT' || bStatus === 'COMPLETED' || isBookingRequestExpired(b)) return false;
- if (bStatus.includes('PENDING') || bStatus.includes('APPROVAL') || bStatus === 'DRAFT' || bStatus === 'AWAITING_PAYMENT') return false;
- const isUser = checkIsUserBooking(b);
- if (!isUser) return false;
- const stayId = String(id || stay?._id || '');
- const bStayId = String(b.stayId?._id || b.stayId || '');
- return !stayId || !bStayId || stayId === bStayId;
- });
- }, [allKnownBookings, checkIsUserBooking, id, stay]);
-
- // Derive booked and requested slots strictly from database bookings
- const { allRoomsBookedSlots, allRoomsRequestedSlots, allRoomsUserBookedSlots, allRoomsUserRequestedSlots } = useMemo(() => {
- const bookedMap = {};
- const requestedMap = {};
- const userBookedMap = {};
- const userRequestedMap = {};
- const stayId = String(id || stay?._id || '');
- const stayTitle = stay?.propertyName || stay?.title;
-
- roomGrid.forEach((rm) => {
- const bookedSet = new Set();
- const requestedSet = new Set();
- const userBookedSet = new Set();
- const userRequestedSet = new Set();
- const numRm = String(rm.roomNumber || '').replace(/[^0-9]/g, '');
-
- allKnownBookings.forEach((b) => {
- if (!b) return;
- const bStatus = String(b.status || '').toUpperCase();
- if (bStatus === 'REJECTED' || bStatus === 'CANCELLED' || bStatus === 'CHECKED_OUT' || bStatus === 'COMPLETED' || bStatus === 'EXPIRED' || isBookingRequestExpired(b)) return;
-
- const isOnlineBooking = b.bookingSource === 'ONLINE' || b.isOnline === true;
- const isUnpaid = b.paymentStatus !== 'PAID';
- const isPending =
- bStatus.includes('PENDING') ||
- bStatus.includes('APPROVAL') ||
- bStatus === 'AWAITING_PAYMENT' ||
- bStatus === 'PAYMENT_PENDING' ||
- (isOnlineBooking && isUnpaid && bStatus !== 'CHECKED_IN');
-
- const isFromStayBookings = Array.isArray(stayBookings) && stayBookings.includes(b);
- const bStayId = String(b.stayId?._id || b.stayId || '');
- const isSameStay =
- isFromStayBookings ||
- (stayId && bStayId && bStayId === stayId) ||
- (stay?.hostEmail && b.hostEmail && String(stay.hostEmail).toLowerCase() === String(b.hostEmail).toLowerCase()) ||
- (stayTitle && b.stayTitle && String(b.stayTitle).trim().toLowerCase() === String(stayTitle).trim().toLowerCase());
-
- const numB = String(b.roomNumber || '').replace(/[^0-9]/g, '');
- const isSameRoom =
- String(b.roomNumber) === String(rm.roomNumber) ||
- formatRoomNo(b.roomNumber) === formatRoomNo(rm.roomNumber) ||
- (numB && numRm && numB === numRm) ||
- (b.roomId && rm._id && String(b.roomId) === String(rm._id)) ||
- (b.roomId && rm._id && String(b.roomId) === String(rm._id));
-
- if (isSameStay && isSameRoom) {
- const isUserBooking = checkIsUserBooking(b);
- const targetSet = isPending ? requestedSet : bookedSet;
- const userTargetSet = isUserBooking ? (isPending ? userRequestedSet : userBookedSet) : null;
-
- if (Array.isArray(b.bookedDates) && b.bookedDates.length > 0) {
- b.bookedDates.forEach((d) => {
- targetSet.add(d);
- if (userTargetSet) userTargetSet.add(d);
- });
- } else if (b.checkIn && b.checkOut) {
- const inD = new Date(b.checkIn);
- const outD = new Date(b.checkOut);
- if (!isNaN(inD.getTime()) && !isNaN(outD.getTime())) {
- let curr = new Date(Date.UTC(inD.getUTCFullYear(), inD.getUTCMonth(), inD.getUTCDate()));
- const end = new Date(Date.UTC(outD.getUTCFullYear(), outD.getUTCMonth(), outD.getUTCDate()));
- if (curr.getTime() === end.getTime()) {
- const y = curr.getUTCFullYear();
- const m = String(curr.getUTCMonth() + 1).padStart(2, '0');
- const d = String(curr.getUTCDate()).padStart(2, '0');
- const dateStr = `${y}-${m}-${d}`;
- targetSet.add(dateStr);
- if (userTargetSet) userTargetSet.add(dateStr);
- } else {
- while (curr < end) {
- const y = curr.getUTCFullYear();
- const m = String(curr.getUTCMonth() + 1).padStart(2, '0');
- const d = String(curr.getUTCDate()).padStart(2, '0');
- const dateStr = `${y}-${m}-${d}`;
- targetSet.add(dateStr);
- if (userTargetSet) userTargetSet.add(dateStr);
- curr.setUTCDate(curr.getUTCDate() + 1);
- }
- }
- }
- }
- }
- });
-
- const cleanNum = String(rm.roomNumber || '').replace(/[^0-9]/g, '');
- const keysToRegister = [
- rm._id,
- rm.id,
- rm.roomNumber ? String(rm.roomNumber).trim() : null,
- cleanNum,
- cleanNum ? `room_${cleanNum}` : null,
- cleanNum ? `Room-${cleanNum}` : null,
- cleanNum ? `Room ${cleanNum}` : null,
- ].filter(Boolean);
-
- keysToRegister.forEach((k) => {
- bookedMap[k] = bookedSet;
- requestedMap[k] = requestedSet;
- userBookedMap[k] = userBookedSet;
- userRequestedMap[k] = userRequestedSet;
- });
- });
-
- return {
- allRoomsBookedSlots: bookedMap,
- allRoomsRequestedSlots: requestedMap,
- allRoomsUserBookedSlots: userBookedMap,
- allRoomsUserRequestedSlots: userRequestedMap,
- };
- }, [roomGrid, allKnownBookings, stayBookings, stay, id, checkIsUserBooking]);
-
- // Map of booked and requested months for EVERY room in the property
- const { allRoomsBookedMonths, allRoomsRequestedMonths, allRoomsUserBookedMonths, allRoomsUserRequestedMonths } = useMemo(() => {
- const bookedMap = {};
- const requestedMap = {};
- const userBookedMap = {};
- const userRequestedMap = {};
- const stayId = String(id || stay?._id || '');
- const stayTitle = stay?.propertyName || stay?.title;
-
- roomGrid.forEach((rm) => {
- const bookedMonthSet = new Set();
- const requestedMonthSet = new Set();
- const userBookedMonthSet = new Set();
- const userRequestedMonthSet = new Set();
- const numRm = String(rm.roomNumber || '').replace(/[^0-9]/g, '');
-
- allKnownBookings.forEach((b) => {
- if (!b) return;
- const bStatus = String(b.status || '').toUpperCase();
- if (bStatus === 'REJECTED' || bStatus === 'CANCELLED' || bStatus === 'CHECKED_OUT' || bStatus === 'COMPLETED' || bStatus === 'EXPIRED' || isBookingRequestExpired(b)) return;
-
- const isOnlineBooking = b.bookingSource === 'ONLINE' || b.isOnline === true;
- const isUnpaid = b.paymentStatus !== 'PAID';
- const isPending =
- bStatus.includes('PENDING') ||
- bStatus.includes('APPROVAL') ||
- bStatus === 'AWAITING_PAYMENT' ||
- bStatus === 'PAYMENT_PENDING' ||
- (isOnlineBooking && isUnpaid && bStatus !== 'CHECKED_IN');
-
- const isFromStayBookings = Array.isArray(stayBookings) && stayBookings.includes(b);
- const bStayId = String(b.stayId?._id || b.stayId || '');
- const isSameStay =
- isFromStayBookings ||
- (stayId && bStayId && bStayId === stayId) ||
- (stay?.hostEmail && b.hostEmail && String(stay.hostEmail).toLowerCase() === String(b.hostEmail).toLowerCase()) ||
- (stayTitle && b.stayTitle && String(b.stayTitle).trim().toLowerCase() === String(stayTitle).trim().toLowerCase());
-
- const numB = String(b.roomNumber || '').replace(/[^0-9]/g, '');
- const isSameRoom =
- String(b.roomNumber) === String(rm.roomNumber) ||
- formatRoomNo(b.roomNumber) === formatRoomNo(rm.roomNumber) ||
- (numB && numRm && numB === numRm) ||
- (b.roomId && rm._id && String(b.roomId) === String(rm._id)) ||
- (b.roomId && rm._id && String(b.roomId) === String(rm._id));
-
- if (isSameStay && isSameRoom) {
- const isUserBooking = checkIsUserBooking(b);
- const targetSet = isPending ? requestedMonthSet : bookedMonthSet;
- const userTargetSet = isUserBooking ? (isPending ? userRequestedMonthSet : userBookedMonthSet) : null;
-
- if (Array.isArray(b.bookedMonths) && b.bookedMonths.length > 0) {
- b.bookedMonths.forEach((m) => {
- targetSet.add(m);
- if (userTargetSet) userTargetSet.add(m);
- });
- } else if (Array.isArray(b.bookedDates) && b.bookedDates.length > 0) {
- b.bookedDates.forEach((d) => {
- const mKey = String(d).slice(0, 7);
- if (mKey.length === 7) {
- targetSet.add(mKey);
- if (userTargetSet) userTargetSet.add(mKey);
- }
- });
- } else if (b.checkIn && b.checkOut) {
- const inD = new Date(b.checkIn);
- const outD = new Date(b.checkOut);
- if (!isNaN(inD.getTime()) && !isNaN(outD.getTime())) {
- let currM = new Date(Date.UTC(inD.getUTCFullYear(), inD.getUTCMonth(), 1));
- const endM = new Date(Date.UTC(outD.getUTCFullYear(), outD.getUTCMonth(), 1));
- while (currM <= endM) {
- const y = currM.getUTCFullYear();
- const m = String(currM.getUTCMonth() + 1).padStart(2, '0');
- const mKey = `${y}-${m}`;
- targetSet.add(mKey);
- if (userTargetSet) userTargetSet.add(mKey);
- currM.setUTCMonth(currM.getUTCMonth() + 1);
- }
- }
- }
- }
- });
-
- const cleanNum = String(rm.roomNumber || '').replace(/[^0-9]/g, '');
- const keysToRegister = [
- rm._id,
- rm.id,
- rm.roomNumber ? String(rm.roomNumber).trim() : null,
- cleanNum,
- cleanNum ? `room_${cleanNum}` : null,
- cleanNum ? `Room-${cleanNum}` : null,
- cleanNum ? `Room ${cleanNum}` : null,
- ].filter(Boolean);
-
- keysToRegister.forEach((k) => {
- bookedMap[k] = bookedMonthSet;
- requestedMap[k] = requestedMonthSet;
- userBookedMap[k] = userBookedMonthSet;
- userRequestedMap[k] = userRequestedMonthSet;
- });
- });
-
- return {
- allRoomsBookedMonths: bookedMap,
- allRoomsRequestedMonths: requestedMap,
- allRoomsUserBookedMonths: userBookedMap,
- allRoomsUserRequestedMonths: userRequestedMap,
- };
- }, [roomGrid, allKnownBookings, stayBookings, stay, id, checkIsUserBooking]);
+  // Hook providing all booking sets, user booking matchers, and real-time maps
+  const {
+    allKnownBookings,
+    checkIsUserBooking,
+    userAwaitingPaymentBooking,
+    userConfirmedBooking,
+    allRoomsBookedSlots,
+    allRoomsRequestedSlots,
+    allRoomsUserBookedSlots,
+    allRoomsUserRequestedSlots,
+    allRoomsBookedMonths,
+    allRoomsRequestedMonths,
+    allRoomsUserBookedMonths,
+    allRoomsUserRequestedMonths,
+  } = useRoomBookingData({
+    id,
+    stay,
+    user,
+    guestEmail,
+    guestPhone,
+    bookings,
+    stayBookings,
+    roomGrid,
+  });
 
  const todayBookedRoomIds = useMemo(() => {
  const bookedIds = new Set();
@@ -919,6 +618,25 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  );
  }, [selectedRoom, allRoomsUserRequestedMonths]);
 
+  const {
+    selectedSlotIndices,
+    setSelectedSlotIndices,
+    selectedMonthIndices,
+    setSelectedMonthIndices,
+    handleToggleSlotDay,
+    handleToggleSlotMonth,
+  } = useRoomSlotSelection(
+    selectedRoom,
+    upcomingWeek,
+    upcomingMonths,
+    bookedSlotsForRoom,
+    userRequestedSlotsForRoom,
+    bookedMonthsForRoom,
+    userRequestedMonthsForRoom,
+    isMonthly
+  );
+
+
  // Identify if current user has an active pending/requested booking specifically for this selected room
  const userPendingBookingForSelectedRoom = useMemo(() => {
  if (!selectedRoom) return null;
@@ -1031,132 +749,6 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  const nextVal = typeof valOrFn === 'function' ? valOrFn(prev) : valOrFn;
  const clamped = Math.max(1, Math.min(maxAllowedPersons, Number(nextVal) || 1));
  return clamped;
- });
- };
-
- useEffect(() => {
- if (!selectedRoom) return;
- const rKey = getRoomKey(selectedRoom);
- if (!rKey) return;
- const currentSelected = roomSelectedSlotsMap[rKey];
- if (Array.isArray(currentSelected) && currentSelected.length > 0) {
- const conflicted = currentSelected.filter(
- (idx) => bookedSlotsForRoom.has(upcomingWeek[idx]?.fullISO) || userRequestedSlotsForRoom.has(upcomingWeek[idx]?.fullISO)
- );
- if (conflicted.length > 0) {
- const nonConflicting = currentSelected.filter(
- (idx) => !bookedSlotsForRoom.has(upcomingWeek[idx]?.fullISO) && !userRequestedSlotsForRoom.has(upcomingWeek[idx]?.fullISO)
- );
- setRoomSelectedSlotsMap((prev) => ({
- ...prev,
- [rKey]: nonConflicting,
- }));
- }
- }
- }, [bookedSlotsForRoom, userRequestedSlotsForRoom, selectedRoom, upcomingWeek, roomSelectedSlotsMap]);
-
- useEffect(() => {
- if (!selectedRoom) return;
- const rKey = getRoomKey(selectedRoom);
- if (!rKey) return;
- const currentSelected = roomSelectedMonthsMap[rKey];
- if (Array.isArray(currentSelected) && currentSelected.length > 0) {
- const conflicted = currentSelected.filter(
- (idx) => bookedMonthsForRoom.has(upcomingMonths[idx]?.monthKey) || userRequestedMonthsForRoom.has(upcomingMonths[idx]?.monthKey)
- );
- if (conflicted.length > 0) {
- const nonConflicting = currentSelected.filter(
- (idx) => !bookedMonthsForRoom.has(upcomingMonths[idx]?.monthKey) && !userRequestedMonthsForRoom.has(upcomingMonths[idx]?.monthKey)
- );
- setRoomSelectedMonthsMap((prev) => ({
- ...prev,
- [rKey]: nonConflicting,
- }));
- }
- }
- }, [bookedMonthsForRoom, userRequestedMonthsForRoom, selectedRoom, upcomingMonths, roomSelectedMonthsMap]);
-
- // Month default selection disabled: user selects month manually
-
- const initializedRoomSlotsRef = useRef(new Set());
- useEffect(() => {
- if (isMonthly || !selectedRoom) return;
- const rKey = getRoomKey(selectedRoom);
- if (!rKey || initializedRoomSlotsRef.current.has(rKey)) return;
- const currentSlots = roomSelectedSlotsMap[rKey];
- if (!Array.isArray(currentSlots) || currentSlots.length === 0) {
- const firstAvailableSlot = upcomingWeek.find((s) => !bookedSlotsForRoom.has(s.fullISO));
- if (firstAvailableSlot) {
- initializedRoomSlotsRef.current.add(rKey);
- setRoomSelectedSlotsMap((prev) => ({
- ...prev,
- [rKey]: [firstAvailableSlot.index],
- }));
- }
- }
- }, [isMonthly, selectedRoom, upcomingWeek, bookedSlotsForRoom, roomSelectedSlotsMap]);
-
- const handleToggleSlotDay = (slotIndex) => {
- const slotObj = upcomingWeek[slotIndex];
- if (bookedSlotsForRoom.has(slotObj?.fullISO)) {
- toast.warn(`${selectedRoom?.roomNumber || 'Room'} is already booked for ${slotObj?.dayName} ${slotObj?.monthDay}.`);
- return;
- }
- if (userRequestedSlotsForRoom.has(slotObj?.fullISO)) {
- toast.info(`You have already requested this slot for ${slotObj?.dayName} ${slotObj?.monthDay} (Pending Host Approval).`);
- return;
- }
-
- setSelectedSlotIndices((prev) => {
- if (prev.length === 0) return [slotIndex];
- if (prev.length === 1 && prev[0] === slotIndex) return [];
- const start = Math.min(prev[0], slotIndex);
- const end = Math.max(prev[0], slotIndex);
- const range = [];
- for (let i = start; i <= end; i++) {
- if (bookedSlotsForRoom.has(upcomingWeek[i]?.fullISO)) {
- toast.warn('Cannot select a date range containing already booked slots.');
- return prev;
- }
- if (userRequestedSlotsForRoom.has(upcomingWeek[i]?.fullISO)) {
- toast.info('Cannot select a date range containing slots you already requested.');
- return prev;
- }
- range.push(i);
- }
- return range;
- });
- };
-
- const handleToggleSlotMonth = (monthIndex) => {
- const monthObj = upcomingMonths[monthIndex];
- if (bookedMonthsForRoom.has(monthObj?.monthKey)) {
- toast.warn(`${selectedRoom?.roomNumber || 'Room'} is already booked for ${monthObj?.monthName || monthObj?.monthShort} ${monthObj?.year}.`);
- return;
- }
- if (userRequestedMonthsForRoom.has(monthObj?.monthKey)) {
- toast.info(`You have already requested ${monthObj?.monthName || monthObj?.monthShort} ${monthObj?.year} (Pending Host Approval).`);
- return;
- }
-
- setSelectedMonthIndices((prev) => {
- if (prev.length === 0) return [monthIndex];
- if (prev.length === 1 && prev[0] === monthIndex) return [];
- const start = Math.min(prev[0], monthIndex);
- const end = Math.max(prev[0], monthIndex);
- const range = [];
- for (let i = start; i <= end; i++) {
- if (bookedMonthsForRoom.has(upcomingMonths[i]?.monthKey)) {
- toast.warn('Cannot select a month range containing already booked months.');
- return prev;
- }
- if (userRequestedMonthsForRoom.has(upcomingMonths[i]?.monthKey)) {
- toast.info('Cannot select a month range containing months you already requested.');
- return prev;
- }
- range.push(i);
- }
- return range;
  });
  };
 
@@ -1317,52 +909,24 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  const uniqueSlotBookingId = `res_${cleanPhone}${refSuffix}`;
  const uniqueBookingId = `bk_${cleanPhone}${refSuffix}`;
 
- const bookingPayload = {
- id: uniqueBookingId,
- bookingReferenceId: uniqueBookingRefId,
- slotBookingId: uniqueSlotBookingId,
- stayId: stayId,
- roomId: selectedRoom._id || selectedRoom.id,
- stayTitle: stay?.propertyName || stay?.title || 'RoomScout Stay',
- stayLocation: stay?.location || stay?.city || 'Uttarakhand',
- stayAddress: stay?.address || stay?.location || '',
- roomNumber: selectedRoom.roomNumber,
- roomType: selectedRoom.type,
- price: selectedRoom.price,
- totalAmount: computedTotal,
- durationDisplay: durationDisplay,
- rateUnit: selectedRoom.rateUnit || displayCategoryUnit || '/month',
- checkIn: exactMonthlyInUTC,
- checkOut: exactMonthlyOutUTC,
- checkInDisplay: checkInLabel,
- checkOutDisplay: checkOutLabel,
- checkInISO: exactMonthlyInUTC,
- checkOutISO: exactMonthlyOutUTC,
- bookedMonths: chosenMonthKeys,
- bookedDates: chosenDates,
- selectedDaysCount: chosenDates.length,
- durationMonths: sortedMonthIndices.length,
- guestName: cleanName,
- fullName: cleanName,
- userName: cleanName,
- guestEmail: guestEmail.trim() || user?.email || `${cleanName.toLowerCase().replace(/\s+/g, '')}${cleanPhone.slice(-4)}@stayhub.local`,
- email: guestEmail.trim() || user?.email || `${cleanName.toLowerCase().replace(/\s+/g, '')}${cleanPhone.slice(-4)}@stayhub.local`,
- guestPhone: cleanPhone,
- phone: cleanPhone,
- userPhone: cleanPhone,
- gender: 'Other',
- guestGender: 'Other',
- userGender: 'Other',
- personCount: safePersons,
- guestAadhar: cleanAadhar,
- aadharId: cleanAadhar,
- userId: user?._id || 'guest_user',
- hostEmail: stay?.hostEmail || stay?.email || '',
- hostPhone: stay?.hostPhone || stay?.phone || '',
- hostName: stay?.hostName || stay?.name || 'Host Owner',
- status: 'Pending Host Approval',
- createdAt: new Date().toISOString(),
- };
+ const bookingPayload = buildBookingPayload({
+    isMonthly: true,
+    selectedRoom,
+    stay,
+    stayId,
+    cleanName,
+    cleanPhone,
+    guestEmail,
+    cleanAadhar,
+    safePersons,
+    user,
+    selectedMonthIndices,
+    upcomingMonths,
+    displayCategoryUnit,
+    selectedSlotIndices,
+    upcomingWeek,
+    allKnownBookings,
+  });
 
  setSubmitting(true);
 
@@ -1467,50 +1031,24 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  const uniqueBookingRefId = `BK-${cleanPhone}${refSuffix}`;
  const uniqueSlotBookingId = `res_${cleanPhone}${refSuffix}`;
  const uniqueBookingId = `bk_${cleanPhone}${refSuffix}`;
- const bookingPayload = {
- id: uniqueBookingId,
- bookingReferenceId: uniqueBookingRefId,
- slotBookingId: uniqueSlotBookingId,
- stayId: stayId,
- roomId: selectedRoom._id || selectedRoom.id,
- stayTitle: stay?.propertyName || stay?.title || 'RoomScout Stay',
- stayLocation: stay?.location || stay?.city || 'Uttarakhand',
- stayAddress: stay?.address || stay?.location || '',
- roomNumber: selectedRoom.roomNumber,
- roomType: selectedRoom.type,
- price: selectedRoom.price,
- totalAmount: computedTotal,
- durationDisplay: durationDisplay,
- rateUnit: selectedRoom.rateUnit,
- checkIn: exactCheckInUTC,
- checkOut: exactCheckOutUTC,
- checkInDisplay: checkInLabel,
- checkOutDisplay: checkOutLabel,
- checkInISO: exactCheckInUTC,
- checkOutISO: exactCheckOutUTC,
- bookedDates: sortedIndices.map((idx) => upcomingWeek[idx]?.fullISO),
- selectedDaysCount: selectedSlotIndices.length,
- guestName: cleanName,
- fullName: cleanName,
- userName: cleanName,
- guestEmail: guestEmail.trim() || user?.email || `${cleanName.toLowerCase().replace(/\s+/g, '')}${cleanPhone.slice(-4)}@stayhub.local`,
- email: guestEmail.trim() || user?.email || `${cleanName.toLowerCase().replace(/\s+/g, '')}${cleanPhone.slice(-4)}@stayhub.local`,
- guestPhone: cleanPhone,
- phone: cleanPhone,
- userPhone: cleanPhone,
- gender: 'Other',
- guestGender: 'Other',
- userGender: 'Other',
- personCount: safePersons,
- guestAadhar: cleanAadhar,
- aadharId: cleanAadhar,
- userId: user?._id || 'guest_user',
- hostEmail: stay?.hostEmail || stay?.email || '',
- hostPhone: stay?.hostPhone || stay?.phone || '',
- hostName: stay?.hostName || stay?.name || 'Host Owner',
- status: 'Pending Host Approval',
- createdAt: new Date().toISOString(),
- };
+ const bookingPayload = buildBookingPayload({
+    isMonthly: false,
+    selectedRoom,
+    stay,
+    stayId,
+    cleanName,
+    cleanPhone,
+    guestEmail,
+    cleanAadhar,
+    safePersons,
+    user,
+    selectedMonthIndices,
+    upcomingMonths,
+    displayCategoryUnit,
+    selectedSlotIndices,
+    upcomingWeek,
+    allKnownBookings,
+  });
 
  setSubmitting(true);
 
