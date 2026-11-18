@@ -9,6 +9,7 @@ import { idsMatch, isAdminUser } from '../middleware/authMiddleware.js';
 import { isBookingRequestExpired } from './bookingController.js';
 import { sendWhatsAppNotification } from '../services/whatsappService.js';
 import { uploadSecureImage } from '../utils/imageSecurity.js';
+import { emitToHost, emitToUser, emitToGlobal } from '../services/socketService.js';
 
 // Normalizes UPI transaction references (UTR / RRN)
 export function normalizeTransactionRef(raw) {
@@ -356,6 +357,29 @@ export const submitUpiPayment = async (req, res, next) => {
       console.warn('[WhatsApp Warning] Could not notify host of submitted payment:', err.message);
     });
 
+    // Real-time WebSockets dispatch to Host & Guest
+    emitToHost([booking.hostId], 'payment:submitted', {
+      bookingId: booking._id,
+      bookingReferenceId: booking.bookingReferenceId,
+      transactionRef: normalizedRef,
+      guestName: booking.fullName,
+      amount: booking.totalAmount,
+      stayTitle: booking.stayTitle,
+      roomNumber: booking.roomNumber,
+      verificationStatus: 'PENDING_VERIFICATION',
+    });
+    emitToHost([booking.hostId], 'booking:updated', {
+      bookingId: booking._id,
+      bookingReferenceId: booking.bookingReferenceId,
+      paymentStatus: 'AWAITING_VERIFICATION',
+    });
+    emitToUser([booking.userId, booking.email], 'payment:status_updated', {
+      bookingId: booking._id,
+      bookingReferenceId: booking.bookingReferenceId,
+      verificationStatus: 'PENDING_VERIFICATION',
+      transactionRef: normalizedRef,
+    });
+
     return res.json({
       success: true,
       message: currentSubmissions === 0
@@ -471,6 +495,29 @@ export const verifyHostPayment = async (req, res, next) => {
         console.warn('[WhatsApp Warning] Could not send payment confirmed alert:', err.message);
       });
 
+      // Real-time WebSockets dispatch to Guest & Host
+      emitToUser([booking.userId, booking.email], 'payment:verified', {
+        bookingId: booking._id,
+        bookingReferenceId: booking.bookingReferenceId,
+        bookingStatus: 'CONFIRMED',
+      });
+      emitToUser([booking.userId, booking.email], 'booking:confirmed', {
+        bookingId: booking._id,
+        bookingReferenceId: booking.bookingReferenceId,
+        booking,
+      });
+      emitToHost([booking.hostId], 'booking:updated', {
+        bookingId: booking._id,
+        bookingReferenceId: booking.bookingReferenceId,
+        status: 'CONFIRMED',
+        paymentStatus: 'PAID',
+        booking,
+      });
+      emitToGlobal('stay:availability_changed', {
+        stayId: booking.stayId,
+        roomNumber: booking.roomNumber,
+      });
+
       return res.json({
         success: true,
         message: `Payment of ₹${booking.totalAmount.toLocaleString('en-IN')} verified successfully! Booking ${booking.bookingReferenceId} is confirmed.`,
@@ -529,6 +576,19 @@ export const verifyHostPayment = async (req, res, next) => {
           },
         }
       );
+
+      // Real-time WebSockets dispatch to Guest & Host
+      emitToUser([booking.userId, booking.email], 'payment:rejected', {
+        bookingId: booking._id,
+        bookingReferenceId: booking.bookingReferenceId,
+        rejectionReason: cleanReason,
+        canResubmit,
+      });
+      emitToHost([booking.hostId], 'booking:updated', {
+        bookingId: booking._id,
+        bookingReferenceId: booking.bookingReferenceId,
+        booking,
+      });
 
       return res.json({
         success: true,

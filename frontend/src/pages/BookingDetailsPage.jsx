@@ -15,6 +15,7 @@ import { isBookingRequestExpired } from '../utils/dateUtils';
 import { generateEntryPassPdf } from '../utils/entryPassPdf';
 import { Left } from '../components/navbar/Left';
 import { Right } from '../components/navbar/Right';
+import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 
 /* ─────────────────────────────── helpers ─────────────────────────────── */
 
@@ -887,7 +888,7 @@ export function BookingDetailsPage({ onLoginClick }) {
           {/* Stay Hero Image Banner */}
           <div className="h-60 sm:h-76 w-full rounded-3xl bg-slate-900 relative overflow-hidden shadow-sm">
             {stayImage ? (
-              <img decoding="async" loading="lazy" src={stayImage} alt={resolvedStayTitle} className="w-full h-full object-cover" />
+              <img decoding="async" loading="lazy" src={getOptimizedImageUrl(stayImage, 800)} alt={resolvedStayTitle} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-slate-400">
                 <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>

@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
 import { useWishlist } from '../../context/WishlistContext';
 import { getStayPricing } from '../../utils/priceUtils';
+import { getOptimizedImageUrl } from '../../utils/imageOptimizer';
 
 /**
  * PropertyCard Component
@@ -68,18 +69,6 @@ export const PropertyCard = memo(function PropertyCard({
  stay.image ||
  (Array.isArray(stay.images) && stay.images[0]) ||
  'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80';
-
- // Responsive downscaled WebP/AVIF images for mobile screens
- const getOptimizedImageUrl = (url, width = 640) => {
- if (!url || typeof url !== 'string') return url;
- if (url.includes('images.unsplash.com')) {
- if (url.includes('w=')) {
- return url.replace(/w=\d+/, `w=${width}`).replace(/q=\d+/, 'q=75');
- }
- return `${url}&auto=format&fit=crop&w=${width}&q=75`;
- }
- return url;
- };
 
   return (
     <div

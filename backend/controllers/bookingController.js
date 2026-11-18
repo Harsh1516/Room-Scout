@@ -12,6 +12,7 @@ import {
   sendBookingRejectedToGuestEmail,
   sendBookingConfirmedEmail,
 } from '../services/emailService.js';
+import { emitToHost, emitToUser, emitToGlobal } from '../services/socketService.js';
 
 const BOOKING_STATUS_ENUM = [
   'PENDING',
@@ -647,6 +648,19 @@ export const createBooking = async (req, res, next) => {
         console.warn('[WhatsApp Warning] Could not send booking pending alert:', err.message);
       });
 
+      // Real-time WebSockets dispatch to Host & Global availability
+      emitToHost([newBooking.hostId], 'booking:new', {
+        booking: newBooking,
+        message: `New booking request for Room ${newBooking.roomNumber} from ${newBooking.fullName}`,
+      });
+      emitToHost([newBooking.hostId], 'booking:created', {
+        booking: newBooking,
+      });
+      emitToGlobal('stay:availability_changed', {
+        stayId: newBooking.stayId,
+        roomNumber: newBooking.roomNumber,
+      });
+
       return res.status(201).json({
         success: true,
         message: 'Booking created successfully',
@@ -841,6 +855,16 @@ export const createOfflineBooking = async (req, res, next) => {
       paymentMethod: 'OFFLINE',
       paymentStatus: 'COMPLETED',
       transactionId: `OFF-TXN-${Date.now().toString().slice(-6)}`,
+    });
+
+    // Real-time WebSockets dispatch to Host & Global availability
+    emitToHost([host._id], 'booking:updated', {
+      booking: newBooking,
+      action: 'OFFLINE_BOOKING_CREATED',
+    });
+    emitToGlobal('stay:availability_changed', {
+      stayId: stay._id,
+      roomNumber: newBooking.roomNumber,
     });
 
     return res.status(201).json({
@@ -1376,6 +1400,15 @@ export const updateBookingStatus = async (req, res, next) => {
       await Payment.deleteMany({
         $or: [{ bookingId: booking._id }, { bookingReferenceId: booking.bookingReferenceId }],
       }).catch(() => {});
+
+      if (booking.hostId) {
+        emitToHost([booking.hostId], 'booking:updated', { bookingId: booking._id, action: 'CHECKED_OUT' });
+      }
+      if (booking.userId || booking.email) {
+        emitToUser([booking.userId, booking.email], 'booking:checked_out', { bookingId: booking._id, bookingReferenceId: booking.bookingReferenceId });
+      }
+      emitToGlobal('stay:availability_changed', { stayId: booking.stayId, roomNumber: booking.roomNumber });
+
       return res.json({
         success: true,
         message: 'Booking checked out and removed from database successfully.',
@@ -1421,6 +1454,41 @@ export const updateBookingStatus = async (req, res, next) => {
       } else if (req.body.status === 'REJECTED') {
         sendWhatsAppNotification(updatedBooking, 'BOOKING_REJECTED').catch((err) => {
           console.warn('[WhatsApp Warning] Could not send booking rejected alert:', err.message);
+        });
+      }
+
+      // Real-time synchronization to guest and host via WebSockets
+      if (updatedBooking.userId || updatedBooking.email) {
+        emitToUser([updatedBooking.userId, updatedBooking.email], 'booking:status_changed', {
+          booking: updatedBooking,
+          bookingId: updatedBooking._id,
+          bookingReferenceId: updatedBooking.bookingReferenceId,
+          status: updatedBooking.status,
+          paymentStatus: updatedBooking.paymentStatus,
+          paymentDeadline: updatedBooking.paymentDeadline,
+        });
+        if (updatedBooking.status === 'CONFIRMED') {
+          emitToUser([updatedBooking.userId, updatedBooking.email], 'booking:confirmed', {
+            booking: updatedBooking,
+            bookingId: updatedBooking._id,
+            bookingReferenceId: updatedBooking.bookingReferenceId,
+          });
+        }
+      }
+
+      if (updatedBooking.hostId) {
+        emitToHost([updatedBooking.hostId], 'booking:updated', {
+          booking: updatedBooking,
+          bookingId: updatedBooking._id,
+          bookingReferenceId: updatedBooking.bookingReferenceId,
+          status: updatedBooking.status,
+        });
+      }
+
+      if (['CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED', 'REJECTED', 'EXPIRED'].includes(updatedBooking.status)) {
+        emitToGlobal('stay:availability_changed', {
+          stayId: updatedBooking.stayId,
+          roomNumber: updatedBooking.roomNumber,
         });
       }
     }
@@ -1519,6 +1587,14 @@ export const removeOccupantBooking = async (req, res, next) => {
     await Booking.deleteMany({ _id: { $in: bookingIds } });
     await Payment.deleteMany({ bookingId: { $in: bookingIds } });
 
+    // Real-time WebSockets dispatch to Host & Global availability
+    const hostTargets = [...new Set(matchingBookings.map((b) => b.hostId?.toString()).filter(Boolean))];
+    if (hostTargets.length > 0) {
+      emitToHost(hostTargets, 'booking:updated', { deletedCount: bookingIds.length });
+    }
+    const stayTargets = [...new Set(matchingBookings.map((b) => b.stayId?.toString()).filter(Boolean))];
+    stayTargets.forEach((sId) => emitToGlobal('stay:availability_changed', { stayId: sId }));
+
     return res.json({
       success: true,
       message: 'Occupant booking and related payments deleted successfully.',
@@ -1614,6 +1690,15 @@ export const checkoutOccupant = async (req, res, next) => {
     // Check-out occupant: remove booking completely from database and free room slots
     await Booking.deleteMany({ _id: { $in: bookingIds } });
     await Payment.deleteMany({ bookingId: { $in: bookingIds } }).catch(() => {});
+
+    // Real-time WebSockets dispatch to Host & Global availability
+    const hostTargets = [...new Set(matchingBookings.map((b) => b.hostId?.toString()).filter(Boolean))];
+    if (hostTargets.length > 0) {
+      emitToHost(hostTargets, 'booking:updated', { checkedOutCount: bookingIds.length });
+    }
+    if (stayId) {
+      emitToGlobal('stay:availability_changed', { stayId, roomNumber });
+    }
 
     // If stayId and roomNumber are provided, check if room has any remaining active occupants
     if (stayId && roomNumber) {
@@ -1715,6 +1800,17 @@ export const checkoutBooking = async (req, res, next) => {
     await Payment.deleteMany({
       $or: [{ bookingId: booking._id }, { bookingReferenceId: booking.bookingReferenceId }],
     }).catch(() => {});
+
+    // Real-time WebSockets dispatch
+    if (booking.hostId) {
+      emitToHost([booking.hostId], 'booking:updated', { bookingId: booking._id, action: 'CHECKED_OUT' });
+    }
+    if (booking.userId || booking.email) {
+      emitToUser([booking.userId, booking.email], 'booking:checked_out', { bookingId: booking._id, bookingReferenceId: booking.bookingReferenceId });
+    }
+    if (booking.stayId) {
+      emitToGlobal('stay:availability_changed', { stayId: booking.stayId, roomNumber: booking.roomNumber });
+    }
 
     return res.json({
       success: true,

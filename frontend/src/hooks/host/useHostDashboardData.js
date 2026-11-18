@@ -642,13 +642,27 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
     const handleRealtimeRefresh = () => {
       fetchHostData();
     };
+    const handleBookingNew = (payload) => {
+      fetchHostData();
+      const room = payload?.booking?.roomNumber ? ` for Room ${payload.booking.roomNumber}` : '';
+      toast.info(`🔔 New booking request received${room}!`);
+    };
+    const handlePaymentSubmitted = (payload) => {
+      fetchHostData();
+      const room = payload?.roomNumber ? ` for Room ${payload.roomNumber}` : '';
+      toast.info(`💰 New UPI payment reference submitted${room}! Verification pending.`);
+    };
+
     socket.on('host:approved', handleHostApproved);
     socket.on('host:status_updated', handleHostStatus);
     socket.on('host:property_saved', handleRealtimeRefresh);
     socket.on('stay:updated', handleRealtimeRefresh);
     socket.on('subscription:verified', handleRealtimeRefresh);
-    socket.on('booking:new', handleRealtimeRefresh);
+    socket.on('booking:new', handleBookingNew);
+    socket.on('booking:created', handleBookingNew);
     socket.on('booking:updated', handleRealtimeRefresh);
+    socket.on('payment:submitted', handlePaymentSubmitted);
+    socket.on('payment:verified', handleRealtimeRefresh);
 
  const handleStorage = (e) => {
  if (
@@ -707,8 +721,11 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
       socket.off('host:property_saved', handleRealtimeRefresh);
       socket.off('stay:updated', handleRealtimeRefresh);
       socket.off('subscription:verified', handleRealtimeRefresh);
-      socket.off('booking:new', handleRealtimeRefresh);
+      socket.off('booking:new', handleBookingNew);
+      socket.off('booking:created', handleBookingNew);
       socket.off('booking:updated', handleRealtimeRefresh);
+      socket.off('payment:submitted', handlePaymentSubmitted);
+      socket.off('payment:verified', handleRealtimeRefresh);
  window.removeEventListener('storage', handleStorage);
  window.removeEventListener('stayhub_admin_sync', handleCustomSync);
  window.removeEventListener('stayhub_slots_updated', handleCustomSync);

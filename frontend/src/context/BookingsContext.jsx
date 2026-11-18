@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { bookingsAPI } from '../services/api';
 import { useAuth } from './AuthContext';
+import { getSocket } from '../services/socket';
 
 const BookingsContext = createContext();
 
@@ -80,60 +81,80 @@ export function BookingsProvider({ children }) {
  }
  }, [isBookingsOpen, isAuthenticated, user, fetchBookings]);
 
- // Real-time synchronization across tabs and host actions (approvals/rejections/payments)
- useEffect(() => {
- if (!isAuthenticated || !user) return;
+  // Real-time synchronization across WebSockets, tabs, and host actions (approvals/rejections/payments)
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
 
- const handleSync = () => {
- fetchBookings();
- };
+    const handleSync = () => {
+      fetchBookings();
+    };
 
- const handleFocus = () => {
- fetchBookings();
- };
+    const handleFocus = () => {
+      fetchBookings();
+    };
 
- const handleVisibilityChange = () => {
- if (document.visibilityState === 'visible') {
- fetchBookings();
- }
- };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchBookings();
+      }
+    };
 
- window.addEventListener('stayhub_slots_updated', handleSync);
- window.addEventListener('stayhub_rooms_updated', handleSync);
- window.addEventListener('stayhub_my_bookings_updated', handleSync);
- window.addEventListener('focus', handleFocus);
- document.addEventListener('visibilitychange', handleVisibilityChange);
+    // ── Instant 0ms WebSocket Real-Time Listeners ──
+    const socket = getSocket();
+    const onRealtimeBookingChange = (payload) => {
+      fetchBookings();
+      window.dispatchEvent(new CustomEvent('stayhub_my_bookings_updated', { detail: payload }));
+    };
 
- // Fast polling when active so booking updates appear live without requiring manual page refresh
- const pollInterval = setInterval(() => {
- if (document.hidden) return;
- fetchBookings();
- }, isBookingsOpen ? 3000 : 15000);
+    socket.on('booking:status_changed', onRealtimeBookingChange);
+    socket.on('booking:confirmed', onRealtimeBookingChange);
+    socket.on('booking:checked_out', onRealtimeBookingChange);
+    socket.on('payment:status_updated', onRealtimeBookingChange);
+    socket.on('payment:verified', onRealtimeBookingChange);
+    socket.on('payment:rejected', onRealtimeBookingChange);
 
- let bc = null;
- try {
- if (typeof BroadcastChannel !== 'undefined') {
- bc = new BroadcastChannel('stayhub_live_channel');
- bc.onmessage = () => {
- fetchBookings();
- };
- }
- } catch {}
+    window.addEventListener('stayhub_slots_updated', handleSync);
+    window.addEventListener('stayhub_rooms_updated', handleSync);
+    window.addEventListener('stayhub_my_bookings_updated', handleSync);
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
- return () => {
- window.removeEventListener('stayhub_slots_updated', handleSync);
- window.removeEventListener('stayhub_rooms_updated', handleSync);
- window.removeEventListener('stayhub_my_bookings_updated', handleSync);
- window.removeEventListener('focus', handleFocus);
- document.removeEventListener('visibilitychange', handleVisibilityChange);
- clearInterval(pollInterval);
- if (bc) {
- try {
- bc.close();
- } catch {}
- }
- };
- }, [isAuthenticated, user, isBookingsOpen, fetchBookings]);
+    // Fallback heartbeat poll (safe relaxed interval since sockets handle instant 0ms updates)
+    const pollInterval = setInterval(() => {
+      if (document.hidden) return;
+      fetchBookings();
+    }, isBookingsOpen ? 20000 : 60000);
+
+    let bc = null;
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        bc = new BroadcastChannel('stayhub_live_channel');
+        bc.onmessage = () => {
+          fetchBookings();
+        };
+      }
+    } catch {}
+
+    return () => {
+      socket.off('booking:status_changed', onRealtimeBookingChange);
+      socket.off('booking:confirmed', onRealtimeBookingChange);
+      socket.off('booking:checked_out', onRealtimeBookingChange);
+      socket.off('payment:status_updated', onRealtimeBookingChange);
+      socket.off('payment:verified', onRealtimeBookingChange);
+      socket.off('payment:rejected', onRealtimeBookingChange);
+      window.removeEventListener('stayhub_slots_updated', handleSync);
+      window.removeEventListener('stayhub_rooms_updated', handleSync);
+      window.removeEventListener('stayhub_my_bookings_updated', handleSync);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(pollInterval);
+      if (bc) {
+        try {
+          bc.close();
+        } catch {}
+      }
+    };
+  }, [isAuthenticated, user, isBookingsOpen, fetchBookings]);
 
  const addBooking = (newBooking) => {
  if (!newBooking) return;

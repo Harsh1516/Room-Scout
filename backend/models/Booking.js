@@ -265,6 +265,7 @@ bookingSchema.index({ stayId: 1, roomNumber: 1, status: 1, checkIn: 1, checkOut:
 bookingSchema.index({ stayId: 1, status: 1, checkIn: 1, checkOut: 1 });
 bookingSchema.index({ hostId: 1, status: 1, createdAt: -1 });
 bookingSchema.index({ userId: 1, createdAt: -1 });
+bookingSchema.index({ userId: 1, status: 1, createdAt: -1 });
 bookingSchema.index({ 'upiPayment.transactionRef': 1 }, { sparse: true });
 
 export const Booking = mongoose.model('Booking', bookingSchema);

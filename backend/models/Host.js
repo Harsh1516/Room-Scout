@@ -169,4 +169,8 @@ hostSchema.methods.generateToken = async function () {
   );
 };
 
+// Fast query compound indexes for Admin/Host lookup
+hostSchema.index({ status: 1, createdAt: -1 });
+hostSchema.index({ isApproved: 1, status: 1 });
+
 export const Host = mongoose.model('Host', hostSchema);

@@ -96,23 +96,37 @@ export function getIO() {
 }
 
 /**
- * Emits an event specifically to a host by email or host ID.
+ * Emits an event specifically to a host by email or host ID (supports single identifier or array of identifiers).
  */
 export function emitToHost(hostIdentifier, eventName, payload) {
   if (!ioInstance || !hostIdentifier) return;
-  const cleanId = String(hostIdentifier).trim().toLowerCase();
-  ioInstance.to(`host:${cleanId}`).emit(eventName, payload);
-  // Also emit to admin so admin panels reflect status changes in real-time
-  ioInstance.to('room:admin').emit(eventName, payload);
+  try {
+    const list = Array.isArray(hostIdentifier) ? hostIdentifier : [hostIdentifier];
+    list.filter(Boolean).forEach((id) => {
+      const cleanId = String(id).trim().toLowerCase();
+      ioInstance.to(`host:${cleanId}`).emit(eventName, payload);
+    });
+    // Also emit to admin so admin panels reflect status changes in real-time
+    ioInstance.to('room:admin').emit(eventName, payload);
+  } catch (err) {
+    console.warn(`[Socket Emit Warning] Failed to emit ${eventName} to host:`, err.message);
+  }
 }
 
 /**
- * Emits an event specifically to a user by email or ID.
+ * Emits an event specifically to a user by email or ID (supports single identifier or array of identifiers).
  */
 export function emitToUser(userIdentifier, eventName, payload) {
   if (!ioInstance || !userIdentifier) return;
-  const cleanId = String(userIdentifier).trim().toLowerCase();
-  ioInstance.to(`user:${cleanId}`).emit(eventName, payload);
+  try {
+    const list = Array.isArray(userIdentifier) ? userIdentifier : [userIdentifier];
+    list.filter(Boolean).forEach((id) => {
+      const cleanId = String(id).trim().toLowerCase();
+      ioInstance.to(`user:${cleanId}`).emit(eventName, payload);
+    });
+  } catch (err) {
+    console.warn(`[Socket Emit Warning] Failed to emit ${eventName} to user:`, err.message);
+  }
 }
 
 /**
@@ -120,7 +134,11 @@ export function emitToUser(userIdentifier, eventName, payload) {
  */
 export function emitToAdmin(eventName, payload) {
   if (!ioInstance) return;
-  ioInstance.to('room:admin').emit(eventName, payload);
+  try {
+    ioInstance.to('room:admin').emit(eventName, payload);
+  } catch (err) {
+    console.warn(`[Socket Emit Warning] Failed to emit ${eventName} to admin:`, err.message);
+  }
 }
 
 /**
@@ -128,5 +146,9 @@ export function emitToAdmin(eventName, payload) {
  */
 export function emitToGlobal(eventName, payload) {
   if (!ioInstance) return;
-  ioInstance.to('room:global').emit(eventName, payload);
+  try {
+    ioInstance.to('room:global').emit(eventName, payload);
+  } catch (err) {
+    console.warn(`[Socket Emit Warning] Failed to emit ${eventName} to global:`, err.message);
+  }
 }
