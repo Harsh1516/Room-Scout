@@ -84,7 +84,7 @@ export function UploadRoomsPricingTab({
  <div className="w-full">
  <ErrorBoundary>
  <HostRoomCategories
- propertyType={formData?.type || formData?.propertyType || 'PG'}
+ propertyType={formData?.propertyType || formData?.type || 'PG'}
  roomRates={formData.roomRates || []}
  rooms={formData.rooms || []}
  selectedCategoryIndex={selectedCategoryIndex}

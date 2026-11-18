@@ -114,7 +114,10 @@ export function UserMonthlySlotCard({
       const rawPrice = activeRoom?.price || stay?.price || 0;
       const unitPrice = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/\D/g, '')) || 0;
       const safePersons = Math.max(1, Number(personCount) || 1);
-      const totalPrice = unitPrice * durationMonths * safePersons;
+      const resolvedType = String(stay?.propertyType || stay?.type || 'PG').trim().toLowerCase();
+      const isPerPerson = resolvedType === 'pg' || resolvedType === 'hostel';
+      const effectiveMultiplier = isPerPerson ? safePersons : 1;
+      const totalPrice = unitPrice * durationMonths * effectiveMultiplier;
 
       return {
         isMonthly: true,

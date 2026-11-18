@@ -142,7 +142,7 @@ export function HostRoomsTab({
 
  <ErrorBoundary>
  <HostRoomCategories
- propertyType={hostProperty?.type || hostProperty?.propertyType || 'PG'}
+ propertyType={hostProperty?.propertyType || hostProperty?.type || 'PG'}
  roomRates={hostProperty?.roomRates || []}
  rooms={roomsList}
  guests={guests}

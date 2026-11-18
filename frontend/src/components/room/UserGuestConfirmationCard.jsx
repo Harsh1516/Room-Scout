@@ -21,6 +21,7 @@ export function UserGuestConfirmationCard({
   upcomingDays = [],
   selectedSlotIndices = [],
   stay,
+  propertyType,
   guestName = '',
   setGuestName = () => {},
   guestPhone = '',
@@ -46,6 +47,9 @@ export function UserGuestConfirmationCard({
   const { user: authUser, isAuthenticated: authIsAuthenticated } = useAuth?.() || {};
   const user = propUser !== undefined ? propUser : authUser;
   const isUserLoggedIn = Boolean((user && (user._id || user.email)) || authIsAuthenticated);
+
+  const resolvedType = String(propertyType || stay?.propertyType || stay?.type || 'PG').trim().toLowerCase();
+  const isPerPerson = resolvedType === 'pg' || resolvedType === 'hostel';
 
   const handleFormSubmit = (e) => {
     if (e && typeof e.preventDefault === 'function') {
@@ -114,7 +118,8 @@ export function UserGuestConfirmationCard({
 
           const monthsCount = sortedSelectedMonths.length;
           const safePersonCount = Math.max(1, Number(personCount) || 1);
-          const totalPrice = monthlyPrice * monthsCount * safePersonCount;
+          const effectiveMultiplier = isPerPerson ? safePersonCount : 1;
+          const totalPrice = monthlyPrice * monthsCount * effectiveMultiplier;
 
           const checkInDate = formatMonthObj(firstM);
           const checkOutDate = formatMonthObj(lastM);
@@ -188,9 +193,10 @@ export function UserGuestConfirmationCard({
         }
 
         const pendingPersonCount = Math.max(1, Number(pendingBooking?.personCount || personCount) || 1);
+        const effectiveMultiplier = isPerPerson ? pendingPersonCount : 1;
         const totalPrice = pendingBooking?.totalAmount 
           ? Number(pendingBooking.totalAmount) 
-          : (monthlyPrice * monthsCount * pendingPersonCount);
+          : (monthlyPrice * monthsCount * effectiveMultiplier);
         const personBreakdown = pendingPersonCount > 1 ? ` × ${pendingPersonCount} persons` : '';
 
         return {
@@ -226,7 +232,9 @@ export function UserGuestConfirmationCard({
             ? stay.price
             : Number(String(selectedRoom?.price || stay?.price || '0').replace(/[^0-9]/g, '')) || 0;
 
-          const totalPrice = nightlyPrice * nights;
+          const safePersonCount = Math.max(1, Number(personCount) || 1);
+          const effectiveMultiplier = isPerPerson ? safePersonCount : 1;
+          const totalPrice = nightlyPrice * nights * effectiveMultiplier;
 
           return {
             isMonthly: false,
@@ -316,6 +324,7 @@ export function UserGuestConfirmationCard({
     userRequestedMonths,
     userRequestedSlots,
     personCount,
+    isPerPerson,
   ]);
 
   const isPendingBooking = Boolean(reservationDetails?.isPending);
@@ -367,7 +376,7 @@ export function UserGuestConfirmationCard({
                 <p className="text-[15px] sm:text-[16px] font-bold text-[#1f1b16] mt-1">
                   ₹{reservationDetails.totalPrice.toLocaleString('en-IN')}
                 </p>
-                {isMonthly && (Number(displayPersonCount) || 1) > 1 && (
+                {isMonthly && isPerPerson && (Number(displayPersonCount) || 1) > 1 && (
                   <p className="text-[10.5px] font-semibold text-slate-500 whitespace-nowrap">
                     ₹{(reservationDetails.unitPrice || 0).toLocaleString('en-IN')}/person
                   </p>
@@ -470,7 +479,9 @@ export function UserGuestConfirmationCard({
           </div>
           {displayPersonCount > 1 && (
             <p className="text-[11.5px] text-slate-500 px-3 mt-1.5 font-medium">
-              Occupies {displayPersonCount} of {roomCapacity} spaces in Room {roomDisplay}.
+              {isPerPerson
+                ? `Occupies ${displayPersonCount} of ${roomCapacity} beds in Room ${roomDisplay}.`
+                : `${displayPersonCount} of max ${roomCapacity} guests in ${roomDisplay}.`}
             </p>
           )}
         </div>

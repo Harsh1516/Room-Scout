@@ -469,7 +469,8 @@ export default function HostRoomCategories({
  compact = false,
  propertyType = 'PG',
 }) {
- const isPg = !propertyType || String(propertyType).trim().toUpperCase() === 'PG';
+ const normType = String(propertyType || 'PG').trim().toUpperCase();
+ const isPg = normType === 'PG' || normType === 'HOSTEL';
  const [confirmDeleteCatIdx, setConfirmDeleteCatIdx] = useState(null);
 	const [activeModalCategoryIndex, setActiveModalCategoryIndex] = useState(null);
 

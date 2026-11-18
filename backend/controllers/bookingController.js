@@ -481,7 +481,10 @@ export const createBooking = async (req, res, next) => {
     const roomBaseRate = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/[^0-9]/g, '')) || 0;
 
     const safePersons = Math.max(1, Number(body.personCount) || 1);
-    const baseAmount = isMonthly ? (roomBaseRate * unitCount * safePersons) : (roomBaseRate * unitCount);
+    const resolvedType = String(stay.type || stay.propertyType || 'PG').trim().toLowerCase();
+    const isPerPerson = resolvedType === 'pg' || resolvedType === 'hostel';
+    const effectiveMultiplier = isPerPerson ? safePersons : 1;
+    const baseAmount = roomBaseRate * unitCount * effectiveMultiplier;
     const serverTotal = (typeof body.totalAmount === 'number' && body.totalAmount >= 0)
       ? body.totalAmount
       : baseAmount;

@@ -1297,7 +1297,10 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  const rawPrice = selectedRoom?.price || stay?.price || 0;
  const unitPrice = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/[^0-9]/g, '')) || 0;
  const safePersons = Math.max(1, Number(personCount) || 1);
- const computedTotal = unitPrice * sortedMonthIndices.length * safePersons;
+ const resolvedType = String(stay?.propertyType || stay?.type || 'PG').trim().toLowerCase();
+ const isPerPerson = resolvedType === 'pg' || resolvedType === 'hostel';
+ const effectiveMultiplier = isPerPerson ? safePersons : 1;
+ const computedTotal = unitPrice * sortedMonthIndices.length * effectiveMultiplier;
  const durationDisplay = `${sortedMonthIndices.length} Month${sortedMonthIndices.length > 1 ? 's' : ''}`;
 
  const allExistingRefs = new Set(
@@ -1444,7 +1447,11 @@ export function RoomAvailabilityPage({ onLoginClick }) {
 
  const rawPrice = selectedRoom?.price || stay?.price || 0;
  const nightlyPrice = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/[^0-9]/g, '')) || 0;
- const computedTotal = nightlyPrice * selectedSlotIndices.length;
+ const safePersons = Math.max(1, Number(personCount) || 1);
+ const resolvedType = String(stay?.propertyType || stay?.type || 'PG').trim().toLowerCase();
+ const isPerPerson = resolvedType === 'pg' || resolvedType === 'hostel';
+ const effectiveMultiplier = isPerPerson ? safePersons : 1;
+ const computedTotal = nightlyPrice * selectedSlotIndices.length * effectiveMultiplier;
  const durationDisplay = `${selectedSlotIndices.length} Night${selectedSlotIndices.length > 1 ? 's' : ''}`;
 
  const allExistingRefs = new Set(
@@ -1673,6 +1680,7 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  upcomingWeek={upcomingWeek}
  selectedSlotIndices={selectedSlotIndices}
  stay={stay}
+ propertyType={stay?.propertyType || stay?.type || 'PG'}
  guestName={guestName}
  setGuestName={setGuestName}
  guestPhone={guestPhone}
@@ -1713,6 +1721,7 @@ export function RoomAvailabilityPage({ onLoginClick }) {
               upcomingWeek={upcomingWeek}
               selectedSlotIndices={selectedSlotIndices}
               stay={stay}
+              propertyType={stay?.propertyType || stay?.type || 'PG'}
               guestName={guestName}
               setGuestName={setGuestName}
               guestPhone={guestPhone}

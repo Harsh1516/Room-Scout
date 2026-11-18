@@ -644,7 +644,10 @@ export default function HostWeeklySlotSchedule({
  const rawPrice = selectedRoomCard?.price || activeCategory?.price || hostProperty?.price || 0;
  const unitPrice = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/\D/g, '')) || 0;
  const safePersons = Math.max(1, Number(hostPersonCount) || 1);
-			const totalPrice = unitPrice * durationMonths * safePersons;
+			const resolvedType = String(hostProperty?.propertyType || hostProperty?.type || 'PG').trim().toLowerCase();
+			const isPerPerson = resolvedType === 'pg' || resolvedType === 'hostel';
+			const effectiveMultiplier = isPerPerson ? safePersons : 1;
+			const totalPrice = unitPrice * durationMonths * effectiveMultiplier;
 
  return {
  isMonthly: true,
