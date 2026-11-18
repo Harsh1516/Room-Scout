@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { haptic } from '../utils/haptics';
 
 const ToastContext = createContext(null);
 
@@ -14,6 +15,13 @@ export const toast = {
 };
 
 function notify(message, type = 'info') {
+  if (type === 'success') {
+    haptic.success();
+  } else if (type === 'error') {
+    haptic.error();
+  } else {
+    haptic.tap();
+  }
   toastListeners.forEach((listener) => listener({ id: Date.now() + Math.random(), message, type }));
 }
 

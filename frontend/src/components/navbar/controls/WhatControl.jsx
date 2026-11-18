@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
 import { staysAPI } from '../../../services/api';
 
+const ALL_TYPES = [
+  { id: 'PG', label: 'PG', matchTypes: ['pg'] },
+  { id: 'Flat', label: 'Flat', matchTypes: ['flat', 'apartment'] },
+  { id: 'Hotel', label: 'Hotel', matchTypes: ['hotel'] },
+];
+
 export function WhatControl({
   selectedType,
   setSelectedType,
@@ -8,11 +14,6 @@ export function WhatControl({
   onToggle,
   onClose,
 }) {
-  const ALL_TYPES = [
-    { id: 'PG', label: 'PG', matchTypes: ['pg'] },
-    { id: 'Flat', label: 'Flat', matchTypes: ['flat', 'apartment'] },
-    { id: 'Hotel', label: 'Hotel', matchTypes: ['hotel'] },
-  ];
 
   // Initialize with ALL_TYPES to prevent empty flash during initial API load
   const [activeTypes, setActiveTypes] = useState(ALL_TYPES);
@@ -34,7 +35,7 @@ export function WhatControl({
           const filtered = ALL_TYPES.filter((t) =>
             t.matchTypes.some((m) => availableTypes.has(m))
           );
-          setActiveTypes(ALL_TYPES);
+          setActiveTypes(filtered.length > 0 ? filtered : ALL_TYPES);
         }
       } catch (err) {
         console.error('Error fetching what control types:', err);

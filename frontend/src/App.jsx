@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useStaySearch } from './hooks/useStaySearch';
 import { Navbar } from './components/Navbar';
 import { WishlistProvider, useWishlist } from './context/WishlistContext';
@@ -96,25 +96,30 @@ function AppContent() {
  const [selectedStayForBooking, setSelectedStayForBooking] = useState(null);
 
  // On-demand chunk triggers: chunks are ONLY downloaded when the user first triggers the respective modal/drawer
-	const hasLoadedLoginRef = useRef(false);
-	if (isLoginOpen) hasLoadedLoginRef.current = true;
-	const hasLoadedLogin = hasLoadedLoginRef.current;
+	const [hasLoadedLogin, setHasLoadedLogin] = useState(false);
+	if (isLoginOpen && !hasLoadedLogin) {
+		setHasLoadedLogin(true);
+	}
 
-	const hasLoadedPropertyModalRef = useRef(false);
-	if (selectedStayForDetail) hasLoadedPropertyModalRef.current = true;
-	const hasLoadedPropertyModal = hasLoadedPropertyModalRef.current;
+	const [hasLoadedPropertyModal, setHasLoadedPropertyModal] = useState(false);
+	if (selectedStayForDetail && !hasLoadedPropertyModal) {
+		setHasLoadedPropertyModal(true);
+	}
 
-	const hasLoadedBookingModalRef = useRef(false);
-	if (selectedStayForBooking) hasLoadedBookingModalRef.current = true;
-	const hasLoadedBookingModal = hasLoadedBookingModalRef.current;
+	const [hasLoadedBookingModal, setHasLoadedBookingModal] = useState(false);
+	if (selectedStayForBooking && !hasLoadedBookingModal) {
+		setHasLoadedBookingModal(true);
+	}
 
-	const hasLoadedWishlistRef = useRef(false);
-	if (isWishlistOpen) hasLoadedWishlistRef.current = true;
-	const hasLoadedWishlist = hasLoadedWishlistRef.current;
+	const [hasLoadedWishlist, setHasLoadedWishlist] = useState(false);
+	if (isWishlistOpen && !hasLoadedWishlist) {
+		setHasLoadedWishlist(true);
+	}
 
-	const hasLoadedBookedPlacesRef = useRef(false);
-	if (isBookingsOpen) hasLoadedBookedPlacesRef.current = true;
-	const hasLoadedBookedPlaces = hasLoadedBookedPlacesRef.current;
+	const [hasLoadedBookedPlaces, setHasLoadedBookedPlaces] = useState(false);
+	if (isBookingsOpen && !hasLoadedBookedPlaces) {
+		setHasLoadedBookedPlaces(true);
+	}
 
  const {
  filters,
@@ -211,12 +216,6 @@ function AppContent() {
       })
       .catch(() => navigate('/host/upload'));
   };
-
- // Handler for Tab 2: Search Rooms Near You (Explore Stays)
- // No login required to browse — login is only prompted when booking
- const handleSelectSearch = () => {
- navigate('/explore');
- };
 
  const onSearch = (searchData) => {
  handleSearchSubmit(searchData);

@@ -643,7 +643,8 @@ export default function HostWeeklySlotSchedule({
  const durationMonths = sortedSelected.length;
  const rawPrice = selectedRoomCard?.price || activeCategory?.price || hostProperty?.price || 0;
  const unitPrice = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/\D/g, '')) || 0;
- const totalPrice = unitPrice * durationMonths;
+ const safePersons = Math.max(1, Number(hostPersonCount) || 1);
+			const totalPrice = unitPrice * durationMonths * safePersons;
 
  return {
  isMonthly: true,
@@ -687,7 +688,7 @@ export default function HostWeeklySlotSchedule({
  unitPrice: nightlyPrice,
  totalPrice,
  };
- }, [isMonthly, sortedSelected, upcomingMonths, upcomingWeek, selectedRoomCard, activeCategory, hostProperty]);
+ }, [isMonthly, sortedSelected, upcomingMonths, upcomingWeek, selectedRoomCard, activeCategory, hostProperty, hostPersonCount]);
 
  useEffect(() => {
  if (reservationDetails && reservationDetails.totalPrice !== undefined) {

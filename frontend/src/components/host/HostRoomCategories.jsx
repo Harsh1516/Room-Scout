@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, useCallback, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { Plus, Camera } from 'lucide-react';
 import HostCategoryMediaFeatures from './HostCategoryMediaFeatures';
@@ -459,8 +459,6 @@ export default function HostRoomCategories({
  onRemoveCategory,
  onUpdateCategory,
  onSaveCategory,
- collapsedCategories = {},
- onToggleCollapseCategory,
  selectedRoomCardId,
  selectedRoomNumber,
  onSelectRoomCardId,
@@ -469,12 +467,38 @@ export default function HostRoomCategories({
  onUpdateRoomNumber,
  onUpdateRoomCapacity,
  compact = false,
+ propertyType = 'PG',
 }) {
+ const isPg = !propertyType || String(propertyType).trim().toUpperCase() === 'PG';
  const [confirmDeleteCatIdx, setConfirmDeleteCatIdx] = useState(null);
+	const [activeModalCategoryIndex, setActiveModalCategoryIndex] = useState(null);
+
+	// Automatically open the centered modal window whenever a new category is added
+	const [prevRatesLength, setPrevRatesLength] = useState(roomRates.length);
+	if (roomRates.length !== prevRatesLength) {
+		const wasAdded = roomRates.length > prevRatesLength;
+		setPrevRatesLength(roomRates.length);
+		if (wasAdded) {
+			setActiveModalCategoryIndex(roomRates.length - 1);
+		} else if (activeModalCategoryIndex !== null && activeModalCategoryIndex >= roomRates.length) {
+			setActiveModalCategoryIndex(null);
+		}
+	}
+
+	// Close centered category tab modal on Escape key press
+	useEffect(() => {
+		if (activeModalCategoryIndex === null) return;
+		const handleKeyDown = (e) => {
+			if (e.key === "Escape") {
+				setActiveModalCategoryIndex(null);
+			}
+		};
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [activeModalCategoryIndex]);
  const [dirtyCategories, setDirtyCategories] = useState({});
  const [customModeMap, setCustomModeMap] = useState({});
  const [updatingCategoryIdx, setUpdatingCategoryIdx] = useState(null);
- const [recentlyUpdatedIdx, setRecentlyUpdatedIdx] = useState(null);
  const [savedSnapshots, setSavedSnapshots] = useState({});
  const currentMonthKey = useMemo(() => new Date().toISOString().slice(0, 7), []);
 
@@ -560,11 +584,6 @@ export default function HostRoomCategories({
  delete next[idx];
  return next;
  });
-
- setRecentlyUpdatedIdx(idx);
- setTimeout(() => {
- setRecentlyUpdatedIdx((cur) => (cur === idx ? null : cur));
- }, 2500);
  } catch (err) {
  console.error('Failed to update category:', err);
  toast.error('Failed to update category');
@@ -613,411 +632,107 @@ export default function HostRoomCategories({
  return map;
  }, [roomRates, rooms, guests, todayISO, currentMonthKey]);
 
- // Determine if any category is currently open
- const isCategoryOpen = (idx) => {
- if (!collapsedCategories || typeof collapsedCategories !== 'object') return false;
- if (collapsedCategories[idx] === false) return true;
- if (collapsedCategories[idx] === true) return false;
- return false;
- };
-
- const safeRoomRates = Array.isArray(roomRates) ? roomRates.filter(Boolean) : [];
-
- // Determine which category index is currently open (if any)
- const openCategoryIndex = safeRoomRates.findIndex((_, idx) => isCategoryOpen(idx));
- const hasOpenCategory = openCategoryIndex !== -1;
-
- // When a category is selected/open: ONLY that window appears, all unselected categories disappear!
- // When no category is open: all categories are displayed in the list.
- const categoriesToRender = hasOpenCategory
- ? safeRoomRates
- .map((rate, idx) => ({ rate, originalIndex: idx }))
- .filter(({ originalIndex }) => originalIndex === openCategoryIndex)
- : safeRoomRates.map((rate, idx) => ({ rate, originalIndex: idx }));
+   const safeRoomRates = Array.isArray(roomRates) ? roomRates.filter(Boolean) : [];
+  // All category capsules remain visible in the list simultaneously without accordion hiding
+  const categoriesToRender = safeRoomRates.map((rate, idx) => ({ rate, originalIndex: idx }));
 
  return (
  <div className="w-full relative flex flex-col justify-center my-auto min-h-full">
  {safeRoomRates.length > 0 ? (
  <div className={`${compact ? 'space-y-2.5' : 'space-y-3.5'} w-full flex flex-col justify-center my-auto`}>
  {categoriesToRender.map(({ rate, originalIndex: index }) => {
- const isExpanded = isCategoryOpen(index);
- const isMonthly = isMonthlyRateUnit(rate?.rateUnit);
- const rawPrice = String(rate?.price || '').replace(/[^0-9]/g, '');
- const rowKey = rate._id || `rate_${index}`;
- const categoryIdKey = rate?._id ? String(rate._id) : `cat_${index}`;
- const normalizedType = String(rate?.type || '').trim();
- const matchedPreset = CATEGORY_NAME_PRESETS.find(
- (preset) => preset.toLowerCase() === normalizedType.toLowerCase()
- );
- const isPreset = Boolean(matchedPreset);
- const isCustom = customModeMap[categoryIdKey] ?? customModeMap[index] ?? (!isPreset && Boolean(normalizedType));
+					const rawPrice = String(rate?.price || '').replace(/[^0-9]/g, '');
+					const rowKey = rate._id || `rate_${index}`;
+					const stats = categoryStatsMap[index] || { totalCount: 0, availableCount: 0, occupiedCount: 0 };
+					const matchingRooms = (Array.isArray(rooms) ? rooms : []).filter((r) =>
+						isRoomMatchingCategory(r, rate, index, safeRoomRates)
+					);
+					const currentSig = getCategorySignature(rate, matchingRooms);
+					const baselineSig = savedSnapshots[rowKey] || savedSnapshots[index];
+					const isCategoryDirty = Boolean(dirtyCategories[index] || (baselineSig && baselineSig !== currentSig));
+					const ratePhotosCount = Array.isArray(rate?.photos)
+						? rate.photos.filter((p) => p && (typeof p === 'string' ? p : p.url)).length
+						: (Array.isArray(rate?.images) ? rate.images.length : 0);
 
- let selectValue = '';
- if (isCustom) {
- selectValue = 'Custom';
- } else if (isPreset) {
- selectValue = matchedPreset;
- }
+					return (
+						<div
+							key={rowKey}
+							onClick={() => {
+								if (confirmDeleteCatIdx !== null && confirmDeleteCatIdx !== index) setConfirmDeleteCatIdx(null);
+								onSelectCategoryIndex(index);
+								setActiveModalCategoryIndex(index);
+							}}
+							className="w-full flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden transition-all border max-md:bg-white/95 max-md:backdrop-blur-md max-md:border-slate-200/90 max-md:shadow-xs md:bg-white/95 md:border-slate-200/90 md:shadow-xs hover:border-slate-300 hover:shadow-md cursor-pointer group select-none active:scale-[0.99]"
+						>
+							<div className="px-4 sm:px-5 py-3 sm:py-3.5 flex flex-col gap-2">
+								{/* Row 1: Category Name on Left, Cross Button on Right */}
+								<div className="flex items-center justify-between gap-3 w-full">
+									<div className="flex items-center gap-2 min-w-0">
+										<h2 className="text-[15.5px] sm:text-[16px] font-bold text-slate-900 truncate tracking-tight">
+											{rate.type || 'Unnamed Category'}
+										</h2>
+										<span className="text-[11px] font-medium text-slate-400 group-hover:text-slate-600 transition-colors shrink-0">
+											(Click to edit)
+										</span>
+									</div>
 
- const stats = categoryStatsMap[index] || { totalCount: 0, availableCount: 0, occupiedCount: 0 };
- const matchingRooms = (Array.isArray(rooms) ? rooms : []).filter((r) =>
- isRoomMatchingCategory(r, rate, index, safeRoomRates)
- );
- const currentSig = getCategorySignature(rate, matchingRooms);
- const baselineSig = savedSnapshots[rowKey] || savedSnapshots[index];
- const isCategoryDirty = Boolean(dirtyCategories[index] || (baselineSig && baselineSig !== currentSig));
- const ratePhotosCount = Array.isArray(rate?.photos)
- ? rate.photos.filter((p) => p && (typeof p === 'string' ? p : p.url)).length
- : (Array.isArray(rate?.images) ? rate.images.length : 0);
+									<button
+										type="button"
+										onClick={(e) => {
+											e.stopPropagation();
+											setConfirmDeleteCatIdx(index);
+										}}
+										className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer shrink-0 active:scale-95"
+										title="Remove category"
+									>
+										<span className="material-symbols-outlined text-[18px]">close</span>
+									</button>
+								</div>
 
- return (
- <div
- key={rowKey}
- className={`w-full flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden transition-all border ${
- isExpanded ? 'max-md:bg-white/95 max-md:backdrop-blur-md max-md:border max-md:border-slate-200/90 max-md:shadow-[0_4px_20px_rgba(0,0,0,0.04)] md:bg-white/95 md:border-slate-200/90 md:shadow-md' : 'max-md:bg-white/90 max-md:backdrop-blur-md max-md:border max-md:border-slate-200/80 max-md:shadow-xs md:bg-white/95 md:border-slate-200/90 md:shadow-xs'
- } ${!isExpanded ? 'cursor-pointer' : ''}`}
- >
- {/* Card Header (Accessible Toggle Trigger: 2 Rows) */}
- <div
- onClick={(e) => {
- if (confirmDeleteCatIdx !== null && confirmDeleteCatIdx !== index) setConfirmDeleteCatIdx(null);
- onSelectCategoryIndex(index);
- if (typeof onToggleCollapseCategory === 'function') {
- onToggleCollapseCategory(index, e);
- }
- }}
- className={`px-4 sm:px-5 py-3 sm:py-3.5 flex flex-col gap-2 ${
- isExpanded
- ? 'border-b max-md:border-white/10 md:border-slate-100'
- : ''
- } max-md:bg-transparent max-md:border-0 max-md:text-[#0b0b0b] md:bg-white/95 md:text-[#1f1b16] select-none cursor-pointer`}
- >
- {/* Row 1: Category Name on Left, Cross Button ONLY on Right */}
- <div className="flex items-center justify-between gap-3 w-full">
- <h2 className="text-[15.5px] sm:text-[16px] max-md:text-[#0b0b0b] font-bold md:text-[#1f1b16] truncate font-medium tracking-tight leading-normal">
- {rate.type || 'Unnamed Category'}
- </h2>
+								{/* Row 2: Price on Left, Tags on Right */}
+								<div className="flex items-center justify-between gap-2 w-full pt-0.5">
+									<div className="flex items-center gap-1.5 min-w-0">
+										{rate.price ? (
+											<span className="text-[13px] font-bold text-emerald-700 truncate tracking-tight">
+												₹{rawPrice} {rate.rateUnit === '/month' ? (isPg ? '/person/month' : '/month') : (rate.rateUnit || '/night')}
+											</span>
+										) : (
+											<span className="text-[12px] font-medium text-slate-400 italic">
+												No price set
+											</span>
+										)}
+									</div>
 
- <button
- type="button"
- onClick={(e) => {
- e.stopPropagation();
- setConfirmDeleteCatIdx(index);
- }}
- className="w-8 h-8 rounded-full flex items-center justify-center max-md:bg-slate-100 max-md:text-slate-500 max-md:hover:text-rose-600 max-md:hover:bg-rose-50 md:text-slate-400 md:hover:text-red-500 md:hover:bg-red-500/10 transition-colors cursor-pointer shrink-0 active:scale-95"
- title="Remove category"
- >
- <span className="material-symbols-outlined text-[18px] leading-none flex items-center justify-center">close</span>
- </button>
- </div>
+									<div className="flex items-center gap-2 shrink-0">
+										{isCategoryDirty && (
+											<span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/80 flex items-center gap-1 leading-normal">
+												<span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+												<span>Unsaved</span>
+											</span>
+										)}
 
- {/* Row 2: Price on Left, All features (Unsaved, Avail, Caret) on Right */}
- <div className="flex items-center justify-between gap-2 w-full pt-0.5">
- {/* Price on Left (matching exactly the size and bold weight of Unsaved) */}
- <div className="flex items-center gap-1.5 min-w-0">
- {rate.price ? (
- <span className="text-[12px] font-semibold text-emerald-700 truncate tracking-tight">
- ₹{rawPrice} {rate.rateUnit === '/month' ? '/month' : (rate.rateUnit || '/night')}
- </span>
- ) : (
- <span className="text-[11px] font-medium text-slate-400 md:text-slate-400 italic">
- No price set
- </span>
- )}
- </div>
+										<span
+											className="h-6 px-2.5 text-[10.5px] rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-medium shadow-2xs select-none flex items-center justify-center"
+											title={`${stats.availableCount} of ${stats.totalCount} rooms are available today`}
+										>
+											{stats.availableCount}/{stats.totalCount} Avail
+										</span>
 
- {/* Unsaved, Avail, Caret on Right */}
- <div className="flex items-center gap-2 shrink-0">
- {isCategoryDirty && (
- <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/80 flex items-center gap-1 leading-normal">
- <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
- <span>Unsaved</span>
- </span>
- )}
-
- <span
- className="h-6 px-2.5 text-[10.5px] rounded-full max-md:bg-slate-100 max-md:border max-md:border-slate-200/80 max-md:text-[#333333] md:bg-slate-100 md:border md:border-slate-200 md:text-slate-700 font-medium shadow-2xs select-none flex items-center justify-center leading-normal"
- title={`${stats.availableCount} of ${stats.totalCount} rooms are available today`}
- >
- {stats.availableCount}/{stats.totalCount} Avail
- </span>
-
- {ratePhotosCount > 0 && (
- <span
- className="h-6 px-2 text-[10.5px] rounded-full max-md:bg-slate-100 max-md:border max-md:border-slate-200/80 max-md:text-[#333333] md:bg-slate-100 md:border md:border-slate-200 md:text-slate-700 font-medium shadow-2xs select-none flex items-center gap-1 justify-center leading-normal"
- title={`${ratePhotosCount} of 3 photos added`}
- >
- <Camera className="w-3 h-3 text-emerald-600 shrink-0" />
- <span>{ratePhotosCount}/3</span>
- </span>
- )}
- </div>
- </div>
- </div>
-
- {/* Expandable Body: Only the border and container height animates, NO inner text morphing/scaling */}
- <AnimatePresence initial={false}>
- {isExpanded && (
- <motion.div
- key={`body-${rowKey}`}
- initial={{ height: 0, opacity: 0 }}
- animate={{ height: 'auto', opacity: 1 }}
- exit={{ height: 0, opacity: 0 }}
- transition={{
- height: { type: 'spring', stiffness: 360, damping: 34, mass: 0.7 },
- opacity: { duration: 0.18, ease: 'easeOut' },
- }}
- className="overflow-hidden"
- >
- <div className="p-3 sm:p-4 flex flex-col gap-2.5 sm:gap-3">
- {/* Form Fields: No labels above, balanced text size, Price/Cycle/Capacity in 1 row */}
- <div className="flex flex-col gap-2.5 mb-2 sm:mb-2.5">
- {/* Category Name Dropdown & Custom Input (Full width, no label) */}
- <div className="flex flex-col gap-2">
- <div className="relative flex items-center w-full">
- <select
- value={selectValue}
- onChange={(e) => {
- const selectedVal = e.target.value;
- if (selectedVal === 'Custom') {
- setCustomModeMap((prev) => ({ ...prev, [categoryIdKey]: true, [index]: true }));
- if (isPreset) {
- onUpdateCategory(index, 'type', '');
- }
- markCategoryDirty(index);
- } else {
- setCustomModeMap((prev) => ({ ...prev, [categoryIdKey]: false, [index]: false }));
- markCategoryDirty(index);
- onUpdateCategory(index, 'type', selectedVal);
- if (PRESET_CAPACITY_MAP[selectedVal]) {
- onUpdateCategory(index, 'capacity', PRESET_CAPACITY_MAP[selectedVal]);
- }
- }
- }}
- onFocus={() => onSelectCategoryIndex(index)}
- onClick={(e) => {
- e.stopPropagation();
- onSelectCategoryIndex(index);
- }}
- className={`w-full h-11.5 sm:h-12 rounded-xl pl-4 pr-10 text-[14px] sm:text-[15px] font-semibold max-md:bg-white max-md:border max-md:border-slate-200/80 ${
- !selectValue ? 'text-slate-400 max-md:text-slate-400 font-normal' : 'text-[#0b0b0b] md:text-[#1f1b16]'
- } md:bg-white/70 md:border md:border-slate-200 transition-all shadow-2xs focus:outline-none appearance-none cursor-pointer`}
- >
- <option value="" disabled className="text-slate-400">
- Select Category (e.g. Single Bed, Double Bed...)
- </option>
- {CATEGORY_NAME_PRESETS.map((preset) => (
- <option key={preset} value={preset} className="text-slate-900 bg-white">
- {preset}
- </option>
- ))}
- <option value="Custom" className="text-slate-900 bg-white font-medium">
- Custom
- </option>
- </select>
- <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[20px] sm:text-[22px] max-md:text-slate-400 md:text-slate-400 pointer-events-none select-none">
- keyboard_arrow_down
- </span>
- </div>
-
- {/* Custom Category Name Input (Rendered when Custom is selected) */}
- {isCustom && (
- <motion.div
- initial={{ opacity: 0, y: -4 }}
- animate={{ opacity: 1, y: 0 }}
- exit={{ opacity: 0, y: -4 }}
- transition={{ duration: 0.15 }}
- className="relative flex items-center w-full"
- >
- <input
- type="text"
- value={rate.type || ''}
- onChange={(e) => {
- const textOnly = e.target.value.replace(/[^a-zA-Z0-9\s-]/g, '');
- markCategoryDirty(index);
- onUpdateCategory(index, 'type', textOnly);
- }}
- onFocus={() => onSelectCategoryIndex(index)}
- onClick={(e) => {
- e.stopPropagation();
- onSelectCategoryIndex(index);
- }}
- placeholder="Enter Custom Category Name (e.g. Deluxe Suite)"
- className="w-full h-11.5 sm:h-12 rounded-xl px-4 text-[14px] sm:text-[15px] font-semibold max-md:bg-white max-md:border max-md:border-slate-200/80 max-md:text-[#0b0b0b] max-md:placeholder:text-slate-400 max-md:shadow-xs max-md:focus:border-black/30 md:bg-white/70 md:border md:border-slate-200 md:text-[#1f1b16] transition-all shadow-2xs focus:outline-none"
- autoFocus
- />
- </motion.div>
- )}
- </div>
-
- {/* Price, Billing Cycle, and Capacity in ONE ROW (no labels) */}
- <div className="grid grid-cols-3 gap-2 sm:gap-2.5 items-center pb-3 sm:pb-3.5 border-b max-md:border-white/10 md:border-slate-100">
- {/* 1. Price */}
- <div className="relative flex items-center">
- <input
- type="text"
- value={rawPrice}
- onChange={(e) => {
- const numOnly = e.target.value.replace(/[^0-9]/g, '');
- markCategoryDirty(index);
- onUpdateCategory(index, 'price', numOnly ? `₹${numOnly}` : '');
- }}
- onFocus={() => onSelectCategoryIndex(index)}
- onClick={(e) => {
- e.stopPropagation();
- onSelectCategoryIndex(index);
- }}
- placeholder="₹ Price"
- className="w-full h-11.5 sm:h-12 rounded-xl px-2.5 sm:px-3 text-[14px] sm:text-base font-medium text-center max-md:bg-white max-md:border max-md:border-slate-200/80 max-md:text-emerald-700 max-md:placeholder:text-slate-400 max-md:shadow-xs font-semibold md:bg-white/70 md:border md:border-slate-200 md:text-emerald-700 shadow-2xs focus:outline-none transition-all"
- />
- </div>
-
- {/* 2. Billing Cycle */}
- <div className="relative flex items-center">
- <select
- value={rate.rateUnit || '/night'}
- onChange={(e) => {
- markCategoryDirty(index);
- onUpdateCategory(index, 'rateUnit', e.target.value);
- }}
- onFocus={() => onSelectCategoryIndex(index)}
- onClick={(e) => {
- e.stopPropagation();
- onSelectCategoryIndex(index);
- }}
- className="w-full h-11.5 sm:h-12 rounded-xl pl-2.5 pr-6 sm:pl-3 sm:pr-7 text-[14px] sm:text-[13px] font-medium max-md:bg-white max-md:border max-md:border-slate-200/80 max-md:text-[#0b0b0b] font-medium md:bg-[#f7f4ee]/80 md:border md:border-slate-200 md:text-slate-800 shadow-2xs focus:outline-none transition-all appearance-none cursor-pointer truncate"
- >
- <option value="/month">Per Month</option>
- <option value="/night">Per Night</option>
- </select>
- <span className="material-symbols-outlined absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 text-[18px] sm:text-[20px] max-md:text-slate-400 md:text-slate-400 pointer-events-none select-none">
- keyboard_arrow_down
- </span>
- </div>
-
- {/* 3. Capacity Stepper (- count + with no button background, enlarged touch buttons) */}
- <div className="w-full h-11.5 sm:h-12 rounded-xl px-1 sm:px-1.5 flex items-center justify-between max-md:bg-white max-md:border max-md:border-slate-200/80 max-md:text-[#0b0b0b] max-md:shadow-xs md:bg-[#f7f4ee]/80 md:border md:border-slate-200 shadow-2xs">
- <button
- type="button"
- disabled={Number(rate.capacity || 1) <= 1}
- onClick={(e) => {
- e.stopPropagation();
- const currentCap = Math.max(1, Number(rate.capacity) || 1);
- if (currentCap > 1) {
- markCategoryDirty(index);
- onUpdateCategory(index, 'capacity', currentCap - 1);
- }
- }}
- className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-full bg-transparent max-md:text-slate-700 max-md:hover:text-slate-900 max-md:active:text-slate-950 md:text-slate-600 md:hover:text-[#1f1b16] transition-all cursor-pointer font-medium text-2xl sm:text-3xl leading-none active:scale-125 disabled:opacity-20 disabled:cursor-not-allowed shrink-0"
- title="Decrease capacity"
- >
- −
- </button>
- <span className="text-base sm:text-[17px] font-bold max-md:text-slate-900 md:text-[#1f1b16] text-center select-none min-w-[20px] leading-none">
- {rate.capacity || 1}
- </span>
- <button
- type="button"
- disabled={Number(rate.capacity || 1) >= 10}
- onClick={(e) => {
- e.stopPropagation();
- const currentCap = Math.max(1, Number(rate.capacity) || 1);
- if (currentCap < 10) {
- markCategoryDirty(index);
- onUpdateCategory(index, 'capacity', currentCap + 1);
- }
- }}
- className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-full bg-transparent max-md:text-slate-700 max-md:hover:text-slate-900 max-md:active:text-slate-950 md:text-slate-600 md:hover:text-[#1f1b16] transition-all cursor-pointer font-medium text-2xl sm:text-3xl leading-none active:scale-125 disabled:opacity-20 disabled:cursor-not-allowed shrink-0"
- title="Increase capacity"
- >
- +
- </button>
- </div>
- </div>
- </div>
-
- {/* Rooms Carousel */}
- <div>
- <CategoryRoomCarousel
- matchingRooms={matchingRooms}
- rate={rate}
- categoryIndex={index}
- selectedRoomCardId={selectedRoomCardId}
- selectedRoomNumber={selectedRoomNumber}
- onSelectRoomCardId={onSelectRoomCardId}
- onSelectCategoryIndex={onSelectCategoryIndex}
- onRemoveRoomCard={onRemoveRoomCard}
- onUpdateRoomNumber={onUpdateRoomNumber}
- onUpdateRoomCapacity={onUpdateRoomCapacity}
- todayISO={todayISO}
- guests={guests}
- currentMonthKey={currentMonthKey}
- isMonthly={isMonthly}
- compact={compact}
- onAddRoomCard={onAddRoomCard}
- onSaveCategory={onSaveCategory}
- markCategoryDirty={markCategoryDirty}
- />
- </div>
-
- {/* Category Media Photos (16:9 only, Max 3) & Features */}
- <HostCategoryMediaFeatures
- rate={rate}
- categoryIndex={index}
- onUpdateCategory={onUpdateCategory}
- markCategoryDirty={markCategoryDirty}
- />
-
- {/* Footer Status Bar & Update Button */}
- <div className="pt-3 mt-1.5 min-h-[44px] border-t max-md:border-white/10 md:border-slate-100 flex items-center justify-between text-xs">
- {/* Left: Saved / Unsaved */}
- <div className="flex items-center gap-2 shrink-0">
- {isCategoryDirty ? (
- <div className="flex items-center gap-2 text-orange-400 md:text-orange-500">
- <span className="w-2.5 h-2.5 rounded-full bg-orange-400 shrink-0" />
- <span className="text-[14px] sm:text-[15px] font-medium leading-none">Unsaved</span>
- </div>
- ) : (
- <div className="flex items-center gap-2 max-md:text-emerald-700 font-semibold md:text-slate-500">
- <span className="material-symbols-outlined text-[20px] sm:text-[22px] text-emerald-400 shrink-0 leading-none flex items-center justify-center">
- check_circle
- </span>
- <span className="text-[14px] sm:text-[15px] font-medium leading-none">Saved</span>
- </div>
- )}
- </div>
-
- {/* Right: Update Button */}
- <button
- type="button"
- disabled={updatingCategoryIdx === index}
- onClick={async (e) => {
- e.stopPropagation();
- await handleUpdateCategoryClick(index);
- }}
- className={`h-11 max-md:h-12 md:h-9 px-6 sm:px-8 md:px-6 rounded-full text-sm md:text-xs font-medium transition-all flex items-center justify-center cursor-pointer shadow-sm leading-none shrink-0 ${
- isCategoryDirty
- ? 'bg-orange-500 hover:bg-orange-600 active:scale-95 text-white shadow-md shadow-orange-500/30'
- : 'max-md:bg-gradient-to-r max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:text-white max-md:font-semibold md:border md:border-slate-200 md:bg-white md:hover:bg-[#f7f4ee] md:text-slate-700'
- }`}
- title={isCategoryDirty ? 'Click to save all changes to database' : 'Update category details'}
- >
- {updatingCategoryIdx === index ? (
- <span className="leading-none">Saving...</span>
- ) : recentlyUpdatedIdx === index ? (
- <span className="text-emerald-400 md:text-emerald-600 leading-none font-medium">Saved </span>
- ) : (
- <span className="leading-none">Update</span>
- )}
- </button>
- </div>
- </div>
- </motion.div>
- )}
- </AnimatePresence>
- </div>
- );
- })}
+										{ratePhotosCount > 0 && (
+											<span
+												className="h-6 px-2 text-[10.5px] rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-medium shadow-2xs select-none flex items-center gap-1 justify-center"
+												title={`${ratePhotosCount} of 3 photos added`}
+											>
+												<Camera className="w-3 h-3 text-emerald-600 shrink-0" />
+												<span>{ratePhotosCount}/3</span>
+											</span>
+										)}
+									</div>
+								</div>
+							</div>
+						</div>
+					);
+				})}
  </div>
  ) : (
  <div className="flex flex-col items-center justify-center min-h-[200px] sm:min-h-[320px] rounded-2xl sm:rounded-3xl border border-dashed border-slate-300 bg-white/70 text-center p-5 sm:p-8 space-y-3 sm:space-y-4 shadow-xl">
@@ -1039,7 +754,290 @@ export default function HostRoomCategories({
  </div>
  )}
 
- {confirmDeleteCatIdx !== null && roomRates[confirmDeleteCatIdx] && typeof document !== 'undefined' && createPortal(
+ 
+      {/* ── CENTERED TAB MODAL WINDOW: Opens in center of screen when adding or clicking a category ── */}
+      {activeModalCategoryIndex !== null && safeRoomRates[activeModalCategoryIndex] && typeof document !== 'undefined' && (() => {
+        const modalIndex = activeModalCategoryIndex;
+        const activeRate = safeRoomRates[modalIndex];
+        if (!activeRate) return null;
+
+        const isMonthly = isMonthlyRateUnit(activeRate?.rateUnit);
+        const rawPrice = String(activeRate?.price || '').replace(/[^0-9]/g, '');
+        const rowKey = activeRate._id || `rate_${modalIndex}`;
+        const categoryIdKey = activeRate?._id ? String(activeRate._id) : `cat_${modalIndex}`;
+        const normalizedType = String(activeRate?.type || '').trim();
+        const matchedPreset = CATEGORY_NAME_PRESETS.find(
+          (preset) => preset.toLowerCase() === normalizedType.toLowerCase()
+        );
+        const isPreset = Boolean(matchedPreset);
+        const isCustom = customModeMap[categoryIdKey] ?? customModeMap[modalIndex] ?? (!isPreset && Boolean(normalizedType));
+
+        let selectValue = '';
+        if (isCustom) {
+          selectValue = 'Custom';
+        } else if (isPreset) {
+          selectValue = matchedPreset;
+        }
+
+        const matchingRooms = (Array.isArray(rooms) ? rooms : []).filter((r) =>
+          isRoomMatchingCategory(r, activeRate, modalIndex, safeRoomRates)
+        );
+        const currentSig = getCategorySignature(activeRate, matchingRooms);
+        const baselineSig = savedSnapshots[rowKey] || savedSnapshots[modalIndex];
+        const isCategoryDirty = Boolean(dirtyCategories[modalIndex] || (baselineSig && baselineSig !== currentSig));
+
+        return createPortal(
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={() => setActiveModalCategoryIndex(null)}
+          >
+            <div
+              className="relative w-full max-w-xl sm:max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-150"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="material-symbols-outlined text-[24px] text-emerald-600">bedroom_parent</span>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight leading-tight truncate">
+                      {activeRate.type ? `${activeRate.type} Configuration` : 'New Room Category'}
+                    </h2>
+                    <p className="text-[11px] sm:text-xs text-slate-500 font-medium">
+                      Configure category details, pricing, room cards and photos
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveModalCategoryIndex(null)}
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-800 hover:bg-slate-200/70 transition-colors cursor-pointer active:scale-95 shrink-0"
+                  title="Close tab"
+                >
+                  <span className="material-symbols-outlined text-[20px]">close</span>
+                </button>
+              </div>
+
+              {/* Modal Body (Scrollable with all original fields just as it is) */}
+              <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1 overscroll-contain">
+                {/* 1. Category Name Preset Dropdown & Custom Input */}
+                <div className="flex flex-col gap-2">
+                  <div className="relative flex items-center w-full">
+                    <select
+                      value={selectValue}
+                      onChange={(e) => {
+                        const selectedVal = e.target.value;
+                        if (selectedVal === 'Custom') {
+                          setCustomModeMap((prev) => ({ ...prev, [categoryIdKey]: true, [modalIndex]: true }));
+                          if (isPreset) {
+                            onUpdateCategory(modalIndex, 'type', '');
+                          }
+                          markCategoryDirty(modalIndex);
+                        } else {
+                          setCustomModeMap((prev) => ({ ...prev, [categoryIdKey]: false, [modalIndex]: false }));
+                          markCategoryDirty(modalIndex);
+                          onUpdateCategory(modalIndex, 'type', selectedVal);
+                          if (PRESET_CAPACITY_MAP[selectedVal]) {
+                            onUpdateCategory(modalIndex, 'capacity', PRESET_CAPACITY_MAP[selectedVal]);
+                          }
+                        }
+                      }}
+                      className="w-full h-12 rounded-xl pl-4 pr-10 text-[14px] sm:text-[15px] font-semibold text-slate-900 bg-white border border-slate-200 transition-all shadow-2xs focus:outline-none appearance-none cursor-pointer"
+                    >
+                      <option value="" disabled className="text-slate-400">
+                        Select Category (e.g. Single Bed, Double Bed...)
+                      </option>
+                      {CATEGORY_NAME_PRESETS.map((preset) => (
+                        <option key={preset} value={preset} className="text-slate-900 bg-white font-medium">
+                          {preset}
+                        </option>
+                      ))}
+                      <option value="Custom" className="text-slate-900 bg-white font-medium">
+                        Custom
+                      </option>
+                    </select>
+                    <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[22px] text-slate-400 pointer-events-none select-none">
+                      keyboard_arrow_down
+                    </span>
+                  </div>
+
+                  {isCustom && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.15 }}
+                      className="relative flex items-center w-full"
+                    >
+                      <input
+                        type="text"
+                        value={activeRate.type || ''}
+                        onChange={(e) => {
+                          const textOnly = e.target.value.replace(/[^a-zA-Z0-9\s-]/g, '');
+                          markCategoryDirty(modalIndex);
+                          onUpdateCategory(modalIndex, 'type', textOnly);
+                        }}
+                        placeholder="Enter Custom Category Name (e.g. Deluxe Suite)"
+                        className="w-full h-12 rounded-xl px-4 text-[14px] sm:text-[15px] font-semibold text-slate-900 bg-white border border-slate-200 transition-all shadow-2xs focus:outline-none"
+                        autoFocus
+                      />
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* 2. Price, Billing Cycle, and Capacity in ONE ROW */}
+                <div className="grid grid-cols-3 gap-2.5 items-center pb-3.5 border-b border-slate-100">
+                  {/* Price */}
+                  <div className="relative flex items-center">
+                    <input
+                      type="text"
+                      value={rawPrice}
+                      onChange={(e) => {
+                        const numOnly = e.target.value.replace(/[^0-9]/g, '');
+                        markCategoryDirty(modalIndex);
+                        onUpdateCategory(modalIndex, 'price', numOnly ? `₹${numOnly}` : '');
+                      }}
+                      placeholder={isPg ? "₹ Price/person" : "₹ Price"}
+                      className="w-full h-12 rounded-xl px-3 text-[14px] sm:text-base font-semibold text-center text-emerald-700 bg-white border border-slate-200 shadow-2xs focus:outline-none transition-all"
+                    />
+                  </div>
+
+                  {/* Billing Cycle */}
+                  <div className="relative flex items-center">
+                    <select
+                      value={activeRate.rateUnit || '/night'}
+                      onChange={(e) => {
+                        markCategoryDirty(modalIndex);
+                        onUpdateCategory(modalIndex, 'rateUnit', e.target.value);
+                      }}
+                      className="w-full h-12 rounded-xl pl-3 pr-7 text-[13px] font-medium bg-[#f7f4ee]/80 border border-slate-200 text-slate-800 shadow-2xs focus:outline-none transition-all appearance-none cursor-pointer truncate"
+                    >
+                      <option value="/month">Per Month</option>
+                      <option value="/night">Per Night</option>
+                    </select>
+                    <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-[20px] text-slate-400 pointer-events-none select-none">
+                      keyboard_arrow_down
+                    </span>
+                  </div>
+
+                  {/* Capacity Stepper */}
+                  <div className="w-full h-12 rounded-xl px-1.5 flex items-center justify-between bg-[#f7f4ee]/80 border border-slate-200 shadow-2xs">
+                    <button
+                      type="button"
+                      disabled={Number(activeRate.capacity || 1) <= 1}
+                      onClick={() => {
+                        const currentCap = Math.max(1, Number(activeRate.capacity) || 1);
+                        if (currentCap > 1) {
+                          markCategoryDirty(modalIndex);
+                          onUpdateCategory(modalIndex, 'capacity', currentCap - 1);
+                        }
+                      }}
+                      className="w-10 h-10 flex items-center justify-center rounded-full bg-transparent text-slate-600 hover:text-slate-900 transition-all cursor-pointer font-medium text-2xl leading-none active:scale-125 disabled:opacity-20 disabled:cursor-not-allowed shrink-0"
+                      title="Decrease capacity"
+                    >
+                      −
+                    </button>
+                    <span className="text-[17px] font-bold text-slate-900 text-center select-none min-w-[20px] leading-none">
+                      {activeRate.capacity || 1}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={Number(activeRate.capacity || 1) >= 10}
+                      onClick={() => {
+                        const currentCap = Math.max(1, Number(activeRate.capacity) || 1);
+                        if (currentCap < 10) {
+                          markCategoryDirty(modalIndex);
+                          onUpdateCategory(modalIndex, 'capacity', currentCap + 1);
+                        }
+                      }}
+                      className="w-10 h-10 flex items-center justify-center rounded-full bg-transparent text-slate-600 hover:text-slate-900 transition-all cursor-pointer font-medium text-2xl leading-none active:scale-125 disabled:opacity-20 disabled:cursor-not-allowed shrink-0"
+                      title="Increase capacity"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* 3. Rooms Carousel (Add Room Card + List) */}
+                <div>
+                  <CategoryRoomCarousel
+                    matchingRooms={matchingRooms}
+                    rate={activeRate}
+                    categoryIndex={modalIndex}
+                    selectedRoomCardId={selectedRoomCardId}
+                    selectedRoomNumber={selectedRoomNumber}
+                    onSelectRoomCardId={onSelectRoomCardId}
+                    onSelectCategoryIndex={onSelectCategoryIndex}
+                    onRemoveRoomCard={onRemoveRoomCard}
+                    onUpdateRoomNumber={onUpdateRoomNumber}
+                    onUpdateRoomCapacity={onUpdateRoomCapacity}
+                    todayISO={todayISO}
+                    guests={guests}
+                    currentMonthKey={currentMonthKey}
+                    isMonthly={isMonthly}
+                    compact={compact}
+                    onAddRoomCard={onAddRoomCard}
+                    onSaveCategory={onSaveCategory}
+                    markCategoryDirty={markCategoryDirty}
+                  />
+                </div>
+
+                {/* 4. Category Media Photos (16:9 only, Max 3) & Features */}
+                <HostCategoryMediaFeatures
+                  rate={activeRate}
+                  categoryIndex={modalIndex}
+                  onUpdateCategory={onUpdateCategory}
+                  markCategoryDirty={markCategoryDirty}
+                />
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-3.5 sm:p-4 px-5 border-t border-slate-100 bg-slate-50/90 flex items-center justify-between">
+                <div className="flex items-center gap-2 shrink-0">
+                  {isCategoryDirty ? (
+                    <div className="flex items-center gap-2 text-amber-600 font-semibold">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
+                      <span className="text-xs sm:text-sm">Unsaved changes</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-emerald-600 font-semibold">
+                      <span className="material-symbols-outlined text-[20px] text-emerald-500">check_circle</span>
+                      <span className="text-xs sm:text-sm">Saved</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2.5">
+                  {isCategoryDirty && (
+                    <button
+                      type="button"
+                      disabled={updatingCategoryIdx === modalIndex}
+                      onClick={async () => {
+                        await handleUpdateCategoryClick(modalIndex);
+                      }}
+                      className="h-10 px-5 rounded-full bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-semibold text-xs transition-all cursor-pointer shadow-sm"
+                    >
+                      {updatingCategoryIdx === modalIndex ? 'Saving...' : 'Save Changes'}
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveModalCategoryIndex(null)}
+                    className="h-10 px-6 rounded-full bg-slate-900 hover:bg-black active:scale-95 text-white font-semibold text-xs transition-all cursor-pointer shadow-sm"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body
+        );
+      })()}
+
+      {confirmDeleteCatIdx !== null && roomRates[confirmDeleteCatIdx] && typeof document !== 'undefined' && createPortal(
  <div
  className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-200"
  onClick={() => setConfirmDeleteCatIdx(null)}

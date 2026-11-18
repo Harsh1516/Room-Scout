@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { getStayPricing, getOtherStayPrices } from '../../utils/priceUtils';
+import { haptic } from '../../utils/haptics';
 import { bookingsAPI } from '../../services/api';
 import {
   getUpcoming12Months,
@@ -76,12 +77,14 @@ export function StayCinematicShowcase({
 
   const handleNext = useCallback(() => {
     if (canGoNext) {
+      haptic.tap();
       goToIndex(activeIndex + 1);
     }
   }, [canGoNext, activeIndex, goToIndex]);
 
   const handlePrev = useCallback(() => {
     if (canGoPrev) {
+      haptic.tap();
       goToIndex(activeIndex - 1);
     }
   }, [canGoPrev, activeIndex, goToIndex]);
@@ -99,6 +102,37 @@ export function StayCinematicShowcase({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [stays.length, handleNext, handlePrev]);
+
+  // Mobile swipe gestures
+  const touchStartXRef = useRef(0);
+  const touchStartYRef = useRef(0);
+
+  const handleTouchStart = (e) => {
+    touchStartXRef.current = e.touches[0].clientX;
+    touchStartYRef.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e) => {
+    const deltaX = e.changedTouches[0].clientX - touchStartXRef.current;
+    const deltaY = e.changedTouches[0].clientY - touchStartYRef.current;
+
+    // Only trigger if horizontal swipe is dominant and exceeds 45px
+    if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY) * 1.4) {
+      if (deltaX < 0) {
+        handleNext();
+      } else {
+        handlePrev();
+      }
+    }
+  };
+
+  const [coverLoaded, setCoverLoaded] = useState(false);
+  const [posterLoaded, setPosterLoaded] = useState(false);
+
+  useEffect(() => {
+    setCoverLoaded(false);
+    setPosterLoaded(false);
+  }, [currentStay?._id]);
 
   const currentStay = (Array.isArray(stays) && stays.length > 0) ? (stays[activeIndex] || stays[0]) : null;
   const pricing = getStayPricing(currentStay);
@@ -257,7 +291,7 @@ export function StayCinematicShowcase({
     const currentMonthKey = upcomingMonths[0]?.monthKey || new Date().toISOString().slice(0, 7);
 
     // Matching rooms for this category/type
-    let matching = [];
+    let matching;
     if (typeOrCategory) {
       const targetRateIdx = roomRates.findIndex(
         (rr) => String(rr.type || '').trim().toLowerCase() === String(typeOrCategory).trim().toLowerCase()
@@ -367,13 +401,6 @@ export function StayCinematicShowcase({
     const res = getRoomTypeAvailability(currentStay, null, 0);
     return res.display;
   }, [currentStay, getRoomTypeAvailability]);
-
-  // Primary room type availability
-  const primaryRoomType = currentStay?.category || currentStay?.type || 'Standard';
-  const primaryRoomOccupancy = useMemo(() => {
-    const res = getRoomTypeAvailability(currentStay, primaryRoomType, 0);
-    return res.display;
-  }, [currentStay, primaryRoomType, getRoomTypeAvailability]);
 
   // Gender label computation
   const genderLabel = useMemo(() => {
@@ -592,11 +619,14 @@ export function StayCinematicShowcase({
       <div className="relative w-full max-w-full sm:max-w-xl md:max-w-2xl mx-auto bg-[#1c1d27] text-white rounded-t-none rounded-b-[36px] sm:rounded-b-[44px] overflow-hidden shadow-2xl">
         
         {/* 1. ORIGINAL PHOTO CONTAINER (Full bleed to top behind navbar) */}
-        <div className="relative w-full h-[390px] sm:h-[450px] rounded-t-none overflow-hidden group">
+        <div className="relative w-full h-[390px] sm:h-[450px] rounded-t-none overflow-hidden group select-none" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+          <div className={`absolute inset-0 bg-slate-900 animate-pulse transition-opacity duration-300 ${coverLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} />
           <img
             src={coverImage}
             alt={fullTitle}
-            className="w-full h-full object-cover object-center select-none scale-105 origin-center"
+            decoding="async"
+            onLoad={() => setCoverLoaded(true)}
+            className={`w-full h-full object-cover object-center select-none scale-105 origin-center transition-opacity duration-300 ${coverLoaded ? 'opacity-100' : 'opacity-0'}`}
             draggable={false}
           />
 
@@ -708,10 +738,13 @@ export function StayCinematicShowcase({
       <div className="relative w-full max-w-full sm:max-w-xl md:max-w-2xl mx-auto px-4 sm:px-6 pointer-events-none z-30">
         <div className="absolute left-4 sm:left-6 top-2.5 sm:top-3 -translate-y-1/2 pointer-events-auto">
           <div className="relative w-48 sm:w-60 md:w-68 h-72 sm:h-84 md:h-96 rounded-3xl overflow-hidden shadow-[0_24px_56px_rgba(0,0,0,0.6)] border-2 border-white/40 bg-slate-800">
+            <div className={`absolute inset-0 bg-slate-800 animate-pulse transition-opacity duration-300 ${posterLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} />
             <img
               src={posterImage}
               alt="Poster"
-              className="w-full h-full object-cover scale-110 select-none"
+              decoding="async"
+              onLoad={() => setPosterLoaded(true)}
+              className={`w-full h-full object-cover scale-110 select-none transition-opacity duration-300 ${posterLoaded ? 'opacity-100' : 'opacity-0'}`}
               draggable={false}
             />
             {/* Top-Left Circular Yellow Rating Tag */}

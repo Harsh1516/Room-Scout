@@ -1,0 +1,25 @@
+{
+  "short_name": "RoomScout",
+  "name": "RoomScout - Verified Living & Stays",
+  "description": "Zero brokerage student and professional verified stays, PGs, flats, and hotels with direct owner contact.",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/roomscout_logo.webp",
+      "type": "image/webp",
+      "sizes": "512x512",
+      "purpose": "any"
+    }
+  ],
+  "start_url": "/explore",
+  "background_color": "#fcfcfd",
+  "theme_color": "#0f172a",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/"
+}

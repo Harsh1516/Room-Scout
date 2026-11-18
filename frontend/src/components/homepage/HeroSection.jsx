@@ -3,7 +3,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { staysAPI } from '../../services/api';
 
-export function HeroSection({ onSelectUpload }) {
+export function HeroSection() {
   const navigate = useNavigate();
 
   const [stats, setStats] = useState(() => {
@@ -18,7 +18,7 @@ export function HeroSection({ onSelectUpload }) {
           cachedStaysCount = parsed.length;
         }
       }
-    } catch {}
+    } catch { /* ignore cache parse error */ }
 
     return {
       staysCount: cachedStaysCount,
@@ -26,44 +26,47 @@ export function HeroSection({ onSelectUpload }) {
       loading: cachedStaysCount === null,
     };
   });
-
-  const loadStats = async (isBackground = false) => {
-    try {
-      const res = await staysAPI.getPublicStats();
-      if (res && res.success) {
-        setStats({
-          staysCount: Number(res.totalStays ?? 0),
-          onlineUsersBooked: Number(res.onlineUsersBooked ?? 0),
-          loading: false,
-        });
-        return;
-      }
-    } catch (err) {
-      console.warn('Could not load public stats, falling back to stays list:', err);
-    }
-
-    // Graceful fallback: fetch stays directly from stays API if public stats route is ever unavailable
-    try {
-      const staysData = await staysAPI.getStays();
-      const list = Array.isArray(staysData)
-        ? staysData
-        : Array.isArray(staysData?.stays)
-        ? staysData.stays
-        : [];
-      setStats((prev) => ({
-        staysCount: list.length,
-        onlineUsersBooked: prev.onlineUsersBooked ?? 0,
-        loading: false,
-      }));
-    } catch (fallbackErr) {
-      console.warn('Fallback stays load error:', fallbackErr);
-      if (!isBackground) {
-        setStats((prev) => ({ ...prev, loading: false }));
-      }
-    }
-  };
-
   useEffect(() => {
+    let mounted = true;
+
+    const loadStats = async (isBackground = false) => {
+      try {
+        const res = await staysAPI.getPublicStats();
+        if (res && res.success && mounted) {
+          setStats({
+            staysCount: Number(res.totalStays ?? 0),
+            onlineUsersBooked: Number(res.onlineUsersBooked ?? 0),
+            loading: false,
+          });
+          return;
+        }
+      } catch (err) {
+        console.warn('Could not load public stats, falling back to stays list:', err);
+      }
+
+      // Graceful fallback: fetch stays directly from stays API if public stats route is ever unavailable
+      try {
+        const staysData = await staysAPI.getStays();
+        const list = Array.isArray(staysData)
+          ? staysData
+          : Array.isArray(staysData?.stays)
+          ? staysData.stays
+          : [];
+        if (mounted) {
+          setStats((prev) => ({
+            staysCount: list.length,
+            onlineUsersBooked: prev.onlineUsersBooked ?? 0,
+            loading: false,
+          }));
+        }
+      } catch (fallbackErr) {
+        console.warn('Fallback stays load error:', fallbackErr);
+        if (!isBackground && mounted) {
+          setStats((prev) => ({ ...prev, loading: false }));
+        }
+      }
+    };
+
     loadStats();
 
     const handleSync = () => loadStats(true);
@@ -85,7 +88,7 @@ export function HeroSection({ onSelectUpload }) {
         bc = new BroadcastChannel('stayhub_live_channel');
         bc.onmessage = () => loadStats(true);
       }
-    } catch {}
+    } catch { /* ignore broadcast channel error */ }
 
     return () => {
       window.removeEventListener('stayhub_rooms_updated', handleSync);
@@ -99,13 +102,12 @@ export function HeroSection({ onSelectUpload }) {
   }, []);
 
   const shouldReduceMotion = useReducedMotion();
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.matchMedia('(max-width: 768px)').matches : false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const mql = window.matchMedia('(max-width: 768px)');
     const update = (e) => setIsMobile(e.matches);
-    setIsMobile(mql.matches);
     if (mql.addEventListener) {
       mql.addEventListener('change', update);
       return () => mql.removeEventListener('change', update);

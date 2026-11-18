@@ -1,18 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, useLocation } from 'react-router-dom';
 import { useWishlist } from '../../context/WishlistContext';
 import { useBookings } from '../../context/BookingsContext';
-import { useAuth } from '../../context/AuthContext';
 import { Login } from './Login';
 
-export function Right({ onLoginClick, onOpenBookings, bookingsCount, onSelectUpload, isHidden = false }) {
- const navigate = useNavigate();
- const location = useLocation();
+export function Right({ onLoginClick, onOpenBookings, bookingsCount, isHidden = false }) {
  const { wishlist, setIsWishlistOpen } = useWishlist();
  const { bookings, setIsBookingsOpen } = useBookings();
- const { isAuthenticated, isHost } = useAuth();
  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef(null);
 

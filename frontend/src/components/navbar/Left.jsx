@@ -14,32 +14,27 @@ export function Left({
  isHidden = false,
 }) {
  const navigate = useNavigate();
- const { isAuthenticated, user, isHost } = useAuth();
-  const [hasHostProperty, setHasHostProperty] = useState(Boolean(user?.hasProperty || isHost));
+ const { isAuthenticated, user, isHost } = useAuth();  const [hasFetchedHostProperty, setHasFetchedHostProperty] = useState(false);
 
   useEffect(() => {
     let mounted = true;
     if (isAuthenticated && user?.email) {
-      if (user?.hasProperty || isHost) {
-        setHasHostProperty(true);
-      }
       adminAPI.getHostByEmail(user.email)
         .then((check) => {
           if (!mounted) return;
           if (check?.hasProperty || check?.host?.isApproved || check?.host?.status === 'Approved') {
-            setHasHostProperty(true);
+            setHasFetchedHostProperty(true);
           }
         })
         .catch(() => {});
-    } else {
-      setHasHostProperty(false);
     }
     return () => {
       mounted = false;
     };
-  }, [isAuthenticated, user?.email, user?.role, user?.hasProperty, isHost]);
+  }, [isAuthenticated, user?.email]);
 
-  const isHostWithProperty = isAuthenticated && (hasHostProperty || user?.hasProperty || user?.role === 'host' || user?.role === 'admin' || isHost);
+  const hasHostProperty = Boolean(user?.hasProperty || isHost || (isAuthenticated && hasFetchedHostProperty));
+  const isHostWithProperty = isAuthenticated && (hasHostProperty || user?.role === 'host' || user?.role === 'admin');
 
  const handleBack = () => {
  if (typeof onBack === 'function') {

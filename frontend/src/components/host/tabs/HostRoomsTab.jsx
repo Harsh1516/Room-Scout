@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import { Suspense } from 'react';
 import { motion } from 'framer-motion';
 import HostRoomCategories from '../HostRoomCategories';
 import { ErrorBoundary } from '../../common/ErrorBoundary';
@@ -142,6 +142,7 @@ export function HostRoomsTab({
 
  <ErrorBoundary>
  <HostRoomCategories
+ propertyType={hostProperty?.type || hostProperty?.propertyType || 'PG'}
  roomRates={hostProperty?.roomRates || []}
  rooms={roomsList}
  guests={guests}

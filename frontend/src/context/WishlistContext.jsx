@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { useAuth } from './AuthContext';
 import { wishlistAPI } from '../services/api';
 import { toast } from './ToastContext';
+import { haptic } from '../utils/haptics';
 
 const WishlistContext = createContext();
 
@@ -115,6 +116,7 @@ export function WishlistProvider({ children }) {
  }, [isAuthenticated, user, fetchWishlist]);
 
  const toggleWishlist = async (stay) => {
+	haptic.tap();
  if (!stay) return;
  const stayId = String(stay._id || '');
 

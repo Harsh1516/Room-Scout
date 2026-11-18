@@ -1551,3 +1551,60 @@ input:-webkit-autofill:active {
     background: rgba(100, 116, 139, 0.6) !important;
   }
 }
+
+/* ===================================================================== */
+/* MOBILE SMOOTHNESS, TOUCH & NATIVE FEEL ENHANCEMENTS */
+/* ===================================================================== */
+
+/* 1. Global tap delay elimination & transparent tap highlight */
+html, body {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
+}
+
+button, a, input, select, textarea, [role="button"], label {
+  touch-action: manipulation;
+}
+
+/* 2. Prevent sticky hover artifacts on touch screens */
+@media (hover: none) and (pointer: coarse) {
+  button:hover:not(:active),
+  a:hover:not(:active) {
+    background-color: inherit;
+    color: inherit;
+    box-shadow: inherit;
+  }
+}
+
+/* 3. Native Momentum Scrolling & Scroll Snap utilities */
+.scroll-touch-momentum {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+}
+
+.scroll-snap-x {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scroll-snap-item {
+  scroll-snap-align: start;
+  scroll-snap-stop: normal;
+}
+
+/* 4. Low-latency mobile GPU & blur acceleration */
+@media (max-width: 768px), (pointer: coarse) {
+  .mobile-gpu-layer {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
+  /* Cap expensive multi-layer backdrop blurs on mobile devices to sustain 60/120 FPS */
+  .apple-glass-backdrop,
+  .backdrop-blur-2xl,
+  .backdrop-blur-xl {
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+  }
+}

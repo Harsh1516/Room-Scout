@@ -480,7 +480,8 @@ export const createBooking = async (req, res, next) => {
     const rawPrice = targetRoom?.price || stay.price || 0;
     const roomBaseRate = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/[^0-9]/g, '')) || 0;
 
-    const baseAmount = roomBaseRate * unitCount;
+    const safePersons = Math.max(1, Number(body.personCount) || 1);
+    const baseAmount = isMonthly ? (roomBaseRate * unitCount * safePersons) : (roomBaseRate * unitCount);
     const serverTotal = (typeof body.totalAmount === 'number' && body.totalAmount >= 0)
       ? body.totalAmount
       : baseAmount;

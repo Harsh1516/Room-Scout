@@ -33,6 +33,7 @@ export function UserMonthlySlotCard({
   WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'],
   selectedRoomFreeStat,
   onOpenGuestDetails,
+  personCount = 1,
 }) {
   const monthGroups = useMemo(() => groupDaysByMonth(upcomingWeek), [upcomingWeek]);
   const [selectedMonthIdx, setSelectedMonthIdx] = useState(0);
@@ -112,7 +113,8 @@ export function UserMonthlySlotCard({
       const durationMonths = sortedSelected.length;
       const rawPrice = activeRoom?.price || stay?.price || 0;
       const unitPrice = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/\D/g, '')) || 0;
-      const totalPrice = unitPrice * durationMonths;
+      const safePersons = Math.max(1, Number(personCount) || 1);
+      const totalPrice = unitPrice * durationMonths * safePersons;
 
       return {
         isMonthly: true,
@@ -157,7 +159,7 @@ export function UserMonthlySlotCard({
       unitPrice: nightlyPrice,
       totalPrice,
     };
-  }, [isMonthly, sortedSelected, upcomingMonths, upcomingWeek, activeRoom, stay]);
+  }, [isMonthly, sortedSelected, upcomingMonths, upcomingWeek, activeRoom, stay, personCount]);
 
   if (!activeRoom) {
     return (

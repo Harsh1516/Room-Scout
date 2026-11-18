@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { HeroSection } from '../components/homepage/HeroSection';
 import { RecentlyAdded } from '../components/homepage/RecentlyAdded';

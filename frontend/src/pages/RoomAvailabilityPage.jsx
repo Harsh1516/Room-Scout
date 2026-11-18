@@ -1296,7 +1296,8 @@ export function RoomAvailabilityPage({ onLoginClick }) {
 
  const rawPrice = selectedRoom?.price || stay?.price || 0;
  const unitPrice = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/[^0-9]/g, '')) || 0;
- const computedTotal = unitPrice * sortedMonthIndices.length;
+ const safePersons = Math.max(1, Number(personCount) || 1);
+ const computedTotal = unitPrice * sortedMonthIndices.length * safePersons;
  const durationDisplay = `${sortedMonthIndices.length} Month${sortedMonthIndices.length > 1 ? 's' : ''}`;
 
  const allExistingRefs = new Set(
@@ -1349,7 +1350,7 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  gender: 'Other',
  guestGender: 'Other',
  userGender: 'Other',
- personCount: personCount,
+ personCount: safePersons,
  guestAadhar: cleanAadhar,
  aadharId: cleanAadhar,
  userId: user?._id || 'guest_user',
@@ -1493,7 +1494,7 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  gender: 'Other',
  guestGender: 'Other',
  userGender: 'Other',
- personCount: personCount,
+ personCount: safePersons,
  guestAadhar: cleanAadhar,
  aadharId: cleanAadhar,
  userId: user?._id || 'guest_user',

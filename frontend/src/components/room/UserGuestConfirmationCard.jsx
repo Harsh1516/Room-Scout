@@ -113,10 +113,12 @@ export function UserGuestConfirmationCard({
             : Number(String(selectedRoom?.price || stay?.price || '0').replace(/[^0-9]/g, '')) || 0;
 
           const monthsCount = sortedSelectedMonths.length;
-          const totalPrice = monthlyPrice * monthsCount;
+          const safePersonCount = Math.max(1, Number(personCount) || 1);
+          const totalPrice = monthlyPrice * monthsCount * safePersonCount;
 
           const checkInDate = formatMonthObj(firstM);
           const checkOutDate = formatMonthObj(lastM);
+          const personBreakdown = safePersonCount > 1 ? ` × ${safePersonCount} persons` : '';
 
           return {
             isMonthly: true,
@@ -126,7 +128,7 @@ export function UserGuestConfirmationCard({
             checkInTime: '12:00 PM',
             checkOutDate,
             checkOutTime: '11:59 AM',
-            priceBreakdown: `₹${monthlyPrice.toLocaleString('en-IN')} × ${monthsCount} month${monthsCount > 1 ? 's' : ''}`,
+            priceBreakdown: `₹${monthlyPrice.toLocaleString('en-IN')} × ${monthsCount} month${monthsCount > 1 ? 's' : ''}${personBreakdown}`,
             unitPrice: monthlyPrice,
             totalPrice,
           };
@@ -185,7 +187,11 @@ export function UserGuestConfirmationCard({
           checkOutDate = formatMonthObj(lastM) || sortedMonths[sortedMonths.length - 1];
         }
 
-        const totalPrice = monthlyPrice * monthsCount;
+        const pendingPersonCount = Math.max(1, Number(pendingBooking?.personCount || personCount) || 1);
+        const totalPrice = pendingBooking?.totalAmount 
+          ? Number(pendingBooking.totalAmount) 
+          : (monthlyPrice * monthsCount * pendingPersonCount);
+        const personBreakdown = pendingPersonCount > 1 ? ` × ${pendingPersonCount} persons` : '';
 
         return {
           isMonthly: true,
@@ -195,7 +201,7 @@ export function UserGuestConfirmationCard({
           checkInTime: '12:00 PM',
           checkOutDate: checkOutDate || 'End Month',
           checkOutTime: '11:59 AM',
-          priceBreakdown: `₹${monthlyPrice.toLocaleString('en-IN')} × ${monthsCount} month${monthsCount > 1 ? 's' : ''}`,
+          priceBreakdown: `₹${monthlyPrice.toLocaleString('en-IN')} × ${monthsCount} month${monthsCount > 1 ? 's' : ''}${personBreakdown}`,
           unitPrice: monthlyPrice,
           totalPrice,
           status: pendingBooking?.status || 'Pending Host Approval',
@@ -309,6 +315,7 @@ export function UserGuestConfirmationCard({
     pendingBooking,
     userRequestedMonths,
     userRequestedSlots,
+    personCount,
   ]);
 
   const isPendingBooking = Boolean(reservationDetails?.isPending);
@@ -356,9 +363,16 @@ export function UserGuestConfirmationCard({
               {reservationDetails.durationLabel}
             </span>
             {reservationDetails.totalPrice > 0 && (
-              <p className="text-[15px] sm:text-[16px] font-bold text-[#1f1b16] mt-1">
-                ₹{reservationDetails.totalPrice.toLocaleString('en-IN')}
-              </p>
+              <div>
+                <p className="text-[15px] sm:text-[16px] font-bold text-[#1f1b16] mt-1">
+                  ₹{reservationDetails.totalPrice.toLocaleString('en-IN')}
+                </p>
+                {isMonthly && (Number(displayPersonCount) || 1) > 1 && (
+                  <p className="text-[10.5px] font-semibold text-slate-500 whitespace-nowrap">
+                    ₹{(reservationDetails.unitPrice || 0).toLocaleString('en-IN')}/person
+                  </p>
+                )}
+              </div>
             )}
           </div>
         </div>

@@ -22,27 +22,18 @@ export function Console({
  handleSearch,
  handleClearFilters,
  onOpenMapModal,
- rippleTriggerId,
  isSearching,
- searchProgress,
   onSearchActiveChange,
 }) {
  const navigate = useNavigate();
  const consoleRef = useRef(null);
- const [isExpanded, setIsExpanded] = useState(Boolean(isFilterActive));
-
- // If any filter becomes active, auto-expand
- useEffect(() => {
- if (isFilterActive) {
- setIsExpanded(true);
- }
- }, [isFilterActive]);
+ const [isExpanded, setIsExpanded] = useState(false);
 
  // Notify parent whenever search console active state changes
   useEffect(() => {
-    const isAnyActive = isExpanded || showWhatPicker || showWherePicker || showWhoPicker;
+    const isAnyActive = isExpanded || Boolean(isFilterActive) || showWhatPicker || showWherePicker || showWhoPicker;
     onSearchActiveChange?.(isAnyActive);
-  }, [isExpanded, showWhatPicker, showWherePicker, showWhoPicker, onSearchActiveChange]);
+  }, [isExpanded, isFilterActive, showWhatPicker, showWherePicker, showWhoPicker, onSearchActiveChange]);
 
   // Click outside to collapse smoothly
   useEffect(() => {

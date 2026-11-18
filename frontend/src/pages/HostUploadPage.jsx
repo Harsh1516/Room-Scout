@@ -607,17 +607,17 @@ export function HostUploadPage() {
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [formData, activeStep, googleMapsUrl, user]);
-
-  // Hydrate user profile defaults if user is loaded and ensure cross-tenant sanitization
+  }, [formData, activeStep, googleMapsUrl, user]);  // Hydrate user profile defaults if user is loaded and ensure cross-tenant sanitization
+  const lastHydratedUserIdRef = useRef(user?.email || '');
   useEffect(() => {
-    if (user) {
+    const currentEmail = (user?.email || '').trim().toLowerCase();
+    if (!currentEmail || lastHydratedUserIdRef.current === currentEmail) return;
+    lastHydratedUserIdRef.current = currentEmail;
+
+    queueMicrotask(() => {
       setFormData((prev) => {
         const prevEmail = (prev.email || '').trim().toLowerCase();
-        const userEmail = (user.email || '').trim().toLowerCase();
-
-        // Cross-tenant check: If prev form held another host's data, reset immediately!
-        if (prevEmail && userEmail && prevEmail !== userEmail) {
+        if (prevEmail && currentEmail && prevEmail !== currentEmail) {
           return {
             ...DEFAULT_HOST_FORM_DATA,
             name: user.name || '',
@@ -644,7 +644,7 @@ export function HostUploadPage() {
         }
         return prev;
       });
-    }
+    });
   }, [user]);
 
   // Load existing property details if already registered (strictly scoped to this host)
@@ -1426,7 +1426,6 @@ export function HostUploadPage() {
   const handleAddRoomCard = (targetCategory) => {
     let createdRoomUid = null;
     let createdRoomNumber = null;
-    let createdCategoryType = '';
 
     setFormData((prev) => {
       const currentRates = Array.isArray(prev.roomRates) ? prev.roomRates : [];
@@ -1472,7 +1471,6 @@ export function HostUploadPage() {
       const roomUid = `room_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
       createdRoomUid = roomUid;
       createdRoomNumber = nextNum;
-      createdCategoryType = cleanCatType;
 
       const newCard = {
         _id: roomUid,
