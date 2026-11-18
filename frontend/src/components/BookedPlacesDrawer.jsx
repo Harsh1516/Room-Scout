@@ -9,6 +9,7 @@ import {
   formatCountdown,
 } from '../utils/bookingPayment';
 import { isBookingRequestExpired } from '../utils/dateUtils';
+import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 
 /* ─────────────────────────────── helpers ─────────────────────────────── */
 
@@ -431,7 +432,7 @@ export function BookedPlacesDrawer({ onLoginClick }) {
                               <img
                                 decoding="async"
                                 loading="lazy"
-                                src={img}
+                                src={getOptimizedImageUrl(img, 480)}
                                 alt={displayTitle}
                                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-102"
                               />

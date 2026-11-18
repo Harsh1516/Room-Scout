@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWishlist } from '../context/WishlistContext';
+import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 
 export function WishlistDrawer({ onStayClick }) {
   const { wishlist, removeFromWishlist, isWishlistOpen, setIsWishlistOpen } = useWishlist();
@@ -92,7 +93,7 @@ export function WishlistDrawer({ onStayClick }) {
                         >
                           {/* Thumbnail */}
                           <div className="w-[52px] h-[52px] rounded-lg overflow-hidden shrink-0 bg-slate-100 border border-slate-200/60">
-                            <img decoding="async" loading="lazy" src={img} alt={displayTitle} className="w-full h-full object-cover" />
+                            <img decoding="async" loading="lazy" src={getOptimizedImageUrl(img, 120)} alt={displayTitle} className="w-full h-full object-cover" />
                           </div>
 
                           {/* Info */}
