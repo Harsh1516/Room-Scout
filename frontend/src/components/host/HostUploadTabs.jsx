@@ -37,7 +37,7 @@ export function HostUploadTabs({
  {isActive && (
  <motion.div
  layoutId="hostUploadActiveCapsuleStep"
- className="absolute inset-0 bg-[#006C4A] rounded-full -z-10 shadow-[0_2px_12px_rgba(0,108,74,0.35)]"
+ className="absolute inset-0 bg-[#006C4A] rounded-full z-0 pointer-events-none shadow-[0_2px_12px_rgba(0,108,74,0.35)]"
  transition={{
  type: 'spring',
  stiffness: 450,
@@ -49,7 +49,7 @@ export function HostUploadTabs({
 
  {/* Step Status Badge (Checkmark for done, or Step number) */}
  <span
- className={`w-4 h-4 md:w-5 md:h-5 rounded-full flex items-center justify-center text-[10px] md:text-xs font-medium shrink-0 transition-colors ${
+ className={`relative z-10 w-4 h-4 md:w-5 md:h-5 rounded-full flex items-center justify-center text-[10px] md:text-xs font-medium shrink-0 transition-colors ${
  isActive
  ? 'bg-white/20 text-white'
  : isDone
@@ -64,7 +64,7 @@ export function HostUploadTabs({
  )}
  </span>
 
- <span className="tracking-tight whitespace-nowrap">
+ <span className="relative z-10 tracking-tight whitespace-nowrap">
  {step.shortTitle || step.title}
  </span>
  </button>

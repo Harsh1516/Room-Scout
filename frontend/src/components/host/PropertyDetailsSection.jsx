@@ -459,27 +459,27 @@ export function PropertyDetailsSection({
                     {isActive && (
                       <motion.div
                         layoutId="propertyMobileActiveSubTabIndicator"
-                        className="absolute inset-0 bg-[#111827] rounded-full shadow-[0_4px_14px_rgba(17,24,39,0.25)] pointer-events-none -z-10"
+                        className="absolute inset-0 bg-[#111827] rounded-full shadow-[0_4px_14px_rgba(17,24,39,0.25)] pointer-events-none z-0"
                         transition={{ type: 'spring', stiffness: 450, damping: 35, mass: 0.6 }}
                       />
                     )}
                     {sec.id === 'overview' && (
-                      <FileText className="w-5 h-5 shrink-0" strokeWidth={1.85} />
+                      <FileText className="relative z-10 w-5 h-5 shrink-0" strokeWidth={1.85} />
                     )}
                     {sec.id === 'description' && (
-                      <PenLine className="w-5 h-5 shrink-0" strokeWidth={1.85} />
+                      <PenLine className="relative z-10 w-5 h-5 shrink-0" strokeWidth={1.85} />
                     )}
                     {sec.id === 'location' && (
-                      <MapPin className="w-5 h-5 shrink-0" strokeWidth={1.85} />
+                      <MapPin className="relative z-10 w-5 h-5 shrink-0" strokeWidth={1.85} />
                     )}
                     {sec.id === 'facilities' && (
-                      <Utensils className="w-5 h-5 shrink-0" strokeWidth={1.85} />
+                      <Utensils className="relative z-10 w-5 h-5 shrink-0" strokeWidth={1.85} />
                     )}
                     {sec.id === 'rules' && (
-                      <ShieldCheck className="w-5 h-5 shrink-0" strokeWidth={1.85} />
+                      <ShieldCheck className="relative z-10 w-5 h-5 shrink-0" strokeWidth={1.85} />
                     )}
                     {sec.id === 'photos' && (
-                      <ImageIcon className="w-5 h-5 shrink-0" strokeWidth={1.85} />
+                      <ImageIcon className="relative z-10 w-5 h-5 shrink-0" strokeWidth={1.85} />
                     )}
                   </button>
                 );

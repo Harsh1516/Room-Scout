@@ -103,7 +103,7 @@ export function VisitedSubNavbar({
  {isActive && (
  <motion.div
  layoutId="visitedSubTabGlider"
- className="absolute inset-0 rounded-full bg-[#111827] shadow-xs pointer-events-none -z-10"
+ className="absolute inset-0 rounded-full bg-[#111827] shadow-xs pointer-events-none z-0"
  transition={{
  type: 'tween',
  duration: 0.2,
@@ -112,10 +112,10 @@ export function VisitedSubNavbar({
  />
  )}
 
- {tab.icon}
- <span>{tab.label}</span>
+ <span className="relative z-10 flex items-center">{tab.icon}</span>
+ <span className="relative z-10">{tab.label}</span>
  <span
- className={`min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-mono font-medium leading-none inline-flex items-center justify-center ${
+ className={`relative z-10 min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-mono font-medium leading-none inline-flex items-center justify-center ${
  isActive
  ? 'bg-white/20 text-white'
  : tab.badgeColor

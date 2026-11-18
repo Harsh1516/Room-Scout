@@ -351,11 +351,11 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                     {!isRegisterMode && (
                       <motion.div
                         layoutId="portalModeActivePill"
-                        className="absolute inset-0 rounded-full bg-slate-900 shadow-md -z-10"
+                        className="absolute inset-0 rounded-full bg-slate-900 shadow-md z-0 pointer-events-none"
                         transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
                       />
                     )}
-                    <span>Login</span>
+                    <span className="relative z-10">Login</span>
                   </button>
 
                   {/* Register Pill */}
@@ -371,11 +371,11 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                     {isRegisterMode && (
                       <motion.div
                         layoutId="portalModeActivePill"
-                        className="absolute inset-0 rounded-full bg-slate-900 shadow-md -z-10"
+                        className="absolute inset-0 rounded-full bg-slate-900 shadow-md z-0 pointer-events-none"
                         transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
                       />
                     )}
-                    <span>Register</span>
+                    <span className="relative z-10">Register</span>
                   </button>
                 </nav>
               ) : (

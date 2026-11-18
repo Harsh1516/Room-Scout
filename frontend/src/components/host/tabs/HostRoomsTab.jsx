@@ -86,12 +86,12 @@ export function HostRoomsTab({
  {activeRightPanelTab !== 'guest' && (
  <motion.div
  layoutId="occupantSwitchIndicator"
- className="absolute inset-0 rounded-full bg-white shadow-sm -z-10 pointer-events-none"
+ className="absolute inset-0 rounded-full bg-white shadow-sm z-0 pointer-events-none"
  transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.8 }}
  />
  )}
- <span className="material-symbols-outlined text-[15px]">group</span>
- <span>Occupants</span>
+ <span className="relative z-10 material-symbols-outlined text-[15px]">group</span>
+ <span className="relative z-10">Occupants</span>
  </button>
 
  <button
@@ -107,12 +107,12 @@ export function HostRoomsTab({
  {activeRightPanelTab === 'guest' && (
  <motion.div
  layoutId="occupantSwitchIndicator"
- className="absolute inset-0 rounded-full bg-white shadow-sm -z-10 pointer-events-none"
+ className="absolute inset-0 rounded-full bg-white shadow-sm z-0 pointer-events-none"
  transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.8 }}
  />
  )}
- <span className="material-symbols-outlined text-[15px]">person_add</span>
- <span>Add Guest</span>
+ <span className="relative z-10 material-symbols-outlined text-[15px]">person_add</span>
+ <span className="relative z-10">Add Guest</span>
  </button>
  </div>
  </div>

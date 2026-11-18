@@ -273,6 +273,12 @@ textarea {
   touch-action: manipulation;
 }
 
+button,
+[role="button"] {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 :focus-visible:not(input):not(textarea):not(select) {
   outline: 2px solid #5E6BFF;
   outline-offset: 2px;
@@ -1566,15 +1572,7 @@ button, a, input, select, textarea, [role="button"], label {
   touch-action: manipulation;
 }
 
-/* 2. Prevent sticky hover artifacts on touch screens */
-@media (hover: none) and (pointer: coarse) {
-  button:hover:not(:active),
-  a:hover:not(:active) {
-    background-color: inherit;
-    color: inherit;
-    box-shadow: inherit;
-  }
-}
+/* 2. Touch and click interactions - preserve intentional button styles */
 
 /* 3. Native Momentum Scrolling & Scroll Snap utilities */
 .scroll-touch-momentum {

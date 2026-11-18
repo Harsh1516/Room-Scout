@@ -129,12 +129,13 @@ export function StayCinematicShowcase({
   const [coverLoaded, setCoverLoaded] = useState(false);
   const [posterLoaded, setPosterLoaded] = useState(false);
 
+  const currentStay = (Array.isArray(stays) && stays.length > 0) ? (stays[activeIndex] || stays[0]) : null;
+
   useEffect(() => {
     setCoverLoaded(false);
     setPosterLoaded(false);
   }, [currentStay?._id]);
 
-  const currentStay = (Array.isArray(stays) && stays.length > 0) ? (stays[activeIndex] || stays[0]) : null;
   const pricing = getStayPricing(currentStay);
   const otherPrices = getOtherStayPrices(currentStay, pricing.primaryPrice);
 

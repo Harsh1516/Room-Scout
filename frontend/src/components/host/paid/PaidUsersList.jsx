@@ -783,7 +783,7 @@ export function PaidUsersList({
  {sectionFilter === 'ONLINE' && (
  <motion.div
  layoutId="paidUsersTabIndicator"
- className="absolute inset-0 rounded-full bg-white shadow-sm shadow-indigo-500/15 border border-slate-200/60 -z-10 pointer-events-none"
+ className="absolute inset-0 rounded-full bg-white shadow-sm shadow-indigo-500/15 border border-slate-200/60 z-0 pointer-events-none"
  transition={{
  type: 'spring',
  stiffness: 450,
@@ -805,8 +805,8 @@ export function PaidUsersList({
  }`}
  />
  </span>
- <Globe className="w-3.5 h-3.5" />
- <span>Online</span>
+ <Globe className="relative z-10 w-3.5 h-3.5" />
+ <span className="relative z-10">Online</span>
  <span
  className={`min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-mono font-medium leading-none inline-flex items-center justify-center ${
  sectionFilter === 'ONLINE'
@@ -831,7 +831,7 @@ export function PaidUsersList({
  {sectionFilter === 'OFFLINE' && (
  <motion.div
  layoutId="paidUsersTabIndicator"
- className="absolute inset-0 rounded-full bg-white shadow-sm shadow-teal-500/15 border border-slate-200/60 -z-10 pointer-events-none"
+ className="absolute inset-0 rounded-full bg-white shadow-sm shadow-teal-500/15 border border-slate-200/60 z-0 pointer-events-none"
  transition={{
  type: 'spring',
  stiffness: 450,
@@ -854,7 +854,7 @@ export function PaidUsersList({
  />
  </span>
  <Store className="w-3.5 h-3.5" />
- <span>Offline</span>
+ <span className="relative z-10">Offline</span>
  <span
  className={`min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-mono font-medium leading-none inline-flex items-center justify-center ${
  sectionFilter === 'OFFLINE'
