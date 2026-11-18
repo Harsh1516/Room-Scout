@@ -625,4 +625,98 @@ export async function sendBookingConfirmedEmail({
   }
 }
 
+/**
+ * Send 6-Digit Email Verification OTP for Registration / Login
+ * @param {Object} options
+ * @param {string} options.to - Recipient email address
+ * @param {string} options.name - User/Host name
+ * @param {string} options.otp - 6-digit verification code
+ * @param {string} options.purpose - 'Registration' | 'Login'
+ * @param {string} options.role - 'user' | 'host'
+ */
+export async function sendEmailVerificationOtp({ to, name, otp, purpose = 'Verification', role = 'user' }) {
+  try {
+    const transporter = await getTransporter();
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Room-Scout Security" <noreply@roomscout.com>';
+    const roleLabel = role === 'host' ? 'Host Partner' : 'Guest Member';
+
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; color: #1e293b; }
+        .container { max-width: 520px; margin: 0 auto; background-color: #ffffff; border-radius: 24px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(0,0,0,0.06); }
+        .header { background: linear-gradient(135deg, #059669 0%, #0d9488 100%); padding: 32px 24px; text-align: center; color: #ffffff; }
+        .brand { font-size: 26px; font-weight: 900; letter-spacing: -0.5px; }
+        .badge { display: inline-block; background: rgba(255,255,255,0.22); padding: 4px 14px; border-radius: 99px; font-size: 11px; font-weight: 800; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .content { padding: 36px 32px; }
+        .greeting { font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 12px; }
+        .text { font-size: 14.5px; line-height: 1.6; color: #475569; margin-bottom: 24px; }
+        .otp-card { background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%); border: 2px dashed #059669; border-radius: 20px; padding: 24px; text-align: center; margin: 28px 0; }
+        .otp-label { font-size: 12px; font-weight: 800; text-transform: uppercase; color: #065f46; letter-spacing: 1px; margin-bottom: 8px; }
+        .otp-code { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace; font-size: 38px; font-weight: 900; color: #064e3b; letter-spacing: 8px; }
+        .expiry-note { font-size: 12px; font-weight: 600; color: #047857; margin-top: 8px; }
+        .security-box { background-color: #f8fafc; border-left: 4px solid #059669; padding: 14px 18px; border-radius: 0 12px 12px 0; font-size: 12px; color: #64748b; line-height: 1.5; margin-top: 24px; }
+        .footer { background-color: #f8fafc; padding: 18px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="brand">🏠 Room-Scout</div>
+          <div class="badge">${roleLabel} • Email Verification</div>
+        </div>
+        <div class="content">
+          <div class="greeting">Hello ${name || 'there'},</div>
+          <div class="text">
+            Use the 6-digit verification code below to complete your <strong>${purpose}</strong> on Room-Scout:
+          </div>
+          
+          <div class="otp-card">
+            <div class="otp-label">Your 6-Digit Verification Code</div>
+            <div class="otp-code">${otp}</div>
+            <div class="expiry-note">⏱ Valid for 10 minutes</div>
+          </div>
+          
+          <div class="text" style="font-size: 13.5px;">
+            Enter this code into your Room-Scout window to verify your email address (<strong>${to}</strong>).
+          </div>
+
+          <div class="security-box">
+            🛡️ <strong>Security Tip:</strong> Room-Scout will never ask you for your verification code outside the app. Never share this code with anyone.
+          </div>
+        </div>
+        <div class="footer">
+          &copy; ${new Date().getFullYear()} Room-Scout Student Living & PG Portals. All rights reserved.
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+
+    if (!transporter) {
+      console.log(`[LOCAL EMAIL SIMULATOR] Email OTP for [${to}] (${purpose}): ${otp}`);
+      return { success: true, simulated: true, otp };
+    }
+
+    const mailOptions = {
+      from: fromAddress,
+      to,
+      subject: `🔐 Your Room-Scout Verification Code: ${otp}`,
+      text: `Hello ${name},\n\nYour 6-digit verification code for Room-Scout ${purpose} is: ${otp}\n\nThis code expires in 10 minutes.\n\nThank you,\nRoom-Scout Team`,
+      html: htmlContent,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Real OTP Email dispatched to [${to}] (Message ID: ${info.messageId})`);
+    return { success: true, messageId: info.messageId, otp };
+  } catch (err) {
+    console.error(`❌ Failed to send OTP email to [${to}]:`, err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+
 

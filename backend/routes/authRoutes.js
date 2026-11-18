@@ -1,7 +1,11 @@
 import express from 'express';
 import {
   registerUser,
+  sendRegisterOtp,
+  verifyRegisterOtp,
   loginUser,
+  verifyLoginOtp,
+  resendOtp,
   googleAuth,
   forgotPassword,
   updateUserProfile,
@@ -16,6 +20,8 @@ import validate from '../middleware/validateMiddleware.js';
 import {
   signupSchema,
   loginSchema,
+  verifyOtpSchema,
+  resendOtpSchema,
   forgotPasswordSchema,
   updateProfileSchema,
   changePasswordSchema,
@@ -32,7 +38,11 @@ const router = express.Router();
 
 // Public Authentication Endpoints (Two-tier defense: campus NAT ceiling + per-account targeted limiter)
 router.route('/register').post(authCampusCeilingLimiter, authLimiter, validate(signupSchema), registerUser);
+router.route('/send-register-otp').post(authCampusCeilingLimiter, authLimiter, validate(signupSchema), sendRegisterOtp);
+router.route('/verify-register-otp').post(authCampusCeilingLimiter, authLimiter, validate(verifyOtpSchema), verifyRegisterOtp);
 router.route('/login').post(authCampusCeilingLimiter, authLimiter, validate(loginSchema), loginUser);
+router.route('/verify-login-otp').post(authCampusCeilingLimiter, authLimiter, validate(verifyOtpSchema), verifyLoginOtp);
+router.route('/resend-otp').post(authCampusCeilingLimiter, authLimiter, validate(resendOtpSchema), resendOtp);
 router.route('/google').post(authCampusCeilingLimiter, authLimiter, googleAuth);
 router.route('/forgot-password').post(passwordResetCampusCeilingLimiter, passwordResetLimiter, validate(forgotPasswordSchema), forgotPassword);
 router.route('/test-email').post(passwordResetLimiter, protect, requireAdmin, testEmailService);

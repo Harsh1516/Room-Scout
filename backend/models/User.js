@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
-      match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please provide a valid email address'],
+      match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please provide a valid email address'],
     },
     googleId: {
       type: String,
@@ -26,6 +26,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ['local', 'google'],
       default: 'local',
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
     },
     password: {
       type: String,

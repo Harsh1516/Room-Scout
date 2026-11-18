@@ -173,6 +173,30 @@ export const authAPI = {
  body: JSON.stringify(userData),
  }),
 
+  sendRegisterOtp: (userData) =>
+    request('/auth/send-register-otp', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    }),
+
+  verifyRegisterOtp: ({ email, otp }) =>
+    request('/auth/verify-register-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp }),
+    }),
+
+  verifyLoginOtp: ({ email, otp, requiredRole, role }) =>
+    request('/auth/verify-login-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp, requiredRole, role }),
+    }),
+
+  resendOtp: ({ email, purpose, role }) =>
+    request('/auth/resend-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, purpose, role }),
+    }),
+
  forgotPassword: ({ email, role }) =>
  request('/auth/forgot-password', {
  method: 'POST',

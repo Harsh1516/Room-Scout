@@ -131,3 +131,37 @@ export const setPasswordSchema = z
   })
   .strict();
 
+// OTP Verification Schema (Register and Login)
+export const verifyOtpSchema = z
+  .object({
+    email: z
+      .string({ required_error: 'Email address is required' })
+      .trim()
+      .min(1, { message: 'Email address is required' })
+      .email({ message: 'Please enter a valid email address' }),
+    otp: z
+      .string({ required_error: '6-digit OTP code is required' })
+      .trim()
+      .length(6, { message: 'Verification code must be exactly 6 digits' })
+      .regex(/^\d{6}$/, { message: 'Verification code must contain 6 numeric digits' }),
+    requiredRole: z.enum(['user', 'host', 'admin']).optional(),
+    role: z.enum(['user', 'host', 'admin']).optional(),
+  })
+  .strict();
+
+// Resend OTP Schema
+export const resendOtpSchema = z
+  .object({
+    email: z
+      .string({ required_error: 'Email address is required' })
+      .trim()
+      .min(1, { message: 'Email address is required' })
+      .email({ message: 'Please enter a valid email address' }),
+    purpose: z.enum(['register', 'login'], {
+      required_error: 'Purpose is required (register or login)',
+    }),
+    role: z.enum(['user', 'host', 'admin']).optional(),
+  })
+  .strict();
+
+

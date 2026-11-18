@@ -62,8 +62,126 @@ const registerSchema = z
     path: ['confirmPassword'],
   });
 
+/* ── Reusable 6-Box OTP Verification Form Component ── */
+function OtpVerificationForm({
+  email,
+  purpose,
+  onVerify,
+  onResend,
+  onBack,
+  isVerifying,
+  isResending,
+  countdown,
+  errorMessage,
+  otpDigits,
+  onDigitChange,
+  onKeyDown,
+  onPaste,
+  inputRefs,
+}) {
+  const isFilled = otpDigits.join('').length === 6;
+
+  return (
+    <div className="space-y-4 pt-1 pb-2 select-none animate-in fade-in duration-200">
+      {/* Icon & Description */}
+      <div className="text-center space-y-2">
+        <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-600 flex items-center justify-center mx-auto shadow-xs">
+          <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <p className="text-xs sm:text-[13.5px] text-slate-600 max-w-xs mx-auto leading-relaxed">
+          We sent a 6-digit code to
+          <span className="font-bold text-slate-900 block truncate max-w-[260px] mx-auto mt-0.5">
+            {email}
+          </span>
+        </p>
+      </div>
+
+      {/* 6 Digit Input Boxes */}
+      <div className="flex justify-center items-center gap-1.5 sm:gap-2" onPaste={onPaste}>
+        {otpDigits.map((digit, idx) => (
+          <input
+            key={idx}
+            ref={(el) => (inputRefs.current[idx] = el)}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={1}
+            value={digit}
+            onChange={(e) => onDigitChange(idx, e.target.value)}
+            onKeyDown={(e) => onKeyDown(idx, e)}
+            className="w-10 h-12 sm:w-11 sm:h-13 text-center font-mono text-xl sm:text-2xl font-bold bg-[#f7f4ee]/80 border-2 border-slate-200 rounded-xl focus:border-emerald-600 focus:bg-white focus:ring-4 focus:ring-emerald-500/15 outline-none transition-all select-none text-slate-900 shadow-2xs"
+            autoComplete="one-time-code"
+          />
+        ))}
+      </div>
+
+      {/* Error Message */}
+      {errorMessage && (
+        <div className="flex items-center gap-2 p-2.5 text-xs rounded-xl bg-rose-50 border border-rose-200 text-rose-700 animate-in fade-in">
+          <svg className="w-4 h-4 shrink-0 text-rose-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01" />
+          </svg>
+          <span className="font-medium leading-tight">{errorMessage}</span>
+        </div>
+      )}
+
+      {/* Submit Button */}
+      <div className="pt-1 flex justify-center w-full">
+        <button
+          type="button"
+          disabled={isVerifying || !isFilled}
+          onClick={() => onVerify()}
+          className="w-[280px] h-[40px] min-h-[40px] bg-[#059669] hover:bg-[#047857] active:scale-[0.98] text-white font-semibold text-[15px] flex items-center justify-center space-x-2 shadow-md shadow-emerald-700/20 transition-all duration-200 rounded-full cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isVerifying ? (
+            <>
+              <svg className="animate-spin h-4 w-4 text-white mr-2" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+              <span>Verifying Code...</span>
+            </>
+          ) : (
+            <span>{purpose === 'register' ? 'Verify & Create Account' : 'Verify & Sign In'}</span>
+          )}
+        </button>
+      </div>
+
+      {/* Resend & Back Controls */}
+      <div className="flex flex-col items-center gap-1.5 text-xs pt-1 text-slate-500">
+        <div className="flex items-center gap-1.5">
+          <span>Didn&apos;t receive code?</span>
+          {countdown > 0 ? (
+            <span className="font-mono font-semibold text-slate-600">Resend in {countdown}s</span>
+          ) : (
+            <button
+              type="button"
+              disabled={isResending}
+              onClick={onResend}
+              className="font-bold text-[#059669] hover:text-emerald-700 hover:underline cursor-pointer disabled:opacity-50"
+            >
+              {isResending ? 'Sending...' : 'Resend Code'}
+            </button>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-slate-500 hover:text-slate-800 hover:underline cursor-pointer font-medium pt-0.5"
+        >
+          ← Back to {purpose === 'register' ? 'Registration' : 'Login'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessage = '' }) {
-  const { user, isAuthenticated, login, register, loginWithGoogle } = useAuth();
+  const { user, isAuthenticated, login, register, loginWithGoogle, verifyLoginOtp, verifyRegisterOtp, resendOtp } = useAuth();
 
   const [accountType, setAccountType] = useState(initialRole);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
@@ -93,6 +211,16 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // OTP Verification States
+  const [isOtpMode, setIsOtpMode] = useState(false);
+  const [otpPurpose, setOtpPurpose] = useState('login'); // 'login' | 'register'
+  const [otpEmail, setOtpEmail] = useState('');
+  const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
+  const [otpCountdown, setOtpCountdown] = useState(45);
+  const [isResending, setIsResending] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const otpInputRefs = useRef([]);
+
   const loginEmailRef = useRef(null);
   const registerNameRef = useRef(null);
 
@@ -104,6 +232,8 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
       setSuccessMessage('');
       setIsForgotMode(false);
       setIsRegisterMode(false);
+      setIsOtpMode(false);
+      setOtpDigits(['', '', '', '', '', '']);
     }
   }, [isOpen, initialRole]);
 
@@ -143,6 +273,139 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
     handleInputChange('name', lettersOnly);
   };
 
+  // OTP Countdown timer
+  useEffect(() => {
+    if (!isOtpMode || otpCountdown <= 0) return;
+    const interval = setInterval(() => {
+      setOtpCountdown((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isOtpMode, otpCountdown]);
+
+  // Focus first OTP input when entering OTP mode
+  useEffect(() => {
+    if (isOtpMode) {
+      setTimeout(() => {
+        otpInputRefs.current[0]?.focus();
+      }, 100);
+    }
+  }, [isOtpMode]);
+
+  const handleOtpDigitChange = (index, value) => {
+    const numericChar = value.replace(/\D/g, '').slice(-1);
+    const updated = [...otpDigits];
+    updated[index] = numericChar;
+    setOtpDigits(updated);
+    setErrorMessage('');
+
+    if (numericChar && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+
+    const fullCode = updated.join('');
+    if (fullCode.length === 6 && !updated.includes('')) {
+      handleVerifyOtp(fullCode);
+    }
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const pasteData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!pasteData) return;
+    const updated = ['', '', '', '', '', ''];
+    for (let i = 0; i < pasteData.length; i++) {
+      updated[i] = pasteData[i];
+    }
+    setOtpDigits(updated);
+    const nextIdx = Math.min(5, pasteData.length);
+    otpInputRefs.current[nextIdx]?.focus();
+
+    if (pasteData.length === 6) {
+      handleVerifyOtp(pasteData);
+    }
+  };
+
+  const handleVerifyOtp = async (codeToVerify) => {
+    const fullCode = (codeToVerify || otpDigits.join('')).trim();
+    if (fullCode.length !== 6) {
+      setErrorMessage('Please enter all 6 digits of the verification code.');
+      return;
+    }
+
+    setErrorMessage('');
+    setIsVerifyingOtp(true);
+
+    try {
+      if (otpPurpose === 'register') {
+        const res = await verifyRegisterOtp({
+          email: otpEmail,
+          otp: fullCode,
+        });
+        if (!res.success) {
+          setErrorMessage(res.message || 'Verification failed. Please check your code.');
+          toast.error(res.message || 'Verification failed.');
+          setIsVerifyingOtp(false);
+          return;
+        }
+        toast.success(`Welcome to Room-Scout, ${formData.name.trim() || 'Guest'}!`);
+        setIsVerifyingOtp(false);
+        setIsOtpMode(false);
+        onClose();
+        return;
+      }
+
+      const res = await verifyLoginOtp({
+        email: otpEmail,
+        otp: fullCode,
+        requiredRole: accountType,
+      });
+      if (!res.success) {
+        setErrorMessage(res.message || 'Verification failed. Please check your code.');
+        toast.error(res.message || 'Verification failed.');
+        setIsVerifyingOtp(false);
+        return;
+      }
+      toast.success(`Welcome back, ${res.data?.name || 'User'}!`);
+      setIsVerifyingOtp(false);
+      setIsOtpMode(false);
+      onClose();
+    } catch (err) {
+      setErrorMessage(err.message || 'Verification failed.');
+      toast.error(err.message || 'Verification failed.');
+      setIsVerifyingOtp(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (otpCountdown > 0 || isResending) return;
+    setIsResending(true);
+    setErrorMessage('');
+
+    const res = await resendOtp({
+      email: otpEmail,
+      purpose: otpPurpose,
+      role: accountType,
+    });
+
+    setIsResending(false);
+    if (!res.success) {
+      setErrorMessage(res.message || 'Failed to resend code.');
+      toast.error(res.message || 'Failed to resend code.');
+      return;
+    }
+
+    toast.success('Fresh verification code sent to your email!');
+    setOtpCountdown(45);
+    setOtpDigits(['', '', '', '', '', '']);
+    otpInputRefs.current[0]?.focus();
+  };
+
   const handleSubmit = async (e, isReg = isRegisterMode) => {
     e.preventDefault();
     setErrorMessage('');
@@ -171,6 +434,16 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
           setIsSubmitting(false);
           return;
         }
+        if (res.requiresOtp) {
+          setIsOtpMode(true);
+          setOtpPurpose('register');
+          setOtpEmail(res.email || formData.email.trim());
+          setOtpCountdown(45);
+          setOtpDigits(['', '', '', '', '', '']);
+          setIsSubmitting(false);
+          toast.success(`Verification code sent to ${formData.email.trim()}`);
+          return;
+        }
         toast.success(`Welcome to RoomScout, ${formData.name.trim()}!`);
         setFormData({ name: '', email: '', phone: '', password: '', confirmPassword: '' });
         setIsSubmitting(false);
@@ -195,6 +468,17 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
         setErrorMessage(msg);
         toast.error(msg);
         setIsSubmitting(false);
+        return;
+      }
+
+      if (res.requiresOtp) {
+        setIsOtpMode(true);
+        setOtpPurpose('login');
+        setOtpEmail(res.email || formData.email.trim());
+        setOtpCountdown(45);
+        setOtpDigits(['', '', '', '', '', '']);
+        setIsSubmitting(false);
+        toast.success(`Security code sent to ${formData.email.trim()}`);
         return;
       }
 
@@ -333,7 +617,12 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
           >
             {/* ── Fixed Position Console: Matches Exact Navbar Search Position ── */}
             <header className="relative z-30 pb-3 sm:pb-3.5 flex flex-col items-center shrink-0">
-              {!isForgotMode ? (
+              {isOtpMode ? (
+                <div className="py-2.5 px-6 sm:py-3 sm:px-8 rounded-full text-base sm:text-lg font-bold bg-white text-[#1f1b16] shadow-xl border-2 border-slate-200 flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Email Verification</span>
+                </div>
+              ) : !isForgotMode ? (
                 <nav
                   aria-label="Portal Mode Selection"
                   className="p-1.5 sm:p-2 rounded-full flex items-center shadow-2xl bg-white border-2 border-slate-200/90"
@@ -409,7 +698,9 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                     {/* Header */}
                     <header className="text-center pt-2 pb-4">
                       <h1 className="text-[30px] font-bold tracking-tight text-[#1f1b16] leading-none">
-                        {isForgotMode
+                        {isOtpMode
+                          ? 'Security Code'
+                          : isForgotMode
                           ? 'Reset Password'
                           : accountType === 'host'
                           ? 'Host Login'
@@ -438,8 +729,28 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                       </div>
                     )}
 
-                    {/* Forgot Password Mode Form */}
-                    {isForgotMode ? (
+                    {/* Tab 1 Body: OTP Form or Forgot Password or Standard Login */}
+                    {isOtpMode && otpPurpose === 'login' ? (
+                      <OtpVerificationForm
+                        email={otpEmail}
+                        purpose="login"
+                        onVerify={handleVerifyOtp}
+                        onResend={handleResendOtp}
+                        onBack={() => {
+                          setIsOtpMode(false);
+                          setErrorMessage('');
+                        }}
+                        isVerifying={isVerifyingOtp}
+                        isResending={isResending}
+                        countdown={otpCountdown}
+                        errorMessage={errorMessage}
+                        otpDigits={otpDigits}
+                        onDigitChange={handleOtpDigitChange}
+                        onKeyDown={handleOtpKeyDown}
+                        onPaste={handleOtpPaste}
+                        inputRefs={otpInputRefs}
+                      />
+                    ) : isForgotMode ? (
                       <form onSubmit={handleForgotPasswordSubmit} className="space-y-3.5">
                         <div className="flex items-center bg-[#f7f4ee]/80 border border-slate-200/90 py-2.5 sm:py-3 transition-all duration-200 rounded-full px-4 sm:px-5 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-200/60">
                           <svg className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
@@ -601,7 +912,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                     )}
 
                     {/* Divider with Text Pill */}
-                    {!isForgotMode && GOOGLE_CLIENT_ID && (
+                    {!isForgotMode && !isOtpMode && GOOGLE_CLIENT_ID && (
                       <>
                         <div className="relative my-4 flex items-center justify-center">
                           <div className="absolute inset-0 flex items-center">
@@ -681,7 +992,11 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                     {/* Header */}
                     <header className="text-center pt-2 pb-4">
                       <h1 className="text-[30px] font-bold tracking-tight text-[#1f1b16] leading-none">
-                        {accountType === 'host' ? 'Host Registration' : 'Create Account'}
+                        {isOtpMode
+                          ? 'Verify Email'
+                          : accountType === 'host'
+                          ? 'Host Registration'
+                          : 'Create Account'}
                       </h1>
                     </header>
 
@@ -706,8 +1021,29 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                       </div>
                     )}
 
-                    {/* Standard Register Form */}
-                    <form onSubmit={(e) => handleSubmit(e, true)} noValidate className="space-y-3">
+                    {/* Tab 2 Body: OTP Form or Standard Register Form */}
+                    {isOtpMode && otpPurpose === 'register' ? (
+                      <OtpVerificationForm
+                        email={otpEmail}
+                        purpose="register"
+                        onVerify={handleVerifyOtp}
+                        onResend={handleResendOtp}
+                        onBack={() => {
+                          setIsOtpMode(false);
+                          setErrorMessage('');
+                        }}
+                        isVerifying={isVerifyingOtp}
+                        isResending={isResending}
+                        countdown={otpCountdown}
+                        errorMessage={errorMessage}
+                        otpDigits={otpDigits}
+                        onDigitChange={handleOtpDigitChange}
+                        onKeyDown={handleOtpKeyDown}
+                        onPaste={handleOtpPaste}
+                        inputRefs={otpInputRefs}
+                      />
+                    ) : (
+                      <form onSubmit={(e) => handleSubmit(e, true)} noValidate className="space-y-3">
                       {/* 1. Full Name */}
                       <div className="flex items-center bg-[#f7f4ee]/80 border border-slate-200/90 py-2.5 sm:py-3 transition-all duration-200 rounded-full px-4 sm:px-5 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-200/60">
                         <svg className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
@@ -867,9 +1203,10 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
                         </button>
                       </div>
                     </form>
+                    )}
 
                     {/* Divider with Text Pill */}
-                    {GOOGLE_CLIENT_ID && (
+                    {!isOtpMode && GOOGLE_CLIENT_ID && (
                       <>
                         <div className="relative my-4 flex items-center justify-center">
                           <div className="absolute inset-0 flex items-center">

@@ -32,6 +32,10 @@ const hostSchema = new mongoose.Schema(
       enum: ['local', 'google'],
       default: 'local',
     },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
     password: {
       type: String,
       required: function () {

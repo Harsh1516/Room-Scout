@@ -370,40 +370,91 @@ export function AuthProvider({ children }) {
  };
  }, [syncAuthState]);
 
- const login = async ({ email, password, requiredRole, role }) => {
- setLoading(true);
- try {
- const targetRole = requiredRole || role;
- const data = await authAPI.login({ email, password, requiredRole: targetRole });
- const authToken = data.token || (data.user && data.user.token);
- if (authToken) {
- syncAuthState(data, authToken);
- }
- setLoading(false);
- return { success: true, data };
- } catch (error) {
- setLoading(false);
- return { success: false, message: error.message || 'Invalid Credentials' };
- }
- };
+   const login = async ({ email, password, requiredRole, role, otp }) => {
+    setLoading(true);
+    try {
+      const targetRole = requiredRole || role;
+      const data = await authAPI.login({ email, password, requiredRole: targetRole, otp });
+      if (data?.requiresOtp) {
+        setLoading(false);
+        return { success: true, requiresOtp: true, email: data.email, role: data.role, name: data.name, message: data.message };
+      }
+      const authToken = data.token || (data.user && data.user.token);
+      if (authToken) {
+        syncAuthState(data, authToken);
+      }
+      setLoading(false);
+      return { success: true, data };
+    } catch (error) {
+      setLoading(false);
+      return { success: false, message: error.message || 'Invalid Credentials' };
+    }
+  };
 
- const register = async ({ name, email, password, phone, role = 'user' }) => {
- setLoading(true);
- try {
- const data = await authAPI.register({ name, email, password, phone, role });
- const authToken = data.token || (data.user && data.user.token);
- if (authToken) {
- syncAuthState(data, authToken);
- }
- setLoading(false);
- return { success: true, data };
- } catch (error) {
- setLoading(false);
- return { success: false, message: error.message || 'Registration failed. Please try again.' };
- }
- };
+  const register = async ({ name, email, password, phone, role = 'user', otp }) => {
+    setLoading(true);
+    try {
+      if (otp) {
+        const data = await authAPI.verifyRegisterOtp({ email, otp });
+        const authToken = data.token || (data.user && data.user.token);
+        if (authToken) {
+          syncAuthState(data, authToken);
+        }
+        setLoading(false);
+        return { success: true, data };
+      }
+      const data = await authAPI.sendRegisterOtp({ name, email, password, phone, role });
+      setLoading(false);
+      return { success: true, requiresOtp: true, email: data.email, message: data.message };
+    } catch (error) {
+      setLoading(false);
+      return { success: false, message: error.message || 'Registration failed. Please try again.' };
+    }
+  };
 
- const loginWithGoogle = async ({ credential, accessToken, role = 'user' }) => {
+  const verifyLoginOtp = async ({ email, otp, requiredRole, role }) => {
+    setLoading(true);
+    try {
+      const targetRole = requiredRole || role;
+      const data = await authAPI.verifyLoginOtp({ email, otp, requiredRole: targetRole, role: targetRole });
+      const authToken = data.token || (data.user && data.user.token);
+      if (authToken) {
+        syncAuthState(data, authToken);
+      }
+      setLoading(false);
+      return { success: true, data };
+    } catch (error) {
+      setLoading(false);
+      return { success: false, message: error.message || 'Verification failed. Please try again.' };
+    }
+  };
+
+  const verifyRegisterOtp = async ({ email, otp }) => {
+    setLoading(true);
+    try {
+      const data = await authAPI.verifyRegisterOtp({ email, otp });
+      const authToken = data.token || (data.user && data.user.token);
+      if (authToken) {
+        syncAuthState(data, authToken);
+      }
+      setLoading(false);
+      return { success: true, data };
+    } catch (error) {
+      setLoading(false);
+      return { success: false, message: error.message || 'Verification failed. Please try again.' };
+    }
+  };
+
+  const resendOtp = async ({ email, purpose, role }) => {
+    try {
+      const res = await authAPI.resendOtp({ email, purpose, role });
+      return { success: true, message: res.message };
+    } catch (error) {
+      return { success: false, message: error.message || 'Failed to resend code.' };
+    }
+  };
+
+  const loginWithGoogle = async ({ credential, accessToken, role = 'user' }) => {
  setLoading(true);
  try {
  const data = await authAPI.googleAuth({ credential, accessToken, role });

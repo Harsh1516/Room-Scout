@@ -7,9 +7,15 @@ import { Booking } from '../models/Booking.js';
 import { Payment } from '../models/Payment.js';
 import { Wishlist } from '../models/Wishlist.js';
 import { generateToken } from '../middleware/authMiddleware.js';
-import { sendPasswordResetEmail, testEmailConnection } from '../services/emailService.js';
+import { sendPasswordResetEmail, testEmailConnection, sendEmailVerificationOtp } from '../services/emailService.js';
+import { EmailOtp } from '../models/EmailOtp.js';
 import { uploadSecureImage } from '../utils/imageSecurity.js';
 import { OAuth2Client } from 'google-auth-library';
+
+// Generate random 6-digit OTP for email verification
+function generate6DigitOtp() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
 // Generate random 10-character password
 function generateRandom10DigitPassword() {
@@ -43,10 +49,10 @@ function setAuthCookie(res, token) {
   }
 }
 
-// @desc    Register a new user or host (Strict collection separation)
-// @route   POST /api/auth/register
+// @desc    Send 6-digit OTP to email for new user/host registration
+// @route   POST /api/auth/send-register-otp
 // @access  Public
-export const registerUser = async (req, res, next) => {
+export const sendRegisterOtp = async (req, res, next) => {
   try {
     const { name, email, password, phone, role } = req.body;
 
@@ -56,7 +62,6 @@ export const registerUser = async (req, res, next) => {
 
     const cleanEmail = email.toLowerCase().trim();
     const cleanRole = role === 'host' ? 'host' : 'user';
-    const avatar = name.trim().slice(0, 2).toUpperCase();
 
     const userExists = await User.findOne({ email: cleanEmail });
     const hostExists = await Host.findOne({ email: cleanEmail });
@@ -72,7 +77,106 @@ export const registerUser = async (req, res, next) => {
       });
     }
 
-    // 1. HOST REGISTRATION -> create unified User account + linked Host profile (Phase 1)
+    const otp = generate6DigitOtp();
+    await EmailOtp.deleteMany({ email: cleanEmail, purpose: 'register' });
+    await EmailOtp.create({
+      email: cleanEmail,
+      otp,
+      purpose: 'register',
+      role: cleanRole,
+      tempData: {
+        name: name.trim(),
+        email: cleanEmail,
+        password,
+        phone: phone ? phone.trim() : '',
+        role: cleanRole,
+      },
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+    });
+
+    await sendEmailVerificationOtp({
+      to: cleanEmail,
+      name: name.trim(),
+      otp,
+      purpose: 'Registration',
+      role: cleanRole,
+    });
+
+    return res.status(200).json({
+      success: true,
+      requiresOtp: true,
+      email: cleanEmail,
+      message: `A 6-digit verification code has been sent to ${cleanEmail}.`,
+    });
+  } catch (error) {
+    console.error('Send Register OTP Error:', error);
+    return next(error);
+  }
+};
+
+// @desc    Verify 6-digit OTP and complete new user/host registration
+// @route   POST /api/auth/verify-register-otp
+// @access  Public
+export const verifyRegisterOtp = async (req, res, next) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: 'Email and 6-digit verification code are required.' });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const cleanOtp = otp.toString().trim();
+
+    const otpRecord = await EmailOtp.findOne({
+      email: cleanEmail,
+      purpose: 'register',
+      expiresAt: { $gt: new Date() },
+    });
+
+    if (!otpRecord) {
+      return res.status(400).json({
+        message: 'Verification code has expired or is invalid. Please request a new code.',
+      });
+    }
+
+    if (otpRecord.attempts >= 5) {
+      await EmailOtp.deleteOne({ _id: otpRecord._id });
+      return res.status(429).json({
+        message: 'Too many incorrect attempts. Please request a new verification code.',
+      });
+    }
+
+    if (otpRecord.otp !== cleanOtp) {
+      otpRecord.attempts += 1;
+      await otpRecord.save();
+      return res.status(400).json({
+        message: 'Incorrect verification code. Please check your email and try again.',
+      });
+    }
+
+    const { name, password, phone, role } = otpRecord.tempData || {};
+    if (!name || !password) {
+      return res.status(400).json({
+        message: 'Registration session expired. Please re-enter your registration details.',
+      });
+    }
+
+    const cleanRole = role === 'host' ? 'host' : 'user';
+    const avatar = name.trim().slice(0, 2).toUpperCase();
+
+    const userExists = await User.findOne({ email: cleanEmail });
+    const hostExists = await Host.findOne({ email: cleanEmail });
+    if (userExists || hostExists) {
+      await EmailOtp.deleteOne({ _id: otpRecord._id });
+      return res.status(400).json({
+        message: 'An account with this email was already registered. Please login.',
+      });
+    }
+
+    let authenticatedAccount = null;
+    let token = null;
+
     if (cleanRole === 'host') {
       const userDoc = await User.create({
         name: name.trim(),
@@ -81,6 +185,7 @@ export const registerUser = async (req, res, next) => {
         phone: phone ? phone.trim() : '',
         role: 'host',
         avatar,
+        isEmailVerified: true,
       });
 
       const hostDoc = await Host.create({
@@ -92,15 +197,14 @@ export const registerUser = async (req, res, next) => {
         avatar,
         status: 'Pending Approval',
         accountId: userDoc._id,
+        isEmailVerified: true,
       });
 
       userDoc.hostId = hostDoc._id;
       await userDoc.save();
 
-      const token = await hostDoc.generateToken();
-      setAuthCookie(res, token);
-
-      return res.status(201).json({
+      token = await hostDoc.generateToken();
+      authenticatedAccount = {
         _id: hostDoc._id,
         id: hostDoc._id.toString(),
         name: hostDoc.name,
@@ -110,46 +214,63 @@ export const registerUser = async (req, res, next) => {
         role: 'host',
         status: hostDoc.status,
         hasPassword: true,
-        token,
+        isEmailVerified: true,
+      };
+    } else {
+      const userDoc = await User.create({
+        name: name.trim(),
+        email: cleanEmail,
+        password,
+        phone: phone ? phone.trim() : '',
+        role: 'user',
+        avatar,
+        isEmailVerified: true,
       });
+
+      token = await userDoc.generateToken();
+      authenticatedAccount = {
+        _id: userDoc._id,
+        id: userDoc._id.toString(),
+        name: userDoc.name,
+        email: userDoc.email,
+        phone: userDoc.phone,
+        avatar: userDoc.avatar,
+        role: 'user',
+        hasPassword: true,
+        isEmailVerified: true,
+      };
     }
 
-    // 2. GUEST REGISTRATION -> strictly in User collection
-    const userDoc = await User.create({
-      name: name.trim(),
-      email: cleanEmail,
-      password,
-      phone: phone ? phone.trim() : '',
-      role: 'user',
-      avatar,
-    });
-
-    const token = await userDoc.generateToken();
+    await EmailOtp.deleteOne({ _id: otpRecord._id });
     setAuthCookie(res, token);
 
     return res.status(201).json({
-      _id: userDoc._id,
-      id: userDoc._id.toString(),
-      name: userDoc.name,
-      email: userDoc.email,
-      phone: userDoc.phone,
-      avatar: userDoc.avatar,
-      role: 'user',
-      hasPassword: true,
+      ...authenticatedAccount,
       token,
+      message: 'Email verified and account registered successfully!',
     });
   } catch (error) {
-    console.error('Registration Error:', error);
+    console.error('Verify Register OTP Error:', error);
     return next(error);
   }
 };
 
-// @desc    Authenticate user & get JWT token (Explicit role separation)
+// @desc    Register a new user or host (Strict collection separation & OTP integration)
+// @route   POST /api/auth/register
+// @access  Public
+export const registerUser = async (req, res, next) => {
+  if (req.body && req.body.otp) {
+    return verifyRegisterOtp(req, res, next);
+  }
+  return sendRegisterOtp(req, res, next);
+};
+
+// @desc    Authenticate user & dispatch 6-digit email OTP (or verify if OTP passed)
 // @route   POST /api/auth/login
 // @access  Public
 export const loginUser = async (req, res, next) => {
   try {
-    const { email, password, requiredRole, role } = req.body;
+    const { email, password, requiredRole, role, otp } = req.body;
     const targetRole = requiredRole || role || null;
     const cleanEmail = (email || '').toLowerCase().trim();
 
@@ -157,12 +278,13 @@ export const loginUser = async (req, res, next) => {
       return res.status(400).json({ message: 'Email and password are required.' });
     }
 
-    let authenticatedAccount = null;
-    let token = null;
+    let account = null;
+    let detectedRole = 'user';
 
     if (targetRole === 'host') {
-      const host = await Host.findOne({ email: cleanEmail }).select('+password');
-      if (!host) {
+      account = await Host.findOne({ email: cleanEmail }).select('+password');
+      detectedRole = 'host';
+      if (!account) {
         const isUserAccount = await User.findOne({ email: cleanEmail });
         if (isUserAccount) {
           return res.status(403).json({
@@ -171,36 +293,132 @@ export const loginUser = async (req, res, next) => {
         }
         return res.status(404).json({ message: 'Account not Found. Register First.' });
       }
-
-      // Phase 1 linking: connect host to an existing user account if present
-      if (!host.accountId) {
-        try {
-          const linkedUser = await User.findOne({ email: cleanEmail });
-          if (linkedUser) {
-            host.accountId = linkedUser._id;
-            await host.save();
-            if (!linkedUser.hostId) {
-              linkedUser.hostId = host._id;
-              await linkedUser.save();
-            }
-          }
-        } catch (linkErr) {
-          console.warn('Host/User link on login failed:', linkErr.message);
+    } else if (targetRole === 'user') {
+      account = await User.findOne({ email: cleanEmail }).select('+password');
+      detectedRole = 'user';
+      if (!account) {
+        const isHostAccount = await Host.findOne({ email: cleanEmail });
+        if (isHostAccount) {
+          return res.status(403).json({
+            message: 'This email belongs to a Property Host account. Hosts must log in through the Upload tab only.',
+          });
         }
+        return res.status(404).json({ message: 'Account not Found. Register First.' });
       }
-
-      if (!host.password) {
-        return res.status(400).json({
-          message: 'This account was registered through Google Sign-In and has no password yet. Please log in with Google, or set a password in your account settings.',
-        });
+    } else {
+      account = await User.findOne({ email: cleanEmail }).select('+password');
+      detectedRole = 'user';
+      if (!account) {
+        account = await Host.findOne({ email: cleanEmail }).select('+password');
+        detectedRole = 'host';
       }
-
-      const isMatch = await host.matchPassword(password);
-      if (!isMatch) {
-        return res.status(401).json({ message: 'Invalid password' });
+      if (!account) {
+        return res.status(404).json({ message: 'Account not Found. Register First.' });
       }
+    }
 
-      // Determine if this host already has a property listing
+    if (!account.password) {
+      return res.status(400).json({
+        message: 'This account was registered through Google Sign-In and has no password yet. Please log in with Google, or set a password in your account settings.',
+      });
+    }
+
+    const isMatch = await account.matchPassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid password' });
+    }
+
+    // If OTP was provided in the login body, verify it directly
+    if (otp) {
+      return verifyLoginOtp(req, res, next);
+    }
+
+    // Otherwise, generate 6-digit OTP and send to the user's verified email
+    const generatedOtp = generate6DigitOtp();
+    await EmailOtp.deleteMany({ email: cleanEmail, purpose: 'login' });
+    await EmailOtp.create({
+      email: cleanEmail,
+      otp: generatedOtp,
+      purpose: 'login',
+      userId: account._id,
+      role: targetRole || account.role || detectedRole,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+    });
+
+    await sendEmailVerificationOtp({
+      to: cleanEmail,
+      name: account.name,
+      otp: generatedOtp,
+      purpose: 'Login',
+      role: targetRole || account.role || detectedRole,
+    });
+
+    return res.status(200).json({
+      success: true,
+      requiresOtp: true,
+      email: cleanEmail,
+      role: targetRole || account.role || detectedRole,
+      name: account.name,
+      message: `A 6-digit verification code has been sent to ${cleanEmail}.`,
+    });
+  } catch (error) {
+    console.error('Login Error:', error);
+    return next(error);
+  }
+};
+
+// @desc    Verify 6-digit OTP for login and issue token
+// @route   POST /api/auth/verify-login-otp
+// @access  Public
+export const verifyLoginOtp = async (req, res, next) => {
+  try {
+    const { email, otp, requiredRole, role } = req.body;
+    const targetRole = requiredRole || role || null;
+    const cleanEmail = (email || '').toLowerCase().trim();
+    const cleanOtp = (otp || '').toString().trim();
+
+    if (!cleanEmail || !cleanOtp) {
+      return res.status(400).json({ message: 'Email and 6-digit verification code are required.' });
+    }
+
+    const otpRecord = await EmailOtp.findOne({
+      email: cleanEmail,
+      purpose: 'login',
+      expiresAt: { $gt: new Date() },
+    });
+
+    if (!otpRecord) {
+      return res.status(400).json({
+        message: 'Verification code has expired or is invalid. Please request a new code.',
+      });
+    }
+
+    if (otpRecord.attempts >= 5) {
+      await EmailOtp.deleteOne({ _id: otpRecord._id });
+      return res.status(429).json({
+        message: 'Too many incorrect attempts. Please request a new verification code.',
+      });
+    }
+
+    if (otpRecord.otp !== cleanOtp) {
+      otpRecord.attempts += 1;
+      await otpRecord.save();
+      return res.status(400).json({
+        message: 'Incorrect verification code. Please check your email and try again.',
+      });
+    }
+
+    let authenticatedAccount = null;
+    let token = null;
+
+    if (targetRole === 'host' || otpRecord.role === 'host') {
+      const host = await Host.findOne({ email: cleanEmail });
+      if (!host) {
+        return res.status(404).json({ message: 'Host account not found.' });
+      }
+      host.isEmailVerified = true;
+      await host.save();
+
       let hasProperty = false;
       try {
         const stayExists = await Stay.findOne({ hostId: host._id }).select('_id').lean();
@@ -221,29 +439,15 @@ export const loginUser = async (req, res, next) => {
         status: host.status,
         hasProperty,
         hasPassword: true,
+        isEmailVerified: true,
       };
-    } else if (targetRole === 'user') {
-      const user = await User.findOne({ email: cleanEmail }).select('+password');
+    } else if (targetRole === 'user' || otpRecord.role === 'user') {
+      const user = await User.findOne({ email: cleanEmail });
       if (!user) {
-        const isHostAccount = await Host.findOne({ email: cleanEmail });
-        if (isHostAccount) {
-          return res.status(403).json({
-            message: 'This email belongs to a Property Host account. Hosts must log in through the Upload tab only.',
-          });
-        }
-        return res.status(404).json({ message: 'Account not Found. Register First.' });
+        return res.status(404).json({ message: 'User account not found.' });
       }
-
-      if (!user.password) {
-        return res.status(400).json({
-          message: 'This account was registered through Google Sign-In and has no password yet. Please log in with Google, or set a password in your account settings.',
-        });
-      }
-
-      const isMatch = await user.matchPassword(password);
-      if (!isMatch) {
-        return res.status(401).json({ message: 'Invalid password' });
-      }
+      user.isEmailVerified = true;
+      await user.save();
 
       token = await user.generateToken();
       authenticatedAccount = {
@@ -255,30 +459,20 @@ export const loginUser = async (req, res, next) => {
         avatar: user.avatar || 'US',
         role: user.role || 'user',
         hasPassword: true,
+        isEmailVerified: true,
       };
     } else {
-      let account = await User.findOne({ email: cleanEmail }).select('+password');
+      let account = await User.findOne({ email: cleanEmail });
       let detectedRole = 'user';
-
       if (!account) {
-        account = await Host.findOne({ email: cleanEmail }).select('+password');
+        account = await Host.findOne({ email: cleanEmail });
         detectedRole = 'host';
       }
-
       if (!account) {
-        return res.status(404).json({ message: 'Account not Found. Register First.' });
+        return res.status(404).json({ message: 'Account not found.' });
       }
-
-      if (!account.password) {
-        return res.status(400).json({
-          message: 'This account was registered through Google Sign-In and has no password yet. Please log in with Google, or set a password in your account settings.',
-        });
-      }
-
-      const isMatch = await account.matchPassword(password);
-      if (!isMatch) {
-        return res.status(401).json({ message: 'Invalid password' });
-      }
+      account.isEmailVerified = true;
+      await account.save();
 
       token = await account.generateToken();
       authenticatedAccount = {
@@ -292,26 +486,103 @@ export const loginUser = async (req, res, next) => {
         status: account.status,
         authProvider: account.authProvider || 'local',
         hasPassword: true,
+        isEmailVerified: true,
       };
     }
 
+    await EmailOtp.deleteOne({ _id: otpRecord._id });
     setAuthCookie(res, token);
 
     return res.json({
-      _id: authenticatedAccount._id,
-      id: authenticatedAccount._id,
-      name: authenticatedAccount.name,
-      email: authenticatedAccount.email,
-      phone: authenticatedAccount.phone,
-      avatar: authenticatedAccount.avatar,
-      role: authenticatedAccount.role,
-      status: authenticatedAccount.status,
-      authProvider: authenticatedAccount.authProvider,
-      hasPassword: true,
+      ...authenticatedAccount,
       token,
+      message: 'Login successful!',
     });
   } catch (error) {
-    console.error('Login Error:', error);
+    console.error('Verify Login OTP Error:', error);
+    return next(error);
+  }
+};
+
+// @desc    Resend fresh 6-digit OTP code to email
+// @route   POST /api/auth/resend-otp
+// @access  Public
+export const resendOtp = async (req, res, next) => {
+  try {
+    const { email, purpose, role } = req.body;
+    const cleanEmail = (email || '').toLowerCase().trim();
+
+    if (!cleanEmail || !purpose) {
+      return res.status(400).json({ message: 'Email and purpose are required.' });
+    }
+
+    const otp = generate6DigitOtp();
+
+    if (purpose === 'register') {
+      const existingRecord = await EmailOtp.findOne({ email: cleanEmail, purpose: 'register' });
+      if (!existingRecord) {
+        return res.status(400).json({
+          message: 'No pending registration found for this email. Please fill out the registration form again.',
+        });
+      }
+
+      existingRecord.otp = otp;
+      existingRecord.attempts = 0;
+      existingRecord.expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+      await existingRecord.save();
+
+      await sendEmailVerificationOtp({
+        to: cleanEmail,
+        name: existingRecord.tempData?.name || 'Guest',
+        otp,
+        purpose: 'Registration',
+        role: existingRecord.tempData?.role || 'user',
+      });
+
+      return res.json({
+        success: true,
+        message: `A fresh 6-digit verification code has been sent to ${cleanEmail}.`,
+      });
+    }
+
+    if (purpose === 'login') {
+      let account = await User.findOne({ email: cleanEmail });
+      let detectedRole = 'user';
+      if (!account) {
+        account = await Host.findOne({ email: cleanEmail });
+        detectedRole = 'host';
+      }
+      if (!account) {
+        return res.status(404).json({ message: 'Account not found. Please register first.' });
+      }
+
+      await EmailOtp.deleteMany({ email: cleanEmail, purpose: 'login' });
+      await EmailOtp.create({
+        email: cleanEmail,
+        otp,
+        purpose: 'login',
+        userId: account._id,
+        role: role || account.role || detectedRole,
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      });
+
+      await sendEmailVerificationOtp({
+        to: cleanEmail,
+        name: account.name,
+        otp,
+        purpose: 'Login',
+        role: role || account.role || detectedRole,
+      });
+
+      return res.json({
+        success: true,
+        message: `A fresh 6-digit verification code has been sent to ${cleanEmail}.`,
+      });
+    }
+
+    return res.status(400).json({ message: 'Invalid OTP purpose specified.' });
+  } catch (error) {
+    console.error('Resend OTP Error:', error);
     return next(error);
   }
 };
