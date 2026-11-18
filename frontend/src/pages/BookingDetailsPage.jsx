@@ -1280,7 +1280,7 @@ export function BookingDetailsPage({ onLoginClick }) {
                 </div>
 
                 {/* Submission Form for 12-digit UTR */}
-                <form onSubmit={handleManualPaymentSubmit} className="space-y-4 pt-2">
+                <form onSubmit={handleSubmitPayment} className="space-y-4 pt-2">
                   <div className="space-y-1.5">
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                       12-Digit UPI Transaction Reference (UTR) <span className="text-rose-500">*</span>
@@ -1326,22 +1326,22 @@ export function BookingDetailsPage({ onLoginClick }) {
                         <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                         </svg>
-                        <span>{screenshotFile ? 'Change Receipt' : 'Upload Receipt'}</span>
+                        <span>{receiptImage ? 'Change Receipt' : 'Upload Receipt'}</span>
                         <input
                           type="file"
                           accept="image/jpeg,image/png,image/webp,application/pdf"
-                          onChange={handleScreenshotChange}
+                          onChange={handleReceiptFileChange}
                           className="hidden"
                         />
                       </label>
-                      {screenshotFile && (
+                      {receiptImage && (
                         <div className="flex items-center gap-1.5 text-xs text-slate-600">
-                          <span className="font-medium truncate max-w-[180px]">{screenshotFile.name}</span>
+                          <span className="font-medium truncate max-w-[180px]">Receipt attached</span>
                           <button
                             type="button"
                             onClick={() => {
-                              setScreenshotFile(null);
-                              setScreenshotPreview(null);
+                              setReceiptImage('');
+                              setReceiptPreview('');
                             }}
                             className="text-xs text-rose-500 font-bold hover:underline cursor-pointer ml-1"
                           >

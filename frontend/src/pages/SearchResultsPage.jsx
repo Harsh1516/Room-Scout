@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef, lazy } from 'react';
+import { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { StayCinematicShowcase } from '../components/common/StayCinematicShowcase';
 

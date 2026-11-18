@@ -536,7 +536,7 @@ export function HostUsersVisitedSection({
  const propId = hostProperty?._id;
  if (propId) broadcastStayUpdate(propId);
  broadcastBookingChange({
- bookingId,
+ bookingId: targetId,
  status: 'REJECTED',
  stayId: propId,
  sender: 'HostReject',

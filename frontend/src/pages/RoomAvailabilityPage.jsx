@@ -129,6 +129,7 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  };
 
  const [stayBookings, setStayBookings] = useState([]);
+ const [isLiveSyncing, setIsLiveSyncing] = useState(false);
 
  const [guestName, setGuestName] = useState(() => user?.name || '');
  const [guestPhone, setGuestPhone] = useState(() => {
