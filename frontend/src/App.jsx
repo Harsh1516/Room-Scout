@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useStaySearch } from './hooks/useStaySearch';
 import { Navbar } from './components/Navbar';
 import { WishlistProvider, useWishlist } from './context/WishlistContext';
@@ -96,30 +96,25 @@ function AppContent() {
  const [selectedStayForBooking, setSelectedStayForBooking] = useState(null);
 
  // On-demand chunk triggers: chunks are ONLY downloaded when the user first triggers the respective modal/drawer
- const [hasLoadedLogin, setHasLoadedLogin] = useState(false);
- const [hasLoadedPropertyModal, setHasLoadedPropertyModal] = useState(false);
- const [hasLoadedBookingModal, setHasLoadedBookingModal] = useState(false);
- const [hasLoadedWishlist, setHasLoadedWishlist] = useState(false);
- const [hasLoadedBookedPlaces, setHasLoadedBookedPlaces] = useState(false);
+	const hasLoadedLoginRef = useRef(false);
+	if (isLoginOpen) hasLoadedLoginRef.current = true;
+	const hasLoadedLogin = hasLoadedLoginRef.current;
 
- useEffect(() => {
- if (isLoginOpen) setHasLoadedLogin(true);
- }, [isLoginOpen]);
- useEffect(() => {
- if (selectedStayForDetail) setHasLoadedPropertyModal(true);
- }, [selectedStayForDetail]);
+	const hasLoadedPropertyModalRef = useRef(false);
+	if (selectedStayForDetail) hasLoadedPropertyModalRef.current = true;
+	const hasLoadedPropertyModal = hasLoadedPropertyModalRef.current;
 
- useEffect(() => {
- if (selectedStayForBooking) setHasLoadedBookingModal(true);
- }, [selectedStayForBooking]);
+	const hasLoadedBookingModalRef = useRef(false);
+	if (selectedStayForBooking) hasLoadedBookingModalRef.current = true;
+	const hasLoadedBookingModal = hasLoadedBookingModalRef.current;
 
- useEffect(() => {
- if (isWishlistOpen) setHasLoadedWishlist(true);
- }, [isWishlistOpen]);
+	const hasLoadedWishlistRef = useRef(false);
+	if (isWishlistOpen) hasLoadedWishlistRef.current = true;
+	const hasLoadedWishlist = hasLoadedWishlistRef.current;
 
- useEffect(() => {
- if (isBookingsOpen) setHasLoadedBookedPlaces(true);
- }, [isBookingsOpen]);
+	const hasLoadedBookedPlacesRef = useRef(false);
+	if (isBookingsOpen) hasLoadedBookedPlacesRef.current = true;
+	const hasLoadedBookedPlaces = hasLoadedBookedPlacesRef.current;
 
  const {
  filters,

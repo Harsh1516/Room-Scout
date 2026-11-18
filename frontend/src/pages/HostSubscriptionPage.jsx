@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { subscriptionsAPI, API_BASE_URL } from '../services/api';
 import { toast } from '../context/ToastContext';
+import { getSocket } from '../services/socket';
 
 // Local storage caching helpers to prevent any reload, flash, or blank frame
 const getStoredSubscriptionInfo = () => {
@@ -55,7 +56,22 @@ export function HostSubscriptionPage() {
  useEffect(() => {
     loadSubscriptionData();
 
-    // ── Real-Time Server-Sent Events (SSE) Listener ──
+    // ── Instant 0ms WebSocket Real-Time Listener ──
+    const socket = getSocket();
+    const handleSubVerified = () => {
+      toast.success('Subscription verified & active!');
+      loadSubscriptionData(true);
+    };
+    const handleSubRejected = () => {
+      toast.error('Subscription verification failed.');
+      loadSubscriptionData(true);
+    };
+
+    socket.on('subscription:verified', handleSubVerified);
+    socket.on('subscription:rejected', handleSubRejected);
+    socket.on('subscription:updated', handleSubVerified);
+
+    // ── Real-Time Server-Sent Events (SSE) Listener Fallback ──
     // Listens for instant verification notification from Admin side without polling
     const token = localStorage.getItem('roomscout_token') || localStorage.getItem('stayhub_jwt_token');
     let eventSource = null;
@@ -134,6 +150,9 @@ export function HostSubscriptionPage() {
     window.addEventListener('popstate', handlePopState);
 
     return () => {
+      socket.off('subscription:verified', handleSubVerified);
+      socket.off('subscription:rejected', handleSubRejected);
+      socket.off('subscription:updated', handleSubVerified);
       if (eventSource) {
         eventSource.close();
       }

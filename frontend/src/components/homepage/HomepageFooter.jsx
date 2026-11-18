@@ -11,29 +11,17 @@ export function HomepageFooter() {
           {/* ── MOBILE FOOTER CONTENT (Full width, very light gray background, no floating card) ── */}
           <div className="md:hidden w-full space-y-4 text-left">
             {/* Brand Header */}
-            <div className="space-y-2">
+            <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm" />
                 <span className="text-sm font-extrabold tracking-wider uppercase text-slate-950">ROOM-SCOUT</span>
-                <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold">
-                  VERIFIED LIVING
+                <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-semibold">
+                  Verified Living
                 </span>
               </div>
-              {/* Informative Value Line: 0% Brokerage, Direct Owner Contact, 100% Verified */}
-              <div className="flex flex-wrap items-center gap-2 pt-1 pb-1">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-200/90 text-slate-800 text-xs font-bold shadow-2xs">
-                  <span>⚡</span>
-                  <span>0% Brokerage</span>
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-200/90 text-slate-800 text-xs font-bold shadow-2xs">
-                  <span>🔑</span>
-                  <span>Direct Owner Contact</span>
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-200/90 text-slate-800 text-xs font-bold shadow-2xs">
-                  <span>🛡️</span>
-                  <span>100% Verified PGs</span>
-                </span>
-              </div>
+              <p className="text-xs text-slate-500 font-medium">
+                0% Brokerage &bull; Direct Owner Contact &bull; 100% Verified Stays
+              </p>
             </div>
 
             {/* Quick Footer Links: Terms & Conditions, Policy, Contact Us, Suggestions */}
@@ -62,30 +50,19 @@ export function HomepageFooter() {
           <div className="hidden md:block w-full">
             <div className="flex flex-col lg:flex-row gap-6 lg:gap-12 pb-8 sm:pb-12 border-b border-slate-200/90">
               {/* Brand Manifesto */}
-              <div className="lg:w-2/5 space-y-3 text-left">
+              <div className="lg:w-2/5 space-y-2.5 text-left">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-slate-900 shadow-sm" />
                   <span className="text-xl sm:text-2xl font-black text-slate-950 tracking-wider uppercase">
                     ROOM-SCOUT
                   </span>
-                  <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-white text-slate-800 font-bold border border-slate-200">
-                    VERIFIED LIVING
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-semibold border border-slate-200">
+                    Verified Living
                   </span>
                 </div>
-                <div className="flex flex-wrap items-center gap-2 pt-1 pb-1">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-800 text-xs sm:text-sm font-bold shadow-2xs">
-                    <span>⚡</span>
-                    <span>0% Brokerage</span>
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-800 text-xs sm:text-sm font-bold shadow-2xs">
-                    <span>🔑</span>
-                    <span>Direct Owner Contact</span>
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-800 text-xs sm:text-sm font-bold shadow-2xs">
-                    <span>🛡️</span>
-                    <span>100% Physically Verified</span>
-                  </span>
-                </div>
+                <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
+                  0% Brokerage &bull; Direct Owner Contact &bull; 100% Physically Verified Stays
+                </p>
               </div>
 
               {/* 3 Link Columns Arranged in a ROW side-by-side */}

@@ -12,6 +12,7 @@ import { PaymentCountdownBanner } from '../components/room/PaymentCountdownBanne
 import { cancelUserBooking } from '../utils/bookingPayment';
 import { Left } from '../components/navbar/Left';
 import { Right } from '../components/navbar/Right';
+import { getSocket } from '../services/socket';
 import {
   getUpcoming30Days,
   getUpcoming12Months,
@@ -211,10 +212,22 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  }
  };
 
+ // ── Instant 0ms WebSocket Real-Time Listener ──
+ const socket = getSocket();
+ const handleAvailabilityChange = (payload) => {
+ if (payload?.stayId && String(payload.stayId) !== String(id)) return;
+ performLiveSync();
+ };
+
+ socket.on('stay:availability_changed', handleAvailabilityChange);
+ socket.on('stay:updated', handleAvailabilityChange);
+ socket.on('booking:new', handleAvailabilityChange);
+ socket.on('booking:updated', handleAvailabilityChange);
+
  const interval = setInterval(() => {
  if (document.hidden) return;
  performLiveSync();
- }, 8000);
+ }, 25000);
 
  const handleFocus = () => {
  performLiveSync();
@@ -264,6 +277,10 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  return () => {
  isSubscribed = false;
  clearInterval(interval);
+ socket.off('stay:availability_changed', handleAvailabilityChange);
+ socket.off('stay:updated', handleAvailabilityChange);
+ socket.off('booking:new', handleAvailabilityChange);
+ socket.off('booking:updated', handleAvailabilityChange);
  window.removeEventListener('focus', handleFocus);
  document.removeEventListener('visibilitychange', handleVisibilityChange);
  window.removeEventListener('storage', handleStorageChange);

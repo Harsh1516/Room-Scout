@@ -1,6 +1,7 @@
 import { calculateDistanceKm, resolveStayCoordinates } from '../utils/geoUtils';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { staysAPI } from '../services/api';
+import { getSocket } from '../services/socket';
 
 // In-memory module cache for instant transitions (Stale-While-Revalidate)
 let memoryCacheStays = null;
@@ -114,6 +115,16 @@ export function useStaySearch() {
  fetchStaysFromAPI(true);
  };
 
+ // ── Instant 0ms WebSocket Real-Time Listener ──
+ const socket = getSocket();
+ const handleRealtimeStaySync = () => {
+ handleSync();
+ };
+
+ socket.on('stay:updated', handleRealtimeStaySync);
+ socket.on('stay:availability_changed', handleRealtimeStaySync);
+ socket.on('host:approved', handleRealtimeStaySync);
+
  window.addEventListener('stayhub_rooms_updated', handleSync);
  window.addEventListener('stayhub_admin_sync', handleSync);
  window.addEventListener('focus', handleSync);
@@ -140,6 +151,9 @@ export function useStaySearch() {
  } catch {}
 
  return () => {
+ socket.off('stay:updated', handleRealtimeStaySync);
+ socket.off('stay:availability_changed', handleRealtimeStaySync);
+ socket.off('host:approved', handleRealtimeStaySync);
  window.removeEventListener('stayhub_rooms_updated', handleSync);
  window.removeEventListener('stayhub_admin_sync', handleSync);
  window.removeEventListener('focus', handleSync);

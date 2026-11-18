@@ -29,7 +29,7 @@ export function getSocket() {
       // Auto-extract from localStorage
       try {
         const token = localStorage.getItem('roomscout_token') || localStorage.getItem('stayhub_jwt_token');
-        const rawUser = localStorage.getItem('stayhub_auth_user');
+        const rawUser = localStorage.getItem('roomscout_user') || localStorage.getItem('stayhub_auth_user');
         const user = rawUser ? JSON.parse(rawUser) : null;
         if (user || token) {
           authenticateSocket(user);

@@ -16,6 +16,7 @@ import { generateEntryPassPdf } from '../utils/entryPassPdf';
 import { Left } from '../components/navbar/Left';
 import { Right } from '../components/navbar/Right';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
+import { getSocket } from '../services/socket';
 
 /* ─────────────────────────────── helpers ─────────────────────────────── */
 
@@ -369,7 +370,29 @@ export function BookingDetailsPage({ onLoginClick }) {
  // Initial fetch with spinner
  loadBookingData(false);
 
- // 1. Same-window custom event listeners
+ // 1. Instant 0ms WebSocket Real-Time Listener
+ const socket = getSocket();
+ const handleRealtimeUpdate = (payload) => {
+ if (payload?.bookingId || payload?.bookingReferenceId) {
+ const currentTargetId = String(id || '').trim();
+ const pId = String(payload.bookingId || '').trim();
+ const pRef = String(payload.bookingReferenceId || '').trim();
+ if (currentTargetId && (currentTargetId === pId || currentTargetId === pRef)) {
+ loadBookingData(true);
+ return;
+ }
+ }
+ loadBookingData(true);
+ };
+
+ socket.on('booking:status_changed', handleRealtimeUpdate);
+ socket.on('booking:confirmed', handleRealtimeUpdate);
+ socket.on('payment:status_updated', handleRealtimeUpdate);
+ socket.on('payment:verified', handleRealtimeUpdate);
+ socket.on('payment:rejected', handleRealtimeUpdate);
+ socket.on('booking:checked_out', handleRealtimeUpdate);
+
+ // 2. Same-window custom event listeners
  const handleSync = () => {
  loadBookingData(true);
  };
@@ -377,7 +400,7 @@ export function BookingDetailsPage({ onLoginClick }) {
  window.addEventListener('stayhub_slots_updated', handleSync);
  window.addEventListener('stayhub_rooms_updated', handleSync);
 
- // 2. Tab focus & visibility change (when switching back to this tab)
+ // 3. Tab focus & visibility change (when switching back to this tab)
  const handleFocus = () => loadBookingData(true);
  const handleVisibility = () => {
  if (document.visibilityState === 'visible') {
@@ -387,7 +410,7 @@ export function BookingDetailsPage({ onLoginClick }) {
  window.addEventListener('focus', handleFocus);
  document.addEventListener('visibilitychange', handleVisibility);
 
- // 3. Cross-tab BroadcastChannel listener
+ // 4. Cross-tab BroadcastChannel listener
  let bc = null;
  try {
  if (typeof BroadcastChannel !== 'undefined') {
@@ -400,8 +423,9 @@ export function BookingDetailsPage({ onLoginClick }) {
  console.warn('BroadcastChannel error:', e);
  }
 
- // 4. Fast live polling (2.5s) so updates from host on any device appear automatically
+ // 5. Relaxed fallback polling (sockets deliver instant 0ms updates)
  const pollInterval = setInterval(() => {
+ if (document.hidden) return;
  const currentSt = String(prevStatusRef.current || '').toUpperCase();
  const isFinal =
  currentSt === 'CONFIRMED' ||
@@ -411,13 +435,18 @@ export function BookingDetailsPage({ onLoginClick }) {
  currentSt === 'REJECTED' ||
  currentSt === 'CANCELLED';
 
- // Keep 2.5s polling active until booking is confirmed/finalized
- if (!isFinal || Math.random() < 0.25) {
+ if (!isFinal) {
  loadBookingData(true);
  }
- }, 2500);
+ }, 15000);
 
  return () => {
+ socket.off('booking:status_changed', handleRealtimeUpdate);
+ socket.off('booking:confirmed', handleRealtimeUpdate);
+ socket.off('payment:status_updated', handleRealtimeUpdate);
+ socket.off('payment:verified', handleRealtimeUpdate);
+ socket.off('payment:rejected', handleRealtimeUpdate);
+ socket.off('booking:checked_out', handleRealtimeUpdate);
  window.removeEventListener('stayhub_my_bookings_updated', handleSync);
  window.removeEventListener('stayhub_slots_updated', handleSync);
  window.removeEventListener('stayhub_rooms_updated', handleSync);

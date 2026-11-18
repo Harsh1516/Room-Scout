@@ -16,21 +16,13 @@ function MapSkeletonLoader() {
 }
 
 export function SearchResultsPage({
- stays = [],
- allFilteredStays = [],
- pagination = {},
- isLoading = false,
- isBackgroundRefreshing = false,
- filters = {},
- setCategoryFilter,
- setGenderFilter,
- setSortOrder,
- setMinRating,
- setPriceRange,
- toggleAmenity,
- resetFilters,
- onStayClick,
- onBookClick,
+	stays = [],
+	allFilteredStays = [],
+	isLoading = false,
+	filters = {},
+	resetFilters,
+	onStayClick,
+	onBookClick,
 }) {
  const [showcaseIndex, setShowcaseIndex] = useState(0);
  const [hoveredStayId, setHoveredStayId] = useState(null);

@@ -551,16 +551,29 @@ export function HostUploadPage() {
     saveDraftToStorage(formData, activeStep, googleMapsUrl, user);
   }, [formData, activeStep, googleMapsUrl, user]);
 
-  // Real-time socket sync for host approval state
+  // Real-time socket sync for host approval/rejection state
   useEffect(() => {
     const socket = getSocket();
     const handleHostApproved = () => {
       setHasUploadedProperty(true);
       setFormData((prev) => ({ ...prev, status: 'Approved', isApproved: true }));
     };
+    const handleHostStatus = (payload) => {
+      if (payload?.status) {
+        setFormData((prev) => ({
+          ...prev,
+          status: payload.status,
+          isApproved: payload.status === 'Approved',
+        }));
+      }
+    };
     socket.on('host:approved', handleHostApproved);
+    socket.on('host:status_updated', handleHostStatus);
+    socket.on('host:rejected', handleHostStatus);
     return () => {
       socket.off('host:approved', handleHostApproved);
+      socket.off('host:status_updated', handleHostStatus);
+      socket.off('host:rejected', handleHostStatus);
     };
   }, []);
 

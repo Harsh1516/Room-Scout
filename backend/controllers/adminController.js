@@ -775,7 +775,14 @@ export const approveHost = async (req, res, next) => {
       }
     );
 
-    emitToHost(host.email, 'host:approved', {
+    emitToHost([host.email, host._id.toString()], 'host:approved', {
+      status: 'Approved',
+      isApproved: true,
+      hasBeenApproved: true,
+      isLive: hasActiveSub,
+      hostId: host._id.toString(),
+    });
+    emitToHost([host.email, host._id.toString()], 'host:status_updated', {
       status: 'Approved',
       isApproved: true,
       hasBeenApproved: true,
@@ -823,6 +830,24 @@ export const rejectHost = async (req, res, next) => {
     }
 
     await Stay.updateMany({ hostId: host._id }, { $set: { isApproved: false, isPublished: false } });
+
+    // Real-time synchronization to host & admin
+    emitToHost([host.email, host._id.toString()], 'host:status_updated', {
+      status: 'Rejected',
+      isApproved: false,
+      hostId: host._id.toString(),
+    });
+    emitToHost([host.email, host._id.toString()], 'host:rejected', {
+      status: 'Rejected',
+      isApproved: false,
+      hostId: host._id.toString(),
+    });
+    emitToAdmin('admin:host_rejected', {
+      hostId: host._id.toString(),
+      status: 'Rejected',
+      isApproved: false,
+    });
+    emitToGlobal('stay:updated', { hostId: host._id });
 
     return res.json({ success: true, message: 'Host application rejected.' });
   } catch (error) {
