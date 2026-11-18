@@ -167,16 +167,16 @@ export function MapLocationPicker({
 
  marker.on('dragend', (e) => {
  const { lat, lng } = e.target.getLatLng();
- const preciseLat = Number(Number(lat).toFixed(6));
- const preciseLng = Number(Number(lng).toFixed(6));
+ const preciseLat = Number(lat);
+ const preciseLng = Number(lng);
  if (onLocationChange) onLocationChange(preciseLat, preciseLng);
  reverseGeocode(preciseLat, preciseLng);
  });
 
  map.on('click', (e) => {
  const { lat, lng } = e.latlng;
- const preciseLat = Number(Number(lat).toFixed(6));
- const preciseLng = Number(Number(lng).toFixed(6));
+ const preciseLat = Number(lat);
+ const preciseLng = Number(lng);
  marker.setLatLng([preciseLat, preciseLng]);
  if (onLocationChange) onLocationChange(preciseLat, preciseLng);
  reverseGeocode(preciseLat, preciseLng);

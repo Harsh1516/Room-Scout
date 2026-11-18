@@ -602,7 +602,7 @@ function parseDMSString(str) {
       if (dir === 'E' || dir === 'W') lng = val;
     }
     if (lat !== null && lng !== null) {
-      return { latitude: Number(lat.toFixed(7)), longitude: Number(lng.toFixed(7)) };
+      return { latitude: Number(lat), longitude: Number(lng) };
     }
   }
   return null;
@@ -638,8 +638,8 @@ export const resolveMapLink = async (req, res) => {
     }
 
     // Extract URL from input text (mobile apps may prepend place name before the link)
-    const urlExtractMatch = trimmed.match(/https?:\/\/[^\s]+/i);
-    const cleanUrl = urlExtractMatch ? urlExtractMatch[0] : trimmed;
+    const urlExtractMatch = trimmed.match(/https?:\/\/[^\s"'<>]+/i);
+    const cleanUrl = urlExtractMatch ? urlExtractMatch[0].replace(/[.,;:)\]}>]+$/, '') : trimmed;
     let parsedUrl;
     try {
       parsedUrl = new URL(cleanUrl);
@@ -651,10 +651,9 @@ export const resolveMapLink = async (req, res) => {
     const isGoogle =
       hostname === 'goo.gl' ||
       hostname.endsWith('.goo.gl') ||
-      hostname === 'google.com' ||
-      hostname.endsWith('.google.com') ||
-      hostname === 'google.co.in' ||
-      hostname.endsWith('.google.co.in');
+      hostname === 'g.page' ||
+      hostname.endsWith('.g.page') ||
+      hostname.includes('google.');
 
     if (!isGoogle) {
       return res.status(400).json({ success: false, message: 'Only verified Google Maps URLs are permitted' });
@@ -662,22 +661,106 @@ export const resolveMapLink = async (req, res) => {
 
     let targetUrl = cleanUrl;
     let fetchedHtml = '';
-    if (hostname.includes('goo.gl') || hostname === 'g.page' || hostname.endsWith('.g.page') || targetUrl.includes('/url?')) {
+    const allSeenUrls = [cleanUrl];
+    const isShortUrl =
+      hostname.includes('goo.gl') ||
+      hostname === 'g.page' ||
+      hostname.endsWith('.g.page') ||
+      targetUrl.includes('/url?');
+
+    if (isShortUrl) {
+      let currentHopUrl = cleanUrl;
+      const MAX_HOPS = 6;
+
+      for (let hop = 0; hop < MAX_HOPS; hop++) {
+        try {
+          const curObj = new URL(currentHopUrl);
+          if (curObj.hostname.includes('consent.google.') || curObj.pathname === '/url') {
+            const cont =
+              curObj.searchParams.get('continue') ||
+              curObj.searchParams.get('q') ||
+              curObj.searchParams.get('url');
+            if (cont && cont.startsWith('http')) {
+              currentHopUrl = decodeURIComponent(cont);
+              allSeenUrls.push(currentHopUrl);
+            }
+          }
+        } catch {}
+
+        try {
+          const redirectRes = await fetch(currentHopUrl, {
+            method: 'GET',
+            redirect: 'manual',
+            headers: {
+              'User-Agent':
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+              'Accept':
+                'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+              'Accept-Language': 'en-US,en;q=0.9',
+            },
+            signal: AbortSignal.timeout(10000),
+          });
+
+          if (redirectRes.status >= 300 && redirectRes.status < 400) {
+            let loc = redirectRes.headers.get('location');
+            if (loc) {
+              if (loc.startsWith('/')) {
+                const curObj = new URL(currentHopUrl);
+                loc = `${curObj.protocol}//${curObj.host}${loc}`;
+              }
+              currentHopUrl = loc;
+              targetUrl = loc;
+              allSeenUrls.push(loc);
+              continue;
+            }
+          }
+
+          if (redirectRes.ok) {
+            targetUrl = redirectRes.url || currentHopUrl;
+            allSeenUrls.push(targetUrl);
+            fetchedHtml = await redirectRes.text();
+
+            const metaRefreshMatch = fetchedHtml.match(
+              /<meta[^>]*http-equiv=["']?refresh["']?[^>]*content=["']?[^"'>]*url=['"]?([^"'>\s]+)['"]?/i
+            );
+            if (metaRefreshMatch && metaRefreshMatch[1]) {
+              let nextUrl = metaRefreshMatch[1];
+              if (nextUrl.startsWith('/')) {
+                const curObj = new URL(currentHopUrl);
+                nextUrl = `${curObj.protocol}//${curObj.host}${nextUrl}`;
+              }
+              currentHopUrl = nextUrl;
+              targetUrl = nextUrl;
+              allSeenUrls.push(nextUrl);
+              continue;
+            }
+            break;
+          } else {
+            break;
+          }
+        } catch (redirectErr) {
+          console.warn('Google Maps redirect error:', redirectErr.message);
+          break;
+        }
+      }
+    } else {
       try {
-        const redirectRes = await fetch(cleanUrl, {
+        const directRes = await fetch(cleanUrl, {
           method: 'GET',
           redirect: 'follow',
           headers: {
             'User-Agent':
               'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           },
+          signal: AbortSignal.timeout(10000),
         });
-        targetUrl = redirectRes.url || cleanUrl;
-        if (redirectRes.ok) {
-          fetchedHtml = await redirectRes.text();
+        if (directRes.ok) {
+          targetUrl = directRes.url || cleanUrl;
+          allSeenUrls.push(targetUrl);
+          fetchedHtml = await directRes.text();
         }
-      } catch (redirectErr) {
-        console.warn('Google Maps redirect error:', redirectErr.message);
+      } catch (err) {
+        console.warn('Direct URL fetch warning:', err.message);
       }
     }
 
@@ -686,66 +769,184 @@ export const resolveMapLink = async (req, res) => {
     let placeName = '';
     let addressHint = {};
 
-    let decodedUrl = targetUrl;
-    try {
-      decodedUrl = decodeURIComponent(targetUrl);
-    } catch {}
-
-    // 0c. DMS coordinates in place path or query
-    const urlDms = parseDMSString(decodedUrl) || parseDMSString(targetUrl);
-    if (urlDms) {
-      lat = urlDms.latitude;
-      lng = urlDms.longitude;
-    }
-
-    // 1. Exact POI / Marker coordinates in protobuf data (!3d<lat> and !4d<lng>)
-    const lat3d = targetUrl.match(/!3d(-?\d+\.\d+)/) || fetchedHtml.match(/!3d(-?\d+\.\d+)/);
-    const lng4d = targetUrl.match(/!4d(-?\d+\.\d+)/) || fetchedHtml.match(/!4d(-?\d+\.\d+)/);
-    if (lat3d && lng4d) {
-      lat = parseFloat(lat3d[1]);
-      lng = parseFloat(lng4d[1]);
-    }
-
-    // 2. Query search / pin marker (?q=lat,lng or ?query=lat,lng or ?ll=lat,lng)
-    if (lat === null || lng === null) {
-      const queryMatch =
-        decodedUrl.match(/[?&](?:q|query|ll)=(?:loc:)?(-?\d+(?:\.\d+)?)[,+\s]+(-?\d+(?:\.\d+)?)/i) ||
-        targetUrl.match(/[?&](?:q|query|ll)=(-?\d+\.\d+),(-?\d+\.\d+)/);
-      if (queryMatch) {
-        lat = Number(queryMatch[1]);
-        lng = Number(queryMatch[2]);
+    // 0c. DMS coordinates in any of the seen URLs
+    for (const u of allSeenUrls) {
+      let dec = u;
+      try { dec = decodeURIComponent(u); } catch {}
+      const urlDms = parseDMSString(dec) || parseDMSString(u);
+      if (urlDms) {
+        lat = urlDms.latitude;
+        lng = urlDms.longitude;
+        break;
       }
     }
 
-    // 3. Direct coordinates in place or search path: /maps/place/lat,lng or /maps/search/lat,lng
+    // 1. Authoritative: Exact POI Marker Protobuf Coordinates (!8m2!3d<lat>!4d<lng> or !3d<lat>!4d<lng>)
     if (lat === null || lng === null) {
-      const directCoordMatch =
-        decodedUrl.match(/\/maps\/(?:place|search)\/(-?\d+(?:\.\d+)?)[,+\s]+(-?\d+(?:\.\d+)?)/) ||
-        targetUrl.match(/\/maps\/(?:place|search)\/(-?\d+(?:\.\d+)?)[,+\s]+(-?\d+(?:\.\d+)?)/);
-      if (directCoordMatch) {
-        lat = parseFloat(directCoordMatch[1]);
-        lng = parseFloat(directCoordMatch[2]);
+      const candidateTextBlock = `${allSeenUrls.join('\n')}\n${fetchedHtml}`;
+      const poiMarkerMatch =
+        candidateTextBlock.match(/!8m2!3d(-?\d+(?:\.\d+)?)[^!]*?!4d(-?\d+(?:\.\d+)?)/) ||
+        candidateTextBlock.match(/!3d(-?\d+(?:\.\d+)?)[^!]*?!4d(-?\d+(?:\.\d+)?)/);
+      if (poiMarkerMatch) {
+        const pLat = parseFloat(poiMarkerMatch[1]);
+        const pLng = parseFloat(poiMarkerMatch[2]);
+        if (pLat >= -90 && pLat <= 90 && pLng >= -180 && pLng <= 180) {
+          lat = pLat;
+          lng = pLng;
+        }
+      }
+    }
+
+    // 2. Schema.org Place Metadata in HTML (<meta itemprop="latitude" content="...">)
+    if ((lat === null || lng === null) && fetchedHtml) {
+      const mLat =
+        fetchedHtml.match(/<meta[^>]*itemprop=["']latitude["'][^>]*content=["'](-?\d+(?:\.\d+)?)["']/i) ||
+        fetchedHtml.match(/<meta[^>]*content=["'](-?\d+(?:\.\d+)?)["'][^>]*itemprop=["']latitude["']/i);
+      const mLng =
+        fetchedHtml.match(/<meta[^>]*itemprop=["']longitude["'][^>]*content=["'](-?\d+(?:\.\d+)?)["']/i) ||
+        fetchedHtml.match(/<meta[^>]*content=["'](-?\d+(?:\.\d+)?)["'][^>]*itemprop=["']longitude["']/i);
+      if (mLat && mLng) {
+        const sLat = parseFloat(mLat[1]);
+        const sLng = parseFloat(mLng[1]);
+        if (sLat >= -90 && sLat <= 90 && sLng >= -180 && sLng <= 180) {
+          lat = sLat;
+          lng = sLng;
+        }
+      }
+    }
+
+    // 3. JSON-LD GeoCoordinates in HTML (<script type="application/ld+json">)
+    if ((lat === null || lng === null) && fetchedHtml) {
+      const jsonLd =
+        fetchedHtml.match(/"latitude":\s*(-?\d+(?:\.\d+)?)[,\s]+"longitude":\s*(-?\d+(?:\.\d+)?)/i) ||
+        fetchedHtml.match(/"geo":\s*\{[^}]*"latitude":\s*(-?\d+(?:\.\d+)?)[^}]*"longitude":\s*(-?\d+(?:\.\d+)?)/i);
+      if (jsonLd) {
+        const jLat = parseFloat(jsonLd[1]);
+        const jLng = parseFloat(jsonLd[2]);
+        if (jLat >= -90 && jLat <= 90 && jLng >= -180 && jLng <= 180) {
+          lat = jLat;
+          lng = jLng;
+        }
+      }
+    }
+
+    // 4. Google Maps APP_INITIALIZATION_STATE internal coordinate array: [null, null, lat, lng]
+    if ((lat === null || lng === null) && fetchedHtml) {
+      const appInit = fetchedHtml.match(/\[null,\s*null,\s*(-?\d+\.\d{4,}),\s*(-?\d+\.\d{4,})\]/);
+      if (appInit) {
+        const aLat = parseFloat(appInit[1]);
+        const aLng = parseFloat(appInit[2]);
+        if (aLat >= -90 && aLat <= 90 && aLng >= -180 && aLng <= 180) {
+          lat = aLat;
+          lng = aLng;
+        }
+      }
+    }
+
+    // 5. OpenGraph Staticmap Marker Coordinates (exact pin on Google's rendered card)
+    if ((lat === null || lng === null) && fetchedHtml) {
+      const staticMarker =
+        fetchedHtml.match(/staticmap[^"'>]*?markers=[^&"']*?(?:%7C|\|)(?:color:[^|%]*?(?:%7C|\|))?(-?\d+\.\d+)(?:%2C|,)(-?\d+\.\d+)/i) ||
+        fetchedHtml.match(/staticmap[^"'>]*?markers=(-?\d+\.\d+)(?:%2C|,)(-?\d+\.\d+)/i);
+      if (staticMarker) {
+        const smLat = parseFloat(staticMarker[1]);
+        const smLng = parseFloat(staticMarker[2]);
+        if (smLat >= -90 && smLat <= 90 && smLng >= -180 && smLng <= 180) {
+          lat = smLat;
+          lng = smLng;
+        }
+      }
+    }
+
+    // 6. Query Parameters (?q=lat,lng or ?query=lat,lng or ?ll=lat,lng or ?daddr=lat,lng)
+    if (lat === null || lng === null) {
+      for (const u of allSeenUrls) {
+        let dec = u;
+        try { dec = decodeURIComponent(u); } catch {}
+        const qMatch =
+          dec.match(/[?&](?:q|query|ll|daddr|saddr|center)=(?:loc:)?(-?\d+(?:\.\d+)?)[,+\s%]+(?:2C)?(-?\d+(?:\.\d+)?)/i) ||
+          u.match(/[?&](?:q|query|ll|daddr|saddr|center)=(?:loc:)?(-?\d+(?:\.\d+)?)[,+\s%]+(?:2C)?(-?\d+(?:\.\d+)?)/i);
+        if (qMatch) {
+          const qLat = parseFloat(qMatch[1]);
+          const qLng = parseFloat(qMatch[2]);
+          if (qLat >= -90 && qLat <= 90 && qLng >= -180 && qLng <= 180) {
+            lat = qLat;
+            lng = qLng;
+            break;
+          }
+        }
+      }
+    }
+
+    // 7. Path Coordinates: /maps/place/lat,lng or /maps/search/lat,lng
+    if (lat === null || lng === null) {
+      for (const u of allSeenUrls) {
+        let dec = u;
+        try { dec = decodeURIComponent(u); } catch {}
+        const directCoordMatch =
+          dec.match(/\/maps\/(?:place|search)\/(-?\d+(?:\.\d+)?)[,+\s%]+(?:2C)?(-?\d+(?:\.\d+)?)/) ||
+          u.match(/\/maps\/(?:place|search)\/(-?\d+(?:\.\d+)?)[,+\s%]+(?:2C)?(-?\d+(?:\.\d+)?)/);
+        if (directCoordMatch) {
+          const dcLat = parseFloat(directCoordMatch[1]);
+          const dcLng = parseFloat(directCoordMatch[2]);
+          if (dcLat >= -90 && dcLat <= 90 && dcLng >= -180 && dcLng <= 180) {
+            lat = dcLat;
+            lng = dcLng;
+            break;
+          }
+        }
+      }
+    }
+
+    // 8. OpenGraph staticmap center
+    if ((lat === null || lng === null) && fetchedHtml) {
+      const staticCenter = fetchedHtml.match(/staticmap[^"'>]*?center=(-?\d+\.\d+)(?:%2C|,)(-?\d+\.\d+)/i);
+      if (staticCenter) {
+        const smcLat = parseFloat(staticCenter[1]);
+        const smcLng = parseFloat(staticCenter[2]);
+        if (smcLat >= -90 && smcLat <= 90 && smcLng >= -180 && smcLng <= 180) {
+          lat = smcLat;
+          lng = smcLng;
+        }
       }
     }
 
     // Viewport camera match (@lat,lng)
-    const atMatch = targetUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-    const atLat = atMatch ? parseFloat(atMatch[1]) : null;
-    const atLng = atMatch ? parseFloat(atMatch[2]) : null;
-
-    // 4. Place name extraction and Plus Code / Open Location Code decoding
-    const placeMatch = targetUrl.match(/\/maps\/place\/([^/@?]+)/) || targetUrl.match(/[?&]q=([^&]+)/);
-    if (placeMatch && placeMatch[1]) {
-      try {
-        placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
-      } catch {
-        placeName = placeMatch[1].replace(/\+/g, ' ');
+    let atLat = null;
+    let atLng = null;
+    for (const u of allSeenUrls) {
+      const atMatch = u.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (atMatch) {
+        atLat = parseFloat(atMatch[1]);
+        atLng = parseFloat(atMatch[2]);
+        break;
       }
+    }
 
+    // 9. Place name extraction and Plus Code / Open Location Code decoding
+    for (const u of allSeenUrls) {
+      const placeMatch = u.match(/\/maps\/place\/([^/@?]+)/) || u.match(/[?&]q=([^&]+)/);
+      if (placeMatch && placeMatch[1]) {
+        try {
+          placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
+        } catch {
+          placeName = placeMatch[1].replace(/\+/g, ' ');
+        }
+        break;
+      }
+    }
+    if (!placeName && fetchedHtml) {
+      const titleMatch = fetchedHtml.match(/<title>([^<]+)<\/title>/i);
+      if (titleMatch && titleMatch[1]) {
+        placeName = titleMatch[1].replace(/- Google Maps.*/i, '').trim();
+      }
+    }
+
+    if (placeName && (lat === null || lng === null)) {
       const CODE_ALPHABET = '23456789CFGHJMPQRVWX';
       const ENCODING_BASE = 20;
       const plusMatch = placeName.match(/\b([23456789CFGHJMPQRVWX]{4,8}\+[23456789CFGHJMPQRVWX]{2,3})\b/i);
-      if (plusMatch && (lat === null || lng === null)) {
+      if (plusMatch) {
         const code = plusMatch[1];
         const refLat = atLat !== null ? atLat : 0;
         const refLng = atLng !== null ? atLng : 0;
@@ -783,8 +984,7 @@ export const resolveMapLink = async (req, res) => {
       }
     }
 
-    // 5. Fallback to viewport center (@lat,lng) ONLY if no specific pin, POI, or Plus Code exists
-    //    Skip viewport center for /place/ URLs because @lat,lng is the viewport, not the pin
+    // 10. Viewport camera center fallback (@lat,lng) if no specific pin, POI, or Plus Code
     if (lat === null || lng === null) {
       if (atLat !== null && atLng !== null) {
         lat = atLat;

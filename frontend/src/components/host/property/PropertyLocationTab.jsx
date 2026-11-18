@@ -262,7 +262,7 @@ export function PropertyLocationTab({
                   <span className="text-xs font-semibold max-md:text-slate-500 text-purple-600">Coordinates:</span>
                   {hostProperty?.latitude && hostProperty?.longitude ? (
                     <span className="px-2.5 py-0.5 rounded-full max-md:bg-white max-md:text-slate-900 max-md:border-slate-200/80 bg-purple-500/10 text-xs font-medium text-slate-800 border border-slate-200/80 shadow-2xs ">
-                      {Number(hostProperty.latitude).toFixed(5)}, {Number(hostProperty.longitude).toFixed(5)}
+                      {hostProperty.latitude}, {hostProperty.longitude}
                     </span>
                   ) : (
                     <span className="text-xs font-normal max-md:text-slate-400 text-purple-600">

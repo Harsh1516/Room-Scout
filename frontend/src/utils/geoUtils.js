@@ -239,8 +239,8 @@ export function parseDMSCoordinates(str) {
     }
     if (lat !== null && lng !== null) {
       return {
-        latitude: Number(lat.toFixed(6)),
-        longitude: Number(lng.toFixed(6)),
+        latitude: Number(lat),
+        longitude: Number(lng),
       };
     }
   }
@@ -248,14 +248,21 @@ export function parseDMSCoordinates(str) {
 }
 
 export function parseGoogleMapsUrl(rawUrl) {
- if (!rawUrl || typeof rawUrl !== 'string') return null;
- const trimmed = rawUrl.trim();
+  if (!rawUrl || typeof rawUrl !== 'string') return null;
+  const trimmed = rawUrl.trim();
 
- let lat = null;
- let lng = null;
- let detectedPlace = '';
+  // Extract URL candidate if text is prepended/appended (e.g. mobile clipboard share)
+  let cleanUrl = trimmed;
+  const urlExtractMatch = trimmed.match(/https?:\/\/[^\s"'<>]+/i);
+  if (urlExtractMatch) {
+    cleanUrl = urlExtractMatch[0].replace(/[.,;:)]}>]+$/, '');
+  }
 
- // 0a. Direct DMS coordinates input (e.g. "29°22'29.4\"N 79°31'39.9\"E")
+  let lat = null;
+  let lng = null;
+  let detectedPlace = '';
+
+  // 0a. Direct DMS coordinates input (e.g. "29°22'29.4\"N 79°31'39.9\"E")
   let decoded = trimmed;
   try {
     decoded = decodeURIComponent(trimmed);
@@ -263,7 +270,14 @@ export function parseGoogleMapsUrl(rawUrl) {
     /* ignore malformed URI */
   }
 
-  const directDms = parseDMSCoordinates(trimmed) || parseDMSCoordinates(decoded);
+  let decodedClean = cleanUrl;
+  try {
+    decodedClean = decodeURIComponent(cleanUrl);
+  } catch {
+    /* ignore malformed URI */
+  }
+
+  const directDms = parseDMSCoordinates(trimmed) || parseDMSCoordinates(decoded) || parseDMSCoordinates(cleanUrl);
   if (directDms) {
     lat = directDms.latitude;
     lng = directDms.longitude;
@@ -280,7 +294,7 @@ export function parseGoogleMapsUrl(rawUrl) {
 
   // 0c. Coordinates inside place/search path: /maps/place/ or /maps/search/
   if (lat === null || lng === null) {
-    const placePathMatch = decoded.match(/\/maps\/(?:place|search)\/([^/@]+)/);
+    const placePathMatch = decodedClean.match(/\/maps\/(?:place|search)\/(?:loc:)?([^/@]+)/) || decoded.match(/\/maps\/(?:place|search)\/(?:loc:)?([^/@]+)/);
     if (placePathMatch && placePathMatch[1]) {
       const pDms = parseDMSCoordinates(placePathMatch[1]);
       if (pDms) {
@@ -292,7 +306,7 @@ export function parseGoogleMapsUrl(rawUrl) {
 
   // 0d. Coordinates inside query string: ?q=... or ?query=...
   if (lat === null || lng === null) {
-    const queryDmsMatch = decoded.match(/[?&](?:q|query|ll)=([^&]+)/i);
+    const queryDmsMatch = decodedClean.match(/[?&](?:q|query|ll|daddr|saddr)=([^&]+)/i) || decoded.match(/[?&](?:q|query|ll|daddr|saddr)=([^&]+)/i);
     if (queryDmsMatch) {
       const qDms = parseDMSCoordinates(queryDmsMatch[1]);
       if (qDms) {
@@ -302,84 +316,109 @@ export function parseGoogleMapsUrl(rawUrl) {
     }
   }
 
-  // 1. Exact POI / Marker coordinates in protobuf data (!3d<lat> and !4d<lng>)
- const lat3d = trimmed.match(/!3d(-?\d+\.\d+)/);
- const lng4d = trimmed.match(/!4d(-?\d+\.\d+)/);
- if (lat3d && lng4d) {
- lat = parseFloat(lat3d[1]);
- lng = parseFloat(lng4d[1]);
- }
+  // 1. Authoritative: Exact POI Marker Protobuf Coordinates (!8m2!3d<lat>!4d<lng> or !3d<lat>!4d<lng>)
+  if (lat === null || lng === null) {
+    const candidateTexts = [cleanUrl, trimmed, decodedClean, decoded];
+    for (const t of candidateTexts) {
+      const poiMarkerMatch =
+        t.match(/!8m2!3d(-?\d+(?:\.\d+)?)[^!]*?!4d(-?\d+(?:\.\d+)?)/) ||
+        t.match(/!3d(-?\d+(?:\.\d+)?)[^!]*?!4d(-?\d+(?:\.\d+)?)/);
+      if (poiMarkerMatch) {
+        const pLat = Number(poiMarkerMatch[1]);
+        const pLng = Number(poiMarkerMatch[2]);
+        if (pLat >= -90 && pLat <= 90 && pLng >= -180 && pLng <= 180) {
+          lat = pLat;
+          lng = pLng;
+          break;
+        }
+      }
+    }
+  }
 
- // 2. Query search / pin marker (?q=lat,lng or ?query=lat,lng or ?ll=lat,lng)
- if (lat === null || lng === null) {
- const queryMatch =
- decoded.match(/[?&](?:q|query|ll)=(?:loc:)?(-?\d+(?:\.\d+)?)[,+\s]+(-?\d+(?:\.\d+)?)/i) ||
- trimmed.match(/[?&](?:q|query|ll)=(-?\d+\.\d+),(-?\d+\.\d+)/);
- if (queryMatch) {
- lat = Number(queryMatch[1]);
- lng = Number(queryMatch[2]);
- }
- }
+  // 2. Query search / pin marker (?q=lat,lng or ?daddr=lat,lng or ?saddr=lat,lng or ?query=lat,lng or ?ll=lat,lng)
+  if (lat === null || lng === null) {
+    const candidateTexts = [cleanUrl, trimmed, decodedClean, decoded];
+    for (const t of candidateTexts) {
+      const queryMatch =
+        t.match(/[?&](?:q|query|ll|daddr|saddr)=(?:loc:)?(-?\d+(?:\.\d+)?)[,+\s%]+(?:2C)?(-?\d+(?:\.\d+)?)/i);
+      if (queryMatch) {
+        const qLat = Number(queryMatch[1]);
+        const qLng = Number(queryMatch[2]);
+        if (qLat >= -90 && qLat <= 90 && qLng >= -180 && qLng <= 180) {
+          lat = qLat;
+          lng = qLng;
+          break;
+        }
+      }
+    }
+  }
 
- // 3. Direct coordinates in place or search path: /maps/place/ or /maps/search/
- if (lat === null || lng === null) {
- const directCoordMatch =
- decoded.match(/\/maps\/(?:place|search)\/(-?\d+(?:\.\d+)?)[,+\s]+(-?\d+(?:\.\d+)?)/) ||
- trimmed.match(/\/maps\/(?:place|search)\/(-?\d+(?:\.\d+)?)[,+\s]+(-?\d+(?:\.\d+)?)/);
- if (directCoordMatch) {
- lat = parseFloat(directCoordMatch[1]);
- lng = parseFloat(directCoordMatch[2]);
- }
- }
+  // 3. Direct coordinates in place or search path: /maps/place/lat,lng or /maps/search/lat,lng
+  if (lat === null || lng === null) {
+    const candidateTexts = [cleanUrl, trimmed, decodedClean, decoded];
+    for (const t of candidateTexts) {
+      const directCoordMatch =
+        t.match(/\/maps\/(?:place|search)\/(?:loc:)?(-?\d+(?:\.\d+)?)[,+\s%]+(?:2C)?(-?\d+(?:\.\d+)?)/);
+      if (directCoordMatch) {
+        const dLat = Number(directCoordMatch[1]);
+        const dLng = Number(directCoordMatch[2]);
+        if (dLat >= -90 && dLat <= 90 && dLng >= -180 && dLng <= 180) {
+          lat = dLat;
+          lng = dLng;
+          break;
+        }
+      }
+    }
+  }
 
- // Camera viewport match (@lat,lng) - used as reference or fallback
- const atMatch = trimmed.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
- const atLat = atMatch ? parseFloat(atMatch[1]) : null;
- const atLng = atMatch ? parseFloat(atMatch[2]) : null;
+  // Camera viewport match (@lat,lng) - used as reference or fallback
+  const atMatch = cleanUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/) || trimmed.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  const atLat = atMatch ? Number(atMatch[1]) : null;
+  const atLng = atMatch ? Number(atMatch[2]) : null;
 
- // 4. Place name extraction and Plus Code / Open Location Code decoding
- const placeMatch = trimmed.match(/\/maps\/place\/([^/@]+)/);
- if (placeMatch && placeMatch[1]) {
- try {
- detectedPlace = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
- } catch {
- detectedPlace = placeMatch[1].replace(/\+/g, ' ');
- }
+  // 4. Place name extraction and Plus Code / Open Location Code decoding
+  const placeMatch = cleanUrl.match(/\/maps\/place\/([^/@]+)/) || trimmed.match(/\/maps\/place\/([^/@]+)/);
+  if (placeMatch && placeMatch[1]) {
+    try {
+      detectedPlace = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
+    } catch {
+      detectedPlace = placeMatch[1].replace(/\+/g, ' ');
+    }
 
- // Check if the place query contains a Plus Code (e.g. CHW4+WWP or 7JXXCHW4+WWP)
- const plusMatch = detectedPlace.match(/\b([23456789CFGHJMPQRVWX]{4,8}\+[23456789CFGHJMPQRVWX]{2,3})\b/i);
- if (plusMatch) {
- const code = plusMatch[1];
- const refLat = lat !== null ? lat : (atLat !== null ? atLat : 0);
- const refLng = lng !== null ? lng : (atLng !== null ? atLng : 0);
- if (refLat !== 0 || refLng !== 0) {
- const decoded = recoverNearestPlusCode(code, refLat, refLng);
- // If !3d/!4d exact pin was absent, plus code represents the exact rooftop / building pin
- if (lat === null || lng === null) {
- lat = decoded.latitude;
- lng = decoded.longitude;
- }
- }
- }
- }
+    // Check if the place query contains a Plus Code (e.g. CHW4+WWP or 7JXXCHW4+WWP)
+    const plusMatch = detectedPlace.match(/\b([23456789CFGHJMPQRVWX]{4,8}\+[23456789CFGHJMPQRVWX]{2,3})\b/i);
+    if (plusMatch) {
+      const code = plusMatch[1];
+      const refLat = lat !== null ? lat : (atLat !== null ? atLat : 0);
+      const refLng = lng !== null ? lng : (atLng !== null ? atLng : 0);
+      if (refLat !== 0 || refLng !== 0) {
+        const decodedCode = recoverNearestPlusCode(code, refLat, refLng);
+        // If !3d/!4d exact pin was absent, plus code represents the exact rooftop / building pin
+        if (lat === null || lng === null) {
+          lat = decodedCode.latitude;
+          lng = decodedCode.longitude;
+        }
+      }
+    }
+  }
 
- // 5. Last resort: Viewport center (@lat,lng) ONLY if no specific pin, POI, or Plus Code exists
- if (lat === null || lng === null) {
- if (atLat !== null && atLng !== null) {
- lat = atLat;
- lng = atLng;
- }
- }
+  // 5. Last resort: Viewport center (@lat,lng) ONLY if no specific pin, POI, or Plus Code exists
+  if (lat === null || lng === null) {
+    if (atLat !== null && atLng !== null) {
+      lat = atLat;
+      lng = atLng;
+    }
+  }
 
- if (lat === null || lng === null || isNaN(lat) || isNaN(lng)) {
- return null;
- }
+  if (lat === null || lng === null || isNaN(lat) || isNaN(lng)) {
+    return null;
+  }
 
- return {
- latitude: Number(lat),
- longitude: Number(lng),
- detectedPlace: detectedPlace ? detectedPlace.trim() : '',
- };
+  return {
+    latitude: Number(lat),
+    longitude: Number(lng),
+    detectedPlace: detectedPlace ? detectedPlace.trim() : '',
+  };
 }
 
 /**
