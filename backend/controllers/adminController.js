@@ -165,8 +165,6 @@ export const getHosts = async (req, res, next) => {
         avatar: h.avatar,
         role: h.role,
         status: h.status,
-        isApproved: h.status === 'Approved' || Boolean(h.isApproved),
-        hasBeenApproved: Boolean(h.hasBeenApproved || h.status === 'Approved'),
         hasProperty: Boolean(s._id || s.title),
         propertyName: s.title || '',
         propertyType: s.type || '',
@@ -255,8 +253,6 @@ export const getHostByEmail = async (req, res, next) => {
       ...host,
       _id: host._id.toString(),
       status: host.status,
-      isApproved: host.status === 'Approved' || Boolean(host.isApproved),
-      hasBeenApproved: Boolean(host.hasBeenApproved || host.status === 'Approved'),
       ...(stay
         ? {
             propertyName: stay.title,
@@ -398,25 +394,17 @@ export const createHost = async (req, res, next) => {
         role: 'host',
         avatar: (name || 'HO').trim().slice(0, 2).toUpperCase(),
         status: status || 'Pending Approval',
-        isApproved: status === 'Approved',
-        hasBeenApproved: status === 'Approved',
       });
     } else {
       if (name) host.name = name.trim();
       if (phone) host.phone = phone.trim();
 
-      const wasAlreadyApproved = host.status === 'Approved' || host.isApproved || host.hasBeenApproved;
+      const wasAlreadyApproved = host.status === 'Approved';
       if (wasAlreadyApproved) {
         // One-Time Approval: Once an admin approves the host, they retain Approved status permanently across all room additions and property updates
         host.status = 'Approved';
-        host.isApproved = true;
-        host.hasBeenApproved = true;
       } else if (status && ['Active', 'Pending Approval', 'Approved', 'Rejected', 'Draft'].includes(status)) {
         host.status = status;
-        if (status === 'Approved') {
-          host.isApproved = true;
-          host.hasBeenApproved = true;
-        }
       } else if (!host.status) {
         host.status = 'Pending Approval';
       }
@@ -590,7 +578,7 @@ export const createHost = async (req, res, next) => {
       host.subscription?.expiresAt &&
       new Date(host.subscription.expiresAt) > new Date()
     );
-    const isApprovedHost = host.status === 'Approved' || Boolean(host.isApproved);
+    const isApprovedHost = host.status === 'Approved';
 
     const stayPayload = {
       hostId: host._id,
@@ -637,8 +625,6 @@ export const createHost = async (req, res, next) => {
       avatar: host.avatar,
       role: host.role,
       status: host.status,
-      isApproved: host.status === 'Approved' || Boolean(host.isApproved),
-      hasBeenApproved: Boolean(host.hasBeenApproved || host.status === 'Approved'),
       // Property / Stay fields
       propertyName: updatedStay?.title || resolvedTitle,
       title: updatedStay?.title || resolvedTitle,
@@ -706,7 +692,7 @@ export const bulkApproveHosts = async (req, res, next) => {
     await Promise.all([
       Host.updateMany(
         { _id: { $in: hostIds } },
-        { $set: { status: 'Approved', isApproved: true, hasBeenApproved: true } }
+        { $set: { status: 'Approved' } }
       ),
       Stay.updateMany(
         { hostId: { $in: hostIds } },
@@ -715,7 +701,7 @@ export const bulkApproveHosts = async (req, res, next) => {
     ]);
 
     hostIds.forEach((hId) => {
-      emitToHost(hId, 'host:approved', { status: 'Approved', isApproved: true, hasBeenApproved: true });
+      emitToHost(hId, 'host:approved', { status: 'Approved' });
     });
     emitToAdmin('admin:hosts_bulk_approved', { hostIds });
     emitToGlobal('stay:updated', { hostIds });
@@ -747,7 +733,7 @@ export const approveHost = async (req, res, next) => {
 
     const host = await Host.findByIdAndUpdate(
       id,
-      { $set: { status: 'Approved', isApproved: true, hasBeenApproved: true } },
+      { $set: { status: 'Approved' } },
       { new: true }
     ).select('-password');
 
@@ -777,22 +763,17 @@ export const approveHost = async (req, res, next) => {
 
     emitToHost([host.email, host._id.toString()], 'host:approved', {
       status: 'Approved',
-      isApproved: true,
-      hasBeenApproved: true,
       isLive: hasActiveSub,
       hostId: host._id.toString(),
     });
     emitToHost([host.email, host._id.toString()], 'host:status_updated', {
       status: 'Approved',
-      isApproved: true,
-      hasBeenApproved: true,
       isLive: hasActiveSub,
       hostId: host._id.toString(),
     });
     emitToAdmin('admin:host_approved', {
       hostId: host._id.toString(),
       status: 'Approved',
-      isApproved: true,
     });
     emitToGlobal('stay:updated', { stayId: existingStay._id, hostId: host._id });
 
@@ -818,7 +799,7 @@ export const rejectHost = async (req, res, next) => {
     const { id } = req.params;
     const host = await Host.findByIdAndUpdate(
       id,
-      { $set: { status: 'Rejected', isApproved: false } },
+      { $set: { status: 'Rejected' } },
       { new: true }
     );
 
@@ -1057,7 +1038,6 @@ export const impersonateAccount = async (req, res, next) => {
         phone: targetAccount.phone,
         role: 'host',
         status: targetAccount.status,
-        isApproved: targetAccount.status === 'Approved' || Boolean(targetAccount.isApproved),
       };
 
       return res.json({

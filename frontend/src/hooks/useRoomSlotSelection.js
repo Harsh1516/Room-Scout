@@ -137,11 +137,11 @@ export function useRoomSlotSelection(
       const range = [];
       for (let i = start; i <= end; i++) {
         if (bookedSlotsForRoom.has(upcomingWeek[i]?.fullISO)) {
-          toast.warn('Cannot select a date range containing already booked slots.');
+          toast.warn('Range includes booked dates');
           return prev;
         }
         if (userRequestedSlotsForRoom.has(upcomingWeek[i]?.fullISO)) {
-          toast.info('Cannot select a date range containing slots you already requested.');
+          toast.info('Range includes your requests');
           return prev;
         }
         range.push(i);
@@ -153,19 +153,11 @@ export function useRoomSlotSelection(
   const handleToggleSlotMonth = (monthIndex) => {
     const monthObj = upcomingMonths[monthIndex];
     if (bookedMonthsForRoom.has(monthObj?.monthKey)) {
-      toast.warn(
-        `${selectedRoom?.roomNumber || 'Room'} is already booked for ${
-          monthObj?.monthName || monthObj?.monthShort
-        } ${monthObj?.year}.`
-      );
+      toast.warn(`${selectedRoom?.roomNumber || 'Room'} booked for ${monthObj?.monthShort || ''}`);
       return;
     }
     if (userRequestedMonthsForRoom.has(monthObj?.monthKey)) {
-      toast.info(
-        `You have already requested ${monthObj?.monthName || monthObj?.monthShort} ${
-          monthObj?.year
-        } (Pending Host Approval).`
-      );
+      toast.info(`Already requested: ${monthObj?.monthShort || ''}`);
       return;
     }
 
@@ -177,11 +169,11 @@ export function useRoomSlotSelection(
       const range = [];
       for (let i = start; i <= end; i++) {
         if (bookedMonthsForRoom.has(upcomingMonths[i]?.monthKey)) {
-          toast.warn('Cannot select a month range containing already booked months.');
+          toast.warn('Range includes booked months');
           return prev;
         }
         if (userRequestedMonthsForRoom.has(upcomingMonths[i]?.monthKey)) {
-          toast.info('Cannot select a month range containing months you already requested.');
+          toast.info('Range includes your requests');
           return prev;
         }
         range.push(i);

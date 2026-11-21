@@ -49,17 +49,8 @@ export const validate16x9Ratio = (file) => {
           resolve({ valid: false, message: 'Unable to detect image dimensions.' });
           return;
         }
-        const ratio = width / height;
-        const targetRatio = 16 / 9;
-        const is16x9 = Math.abs(ratio - targetRatio) <= 0.06;
-        if (!is16x9) {
-          resolve({
-            valid: false,
-            message: 'Photos must be in 16:9 aspect ratio only.',
-          });
-        } else {
-          resolve({ valid: true });
-        }
+        // Accepts all resolutions and aspect ratios (Airbnb standard: 4:3, 16:9, portrait, etc.)
+        resolve({ valid: true, isLandscape: width >= height, width, height });
       };
       img.onerror = () => resolve({ valid: false, message: `Failed to read image "${file.name}".` });
       img.src = e.target.result;
@@ -91,7 +82,7 @@ export function useHostPhotoUpload({ formData, setFormData, showToast = () => {}
     for (const file of filesToUpload) {
       const validation = await validate16x9Ratio(file);
       if (!validation.valid) {
-        toast.error(validation.message || 'Photos must be in 16:9 aspect ratio only.');
+        toast.error(validation.message || 'Please upload a valid image file');
         continue;
       }
       try {
@@ -152,7 +143,7 @@ export function useHostPhotoUpload({ formData, setFormData, showToast = () => {}
     if (!file) return;
     const validation = await validate16x9Ratio(file);
     if (!validation.valid) {
-      toast.error(validation.message || 'Photos must be in 16:9 aspect ratio only.');
+      toast.error(validation.message || 'Please upload a valid image file');
       return;
     }
     try {
@@ -185,7 +176,7 @@ export function useHostPhotoUpload({ formData, setFormData, showToast = () => {}
 
       const validation = await validate16x9Ratio(file);
       if (!validation.valid) {
-        toast.error(validation.message || 'Photos must be in 16:9 aspect ratio only.');
+        toast.error(validation.message || 'Please upload a valid image file');
         continue;
       }
       try {

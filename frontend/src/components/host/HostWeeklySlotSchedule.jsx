@@ -775,7 +775,7 @@ export default function HostWeeklySlotSchedule({
  if (activeRequestedBooking?._id) {
  const bookingId = activeRequestedBooking._id;
  const isOnline = activeRequestedBooking.bookingSource === 'ONLINE' || activeRequestedBooking.isOnline === true;
- const deadline = new Date(Date.now() + 5 * 60 * 1000);
+ const deadline = new Date(Date.now() + 10 * 60 * 1000);
  await bookingsAPI.updateBookingStatus(bookingId, {
  status: isOnline ? 'AWAITING_PAYMENT' : 'CONFIRMED',
  totalAmount: finalAmount,
@@ -863,7 +863,7 @@ export default function HostWeeklySlotSchedule({
  try {
  if (activeRequestedBooking?._id) {
  const bookingId = activeRequestedBooking._id;
- const deadline = new Date(Date.now() + 5 * 60 * 1000);
+ const deadline = new Date(Date.now() + 10 * 60 * 1000);
  await bookingsAPI.updateBookingStatus(bookingId, {
  status: 'AWAITING_PAYMENT',
  totalAmount: finalAmount,

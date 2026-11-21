@@ -22,7 +22,7 @@ function PropertyDetailSkeleton() {
         <div className="fixed top-2.5 sm:top-5 left-2.5 sm:left-6 z-50 flex items-center h-[54px] sm:h-[56px]">
           <div className="w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] rounded-full bg-white/90 border border-slate-200/90 shadow-sm" />
         </div>
-        <div className="fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center h-[54px] sm:h-[56px]">
+        <div className="fixed bottom-5 sm:bottom-6 md:bottom-auto md:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center h-[54px] sm:h-[56px]">
           <div className="h-12 w-64 sm:w-80 rounded-full bg-white/90 border border-slate-200/90 shadow-sm" />
         </div>
         <div className="fixed top-2.5 sm:top-5 right-2.5 sm:right-6 z-50 flex items-center h-[54px] sm:h-[56px]">
@@ -335,7 +335,7 @@ export function PropertyDetailPage({ onLoginClick }) {
     if (!newReviewText.trim()) return;
 
     if (currentUserReview) {
-      toast.info('You have already submitted a review for this property.');
+      toast.info('Already reviewed this stay');
       return;
     }
 
@@ -363,10 +363,10 @@ export function PropertyDetailPage({ onLoginClick }) {
       if (res && Array.isArray(res.reviews)) {
         setReviews(res.reviews);
       }
-      toast.success('Your review has been saved to the database!');
+      toast.success('Review published!');
     } catch (err) {
       console.warn('API error persisting review:', err);
-      toast.success('Your review and rating have been published!');
+      toast.success('Review published!');
     } finally {
       setSubmittingReview(false);
     }
@@ -379,13 +379,13 @@ export function PropertyDetailPage({ onLoginClick }) {
         {/* 1. Left Island: Back button (Property type badge shifted to media section image) */}
         <Left showBadge={false} fallbackUrl="/explore" />
 
-        {/* 2. Center Island: Segmented Tabs (Property | Host | Reviews) - Dynamic wide capsule with sleek lesser height */}
-        <div className="fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center pointer-events-auto select-none w-max max-w-[calc(100vw-120px)] sm:max-w-none h-[54px] sm:h-[56px]">
-          <nav className="relative flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-full bg-white border border-slate-200/90 shadow-sm select-none w-fit">
+        {/* 2. Hybrid Capsule Dock: Bottom Floating Dock on Mobile (< md), Top Center on Desktop (md+) */}
+        <div className="fixed bottom-5 sm:bottom-6 md:bottom-auto md:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center pointer-events-auto select-none w-max max-w-[calc(100vw-24px)] md:max-w-none h-[54px] sm:h-[56px]">
+          <nav className="relative flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-full bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.12)] md:shadow-sm select-none w-fit">
             <button
               type="button"
               onClick={() => setActiveCenterTab('property')}
-              className={`relative h-[36px] sm:h-[38px] min-w-[84px] sm:min-w-[115px] md:min-w-[130px] px-3.5 sm:px-6 md:px-8 rounded-full text-[13px] sm:text-sm font-semibold tracking-tight transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
+              className={`relative h-[42px] sm:h-[44px] md:h-[38px] min-w-[78px] sm:min-w-[100px] md:min-w-[130px] px-3.5 sm:px-5 md:px-8 rounded-full text-[13px] sm:text-sm font-semibold tracking-tight transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
                 activeCenterTab === 'property'
                   ? 'text-white'
                   : 'text-slate-700 hover:text-[#1f1b16]'
@@ -408,7 +408,7 @@ export function PropertyDetailPage({ onLoginClick }) {
             <button
               type="button"
               onClick={handleHostTabClick}
-              className={`relative h-[36px] sm:h-[38px] min-w-[76px] sm:min-w-[105px] md:min-w-[120px] px-3.5 sm:px-6 md:px-8 rounded-full text-[13px] sm:text-sm font-semibold tracking-tight transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
+              className={`relative h-[42px] sm:h-[44px] md:h-[38px] min-w-[70px] sm:min-w-[90px] md:min-w-[120px] px-3.5 sm:px-5 md:px-8 rounded-full text-[13px] sm:text-sm font-semibold tracking-tight transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
                 activeCenterTab === 'host'
                   ? 'text-white'
                   : 'text-slate-700 hover:text-[#1f1b16]'
@@ -431,7 +431,7 @@ export function PropertyDetailPage({ onLoginClick }) {
             <button
               type="button"
               onClick={() => setActiveCenterTab('reviews')}
-              className={`relative h-[36px] sm:h-[38px] min-w-[96px] sm:min-w-[130px] md:min-w-[150px] px-3.5 sm:px-6 md:px-8 rounded-full text-[13px] sm:text-sm font-semibold tracking-tight transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
+              className={`relative h-[42px] sm:h-[44px] md:h-[38px] min-w-[88px] sm:min-w-[110px] md:min-w-[150px] px-3.5 sm:px-5 md:px-8 rounded-full text-[13px] sm:text-sm font-semibold tracking-tight transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
                 activeCenterTab === 'reviews'
                   ? 'text-white'
                   : 'text-slate-700 hover:text-[#1f1b16]'
@@ -460,8 +460,8 @@ export function PropertyDetailPage({ onLoginClick }) {
       <main
         className={`max-w-[1600px] mx-auto ${
           activeCenterTab === 'property'
-            ? 'px-0 sm:px-6 lg:px-8 pt-0 sm:pt-24 pb-0 sm:pb-24'
-            : 'px-3.5 sm:px-6 lg:px-8 pt-[88px] sm:pt-24 pb-8 sm:pb-24'
+            ? 'px-0 sm:px-6 lg:px-8 pt-0 sm:pt-24 pb-28 sm:pb-32 md:pb-24'
+            : 'px-3.5 sm:px-6 lg:px-8 pt-[88px] sm:pt-24 pb-28 sm:pb-32 md:pb-24'
         } min-h-screen transition-all duration-300`}
       >
         <div className={activeCenterTab === 'property' ? "grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-8 items-start" : "max-w-4xl mx-auto w-full"}>

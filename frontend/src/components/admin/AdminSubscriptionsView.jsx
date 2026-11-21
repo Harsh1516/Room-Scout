@@ -127,7 +127,7 @@ export function AdminSubscriptionsView({
  const hostEmail = (r.hostId?.email || '').toLowerCase();
  const stayTitle = (r.stayId?.title || '').toLowerCase();
  const utr = (r.transactionRef || '').toLowerCase();
- const plan = (r.planLabel || '').toLowerCase();
+ const plan = (r.planLabel || r.derivedPlanLabel || `${r.durationMonths || 1} Month` || '').toLowerCase();
 
  return (
  hostName.includes(q) ||
@@ -316,7 +316,7 @@ export function AdminSubscriptionsView({
  setExtractedUtrs(res.entries);
  setHasMatched(false);
  setIsSorted(false);
- toast.success(` Extracted ${res.entries.length} UTR numbers from ${attachedFile.name}! Click "Match" to verify.`);
+ toast.success(`Extracted ${res.entries.length} UTRs`);
  }
  } else {
  toast.error(res?.message || 'Could not parse PDF statement.');
@@ -336,7 +336,7 @@ export function AdminSubscriptionsView({
  const uniqueUtrs = Array.from(new Set(matches));
 
  if (uniqueUtrs.length === 0) {
- toast.warning('No 12-digit UTR numbers were detected in this statement.');
+ toast.warning('No 12-digit UTRs found');
  } else {
  const lines = rawText.split(/\r?\n/).filter((l) => l.trim().length > 0);
  const entries = uniqueUtrs.map((utr) => {
@@ -355,12 +355,12 @@ export function AdminSubscriptionsView({
  setExtractedUtrs(entries);
  setHasMatched(false);
  setIsSorted(false);
- toast.success(` Extracted ${entries.length} 12-digit UTR numbers from ${attachedFile.name}! Click "Match" to verify.`);
+ toast.success(`Extracted ${entries.length} UTRs`);
  }
  }
  } catch (err) {
  console.error('Extract error:', err);
- toast.error(err.message || 'Error extracting UTRs from statement.');
+ toast.error(err.message || 'Error extracting UTRs');
  } finally {
  setIsExtracting(false);
  }
@@ -381,21 +381,21 @@ export function AdminSubscriptionsView({
  requests.some((r) => r.transactionRef === item.utr)
  ).length;
 
- toast.success(` Matched ${matchedCount} host request(s) with your bank statement!`);
+ toast.success(`Matched ${matchedCount} host requests`);
  };
 
  // 4. Sort Matched UTRs to top and non-matched to bottom
  const handleSortMatched = () => {
  if (!hasMatched) {
- toast.info('Click "Match" before sorting.');
+ toast.info('Click Match before sorting');
  return;
  }
  setIsSorted((prev) => {
  const next = !prev;
  if (next) {
- toast.success(' Sorted: All matched UTRs moved to top!');
+ toast.success('Matched UTRs moved to top');
  } else {
- toast.info('Sorting reset to default submission order.');
+ toast.info('Sorting reset to default');
  }
  return next;
  });
@@ -506,7 +506,7 @@ export function AdminSubscriptionsView({
  // Allow all verified hosts where price matches
  const handleAllowVerifiedMatched = async () => {
  if (validPricePendingMatches.length === 0) {
- toast.info('No pending host requests with verified matching price.');
+ toast.info('No pending verified requests');
  return;
  }
 
@@ -514,7 +514,7 @@ export function AdminSubscriptionsView({
  setIsBulkVerifying(true);
  const pendingIds = validPricePendingMatches.map((r) => r._id);
  await onBulkVerify({ paymentIds: pendingIds });
- toast.success(` Verified and activated ${pendingIds.length} host plan(s) with matching payment!`);
+ toast.success(`Activated ${pendingIds.length} host plans`);
  } catch (err) {
  toast.error(err.message || 'Bulk verify failed.');
  } finally {
@@ -525,7 +525,7 @@ export function AdminSubscriptionsView({
  // Reject all underpaid/tampered host submissions automatically
  const handleRejectUnderpaidMatched = async () => {
  if (underpaidPendingMatches.length === 0) {
- toast.info('No underpaid host requests found.');
+ toast.info('No underpaid requests found');
  return;
  }
 
@@ -536,7 +536,7 @@ export function AdminSubscriptionsView({
  paymentIds: underpaidIds,
  rejectionReason: 'Paid amount in bank statement did not match required subscription plan price.',
  });
- toast.success(` Successfully rejected ${underpaidIds.length} underpaid request(s).`);
+ toast.success(`Rejected ${underpaidIds.length} requests`);
  } catch (err) {
  toast.error(err.message || 'Bulk rejection failed.');
  } finally {
@@ -547,7 +547,7 @@ export function AdminSubscriptionsView({
  // 1-Click Auto-Resolve: Accepts verified price matches AND rejects underpaid matches
  const handleAutoResolveAll = async () => {
  if (validPricePendingMatches.length === 0 && underpaidPendingMatches.length === 0) {
- toast.info('No pending matches available to auto-resolve.');
+ toast.info('No pending matches');
  return;
  }
 
@@ -564,9 +564,7 @@ export function AdminSubscriptionsView({
  rejectionReason: 'Paid amount in bank statement did not match required subscription plan price.',
  });
  }
- toast.success(
- ` Auto-reconciliation complete: ${validPricePendingMatches.length} verified & accepted, ${underpaidPendingMatches.length} underpaid rejected!`
- );
+ toast.success('Auto-resolve complete');
  } catch (err) {
  toast.error(err.message || 'Auto-resolve failed.');
  } finally {
@@ -585,7 +583,7 @@ export function AdminSubscriptionsView({
  durationMonths: request.durationMonths || 1,
  adminNotes: 'Verified via statement reconciliation match',
  });
- toast.success(` Plan activated for ${request.hostId?.name || 'Host'}!`);
+ toast.success(`Plan activated: ${request.hostId?.name || 'Host'}`);
  } else {
  await onReject(request._id, {
  action: 'REJECT',
@@ -593,7 +591,7 @@ export function AdminSubscriptionsView({
  customReason ||
  'Paid amount in bank statement did not match required subscription plan price.',
  });
- toast.success(` Request rejected for ${request.hostId?.name || 'Host'}.`);
+ toast.success(`Request rejected: ${request.hostId?.name || 'Host'}`);
  }
  setConfirmingRow(null);
  } catch (err) {
@@ -1457,7 +1455,7 @@ export function AdminSubscriptionsView({
  {/* 2. Plan & Amount */}
  <td className="py-3.5 px-3.5 align-middle">
  <div className="font-normal text-[#1f1b16] text-xs">
- {item.planLabel}
+ {item.planLabel || item.derivedPlanLabel || `${item.durationMonths || 1} Month${(item.durationMonths || 1) > 1 ? 's' : ''}`}
  </div>
  <div className="text-emerald-600 font-normal text-sm mt-0.5">
  ₹{Number(item.amount).toLocaleString('en-IN')}

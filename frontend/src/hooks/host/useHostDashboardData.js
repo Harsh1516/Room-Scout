@@ -168,7 +168,7 @@ export function isHostPropertyEqual(prev, next) {
  if (prev === next) return true;
  if (prev._id !== next._id) return false;
  if (prev.email !== next.email) return false;
- if (prev.status !== next.status || Boolean(prev.isApproved) !== Boolean(next.isApproved)) return false;
+ if (prev.status !== next.status) return false;
  if (prev.propertyName !== next.propertyName || prev.title !== next.title) return false;
  if (prev.propertyType !== next.propertyType || prev.genderType !== next.genderType) return false;
  if (prev.description !== next.description) return false;
@@ -343,7 +343,7 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
  const propId = foundHost._id || foundHost.email || 'default';
  const notifiedKey = `roomscout_approved_notified_${propId}`;
  const legacyNotifiedKey = `stayhub_approved_notified_${propId}`;
- const isApproved = foundHost.status === 'Approved' || Boolean(foundHost.isApproved);
+ const isApproved = foundHost.status === 'Approved';
  const alreadyNotified =
  typeof window !== 'undefined' &&
  (localStorage.getItem(notifiedKey) === 'true' || localStorage.getItem(legacyNotifiedKey) === 'true');
@@ -351,7 +351,7 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
  if (isApproved) {
  if (!alreadyNotified) {
  if (hasInitialFetchedRef.current && prevStatusRef.current && prevStatusRef.current !== 'Approved') {
- toast.success(' Property approved by Admin! Room scheduling is now unlocked.');
+ toast.success('Property approved by Admin');
  }
  try {
  localStorage.setItem(notifiedKey, 'true');
@@ -362,12 +362,11 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
  }
  if (
  typeof updateUserSession === 'function' &&
- (!user?.isApproved || user?.status !== 'Approved')
+ user?.status !== 'Approved'
  ) {
  updateUserSession((prev) => ({
  ...(prev || {}),
  status: 'Approved',
- isApproved: true,
  }));
  }
  } else {
@@ -396,7 +395,6 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
  const merged = {
  ...latestHostPropertyRef.current,
  status: isApproved ? 'Approved' : (latestHostPropertyRef.current.status || 'Pending Approval'),
- isApproved: isApproved || Boolean(latestHostPropertyRef.current.isApproved),
  };
  latestHostPropertyRef.current = merged;
  return merged;
@@ -521,7 +519,6 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
  email: targetEmail,
  phone: user?.phone || hostByEmailRes?.host?.phone || '',
  status: user?.status || hostByEmailRes?.host?.status || 'Pending Approval',
- isApproved: user?.status === 'Approved' || hostByEmailRes?.host?.status === 'Approved' || Boolean(user?.isApproved),
  propertyName: '',
  title: '',
  propertyType: '',
@@ -608,7 +605,7 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
  // Tab Guard: If property is awaiting initial admin approval, lock navigation strictly to 'property' tab
  useEffect(() => {
  if (!loading && hostProperty) {
- const isApprovedHost = hostProperty?.status === 'Approved' || hostProperty?.isApproved === true;
+ const isApprovedHost = hostProperty?.status === 'Approved';
  if (!isApprovedHost && activeTab !== 'property') {
  setActiveTab('property');
  }
@@ -629,9 +626,9 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
     // ── Real-Time WebSockets Listener (Instant 0ms sync across devices) ──
     const socket = getSocket();
     const handleHostApproved = (payload) => {
-      setHostProperty((prev) => (prev ? { ...prev, status: 'Approved', isApproved: true, hasBeenApproved: true } : prev));
+      setHostProperty((prev) => (prev ? { ...prev, status: 'Approved' } : prev));
       fetchHostData();
-      toast.success('🎉 Property approved by Admin! Room scheduling is now unlocked.');
+      toast.success('Property approved by Admin');
     };
     const handleHostStatus = (payload) => {
       if (payload?.status) {

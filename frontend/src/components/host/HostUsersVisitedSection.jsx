@@ -609,7 +609,7 @@ export function HostUsersVisitedSection({
 
  const nextStatus = isOnline ? 'AWAITING_PAYMENT' : 'CONFIRMED';
  const approvedAt = new Date().toISOString();
- const deadline = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+ const deadline = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
  // Optimistically update status so request card immediately animates and transitions
  setGuests((prev) =>

@@ -9,7 +9,7 @@ export const validateHostStep = (stepNumber, formData, setFieldErrors = () => {}
     if (!formData?.name || formData.name.trim().length < 2) {
       if (shouldSetErrors) {
         setFieldErrors((prev) => ({ ...prev, name: 'Host name is required (min 2 characters).' }));
-        toast.error('Please enter the host name (min 2 characters).');
+        toast.error('Host name min 2 chars');
       }
       return false;
     }
@@ -17,7 +17,7 @@ export const validateHostStep = (stepNumber, formData, setFieldErrors = () => {}
     if (!raw10Phone || raw10Phone.length < 10) {
       if (shouldSetErrors) {
         setFieldErrors((prev) => ({ ...prev, phone: 'Host contact number must be at least 10 digits.' }));
-        toast.error('Host contact number must be at least 10 digits.');
+        toast.error('Contact min 10 digits');
       }
       return false;
     }
@@ -25,21 +25,21 @@ export const validateHostStep = (stepNumber, formData, setFieldErrors = () => {}
     if (!formData?.propertyName || formData.propertyName.trim().length < 3) {
       if (shouldSetErrors) {
         setFieldErrors((prev) => ({ ...prev, propertyName: 'Property name must be at least 3 characters long.' }));
-        toast.error('Property name must be at least 3 characters long.');
+        toast.error('Property name min 3 chars');
       }
       return false;
     }
     if (!formData?.propertyType) {
       if (shouldSetErrors) {
         setFieldErrors((prev) => ({ ...prev, propertyType: 'Please select a property category (e.g. PG, Hotel, Flat).' }));
-        toast.error('Please select a property category (e.g. PG, Hotel, Flat).');
+        toast.error('Select property category');
       }
       return false;
     }
     if (!formData?.genderType) {
       if (shouldSetErrors) {
         setFieldErrors((prev) => ({ ...prev, genderType: 'Please select who this stay is available for.' }));
-        toast.error('Please select who this stay is available for.');
+        toast.error('Select target occupants');
       }
       return false;
     }
@@ -57,7 +57,7 @@ export const validateHostStep = (stepNumber, formData, setFieldErrors = () => {}
       if (shouldSetErrors) {
         setFieldErrors((prev) => ({ ...prev, ...errors }));
         const firstMsg = Object.values(errors)[0] || 'Please complete all address details.';
-        toast.error(firstMsg);
+        toast.error(firstMsg.length > 25 ? 'Complete address details' : firstMsg);
       }
       return false;
     }
@@ -69,14 +69,14 @@ export const validateHostStep = (stepNumber, formData, setFieldErrors = () => {}
     if (!facilities || facilities.length === 0) {
       if (shouldSetErrors) {
         setFieldErrors((prev) => ({ ...prev, facilities: 'Please select at least 1 facility/amenity.' }));
-        toast.error('Please select at least 1 facility/amenity.');
+        toast.error('Select at least 1 facility');
       }
       return false;
     }
     if (!formData?.rules || formData.rules.length === 0) {
       if (shouldSetErrors) {
         setFieldErrors((prev) => ({ ...prev, rules: 'Please select at least 1 house rule.' }));
-        toast.error('Please select at least 1 house rule.');
+        toast.error('Select at least 1 rule');
       }
       return false;
     }
@@ -87,7 +87,7 @@ export const validateHostStep = (stepNumber, formData, setFieldErrors = () => {}
     if (!formData?.images || formData.images.length === 0) {
       if (shouldSetErrors) {
         setFieldErrors((prev) => ({ ...prev, images: 'Please upload at least 1 showcase photo.' }));
-        toast.error('Please upload at least 1 showcase photo before proceeding.');
+        toast.error('Upload at least 1 photo');
       }
       return false;
     }
@@ -98,7 +98,7 @@ export const validateHostStep = (stepNumber, formData, setFieldErrors = () => {}
     if (!formData?.description || formData.description.trim().length < 10) {
       if (shouldSetErrors) {
         setFieldErrors((prev) => ({ ...prev, description: 'Description must be at least 10 characters long.' }));
-        toast.error('Property description must be at least 10 characters long.');
+        toast.error('Description min 10 chars');
       }
       return false;
     }
@@ -106,7 +106,7 @@ export const validateHostStep = (stepNumber, formData, setFieldErrors = () => {}
     if (validRates.length === 0) {
       if (shouldSetErrors) {
         setFieldErrors((prev) => ({ ...prev, roomRates: 'Please configure at least 1 room category.' }));
-        toast.error('Please configure at least 1 room category rate.');
+        toast.error('Set at least 1 room rate');
       }
       return false;
     }
@@ -114,7 +114,7 @@ export const validateHostStep = (stepNumber, formData, setFieldErrors = () => {}
     if (validRooms.length === 0) {
       if (shouldSetErrors) {
         setFieldErrors((prev) => ({ ...prev, rooms: 'Please add at least 1 room card.' }));
-        toast.error('Please add at least 1 room card with room number.');
+        toast.error('Add at least 1 room card');
       }
       return false;
     }

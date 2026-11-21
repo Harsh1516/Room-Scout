@@ -55,16 +55,6 @@ const hostSchema = new mongoose.Schema(
       type: String,
       enum: ['Active', 'Pending Approval', 'Approved', 'Rejected', 'Draft'],
       default: 'Pending Approval',
-      index: true,
-    },
-    isApproved: {
-      type: Boolean,
-      default: false,
-      index: true,
-    },
-    hasBeenApproved: {
-      type: Boolean,
-      default: false,
     },
     upiSettings: {
       upiId: {
@@ -94,17 +84,12 @@ const hostSchema = new mongoose.Schema(
         default: Date.now,
       },
     },
-    revenueResetSettings: {
-      resetAt: { type: Date, default: null },
-      baselineTotal: { type: Number, default: 0 },
-      baselineOnline: { type: Number, default: 0 },
-      baselineOffline: { type: Number, default: 0 },
-    },
     accountId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       default: null,
       index: true,
+      sparse: true,
     },
     subscription: {
       planCode: {
@@ -112,7 +97,7 @@ const hostSchema = new mongoose.Schema(
         enum: ['monthly', 'quarterly', 'halfYearly', 'yearly', 'none', 'custom'],
         default: 'none',
       },
-      planLabel: { type: String, default: '' },
+      planLabel: { type: String, trim: true },
       durationMonths: { type: Number, default: 0 },
       amountPaid: { type: Number, default: 0 },
       startDate: { type: Date, default: null },
@@ -123,10 +108,10 @@ const hostSchema = new mongoose.Schema(
         default: 'NONE',
         index: true,
       },
-      lastPaymentRef: { type: String, default: '' },
+      lastPaymentRef: { type: String, trim: true },
       lastVerifiedAt: { type: Date, default: null },
-      lockedPlanCode: { type: String, default: '' },
-      lockedStartOption: { type: String, enum: ['CURRENT', 'NEXT'], default: 'CURRENT' },
+      lockedPlanCode: { type: String, trim: true },
+      lockedStartOption: { type: String, enum: ['CURRENT', 'NEXT'] },
     },
   },
   {
@@ -173,8 +158,7 @@ hostSchema.methods.generateToken = async function () {
   );
 };
 
-// Fast query compound indexes for Admin/Host lookup
+// Fast query compound index for Admin/Host lookup
 hostSchema.index({ status: 1, createdAt: -1 });
-hostSchema.index({ isApproved: 1, status: 1 });
 
 export const Host = mongoose.model('Host', hostSchema);

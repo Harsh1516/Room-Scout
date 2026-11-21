@@ -111,13 +111,6 @@ const bookingSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
-    taxBreakdown: {
-      baseAmount: { type: Number, default: 0 },
-      cleaningFee: { type: Number, default: 0 },
-      cgst: { type: Number, default: 0 },
-      sgst: { type: Number, default: 0 },
-      totalAmount: { type: Number, default: 0 },
-    },
 
     // Identifiers & Status
     bookingReferenceId: {
@@ -131,10 +124,6 @@ const bookingSchema = new mongoose.Schema(
       trim: true,
       default: '',
       index: true,
-    },
-    slotBookingId: {
-      type: String,
-      default: '',
     },
     bookingSource: {
       type: String,
@@ -183,12 +172,6 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       enum: ['ONLINE', 'UPI', 'PAY_ON_ARRIVAL', 'CASH', 'OFFLINE', 'RAZORPAY'],
       default: 'OFFLINE',
-    },
-    paymentDetails: {
-      gateway: { type: String, default: 'Direct Host UPI' },
-      paymentId: { type: String, default: '' },
-      orderId: { type: String, default: '' },
-      signature: { type: String, default: '' },
     },
     upiPayment: {
       upiId: { type: String, trim: true, default: '' },

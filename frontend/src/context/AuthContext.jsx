@@ -57,8 +57,8 @@ export function sanitizeUserSession(rawUserData) {
  let hasProperty = false;
 
  if (isHost) {
- isApproved = Boolean(data.isApproved || data.status === 'Approved');
- status = data.status || (isApproved ? 'Approved' : 'Pending Approval');
+ status = data.status || 'Pending Approval';
+ isApproved = status === 'Approved';
  hasProperty = Boolean(data.hasProperty);
  }
 
@@ -307,7 +307,7 @@ export function AuthProvider({ children }) {
 
         if (cleanProfile?.email) {
           adminAPI.getHostByEmail(cleanProfile.email).then((hCheck) => {
-            if (hCheck?.hasProperty || hCheck?.host?.isApproved || hCheck?.host?.status === 'Approved') {
+            if (hCheck?.hasProperty || hCheck?.host?.status === 'Approved') {
               setUser((prev) => {
                 if (!prev) return prev;
                 const nextUser = {
@@ -586,6 +586,9 @@ export function AuthProvider({ children }) {
  loginWithGoogle,
  register,
  signup: register,
+ verifyLoginOtp,
+ verifyRegisterOtp,
+ resendOtp,
  updateUserSession,
  logout,
  }}

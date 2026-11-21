@@ -149,17 +149,7 @@ const validate16x9Ratio = (file) => {
  // Allow ~3.5% tolerance (approx 1.71 to 1.84) to support standard 16:9 resolutions:
  // 1920x1080, 1280x720, 1366x768 (1.7786), 1600x900, 2560x1440, 3840x2160, 854x480 (1.779)
  // Strictly blocks 4:3 (1.33), 1:1 (1.0), 3:2 (1.50), 16:10 (1.60), and portrait ratios (< 1.0)
- const is16x9 = Math.abs(ratio - targetRatio) <= 0.06;
- if (!is16x9) {
- resolve({
- valid: false,
- message: 'Photos must be in 16:9 only',
- width,
- height,
- });
- } else {
- resolve({ valid: true, width, height });
- }
+ resolve({ valid: true, width, height, isLandscape: width >= height });
  };
  img.onerror = () => {
  resolve({ valid: false, message: 'Failed to read image file.' });
@@ -364,7 +354,7 @@ export function PropertyPhotosTab({
  const validation = await validate16x9Ratio(file);
  if (!validation.valid) {
  setUploadNotice(validation.message);
- toast.error(validation.message);
+ toast.error(validation.message || 'Please upload a valid image file');
  if (replaceFileInputRef.current) {
  replaceFileInputRef.current.value = '';
  }
@@ -426,7 +416,7 @@ export function PropertyPhotosTab({
  const validation = await validate16x9Ratio(file);
  if (!validation.valid) {
  setUploadNotice(validation.message);
- toast.error(validation.message);
+ toast.error(validation.message || 'Please upload a valid image file');
  if (fileInputRef.current) {
  fileInputRef.current.value = '';
  }
@@ -704,11 +694,11 @@ export function PropertyPhotosTab({
  <div className="text-center px-1">
  <p className="text-xs font-medium text-slate-800">Upload Photo</p>
  <p className="text-[10px] text-slate-500 mt-0.5">
- 16:9 only • {MAX_PHOTOS - localImages.length} of {MAX_PHOTOS} remaining
+ Any format • Landscape recommended • {MAX_PHOTOS - localImages.length} of {MAX_PHOTOS} remaining
  </p>
  </div>
  <span className="mt-0.5 py-1 px-2.5 rounded-xl bg-white/80 hover:bg-purple-500/10 border border-slate-200/80 text-slate-800 text-[10.5px] font-medium transition-all shadow-2xs">
- Choose 16:9 File
+ Choose Photo
  </span>
  </div>
  )}
@@ -731,7 +721,7 @@ export function PropertyPhotosTab({
  {/* Edit mode drag guidance tip */}
  {isEditing && (
  <p className="text-xs text-slate-500 pt-1 font-normal">
- Tip: Photos must be in <span className="font-semibold text-[#1f1b16]">16:9 widescreen ratio</span>. 4 required views: Front View, Side View, Balcony, Parking. Limit: {MAX_PHOTOS} photos maximum.
+ Tip: All photo resolutions and orientations are supported. Landscape (horizontal) photos look best as your cover image. Limit: {MAX_PHOTOS} photos maximum.
  </p>
  )}
 

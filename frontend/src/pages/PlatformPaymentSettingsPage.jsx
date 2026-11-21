@@ -126,7 +126,7 @@ export default function PlatformPaymentSettingsPage() {
  const handleSave = async (event) => {
  event.preventDefault();
  if (form.upiId && !/^[^\s@]+@[^\s@]+$/.test(form.upiId)) {
- toast.error('Please enter a valid UPI ID (e.g. name@bank).');
+ toast.error('Enter valid UPI ID');
  return;
  }
 
@@ -134,7 +134,7 @@ export default function PlatformPaymentSettingsPage() {
  for (const pt of PROPERTY_TYPES) {
  const val = form.propertyPricing[pt.key];
  if (val === '' || isNaN(Number(val)) || Number(val) < 0) {
- toast.error(`Please provide a valid price for ${pt.label}.`);
+ toast.error(`Enter valid price for ${pt.label}`);
  return;
  }
  }
@@ -185,7 +185,7 @@ export default function PlatformPaymentSettingsPage() {
 
  setForm(updatedForm);
  saveStoredPaymentSettings(updatedForm);
- toast.success(' Platform UPI details, property pricing rates, and dynamic subscription plans saved!');
+ toast.success('Settings saved');
  } catch (error) {
  toast.error(error.message || 'Could not save settings');
  } finally {

@@ -661,14 +661,23 @@ export const googleAuth = async (req, res, next) => {
           avatar,
           role: 'host',
           status: 'Pending Approval',
-          isApproved: false,
+          isEmailVerified: true,
         });
       } else {
+        let changed = false;
         if (!host.googleId) {
           host.googleId = googleId;
-          if (payload.picture && (!host.avatar || host.avatar === 'HO')) {
-            host.avatar = payload.picture;
-          }
+          changed = true;
+        }
+        if (payload.picture && (!host.avatar || host.avatar === 'HO')) {
+          host.avatar = payload.picture;
+          changed = true;
+        }
+        if (!host.isEmailVerified) {
+          host.isEmailVerified = true;
+          changed = true;
+        }
+        if (changed) {
           await host.save();
         }
       }
@@ -683,7 +692,6 @@ export const googleAuth = async (req, res, next) => {
         avatar: host.avatar || 'HO',
         role: 'host',
         status: host.status,
-        isApproved: host.isApproved,
         authProvider: host.authProvider || 'google',
         hasPassword: Boolean(host.password),
       };
@@ -707,13 +715,23 @@ export const googleAuth = async (req, res, next) => {
           authProvider: 'google',
           avatar,
           role: 'user',
+          isEmailVerified: true,
         });
       } else {
+        let changed = false;
         if (!user.googleId) {
           user.googleId = googleId;
-          if (payload.picture && (!user.avatar || user.avatar === 'US')) {
-            user.avatar = payload.picture;
-          }
+          changed = true;
+        }
+        if (payload.picture && (!user.avatar || user.avatar === 'US')) {
+          user.avatar = payload.picture;
+          changed = true;
+        }
+        if (!user.isEmailVerified) {
+          user.isEmailVerified = true;
+          changed = true;
+        }
+        if (changed) {
           await user.save();
         }
       }
@@ -744,7 +762,6 @@ export const googleAuth = async (req, res, next) => {
       avatar: authenticatedAccount.avatar,
       role: authenticatedAccount.role,
       status: authenticatedAccount.status,
-      isApproved: authenticatedAccount.isApproved,
       authProvider: authenticatedAccount.authProvider,
       hasPassword: authenticatedAccount.hasPassword,
       token,
@@ -894,7 +911,6 @@ export const updateUserProfile = async (req, res, next) => {
           avatar: host.avatar,
           role: 'host',
           status: host.status,
-          isApproved: host.isApproved,
           authProvider: host.authProvider || 'local',
           hasPassword: Boolean(host.password),
         };
@@ -1028,7 +1044,6 @@ export const setPassword = async (req, res, next) => {
       avatar: account.avatar || (isHostRole ? 'HO' : 'US'),
       role: account.role || (isHostRole ? 'host' : 'user'),
       status: account.status,
-      isApproved: account.isApproved,
       authProvider: account.authProvider || 'google',
       hasPassword: true,
       hasProperty: Boolean(account.hasProperty),

@@ -7,7 +7,7 @@ import { Host } from '../models/Host.js';
 import { Stay } from '../models/Stay.js';
 import { idsMatch, isAdminUser } from '../middleware/authMiddleware.js';
 import { isBookingRequestExpired } from './bookingController.js';
-import { sendWhatsAppNotification } from '../services/whatsappService.js';
+import { sendBookingConfirmedEmail, sendPaymentSubmittedToHostEmail, getPublicClientBaseUrl } from '../services/emailService.js';
 import { uploadSecureImage } from '../utils/imageSecurity.js';
 import { emitToHost, emitToUser, emitToGlobal } from '../services/socketService.js';
 
@@ -75,7 +75,7 @@ export const getBookingUpiPaymentDetails = async (req, res, next) => {
 
     // Resolve Host and Stay payment settings
     const stay = await Stay.findById(booking.stayId).select('title upiSettings hostId').lean();
-    const host = await Host.findById(booking.hostId).select('name upiSettings isApproved').lean();
+    const host = await Host.findById(booking.hostId).select('name upiSettings status').lean();
 
     const hostUpi = stay?.upiSettings?.upiId || host?.upiSettings?.upiId || '';
     const payeeName = stay?.upiSettings?.payeeName || host?.upiSettings?.payeeName || host?.name || stay?.title || 'Room Scout Host';
@@ -348,14 +348,37 @@ export const submitUpiPayment = async (req, res, next) => {
       throw dbErr;
     }
 
-    // Send automated WhatsApp notice to host
-    sendWhatsAppNotification(booking, 'PAYMENT_PENDING', {
-      transactionRef: normalizedRef,
-      totalAmount: booking.totalAmount,
-      stayTitle: booking.stayTitle,
-    }).catch((err) => {
-      console.warn('[WhatsApp Warning] Could not notify host of submitted payment:', err.message);
-    });
+    // Send automated branded email alert to Host
+    try {
+      const hostDoc = await Host.findById(booking.hostId).select('name email').lean();
+      if (hostDoc?.email) {
+        const clientBaseUrl = getPublicClientBaseUrl(req);
+        const hostDashboardUrl = `${clientBaseUrl}/host-dashboard?tab=visited`;
+
+        sendPaymentSubmittedToHostEmail({
+          hostEmail: hostDoc.email,
+          hostName: hostDoc.name || 'Host Partner',
+          guestName: booking.fullName,
+          roomCategory: booking.roomType || 'Standard',
+          roomType: booking.roomType || 'Standard',
+          roomNumber: booking.roomNumber,
+          durationDisplay: booking.durationDisplay,
+          rateUnit: booking.rateUnit,
+          bookedMonths: booking.bookedMonths,
+          checkIn: booking.checkIn,
+          checkOut: booking.checkOut,
+          amount: booking.totalAmount,
+          transactionRef: normalizedRef,
+          bookingId: booking._id,
+          bookingReferenceId: booking.bookingReferenceId,
+          dashboardUrl: hostDashboardUrl,
+        }).catch((err) => {
+          console.warn('[Email Warning] Could not notify host of submitted payment via email:', err.message);
+        });
+      }
+    } catch (e) {
+      console.warn('[Email Warning] Host lookup error for payment submission:', e.message);
+    }
 
     // Real-time WebSockets dispatch to Host & Guest
     emitToHost([booking.hostId], 'payment:submitted', {
@@ -486,14 +509,21 @@ export const verifyHostPayment = async (req, res, next) => {
         { upsert: true }
       );
 
-      // Automated WhatsApp Booking Confirmation alert to guest
-      sendWhatsAppNotification(booking, 'BOOKING_CONFIRMED', {
-        paymentId: booking.upiPayment.transactionRef,
-        totalAmount: booking.totalAmount,
-        durationDisplay: booking.durationDisplay,
-      }).catch((err) => {
-        console.warn('[WhatsApp Warning] Could not send payment confirmed alert:', err.message);
-      });
+      // Automated Branded Booking Confirmation Email to guest with Check-In pass
+      if (booking.email) {
+        sendBookingConfirmedEmail({
+          guestEmail: booking.email,
+          guestName: booking.fullName,
+          stayTitle: booking.stayTitle,
+          roomNumber: booking.roomNumber,
+          totalAmount: booking.totalAmount,
+          checkInCode: booking.checkInCode || booking.bookingReferenceId,
+          bookingId: booking._id,
+          bookingReferenceId: booking.bookingReferenceId,
+        }).catch((err) => {
+          console.warn('[Email Warning] Could not send booking confirmation email:', err.message);
+        });
+      }
 
       // Real-time WebSockets dispatch to Guest & Host
       emitToUser([booking.userId, booking.email], 'payment:verified', {

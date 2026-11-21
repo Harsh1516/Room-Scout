@@ -490,7 +490,7 @@ export function HostSubscriptionPage() {
                           })}
                         </td>
                         <td className="py-3 px-3.5 font-semibold md:font-medium text-slate-900 md:text-white tracking-tight">
-                          {item.planLabel}
+                          {item.planLabel || item.derivedPlanLabel || (item.durationMonths ? `${item.durationMonths} Month${item.durationMonths > 1 ? 's' : ''}` : 'Subscription')}
                         </td>
                         <td className="py-3 px-3.5 font-semibold md:font-medium text-slate-900 md:text-emerald-400 tracking-tight">
                           ₹{Number(item.amount).toLocaleString('en-IN')}

@@ -88,7 +88,7 @@ export async function submitBookingUpiPayment({
  receiptImage: receiptImage || undefined,
  });
 
- toast.success(' Payment reference submitted! The host has been notified to verify your transaction.');
+ toast.success('Payment reference submitted');
 
  // Broadcast refresh events across tabs and components
  broadcastBookingChange({
@@ -101,7 +101,7 @@ export async function submitBookingUpiPayment({
  return res;
  } catch (err) {
  console.error('Submit UPI Payment Error:', err);
- toast.error(err.message || 'Failed to submit payment reference. Please check your reference.');
+ toast.error(err.message || 'Payment submission failed');
  if (onError) onError(err);
  throw err;
  }
@@ -118,7 +118,7 @@ export async function cancelUserBooking({ booking, onCancelled, onError }) {
  await bookingsAPI.updateBookingStatus(bookingId, { status: 'CANCELLED' }).catch(() => {});
  await bookingsAPI.deleteBooking(bookingId).catch(() => {});
 
- toast.success(`Booking for Room ${booking.roomNumber || ''} has been cancelled.`);
+ toast.success(`Room ${booking.roomNumber || ''} cancelled`);
 
  broadcastBookingChange({
  bookingId,
@@ -129,7 +129,7 @@ export async function cancelUserBooking({ booking, onCancelled, onError }) {
  if (onCancelled) onCancelled(booking);
  } catch (err) {
  console.error('Error cancelling booking:', err);
- toast.error(err.message || 'Failed to cancel booking.');
+ toast.error(err.message || 'Cancel failed');
  if (onError) onError(err);
  }
 }

@@ -198,7 +198,6 @@ export function HostUploadPage() {
         roomRates: loadedRates,
         rooms: loadedRooms,
         status: safePassedProp.status || 'Pending Approval',
-        isApproved: safePassedProp.status === 'Approved' || Boolean(safePassedProp.isApproved),
       };
 
       saveDraftToStorage(hydrated, 1, '', user);
@@ -476,7 +475,6 @@ export function HostUploadPage() {
               roomRates: mergedRates,
               rooms: mergedRooms,
               status: prop.status || prev.status || 'Pending Approval',
-              isApproved: prop.status === 'Approved' || Boolean(prop.isApproved),
             };
 
             const preservedStep = (currentDraft?.activeStep && Number(currentDraft.activeStep) >= 1)
@@ -684,7 +682,7 @@ export function HostUploadPage() {
           validateStep(s, true);
         }
         const stepMeta = WIZARD_STEPS.find((st) => st.id === s);
-        toast.error(`Please complete "${stepMeta?.shortTitle || stepMeta?.title || `Step ${s}`}" details first.`);
+        toast.error(`Complete ${stepMeta?.shortTitle || `Step ${s}`} first`);
         return;
       }
     }
@@ -713,7 +711,7 @@ export function HostUploadPage() {
         ...(!hasHostName ? { name: 'Host name is required (min 2 characters).' } : {}),
         ...(!hasHostPhone ? { phone: 'Host contact number must be at least 10 digits.' } : {}),
       }));
-      showToast('Please fill Host details first (Contact phone number is required).', 'error');
+      showToast('Fill host details first', 'error');
       return;
     }
 
@@ -722,7 +720,7 @@ export function HostUploadPage() {
       if (!validateStep(s, true)) {
         setActiveStep(s);
         const stepMeta = WIZARD_STEPS.find((st) => st.id === s);
-        toast.error(`Please complete all required details in "${stepMeta?.shortTitle || stepMeta?.title || `Step ${s}`}" before requesting upload.`);
+        toast.error(`Complete ${stepMeta?.shortTitle || `Step ${s}`} first`);
         return;
       }
     }
@@ -810,7 +808,7 @@ export function HostUploadPage() {
       .slice(0, MAX_PHOTOS);
     const finalPrimaryImage = finalImages[0] || '';
 
-    const isAlreadyApproved = formData.status === 'Approved' || Boolean(formData.isApproved);
+    const isAlreadyApproved = formData.status === 'Approved';
     const targetStatus = isAlreadyApproved ? 'Approved' : 'Pending Approval';
 
     try {

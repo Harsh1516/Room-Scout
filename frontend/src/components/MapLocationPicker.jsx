@@ -81,8 +81,6 @@ export function MapLocationPicker({
  defaultCity = '',
  defaultState = '',
 }) {
- if (typeof window === 'undefined') return null;
-
  const mapContainerRef = useRef(null);
  const mapInstanceRef = useRef(null);
  const baseLayerRef = useRef(null);
@@ -233,6 +231,8 @@ export function MapLocationPicker({
  mapInstanceRef.current.flyTo(pos, 17, { duration: 0.6 });
  }
  };
+
+ if (typeof window === 'undefined') return null;
 
  return (
  <div className="w-full h-full">

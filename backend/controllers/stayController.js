@@ -1153,7 +1153,6 @@ export const getPropertiesByHost = async (req, res, next) => {
       email: host?.email || req.user?.email || '',
       phone: host?.phone || req.user?.phone || '',
       status: host?.status || (s.isApproved ? 'Approved' : 'Pending Approval'),
-      isApproved: host?.status === 'Approved' || Boolean(s.isApproved),
       isPublished: Boolean(s.isPublished),
     }));
 

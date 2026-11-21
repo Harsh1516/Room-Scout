@@ -240,11 +240,10 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
         });
         if (!res.success) {
           setErrorMessage(res.message || 'Verification failed. Please check your code.');
-          toast.error(res.message || 'Verification failed.');
           setIsVerifyingOtp(false);
           return;
         }
-        toast.success(`Welcome to Room-Scout, ${formData.name.trim() || 'Guest'}!`);
+        toast.success(`Welcome, ${formData.name.trim() || 'Guest'}!`);
         setIsVerifyingOtp(false);
         setIsOtpMode(false);
         onClose();
@@ -258,17 +257,15 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
       });
       if (!res.success) {
         setErrorMessage(res.message || 'Verification failed. Please check your code.');
-        toast.error(res.message || 'Verification failed.');
         setIsVerifyingOtp(false);
         return;
       }
-      toast.success(`Welcome back, ${res.data?.name || 'User'}!`);
+      toast.success(`Welcome, ${res.data?.name || 'User'}!`);
       setIsVerifyingOtp(false);
       setIsOtpMode(false);
       onClose();
     } catch (err) {
       setErrorMessage(err.message || 'Verification failed.');
-      toast.error(err.message || 'Verification failed.');
       setIsVerifyingOtp(false);
     }
   };
@@ -287,11 +284,10 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
     setIsResending(false);
     if (!res.success) {
       setErrorMessage(res.message || 'Failed to resend code.');
-      toast.error(res.message || 'Failed to resend code.');
       return;
     }
 
-    toast.success('Fresh verification code sent to your email!');
+    toast.success('New code sent to email');
     setOtpCountdown(45);
     setOtpDigits(['', '', '', '', '', '']);
     otpInputRefs.current[0]?.focus();
@@ -321,7 +317,6 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
         if (!res.success) {
           const msg = res.message || 'Registration failed.';
           setErrorMessage(msg);
-          toast.error(msg);
           setIsSubmitting(false);
           return;
         }
@@ -332,10 +327,10 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
           setOtpCountdown(45);
           setOtpDigits(['', '', '', '', '', '']);
           setIsSubmitting(false);
-          toast.success(`Verification code sent to ${formData.email.trim()}`);
+          toast.success('Code sent to email');
           return;
         }
-        toast.success(`Welcome to RoomScout, ${formData.name.trim()}!`);
+        toast.success(`Welcome, ${formData.name.trim() || 'Guest'}!`);
         setFormData({ name: '', email: '', phone: '', password: '', confirmPassword: '' });
         setIsSubmitting(false);
         onClose();
@@ -357,7 +352,6 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
           msg = 'Account not Found. Register First.';
         }
         setErrorMessage(msg);
-        toast.error(msg);
         setIsSubmitting(false);
         return;
       }
@@ -369,11 +363,11 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
         setOtpCountdown(45);
         setOtpDigits(['', '', '', '', '', '']);
         setIsSubmitting(false);
-        toast.success(`Security code sent to ${formData.email.trim()}`);
+        toast.success('Security code sent');
         return;
       }
 
-      toast.success(`Welcome back, ${res.data?.name || 'User'}!`);
+      toast.success(`Welcome, ${res.data?.name || 'User'}!`);
       setFormData({ name: '', email: '', phone: '', password: '', confirmPassword: '' });
       setSuccessMessage('');
       setIsSubmitting(false);
@@ -390,7 +384,6 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
         msg = 'Server connection error. Please ensure the backend is running.';
       }
       setErrorMessage(msg);
-      toast.error(msg);
       setIsSubmitting(false);
     }
   };
@@ -419,31 +412,29 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
           msg = 'Account not Found. Register First.';
         }
         setErrorMessage(msg);
-        toast.error(msg);
         setIsSubmitting(false);
         return;
       }
 
-      toast.success(`Welcome${res.data?.name ? `, ${res.data.name}` : ''}!`);
+      toast.success(`Welcome, ${res.data?.name || 'User'}!`);
       setFormData({ name: '', email: '', phone: '', password: '', confirmPassword: '' });
       setIsSubmitting(false);
       onClose();
     } catch (err) {
       const msg = err.message || 'Google sign-in error';
       setErrorMessage(msg);
-      toast.error(msg);
       setIsSubmitting(false);
     }
   };
 
   const handleGoogleError = () => {
-    toast.error('Google Sign-In was cancelled or failed.');
+    toast.error('Google sign-in cancelled');
   };
 
   const handleForgotPasswordSubmit = async (e) => {
     e.preventDefault();
     if (!forgotEmail.trim()) {
-      toast.error('Please enter your email address.');
+      toast.error('Enter your email address');
       return;
     }
 
@@ -468,7 +459,6 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
     } catch (err) {
       const msg = err.message || 'Failed to send reset password.';
       setErrorMessage(msg);
-      toast.error(msg);
       setIsSubmitting(false);
     }
   };

@@ -67,9 +67,6 @@ export const envSchema = z
     // Google OAuth
     GOOGLE_CLIENT_ID: z.string().trim().optional(),
     GOOGLE_CLIENT_SECRET: z.string().trim().optional(),
-
-    // WhatsApp Automation (whatsapp-web.js)
-    ENABLE_WHATSAPP: z.string().trim().optional(),
   })
   .superRefine((data, ctx) => {
     // 1. In production, JWT_SECRET must be at least 32 characters long

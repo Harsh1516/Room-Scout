@@ -13,8 +13,6 @@ const CITY_HOTSPOTS = [
 ];
 
 export function MapPickerModal({ isOpen, onClose, onSelectLocation }) {
-  if (typeof window === 'undefined' || !isOpen) return null;
-
   const [pinPos, setPinPos] = useState({ lat: 29.3803, lon: 79.4636 });
   const [extractedCity, setExtractedCity] = useState('Nainital');
   const [isGeocoding, setIsGeocoding] = useState(false);

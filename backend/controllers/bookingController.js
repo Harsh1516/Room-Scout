@@ -3,8 +3,8 @@ import { Booking } from '../models/Booking.js';
 import { Stay } from '../models/Stay.js';
 import { Host } from '../models/Host.js';
 import { Payment } from '../models/Payment.js';
+import { User } from '../models/User.js';
 import { actorId, assertSelfHostOrAdmin, idsMatch, isAdminUser } from '../middleware/authMiddleware.js';
-import { sendWhatsAppNotification } from '../services/whatsappService.js';
 import {
   sendBookingRequestToHostEmail,
   sendBookingSubmittedToGuestEmail,
@@ -265,13 +265,6 @@ export async function autoExpireBookings(filter = {}) {
           }
         );
       }
-
-      // Dispatch automated WhatsApp alerts for expired bookings
-      for (const expiredBooking of expiredCandidates) {
-        sendWhatsAppNotification(expiredBooking, 'BOOKING_EXPIRED').catch((err) => {
-          console.warn('[WhatsApp Notice] Expiry alert notice:', err.message);
-        });
-      }
     }
   } catch (err) {
     console.error('Error auto-expiring bookings:', err);
@@ -494,7 +487,7 @@ export const createBooking = async (req, res, next) => {
     const taxes = 0;
 
     // Lookup Host UPI settings for immutable booking pricing snapshot
-    const hostDoc = await Host.findById(stay.hostId).select('name upiSettings').lean();
+    const hostDoc = await Host.findById(stay.hostId).select('name email upiSettings').lean();
     const recipientUpi = stay.upiSettings?.upiId || hostDoc?.upiSettings?.upiId || '';
     const recipientPayee = stay.upiSettings?.payeeName || hostDoc?.upiSettings?.payeeName || hostDoc?.name || stay.title;
 
@@ -506,14 +499,6 @@ export const createBooking = async (req, res, next) => {
       }
     } else {
       finalRefId = `BK-${Date.now().toString().slice(-8)}-${Math.random().toString(36).slice(2, 6)}`;
-    }
-
-    let finalSlotId = body.slotBookingId || '';
-    if (finalSlotId) {
-      const exists = await Booking.exists({ slotBookingId: finalSlotId });
-      if (exists) {
-        finalSlotId = `${finalSlotId}_${Date.now().toString().slice(-4)}`;
-      }
     }
 
     const bookingPayload = {
@@ -533,19 +518,13 @@ export const createBooking = async (req, res, next) => {
       checkIn,
       checkOut,
       durationDisplay: timings.durationDisplay || body.durationDisplay || '',
-      bookedDates: Array.isArray(body.bookedDates) && body.bookedDates.length > 0 ? body.bookedDates : (timings.cleanDates || []),
-      bookedMonths: Array.isArray(body.bookedMonths) && body.bookedMonths.length > 0 ? body.bookedMonths : (timings.cleanMonths || []),
+      bookedDates: isMonthly ? [] : (Array.isArray(body.bookedDates) && body.bookedDates.length > 0 ? body.bookedDates : (timings.cleanDates || [])),
+      bookedMonths: isMonthly ? (Array.isArray(body.bookedMonths) && body.bookedMonths.length > 0 ? body.bookedMonths : (timings.cleanMonths || [])) : [],
       personCount: Number(body.personCount) || 1,
       totalAmount: serverTotal,
-      taxBreakdown: {
-        baseAmount,
-        cleaningFee: maintenance,
-        cgst: Math.round(taxes / 2),
-        sgst: Math.round(taxes / 2),
-        totalAmount: serverTotal,
-      },
       pricingSnapshot: {
         basePrice: roomBaseRate,
+        baseAmount,
         rateUnit: isMonthly ? '/month' : '/night',
         unitCount,
         taxes,
@@ -577,7 +556,6 @@ export const createBooking = async (req, res, next) => {
         },
       ],
       bookingReferenceId: finalRefId,
-      slotBookingId: finalSlotId,
       bookingSource: 'ONLINE',
       status: 'PENDING',
       paymentStatus: isPayOnArrival ? 'PENDING' : 'UNPAID',
@@ -642,15 +620,41 @@ export const createBooking = async (req, res, next) => {
 
         return createdBooking;
       });
+      // Send automated branded email alerts (Host new request & Guest confirmation)
+      if (hostDoc?.email) {
+        sendBookingRequestToHostEmail({
+          hostEmail: hostDoc.email,
+          hostName: hostDoc.name || 'Host Partner',
+          guestName: newBooking.fullName,
+          guestPhone: newBooking.phone,
+          guestEmail: newBooking.email,
+          stayTitle: stay.title,
+          roomNumber: newBooking.roomNumber,
+          roomType: newBooking.roomType,
+          totalAmount: newBooking.totalAmount,
+          durationDisplay: newBooking.durationDisplay || timings.durationDisplay,
+          checkIn: newBooking.checkIn,
+          checkOut: newBooking.checkOut,
+          bookingId: newBooking._id,
+          bookingReferenceId: newBooking.bookingReferenceId,
+        }).catch((err) => {
+          console.warn('[Email Warning] Could not send host booking request alert:', err.message);
+        });
+      }
 
-      // Send automated WhatsApp confirmation to guest for received booking request
-      sendWhatsAppNotification(newBooking, 'BOOKING_PENDING', {
-        stayTitle: stay.title,
-        location: stay.location,
-        durationDisplay: newBooking.durationDisplay || timings.durationDisplay,
-      }).catch((err) => {
-        console.warn('[WhatsApp Warning] Could not send booking pending alert:', err.message);
-      });
+      if (newBooking.email) {
+        sendBookingSubmittedToGuestEmail({
+          guestEmail: newBooking.email,
+          guestName: newBooking.fullName,
+          stayTitle: stay.title,
+          roomNumber: newBooking.roomNumber,
+          totalAmount: newBooking.totalAmount,
+          bookingId: newBooking._id,
+          bookingReferenceId: newBooking.bookingReferenceId,
+        }).catch((err) => {
+          console.warn('[Email Warning] Could not send guest booking submitted alert:', err.message);
+        });
+      }
 
       // Real-time WebSockets dispatch to Host & Global availability
       emitToHost([newBooking.hostId], 'booking:new', {
@@ -836,11 +840,10 @@ export const createOfflineBooking = async (req, res, next) => {
       checkIn: startDate,
       checkOut: endDate,
       durationDisplay,
-      bookedDates: cleanDates.length > 0 ? cleanDates : (timings.cleanDates || []),
-      bookedMonths: Array.isArray(req.body.bookedMonths) && req.body.bookedMonths.length > 0 ? req.body.bookedMonths : (timings.cleanMonths || []),
+      bookedDates: isMonthlyRoom ? [] : (cleanDates.length > 0 ? cleanDates : (timings.cleanDates || [])),
+      bookedMonths: isMonthlyRoom ? (Array.isArray(req.body.bookedMonths) && req.body.bookedMonths.length > 0 ? req.body.bookedMonths : (timings.cleanMonths || [])) : [],
       totalAmount: Number(totalAmount) || 0,
       bookingReferenceId: refId,
-      slotBookingId: refId,
       status: 'CHECKED_IN',
       isOccupied: true,
       paymentStatus: 'PAID',
@@ -1352,13 +1355,13 @@ export const updateBookingStatus = async (req, res, next) => {
       updateFields.approvedAt = req.body.approvedAt ? new Date(req.body.approvedAt) : new Date();
       updateFields.paymentDeadline = req.body.paymentDeadline
         ? new Date(req.body.paymentDeadline)
-        : new Date(Date.now() + 15 * 60 * 1000);
+        : new Date(Date.now() + 10 * 60 * 1000);
     } else if (req.body.status === 'AWAITING_PAYMENT') {
       updateFields.status = 'AWAITING_PAYMENT';
       updateFields.approvedAt = req.body.approvedAt ? new Date(req.body.approvedAt) : new Date();
       updateFields.paymentDeadline = req.body.paymentDeadline
         ? new Date(req.body.paymentDeadline)
-        : new Date(Date.now() + 15 * 60 * 1000);
+        : new Date(Date.now() + 10 * 60 * 1000);
     }
 
     if (req.body.status === 'EXPIRED') {
@@ -1445,20 +1448,72 @@ export const updateBookingStatus = async (req, res, next) => {
 
     const updatedBooking = await Booking.findByIdAndUpdate(booking._id, { $set: updateFields }, { new: true });
 
-    // Send automated WhatsApp alerts based on host status action
+    // Send automated Email alerts based on host status action
     if (updatedBooking) {
-      if (req.body.status === 'AWAITING_PAYMENT') {
-        sendWhatsAppNotification(updatedBooking, 'PAYMENT_PENDING').catch((err) => {
-          console.warn('[WhatsApp Warning] Could not send payment pending alert:', err.message);
+      if (req.body.status === 'AWAITING_PAYMENT' || updateFields.status === 'AWAITING_PAYMENT') {
+        const dispatchApprovedEmail = async () => {
+          let recipientEmail = (updatedBooking.email || booking.email || '').trim();
+          let recipientName = (updatedBooking.fullName || booking.fullName || '').trim();
+
+          if (!recipientEmail && (updatedBooking.userId || booking.userId)) {
+            try {
+              const userDoc = await User.findById(updatedBooking.userId || booking.userId).select('name email').lean();
+              if (userDoc?.email) {
+                recipientEmail = userDoc.email.trim();
+                if (!recipientName) recipientName = userDoc.name || 'Guest';
+              }
+            } catch (err) {
+              console.warn('[Email Warning] Could not resolve guest user from userId:', err.message);
+            }
+          }
+
+          if (recipientEmail) {
+            const originUrl = req.get('origin') || process.env.CLIENT_URL || 'http://localhost:5173';
+            const directBookingUrl = `${originUrl}/booking/${updatedBooking._id}`;
+            await sendBookingApprovedToGuestEmail({
+              guestEmail: recipientEmail,
+              guestName: recipientName || 'Guest',
+              stayTitle: updatedBooking.stayTitle || booking.stayTitle,
+              roomNumber: updatedBooking.roomNumber || booking.roomNumber,
+              totalAmount: updatedBooking.totalAmount || booking.totalAmount,
+              paymentDeadline: updatedBooking.paymentDeadline,
+              bookingId: updatedBooking._id,
+              bookingReferenceId: updatedBooking.bookingReferenceId,
+              bookingUrl: directBookingUrl,
+            });
+          }
+        };
+
+        dispatchApprovedEmail().catch((err) => {
+          console.warn('[Email Warning] Could not send guest booking approved alert:', err.message);
         });
       } else if (req.body.status === 'CONFIRMED') {
-        sendWhatsAppNotification(updatedBooking, 'BOOKING_CONFIRMED').catch((err) => {
-          console.warn('[WhatsApp Warning] Could not send booking confirmed alert:', err.message);
-        });
+        if (updatedBooking.email) {
+          sendBookingConfirmedEmail({
+            guestEmail: updatedBooking.email,
+            guestName: updatedBooking.fullName,
+            stayTitle: updatedBooking.stayTitle,
+            roomNumber: updatedBooking.roomNumber,
+            totalAmount: updatedBooking.totalAmount,
+            checkInCode: updatedBooking.checkInCode || updatedBooking.bookingReferenceId,
+            bookingId: updatedBooking._id,
+            bookingReferenceId: updatedBooking.bookingReferenceId,
+          }).catch((err) => {
+            console.warn('[Email Warning] Could not send guest booking confirmed alert:', err.message);
+          });
+        }
       } else if (req.body.status === 'REJECTED') {
-        sendWhatsAppNotification(updatedBooking, 'BOOKING_REJECTED').catch((err) => {
-          console.warn('[WhatsApp Warning] Could not send booking rejected alert:', err.message);
-        });
+        if (updatedBooking.email) {
+          sendBookingRejectedToGuestEmail({
+            guestEmail: updatedBooking.email,
+            guestName: updatedBooking.fullName,
+            stayTitle: updatedBooking.stayTitle,
+            roomNumber: updatedBooking.roomNumber,
+            bookingReferenceId: updatedBooking.bookingReferenceId,
+          }).catch((err) => {
+            console.warn('[Email Warning] Could not send guest booking rejected alert:', err.message);
+          });
+        }
       }
 
       // Real-time synchronization to guest and host via WebSockets

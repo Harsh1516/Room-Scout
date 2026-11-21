@@ -121,7 +121,7 @@ export function getBookingStatusMeta(rawStatus, booking = null) {
 
   if (upiVerification === 'REJECTED' || isRecheck) {
     return {
-      label: isRecheck ? 'Action Required: Correct Payment Details' : 'Payment Reference Rejected',
+      label: isRecheck ? 'Payment Correction' : 'Payment Rejected',
       textColor: 'text-rose-600',
       dotClass: 'bg-rose-500',
       step: 2,
@@ -202,7 +202,7 @@ export function getBookingStatusMeta(rawStatus, booking = null) {
 
   if (st.includes('PENDING') || st.includes('APPROVAL')) {
     return {
-      label: 'Waiting for Host Approval',
+      label: 'Awaiting Approval',
       textColor: 'text-blue-600',
       dotClass: 'bg-blue-500',
       step: 1,

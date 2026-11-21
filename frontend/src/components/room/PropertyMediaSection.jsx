@@ -49,8 +49,6 @@ export function PropertyMediaSection({
             </div>
           )}
 
-          {/* Top subtle frosted glass blur matching natural photo colors without black tint */}
-          <div className="absolute inset-x-0 top-0 h-20 sm:h-24 backdrop-blur-xl bg-white/20 pointer-events-none z-10 [mask-image:linear-gradient(to_bottom,black_80%,transparent)] [-webkit-mask-image:linear-gradient(to_bottom,black_80%,transparent)]" />
 
           {/* Center "View Full" Pill Button (balanced capsule height & width) */}
           <button

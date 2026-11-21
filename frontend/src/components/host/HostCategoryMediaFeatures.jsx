@@ -87,14 +87,14 @@ export default function HostCategoryMediaFeatures({
     try {
       const validation = await validate16x9Ratio(file);
       if (!validation.valid) {
-        toast.error(validation.message || 'Photos must be in 16:9 aspect ratio only.');
+        toast.error('Photos must be 16:9 ratio');
         return;
       }
 
       // Compress image into KB using canvas 1400 max-dim 0.82 JPEG
       const compressedDataUrl = await compressImage(file);
       if (!compressedDataUrl) {
-        toast.error('Failed to process image. Please try another file.');
+        toast.error('Failed to process image');
         return;
       }
 

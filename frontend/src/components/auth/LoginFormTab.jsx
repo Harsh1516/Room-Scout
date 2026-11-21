@@ -72,7 +72,7 @@ export function LoginFormTab({
         )}
 
         {/* Error Banner */}
-        {!isRegisterMode && errorMessage && (
+        {!isRegisterMode && !isOtpMode && errorMessage && (
           <div className="mb-3 p-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-700 text-xs font-semibold text-center">
             {errorMessage}
           </div>

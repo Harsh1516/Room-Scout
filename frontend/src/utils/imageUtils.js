@@ -95,7 +95,7 @@ export const compressImage = (file) => {
   });
 };
 
-// Validates 16:9 aspect ratio with a tolerance of 0.06
+// Validates image readability, accepting all aspect ratios (Airbnb standard)
 export const validate16x9Ratio = (file) => {
   return new Promise((resolve) => {
     if (!file || !file.type.startsWith('image/')) {
@@ -112,17 +112,7 @@ export const validate16x9Ratio = (file) => {
           resolve({ valid: false, message: 'Unable to detect image dimensions.' });
           return;
         }
-        const ratio = width / height;
-        const targetRatio = 16 / 9;
-        const is16x9 = Math.abs(ratio - targetRatio) <= 0.06;
-        if (!is16x9) {
-          resolve({
-            valid: false,
-            message: 'Photos must be in 16:9 aspect ratio only.',
-          });
-        } else {
-          resolve({ valid: true });
-        }
+        resolve({ valid: true, width, height, isLandscape: width >= height });
       };
       img.onerror = () => resolve({ valid: false, message: `Failed to read image "${file.name}".` });
       img.src = e.target.result;

@@ -221,7 +221,7 @@ export function HostDashboardPage() {
  selectedRoomNumberRef,
  });
 
- const isApproved = hostProperty?.status === 'Approved' || hostProperty?.isApproved === true;
+ const isApproved = hostProperty?.status === 'Approved';
  const isPending = !isApproved;
 
  return (

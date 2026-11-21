@@ -1,4 +1,5 @@
 import path from 'path';
+import os from 'os';
 import { fileURLToPath } from 'url';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
@@ -187,56 +188,57 @@ export async function sendPasswordResetEmail({ to, name, tempPassword, role = 'u
     <html lang="en">
     <head>
       <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; color: #1e293b; }
-        .container { max-width: 540px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-        .header { background: linear-gradient(135deg, #059669 0%, #0d9488 100%); padding: 30px 24px; text-align: center; color: #ffffff; }
-        .brand { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; }
-        .badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 99px; font-size: 11px; font-weight: 700; margin-top: 8px; text-transform: uppercase; }
-        .content { padding: 32px 28px; }
-        .greeting { font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 12px; }
-        .text { font-size: 14px; line-height: 1.6; color: #475569; margin-bottom: 20px; }
-        .password-card { background-color: #f0fdf4; border: 2px dashed #86efac; border-radius: 16px; padding: 18px; text-align: center; margin: 24px 0; }
-        .pass-label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #166534; letter-spacing: 0.5px; margin-bottom: 6px; }
-        .password { font-family: 'Courier New', Courier, monospace; font-size: 26px; font-weight: 900; color: #0f172a; letter-spacing: 3px; }
-        .btn-container { text-align: center; margin: 28px 0 16px 0; }
-        .btn { display: inline-block; background: linear-gradient(135deg, #059669 0%, #0d9488 100%); color: #ffffff !important; padding: 12px 28px; border-radius: 99px; font-size: 13px; font-weight: 800; text-decoration: none; box-shadow: 0 4px 12px rgba(5,150,105,0.25); }
-        .notice { font-size: 11px; color: #94a3b8; line-height: 1.5; border-top: 1px solid #f1f5f9; padding-top: 16px; margin-top: 20px; }
-        .footer { background-color: #f8fafc; padding: 16px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 32px 16px; color: #0f172a; -webkit-font-smoothing: antialiased; }
+        .container { max-width: 540px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
+        .header { padding: 24px 32px; border-bottom: 1px solid #f1f5f9; }
+        .brand { font-size: 19px; font-weight: 800; letter-spacing: -0.03em; color: #0f172a; text-decoration: none; }
+        .brand-accent { color: #059669; }
+        .badge { float: right; background-color: #f1f5f9; color: #475569; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 10px; border-radius: 6px; }
+        .content { padding: 32px; }
+        .greeting { font-size: 20px; font-weight: 700; color: #0f172a; letter-spacing: -0.02em; margin-bottom: 10px; }
+        .text { font-size: 14.5px; line-height: 1.65; color: #475569; margin-bottom: 22px; }
+        .password-card { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; text-align: center; margin: 24px 0; }
+        .pass-label { font-size: 11.5px; font-weight: 600; text-transform: uppercase; color: #64748b; letter-spacing: 0.06em; margin-bottom: 8px; }
+        .password { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 28px; font-weight: 700; color: #0f172a; letter-spacing: 4px; }
+        .btn-container { text-align: left; margin: 28px 0 20px 0; }
+        .btn { display: inline-block; background-color: #0f172a; color: #ffffff !important; padding: 13px 28px; border-radius: 8px; font-size: 13.5px; font-weight: 600; text-decoration: none; letter-spacing: -0.01em; }
+        .notice { font-size: 12px; color: #64748b; line-height: 1.55; background-color: #f8fafc; border: 1px solid #f1f5f9; border-radius: 8px; padding: 14px 16px; margin-top: 24px; }
+        .footer { background-color: #fcfcfd; padding: 22px 32px; text-align: center; font-size: 11.5px; color: #94a3b8; border-top: 1px solid #f1f5f9; line-height: 1.6; }
       </style>
     </head>
     <body>
       <div class="container">
         <div class="header">
-          <div class="brand">🏠 Room-Scout</div>
-          <div class="badge">${roleLabel} Security</div>
+          <span class="brand">Room<span class="brand-accent">Scout</span></span>
+          <span class="badge">${roleLabel} • Password Recovery</span>
         </div>
         <div class="content">
           <div class="greeting">Hello ${name || 'there'},</div>
           <div class="text">
-            We received a request to recover your account password for <strong>${to}</strong>.
-            Your fresh, secure 10-character temporary password has been generated and saved to your account:
+            We received a request to recover your account password for <strong>${to}</strong>. Your temporary password is provided below:
           </div>
           
           <div class="password-card">
-            <div class="pass-label">Your New 10-Character Password</div>
+            <div class="pass-label">Temporary Access Password</div>
             <div class="password">${tempPassword}</div>
           </div>
           
-          <div class="text" style="font-size: 13px;">
-            You can now use this fresh password to immediately sign in to your Room-Scout ${roleLabel} account.
+          <div class="text" style="font-size: 13.5px; color: #64748b;">
+            Use this temporary password to sign in immediately. For optimal security, update your password under <strong>Account Settings &gt; Password</strong> after logging in.
           </div>
 
           <div class="btn-container">
-            <a href="${clientUrl}" class="btn" target="_blank">Sign In to Room-Scout →</a>
+            <a href="${clientUrl}" class="btn" target="_blank">Sign In to RoomScout</a>
           </div>
 
           <div class="notice">
-            🔒 <strong>Security Tip:</strong> Once you log in, you can update this password at any time by visiting your <strong>Account Center &gt; Password</strong> tab. If you did not make this request, please contact support.
+            If you did not request this password recovery, please ignore this email or reach out to our team if you have security concerns.
           </div>
         </div>
         <div class="footer">
-          &copy; ${new Date().getFullYear()} Room-Scout Student Living & PG Portals. All rights reserved.
+          &copy; ${new Date().getFullYear()} RoomScout Student Living & PG Portals • Direct Account Notification
         </div>
       </div>
     </body>
@@ -313,18 +315,60 @@ export async function testEmailConnection(testEmail = 'test@roomscout.com') {
     const info = await sendRawMail({
       from: process.env.EMAIL_FROM || emailUser || '"Room-Scout Diagnostic" <noreply@roomscout.com>',
       to: testEmail,
-      subject: `🧪 Room-Scout Connection Diagnostic Test (${activeProvider})`,
-      text: `Your Room-Scout email delivery system is functioning properly!\n\nProvider: ${activeProvider}\nTimestamp: ${new Date().toISOString()}`,
+      subject: `RoomScout Delivery Diagnostic (${activeProvider})`,
+      text: `Your RoomScout email delivery system is functioning properly!\n\nProvider: ${activeProvider}\nTimestamp: ${new Date().toISOString()}`,
       html: `
-        <div style="font-family: sans-serif; padding: 24px; max-width: 520px; border: 1px solid #10b981; border-radius: 16px; background-color: #ffffff;">
-          <h2 style="color: #059669; margin: 0 0 10px 0;">✅ Email Diagnostic Success</h2>
-          <p style="color: #374151; font-size: 14px;">Your Room-Scout transactional email system is connected and working perfectly!</p>
-          <ul style="color: #4b5563; font-size: 13px; line-height: 1.8;">
-            <li><strong>Active Provider:</strong> ${activeProvider}</li>
-            <li><strong>Host/Sender:</strong> ${emailUser || 'system-default'}</li>
-            <li><strong>Timestamp:</strong> ${new Date().toISOString()}</li>
-          </ul>
-        </div>
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 32px 16px; color: #0f172a; -webkit-font-smoothing: antialiased; }
+            .container { max-width: 540px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; }
+            .header { padding: 24px 32px; border-bottom: 1px solid #f1f5f9; }
+            .brand { font-size: 19px; font-weight: 800; letter-spacing: -0.03em; color: #0f172a; text-decoration: none; }
+            .brand-accent { color: #059669; }
+            .badge { float: right; background-color: #ecfdf5; color: #047857; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 10px; border-radius: 6px; }
+            .content { padding: 32px; }
+            .title { font-size: 20px; font-weight: 700; color: #0f172a; letter-spacing: -0.02em; margin: 0 0 10px 0; }
+            .subtitle { font-size: 14.5px; line-height: 1.65; color: #475569; margin: 0 0 24px 0; }
+            .card { background-color: #fcfcfd; border: 1px solid #f1f5f9; border-radius: 10px; padding: 8px 18px; margin: 20px 0; }
+            .footer { background-color: #fcfcfd; padding: 20px 32px; text-align: center; font-size: 11.5px; color: #94a3b8; border-top: 1px solid #f1f5f9; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <span class="brand">Room<span class="brand-accent">Scout</span></span>
+              <span class="badge">Diagnostic Verified</span>
+            </div>
+            <div class="content">
+              <div class="title">Email System Connected</div>
+              <div class="subtitle">Your transactional email delivery pipeline is verified and delivering in real time.</div>
+              <div class="card">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 10px 0; font-size: 12.5px; color: #64748b; border-bottom: 1px solid #f1f5f9;">Active Provider</td>
+                    <td style="padding: 10px 0; font-size: 13.5px; font-weight: 600; color: #0f172a; text-align: right; border-bottom: 1px solid #f1f5f9;">${activeProvider}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px 0; font-size: 12.5px; color: #64748b; border-bottom: 1px solid #f1f5f9;">Sender Account</td>
+                    <td style="padding: 10px 0; font-size: 13.5px; font-weight: 600; color: #0f172a; text-align: right; border-bottom: 1px solid #f1f5f9;">${emailUser || 'system-default'}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px 0; font-size: 12.5px; color: #64748b;">Dispatched At</td>
+                    <td style="padding: 10px 0; font-size: 13.5px; font-weight: 600; color: #0f172a; text-align: right;">${new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}, ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+            <div class="footer">
+              &copy; ${new Date().getFullYear()} RoomScout System Diagnostics
+            </div>
+          </div>
+        </body>
+        </html>
       `,
     });
 
@@ -347,15 +391,16 @@ export async function testEmailConnection(testEmail = 'test@roomscout.com') {
 }
 
 /**
- * Common HTML email wrapper for Room-Scout transactional messages
+ * Executive HTML email wrapper for RoomScout transactional messages
  */
 function buildBrandedEmailHtml({ badgeText, title, subtitle, detailsRows = [], ctaText, ctaUrl, footerNote }) {
+  const cleanBadge = (badgeText || '').replace(/^[^\w\s]+/, '').trim();
   const renderedRows = detailsRows
     .map(
       (row) => `
       <tr>
-        <td style="padding: 10px 0; font-size: 13px; color: #64748b; border-bottom: 1px solid #f1f5f9;">${row.label}</td>
-        <td style="padding: 10px 0; font-size: 14px; font-weight: 700; color: #0f172a; text-align: right; border-bottom: 1px solid #f1f5f9;">${row.value}</td>
+        <td style="padding: 10px 0; font-size: 12.5px; font-weight: 500; color: #64748b; border-bottom: 1px solid #f1f5f9; letter-spacing: 0.01em;">${row.label}</td>
+        <td style="padding: 10px 0; font-size: 13.5px; font-weight: 600; color: #0f172a; text-align: right; border-bottom: 1px solid #f1f5f9;">${row.value}</td>
       </tr>
     `
     )
@@ -368,26 +413,27 @@ function buildBrandedEmailHtml({ badgeText, title, subtitle, detailsRows = [], c
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; color: #1e293b; }
-      .container { max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-      .header { background: linear-gradient(135deg, #059669 0%, #0d9488 100%); padding: 28px 24px; text-align: center; color: #ffffff; }
-      .brand { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; }
-      .badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 99px; font-size: 11px; font-weight: 700; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-      .content { padding: 32px 28px; }
-      .title { font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
-      .subtitle { font-size: 14px; line-height: 1.6; color: #475569; margin-bottom: 24px; }
-      .table-card { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px 20px; margin: 20px 0; }
-      .btn-container { text-align: center; margin: 28px 0 16px 0; }
-      .btn { display: inline-block; background: linear-gradient(135deg, #059669 0%, #0d9488 100%); color: #ffffff !important; padding: 14px 32px; border-radius: 99px; font-size: 14px; font-weight: 800; text-decoration: none; box-shadow: 0 4px 14px rgba(5,150,105,0.3); }
-      .footer-note { font-size: 12px; color: #94a3b8; line-height: 1.5; border-top: 1px solid #f1f5f9; padding-top: 16px; margin-top: 24px; text-align: center; }
-      .footer { background-color: #f8fafc; padding: 16px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; }
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 32px 16px; color: #0f172a; -webkit-font-smoothing: antialiased; }
+      .container { max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
+      .header { padding: 24px 32px; border-bottom: 1px solid #f1f5f9; }
+      .brand { font-size: 19px; font-weight: 800; letter-spacing: -0.03em; color: #0f172a; text-decoration: none; }
+      .brand-accent { color: #059669; }
+      .badge { float: right; background-color: #f1f5f9; color: #475569; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 10px; border-radius: 6px; }
+      .content { padding: 32px; }
+      .title { font-size: 21px; font-weight: 700; color: #0f172a; letter-spacing: -0.02em; line-height: 1.35; margin: 0 0 10px 0; }
+      .subtitle { font-size: 14.5px; line-height: 1.65; color: #475569; margin: 0 0 24px 0; }
+      .table-card { background-color: #fcfcfd; border: 1px solid #f1f5f9; border-radius: 10px; padding: 6px 18px; margin: 20px 0; }
+      .btn-container { text-align: left; margin: 28px 0 20px 0; }
+      .btn { display: inline-block; background-color: #0f172a; color: #ffffff !important; padding: 13px 28px; border-radius: 8px; font-size: 13.5px; font-weight: 600; text-decoration: none; letter-spacing: -0.01em; }
+      .footer-note { font-size: 12px; color: #64748b; line-height: 1.55; background-color: #f8fafc; border: 1px solid #f1f5f9; border-radius: 8px; padding: 12px 16px; margin-top: 24px; }
+      .footer { background-color: #fcfcfd; padding: 22px 32px; text-align: center; font-size: 11.5px; color: #94a3b8; border-top: 1px solid #f1f5f9; line-height: 1.6; }
     </style>
   </head>
   <body>
     <div class="container">
       <div class="header">
-        <div class="brand">🏠 Room-Scout</div>
-        <div class="badge">${badgeText}</div>
+        <span class="brand">Room<span class="brand-accent">Scout</span></span>
+        ${cleanBadge ? `<span class="badge">${cleanBadge}</span>` : ''}
       </div>
       <div class="content">
         <div class="title">${title}</div>
@@ -409,7 +455,7 @@ function buildBrandedEmailHtml({ badgeText, title, subtitle, detailsRows = [], c
           ctaText && ctaUrl
             ? `
           <div class="btn-container">
-            <a href="${ctaUrl}" class="btn" target="_blank">${ctaText} →</a>
+            <a href="${ctaUrl}" class="btn" target="_blank">${ctaText}</a>
           </div>
         `
             : ''
@@ -418,7 +464,7 @@ function buildBrandedEmailHtml({ badgeText, title, subtitle, detailsRows = [], c
         ${footerNote ? `<div class="footer-note">${footerNote}</div>` : ''}
       </div>
       <div class="footer">
-        &copy; ${new Date().getFullYear()} Room-Scout Student Living & PG Portals. All rights reserved.
+        &copy; ${new Date().getFullYear()} RoomScout Student Living & PG Portals • Direct Verified Notification
       </div>
     </div>
   </body>
@@ -471,7 +517,7 @@ export async function sendBookingRequestToHostEmail({
       ],
       ctaText: 'Review & Approve Request',
       ctaUrl: hostDashboardUrl,
-      footerNote: '⚡ As part of our asynchronous workflow, approving this request will instantly notify the guest to complete payment within their allotted window.',
+      footerNote: 'Approving this request will notify the guest to complete payment within their allotted window.',
     });
 
     if (!transporter) {
@@ -482,8 +528,8 @@ export async function sendBookingRequestToHostEmail({
     const mailOptions = {
       from: fromAddress,
       to: hostEmail,
-      subject: `🏠 New Booking Request: Room ${roomNumber} at ${stayTitle} (${bookingReferenceId || bookingId})`,
-      text: `Hello ${hostName},\n\nYou have received a new booking request for Room ${roomNumber} at ${stayTitle} from ${guestName}.\nTotal: ₹${totalAmount}\n\nReview & Approve at: ${hostDashboardUrl}\n\nRoom-Scout Team`,
+      subject: `New Booking Request: Room ${roomNumber} at ${stayTitle} (${bookingReferenceId || bookingId})`,
+      text: `Hello ${hostName},\n\nYou have received a new booking request for Room ${roomNumber} at ${stayTitle} from ${guestName}.\nTotal: ₹${totalAmount}\n\nReview & Approve at: ${hostDashboardUrl}\n\nRoomScout Team`,
       html: htmlContent,
     };
 
@@ -529,7 +575,7 @@ export async function sendBookingSubmittedToGuestEmail({
       ],
       ctaText: 'View Booking Status',
       ctaUrl: bookingUrl,
-      footerNote: '💡 No need to continuously refresh! You will receive a direct notification link as soon as your slot is approved.',
+      footerNote: 'You will receive a direct notification link as soon as your slot is approved by the host.',
     });
 
     if (!transporter) {
@@ -540,8 +586,8 @@ export async function sendBookingSubmittedToGuestEmail({
     const mailOptions = {
       from: fromAddress,
       to: guestEmail,
-      subject: `⏳ Booking Request Received: ${stayTitle} (${bookingReferenceId || bookingId})`,
-      text: `Hello ${guestName},\n\nYour booking request for Room ${roomNumber} at ${stayTitle} is pending host approval.\n\nTrack status: ${bookingUrl}\n\nRoom-Scout Team`,
+      subject: `Booking Request Received: ${stayTitle} (${bookingReferenceId || bookingId})`,
+      text: `Hello ${guestName},\n\nYour booking request for Room ${roomNumber} at ${stayTitle} is pending host approval.\n\nTrack status: ${bookingUrl}\n\nRoomScout Team`,
       html: htmlContent,
     };
 
@@ -566,6 +612,7 @@ export async function sendBookingApprovedToGuestEmail({
   paymentDeadline,
   bookingId,
   bookingReferenceId,
+  bookingUrl: customBookingUrl,
 }) {
   if (!guestEmail) return { success: false, reason: 'No guest email address provided' };
 
@@ -573,26 +620,28 @@ export async function sendBookingApprovedToGuestEmail({
     const transporter = await getTransporter();
     const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Room-Scout Support" <noreply@roomscout.com>';
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-    const bookingUrl = `${clientUrl}/booking/${bookingId}`;
+    const bookingUrl = customBookingUrl || `${clientUrl}/booking/${bookingId}`;
 
-    const deadlineText = paymentDeadline
+    const deadlineTime = paymentDeadline
       ? new Date(paymentDeadline).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-      : '15 minutes';
+      : null;
+    const deadlineText = deadlineTime ? `10 minutes (before ${deadlineTime})` : '10 minutes';
 
     const htmlContent = buildBrandedEmailHtml({
-      badgeText: '🎉 Slot Approved: Payment Open',
-      title: `Great news, ${guestName}! Your booking was approved!`,
-      subtitle: `The host has approved your booking for <strong>Room ${roomNumber}</strong> at <strong>${stayTitle}</strong>. Please complete your direct payment before <strong>${deadlineText}</strong> to confirm your slot reservation.`,
+      badgeText: '🎉 Slot Accepted: Payment Required',
+      title: `Slot Accepted: Complete Payment for Room ${roomNumber}`,
+      subtitle: `Great news, ${guestName}! The host has accepted your slot request for <strong>Room ${roomNumber}</strong> at <strong>${stayTitle}</strong>. Please complete your direct payment of <strong>₹${Number(totalAmount || 0).toLocaleString('en-IN')}</strong> within <strong>10 minutes</strong> (${deadlineText}) to secure your booking.`,
       detailsRows: [
         { label: 'Booking Reference', value: bookingReferenceId || bookingId },
         { label: 'Property', value: stayTitle },
         { label: 'Room', value: `Room ${roomNumber}` },
         { label: 'Amount Due', value: `₹${Number(totalAmount || 0).toLocaleString('en-IN')}` },
+        { label: 'Time Limit', value: '10 Minutes' },
         { label: 'Payment Deadline', value: deadlineText },
       ],
-      ctaText: 'Complete Payment Now',
+      ctaText: 'Complete Payment via UPI QR Code',
       ctaUrl: bookingUrl,
-      footerNote: '⚠️ Please complete payment and upload your transaction reference before the timer elapses to lock your room.',
+      footerNote: 'Please complete payment and submit your 12-digit UPI transaction reference (UTR) within the 10-minute window before the slot expires.',
     });
 
     if (!transporter) {
@@ -603,8 +652,8 @@ export async function sendBookingApprovedToGuestEmail({
     const mailOptions = {
       from: fromAddress,
       to: guestEmail,
-      subject: `🎉 Booking Approved: Complete Payment for ${stayTitle} (Room ${roomNumber})`,
-      text: `Hello ${guestName},\n\nThe host has approved your booking for Room ${roomNumber} at ${stayTitle}!\nPlease complete payment (₹${totalAmount}) before ${deadlineText}.\n\nPay now: ${bookingUrl}\n\nRoom-Scout Team`,
+      subject: `Slot Accepted: Pay within 10 Minutes for ${stayTitle} (Room ${roomNumber})`,
+      text: `Hello ${guestName},\n\nYour room slot request for Room ${roomNumber} at ${stayTitle} has been accepted by the host!\nPlease complete payment (₹${totalAmount}) within 10 minutes (${deadlineText}).\n\nInstant Payment Link: ${bookingUrl}\n\nRoomScout Team`,
       html: htmlContent,
     };
 
@@ -635,9 +684,9 @@ export async function sendBookingRejectedToGuestEmail({
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
 
     const htmlContent = buildBrandedEmailHtml({
-      badgeText: 'Booking Update: Declined',
-      title: `Booking Request Declined`,
-      subtitle: `Hello ${guestName}, unfortunately the host was unable to accept your booking request for <strong>Room ${roomNumber}</strong> at <strong>${stayTitle}</strong> at this time.`,
+      badgeText: 'Booking Declined',
+      title: 'Booking Request Declined',
+      subtitle: `Hello ${guestName}, the host was unable to accept your booking request for <strong>Room ${roomNumber}</strong> at <strong>${stayTitle}</strong> for your selected dates.`,
       detailsRows: [
         { label: 'Booking Reference', value: bookingReferenceId || 'N/A' },
         { label: 'Property', value: stayTitle },
@@ -646,7 +695,7 @@ export async function sendBookingRejectedToGuestEmail({
       ],
       ctaText: 'Explore Other Available Stays',
       ctaUrl: clientUrl,
-      footerNote: 'You have not been charged. Browse hundreds of other student PGs and apartments on Room-Scout.',
+      footerNote: 'You have not been charged. Browse hundreds of verified student PGs and apartments on RoomScout.',
     });
 
     if (!transporter) {
@@ -658,7 +707,7 @@ export async function sendBookingRejectedToGuestEmail({
       from: fromAddress,
       to: guestEmail,
       subject: `Booking Request Declined: ${stayTitle} (${bookingReferenceId})`,
-      text: `Hello ${guestName},\n\nThe host was unable to accept your booking for Room ${roomNumber} at ${stayTitle}.\n\nExplore other stays: ${clientUrl}\n\nRoom-Scout Team`,
+      text: `Hello ${guestName},\n\nThe host was unable to accept your booking for Room ${roomNumber} at ${stayTitle}.\n\nExplore other stays: ${clientUrl}\n\nRoomScout Team`,
       html: htmlContent,
     };
 
@@ -693,12 +742,12 @@ export async function sendBookingConfirmedEmail({
     const bookingUrl = `${clientUrl}/booking/${bookingId}`;
 
     const htmlContent = buildBrandedEmailHtml({
-      badgeText: '✅ Booking Confirmed & Verified',
+      badgeText: 'Booking Confirmed',
       title: `Reservation Confirmed, ${guestName}!`,
-      subtitle: `Your payment has been verified by the host! Your reservation for <strong>Room ${roomNumber}</strong> at <strong>${stayTitle}</strong> is 100% locked. Keep your check-in code handy upon arrival.`,
+      subtitle: `Your payment has been verified by the host. Your reservation for <strong>Room ${roomNumber}</strong> at <strong>${stayTitle}</strong> is locked. Keep your check-in code handy upon arrival.`,
       detailsRows: [
         { label: 'Booking Reference', value: bookingReferenceId || bookingId },
-        { label: 'Check-In Pass Code', value: checkInCode ? `🔑 ${checkInCode}` : 'Issued on Pass' },
+        { label: 'Check-In Pass Code', value: checkInCode || 'Issued on Pass' },
         { label: 'Property', value: stayTitle },
         { label: 'Room', value: `Room ${roomNumber}` },
         { label: 'Amount Paid', value: `₹${Number(totalAmount || 0).toLocaleString('en-IN')}` },
@@ -717,8 +766,8 @@ export async function sendBookingConfirmedEmail({
     const mailOptions = {
       from: fromAddress,
       to: guestEmail,
-      subject: `✅ Booking Confirmed! Your Stay at ${stayTitle} (Code: ${checkInCode || 'Verified'})`,
-      text: `Hello ${guestName},\n\nYour booking for Room ${roomNumber} at ${stayTitle} is confirmed!\nCheck-In Code: ${checkInCode}\n\nView Pass: ${bookingUrl}\n\nRoom-Scout Team`,
+      subject: `Booking Confirmed: Your Stay at ${stayTitle} (Code: ${checkInCode || 'Verified'})`,
+      text: `Hello ${guestName},\n\nYour booking for Room ${roomNumber} at ${stayTitle} is confirmed!\nCheck-In Code: ${checkInCode}\n\nView Pass: ${bookingUrl}\n\nRoomScout Team`,
       html: htmlContent,
     };
 
@@ -751,51 +800,53 @@ export async function sendEmailVerificationOtp({ to, name, otp, purpose = 'Verif
     <html lang="en">
     <head>
       <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; color: #1e293b; }
-        .container { max-width: 520px; margin: 0 auto; background-color: #ffffff; border-radius: 24px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(0,0,0,0.06); }
-        .header { background: linear-gradient(135deg, #059669 0%, #0d9488 100%); padding: 32px 24px; text-align: center; color: #ffffff; }
-        .brand { font-size: 26px; font-weight: 900; letter-spacing: -0.5px; }
-        .badge { display: inline-block; background: rgba(255,255,255,0.22); padding: 4px 14px; border-radius: 99px; font-size: 11px; font-weight: 800; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .content { padding: 36px 32px; }
-        .greeting { font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 12px; }
-        .text { font-size: 14.5px; line-height: 1.6; color: #475569; margin-bottom: 24px; }
-        .otp-card { background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%); border: 2px dashed #059669; border-radius: 20px; padding: 24px; text-align: center; margin: 28px 0; }
-        .otp-label { font-size: 12px; font-weight: 800; text-transform: uppercase; color: #065f46; letter-spacing: 1px; margin-bottom: 8px; }
-        .otp-code { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace; font-size: 38px; font-weight: 900; color: #064e3b; letter-spacing: 8px; }
-        .expiry-note { font-size: 12px; font-weight: 600; color: #047857; margin-top: 8px; }
-        .security-box { background-color: #f8fafc; border-left: 4px solid #059669; padding: 14px 18px; border-radius: 0 12px 12px 0; font-size: 12px; color: #64748b; line-height: 1.5; margin-top: 24px; }
-        .footer { background-color: #f8fafc; padding: 18px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 32px 16px; color: #0f172a; -webkit-font-smoothing: antialiased; }
+        .container { max-width: 520px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
+        .header { padding: 24px 32px; border-bottom: 1px solid #f1f5f9; }
+        .brand { font-size: 19px; font-weight: 800; letter-spacing: -0.03em; color: #0f172a; text-decoration: none; }
+        .brand-accent { color: #059669; }
+        .badge { float: right; background-color: #f1f5f9; color: #475569; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 10px; border-radius: 6px; }
+        .content { padding: 32px; }
+        .greeting { font-size: 20px; font-weight: 700; color: #0f172a; letter-spacing: -0.02em; margin-bottom: 10px; }
+        .text { font-size: 14.5px; line-height: 1.65; color: #475569; margin-bottom: 22px; }
+        .otp-card { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 22px; text-align: center; margin: 24px 0; }
+        .otp-label { font-size: 11.5px; font-weight: 600; text-transform: uppercase; color: #64748b; letter-spacing: 0.06em; margin-bottom: 8px; }
+        .otp-code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 34px; font-weight: 700; color: #0f172a; letter-spacing: 8px; }
+        .expiry-note { font-size: 12px; font-weight: 500; color: #64748b; margin-top: 8px; }
+        .security-box { background-color: #f8fafc; border: 1px solid #f1f5f9; border-radius: 8px; padding: 14px 16px; font-size: 12px; color: #64748b; line-height: 1.55; margin-top: 24px; }
+        .footer { background-color: #fcfcfd; padding: 22px 32px; text-align: center; font-size: 11.5px; color: #94a3b8; border-top: 1px solid #f1f5f9; line-height: 1.6; }
       </style>
     </head>
     <body>
       <div class="container">
         <div class="header">
-          <div class="brand">🏠 Room-Scout</div>
-          <div class="badge">${roleLabel} • Email Verification</div>
+          <span class="brand">Room<span class="brand-accent">Scout</span></span>
+          <span class="badge">${roleLabel} • Verification</span>
         </div>
         <div class="content">
           <div class="greeting">Hello ${name || 'there'},</div>
           <div class="text">
-            Use the 6-digit verification code below to complete your <strong>${purpose}</strong> on Room-Scout:
+            Use the 6-digit verification code below to complete your <strong>${purpose}</strong> on RoomScout:
           </div>
           
           <div class="otp-card">
-            <div class="otp-label">Your 6-Digit Verification Code</div>
+            <div class="otp-label">Security Verification Code</div>
             <div class="otp-code">${otp}</div>
-            <div class="expiry-note">⏱ Valid for 10 minutes</div>
+            <div class="expiry-note">Expires in 10 minutes</div>
           </div>
           
-          <div class="text" style="font-size: 13.5px;">
-            Enter this code into your Room-Scout window to verify your email address (<strong>${to}</strong>).
+          <div class="text" style="font-size: 13.5px; color: #64748b;">
+            Enter this code into your RoomScout prompt to verify your account email address (<strong>${to}</strong>).
           </div>
 
           <div class="security-box">
-            🛡️ <strong>Security Tip:</strong> Room-Scout will never ask you for your verification code outside the app. Never share this code with anyone.
+            Never share this verification code with anyone. RoomScout staff will never ask for your code.
           </div>
         </div>
         <div class="footer">
-          &copy; ${new Date().getFullYear()} Room-Scout Student Living & PG Portals. All rights reserved.
+          &copy; ${new Date().getFullYear()} RoomScout Student Living & PG Portals • Direct Security Notification
         </div>
       </div>
     </body>
@@ -810,8 +861,8 @@ export async function sendEmailVerificationOtp({ to, name, otp, purpose = 'Verif
     const mailOptions = {
       from: fromAddress,
       to,
-      subject: `🔐 Your Room-Scout Verification Code: ${otp}`,
-      text: `Hello ${name},\n\nYour 6-digit verification code for Room-Scout ${purpose} is: ${otp}\n\nThis code expires in 10 minutes.\n\nThank you,\nRoom-Scout Team`,
+      subject: `Verification Code: ${otp}`,
+      text: `Hello ${name},\n\nYour 6-digit verification code for RoomScout ${purpose} is: ${otp}\n\nThis code expires in 10 minutes.\n\nThank you,\nRoomScout Team`,
       html: htmlContent,
     };
 
@@ -820,6 +871,346 @@ export async function sendEmailVerificationOtp({ to, name, otp, purpose = 'Verif
     return { success: true, messageId: info.messageId, otp };
   } catch (err) {
     console.error(`❌ Failed to send OTP email to [${to}]:`, err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * 6. Send Subscription Request Email to Admin (Fired when host submits plan payment)
+ */
+export async function sendSubscriptionRequestToAdminEmail({
+  hostName,
+  hostEmail,
+  hostPhone,
+  stayTitle,
+  planLabel,
+  durationMonths,
+  amount,
+  transactionRef,
+  startMonthLabel,
+}) {
+  const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
+  if (!adminEmail) return { success: false, reason: 'No admin email configured' };
+
+  try {
+    const transporter = await getTransporter();
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Room-Scout Admin" <noreply@roomscout.com>';
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const adminUrl = `${clientUrl}/admin`;
+
+    const htmlContent = buildBrandedEmailHtml({
+      badgeText: 'New Subscription Payment',
+      title: 'Host Subscription Payment Submitted',
+      subtitle: `Host <strong>${hostName}</strong> has submitted a UPI payment of <strong>₹${Number(amount || 0).toLocaleString('en-IN')}</strong> for property <strong>${stayTitle || 'Listing'}</strong>. Please verify the 12-digit UTR against your bank statement records.`,
+      detailsRows: [
+        { label: 'Host Name', value: hostName },
+        { label: 'Host Email', value: hostEmail || 'N/A' },
+        { label: 'Host Phone', value: hostPhone || 'N/A' },
+        { label: 'Property / Stay', value: stayTitle || 'General Host Account' },
+        { label: 'Subscription Plan', value: planLabel || `${durationMonths} Month(s)` },
+        { label: 'Plan Duration', value: `${durationMonths} Month(s)` },
+        { label: 'Amount Paid', value: `₹${Number(amount || 0).toLocaleString('en-IN')}` },
+        { label: '12-Digit UTR', value: transactionRef },
+        { label: 'Validity Schedule', value: startMonthLabel || 'Immediate' },
+      ],
+      ctaText: 'Open Admin Subscriptions Panel',
+      ctaUrl: adminUrl,
+      footerNote: 'You can verify this plan directly in Admin > Subscriptions or upload your bank statement CSV to auto-reconcile matching UTRs.',
+    });
+
+    if (!transporter) {
+      console.log(`[LOCAL EMAIL SIMULATOR] Subscription request alert to admin: ${adminEmail}`);
+      return { success: true, simulated: true };
+    }
+
+    const mailOptions = {
+      from: fromAddress,
+      to: adminEmail,
+      subject: `New Subscription Payment: ${hostName} (${planLabel}, UTR: ${transactionRef})`,
+      text: `Hello Admin,\n\nHost ${hostName} has submitted a payment of ₹${amount} for plan ${planLabel}.\nUTR: ${transactionRef}\n\nVerify at: ${adminUrl}\n\nRoomScout Team`,
+      html: htmlContent,
+    };
+
+    const info = await sendRawMail(mailOptions);
+    console.log(`✅ Real Admin Subscription Alert dispatched to [${adminEmail}] (Message ID: ${info.messageId})`);
+    return { success: true, messageId: info.messageId };
+  } catch (err) {
+    console.error(`❌ Failed to send subscription alert to admin [${adminEmail}]:`, err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * 7. Send Subscription Activated Email to Host (Fired when admin approves plan)
+ */
+export async function sendSubscriptionActivatedToHostEmail({
+  hostEmail,
+  hostName,
+  planLabel,
+  durationMonths,
+  amount,
+  transactionRef,
+  validUntil,
+  isApprovedHost = true,
+}) {
+  if (!hostEmail) return { success: false, reason: 'No host email address provided' };
+
+  try {
+    const transporter = await getTransporter();
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Room-Scout Billing" <noreply@roomscout.com>';
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const hostDashboardUrl = `${clientUrl}/host-dashboard`;
+
+    const htmlContent = buildBrandedEmailHtml({
+      badgeText: 'Subscription Activated',
+      title: 'Host Subscription Activated',
+      subtitle: `Your subscription payment has been verified by the RoomScout administration. ${
+        isApprovedHost
+          ? 'Your property listing is now <strong>LIVE</strong> and actively visible to guests across the platform.'
+          : 'Your host subscription is now active! Your property listing will go live as soon as final review is completed.'
+      }`,
+      detailsRows: [
+        { label: 'Host Partner', value: hostName },
+        { label: 'Activated Plan', value: planLabel || `${durationMonths} Month(s)` },
+        { label: 'Plan Duration', value: `${durationMonths} Month(s)` },
+        { label: 'Amount Paid', value: `₹${Number(amount || 0).toLocaleString('en-IN')}` },
+        { label: 'Payment Reference', value: transactionRef || 'Verified' },
+        { label: 'Plan Active Until', value: validUntil },
+        { label: 'Listing Status', value: isApprovedHost ? 'Active & Accepting Bookings' : 'Active Subscription' },
+      ],
+      ctaText: 'Open Host Dashboard',
+      ctaUrl: hostDashboardUrl,
+      footerNote: 'Please retain this email as your official digital invoice. You can manage room inventory and review incoming guest bookings anytime from your Host Dashboard.',
+    });
+
+    if (!transporter) {
+      console.log(`[LOCAL EMAIL SIMULATOR] Subscription activated email to: ${hostEmail}`);
+      return { success: true, simulated: true };
+    }
+
+    const mailOptions = {
+      from: fromAddress,
+      to: hostEmail,
+      subject: `Host Subscription Activated: ${planLabel} (Valid Until ${validUntil})`,
+      text: `Hello ${hostName},\n\nYour host subscription for ${planLabel} has been verified and activated!\nValid Until: ${validUntil}\n\nGo to Dashboard: ${hostDashboardUrl}\n\nRoomScout Team`,
+      html: htmlContent,
+    };
+
+    const info = await sendRawMail(mailOptions);
+    console.log(`✅ Real Host Subscription Activated email dispatched to [${hostEmail}] (Message ID: ${info.messageId})`);
+    return { success: true, messageId: info.messageId };
+  } catch (err) {
+    console.error(`❌ Failed to send subscription activated email to [${hostEmail}]:`, err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * 8. Send Subscription Rejected Email to Host (Fired when admin rejects plan payment)
+ */
+export async function sendSubscriptionRejectedToHostEmail({
+  hostEmail,
+  hostName,
+  planLabel,
+  amount,
+  transactionRef,
+  rejectionReason,
+}) {
+  if (!hostEmail) return { success: false, reason: 'No host email address provided' };
+
+  try {
+    const transporter = await getTransporter();
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Room-Scout Support" <noreply@roomscout.com>';
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const retryUrl = `${clientUrl}/host-dashboard?tab=subscription`;
+
+    const htmlContent = buildBrandedEmailHtml({
+      badgeText: 'Payment Verification Update',
+      title: 'Subscription Verification Unsuccessful',
+      subtitle: `Hello ${hostName}, the administration was unable to verify your submitted payment for the <strong>${planLabel}</strong>.`,
+      detailsRows: [
+        { label: 'Host Partner', value: hostName },
+        { label: 'Plan Attempted', value: planLabel },
+        { label: 'Amount', value: `₹${Number(amount || 0).toLocaleString('en-IN')}` },
+        { label: 'Submitted UTR', value: transactionRef || 'N/A' },
+        { label: 'Reason', value: rejectionReason || 'UTR did not match bank statement records' },
+      ],
+      ctaText: 'Review & Re-submit Payment',
+      ctaUrl: retryUrl,
+      footerNote: 'Please verify that the 12-digit UTR on your banking receipt is entered accurately without spaces or missing digits.',
+    });
+
+    if (!transporter) {
+      console.log(`[LOCAL EMAIL SIMULATOR] Subscription rejected email to: ${hostEmail}`);
+      return { success: true, simulated: true };
+    }
+
+    const mailOptions = {
+      from: fromAddress,
+      to: hostEmail,
+      subject: `Subscription Payment Update: ${planLabel}`,
+      text: `Hello ${hostName},\n\nYour subscription payment for ${planLabel} could not be verified.\nReason: ${rejectionReason}\n\nRetry at: ${retryUrl}\n\nRoomScout Team`,
+      html: htmlContent,
+    };
+
+    const info = await sendRawMail(mailOptions);
+    console.log(`✅ Real Host Subscription Rejected email dispatched to [${hostEmail}] (Message ID: ${info.messageId})`);
+    return { success: true, messageId: info.messageId };
+  } catch (err) {
+    console.error(`❌ Failed to send subscription rejected email to [${hostEmail}]:`, err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Helper to resolve the accessible frontend website base URL
+ * Prioritizes:
+ * 1. Explicit PUBLIC_CLIENT_URL or WEBSITE_URL (e.g. production domain)
+ * 2. Request origin if not localhost
+ * 3. Configured CLIENT_URL if not localhost
+ * 4. Local network IPv4 address (e.g. http://192.168.1.6:5173) so phones on local Wi-Fi can open links
+ * 5. Fallback to CLIENT_URL
+ */
+export function getPublicClientBaseUrl(req) {
+  if (process.env.PUBLIC_CLIENT_URL && !process.env.PUBLIC_CLIENT_URL.includes('localhost') && !process.env.PUBLIC_CLIENT_URL.includes('127.0.0.1')) {
+    return process.env.PUBLIC_CLIENT_URL.replace(/\/+$/, '');
+  }
+  if (process.env.WEBSITE_URL && !process.env.WEBSITE_URL.includes('localhost') && !process.env.WEBSITE_URL.includes('127.0.0.1')) {
+    return process.env.WEBSITE_URL.replace(/\/+$/, '');
+  }
+
+  const reqOrigin = req?.get ? (req.get('origin') || (req.headers?.referer ? new URL(req.headers.referer).origin : '')) : '';
+  if (reqOrigin && !reqOrigin.includes('localhost') && !reqOrigin.includes('127.0.0.1')) {
+    return reqOrigin.replace(/\/+$/, '');
+  }
+
+  if (process.env.CLIENT_URL && !process.env.CLIENT_URL.includes('localhost') && !process.env.CLIENT_URL.includes('127.0.0.1')) {
+    return process.env.CLIENT_URL.replace(/\/+$/, '');
+  }
+
+  if (reqOrigin && (reqOrigin.includes('192.168.') || reqOrigin.includes('10.') || reqOrigin.includes('172.'))) {
+    return reqOrigin.replace(/\/+$/, '');
+  }
+
+  try {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+      for (const net of interfaces[name] || []) {
+        if (net.family === 'IPv4' && !net.internal && net.address.startsWith('192.168.')) {
+          return `http://${net.address}:5173`;
+        }
+      }
+    }
+    for (const name of Object.keys(interfaces)) {
+      for (const net of interfaces[name] || []) {
+        if (net.family === 'IPv4' && !net.internal) {
+          return `http://${net.address}:5173`;
+        }
+      }
+    }
+  } catch (_) {}
+
+  return (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/+$/, '');
+}
+
+/**
+ * 9. Send Guest Payment Submitted Email to Host (Fired when guest submits UTR)
+ */
+export async function sendPaymentSubmittedToHostEmail({
+  hostEmail,
+  hostName = 'Host Partner',
+  guestName,
+  roomCategory,
+  roomType,
+  roomNumber,
+  durationDisplay,
+  rateUnit,
+  bookedMonths,
+  checkIn,
+  checkOut,
+  amount,
+  transactionRef,
+  bookingId,
+  dashboardUrl: customDashboardUrl,
+}) {
+  if (!hostEmail) return { success: false, reason: 'No host email address provided' };
+
+  try {
+    const transporter = await getTransporter();
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Room-Scout Payments" <noreply@roomscout.com>';
+    const hostDashboardUrl = customDashboardUrl || `${getPublicClientBaseUrl()}/host-dashboard?tab=visited`;
+
+    const isMonthly = rateUnit === '/month' || (Array.isArray(bookedMonths) && bookedMonths.length > 0);
+    const accommodationTimingLabel = isMonthly ? 'Booked Months' : 'Booked Dates';
+    let accommodationTimingValue = '';
+
+    if (isMonthly) {
+      if (Array.isArray(bookedMonths) && bookedMonths.length > 0) {
+        accommodationTimingValue = bookedMonths
+          .map((m) => {
+            if (/^\d{4}-\d{2}$/.test(m)) {
+              const [y, mon] = m.split('-');
+              return new Date(Number(y), Number(mon) - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+            }
+            return m;
+          })
+          .join(', ');
+      } else if (checkIn && checkOut) {
+        const start = new Date(checkIn).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+        const end = new Date(checkOut).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+        accommodationTimingValue = start === end ? start : `${start} – ${end}`;
+      } else {
+        accommodationTimingValue = durationDisplay || 'Monthly Stay';
+      }
+    } else {
+      if (checkIn && checkOut) {
+        const start = new Date(checkIn).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        const end = new Date(checkOut).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        accommodationTimingValue = `${start} to ${end}`;
+      } else {
+        accommodationTimingValue = durationDisplay || 'Short Stay';
+      }
+    }
+
+    const resolvedCategory = roomCategory || roomType || 'Standard';
+
+    const htmlContent = buildBrandedEmailHtml({
+      badgeText: 'Payment Verification Required',
+      title: `Guest Payment Submitted for Room ${roomNumber}`,
+      subtitle: `Guest <strong>${guestName}</strong> has submitted direct UPI transfer of <strong>₹${Number(amount || 0).toLocaleString('en-IN')}</strong> for <strong>Room ${roomNumber}</strong> (${resolvedCategory}). Please check your bank account or UPI app (PhonePe, GPay, Paytm) and verify to unlock the guest pass.`,
+      detailsRows: [
+        { label: 'User Name', value: guestName || 'Guest' },
+        { label: 'Room Category', value: resolvedCategory },
+        { label: 'Room No.', value: `Room ${roomNumber}` },
+        { label: 'Duration', value: durationDisplay || (isMonthly ? '1 Month' : '1 Night') },
+        { label: accommodationTimingLabel, value: accommodationTimingValue },
+        { label: 'Paid Amount', value: `₹${Number(amount || 0).toLocaleString('en-IN')}` },
+        { label: 'UPI Reference (UTR)', value: transactionRef || 'N/A' },
+        { label: 'Status', value: 'Pending Your Confirmation' },
+      ],
+      ctaText: 'Verify Payment & Unlock Pass',
+      ctaUrl: hostDashboardUrl,
+      footerNote: 'Once you verify this payment in your Host Dashboard, the guest\'s official Check-In Pass Code is automatically generated and active.',
+    });
+
+    if (!transporter) {
+      console.log(`[LOCAL EMAIL SIMULATOR] Guest payment submitted alert to host: ${hostEmail}`);
+      return { success: true, simulated: true };
+    }
+
+    const mailOptions = {
+      from: fromAddress,
+      to: hostEmail,
+      subject: `Payment Submitted: ₹${amount} for Room ${roomNumber} by ${guestName} (UTR: ${transactionRef})`,
+      text: `Hello ${hostName},\n\nGuest ${guestName} has submitted UPI payment of ₹${amount} for Room ${roomNumber} (${resolvedCategory}).\nDuration: ${durationDisplay || ''}\n${accommodationTimingLabel}: ${accommodationTimingValue}\nUTR: ${transactionRef}\n\nVerify and Confirm at: ${hostDashboardUrl}\n\nRoomScout Team`,
+      html: htmlContent,
+    };
+
+    const info = await sendRawMail(mailOptions);
+    console.log(`✅ Real Host Payment Submission Alert dispatched to [${hostEmail}] (Message ID: ${info.messageId})`);
+    return { success: true, messageId: info.messageId };
+  } catch (err) {
+    console.error(`❌ Failed to send host payment submission alert to [${hostEmail}]:`, err.message);
     return { success: false, error: err.message };
   }
 }

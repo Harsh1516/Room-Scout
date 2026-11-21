@@ -121,7 +121,7 @@ export function WishlistProvider({ children }) {
  const stayId = String(stay._id || '');
 
  if (!isAuthenticated || !user) {
- toast.info('Please log in to save properties to your Wishlist');
+ toast.info('Sign in to save to Wishlist');
  return;
  }
 

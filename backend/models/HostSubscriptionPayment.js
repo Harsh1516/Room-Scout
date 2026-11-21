@@ -21,7 +21,6 @@ const hostSubscriptionPaymentSchema = new mongoose.Schema(
     },
     planLabel: {
       type: String,
-      required: true,
       trim: true,
     },
     durationMonths: {
@@ -39,25 +38,19 @@ const hostSubscriptionPaymentSchema = new mongoose.Schema(
       required: [true, '12-digit UPI reference number is required'],
       trim: true,
       uppercase: true,
-      index: true,
     },
     receiptUrl: {
       type: String,
-      default: '',
+      trim: true,
     },
     startOption: {
       type: String,
       enum: ['CURRENT', 'NEXT'],
       default: 'CURRENT',
     },
-    startMonthLabel: {
-      type: String,
-      default: '',
-    },
     recipientUpiId: {
       type: String,
       trim: true,
-      default: '',
     },
     status: {
       type: String,
@@ -68,20 +61,18 @@ const hostSubscriptionPaymentSchema = new mongoose.Schema(
     rejectionReason: {
       type: String,
       trim: true,
-      default: '',
     },
     adminNotes: {
       type: String,
       trim: true,
-      default: '',
     },
     verifiedAt: {
       type: Date,
       default: null,
     },
     verifiedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      type: String,
+      trim: true,
       default: null,
     },
     activatedStartDate: {
@@ -95,15 +86,33 @@ const hostSubscriptionPaymentSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 
-// Compound index for fast queries on pending payments per host
+// Virtual for deriving human-readable plan label if omitted
+hostSubscriptionPaymentSchema.virtual('derivedPlanLabel').get(function () {
+  return (
+    this.planLabel ||
+    (this.durationMonths ? `${this.durationMonths} Month${this.durationMonths > 1 ? 's' : ''}` : this.planCode || '')
+  );
+});
+
+// Indexes for fast host and status queries
 hostSubscriptionPaymentSchema.index({ hostId: 1, createdAt: -1 });
 hostSubscriptionPaymentSchema.index({ status: 1, createdAt: -1 });
+
+// Partial unique index: prevents concurrent duplicate submissions of the same UTR
+hostSubscriptionPaymentSchema.index(
+  { transactionRef: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { status: { $in: ['PENDING', 'VERIFIED'] } },
+  }
+);
 
 export const HostSubscriptionPayment = mongoose.model(
   'HostSubscriptionPayment',
   hostSubscriptionPaymentSchema
 );
-

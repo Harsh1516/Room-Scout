@@ -301,7 +301,7 @@ export function useHostRoomManagement({
  ).trim().toLowerCase();
 
  if (!targetEmail) {
- toast.error('Host email is missing. Please log in again.');
+ toast.error('Session expired, sign in again');
  return;
  }
 
@@ -374,8 +374,7 @@ export function useHostRoomManagement({
  roomRates: Array.isArray(updatedHost.roomRates) ? updatedHost.roomRates : (hostProperty?.roomRates || []),
  rooms: validRooms,
  totalRooms: finalTotalRooms,
- status: (hostProperty?.status === 'Approved' || hostProperty?.isApproved || updatedHost?.status === 'Approved') ? 'Approved' : (hostProperty?.status || 'Pending Approval'),
- isApproved: Boolean(hostProperty?.status === 'Approved' || hostProperty?.isApproved || updatedHost?.status === 'Approved'),
+ status: (hostProperty?.status === 'Approved' || updatedHost?.status === 'Approved') ? 'Approved' : (hostProperty?.status || 'Pending Approval'),
  };
 
  latestHostPropertyRef.current = payload;
@@ -443,7 +442,7 @@ export function useHostRoomManagement({
  setSavedRoomNumbers(updatedNumbers);
  savedRoomNumbersRef.current = updatedNumbers;
  }
- toast.success(`Category "${catName}" & rooms saved to database!`);
+ toast.success(`Category "${catName}" saved`);
  return saved;
  } catch (err) {
  console.warn('Category update save error:', err);
@@ -481,7 +480,7 @@ export function useHostRoomManagement({
 
  const totalCount = updatedRooms.length;
  const availCount = updatedRooms.filter((r) => r.status === 'Available').length;
- const isApprovedHost = hostProperty.status === 'Approved' || hostProperty.isApproved;
+ const isApprovedHost = hostProperty.status === 'Approved';
  const nextStatus = isApprovedHost
  ? 'Approved'
  : (updatedRooms.length === 0 || currentRates.length === 0)
@@ -521,7 +520,7 @@ export function useHostRoomManagement({
  selectedRoomIndexRef.current = null;
  }
 
- toast.info(`Category "${removed.type || 'Unnamed'}" and ${roomsToRemove.length} room card(s) removed.`);
+ toast.info(`Category "${removed.type || 'Room'}" removed`);
 
  try {
  await bookingsAPI.cascadeDeleteRoomBookings({
@@ -722,7 +721,7 @@ export function useHostRoomManagement({
  const updatedRooms = currentRooms.filter((r) => !isTargetRoom(r));
  const totalCount = updatedRooms.length;
  const availCount = updatedRooms.filter((r) => r.status === 'Available').length;
- const isApprovedHost = baseHost.status === 'Approved' || Boolean(baseHost.isApproved);
+ const isApprovedHost = baseHost.status === 'Approved';
  const nextStatus = isApprovedHost ? 'Approved' : (updatedRooms.length === 0 ? 'Pending Approval' : (baseHost.status || 'Pending Approval'));
 
  const updatedHost = {

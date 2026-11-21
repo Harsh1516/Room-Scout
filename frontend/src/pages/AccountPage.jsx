@@ -199,7 +199,7 @@ export function AccountPage({ onLoginClick }) {
  }
  });
  setPersonalErrors(errors);
- toast.error(result.error.issues[0]?.message || 'Please fix the validation errors');
+ toast.error('Check form errors');
  return;
  }
  setPersonalErrors({});
@@ -217,9 +217,9 @@ export function AccountPage({ onLoginClick }) {
  if (res.user) {
  updateUserSession(res.user, res.token);
  }
- toast.success(res.message || 'Personal details updated successfully!');
+ toast.success('Profile updated');
  } catch (err) {
- toast.error(err.message || 'Failed to update personal details.');
+ toast.error(err.message || 'Update failed');
  } finally {
  setLoading(false);
  }
@@ -249,7 +249,7 @@ export function AccountPage({ onLoginClick }) {
  }
  });
  setPasswordErrors(errors);
- toast.error(result.error.issues[0]?.message || 'Please fix password errors');
+ toast.error('Check password requirements');
  return;
  }
  setPasswordErrors({});
@@ -267,9 +267,7 @@ export function AccountPage({ onLoginClick }) {
  updateUserSession((prev) => ({ ...prev, hasPassword: true }), res.token);
  }
 
- toast.success(
- res.message || 'Password created successfully! You can now log in with either Google or your email and password.'
- );
+ toast.success('Password created');
  setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
  setPasswordErrors({});
  } else {
@@ -278,12 +276,12 @@ export function AccountPage({ onLoginClick }) {
  newPassword: passwordForm.newPassword,
  });
 
- toast.success(res.message || 'Password updated successfully!');
+ toast.success('Password updated');
  setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
  setPasswordErrors({});
  }
  } catch (err) {
- toast.error(err.message || (isSettingPassword ? 'Failed to set password.' : 'Failed to update password.'));
+ toast.error(err.message || 'Password update failed');
  } finally {
  setLoading(false);
  }
@@ -294,12 +292,12 @@ export function AccountPage({ onLoginClick }) {
  setIsDeleting(true);
  try {
  const res = await authAPI.deleteAccount();
- toast.info(res.message || 'Your account has been deleted.');
+ toast.info('Account deleted');
  setShowDeleteModal(false);
  logout();
  navigate('/');
  } catch (err) {
- toast.error(err.message || 'Failed to delete account.');
+ toast.error(err.message || 'Delete failed');
  setIsDeleting(false);
  setShowDeleteModal(false);
  }
@@ -314,7 +312,7 @@ export function AccountPage({ onLoginClick }) {
  };
 
  return (
- <div className="min-h-screen bg-[#f5f2ea] text-[#1f1b16] transition-colors duration-300 font-body-md antialiased pb-8 sm:pb-12">
+ <div className="min-h-screen bg-[#ebedf0] text-[#1f1b16] transition-colors duration-300 font-body-md antialiased pb-8 sm:pb-12">
  {/* ── TOP FLOATING NAVIGATION CAPSULES (MATCHING STANDARD SITE LAYOUT: LEFT | CENTER CAPSULE | RIGHT) ── */}
       <header className="relative w-full h-[70px] sm:h-[88px] pointer-events-none select-none z-50 font-body-md antialiased">
         {/* 1. Left Island: Circular Floating Back Button (Identical to Standard Navbar) */}
@@ -324,15 +322,15 @@ export function AccountPage({ onLoginClick }) {
           fallbackUrl={isHost ? '/host/dashboard' : '/explore'}
         />
 
-        {/* 2. Center Island: Floating Segmented Capsule Tabs (Profile | Password | Delete) */}
-        <div className="fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center pointer-events-auto select-none w-max max-w-[calc(100vw-132px)] sm:max-w-none h-[54px] sm:h-[56px]">
-          <nav className="relative flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-full bg-white border border-slate-200/90 shadow-sm select-none w-fit">
+        {/* 2. Hybrid Capsule Dock: Bottom Floating Dock on Mobile (< md), Top Center on Desktop (md+) */}
+        <div className="fixed bottom-5 sm:bottom-6 md:bottom-auto md:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center pointer-events-auto select-none w-max max-w-[calc(100vw-24px)] md:max-w-none h-[54px] sm:h-[56px]">
+          <nav className="relative flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-full bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.12)] md:shadow-sm select-none w-fit">
             {/* Tab 1: Profile Details */}
             <button
               type="button"
               onClick={() => setActiveTab('details')}
               data-no-hover="true"
-              className={`relative h-[36px] sm:h-[38px] px-2.5 sm:px-4.5 md:px-5 rounded-full text-[12px] sm:text-sm font-semibold tracking-tight transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
+              className={`relative h-[42px] sm:h-[44px] md:h-[38px] px-3.5 sm:px-5 md:px-5 rounded-full text-[13px] sm:text-sm font-semibold tracking-tight transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none shrink-0 whitespace-nowrap active:scale-95 ${
                 activeTab === 'details'
                   ? 'text-white'
                   : 'text-slate-700 hover:text-[#1f1b16]'
@@ -345,11 +343,11 @@ export function AccountPage({ onLoginClick }) {
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
-              <svg className="relative z-10 w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="relative z-10 w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
-              <span className="relative z-10">Profile<span className="hidden sm:inline"> Details</span></span>
+              <span className="relative z-10">Profile<span className="hidden xs:inline"> Details</span></span>
             </button>
 
             {/* Tab 2: Password */}
@@ -357,7 +355,7 @@ export function AccountPage({ onLoginClick }) {
               type="button"
               onClick={() => setActiveTab('password')}
               data-no-hover="true"
-              className={`relative h-[36px] sm:h-[38px] px-2.5 sm:px-4.5 md:px-5 rounded-full text-[12px] sm:text-sm font-semibold tracking-tight transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
+              className={`relative h-[42px] sm:h-[44px] md:h-[38px] px-3.5 sm:px-5 md:px-5 rounded-full text-[13px] sm:text-sm font-semibold tracking-tight transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none shrink-0 whitespace-nowrap active:scale-95 ${
                 activeTab === 'password'
                   ? 'text-white'
                   : 'text-slate-700 hover:text-[#1f1b16]'
@@ -370,7 +368,7 @@ export function AccountPage({ onLoginClick }) {
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
-              <svg className="relative z-10 w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="relative z-10 w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
@@ -382,7 +380,7 @@ export function AccountPage({ onLoginClick }) {
               type="button"
               onClick={() => setActiveTab('delete')}
               data-no-hover="true"
-              className={`relative h-[36px] sm:h-[38px] px-2.5 sm:px-4.5 md:px-5 rounded-full text-[12px] sm:text-sm font-semibold tracking-tight transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
+              className={`relative h-[42px] sm:h-[44px] md:h-[38px] px-3.5 sm:px-5 md:px-5 rounded-full text-[13px] sm:text-sm font-semibold tracking-tight transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none shrink-0 whitespace-nowrap active:scale-95 ${
                 activeTab === 'delete'
                   ? 'text-white'
                   : 'text-rose-600 hover:text-rose-700'
@@ -395,12 +393,12 @@ export function AccountPage({ onLoginClick }) {
                   transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                 />
               )}
-              <svg className="relative z-10 w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="relative z-10 w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 6h18" />
                 <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
                 <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
               </svg>
-              <span className="relative z-10">Delete<span className="hidden sm:inline"> Account</span></span>
+              <span className="relative z-10">Delete<span className="hidden xs:inline"> Account</span></span>
             </button>
           </nav>
         </div>
@@ -410,7 +408,7 @@ export function AccountPage({ onLoginClick }) {
       </header>
 
  {/* Main Container */}
- <main className="max-w-3xl mx-auto px-3 sm:px-6 pt-20 sm:pt-24 lg:pt-28 pb-12 sm:pb-16 min-h-[calc(100vh-4rem)]">
+ <main className="max-w-3xl mx-auto px-3 sm:px-6 pt-20 sm:pt-24 lg:pt-28 pb-28 sm:pb-32 md:pb-16 min-h-[calc(100vh-4rem)]">
 
  {/* ── TAB 1: PROFILE DETAILS (GREEN THEMED CARD ON MOBILE) ── */}
  {activeTab === 'details' && (
@@ -953,7 +951,7 @@ export function AccountPage({ onLoginClick }) {
  {/* Confirmation Modal for Delete */}
  <AnimatePresence>
  {showDeleteModal && (
- <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 ">
+ <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 ">
  <motion.div
  initial={{ scale: 0.95, opacity: 0 }}
  animate={{ scale: 1, opacity: 1 }}

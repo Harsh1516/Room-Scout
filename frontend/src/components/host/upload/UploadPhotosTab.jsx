@@ -85,7 +85,7 @@ export function UploadPhotosTab({
           <div className="flex items-center justify-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold tracking-wide bg-white/80 backdrop-blur-md text-slate-700 border border-slate-200/80 shadow-xs">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              16:9 photos only
+              All formats accepted • Landscape recommended
             </span>
           </div>
           <p className="text-[11px] text-slate-500 font-medium">
@@ -129,7 +129,7 @@ export function UploadPhotosTab({
               <div className="flex items-center gap-2 min-w-0">
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs shrink-0 select-none">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  16:9 photos only
+                  All formats accepted • Landscape recommended
                 </span>
                 <span className="text-[11px] text-slate-400 font-medium truncate select-none" title="(Front View, Side View, Balcony, Parking)">
                   (Front View, Side View, Balcony, Parking)
@@ -369,7 +369,7 @@ export function UploadPhotosTab({
                       max-md:text-slate-500 max-md:font-medium
                       md:text-slate-400"
                     >
-                      16:9 Aspect Ratio • {config.desc}
+                      Landscape recommended • {config.desc}
                     </span>
                   </button>
                 </div>

@@ -276,7 +276,7 @@ export function AdminPage() {
 
  const handleOpenUserPortal = async (targetUser) => {
  if (targetUser.isOffline) {
- toast.error('Offline users cannot be logged into as they do not have login credentials.');
+ toast.error('Offline user has no login');
  return;
  }
 
@@ -288,7 +288,7 @@ export function AdminPage() {
  });
  if (res?.token && res?.user) {
  updateUserSession(res.user, res.token);
- toast.success(`Admin accessed User Portal: ${res.user.name}`);
+ toast.success(`Accessed portal: ${res.user.name}`);
  navigate('/explore');
  return;
  }
@@ -411,7 +411,7 @@ export function AdminPage() {
     setHosts((prev) =>
       prev.map((h) =>
         String(h._id) === String(hostId)
-          ? { ...h, status: targetHost.status, isApproved: targetHost.isApproved }
+          ? { ...h, status: targetHost.status }
           : h
       )
     );
@@ -472,7 +472,7 @@ export function AdminPage() {
  );
  setSelectedHostIds([]);
  broadcastUpdate();
- toast.success(`Successfully approved ${idsToApprove.length} property host${idsToApprove.length === 1 ? '' : 's'}!`);
+ toast.success(`Approved ${idsToApprove.length} host(s)`);
  } catch (err) {
  console.error('Failed to bulk approve hosts:', err);
  toast.error(`Error approving hosts: ${err.message || 'Something went wrong'}`);
@@ -497,7 +497,7 @@ export function AdminPage() {
 
   const handleVerifySubscription = async (id, payload) => {
     const res = await adminAPI.verifySubscriptionRequest(id, payload);
-    toast.success(res.message || 'Subscription plan verified and activated!');
+    toast.success('Plan verified & active');
     notifySubscriptionSync({ id, action: 'VERIFY' });
     fetchSubscriptions(true);
     fetchData(true);
@@ -505,7 +505,7 @@ export function AdminPage() {
 
   const handleRejectSubscription = async (id, payload) => {
     const res = await adminAPI.verifySubscriptionRequest(id, payload);
-    toast.success(res.message || 'Subscription request rejected.');
+    toast.success('Request rejected');
     notifySubscriptionSync({ id, action: 'REJECT' });
     fetchSubscriptions(true);
     fetchData(true);
@@ -513,7 +513,7 @@ export function AdminPage() {
 
   const handleManualActivateHostSubscription = async (hostId, payload) => {
     const res = await adminAPI.manualActivateHostSubscription(hostId, payload);
-    toast.success(res.message || 'Subscription plan granted successfully!');
+    toast.success('Plan granted');
     notifySubscriptionSync({ hostId, action: 'MANUAL_ACTIVATE' });
     fetchSubscriptions(true);
     fetchData(true);
@@ -522,7 +522,7 @@ export function AdminPage() {
   const handleDeleteSubscription = async (id) => {
     try {
       const res = await adminAPI.deleteSubscriptionRequest(id);
-      toast.success(res.message || 'Subscription payment entry deleted.');
+      toast.success('Payment entry deleted');
       setSubscriptions((prev) => prev.filter((s) => String(s._id) !== String(id)));
       notifySubscriptionSync({ id, action: 'DELETE' });
       fetchSubscriptions(true);
@@ -536,7 +536,7 @@ export function AdminPage() {
   const handleDeleteAllSubscriptions = async () => {
     try {
       const res = await adminAPI.deleteAllSubscriptionRequests();
-      toast.success(res.message || 'All subscription payment records deleted.');
+      toast.success('All records deleted');
       setSubscriptions([]);
       setSubscriptionCounts({ pending: 0, verified: 0, rejected: 0, total: 0 });
       notifySubscriptionSync({ action: 'DELETE_ALL' });
@@ -552,7 +552,7 @@ export function AdminPage() {
   const handleBulkRejectSubscriptions = async (payload) => {
     try {
       const res = await adminAPI.bulkRejectSubscriptions(payload);
-      toast.success(res.message || 'Bulk rejection of underpaid requests complete.');
+      toast.success('Underpaid requests rejected');
       notifySubscriptionSync({ action: 'BULK_REJECT' });
       fetchSubscriptions(true);
       fetchData(true);
@@ -566,7 +566,7 @@ export function AdminPage() {
   const handleBulkVerifySubscriptions = async (payload) => {
     try {
       const res = await adminAPI.bulkVerifySubscriptions(payload);
-      toast.success(res.message || 'Bulk verification successful!');
+      toast.success('Bulk verification complete');
       notifySubscriptionSync({ action: 'BULK_VERIFY' });
       fetchSubscriptions(true);
       fetchData(true);

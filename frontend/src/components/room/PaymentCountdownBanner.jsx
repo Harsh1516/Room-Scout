@@ -61,7 +61,7 @@ export function PaymentCountdownBanner({
  window.dispatchEvent(new Event('stayhub_my_bookings_updated'));
  } catch (e) {}
  }
- toast.error(`Payment window for Room ${booking?.roomNumber || ''} expired. The slot has been released.`);
+ toast.error(`Room ${booking?.roomNumber || ''} slot released`);
  if (onBookingCancelled) onBookingCancelled(booking);
  };
 

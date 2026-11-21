@@ -89,54 +89,42 @@ export function BookingPaymentSection({
 
       {/* Re-Request Payment Card (First Expiration - Final 5 Min Chance) */}
       {isFirstPaymentExpired && (
-        <div className="rounded-3xl border-2 border-amber-300 bg-amber-50/70 p-6 sm:p-7 space-y-5 shadow-2xs">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="rounded-3xl border border-amber-200 bg-amber-50/60 p-5 sm:p-6 space-y-4 shadow-xs">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-lg sm:text-xl font-bold text-[#1f1b16]">
-                  Payment Window Expired
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="text-base sm:text-lg font-bold text-[#1f1b16]">
+                  Payment Expired
                 </h3>
-                <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-amber-200 text-amber-900 border border-amber-300">
-                  1 Final Chance Available
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-200 text-amber-900 border border-amber-300">
+                  Final Chance
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
-                The initial time window for payment has expired. You have one final chance to re-request the payment QR code and UPI details. You will receive a new 5-minute timer to complete payment and click &ldquo;Send for Verification&rdquo;.
+              <p className="text-xs sm:text-sm text-slate-600 font-medium mt-0.5">
+                Re-open your payment window for a final 5 minutes to complete this booking.
               </p>
             </div>
-          </div>
-
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-amber-200 text-xs text-slate-600 space-y-1.5 shadow-2xs">
-            <div className="flex items-center gap-2 font-bold text-amber-800">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <span>Important Notice</span>
-            </div>
-            <p className="font-medium leading-relaxed">
-              This is your last opportunity to complete this booking. A new 5-minute countdown starts immediately upon clicking below. If the timer runs out before you click <strong>Send for Verification</strong>, this booking will permanently time out.
-            </p>
           </div>
 
           <button
             type="button"
             onClick={onReRequestPayment}
             disabled={isReRequesting}
-            className="w-full min-h-[46px] py-3 px-6 rounded-full font-bold text-sm bg-amber-600 hover:bg-amber-700 active:scale-95 text-white shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+            className="w-full h-11 py-2.5 px-5 rounded-full font-bold text-sm bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
           >
             {isReRequesting ? (
               <>
                 <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                <span>Re-requesting Payment Window...</span>
+                <span>Re-opening Window...</span>
               </>
             ) : (
               <>
-                <span>Re-Request Payment Window (Final 5 Minutes)</span>
+                <span>Re-Open Payment QR (5 Mins)</span>
                 <span>→</span>
               </>
             )}
@@ -146,19 +134,19 @@ export function BookingPaymentSection({
 
       {/* Permanent Timeout Card */}
       {isPermanentlyTimedOut && (
-        <div className="rounded-3xl border-2 border-rose-300 bg-rose-50/70 p-6 sm:p-7 space-y-4 shadow-2xs">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="rounded-3xl border border-rose-200 bg-rose-50/60 p-5 sm:p-6 space-y-3 shadow-xs">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </div>
-            <div className="space-y-1">
-              <h3 className="text-lg sm:text-xl font-bold text-rose-950">
+            <div className="min-w-0">
+              <h3 className="text-base sm:text-lg font-bold text-rose-950">
                 Payment Window Closed
               </h3>
-              <p className="text-xs sm:text-sm text-rose-800/90 font-medium leading-relaxed">
-                The payment window for this booking has permanently closed. All retry opportunities have been used. The room slot has been released back to other scout residents.
+              <p className="text-xs sm:text-sm text-rose-800/90 font-medium mt-0.5">
+                The payment deadline has elapsed and this booking slot has been released.
               </p>
             </div>
           </div>
@@ -298,41 +286,6 @@ export function BookingPaymentSection({
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                Payment Screenshot Receipt <span className="text-slate-400 font-normal lowercase">(optional)</span>
-              </label>
-              <div className="flex items-center gap-3">
-                <label className="cursor-pointer min-h-[42px] px-5 py-2.5 rounded-full border border-slate-300 hover:border-slate-400 bg-white font-bold text-xs text-slate-700 inline-flex items-center gap-2 transition-all">
-                  <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                  </svg>
-                  <span>{receiptImage ? 'Change Receipt' : 'Upload Receipt'}</span>
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,application/pdf"
-                    onChange={onReceiptFileChange}
-                    className="hidden"
-                  />
-                </label>
-                {receiptImage && (
-                  <div className="flex items-center gap-1.5 text-xs text-slate-600">
-                    <span className="font-medium truncate max-w-[180px]">Receipt attached</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setReceiptImage('');
-                        setReceiptPreview('');
-                      }}
-                      className="text-xs text-rose-500 font-bold hover:underline cursor-pointer ml-1"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
             <div className="pt-2">
               <button
                 type="submit"
@@ -402,7 +355,7 @@ export function BookingPaymentSection({
             </div>
             <div className="flex items-center justify-between text-xs sm:text-sm">
               <span className="text-slate-400 font-bold uppercase tracking-wider">Host Notification:</span>
-              <span className="text-emerald-700 font-bold">Sent via WhatsApp & Dashboard</span>
+              <span className="text-emerald-700 font-bold">Sent via Email & Dashboard</span>
             </div>
           </div>
 

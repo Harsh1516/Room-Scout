@@ -84,12 +84,12 @@ export function DirectUpiPaymentModal({
  if (!file) return;
 
  if (!file.type.startsWith('image/')) {
- toast.error('Please upload an image file (JPEG, PNG, WebP).');
+ toast.error('Upload JPEG/PNG/WebP image');
  return;
  }
 
  if (file.size > 5 * 1024 * 1024) {
- toast.error('Receipt image must be under 5 MB.');
+ toast.error('Receipt must be under 5 MB');
  return;
  }
 

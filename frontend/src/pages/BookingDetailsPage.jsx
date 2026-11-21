@@ -71,17 +71,17 @@ export function BookingDetailsPage({ onLoginClick }) {
 
           if (prevStatus && prevStatus !== newStatus) {
             if (newStatus === 'AWAITING_PAYMENT') {
-              toast.success(' Host has approved your booking! You can now make payment below.', { autoClose: 6000 });
+              toast.success('Booking approved! Pay below');
             } else if (newStatus === 'CONFIRMED') {
-              toast.success(' Host verified your payment! Your booking is confirmed.', { autoClose: 6000 });
+              toast.success('Payment verified! Confirmed');
             } else if (newStatus === 'REJECTED') {
-              toast.error('Reservation request was declined by the host.');
+              toast.error('Reservation declined');
             }
           } else if (prevUpi && prevUpi !== newUpi) {
             if (newUpi === 'REJECTED' && isRecheck) {
-              toast.info('Host requested corrected payment reference (final chance).');
+              toast.info('Payment re-check requested');
             } else if (newUpi === 'VERIFIED') {
-              toast.success(' Host verified your payment! Booking is confirmed.', { autoClose: 6000 });
+              toast.success('Payment verified! Confirmed');
             }
           }
 
@@ -290,18 +290,20 @@ export function BookingDetailsPage({ onLoginClick }) {
   const statusMeta = useMemo(() => {
     if (isPermanentlyTimedOut) {
       return {
-        label: 'Time Out',
+        label: 'Timed Out',
         badgeClass: 'bg-rose-50 text-rose-800 border-rose-200/90 shadow-2xs',
         dotClass: 'bg-rose-400 ring-2 ring-rose-400/30',
+        textColor: 'text-rose-600',
         step: 2,
         type: 'timed_out',
       };
     }
     if (isFirstPaymentExpired) {
       return {
-        label: 'Payment Window Expired • 1 Re-Request Left',
+        label: 'Payment Expired',
         badgeClass: 'bg-amber-50 text-amber-800 border-amber-200/90 shadow-2xs',
         dotClass: 'bg-amber-400 ring-2 ring-amber-400/30',
+        textColor: 'text-amber-600',
         step: 2,
         type: 'first_payment_expired',
       };
@@ -407,10 +409,10 @@ export function BookingDetailsPage({ onLoginClick }) {
         host: hostData || {},
         checkInCode: displayCheckInCode,
       });
-      toast.success(`Entry Pass (${filename}) downloaded successfully!`);
+      toast.success('Entry pass downloaded');
     } catch (err) {
       console.error('Failed to generate pass PDF:', err);
-      toast.error('Failed to generate PDF pass. Please try again.');
+      toast.error('Pass download failed');
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -421,12 +423,12 @@ export function BookingDetailsPage({ onLoginClick }) {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file (JPEG, PNG, WebP).');
+      toast.error('Upload JPEG/PNG/WebP image');
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Receipt image must be under 5 MB.');
+      toast.error('Receipt must be under 5 MB');
       return;
     }
 
@@ -446,7 +448,7 @@ export function BookingDetailsPage({ onLoginClick }) {
     const cleanRef = transactionRef.trim().toUpperCase();
 
     if (cleanRef.length !== 12 || !/^\d{12}$/.test(cleanRef)) {
-      toast.error('Please enter a valid 12-digit UPI reference number (UTR / RRN).');
+      toast.error('Enter valid 12-digit UTR');
       return;
     }
 
@@ -462,7 +464,7 @@ export function BookingDetailsPage({ onLoginClick }) {
             setBooking(response.booking);
           }
           loadBookingData();
-          toast.success('Payment details sent for verification!');
+          toast.success('Payment sent for review');
         },
       });
     } catch {
@@ -480,13 +482,13 @@ export function BookingDetailsPage({ onLoginClick }) {
         booking,
         onCancelled: () => {
           if (deleteBooking) deleteBooking(booking._id || booking.bookingReferenceId).catch(() => {});
-          toast.success('Reservation has been cancelled.');
+          toast.success('Reservation cancelled');
           setShowCancelModal(false);
           loadBookingData();
         },
       });
     } catch (err) {
-      toast.error(err.message || 'Failed to cancel reservation.');
+      toast.error(err.message || 'Cancel failed');
     } finally {
       setIsCancelling(false);
     }
@@ -515,16 +517,14 @@ export function BookingDetailsPage({ onLoginClick }) {
           setCountdownSec(300);
         }
 
-        toast.success(' Final 5-minute payment window activated! Complete payment and click "Send for Verification".', {
-          autoClose: 7000,
-        });
+        toast.success('5-min payment window open');
         window.dispatchEvent(new Event('stayhub_slots_updated'));
         window.dispatchEvent(new Event('stayhub_my_bookings_updated'));
       } else {
-        toast.error(res.message || 'Could not re-request payment.');
+        toast.error(res.message || 'Re-request failed');
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || err.message || 'Failed to re-request payment.');
+      toast.error(err.response?.data?.message || err.message || 'Re-request failed');
     } finally {
       setIsReRequesting(false);
     }
@@ -532,7 +532,7 @@ export function BookingDetailsPage({ onLoginClick }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-24 pb-16 px-4 bg-[#f7f4ee] flex items-center justify-center">
+      <div className="min-h-screen pt-24 pb-16 px-4 bg-[#ebedf0] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-9 h-9 rounded-full border-3 border-emerald-500/30 border-t-emerald-500 animate-spin" />
           <p className="text-xs font-semibold text-slate-500">Loading booking status...</p>
@@ -543,7 +543,7 @@ export function BookingDetailsPage({ onLoginClick }) {
 
   if (isPermanentlyTimedOut) {
     return (
-      <div className="min-h-screen bg-[#f7f4ee] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#ebedf0] flex items-center justify-center p-4">
         <div className="text-center">
           <h1 className="text-xl sm:text-2xl font-medium text-slate-800">Time Out</h1>
         </div>
@@ -553,7 +553,7 @@ export function BookingDetailsPage({ onLoginClick }) {
 
   if (error || !booking) {
     return (
-      <div className="min-h-screen pt-24 pb-16 px-4 bg-[#f7f4ee] flex items-center justify-center">
+      <div className="min-h-screen pt-24 pb-16 px-4 bg-[#ebedf0] flex items-center justify-center">
         <div className="max-w-md w-full p-6 rounded-3xl bg-white border border-slate-200 text-center space-y-4 shadow-xl">
           <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-600 mx-auto flex items-center justify-center">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -588,7 +588,7 @@ export function BookingDetailsPage({ onLoginClick }) {
   }
 
   return (
-    <div className="min-h-screen pt-[136px] sm:pt-[152px] pb-32 sm:pb-36 px-3 sm:px-6 lg:px-8 bg-[#ede6db] text-slate-800 transition-colors relative">
+    <div className="min-h-screen pt-[136px] sm:pt-[152px] pb-32 sm:pb-36 px-3 sm:px-6 lg:px-8 bg-[#ebedf0] text-slate-800 transition-colors relative">
       {/* Navbar: Fixed Left (Back Button) & Right (Actions/Mobile Menu) */}
       <header className="relative w-full pointer-events-none select-none z-50">
         <Left
@@ -598,11 +598,11 @@ export function BookingDetailsPage({ onLoginClick }) {
         />
 
         {/* Navbar Center Island: Status badge only */}
-        <div className="fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center pointer-events-auto select-none h-[54px] sm:h-[56px] max-w-[calc(100vw-130px)] sm:max-w-none">
-          <div className="inline-flex items-center gap-2.5 sm:gap-3 bg-transparent">
-            <span className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full shrink-0 ${statusMeta.dotClass || 'bg-blue-500'}`} />
+        <div className="fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center pointer-events-auto select-none h-[54px] sm:h-[56px] max-w-[calc(100vw-120px)] sm:max-w-none px-2">
+          <div className="inline-flex items-center gap-2 sm:gap-2.5 bg-transparent min-w-0">
+            <span className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shrink-0 ${statusMeta.dotClass || 'bg-blue-500'}`} />
             <span
-              className={`text-lg sm:text-xl font-bold tracking-tight truncate whitespace-nowrap ${
+              className={`text-[15px] sm:text-xl font-bold tracking-tight truncate whitespace-nowrap ${
                 statusMeta.textColor || 'text-blue-600'
               }`}
             >
@@ -615,7 +615,7 @@ export function BookingDetailsPage({ onLoginClick }) {
       </header>
 
       {/* Fixed Top Header Bar & Stepper Console */}
-      <div className="fixed top-0 inset-x-0 z-40 bg-[#faf8f5] rounded-b-[28px] sm:rounded-b-[32px] pt-[66px] sm:pt-[78px] pb-3 sm:pb-3.5 px-3 sm:px-6 border-b border-black/[0.06] shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
+      <div className="fixed top-0 inset-x-0 z-40 bg-white rounded-b-[28px] sm:rounded-b-[32px] pt-[66px] sm:pt-[78px] pb-3 sm:pb-3.5 px-3 sm:px-6 border-b border-black/[0.06] shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
         <div className="max-w-md sm:max-w-lg mx-auto">
           <div className="rounded-full bg-[#1f1b16] text-white border border-white/15 px-4 sm:px-6 py-2 shadow-xl">
             <div className="grid grid-cols-3 gap-2 sm:gap-4 relative">
@@ -925,7 +925,7 @@ export function BookingDetailsPage({ onLoginClick }) {
       </div>
 
       {/* Fixed Bottom Footer Action Bar */}
-      <footer className="fixed bottom-0 inset-x-0 z-40 bg-[#faf8f5] rounded-t-[28px] sm:rounded-t-[32px] border-t border-black/[0.06] py-3.5 sm:py-4 px-4 sm:px-8 shadow-[0_-8px_24px_rgba(0,0,0,0.08)]">
+      <footer className="fixed bottom-0 inset-x-0 z-40 bg-white rounded-t-[28px] sm:rounded-t-[32px] border-t border-black/[0.06] py-3.5 sm:py-4 px-4 sm:px-8 shadow-[0_-8px_24px_rgba(0,0,0,0.08)]">
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
           {stayData?._id ? (
             <Link

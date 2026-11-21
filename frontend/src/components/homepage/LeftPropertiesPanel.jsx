@@ -77,7 +77,7 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory, onSele
       adminAPI.getHostByEmail(user.email)
         .then((check) => {
           if (!mounted) return;
-          if (check?.hasProperty || check?.host?.isApproved || check?.host?.status === 'Approved') {
+          if (check?.hasProperty || check?.host?.status === 'Approved') {
             setHasHostProperty(true);
           }
         })
@@ -165,7 +165,7 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory, onSele
       if (user?.email) {
         adminAPI.getHostByEmail(user.email)
           .then((check) => {
-            if (check?.hasProperty || check?.host?.isApproved || check?.host?.status === 'Approved') {
+            if (check?.hasProperty || check?.host?.status === 'Approved') {
               setHasHostProperty(true);
             }
           })

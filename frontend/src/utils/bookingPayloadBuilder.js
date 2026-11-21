@@ -1,5 +1,3 @@
-import { getDatesForMonthKeys } from './dateUtils';
-
 export function buildBookingPayload({
   isMonthly,
   selectedRoom,
@@ -53,14 +51,12 @@ export function buildBookingPayload({
     const checkOutLabel = `${lastMonth.daysInMonth} ${lastMonth.monthShort} ${lastMonth.year} (11:59 PM)`;
 
     const chosenMonthKeys = sortedMonthIndices.map((idx) => upcomingMonths[idx]?.monthKey);
-    const chosenDates = getDatesForMonthKeys(chosenMonthKeys);
     const computedTotal = unitPrice * sortedMonthIndices.length * effectiveMultiplier;
     const durationDisplay = `${sortedMonthIndices.length} Month${sortedMonthIndices.length > 1 ? 's' : ''}`;
 
     return {
       id: uniqueBookingId,
       bookingReferenceId: uniqueBookingRefId,
-      slotBookingId: uniqueSlotBookingId,
       stayId: stayId,
       roomId: selectedRoom._id || selectedRoom.id,
       stayTitle: stay?.propertyName || stay?.title || 'RoomScout Stay',
@@ -79,8 +75,8 @@ export function buildBookingPayload({
       checkInISO: exactMonthlyInUTC,
       checkOutISO: exactMonthlyOutUTC,
       bookedMonths: chosenMonthKeys,
-      bookedDates: chosenDates,
-      selectedDaysCount: chosenDates.length,
+      bookedDates: [],
+      selectedDaysCount: chosenMonthKeys.length,
       durationMonths: sortedMonthIndices.length,
       guestName: cleanName,
       fullName: cleanName,
@@ -139,7 +135,6 @@ export function buildBookingPayload({
   return {
     id: uniqueBookingId,
     bookingReferenceId: uniqueBookingRefId,
-    slotBookingId: uniqueSlotBookingId,
     stayId: stayId,
     roomId: selectedRoom._id || selectedRoom.id,
     stayTitle: stay?.propertyName || stay?.title || 'RoomScout Stay',
@@ -158,6 +153,7 @@ export function buildBookingPayload({
     checkInISO: exactCheckInUTC,
     checkOutISO: exactCheckOutUTC,
     bookedDates: sortedIndices.map((idx) => upcomingWeek[idx]?.fullISO),
+    bookedMonths: [],
     selectedDaysCount: selectedSlotIndices.length,
     guestName: cleanName,
     fullName: cleanName,

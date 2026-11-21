@@ -29,7 +29,7 @@ export function useHostLocationImport({ formData, setFormData, googleMapsUrl, sh
   const handleImportGoogleMaps = async () => {
     const rawUrl = (googleMapsUrl || '').trim();
     if (!rawUrl) {
-      toast.error('Please paste a Google Maps link first.');
+      toast.error('Paste Google Maps link first');
       return;
     }
 
@@ -102,10 +102,10 @@ export function useHostLocationImport({ formData, setFormData, googleMapsUrl, sh
         console.warn('Reverse geocode error:', revErr);
       }
 
-      toast.success('Location imported & address details filled!');
+      toast.success('Location imported');
     } catch (err) {
       console.error('Import Google Maps error:', err);
-      toast.error(`Failed to import location: ${err.message || 'Please try again'}`);
+      toast.error('Location import failed');
     } finally {
       setIsImportingGMap(false);
     }

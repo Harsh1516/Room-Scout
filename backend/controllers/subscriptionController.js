@@ -68,6 +68,11 @@ import { Stay } from '../models/Stay.js';
 import { PlatformPaymentSettings } from '../models/PlatformPaymentSettings.js';
 import { HostSubscriptionPayment } from '../models/HostSubscriptionPayment.js';
 import { uploadSecureImage } from '../utils/imageSecurity.js';
+import {
+  sendSubscriptionRequestToAdminEmail,
+  sendSubscriptionActivatedToHostEmail,
+  sendSubscriptionRejectedToHostEmail,
+} from '../services/emailService.js';
 
 // Helper: Calculate dynamic room-based subscription plans based on property type and room count
 export function calculateSubscriptionPlans({
@@ -366,7 +371,7 @@ export async function getHostSubscriptionStatus(req, res, next) {
     }
 
     const hasActiveSubscription = currentStatus === 'ACTIVE' && Boolean(expiresAt && expiresAt > now);
-    const isApprovedHostOrStay = host.status === 'Approved' || Boolean(host.isApproved) || (stay ? Boolean(stay.isApproved) : true);
+    const isApprovedHostOrStay = host.status === 'Approved' || (stay ? Boolean(stay.isApproved) : true);
     const isLive = hasActiveSubscription && isApprovedHostOrStay;
     const daysRemaining = expiresAt && expiresAt > now
       ? Math.max(0, Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
@@ -565,51 +570,69 @@ export async function submitHostSubscriptionPayment(req, res, next) {
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December'
     ];
-    let startMonthLabel = '';
+    let emailScheduleLabel = '';
     if (cleanStartOption === 'NEXT') {
       const nextMonthDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-      startMonthLabel = `Next Month (1 ${monthNames[nextMonthDate.getMonth()]} ${nextMonthDate.getFullYear()})`;
+      emailScheduleLabel = `Next Month (1 ${monthNames[nextMonthDate.getMonth()]} ${nextMonthDate.getFullYear()})`;
     } else {
-      startMonthLabel = `This Month (${monthNames[now.getMonth()]} ${now.getFullYear()})`;
+      emailScheduleLabel = `This Month (${monthNames[now.getMonth()]} ${now.getFullYear()})`;
     }
 
-    const paymentRecord = await HostSubscriptionPayment.create({
+    const paymentData = {
       hostId: host._id,
       stayId: stay?._id || null,
       planCode: planObj.code,
-      planLabel: planObj.label,
       durationMonths: planObj.durationMonths,
       amount: Number(planObj.price),
       startOption: cleanStartOption,
-      startMonthLabel,
       transactionRef: cleanRef,
-      receiptUrl: finalReceiptUrl,
-      recipientUpiId: settings.upiId || '',
       status: 'PENDING',
-    });
+    };
+    if (planObj.label) paymentData.planLabel = planObj.label;
+    if (settings.upiId) paymentData.recipientUpiId = settings.upiId;
+    if (finalReceiptUrl) paymentData.receiptUrl = finalReceiptUrl;
+
+    const paymentRecord = await HostSubscriptionPayment.create(paymentData);
 
     // Auto-prune database so host keeps only latest 3 records (older records deleted)
     await pruneHostSubscriptionHistory(host._id);
 
     // Clear locked plan code and start option since payment UTR has now been completely sent to admin
-    if (!host.subscription) host.subscription = {};
-    host.subscription.lockedPlanCode = '';
-    host.subscription.lockedStartOption = 'CURRENT';
+    if (host.subscription) {
+      host.subscription.lockedPlanCode = undefined;
+      host.subscription.lockedStartOption = undefined;
+    }
 
     // If host doesn't have an active subscription, mark as PENDING_VERIFICATION
     if (host.subscription?.status !== 'ACTIVE') {
       host.subscription = {
-        ...host.subscription,
+        ...(host.subscription ? host.subscription.toObject?.() || host.subscription : {}),
         status: 'PENDING_VERIFICATION',
         planCode: planObj.code,
-        planLabel: planObj.label,
         durationMonths: planObj.durationMonths,
         amountPaid: Number(planObj.price),
         lastPaymentRef: cleanRef,
-        lockedPlanCode: '',
       };
+      if (planObj.label) host.subscription.planLabel = planObj.label;
+      delete host.subscription.lockedPlanCode;
+      delete host.subscription.lockedStartOption;
     }
     await host.save();
+
+    // Send automated email alert to Admin
+    sendSubscriptionRequestToAdminEmail({
+      hostName: host.name || 'Host Partner',
+      hostEmail: host.email || '',
+      hostPhone: host.phone || '',
+      stayTitle: stay?.title || '',
+      planLabel: planObj.label,
+      durationMonths: planObj.durationMonths,
+      amount: planObj.price,
+      transactionRef: cleanRef,
+      startMonthLabel: emailScheduleLabel,
+    }).catch((err) => {
+      console.warn('[Email Warning] Could not send subscription request to admin:', err.message);
+    });
 
     return res.status(201).json({
       success: true,
@@ -714,14 +737,19 @@ export async function verifySubscriptionRequest(req, res, next) {
         }
       }
 
+      const adminIdentifier =
+        req.user?._id?.toString() || req.user?.email || (req.isAdminKey ? 'ADMIN' : 'SYSTEM');
+
       // Update payment record
       request.status = 'VERIFIED';
       request.durationMonths = monthsToAdd;
       request.verifiedAt = now;
-      request.verifiedBy = req.user?._id || null;
+      request.verifiedBy = adminIdentifier;
       request.activatedStartDate = newStartDate;
       request.activatedExpiresAt = newExpiresAt;
-      if (adminNotes) request.adminNotes = String(adminNotes).trim();
+      if (adminNotes && String(adminNotes).trim()) {
+        request.adminNotes = String(adminNotes).trim();
+      }
       await request.save();
 
       // Update Host subscription
@@ -739,7 +767,7 @@ export async function verifySubscriptionRequest(req, res, next) {
       await host.save();
 
       // Update Stay records for this host: if stay was approved by admin, make it live!
-      const isApprovedHost = host.status === 'Approved' || Boolean(host.isApproved);
+      const isApprovedHost = host.status === 'Approved';
       await Stay.updateMany(
         { hostId: host._id },
         {
@@ -762,6 +790,22 @@ export async function verifySubscriptionRequest(req, res, next) {
         status: 'ACTIVE',
       });
 
+      // Send branded activation email to host
+      if (host.email) {
+        sendSubscriptionActivatedToHostEmail({
+          hostEmail: host.email,
+          hostName: host.name || 'Host Partner',
+          planLabel: request.planLabel,
+          durationMonths: monthsToAdd,
+          amount: request.amount,
+          transactionRef: request.transactionRef,
+          validUntil: formatValidityDate(newExpiresAt),
+          isApprovedHost,
+        }).catch((err) => {
+          console.warn('[Email Warning] Could not send subscription activation email to host:', err.message);
+        });
+      }
+
       return res.json({
         success: true,
         message: isApprovedHost
@@ -770,11 +814,15 @@ export async function verifySubscriptionRequest(req, res, next) {
         subscription: host.subscription,
       });
     } else if (action === 'REJECT') {
+      const adminIdentifier =
+        req.user?._id?.toString() || req.user?.email || (req.isAdminKey ? 'ADMIN' : 'SYSTEM');
       request.status = 'REJECTED';
       request.rejectionReason = String(rejectionReason || 'UTR did not match bank statement records.').trim();
       request.verifiedAt = new Date();
-      request.verifiedBy = req.user?._id || null;
-      if (adminNotes) request.adminNotes = String(adminNotes).trim();
+      request.verifiedBy = adminIdentifier;
+      if (adminNotes && String(adminNotes).trim()) {
+        request.adminNotes = String(adminNotes).trim();
+      }
       await request.save();
 
       // If host was pending verification and doesn't have an active plan, mark as expired/none
@@ -794,6 +842,20 @@ export async function verifySubscriptionRequest(req, res, next) {
         status: 'REJECTED',
         rejectionReason: request.rejectionReason,
       });
+
+      // Send branded rejection email to host
+      if (host.email) {
+        sendSubscriptionRejectedToHostEmail({
+          hostEmail: host.email,
+          hostName: host.name || 'Host Partner',
+          planLabel: request.planLabel,
+          amount: request.amount,
+          transactionRef: request.transactionRef,
+          rejectionReason: request.rejectionReason,
+        }).catch((err) => {
+          console.warn('[Email Warning] Could not send subscription rejection email to host:', err.message);
+        });
+      }
 
       return res.json({
         success: true,
@@ -858,7 +920,7 @@ export async function manualActivateSubscription(req, res, next) {
     };
     await host.save();
 
-    const isApprovedHost = host.status === 'Approved' || Boolean(host.isApproved);
+    const isApprovedHost = host.status === 'Approved';
     await Stay.updateMany(
       { hostId: host._id },
       {
@@ -1047,10 +1109,12 @@ export async function bulkVerifySubscriptions(req, res, next) {
         }
       }
 
+      const adminIdentifier =
+        req.user?._id?.toString() || req.user?.email || (req.isAdminKey ? 'ADMIN' : 'SYSTEM');
       request.status = 'VERIFIED';
       request.durationMonths = monthsToAdd;
       request.verifiedAt = now;
-      request.verifiedBy = req.user?._id || null;
+      request.verifiedBy = adminIdentifier;
       request.activatedStartDate = newStartDate;
       request.activatedExpiresAt = newExpiresAt;
       request.adminNotes = 'Bulk verified via bank statement reconciliation';
@@ -1069,7 +1133,7 @@ export async function bulkVerifySubscriptions(req, res, next) {
       };
       await host.save();
 
-      const isApprovedHost = host.status === 'Approved' || Boolean(host.isApproved);
+      const isApprovedHost = host.status === 'Approved';
       await Stay.updateMany(
         { hostId: host._id },
         {
@@ -1098,6 +1162,22 @@ export async function bulkVerifySubscriptions(req, res, next) {
         expiresAt: newExpiresAt,
         status: 'ACTIVE',
       });
+
+      // Send branded activation email to host
+      if (host.email) {
+        sendSubscriptionActivatedToHostEmail({
+          hostEmail: host.email,
+          hostName: host.name || 'Host Partner',
+          planLabel: request.planLabel,
+          durationMonths: monthsToAdd,
+          amount: request.amount,
+          transactionRef: request.transactionRef,
+          validUntil: formatValidityDate(newExpiresAt),
+          isApprovedHost,
+        }).catch((err) => {
+          console.warn('[Email Warning] Bulk subscription activation email failed:', err.message);
+        });
+      }
     }
 
     return res.json({
@@ -1141,10 +1221,12 @@ export async function bulkRejectSubscriptions(req, res, next) {
     const rejectedRecords = [];
 
     for (const request of requests) {
+      const adminIdentifier =
+        req.user?._id?.toString() || req.user?.email || (req.isAdminKey ? 'ADMIN' : 'SYSTEM');
       request.status = 'REJECTED';
       request.rejectionReason = String(rejectionReason).trim();
       request.verifiedAt = now;
-      request.verifiedBy = req.user?._id || null;
+      request.verifiedBy = adminIdentifier;
       request.adminNotes = 'Rejected via bank statement reconciliation (amount mismatch)';
       await request.save();
 

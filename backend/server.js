@@ -16,7 +16,6 @@ import errorMiddleware from './middleware/errorMiddleware.js';
 import { apiLimiter } from './middleware/rateLimitMiddleware.js';
 import { sanitizeInput } from './middleware/sanitizeMiddleware.js';
 import { autoExpireBookings } from './controllers/bookingController.js';
-import { initWhatsAppClient } from './services/whatsappService.js';
 import './config/env.js';
 import { env } from './config/env.js';
 
@@ -229,9 +228,6 @@ connectDB().then(() => {
   setInterval(() => {
     autoExpireBookings().catch((err) => console.error('Interval auto-expire error:', err));
   }, 60 * 1000);
-
-  // Initialize WhatsApp Automation Client
-  initWhatsAppClient();
 });
 
 // Process-level unhandled promise rejection handler (logs safely without corrupting server state)

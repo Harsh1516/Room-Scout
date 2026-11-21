@@ -625,6 +625,7 @@ export function RoomAvailabilityPage({ onLoginClick }) {
     setSelectedMonthIndices,
     handleToggleSlotDay,
     handleToggleSlotMonth,
+    clearSelection,
   } = useRoomSlotSelection(
     selectedRoom,
     upcomingWeek,
@@ -668,12 +669,12 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  deleteBooking(userPendingBookingForSelectedRoom._id || userPendingBookingForSelectedRoom.bookingReferenceId).catch(() => {});
  }
  fetchStayBookings();
- toast.success(`Booking request for Room ${selectedRoom?.roomNumber || ''} cancelled.`);
+ toast.success(`Cancelled: Room ${selectedRoom?.roomNumber || ''}`);
  },
  });
  } catch (err) {
  console.error('Failed to cancel booking request:', err);
- toast.error('Failed to cancel booking request.');
+ toast.error('Cancel request failed');
  } finally {
  setCancellingPendingBooking(false);
  }
@@ -760,7 +761,7 @@ export function RoomAvailabilityPage({ onLoginClick }) {
 
  // Require user to be logged in first before requesting a slot
     if (!isAuthenticated || !user) {
-      toast.warn('Please sign in or register to request your booking slot.');
+      toast.warn('Sign in to request booking');
       pendingBookingIntentRef.current = true;
       setIsGuestDetailsModalOpen(false);
       if (typeof onLoginClick === 'function') {
@@ -781,40 +782,40 @@ export function RoomAvailabilityPage({ onLoginClick }) {
     const stayId = id || stay?._id;
 
  if (!selectedRoom) {
- toast.warn('Please select an available room from the left panel.');
+ toast.warn('Select an available room');
  return;
  }
 
  const cleanName = guestName.trim();
  if (!cleanName) {
- toast.warn('Please provide your Full Name.');
+ toast.warn('Enter your full name');
  return;
  }
  if (!/^[a-zA-Z\s.']{2,50}$/.test(cleanName)) {
- toast.error('Name must contain text/letters only (no numbers or special characters).');
+ toast.error('Name: letters only');
  return;
  }
 
  const cleanPhone = guestPhone.trim().replace(/\D/g, '');
  if (!cleanPhone || cleanPhone.length !== 10) {
- toast.error('Please provide a valid 10-digit mobile number.');
+ toast.error('Enter valid 10-digit mobile');
  return;
  }
 
  const cleanAadhar = guestAadhar.trim().replace(/\D/g, '');
  if (!cleanAadhar || cleanAadhar.length !== 12) {
- toast.error('Please provide a valid 12-digit Aadhar ID number.');
+ toast.error('Enter valid 12-digit Aadhar');
  return;
  }
 
  if (isMonthly) {
  if (selectedMonthIndices.length === 0) {
- toast.warn('Please select at least 1 month for your booking.');
+ toast.warn('Select at least 1 month');
  return;
  }
  } else {
  if (selectedSlotIndices.length === 0) {
- toast.warn('Please select at least 1 day slot for your booking.');
+ toast.warn('Select at least 1 day');
  return;
  }
  }
@@ -850,7 +851,7 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  });
 
  if (isDuplicateInBookings) {
- toast.error(`Mobile ${cleanPhone} already has an active reservation in Room ${selectedRoom.roomNumber} for the selected dates.`);
+ toast.error(`Mobile booked in Room ${selectedRoom.roomNumber}`);
  return;
  }
 
@@ -860,7 +861,7 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  const sortedMonthIndices = [...selectedMonthIndices].sort((a, b) => a - b);
  for (let i = 1; i < sortedMonthIndices.length; i++) {
  if (sortedMonthIndices[i] !== sortedMonthIndices[i - 1] + 1) {
- toast.error('Booking month range must be contiguous without gaps in between.');
+ toast.error('Months must be contiguous');
  return;
  }
  }
@@ -882,7 +883,7 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  (mKey) => bookedMonthsForRoom.has(mKey) || userRequestedMonthsForRoom.has(mKey)
  );
  if (hasConflict) {
- toast.error(`Room ${selectedRoom.roomNumber} is already booked or requested by you for selected months.`);
+ toast.error(`Room ${selectedRoom.roomNumber} already booked`);
  return;
  }
 
@@ -934,12 +935,8 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  const res = await bookingsAPI.createBooking(bookingPayload);
  const savedBooking = res?.booking || bookingPayload;
 
- const rKey = getRoomKey(selectedRoom);
- if (rKey) {
- setRoomSelectedMonthsMap((prev) => ({
- ...prev,
- [rKey]: [],
- }));
+ if (typeof clearSelection === 'function') {
+ clearSelection();
  }
 
  addBooking(savedBooking);
@@ -955,7 +952,7 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  window.dispatchEvent(new Event('stayhub_slots_updated'));
  window.dispatchEvent(new Event('stayhub_my_bookings_updated'));
 
- toast.success(`Booking request sent for Room ${selectedRoom.roomNumber}!`);
+ toast.success(`Request sent: Room ${selectedRoom.roomNumber}`);
  setIsBookingsOpen(true);
  } catch (err) {
  console.error('Error requesting booking approval:', err);
@@ -963,7 +960,7 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  err?.data?.message ||
  err?.message ||
  err?.response?.data?.message ||
- 'Failed to submit booking request. Please try again.'
+ 'Failed to submit request'
  );
  } finally {
  setSubmitting(false);
@@ -973,14 +970,14 @@ export function RoomAvailabilityPage({ onLoginClick }) {
 
  // NIGHTLY FLOW
  if (selectedSlotIndices.length === 0) {
- toast.warn('Please select at least 1 day slot for your booking.');
+ toast.warn('Select at least 1 day');
  return;
  }
 
  const sortedIndices = [...selectedSlotIndices].sort((a, b) => a - b);
  for (let i = 1; i < sortedIndices.length; i++) {
  if (sortedIndices[i] !== sortedIndices[i - 1] + 1) {
- toast.error('Booking date range must be contiguous without gaps in between.');
+ toast.error('Dates must be contiguous');
  return;
  }
  }
@@ -1005,7 +1002,7 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  (idx) => bookedSlotsForRoom.has(upcomingWeek[idx]?.fullISO) || userRequestedSlotsForRoom.has(upcomingWeek[idx]?.fullISO)
  );
  if (hasConflict) {
- toast.error(`Room ${selectedRoom.roomNumber} is already booked or requested by you for selected dates.`);
+ toast.error(`Room ${selectedRoom.roomNumber} already booked`);
  return;
  }
 
@@ -1056,12 +1053,8 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  const res = await bookingsAPI.createBooking(bookingPayload);
  const savedBooking = res?.booking || bookingPayload;
 
- const rKey = getRoomKey(selectedRoom);
- if (rKey) {
- setRoomSelectedSlotsMap((prev) => ({
- ...prev,
- [rKey]: [],
- }));
+ if (typeof clearSelection === 'function') {
+ clearSelection();
  }
 
  addBooking(savedBooking);
@@ -1077,7 +1070,7 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  window.dispatchEvent(new Event('stayhub_slots_updated'));
  window.dispatchEvent(new Event('stayhub_my_bookings_updated'));
 
- toast.success(`Booking request sent for Room ${selectedRoom.roomNumber}!`);
+ toast.success(`Request sent: Room ${selectedRoom.roomNumber}`);
  setIsBookingsOpen(true);
  } catch (err) {
  console.error('Error requesting booking approval:', err);
@@ -1085,7 +1078,7 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  err?.data?.message ||
  err?.message ||
  err?.response?.data?.message ||
- 'Failed to submit booking request. Please try again.'
+ 'Failed to submit request'
  );
  } finally {
  setSubmitting(false);
