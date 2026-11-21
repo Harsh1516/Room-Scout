@@ -5,7 +5,8 @@ import { z } from 'zod';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
-import { Login } from '../components/navbar/Login';
+import { Left } from '../components/navbar/Left';
+import { Right } from '../components/navbar/Right';
 
 // Helper to extract raw 10-digit phone number without +91 prefix
 const extractRawPhoneNumber = (phoneStr = '') => {
@@ -91,7 +92,7 @@ const passwordSetSchema = z
  path: ['confirmPassword'],
  });
 
-export function AccountPage() {
+export function AccountPage({ onLoginClick }) {
  const navigate = useNavigate();
  const { user, isHost, updateUserSession, logout } = useAuth();
  
@@ -314,116 +315,99 @@ export function AccountPage() {
 
  return (
  <div className="min-h-screen bg-[#f5f2ea] text-[#1f1b16] transition-colors duration-300 font-body-md antialiased pb-8 sm:pb-12">
- {/* ── TOP FLOATING NAVIGATION CAPSULES (MATCHING HOST DASHBOARD / APP NAVBAR) ── */}
- <header className="relative w-full h-[70px] sm:h-[88px] pointer-events-none select-none z-50 font-body-md antialiased">
- {/* 1. Left Island: Back button */}
- <div className="fixed top-2.5 sm:top-5 left-2.5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none h-12 sm:h-13">
- <button
- type="button"
- onClick={handleBack}
- data-no-hover="true"
- className="inline-flex items-center justify-center h-12 sm:h-13 px-4.5 sm:px-5.5 gap-2 rounded-full bg-white text-slate-700 text-[14.5px] sm:text-base font-medium shadow-md border border-slate-200/90 hover:bg-[#f7f4ee] transition-colors cursor-pointer select-none active:scale-95 shrink-0"
- title="Return"
- >
- <svg
- className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-slate-600 stroke-[2] shrink-0"
- viewBox="0 0 24 24"
- fill="none"
- stroke="currentColor"
- strokeLinecap="round"
- strokeLinejoin="round"
- >
- <path d="M15.75 19.5L8.25 12l7.5-7.5" />
- </svg>
- <span className="flex items-center justify-center leading-none tracking-tight">Back</span>
- </button>
- </div>
+ {/* ── TOP FLOATING NAVIGATION CAPSULES (MATCHING STANDARD SITE LAYOUT: LEFT | CENTER CAPSULE | RIGHT) ── */}
+      <header className="relative w-full h-[70px] sm:h-[88px] pointer-events-none select-none z-50 font-body-md antialiased">
+        {/* 1. Left Island: Circular Floating Back Button (Identical to Standard Navbar) */}
+        <Left
+          showBadge={false}
+          onBack={handleBack}
+          fallbackUrl={isHost ? '/host/dashboard' : '/explore'}
+        />
 
- {/* 2. Center Island: Floating Liquid Glass Segmented Tabs */}
- <div className="fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center pointer-events-auto max-w-[calc(100vw-130px)] sm:max-w-none h-13 sm:h-[54px] select-none">
- <nav className="relative flex items-center h-13 sm:h-[54px] p-1 sm:p-1.5 rounded-full border border-slate-200/90 bg-white shadow-md select-none">
- {/* Tab 1: Profile Details */}
- <button
- type="button"
- onClick={() => setActiveTab('details')}
- className={`relative z-10 h-11 sm:h-12 py-0 px-3.5 sm:px-5 rounded-full text-xs sm:text-sm md:text-base font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none shrink-0 ${
- activeTab === 'details'
- ? 'text-white font-medium'
- : 'text-slate-600 hover:text-[#1f1b16] font-medium'
- }`}
- >
- <svg className="relative z-10 w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
- <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
- <circle cx="12" cy="7" r="4" />
- </svg>
- <span className="relative z-10">Profile<span className="hidden sm:inline"> Details</span></span>
- {activeTab === 'details' && (
- <motion.div
- layoutId="accountTabActivePill"
- className="absolute inset-0 bg-[#1f1b16] rounded-full z-0 pointer-events-none shadow-[0_2px_8px_rgba(31,27,22,0.3)]"
- transition={{ type: 'spring', stiffness: 450, damping: 32 }}
- />
- )}
- </button>
+        {/* 2. Center Island: Floating Segmented Capsule Tabs (Profile | Password | Delete) */}
+        <div className="fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center pointer-events-auto select-none w-max max-w-[calc(100vw-132px)] sm:max-w-none h-[54px] sm:h-[56px]">
+          <nav className="relative flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-full bg-white border border-slate-200/90 shadow-sm select-none w-fit">
+            {/* Tab 1: Profile Details */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('details')}
+              data-no-hover="true"
+              className={`relative h-[36px] sm:h-[38px] px-2.5 sm:px-4.5 md:px-5 rounded-full text-[12px] sm:text-sm font-semibold tracking-tight transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
+                activeTab === 'details'
+                  ? 'text-white'
+                  : 'text-slate-700 hover:text-[#1f1b16]'
+              }`}
+            >
+              {activeTab === 'details' && (
+                <motion.div
+                  layoutId="accountTabActivePill"
+                  className="absolute inset-0 bg-[#1f1b16] rounded-full z-0 pointer-events-none shadow-[0_2px_8px_rgba(31,27,22,0.3)]"
+                  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                />
+              )}
+              <svg className="relative z-10 w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              <span className="relative z-10">Profile<span className="hidden sm:inline"> Details</span></span>
+            </button>
 
- {/* Tab 2: Password */}
- <button
- type="button"
- onClick={() => setActiveTab('password')}
- className={`relative z-10 h-11 sm:h-12 py-0 px-3.5 sm:px-5 rounded-full text-xs sm:text-sm md:text-base font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none shrink-0 ${
- activeTab === 'password'
- ? 'text-white font-medium'
- : 'text-slate-600 hover:text-[#1f1b16] font-medium'
- }`}
- >
- <svg className="relative z-10 w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
- <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
- <path d="M7 11V7a5 5 0 0 1 10 0v4" />
- </svg>
- <span className="relative z-10">Password</span>
- {activeTab === 'password' && (
- <motion.div
- layoutId="accountTabActivePill"
- className="absolute inset-0 bg-[#1f1b16] rounded-full z-0 pointer-events-none shadow-[0_2px_8px_rgba(31,27,22,0.3)]"
- transition={{ type: 'spring', stiffness: 450, damping: 32 }}
- />
- )}
- </button>
+            {/* Tab 2: Password */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('password')}
+              data-no-hover="true"
+              className={`relative h-[36px] sm:h-[38px] px-2.5 sm:px-4.5 md:px-5 rounded-full text-[12px] sm:text-sm font-semibold tracking-tight transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
+                activeTab === 'password'
+                  ? 'text-white'
+                  : 'text-slate-700 hover:text-[#1f1b16]'
+              }`}
+            >
+              {activeTab === 'password' && (
+                <motion.div
+                  layoutId="accountTabActivePill"
+                  className="absolute inset-0 bg-[#1f1b16] rounded-full z-0 pointer-events-none shadow-[0_2px_8px_rgba(31,27,22,0.3)]"
+                  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                />
+              )}
+              <svg className="relative z-10 w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              <span className="relative z-10">Password</span>
+            </button>
 
- {/* Tab 3: Delete Account */}
- <button
- type="button"
- onClick={() => setActiveTab('delete')}
- className={`relative z-10 h-11 sm:h-12 py-0 px-3.5 sm:px-5 rounded-full text-xs sm:text-sm md:text-base font-semibold tracking-tight transition-colors duration-200 cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none shrink-0 ${
- activeTab === 'delete'
- ? 'text-white font-medium'
- : 'text-rose-600 hover:text-rose-700 font-medium'
- }`}
- >
- <svg className="relative z-10 w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
- <path d="M3 6h18" />
- <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
- <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
- </svg>
- <span className="relative z-10">Delete<span className="hidden sm:inline"> Account</span></span>
- {activeTab === 'delete' && (
- <motion.div
- layoutId="accountTabActivePill"
- className="absolute inset-0 bg-rose-600 rounded-full z-0 pointer-events-none shadow-[0_2px_8px_rgba(225,29,72,0.3)]"
- transition={{ type: 'spring', stiffness: 450, damping: 32 }}
- />
- )}
- </button>
- </nav>
- </div>
+            {/* Tab 3: Delete Account */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('delete')}
+              data-no-hover="true"
+              className={`relative h-[36px] sm:h-[38px] px-2.5 sm:px-4.5 md:px-5 rounded-full text-[12px] sm:text-sm font-semibold tracking-tight transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
+                activeTab === 'delete'
+                  ? 'text-white'
+                  : 'text-rose-600 hover:text-rose-700'
+              }`}
+            >
+              {activeTab === 'delete' && (
+                <motion.div
+                  layoutId="accountTabActivePill"
+                  className="absolute inset-0 bg-rose-600 rounded-full z-0 pointer-events-none shadow-[0_2px_8px_rgba(225,29,72,0.3)]"
+                  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                />
+              )}
+              <svg className="relative z-10 w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 6h18" />
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+              </svg>
+              <span className="relative z-10">Delete<span className="hidden sm:inline"> Account</span></span>
+            </button>
+          </nav>
+        </div>
 
- {/* 3. Right Island: Profile / Login Avatar Button */}
- <div className="fixed top-2.5 sm:top-5 right-2.5 sm:right-6 z-50 flex items-center gap-1.5 sm:gap-2.5 pointer-events-auto select-none h-12 sm:h-13">
- <div className="relative flex items-center justify-center h-12 sm:h-13">
- <Login />
- </div>
- </div>
- </header>
+        {/* 3. Right Island: Standard Navbar Actions (Wishlist, Bookings, Login/Avatar on desktop; circular 2-line menu on mobile) */}
+        <Right onLoginClick={onLoginClick} />
+      </header>
 
  {/* Main Container */}
  <main className="max-w-3xl mx-auto px-3 sm:px-6 pt-20 sm:pt-24 lg:pt-28 pb-12 sm:pb-16 min-h-[calc(100vh-4rem)]">

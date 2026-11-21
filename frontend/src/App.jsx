@@ -402,7 +402,7 @@ function AppContent() {
  path="/account"
  element={
  <ProtectedRoute>
- <AccountPage />
+ <AccountPage onLoginClick={() => handleOpenLoginModal('user', '')} />
  </ProtectedRoute>
  }
  />
