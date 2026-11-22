@@ -223,7 +223,6 @@ export function UserMonthlySlotCard({
                     const isUserMonth = isBooked && userBookedMonthsForRoom.has(m.monthKey);
                     const isUserMonthRequested = !isBooked && userRequestedMonthsForRoom.has(m.monthKey);
                     const isSelected = selectedMonthIndices.includes(m.index);
-                    const isCurrentMonth = m.isCurrentMonth;
                     const occupiedCount = isBooked ? roomCapacity : 0;
                     const isBookedMonth = isBooked || isUserMonthRequested;
 
@@ -244,16 +243,12 @@ export function UserMonthlySlotCard({
                         <span className={`relative z-10 text-xs sm:text-sm font-bold px-3 py-1 rounded-full tracking-wide truncate max-w-[130px] leading-tight ${
                           isBookedMonth
                             ? 'bg-orange-50 text-orange-600 border border-orange-200/80 font-bold'
-                            : isCurrentMonth
-                            ? 'bg-blue-50 text-blue-700 border border-blue-200 font-extrabold'
                             : 'bg-blue-50/70 text-blue-700 border border-blue-100 font-bold'
                         }`}>
                           {isBooked
                             ? (isUserMonth ? '★ You' : 'Booked')
                             : isUserMonthRequested
                             ? 'Requested'
-                            : isCurrentMonth
-                            ? 'This Month'
                             : 'Available'}
                         </span>
 
@@ -376,7 +371,6 @@ export function UserMonthlySlotCard({
                               const isUserSlot = isBooked && userBookedSlotsForRoom.has(slot.fullISO);
                               const isUserRequested = !isBooked && userRequestedSlotsForRoom.has(slot.fullISO);
                               const isSelected = selectedSlotIndices.includes(slot.index);
-                              const isToday = slot.fullISO === todayISO;
                               const dayOfWeek = slot.dayOfWeek;
 
                               const [sY, sM, sD] = slot.fullISO.split('-').map(Number);
@@ -433,8 +427,6 @@ export function UserMonthlySlotCard({
                                         ? `${capsuleBg} cursor-not-allowed`
                                         : isSelected
                                         ? 'bg-[#00e599] text-[#071320] font-black cursor-pointer shadow-md shadow-[#00e599]/20 rounded-full'
-                                        : isToday
-                                        ? 'border-2 border-[#c0c1ff] text-slate-900 cursor-pointer font-bold bg-transparent rounded-full'
                                         : 'text-slate-700 flex items-center justify-center font-bold hover:bg-slate-100 transition-colors cursor-pointer rounded-full'
                                     }`}
                                   >

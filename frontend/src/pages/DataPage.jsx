@@ -136,6 +136,9 @@ export function DataPage({ onStayClick, onBookClick }) {
  if (catLower === 'stays & villas') {
  return type === 'villa' || type === 'resort' || type.includes('villa');
  }
+ if (catLower === 'independent room') {
+ return type === 'independent room' || type === 'independent' || type.includes('independent');
+ }
  return type === catLower;
  });
  }
@@ -185,7 +188,7 @@ export function DataPage({ onStayClick, onBookClick }) {
  });
  }, [stays, searchQuery, selectedCategory, selectedGender, sortOrder]);
 
- const categories = ['All', 'PG', 'Flat', 'Hotel'];
+ const categories = ['All', 'PG', 'Flat', 'Hotel', 'Independent Room'];
 
  return (
  <div className="min-h-screen bg-[#f7f4ee] text-[#1f1b16] transition-colors duration-300 font-sans">

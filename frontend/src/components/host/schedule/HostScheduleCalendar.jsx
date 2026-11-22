@@ -141,6 +141,12 @@ export function HostScheduleCalendar({
  const [activeMonthModalKey, setActiveMonthModalKey] = useState(null);
  const [activeDateModalISO, setActiveDateModalISO] = useState(null);
 
+	const cleanRoomNum = useMemo(() => {
+		const raw = selectedRoomCard?.roomNumber || (typeof roomDisplay === 'string' ? roomDisplay : '');
+		if (!raw) return '';
+		return String(raw).replace(/^room[- ]*/i, '').trim();
+	}, [selectedRoomCard?.roomNumber, roomDisplay]);
+
  const hasCheckInBanner = Boolean(!isUserRequestSelection && !selectedBookedGuest && reservationDetails);
  const hasWarningBanner = Boolean(!isRoomSavedToDb);
  const hasAdminLockBanner = Boolean(!isPropertyApproved);
@@ -493,18 +499,21 @@ export function HostScheduleCalendar({
  ref={calendarCardRef}
  className="w-full flex-1 flex flex-col max-xl:rounded-3xl max-xl:border max-xl:border-white/90 xl:rounded-[26px] overflow-hidden transition-all max-xl:bg-white/95 max-xl:backdrop-blur-xl max-xl:shadow-xs xl:bg-[#0284c7] xl:border xl:border-sky-300/30 xl:shadow-[0_12px_40px_rgba(2,132,199,0.35)] select-none relative min-h-0 max-xl:pb-36 sm:max-xl:pb-40 xl:pb-6"
  >
- {/* Room Detail Banner */}
- <div className="px-4 sm:px-5 py-3 border-b max-xl:border-slate-100 max-xl:bg-transparent xl:border-white/15 xl:bg-white/10 relative z-10 ">
- <div className="flex items-center justify-center w-full">
- <span className="inline-flex items-center justify-center px-4.5 sm:px-5 py-1.5 sm:py-2 rounded-full max-xl:bg-[#111827] max-xl:border max-xl:border-slate-800 max-xl:text-white font-semibold xl:bg-white/20 xl:hover:bg-white/25 xl:border xl:border-white/35 xl:text-white text-xs sm:text-sm xl:text-base xl:sm:text-lg shadow-xs tracking-tight select-none">
- {occupancyPercentage}% Full
- </span>
- </div>
- </div>
+ {/* Room Detail Banner — Exact match to user side room page */}
+		<div className="px-4 sm:px-5 py-2.5 sm:py-3 border-b max-xl:border-slate-100 max-xl:bg-transparent xl:border-white/15 xl:bg-white/10 relative z-10">
+			<div className="flex items-center justify-center w-full">
+				<div className="inline-flex items-center justify-center px-5 sm:px-6 py-1.5 sm:py-2 rounded-full border max-xl:border-slate-300 max-xl:bg-white max-xl:shadow-2xs xl:bg-white/20 xl:border-white/35 xl:text-white shadow-2xs select-none">
+					<h2 className="text-[17px] sm:text-xl md:text-[22px] font-black tracking-tight leading-none flex items-center gap-1.5">
+						<span className="max-xl:text-black xl:text-white">Room No.</span>
+						<span className="max-xl:text-slate-400 xl:text-sky-100 font-semibold">{cleanRoomNum || 'Room'}</span>
+					</h2>
+				</div>
+			</div>
+		</div>
 
- <div className="px-4 sm:px-5 pb-3.5 sm:pb-4 pt-2.5 sm:pt-3 flex flex-col gap-2.5 max-xl:text-[#0b0b0b] font-bold xl:text-white">
+		<div className="px-4 sm:px-5 pb-3.5 sm:pb-4 pt-2.5 sm:pt-3 flex flex-col gap-2.5 max-xl:text-[#0b0b0b] font-bold xl:text-white">
 
- {/* User Request Display-Only Banner */}
+		{/* User Request Display-Only Banner */}
  <AnimatePresence initial={false} mode="sync">
  {hasUserReqBanner && (
  <motion.div
@@ -721,39 +730,33 @@ export function HostScheduleCalendar({
  )}
  </AnimatePresence>
 
- {/* Month Card Header & Subtitle */}
+ {/* Month Card Header & Subtitle — label removed per UI request */}
+ {!hideMonthCardExtras && isUserRequestSelection && (
  <div className="flex items-center justify-between pt-0.5">
  <span className="text-[15px] sm:text-[16px] font-bold max-xl:text-[#0b0b0b] xl:text-sky-100 flex items-center gap-1.5">
- <span>{isMonthly ? 'Month Card (12 Months)' : 'Month Card'}</span>
- {!hideMonthCardExtras && isUserRequestSelection && (
  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-code-sm text-[11px] font-medium bg-white/20 text-white border border-white/30">
  <span className="material-symbols-outlined text-[13px]">lock</span>
  Display-Only
  </span>
- )}
  </span>
- {!hideMonthCardExtras && (
- <span className={`text-[13.5px] sm:text-[14.5px] font-medium ${
- sortedSelected.length > 0
- ? isUserRequestSelection
- ? 'text-white'
- : 'text-emerald-300'
- : 'max-xl:text-slate-500 text-sky-100'
- }`}>
- {isUserRequestSelection
- ? isMonthly
+ <span className="text-[13.5px] sm:text-[14.5px] font-medium text-white">
+ {isMonthly
  ? `${sortedSelected.length} Month(s) Requested`
- : `${sortedSelected.length} Night(s) Requested`
- : isMonthly
- ? sortedSelected.length > 0
- ? `${sortedSelected.length} Month(s) Selected`
- : 'Select month(s) below'
- : sortedSelected.length > 0
- ? `${sortedSelected.length} Night(s) Selected`
- : 'Select dates below'}
+ : `${sortedSelected.length} Night(s) Requested`}
  </span>
- )}
  </div>
+ )}
+ {!hideMonthCardExtras && !isUserRequestSelection && sortedSelected.length > 0 && (
+ <div className="flex items-center justify-end pt-0.5">
+ <span className={`text-[13.5px] sm:text-[14.5px] font-medium ${
+ isMonthly ? 'text-emerald-300' : 'text-emerald-300'
+ }`}>
+ {isMonthly
+ ? `${sortedSelected.length} Month(s) Selected`
+ : `${sortedSelected.length} Night(s) Selected`}
+ </span>
+ </div>
+ )}
 
  {/* Schedule Matrix */}
  {isMonthly ? (
@@ -854,8 +857,6 @@ export function HostScheduleCalendar({
  ? 'max-xl:bg-amber-50/70 max-xl:border-2 max-xl:border-amber-300 max-xl:text-amber-900 xl:bg-amber-950/40 xl:border-2 xl:border-amber-300 xl:text-amber-100 font-medium hover:border-amber-200 cursor-pointer'
  : isUserRequestSelection
  ? 'bg-white/10 border border-white/20 text-white/40 cursor-not-allowed pointer-events-none'
- : isCurrentMonth
- ? 'max-xl:bg-white max-xl:border-2 max-xl:border-slate-800 max-xl:shadow-xs xl:bg-white/20 xl:border-2 xl:border-emerald-300 text-white font-medium hover:bg-white/30 cursor-pointer shadow-xs'
  : 'max-xl:bg-white max-xl:border max-xl:border-slate-200/90 max-xl:shadow-xs xl:bg-white/15 xl:border xl:border-white/20 hover:border-white/40 hover:bg-white/25 text-white cursor-pointer shadow-xs active:scale-95'
  }`}
  >
@@ -884,8 +885,6 @@ export function HostScheduleCalendar({
  : 'bg-slate-900 text-white font-medium shadow-xs'
  : isPartiallyBooked
  ? 'max-xl:bg-amber-100 max-xl:text-amber-800 max-xl:border max-xl:border-amber-300 xl:bg-amber-400/30 xl:text-amber-100 xl:border xl:border-amber-300'
- : isCurrentMonth
- ? 'max-xl:bg-emerald-50 max-xl:text-emerald-700 max-xl:border max-xl:border-emerald-200/80 xl:bg-emerald-400/30 xl:text-white xl:border xl:border-emerald-300 font-medium'
  : 'max-xl:bg-slate-100 max-xl:text-slate-700 max-xl:border max-xl:border-slate-200/80 xl:bg-emerald-400/25 xl:text-emerald-100 xl:border xl:border-emerald-400/40'
  }`}>
  {isFullyBooked
@@ -1149,14 +1148,10 @@ export function HostScheduleCalendar({
  : isUserReqSelected
  ? `${capsuleBg} font-medium cursor-default pointer-events-none`
  : isUserRequestSelection
- ? isToday
- ? 'border-2 border-white text-white cursor-pointer font-normal bg-transparent rounded-full'
- : 'text-white flex items-center justify-center font-normal hover:bg-white/10 transition-colors cursor-pointer rounded-full'
- : isSelected
- ? 'bg-white text-[#1f1b16] font-normal cursor-pointer border-2 border-white rounded-full z-10'
- : isToday
- ? 'border-2 border-white/70 text-white cursor-pointer font-normal bg-transparent rounded-full'
- : 'text-white flex items-center justify-center font-normal hover:bg-white/10 transition-colors cursor-pointer rounded-full'
+										? 'text-white flex items-center justify-center font-normal hover:bg-white/10 transition-colors cursor-pointer rounded-full'
+										: isSelected
+										? 'bg-white text-[#1f1b16] font-normal cursor-pointer border-2 border-white rounded-full z-10'
+										: 'text-white flex items-center justify-center font-normal hover:bg-white/10 transition-colors cursor-pointer rounded-full'
  }`}
  >
  <span className={`text-[23px] sm:text-[25px] font-normal leading-none tracking-normal select-none flex items-center justify-center ${

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { toast } from '../context/ToastContext';
 
 function getRoomKey(r) {
@@ -14,7 +14,7 @@ export function useRoomSlotSelection(
   userRequestedSlotsForRoom,
   bookedMonthsForRoom,
   userRequestedMonthsForRoom,
-  isMonthly = false
+  _isMonthly = false
 ) {
   const [roomSelectedSlotsMap, setRoomSelectedSlotsMap] = useState({});
   const [roomSelectedMonthsMap, setRoomSelectedMonthsMap] = useState({});
@@ -94,25 +94,6 @@ export function useRoomSlotSelection(
       }
     }
   }, [bookedMonthsForRoom, userRequestedMonthsForRoom, selectedRoom, upcomingMonths, roomSelectedMonthsMap]);
-
-  // Auto select first available nightly slot
-  const initializedRoomSlotsRef = useRef(new Set());
-  useEffect(() => {
-    if (isMonthly || !selectedRoom) return;
-    const rKey = getRoomKey(selectedRoom);
-    if (!rKey || initializedRoomSlotsRef.current.has(rKey)) return;
-    const currentSlots = roomSelectedSlotsMap[rKey];
-    if (!Array.isArray(currentSlots) || currentSlots.length === 0) {
-      const firstAvailableSlot = upcomingWeek.find((s) => !bookedSlotsForRoom?.has(s.fullISO));
-      if (firstAvailableSlot) {
-        initializedRoomSlotsRef.current.add(rKey);
-        setRoomSelectedSlotsMap((prev) => ({
-          ...prev,
-          [rKey]: [firstAvailableSlot.index],
-        }));
-      }
-    }
-  }, [isMonthly, selectedRoom, upcomingWeek, bookedSlotsForRoom, roomSelectedSlotsMap]);
 
   const handleToggleSlotDay = (slotIndex) => {
     const slotObj = upcomingWeek[slotIndex];

@@ -285,7 +285,8 @@ export function useStaySearch() {
  filters.type === 'All Types' ||
  stayType === targetType ||
  (targetType === 'stays & villas' && (stayType === 'villa' || stayType === 'resort')) ||
- (targetType === 'flat' && (stayType === 'flat' || stayType === 'apartment'));
+ (targetType === 'flat' && (stayType === 'flat' || stayType === 'apartment')) ||
+ (targetType === 'independent room' && (stayType === 'independent room' || stayType === 'independent' || stayType.includes('independent')));
 
  // 3. Gender / Occupancy match
  const stayGender = (stay.genderType || '').toLowerCase();

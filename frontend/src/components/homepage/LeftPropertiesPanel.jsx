@@ -21,6 +21,11 @@ const ALL_CATEGORIES = [
  title: 'PG',
  matchTypes: ['pg'],
  },
+ {
+ id: 'independent_room',
+ title: 'Independent Room',
+ matchTypes: ['independent room', 'independent_room', 'independent'],
+ },
 ];
 
 function renderCategoryIcon(id) {
@@ -52,6 +57,15 @@ function renderCategoryIcon(id) {
  <svg className="w-5 h-5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
  <polyline points="9 22 9 12 15 12 15 22" />
+ </svg>
+ );
+ case 'independent_room':
+ return (
+ <svg className="w-5 h-5 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+ <path d="M13 4h3a2 2 0 0 1 2 2v14" />
+ <path d="M2 20h20" />
+ <path d="M13 20V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v16" />
+ <circle cx="9" cy="12" r="1" />
  </svg>
  );
  default:

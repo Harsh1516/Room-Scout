@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ExternalLink, Download, CheckCircle2 } from 'lucide-react';
+import { Download, CheckCircle2, X } from 'lucide-react';
 import { MapLocationPicker } from '../../MapLocationPicker';
 import { formatCoordinate } from '../../../utils/geoUtils';
 
@@ -30,17 +30,26 @@ export function UploadLocationTab({
  md:bg-white md:border-slate-200/90 md:p-1.5 md:shadow-black/5"
  >
  <div className="flex items-center gap-1.5 sm:gap-2 w-full">
- {/* Open Google Maps Button (Minimal & Premium) */}
+ {/* Open Google Maps Button (Circular with authentic Google Maps original icon in center) */}
  <a
  href="https://www.google.com/maps"
  target="_blank"
  rel="noopener noreferrer"
- className="min-h-[44px] sm:min-h-[48px] px-4 sm:px-5 rounded-full bg-[#0284c7] hover:bg-[#0369a1] text-white text-sm sm:text-base font-semibold shadow-xs active:scale-95 transition-all shrink-0 cursor-pointer inline-flex items-center gap-1.5"
+ className="w-10 h-10 sm:w-11 sm:h-11 min-w-[40px] min-h-[40px] rounded-full bg-white hover:bg-slate-50 border border-slate-200/90 shadow-xs active:scale-95 transition-all shrink-0 cursor-pointer flex items-center justify-center"
  title="Open Google Maps to find your location"
+ aria-label="Open Google Maps"
  >
- <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white shrink-0" />
- <span className="hidden xs:inline sm:inline">Google Maps</span>
- <span className="xs:hidden sm:hidden">Maps</span>
+ <svg
+ viewBox="0 0 92.3 132.3"
+ className="w-5 h-5 sm:w-5.5 sm:h-5.5 shrink-0"
+ fill="none"
+ >
+ <path fill="#1a73e8" d="M60.2 2.2C55.8.8 51 0 46.1 0 32 0 19.3 6.4 10.8 16.5l21.8 18.3L60.2 2.2z"/>
+ <path fill="#ea4335" d="M10.8 16.5C4.1 24.5 0 34.9 0 46.1c0 8.7 1.7 15.7 4.6 22l28-33.3-21.8-18.3z"/>
+ <path fill="#4285f4" d="M46.2 28.5c9.8 0 17.7 7.9 17.7 17.7 0 4.3-1.6 8.3-4.2 11.4 0 0 13.9-16.6 27.5-32.7-5.6-10.8-15.3-19-27-22.7L32.6 34.8c3.3-3.8 8.1-6.3 13.6-6.3"/>
+ <path fill="#fbbc04" d="M46.2 63.8c-9.8 0-17.7-7.9-17.7-17.7 0-4.3 1.5-8.3 4.1-11.3l-28 33.3c4.8 10.6 12.8 19.2 21 29.9l34.1-40.5c-3.3 3.9-8.1 6.3-13.5 6.3"/>
+ <path fill="#34a853" d="M59.1 109.2c15.4-24.1 33.3-35 33.3-63 0-7.7-1.9-14.9-5.2-21.3L25.6 98c2.6 3.4 5.3 7.3 7.9 11.3 9.4 14.5 6.8 23.1 12.8 23.1s3.4-8.7 12.8-23.2"/>
+ </svg>
  </a>
 
  {/* Seamless URL Input Inside the Pill */}
@@ -67,10 +76,9 @@ export function UploadLocationTab({
  className="absolute right-2 w-4.5 h-4.5 rounded-full text-[10px] flex items-center justify-center cursor-pointer transition-colors
  max-md:bg-slate-200 max-md:text-slate-600 max-md:hover:bg-slate-300
  md:bg-slate-200 md:text-slate-600 md:hover:bg-slate-300"
- title="Clear"
- >
- 
- </button>
+ title="Clear">
+              <X className="w-3 h-3 stroke-[2.5]" />
+            </button>
  )}
  </div>
 
@@ -168,7 +176,7 @@ export function UploadLocationTab({
  }`}
  />
  {fieldErrors.roadArea && (
- <p className="text-[11px] text-rose-300 md:text-rose-500 font-medium pl-1">{fieldErrors.roadArea}</p>
+ <p className="text-[11px] text-rose-500 font-medium pl-1">{fieldErrors.roadArea}</p>
  )}
  </div>
 
@@ -191,7 +199,7 @@ export function UploadLocationTab({
  }`}
  />
  {fieldErrors.city && (
- <p className="text-[11px] text-rose-300 md:text-rose-500 font-medium pl-1">{fieldErrors.city}</p>
+ <p className="text-[11px] text-rose-500 font-medium pl-1">{fieldErrors.city}</p>
  )}
  </div>
 
@@ -212,7 +220,7 @@ export function UploadLocationTab({
  }`}
  />
  {fieldErrors.state && (
- <p className="text-[11px] text-rose-300 md:text-rose-500 font-medium pl-1">{fieldErrors.state}</p>
+ <p className="text-[11px] text-rose-500 font-medium pl-1">{fieldErrors.state}</p>
  )}
  </div>
  </div>
@@ -236,7 +244,7 @@ export function UploadLocationTab({
  }`}
  />
  {fieldErrors.pincode && (
- <p className="text-[11px] text-rose-300 md:text-rose-500 font-medium pl-1">{fieldErrors.pincode}</p>
+ <p className="text-[11px] text-rose-500 font-medium pl-1">{fieldErrors.pincode}</p>
  )}
  </div>
 

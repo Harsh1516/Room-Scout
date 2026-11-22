@@ -5,6 +5,7 @@ const ALL_TYPES = [
   { id: 'PG', label: 'PG', matchTypes: ['pg'] },
   { id: 'Flat', label: 'Flat', matchTypes: ['flat', 'apartment'] },
   { id: 'Hotel', label: 'Hotel', matchTypes: ['hotel'] },
+  { id: 'Independent Room', label: 'Independent Room', matchTypes: ['independent room', 'independent_room', 'independent'] },
 ];
 
 export function WhatControl({

@@ -353,7 +353,7 @@ export function HostDashboardPage() {
  {activeTab === 'users' && (
  <div
  key="console-tab-users"
- className="w-full flex-1 min-h-0 flex flex-col px-3 sm:px-6 pt-1.5 pb-28 sm:pb-32 lg:pt-2 lg:pb-4 max-w-[1600px] mx-auto overflow-y-auto lg:overflow-hidden"
+ className="w-full flex-1 min-h-0 flex flex-col px-3 sm:px-6 max-md:pt-3.5 pt-1.5 pb-28 sm:pb-32 lg:pt-2 lg:pb-4 max-w-[1600px] mx-auto overflow-y-auto lg:overflow-hidden"
  >
  <Suspense fallback={<DashboardSkeletonLoader />}>
  <HostUsersVisitedSection

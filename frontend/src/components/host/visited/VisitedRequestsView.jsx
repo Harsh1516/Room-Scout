@@ -500,10 +500,10 @@ export function VisitedRequestsView({
  className={`rounded-2xl border overflow-hidden transition-all duration-300 ${
  isSelectedCat
  ? subTab === 'checkout'
- ? 'bg-white border-sky-500 ring-2 ring-sky-500/20 shadow-[0_6px_20px_-2px_rgba(2,132,199,0.15)]'
+ ? 'bg-white border-sky-500'
  : subTab === 'checkin'
- ? 'bg-white border-emerald-500 ring-2 ring-emerald-500/20 shadow-[0_6px_20px_-2px_rgba(16,185,129,0.15)]'
- : 'bg-white border-orange-500 ring-2 ring-orange-500/20 shadow-[0_6px_20px_-2px_rgba(234,88,12,0.15)]'
+ ? 'bg-white border-emerald-500'
+ : 'bg-white border-orange-500'
  : 'bg-white border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_20px_-2px_rgba(0,0,0,0.08)] ' + (
  subTab === 'checkout' ? 'hover:border-sky-300' : subTab === 'checkin' ? 'hover:border-emerald-300' : 'hover:border-orange-300'
  )

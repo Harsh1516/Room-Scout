@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { User, Phone, Mail, Building, Building2, Home } from 'lucide-react';
+import { User, Phone, Mail, Building, Building2, Home, DoorOpen } from 'lucide-react';
 
 const PROPERTY_TYPES = [
   {
@@ -16,6 +16,11 @@ const PROPERTY_TYPES = [
     label: 'Flat',
     desc: 'Independent apartment or studio unit',
     icon: Building,
+  },
+  {
+    label: 'Independent Room',
+    desc: 'Private individual room rental',
+    icon: DoorOpen,
   },
 ];
 
@@ -68,7 +73,9 @@ export function UploadBasicsTab({
   // Swipe pan gesture handlers for sliding window toggles
   const handleCategoryPanEnd = (e, info) => {
     const currentIndex = PROPERTY_TYPES.findIndex((pt) => pt.label === formData.propertyType);
-    if (info.offset.x < -35 && currentIndex >= 0 && currentIndex < PROPERTY_TYPES.length - 1) {
+    const isSwipeLeft = info.offset.x < -20 || info.velocity.x < -200;
+    const isSwipeRight = info.offset.x > 20 || info.velocity.x > 200;
+    if (isSwipeLeft && currentIndex >= 0 && currentIndex < PROPERTY_TYPES.length - 1) {
       const nextType = PROPERTY_TYPES[currentIndex + 1].label;
       setFormData((prev) => ({ ...prev, propertyType: nextType }));
       if (fieldErrors.propertyType && setFieldErrors) {
@@ -78,7 +85,7 @@ export function UploadBasicsTab({
           return next;
         });
       }
-    } else if (info.offset.x > 35 && currentIndex > 0) {
+    } else if (isSwipeRight && currentIndex > 0) {
       const prevType = PROPERTY_TYPES[currentIndex - 1].label;
       setFormData((prev) => ({ ...prev, propertyType: prevType }));
       if (fieldErrors.propertyType && setFieldErrors) {
@@ -101,7 +108,9 @@ export function UploadBasicsTab({
   const handleGenderPanEnd = (e, info) => {
     const currentVal = getNormalizedGender(formData.genderType);
     const currentIndex = GENDER_OPTIONS.findIndex((g) => g.value === currentVal);
-    if (info.offset.x < -35 && currentIndex >= 0 && currentIndex < GENDER_OPTIONS.length - 1) {
+    const isSwipeLeft = info.offset.x < -20 || info.velocity.x < -200;
+    const isSwipeRight = info.offset.x > 20 || info.velocity.x > 200;
+    if (isSwipeLeft && currentIndex >= 0 && currentIndex < GENDER_OPTIONS.length - 1) {
       const nextGender = GENDER_OPTIONS[currentIndex + 1].value;
       setFormData((prev) => ({ ...prev, genderType: nextGender }));
       if (fieldErrors.genderType && setFieldErrors) {
@@ -111,7 +120,7 @@ export function UploadBasicsTab({
           return next;
         });
       }
-    } else if (info.offset.x > 35 && currentIndex > 0) {
+    } else if (isSwipeRight && currentIndex > 0) {
       const prevGender = GENDER_OPTIONS[currentIndex - 1].value;
       setFormData((prev) => ({ ...prev, genderType: prevGender }));
       if (fieldErrors.genderType && setFieldErrors) {
@@ -205,7 +214,7 @@ export function UploadBasicsTab({
                 />
               </div>
               {fieldErrors.name && (
-                <p className="text-xs sm:text-sm text-rose-300 md:text-rose-500 font-medium pl-1">{fieldErrors.name}</p>
+                <p className="text-xs sm:text-sm text-rose-500 font-medium pl-1">{fieldErrors.name}</p>
               )}
             </div>
 
@@ -245,7 +254,7 @@ export function UploadBasicsTab({
                 />
               </div>
               {fieldErrors.phone && (
-                <p className="text-xs sm:text-sm text-rose-300 md:text-rose-500 font-medium pl-1">{fieldErrors.phone}</p>
+                <p className="text-xs sm:text-sm text-rose-500 font-medium pl-1">{fieldErrors.phone}</p>
               )}
             </div>
           </div>
@@ -300,22 +309,23 @@ export function UploadBasicsTab({
               }`}
             />
             {fieldErrors.propertyName && (
-              <p className="text-xs sm:text-sm text-rose-300 md:text-rose-500 font-medium pl-1">{fieldErrors.propertyName}</p>
+              <p className="text-xs sm:text-sm text-rose-500 font-medium pl-1">{fieldErrors.propertyName}</p>
             )}
           </div>
 
           {/* Property Category Sliding Window */}
           <div className="space-y-2">
             <label className="block text-xs sm:text-sm md:text-[11px] font-bold uppercase tracking-wider max-md:text-slate-800 md:text-slate-700">
-              Property Category <span className="text-rose-300 md:text-rose-500">*</span>
+              Property Category <span className="text-rose-500">*</span>
             </label>
             <motion.div
               onPanEnd={handleCategoryPanEnd}
-              className={`relative w-full rounded-[28px] sm:rounded-3xl md:rounded-2xl p-1.5 border grid grid-cols-3 gap-0 select-none overflow-hidden touch-pan-y transition-colors ${
+              className={`relative w-full rounded-[28px] sm:rounded-3xl md:rounded-2xl p-1.5 border grid grid-cols-4 gap-0 select-none overflow-hidden touch-pan-y transition-colors ${
                 fieldErrors.propertyType
                   ? 'bg-rose-50/50 border-rose-300/80 ring-2 ring-rose-500/10'
                   : 'max-md:bg-slate-200/50 max-md:backdrop-blur-sm max-md:border-slate-300/60 md:bg-slate-100/80 md:border-slate-200/90 shadow-inner md:shadow-xs'
               }`}
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               {PROPERTY_TYPES.map((pt) => {
                 const isSelected = formData.propertyType === pt.label;
@@ -335,7 +345,8 @@ export function UploadBasicsTab({
                         });
                       }
                     }}
-                    className="relative aspect-square sm:aspect-auto sm:py-4 md:py-2.5 p-2 sm:p-3 flex flex-col items-center justify-center text-center gap-2 md:gap-1.5 rounded-[22px] sm:rounded-[22px] md:rounded-xl cursor-pointer select-none transition-colors group z-10 active:scale-[0.98]"
+                    className="relative min-h-[84px] sm:min-h-0 sm:aspect-auto sm:py-4 md:py-2.5 p-1 sm:p-3 flex flex-col items-center justify-center text-center gap-1.5 sm:gap-2 md:gap-1.5 rounded-[22px] sm:rounded-[22px] md:rounded-xl cursor-pointer select-none transition-colors group z-10 outline-none focus:outline-none"
+                    style={{ WebkitTapHighlightColor: 'transparent' }}
                   >
                     {/* Sliding Window Highlight Pill/Card */}
                     {isSelected && (
@@ -343,26 +354,26 @@ export function UploadBasicsTab({
                         layoutId="activePropertyCategorySlidingWindow"
                         transition={{
                           type: 'spring',
-                          stiffness: 450,
-                          damping: 32,
-                          mass: 0.8,
+                          stiffness: 380,
+                          damping: 30,
+                          mass: 0.6,
                         }}
-                        className="absolute inset-0 rounded-[22px] sm:rounded-[22px] md:rounded-xl max-md:bg-gradient-to-br max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:shadow-[0_8px_20px_rgba(14,165,233,0.32),inset_0_1px_1px_rgba(255,255,255,0.4)] md:bg-white md:border-2 md:border-[#006C4A] md:shadow-sm z-0 pointer-events-none"
+                        className="absolute inset-0 rounded-[22px] sm:rounded-[22px] md:rounded-xl max-md:bg-gradient-to-br max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:shadow-[0_8px_20px_rgba(14,165,233,0.32),inset_0_1px_1px_rgba(255,255,255,0.4)] md:bg-white md:border-2 md:border-[#006C4A] md:shadow-sm z-0 pointer-events-none transform-gpu will-change-transform"
                       />
                     )}
 
                     <span
-                      className={`relative z-10 w-12 h-12 sm:w-14 sm:h-14 md:w-8 md:h-8 rounded-2xl md:rounded-lg flex items-center justify-center transition-all duration-200 ${
+                      className={`relative z-10 w-9.5 h-9.5 sm:w-14 sm:h-14 md:w-8 md:h-8 rounded-xl sm:rounded-2xl md:rounded-lg flex items-center justify-center transition-colors duration-150 transform-gpu ${
                         isSelected
-                          ? 'max-md:bg-white max-md:text-[#0284c7] max-md:shadow-xs md:bg-[#006C4A] md:text-white shadow-xs scale-105'
+                          ? 'max-md:bg-white max-md:text-[#0284c7] max-md:shadow-xs md:bg-[#006C4A] md:text-white shadow-xs'
                           : 'max-md:bg-white/85 max-md:text-slate-800 max-md:border max-md:border-slate-200/80 max-md:shadow-2xs md:bg-white md:text-slate-700 md:border md:border-slate-200/80 group-hover:bg-white'
                       }`}
                     >
-                      <IconComp className="w-6 h-6 sm:w-7 sm:h-7 md:w-4 md:h-4" />
+                      <IconComp className="w-5 h-5 sm:w-7 sm:h-7 md:w-4 md:h-4" />
                     </span>
 
                     <span
-                      className={`relative z-10 text-sm sm:text-base md:text-xs tracking-tight transition-colors duration-200 ${
+                      className={`relative z-10 text-[10.5px] sm:text-base md:text-xs leading-tight tracking-tight text-center px-0.5 transition-colors duration-150 ${
                         isSelected
                           ? 'max-md:text-white font-bold md:text-slate-900 md:font-bold'
                           : 'max-md:text-slate-900 font-bold md:text-slate-900'
@@ -375,14 +386,14 @@ export function UploadBasicsTab({
               })}
             </motion.div>
             {fieldErrors.propertyType && (
-              <p className="text-xs sm:text-sm text-rose-300 md:text-rose-500 font-medium pl-1">{fieldErrors.propertyType}</p>
+              <p className="text-xs sm:text-sm text-rose-500 font-medium pl-1">{fieldErrors.propertyType}</p>
             )}
           </div>
 
           {/* Available For Gender Preference Sliding Window */}
           <div className="space-y-2">
             <label className="block text-xs sm:text-sm md:text-[11px] font-bold uppercase tracking-wider max-md:text-slate-800 md:text-slate-700">
-              Available For (Gender Policy) <span className="text-rose-300 md:text-rose-500">*</span>
+              Available For (Gender Policy) <span className="text-rose-500">*</span>
             </label>
             <motion.div
               onPanEnd={handleGenderPanEnd}
@@ -391,6 +402,7 @@ export function UploadBasicsTab({
                   ? 'bg-rose-50/50 border-rose-300/80 ring-2 ring-rose-500/10'
                   : 'max-md:bg-slate-200/50 max-md:backdrop-blur-sm max-md:border-slate-300/60 md:bg-slate-100/80 md:border-slate-200/90 shadow-inner md:shadow-xs'
               }`}
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               {GENDER_OPTIONS.map((g) => {
                 const isSelected =
@@ -413,7 +425,8 @@ export function UploadBasicsTab({
                         });
                       }
                     }}
-                    className="relative aspect-square sm:aspect-auto sm:py-4 md:py-2.5 p-2 sm:p-3 flex flex-col items-center justify-center text-center gap-2 md:gap-1.5 rounded-[22px] sm:rounded-[22px] md:rounded-xl cursor-pointer select-none transition-colors group z-10 active:scale-[0.98]"
+                    className="relative aspect-square sm:aspect-auto sm:py-4 md:py-2.5 p-2 sm:p-3 flex flex-col items-center justify-center text-center gap-2 md:gap-1.5 rounded-[22px] sm:rounded-[22px] md:rounded-xl cursor-pointer select-none transition-colors group z-10 outline-none focus:outline-none"
+                    style={{ WebkitTapHighlightColor: 'transparent' }}
                   >
                     {/* Sliding Window Highlight Pill/Card */}
                     {isSelected && (
@@ -421,18 +434,18 @@ export function UploadBasicsTab({
                         layoutId="activeGenderPolicySlidingWindow"
                         transition={{
                           type: 'spring',
-                          stiffness: 450,
-                          damping: 32,
-                          mass: 0.8,
+                          stiffness: 380,
+                          damping: 30,
+                          mass: 0.6,
                         }}
-                        className="absolute inset-0 rounded-[22px] sm:rounded-[22px] md:rounded-xl max-md:bg-gradient-to-br max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:shadow-[0_8px_20px_rgba(14,165,233,0.32),inset_0_1px_1px_rgba(255,255,255,0.4)] md:bg-white md:border-2 md:border-[#006C4A] md:shadow-sm z-0 pointer-events-none"
+                        className="absolute inset-0 rounded-[22px] sm:rounded-[22px] md:rounded-xl max-md:bg-gradient-to-br max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:shadow-[0_8px_20px_rgba(14,165,233,0.32),inset_0_1px_1px_rgba(255,255,255,0.4)] md:bg-white md:border-2 md:border-[#006C4A] md:shadow-sm z-0 pointer-events-none transform-gpu will-change-transform"
                       />
                     )}
 
                     <span
-                      className={`relative z-10 w-12 h-12 sm:w-14 sm:h-14 md:w-8 md:h-8 rounded-2xl md:rounded-lg flex items-center justify-center transition-all duration-200 ${
+                      className={`relative z-10 w-12 h-12 sm:w-14 sm:h-14 md:w-8 md:h-8 rounded-2xl md:rounded-lg flex items-center justify-center transition-colors duration-150 transform-gpu ${
                         isSelected
-                          ? 'max-md:bg-white max-md:text-[#0284c7] max-md:shadow-xs md:bg-[#006C4A] md:text-white shadow-xs scale-105'
+                          ? 'max-md:bg-white max-md:text-[#0284c7] max-md:shadow-xs md:bg-[#006C4A] md:text-white shadow-xs'
                           : 'max-md:bg-white/85 max-md:text-slate-800 max-md:border max-md:border-slate-200/80 max-md:shadow-2xs md:bg-white md:text-slate-700 md:border md:border-slate-200/80 group-hover:bg-white'
                       }`}
                     >
@@ -440,7 +453,7 @@ export function UploadBasicsTab({
                     </span>
 
                     <span
-                      className={`relative z-10 text-sm sm:text-base md:text-xs tracking-tight transition-colors duration-200 ${
+                      className={`relative z-10 text-sm sm:text-base md:text-xs tracking-tight transition-colors duration-150 ${
                         isSelected
                           ? 'max-md:text-white font-bold md:text-slate-900 md:font-bold'
                           : 'max-md:text-slate-900 font-bold md:text-slate-900'
@@ -453,7 +466,7 @@ export function UploadBasicsTab({
               })}
             </motion.div>
             {fieldErrors.genderType && (
-              <p className="text-xs sm:text-sm text-rose-300 md:text-rose-500 font-medium pl-1">{fieldErrors.genderType}</p>
+              <p className="text-xs sm:text-sm text-rose-500 font-medium pl-1">{fieldErrors.genderType}</p>
             )}
           </div>
         </section>

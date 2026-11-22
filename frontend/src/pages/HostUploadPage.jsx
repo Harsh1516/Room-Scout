@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { z } from 'zod';
-import { ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, X, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { adminAPI, staysAPI, paymentsAPI } from '../services/api';
 import { Left } from '../components/navbar/Left';
@@ -20,6 +20,7 @@ import { UploadPerksRulesTab } from '../components/host/upload/UploadPerksRulesT
 import { UploadPhotosTab } from '../components/host/upload/UploadPhotosTab';
 import { UploadRoomsPricingTab } from '../components/host/upload/UploadRoomsPricingTab';
 import { UploadUpiTab } from '../components/host/upload/UploadUpiTab';
+import UploadProgressModal from '../components/host/upload/UploadProgressModal';
 import { saveImagesToIndexedDB, loadImagesFromIndexedDB, clearImagesFromIndexedDB } from '../utils/draftStorage';
 
 import {
@@ -59,6 +60,10 @@ export function HostUploadPage() {
     return 1;
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showProgressModal, setShowProgressModal] = useState(false);
+  const [isUploadComplete, setIsUploadComplete] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
+  const [pendingNavigateHost, setPendingNavigateHost] = useState(null);
   const [isEditing, setIsEditing] = useState(() => {
     const passed = location.state?.hostProperty;
     return Boolean(
@@ -79,6 +84,18 @@ export function HostUploadPage() {
   });
   const [fieldErrors, setFieldErrors] = useState({});
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  // Close steps navigation panel on Escape key press (matching LeftPropertiesPanel)
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setMobileNavOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [mobileNavOpen]);
 
 
 
@@ -770,6 +787,7 @@ export function HostUploadPage() {
     const result = hostPropertySchema.safeParse({
       ...formData,
       name: formData.name.trim(),
+      email: (formData.email || user?.email || '').trim().toLowerCase(),
       phone: formattedHostPhone,
       totalRooms: parsedTotalRooms,
       availableRooms: parsedAvailableRooms,
@@ -843,6 +861,9 @@ export function HostUploadPage() {
 
     try {
       setIsSubmitting(true);
+      setShowProgressModal(true);
+      setIsUploadComplete(false);
+      setUploadError(null);
 
       // Persist host UPI settings via dedicated payment settings endpoint
       if (formData.upiId && formData.payeeName) {
@@ -915,17 +936,34 @@ export function HostUploadPage() {
             phone: formattedHostPhone || user.phone,
           });
         }
-        showToast('Property Saved');
-        navigate('/host/dashboard', { state: { updatedHost: res.host || formData } });
+        // Signal the showcase progress modal that backend upload succeeded
+        setPendingNavigateHost(res.host || formData);
+        setIsUploadComplete(true);
       } else {
-        showToast(res?.message || 'Error submitting property request.');
+        const errMsg = res?.message || 'Error submitting property request.';
+        setUploadError(errMsg);
+        showToast(errMsg, 'error');
       }
     } catch (err) {
       console.error('Error submitting host upload request:', err);
-      showToast(`Submission error: ${err.message}`);
+      const errMsg = err?.message || 'Submission error occurred.';
+      setUploadError(errMsg);
+      showToast(`Submission error: ${errMsg}`, 'error');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleUploadModalComplete = () => {
+    setShowProgressModal(false);
+    showToast('Property Saved');
+    navigate('/host/dashboard', { state: { updatedHost: pendingNavigateHost || formData } });
+  };
+
+  const handleCloseProgressModal = () => {
+    setShowProgressModal(false);
+    setUploadError(null);
+    setIsSubmitting(false);
   };
 
   // Allow a logged-in guest to become a host; backend converts the account role on submit.
@@ -962,11 +1000,18 @@ export function HostUploadPage() {
           />
         </div>
 
-        {/* Mobile Center Step Count Badge (Background removed) */}
-        <div className="md:hidden fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none select-none h-[54px] sm:h-[56px] flex items-center justify-center">
-          <span className="text-slate-800 text-xs sm:text-sm font-extrabold tracking-wider uppercase leading-none select-none">
-            Step {activeStep} of {WIZARD_STEPS.length}
-          </span>
+        {/* Mobile Center Step Count Badge (Tappable to open step drawer) */}
+        <div className="md:hidden fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 pointer-events-auto select-none h-[54px] sm:h-[56px] flex items-center justify-center">
+          <button
+            type="button"
+            onClick={() => setMobileNavOpen(true)}
+            className="px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-slate-200/90 shadow-xs text-slate-800 text-xs sm:text-sm font-extrabold tracking-wider uppercase leading-none flex items-center gap-1.5 active:scale-95 transition-all cursor-pointer"
+            title="Open Steps Navigation"
+            aria-label="Open Steps Navigation"
+          >
+            <span>Step {activeStep} of {WIZARD_STEPS.length}</span>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-600 stroke-[2.5]" />
+          </button>
         </div>
 
         {/* ── 3. RIGHT FLOATING ISLAND: USER DASHBOARD BUTTON + PROFILE BUTTON ── */}
@@ -997,133 +1042,178 @@ export function HostUploadPage() {
         </div>
       </header>
 
-      {/* ── Mobile Vertical Navbar Left Drawer ── */}
+      {/* ── Left Side Upload Steps Panel (Styled matching LeftPropertiesPanel) ── */}
       <AnimatePresence>
         {mobileNavOpen && (
-          <>
+          <div className="fixed inset-0 z-[9999] overflow-hidden">
             {/* Backdrop */}
             <motion.div
+              key="step-nav-backdrop"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="absolute inset-0 bg-[#121418]/60 backdrop-blur-xs cursor-pointer"
               onClick={() => setMobileNavOpen(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 md:hidden pointer-events-auto"
             />
 
-            {/* Slide-out Left Drawer */}
-            <motion.aside
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-              className="fixed inset-y-0 left-0 z-50 w-[82vw] max-w-xs bg-white border-r border-slate-200 shadow-2xl flex flex-col justify-between p-4 md:hidden pointer-events-auto select-none overflow-y-auto"
-            >
-              <div className="space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                  <div className="flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-200/80 text-emerald-700 flex items-center justify-center font-bold text-xs">
-                      RS
-                    </span>
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-900 leading-tight">
-                        Upload Steps
-                      </h3>
-                      <p className="text-[11px] text-slate-500">
-                        Step {activeStep} of {WIZARD_STEPS.length}
-                      </p>
-                    </div>
-                  </div>
+            {/* Floating Panel positioned at top-left with height fitting steps list */}
+            <div className="fixed top-2.5 sm:top-5 left-2.5 sm:left-6 pointer-events-none z-10 max-w-[calc(100vw-20px)]">
+              <motion.div
+                key="step-nav-drawer-panel"
+                initial={{ opacity: 0, x: -28, scale: 0.98 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: -28, scale: 0.98 }}
+                transition={{
+                  duration: 0.28,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                className="pointer-events-auto w-80 sm:w-88 max-w-[calc(100vw-24px)] flex flex-col bg-white border border-slate-200/90 shadow-[0_20px_50px_rgba(0,0,0,0.22)] max-h-[calc(100dvh-24px)] sm:max-h-[calc(100dvh-40px)] will-change-transform select-none rounded-[28px] sm:rounded-[32px] overflow-hidden"
+              >
+                {/* Header: Centered Upload Steps title */}
+                <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 shrink-0">
+                  <div className="w-7" />
+                  <h2 className="text-[22px] sm:text-[24px] font-bold text-[#1f1b16] tracking-tight leading-none text-center">
+                    Upload Steps
+                  </h2>
                   <button
                     type="button"
                     onClick={() => setMobileNavOpen(false)}
-                    className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer transition-colors"
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
                     aria-label="Close steps menu"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-4 h-4 stroke-[2.2]" />
                   </button>
                 </div>
 
-                {/* Stepper Navigation Vertical List */}
-                <nav aria-label="Mobile Onboarding Stepper" className="space-y-1.5">
+                {/* List of Step Cards (Matching LeftPropertiesPanel Card Anatomy) */}
+                <div className="overflow-y-auto p-3.5 space-y-2.5 flex-1">
                   {WIZARD_STEPS.map((step) => {
                     const isActive = step.id === activeStep;
                     const isCompleted = validateStep(step.id, false);
                     const isAccessible = canAccessStep(step.id);
 
                     return (
-                      <button
+                      <div
                         key={step.id}
-                        type="button"
-                        onClick={() => {
-                          handleSelectStep(step.id);
-                          if (canAccessStep(step.id)) {
-                            setMobileNavOpen(false);
-                          }
-                        }}
-                        className={`w-full min-h-[48px] text-left p-3.5 rounded-2xl flex items-center gap-3 transition-all ${
+                        className={`rounded-xl border transition-colors duration-150 overflow-hidden ${
                           isActive
-                            ? 'bg-emerald-50 border border-emerald-500/30 text-emerald-950 shadow-xs font-bold cursor-default'
+                            ? 'border-slate-400 bg-[#f7f4ee]/60 shadow-xs'
                             : isAccessible
-                            ? 'hover:bg-slate-100/70 border border-transparent text-slate-700 cursor-pointer'
-                            : 'opacity-50 text-slate-400 border border-transparent cursor-not-allowed hover:text-slate-400'
+                            ? 'border-slate-200 bg-white hover:border-slate-300'
+                            : 'border-slate-200/60 bg-slate-50/50 opacity-60'
                         }`}
-                        title={!isAccessible ? `Complete previous steps to unlock ${step.title}` : step.title}
                       >
+                        {/* Top: Step Number / Status Icon + Info */}
                         <div
-                          className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
-                            isActive
-                              ? 'bg-[#006C4A] text-white shadow-xs'
-                              : isCompleted
-                              ? 'bg-emerald-100 text-emerald-700 border border-emerald-300/40'
-                              : 'bg-slate-100 text-slate-500'
-                          }`}
+                          className={`flex gap-3 p-3 ${isAccessible || isActive ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                          onClick={() => {
+                            if (isAccessible || isActive) {
+                              handleSelectStep(step.id);
+                              setMobileNavOpen(false);
+                            }
+                          }}
                         >
-                          {isCompleted && !isActive ? (
-                            <Check className="w-3.5 h-3.5 stroke-[3]" />
-                          ) : (
-                            step.id
-                          )}
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-between gap-1">
-                            <span className={`text-xs truncate ${isActive ? 'text-[#006C4A] font-bold' : 'text-slate-800'}`}>
-                              {step.shortTitle || step.title}
-                            </span>
-                            {isActive && (
-                              <span className="text-[9.5px] uppercase tracking-wider font-extrabold text-[#006C4A]">
-                                Current
-                              </span>
+                          {/* Thumbnail / Step Number Icon Container */}
+                          <div
+                            className={`w-[52px] h-[52px] rounded-lg overflow-hidden shrink-0 border flex items-center justify-center font-bold text-base transition-colors ${
+                              isActive
+                                ? 'bg-[#006C4A] text-white border-[#006C4A] shadow-xs'
+                                : isCompleted
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-300/60'
+                                : 'bg-slate-100 text-slate-500 border-slate-200/60'
+                            }`}
+                          >
+                            {isCompleted && !isActive ? (
+                              <Check className="w-5 h-5 stroke-[2.5]" />
+                            ) : (
+                              <span>{step.id}</span>
                             )}
                           </div>
-                          <p className="text-[11px] text-slate-500 truncate mt-0.5">
-                            {step.sub}
-                          </p>
+
+                          {/* Info */}
+                          <div className="flex-1 min-w-0 flex flex-col justify-center">
+                            <div className="flex items-center justify-between gap-2">
+                              <span
+                                className={`text-[13px] font-semibold leading-snug truncate ${
+                                  isActive ? 'text-[#006C4A] font-bold' : 'text-[#1f1b16]'
+                                }`}
+                              >
+                                {step.title}
+                              </span>
+                              {isActive && (
+                                <span className="text-[9.5px] uppercase tracking-wider font-extrabold text-[#006C4A] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60 shrink-0">
+                                  Current
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                              <span className="text-[12px] text-slate-400 truncate">
+                                {step.sub || step.desc}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                      </button>
+
+                        {/* Action Row */}
+                        <div
+                          className="flex items-center justify-between px-3 pb-2.5 pt-2 border-t border-slate-100"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <span className="text-[11px] text-slate-400">
+                            {isCompleted
+                              ? 'Step completed'
+                              : isActive
+                              ? 'Currently editing'
+                              : isAccessible
+                              ? 'Ready to fill'
+                              : 'Complete previous'}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={!isAccessible && !isActive}
+                            onClick={() => {
+                              handleSelectStep(step.id);
+                              setMobileNavOpen(false);
+                            }}
+                            className={`text-xs font-medium px-4 py-1.5 min-h-[30px] rounded-full transition-all inline-flex items-center gap-1.5 shadow-xs ${
+                              isActive
+                                ? 'bg-[#006C4A] text-white border border-[#006C4A] active:scale-95 cursor-pointer'
+                                : isAccessible
+                                ? 'bg-[#2b2c37] hover:bg-[#343542] text-white border border-[#3b3d4d] active:scale-95 cursor-pointer'
+                                : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-60'
+                            }`}
+                          >
+                            <span>{isActive ? 'Active' : isCompleted ? 'Edit' : 'Open'}</span>
+                            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
                     );
                   })}
-                </nav>
-              </div>
+                </div>
 
-              {/* Drawer Footer Progression */}
-              <div className="pt-3 border-t border-slate-100 space-y-2">
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
-                  <span>Overall Progress</span>
-                  <span className="font-mono-data font-bold text-[#006C4A]">
-                    {Math.round(((activeStep - 1) / (WIZARD_STEPS.length - 1)) * 100)}%
-                  </span>
+                {/* ── Bottom Section: Overall Progress Bar styled matching LeftPropertiesPanel footer ── */}
+                <div className="p-3 sm:p-3.5 pt-2.5 border-t border-slate-100 shrink-0 bg-[#faf8f5]/60 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
+                    <span className="text-[#1f1b16] font-medium">Overall Progress</span>
+                    <span className="font-mono-data font-bold text-[#006C4A]">
+                      {Math.round(((activeStep - 1) / (WIZARD_STEPS.length - 1)) * 100)}%
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-200/80 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#006C4A] rounded-full transition-all duration-300"
+                      style={{ width: `${((activeStep - 1) / (WIZARD_STEPS.length - 1)) * 100}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-[#006C4A] rounded-full transition-all duration-300"
-                    style={{ width: `${((activeStep - 1) / (WIZARD_STEPS.length - 1)) * 100}%` }}
-                  />
-                </div>
-              </div>
-            </motion.aside>
-          </>
+              </motion.div>
+            </div>
+          </div>
         )}
       </AnimatePresence>
 
@@ -1257,7 +1347,7 @@ export function HostUploadPage() {
 
       {/* ── Fixed Bottom Progression Bar (Airbnb visual reference: screenshots 1 & 2) ── */}
       <footer
-        className="fixed bottom-0 inset-x-0 z-40 backdrop-blur-md max-md:bg-[rgba(255,255,255,0.88)] max-md:backdrop-blur-2xl max-md:border-t max-md:border-white/80 max-md:shadow-[0_-8px_28px_rgba(14,116,144,0.06)] md:bg-[#F4F4F6]/95 md:border-t md:border-slate-200/60 shadow-[0_-4px_25px_rgba(0,0,0,0.06)]"
+        className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-200 shadow-[0_-4px_25px_rgba(0,0,0,0.08)]"
       >
         {/* Hairline Continuous Progress Indicator Line */}
         <div className="w-full h-1 relative overflow-hidden max-md:bg-slate-200/60 md:bg-slate-100">
@@ -1337,6 +1427,15 @@ export function HostUploadPage() {
           </div>
         </div>
       </footer>
+
+      {/* ── Upload & Publish Showcase Progress Modal ── */}
+      <UploadProgressModal
+        isOpen={showProgressModal}
+        isComplete={isUploadComplete}
+        error={uploadError}
+        onComplete={handleUploadModalComplete}
+        onClose={handleCloseProgressModal}
+      />
     </div>
   );
 }

@@ -1,196 +1,195 @@
-import React from 'react';
-import { Calendar, Bell, LogIn, LogOut } from 'lucide-react';
+import { Bell, LogIn, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export function VisitedSubNavbar({
- operationTab = 'checkin',
- setOperationTab = () => {},
- scope = 'today',
- setScope = () => {},
- pendingCount = 0,
- todayPendingCount = 0,
- todayCheckInCount = 0,
- allCheckInCount = 0,
- todayCheckOutCount = 0,
- allCheckOutCount = 0,
- paidUsersCount = 0,
- onResetFilter = () => {},
+	operationTab = 'checkin',
+	setOperationTab = () => {},
+	scope = 'today',
+	setScope = () => {},
+	pendingCount = 0,
+	todayPendingCount = 0,
+	todayCheckInCount = 0,
+	allCheckInCount = 0,
+	todayCheckOutCount = 0,
+	allCheckOutCount = 0,
+	paidUsersCount = 0,
+	onResetFilter = () => {},
 }) {
- // Sub-tabs list shifted to the top-left corner below the Back button
- const subTabs = [
- {
- id: 'requests',
- label: 'Requests',
- icon: <Bell className="w-3.5 h-3.5 shrink-0" />,
- count: pendingCount,
- badgeColor: 'bg-amber-100 text-amber-800 border border-amber-300/40',
- },
- {
- id: 'checkin',
- label: 'Check-in',
- icon: <LogIn className="w-3.5 h-3.5 shrink-0" />,
- count: allCheckInCount,
- badgeColor: 'bg-emerald-100 text-emerald-800 border border-emerald-300/40',
- },
- {
- id: 'checkout',
- label: 'Check-out',
- icon: <LogOut className="w-3.5 h-3.5 shrink-0" />,
- count: allCheckOutCount,
- badgeColor: 'bg-indigo-100 text-indigo-800 border border-indigo-300/40',
- },
- ];
+	// Sub-tabs list shifted to the top-left corner below the Back button
+	const subTabs = [
+		{
+			id: 'requests',
+			label: 'Requests',
+			icon: <Bell className="w-4 h-4 shrink-0" />,
+			count: pendingCount,
+			badgeColor: 'bg-amber-100 text-amber-800 border border-amber-300/40',
+		},
+		{
+			id: 'checkin',
+			label: 'Check-in',
+			icon: <LogIn className="w-4 h-4 shrink-0" />,
+			count: allCheckInCount,
+			badgeColor: 'bg-emerald-100 text-emerald-800 border border-emerald-300/40',
+		},
+		{
+			id: 'checkout',
+			label: 'Check-out',
+			icon: <LogOut className="w-4 h-4 shrink-0" />,
+			count: allCheckOutCount,
+			badgeColor: 'bg-indigo-100 text-indigo-800 border border-indigo-300/40',
+		},
+	];
 
- // Determine counts for the segmented [Today | All] toggle based on active operation tab
- const activeTodayCount =
- operationTab === 'requests'
- ? todayPendingCount
- : operationTab === 'checkout'
- ? todayCheckOutCount
- : operationTab === 'paid'
- ? paidUsersCount
- : todayCheckInCount;
+	// Determine counts for the segmented [Today | All] toggle based on active operation tab
+	const activeTodayCount =
+		operationTab === 'requests'
+			? todayPendingCount
+			: operationTab === 'checkout'
+			? todayCheckOutCount
+			: operationTab === 'paid'
+			? paidUsersCount
+			: todayCheckInCount;
 
- const activeAllCount =
- operationTab === 'requests'
- ? pendingCount
- : operationTab === 'checkout'
- ? allCheckOutCount
- : operationTab === 'paid'
- ? paidUsersCount
- : allCheckInCount;
+	const activeAllCount =
+		operationTab === 'requests'
+			? pendingCount
+			: operationTab === 'checkout'
+			? allCheckOutCount
+			: operationTab === 'paid'
+			? paidUsersCount
+			: allCheckInCount;
 
- const allScopeLabel =
- operationTab === 'checkout'
- ? 'All Departures'
- : operationTab === 'requests'
- ? 'All Requests'
- : operationTab === 'paid'
- ? 'All Paid Users'
- : 'All Check-ins';
+	const allScopeLabel =
+		operationTab === 'checkout'
+			? 'All Departures'
+			: operationTab === 'requests'
+			? 'All Requests'
+			: operationTab === 'paid'
+			? 'All Paid Users'
+			: 'All Check-ins';
 
- const todayFormatted = new Date().toLocaleDateString('en-US', {
- weekday: 'short',
- month: 'short',
- day: 'numeric',
- year: 'numeric',
- });
+	return (
+		<div className="w-full select-none pb-1">
+			{/* Top Command & Filter Bar: Same Row with Left (req, in, out) and Right (today, all) */}
+			<div className="w-full flex items-center justify-between gap-1.5 sm:gap-3 pt-0.5 pb-1">
+				{/* Left Side: Primary Sub-Tabs (Requests | Check-in | Check-out) matching footer console configuration */}
+				<div className="flex items-center justify-start shrink-0">
+					<div className="inline-flex items-center p-1 sm:p-1.5 rounded-full border border-slate-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.12)] bg-white/95 backdrop-blur-md gap-1 select-none relative">
+						{subTabs.map((tab) => {
+							const isActive = operationTab === tab.id;
+							return (
+								<button
+									key={tab.id}
+									type="button"
+									onClick={() => {
+										setOperationTab(tab.id);
+										onResetFilter();
+									}}
+									title={tab.label}
+									aria-label={tab.label}
+									className={`relative h-[42px] sm:h-[46px] px-2.5 sm:px-3.5 rounded-full text-xs sm:text-sm font-semibold tracking-tight transition-colors duration-150 flex items-center justify-center gap-1.5 select-none cursor-pointer active:scale-95 z-10 whitespace-nowrap ${
+										isActive
+											? 'text-white'
+											: 'text-slate-700 hover:text-[#1f1b16]'
+									}`}
+								>
+									{/* Sliding Glider matching footer console */}
+									{isActive && (
+										<motion.div
+											layoutId="visitedSubTabGlider"
+											className="absolute inset-0 bg-[#1f1b16] rounded-full shadow-[0_2px_8px_rgba(31,27,22,0.3)] z-0 pointer-events-none"
+											transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+										/>
+									)}
 
- return (
- <div className="w-full select-none pb-1">
- {/* Top Command & Filter Bar: 3-Column Layout matching Left Tab (20%), Mid Tab (flex-1), and Right Tab */}
- <div className="flex flex-col sm:flex-row sm:flex-wrap lg:flex-nowrap items-center justify-between gap-2.5 sm:gap-3 pt-0.5 pb-1 w-full">
- {/* Left Column (Left Tab alignment): Primary Sub-Tabs (Requests | Check-in | Check-out) */}
- <div className="w-full sm:w-auto lg:w-[20%] lg:min-w-0 shrink-0 flex items-center justify-center sm:justify-start">
- <div className="inline-flex items-center p-1 rounded-full max-md:bg-white/95 max-md:backdrop-blur-xl max-md:border-white/90 max-md:shadow-xs bg-slate-100/90 border border-slate-200/90 shadow-xs relative">
- {subTabs.map((tab) => {
- const isActive = operationTab === tab.id;
- return (
- <button
- key={tab.id}
- type="button"
- onClick={() => {
- setOperationTab(tab.id);
- onResetFilter();
- }}
- className={`relative px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors duration-150 flex items-center gap-1.5 cursor-pointer select-none active:scale-95 z-10 whitespace-nowrap ${
- isActive
- ? 'text-white font-medium'
- : 'text-slate-600 hover:text-slate-900'
- }`}
- >
- {/* Sliding Glider for Active Tab */}
- {isActive && (
- <motion.div
- layoutId="visitedSubTabGlider"
- className="absolute inset-0 rounded-full bg-[#111827] shadow-xs pointer-events-none z-0"
- transition={{
- type: 'tween',
- duration: 0.2,
- ease: 'easeInOut',
- }}
- />
- )}
+									<span className="relative z-10 flex items-center">{tab.icon}</span>
+									<span
+										className={`relative z-10 min-w-[20px] h-[20px] sm:min-w-[22px] sm:h-[22px] px-1 sm:px-1.5 rounded-full text-[11px] sm:text-xs font-mono font-semibold leading-none inline-flex items-center justify-center ${
+											isActive
+												? 'bg-white/20 text-white'
+												: tab.badgeColor
+										}`}
+									>
+										{tab.count}
+									</span>
+								</button>
+							);
+						})}
+					</div>
+				</div>
 
- <span className="relative z-10 flex items-center">{tab.icon}</span>
- <span className="relative z-10">{tab.label}</span>
- <span
- className={`relative z-10 min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-mono font-medium leading-none inline-flex items-center justify-center ${
- isActive
- ? 'bg-white/20 text-white'
- : tab.badgeColor
- }`}
- >
- {tab.count}
- </span>
- </button>
- );
- })}
- </div>
- </div>
-
- {/* Mid Column (Mid Tab alignment): Secondary Scope Filter (Today / All Switch Button Centered in Mid Tab) */}
- <div className="w-full sm:w-auto lg:flex-1 lg:min-w-0 flex items-center justify-center">
- {operationTab !== 'requests' && operationTab !== 'paid' && (
- <div className="inline-flex items-center p-1 rounded-full max-md:bg-white/95 max-md:border-white/90 max-md:shadow-xs bg-[#E2E7FF]/70 border border-slate-200/80 shadow-inner">
- <button
- type="button"
- onClick={() => {
- setScope('today');
- onResetFilter();
- }}
- className={`px-3 py-1.5 rounded-full text-xs transition-all duration-200 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
- scope === 'today'
- ? 'bg-[#111827] text-white font-semibold shadow-xs'
- : 'text-slate-600 hover:text-slate-900 font-medium'
- }`}
- >
- <span>Today</span>
- <span
- className={`min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-medium inline-flex items-center justify-center leading-none ${
- scope === 'today'
- ? 'bg-white/20 text-white'
- : 'bg-slate-200/70 text-slate-600'
- }`}
- >
- {activeTodayCount}
- </span>
- </button>
- <button
- type="button"
- onClick={() => {
- setScope('all');
- onResetFilter();
- }}
- className={`px-3 py-1.5 rounded-full text-xs transition-all duration-200 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
- scope === 'all'
- ? 'bg-[#111827] text-white font-semibold shadow-xs'
- : 'text-slate-600 hover:text-slate-900 font-medium'
- }`}
- >
- <span>{allScopeLabel}</span>
- <span
- className={`min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-medium inline-flex items-center justify-center leading-none ${
- scope === 'all'
- ? 'bg-white/20 text-white'
- : 'bg-slate-200/70 text-slate-600'
- }`}
- >
- {activeAllCount}
- </span>
- </button>
- </div>
- )}
- </div>
-
- {/* Right Column (Right Tab alignment): Today Date Display */}
- <div className="w-full sm:w-auto lg:w-[380px] xl:w-[410px] 2xl:w-[440px] shrink-0 flex items-center justify-center sm:justify-end">
- <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 py-1 whitespace-nowrap">
- <Calendar className="w-3.5 h-3.5 text-slate-800" />
- <span>Today: {todayFormatted}</span>
- </div>
- </div>
- </div>
- </div>
- );
+				{/* Right Side: Scope Filter (Today | All) matching footer console configuration */}
+				{operationTab !== 'requests' && operationTab !== 'paid' && (
+					<div className="flex items-center justify-end shrink-0">
+						<div className="inline-flex items-center p-1 sm:p-1.5 rounded-full border border-slate-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.12)] bg-white/95 backdrop-blur-md gap-1 select-none relative">
+							<button
+								type="button"
+								onClick={() => {
+									setScope('today');
+									onResetFilter();
+								}}
+								className={`relative h-[42px] sm:h-[46px] px-3 sm:px-4 rounded-full text-xs sm:text-sm font-semibold tracking-tight transition-colors duration-150 flex items-center justify-center gap-1.5 select-none cursor-pointer active:scale-95 z-10 whitespace-nowrap ${
+									scope === 'today'
+										? 'text-white'
+										: 'text-slate-700 hover:text-[#1f1b16]'
+								}`}
+							>
+								{/* Sliding Glider matching footer console */}
+								{scope === 'today' && (
+									<motion.div
+										layoutId="visitedScopeGlider"
+										className="absolute inset-0 bg-[#1f1b16] rounded-full shadow-[0_2px_8px_rgba(31,27,22,0.3)] z-0 pointer-events-none"
+										transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+									/>
+								)}
+								<span className="relative z-10">Today</span>
+								<span
+									className={`relative z-10 min-w-[20px] h-[20px] sm:min-w-[22px] sm:h-[22px] px-1 sm:px-1.5 rounded-full text-[11px] sm:text-xs font-mono font-semibold inline-flex items-center justify-center leading-none ${
+										scope === 'today'
+											? 'bg-white/20 text-white'
+											: 'bg-slate-100 text-slate-700'
+									}`}
+								>
+									{activeTodayCount}
+								</span>
+							</button>
+							<button
+								type="button"
+								onClick={() => {
+									setScope('all');
+									onResetFilter();
+								}}
+								title={allScopeLabel}
+								className={`relative h-[42px] sm:h-[46px] px-3 sm:px-4 rounded-full text-xs sm:text-sm font-semibold tracking-tight transition-colors duration-150 flex items-center justify-center gap-1.5 select-none cursor-pointer active:scale-95 z-10 whitespace-nowrap ${
+									scope === 'all'
+										? 'text-white'
+										: 'text-slate-700 hover:text-[#1f1b16]'
+								}`}
+							>
+								{/* Sliding Glider matching footer console */}
+								{scope === 'all' && (
+									<motion.div
+										layoutId="visitedScopeGlider"
+										className="absolute inset-0 bg-[#1f1b16] rounded-full shadow-[0_2px_8px_rgba(31,27,22,0.3)] z-0 pointer-events-none"
+										transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+									/>
+								)}
+								<span className="relative z-10 hidden sm:inline">{allScopeLabel}</span>
+								<span className="relative z-10 sm:hidden">All</span>
+								<span
+									className={`relative z-10 min-w-[20px] h-[20px] sm:min-w-[22px] sm:h-[22px] px-1 sm:px-1.5 rounded-full text-[11px] sm:text-xs font-mono font-semibold inline-flex items-center justify-center leading-none ${
+										scope === 'all'
+											? 'bg-white/20 text-white'
+											: 'bg-slate-100 text-slate-700'
+									}`}
+								>
+									{activeAllCount}
+								</span>
+							</button>
+						</div>
+					</div>
+				)}
+			</div>
+		</div>
+	);
 }

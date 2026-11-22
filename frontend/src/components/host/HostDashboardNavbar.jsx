@@ -53,68 +53,72 @@ export function HostDashboardNavbar({
     }
   };
 
-  return (
-    <header className="relative w-full h-[70px] sm:h-[88px] pointer-events-none select-none z-50 font-body-md antialiased">
-      {/* ── 1. LEFT FLOATING ISLAND: ZERO-OVERLAP CIRCULAR BACK BUTTON (+ OPTIONAL STATUS/PLAN) ── */}
-      <div className="fixed top-2.5 sm:top-5 left-2.5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none h-[54px] sm:h-[56px]">
-        {/* Standalone Circular Back Button (Identical to User Side, zero-overlap) */}
-        <button
-          type="button"
-          onClick={handleBack}
-          data-no-hover="true"
-          className="w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] min-w-[54px] min-h-[54px] rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-sm flex items-center justify-center font-medium transition-all cursor-pointer active:scale-95 shrink-0 hover:bg-[#f7f4ee]"
-          title="Go Back"
-          aria-label="Go Back"
-        >
-          <svg
-            className="w-7 h-7 sm:w-[30px] sm:h-[30px] text-slate-700 stroke-[2.8] shrink-0"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M15.75 19.5L8.25 12l7.5-7.5" />
-          </svg>
-        </button>
+  const isRoomOrUsers = activeTab === 'room' || activeTab === 'users' || activeTab === 'paid';
 
-        {/* Plan Button (shown on desktop when approved) */}
-        {isApproved && (
+  return (
+    <header className={`relative w-full ${isRoomOrUsers ? 'max-md:h-0 md:h-[70px] md:sm:h-[88px]' : 'h-[70px] sm:h-[88px]'} pointer-events-none select-none z-50 font-body-md antialiased`}>
+      {/* ── 1. LEFT FLOATING ISLAND: ZERO-OVERLAP CIRCULAR BACK BUTTON (+ OPTIONAL STATUS/PLAN) ── */}
+      {!isRoomOrUsers && (
+        <div className="fixed top-2.5 sm:top-5 left-2.5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none h-[54px] sm:h-[56px]">
+          {/* Standalone Circular Back Button (Identical to User Side, zero-overlap) */}
           <button
             type="button"
-            onClick={() => navigate('/host/subscription')}
+            onClick={handleBack}
             data-no-hover="true"
-            className="hidden sm:inline-flex items-center justify-center h-[54px] sm:h-[56px] px-4.5 sm:px-5.5 gap-2 rounded-full bg-white text-slate-800 text-sm sm:text-base font-semibold shadow-sm border border-slate-200/90 hover:bg-[#f7f4ee] transition-all cursor-pointer select-none active:scale-95 shrink-0"
-            title="View Subscription & Purchase Plans"
+            className="w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] min-w-[54px] min-h-[54px] rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-sm flex items-center justify-center font-medium transition-all cursor-pointer active:scale-95 shrink-0 hover:bg-[#f7f4ee]"
+            title="Go Back"
+            aria-label="Go Back"
           >
             <svg
-              className="w-4 h-4 sm:w-5 sm:h-5 text-slate-800 fill-none stroke-current stroke-[2] shrink-0"
+              className="w-7 h-7 sm:w-[30px] sm:h-[30px] text-slate-700 stroke-[2.8] shrink-0"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              <path d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
-            <span>Plan</span>
           </button>
-        )}
 
-        {/* Awaiting Approval Indicator (shown on desktop if property is not yet approved) */}
-        {!isApproved && (
-          <div
-            className="hidden md:inline-flex items-center justify-center gap-2 px-3.5 sm:px-4.5 h-[54px] sm:h-[56px] rounded-full bg-[#FFF5EC] border border-[#FCD9BD] text-[#C26117] text-[13px] sm:text-[14px] font-medium shadow-sm tracking-tight shrink-0 select-none"
-            title="Plan, Rooms, Guest Management & UPI Settings unlock after admin approval."
-          >
-            <svg className="w-4.5 h-4.5 text-[#C26117] stroke-[1.8] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <rect x="5" y="11" width="14" height="10" rx="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M8 11V7a4 4 0 0 1 8 0v4" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span className="whitespace-nowrap flex items-center leading-none">Awaiting Approval</span>
-          </div>
-        )}
-      </div>
+          {/* Plan Button (shown on desktop when approved) */}
+          {isApproved && (
+            <button
+              type="button"
+              onClick={() => navigate('/host/subscription')}
+              data-no-hover="true"
+              className="hidden sm:inline-flex items-center justify-center h-[54px] sm:h-[56px] px-4.5 sm:px-5.5 gap-2 rounded-full bg-white text-slate-800 text-sm sm:text-base font-semibold shadow-sm border border-slate-200/90 hover:bg-[#f7f4ee] transition-all cursor-pointer select-none active:scale-95 shrink-0"
+              title="View Subscription & Purchase Plans"
+            >
+              <svg
+                className="w-4 h-4 sm:w-5 sm:h-5 text-slate-800 fill-none stroke-current stroke-[2] shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+              <span>Plan</span>
+            </button>
+          )}
+
+          {/* Awaiting Approval Indicator (shown on desktop if property is not yet approved) */}
+          {!isApproved && (
+            <div
+              className="hidden md:inline-flex items-center justify-center gap-2 px-3.5 sm:px-4.5 h-[54px] sm:h-[56px] rounded-full bg-[#FFF5EC] border border-[#FCD9BD] text-[#C26117] text-[13px] sm:text-[14px] font-medium shadow-sm tracking-tight shrink-0 select-none"
+              title="Plan, Rooms, Guest Management & UPI Settings unlock after admin approval."
+            >
+              <svg className="w-4.5 h-4.5 text-[#C26117] stroke-[1.8] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <rect x="5" y="11" width="14" height="10" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M8 11V7a4 4 0 0 1 8 0v4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="whitespace-nowrap flex items-center leading-none">Awaiting Approval</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── 2. CENTER FLOATING ISLAND: SEGMENTED TABS (DESKTOP) ── */}
       <div
@@ -226,74 +230,76 @@ export function HostDashboardNavbar({
       </div>
 
       {/* ── 3. RIGHT FLOATING ISLAND: USER DASHBOARD BUTTON + PROFILE BUTTON ONLY (NO MULTI-PILL MENU) ── */}
-      <div className="fixed top-2.5 sm:top-5 right-2.5 sm:right-6 z-50 flex items-center gap-2 sm:gap-2.5 pointer-events-auto select-none h-[54px] sm:h-[56px]">
-        {/* On User Visited Tab: Paid Users Pill (Desktop Only) */}
-        {activeTab === 'users' && (
+      {!isRoomOrUsers && (
+        <div className="fixed top-2.5 sm:top-5 right-2.5 sm:right-6 z-50 flex items-center gap-2 sm:gap-2.5 pointer-events-auto select-none h-[54px] sm:h-[56px]">
+          {/* On User Visited Tab: Paid Users Pill (Desktop Only) */}
+          {activeTab === 'users' && (
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof onVisitedSubTabChange === 'function') {
+                  onVisitedSubTabChange(visitedSubTab === 'paid' ? 'checkin' : 'paid');
+                }
+              }}
+              className={`hidden md:inline-flex h-[54px] sm:h-[56px] relative items-center justify-center gap-2 px-4.5 sm:px-5.5 rounded-full border text-sm sm:text-base font-semibold transition-all cursor-pointer select-none active:scale-95 shrink-0 ${
+                visitedSubTab === 'paid'
+                  ? 'bg-purple-600 text-white border-purple-600 shadow-md'
+                  : 'border-slate-200/90 bg-white text-slate-800 shadow-sm hover:border-purple-500/50 hover:bg-[#f7f4ee]'
+              }`}
+              title="View Paid Residents list"
+            >
+              <svg
+                className={`w-4.5 h-4.5 sm:w-5 sm:h-5 shrink-0 transition-colors ${
+                  visitedSubTab === 'paid' ? 'text-white' : 'text-emerald-500'
+                }`}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+              <span>Paid Users</span>
+              <span className={`font-mono text-xs font-semibold min-w-[22px] h-[22px] sm:min-w-[24px] sm:h-[24px] px-1 sm:px-1.5 rounded-full inline-flex items-center justify-center leading-none ${
+                visitedSubTab === 'paid'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+              }`}>
+                {activePaidCount}
+              </span>
+            </button>
+          )}
+
+          {/* 1. User Dashboard Button (Circular with Home Icon) */}
           <button
             type="button"
-            onClick={() => {
-              if (typeof onVisitedSubTabChange === 'function') {
-                onVisitedSubTabChange(visitedSubTab === 'paid' ? 'checkin' : 'paid');
-              }
-            }}
-            className={`hidden md:inline-flex h-[54px] sm:h-[56px] relative items-center justify-center gap-2 px-4.5 sm:px-5.5 rounded-full border text-sm sm:text-base font-semibold transition-all cursor-pointer select-none active:scale-95 shrink-0 ${
-              visitedSubTab === 'paid'
-                ? 'bg-purple-600 text-white border-purple-600 shadow-md'
-                : 'border-slate-200/90 bg-white text-slate-800 shadow-sm hover:border-purple-500/50 hover:bg-[#f7f4ee]'
-            }`}
-            title="View Paid Residents list"
+            onClick={() => navigate('/')}
+            data-no-hover="true"
+            className="w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] min-w-[54px] min-h-[54px] rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-sm hover:bg-[#f7f4ee] flex items-center justify-center transition-all cursor-pointer select-none active:scale-95 shrink-0"
+            title="Switch to User Dashboard"
+            aria-label="User Dashboard"
           >
             <svg
-              className={`w-4.5 h-4.5 sm:w-5 sm:h-5 shrink-0 transition-colors ${
-                visitedSubTab === 'paid' ? 'text-white' : 'text-emerald-500'
-              }`}
+              className="w-6 h-6 sm:w-6.5 sm:h-6.5 text-slate-700 stroke-[2.2] shrink-0"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
             </svg>
-            <span>Paid Users</span>
-            <span className={`font-mono text-xs font-semibold min-w-[22px] h-[22px] sm:min-w-[24px] sm:h-[24px] px-1 sm:px-1.5 rounded-full inline-flex items-center justify-center leading-none ${
-              visitedSubTab === 'paid'
-                ? 'bg-white/20 text-white'
-                : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-            }`}>
-              {activePaidCount}
-            </span>
           </button>
-        )}
 
-        {/* 1. User Dashboard Button (Circular with Home Icon) */}
-        <button
-          type="button"
-          onClick={() => navigate('/')}
-          data-no-hover="true"
-          className="w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] min-w-[54px] min-h-[54px] rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-sm hover:bg-[#f7f4ee] flex items-center justify-center transition-all cursor-pointer select-none active:scale-95 shrink-0"
-          title="Switch to User Dashboard"
-          aria-label="User Dashboard"
-        >
-          <svg
-            className="w-6 h-6 sm:w-6.5 sm:h-6.5 text-slate-700 stroke-[2.2] shrink-0"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-            <polyline points="9 22 9 12 15 12 15 22" />
-          </svg>
-        </button>
-
-        {/* 2. Profile Avatar Button with Dropdown */}
-        <div className="relative flex items-center justify-center h-[54px] sm:h-[56px] shrink-0">
-          <Login onOpenActivity={onOpenPropertyTelemetry} />
+          {/* 2. Profile Avatar Button with Dropdown */}
+          <div className="relative flex items-center justify-center h-[54px] sm:h-[56px] shrink-0">
+            <Login onOpenActivity={onOpenPropertyTelemetry} />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── 4. MOBILE CENTER CAPSULE (Fixed at bottom on mobile screens with IDENTICAL CAPSULE PILL WIDTHS) ── */}
       <div className="md:hidden fixed bottom-5 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex justify-center select-none pb-[env(safe-area-inset-bottom,0px)]">

@@ -31,7 +31,7 @@ export const validateHostStep = (stepNumber, formData, setFieldErrors = () => {}
     }
     if (!formData?.propertyType) {
       if (shouldSetErrors) {
-        setFieldErrors((prev) => ({ ...prev, propertyType: 'Please select a property category (e.g. PG, Hotel, Flat).' }));
+        setFieldErrors((prev) => ({ ...prev, propertyType: 'Please select a property category (e.g. PG, Hotel, Flat, Independent Room).' }));
         toast.error('Select property category');
       }
       return false;
@@ -146,6 +146,14 @@ export const validateHostStep = (stepNumber, formData, setFieldErrors = () => {}
       if (shouldSetErrors) {
         setFieldErrors((prev) => ({ ...prev, payeeName: 'Payee display name must be at least 2 characters.' }));
         toast.error('Payee name min 2 chars');
+      }
+      return false;
+    }
+
+    if (cleanPayee.length > 20) {
+      if (shouldSetErrors) {
+        setFieldErrors((prev) => ({ ...prev, payeeName: 'Payee display name cannot exceed 20 characters.' }));
+        toast.error('Payee name max 20 chars');
       }
       return false;
     }

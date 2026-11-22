@@ -35,7 +35,7 @@ export const WIZARD_STEPS = [
     title: 'Photos & Video Tour',
     shortTitle: 'Photos',
     sub: 'Showcase your property',
-    desc: 'Upload up to 5 photos and add an Instagram Reel or YouTube walkthrough tour link.',
+    desc: 'Upload up to 4 photos and add an Instagram Reel or YouTube walkthrough tour link.',
   },
   {
     id: 5,
@@ -61,7 +61,7 @@ export const hostPropertySchema = z
     email: z.string().trim().email('Please enter a valid host email address'),
     phone: z.string().trim().min(10, 'Please fill Host details first (Contact number must be at least 10 digits)'),
     propertyName: z.string().trim().min(3, 'Property name must be at least 3 characters'),
-    propertyType: z.enum(['PG', 'Hotel', 'Flat']),
+    propertyType: z.enum(['PG', 'Hotel', 'Flat', 'Independent Room']),
     genderType: z.enum(['Boys', 'Girls', 'Both', 'Family', 'Male', 'Female']),
     roadArea: z.string().trim().min(2, 'Road name / area / colony is required'),
     pincode: z.string().trim().min(4, 'Valid pincode is required'),
@@ -87,7 +87,7 @@ export const hostPropertySchema = z
       .regex(/^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/, 'Invalid UPI ID format (e.g. user@bank)')
       .optional()
       .or(z.literal('')),
-    payeeName: z.string().trim().min(2, 'Payee display name must be at least 2 characters').optional().or(z.literal('')),
+    payeeName: z.string().trim().min(2, 'Payee display name must be at least 2 characters').max(20, 'Payee display name cannot exceed 20 characters').optional().or(z.literal('')),
   })
   .passthrough();
 

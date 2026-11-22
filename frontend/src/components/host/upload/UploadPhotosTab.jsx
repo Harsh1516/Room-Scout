@@ -78,19 +78,10 @@ export function UploadPhotosTab({
       {/* ── CARD 1: Gallery Manager Header & Grid (Left Side on Desktop) ── */}
       <div className="md:col-span-7 flex flex-col space-y-2.5 sm:space-y-3 min-w-0">
         {/* Mobile-Only Heading (Outside, Centered) */}
-        <div className="md:hidden text-center px-1 mb-2 space-y-1.5">
+        <div className="md:hidden text-center px-1 mb-2">
           <h2 className="text-[22px] font-bold text-slate-900 tracking-tight">
             Property Showcase Gallery
           </h2>
-          <div className="flex items-center justify-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold tracking-wide bg-white/80 backdrop-blur-md text-slate-700 border border-slate-200/80 shadow-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              All formats accepted • Landscape recommended
-            </span>
-          </div>
-          <p className="text-[11px] text-slate-500 font-medium">
-            4 views: Front View, Side View, Balcony, Parking
-          </p>
         </div>
 
         {/* Card Body */}
@@ -100,54 +91,31 @@ export function UploadPhotosTab({
           md:bg-white md:border-slate-200/90 md:p-4 md:shadow-black/5"
         >
           {/* Mobile Top Bar */}
-          <div className="flex md:hidden items-center justify-between pb-2.5 border-b border-slate-100">
-            <span className="text-[15.5px] font-bold text-slate-800 tracking-tight">
-              Showcase Gallery
-            </span>
-            <div className="flex items-center gap-1.5 ml-auto">
+          <div className="flex md:hidden items-center justify-end pb-2.5 border-b border-slate-100">
+            <div className="flex items-center gap-2 ml-auto">
               {imagesList.length > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold font-mono tracking-tight bg-slate-100/90 text-slate-800 border border-slate-200 shadow-2xs">
                   {totalMemoryFormatted}
                 </span>
               )}
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium tracking-tight bg-sky-50 text-sky-800 border border-sky-200 font-semibold shadow-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-tight bg-sky-50 text-sky-800 border border-sky-200 shadow-2xs">
                 {imagesList.length} / {maxPhotos} Photos
               </span>
             </div>
           </div>
 
           {/* Desktop Gallery Header Inside Card */}
-          <div className="hidden md:flex flex-col gap-2 pb-2.5 border-b border-slate-100">
-            <h2 className="text-base font-semibold text-[#1f1b16] tracking-tight text-center">
-              Property Showcase Gallery
-            </h2>
-
-            {/* Subtitle & Status Badges aligned cleanly in one row without overlapping */}
-            <div className="flex items-center justify-between gap-3 w-full">
-              {/* Left Subtitle: 16:9 Pill and View Descriptions */}
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs shrink-0 select-none">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  All formats accepted • Landscape recommended
+          <div className="hidden md:flex items-center justify-end pb-2.5 border-b border-slate-100">
+            {/* Right Pills: Memory Size & Photo Count */}
+            <div className="flex items-center gap-2 shrink-0 select-none">
+              {imagesList.length > 0 && (
+                <span className="px-2.5 py-0.5 rounded-full text-[11.5px] font-bold font-mono tracking-tight bg-slate-100/90 text-slate-800 border border-slate-200 shadow-2xs">
+                  {totalMemoryFormatted}
                 </span>
-                <span className="text-[11px] text-slate-400 font-medium truncate select-none" title="(Front View, Side View, Balcony, Parking)">
-                  (Front View, Side View, Balcony, Parking)
-                </span>
-              </div>
-
-              {/* Right Pills: Memory Size & Photo Count */}
-              <div className="flex items-center gap-2 shrink-0 select-none">
-                {imagesList.length > 0 && (
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                    {totalMemoryFormatted}
-                  </span>
-                )}
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  {imagesList.length} / {maxPhotos} Photos
-                </span>
-              </div>
+              )}
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11.5px] font-bold tracking-tight bg-sky-50 text-sky-800 border border-sky-200 shadow-2xs">
+                {imagesList.length} / {maxPhotos} Photos
+              </span>
             </div>
           </div>
 
@@ -212,18 +180,6 @@ export function UploadPhotosTab({
                     {/* Top Action Bar */}
                     <div className="absolute top-2 left-2 right-2 sm:top-3 sm:left-3 sm:right-3 flex items-center justify-between z-10 pointer-events-none">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        {isCover ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#006C4A] text-white text-[10.5px] sm:text-xs font-semibold tracking-wide shadow-sm">
-                            <Star className="w-3.5 h-3.5 fill-current text-amber-300" />
-                            <span>Front View (Cover)</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/65 backdrop-blur-md text-white text-[10.5px] sm:text-xs font-semibold border border-white/20">
-                            <Icon className="w-3 h-3 text-emerald-400" />
-                            <span>{config.label}</span>
-                          </span>
-                        )}
-
                         {size > 0 && (
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-black/65 backdrop-blur-md text-emerald-300 text-[10px] font-mono font-medium border border-emerald-400/30">
                             {formatMemorySize(size)}
@@ -231,49 +187,25 @@ export function UploadPhotosTab({
                         )}
                       </div>
 
-                      {/* Top Right Buttons: Replace & Remove */}
-                      <div className="flex items-center gap-1 pointer-events-auto">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            replaceInputRefs.current[i]?.click();
-                          }}
-                          className="w-6.5 h-6.5 sm:w-7 sm:h-7 rounded-full bg-black/65 hover:bg-black/90 text-white/90 hover:text-white border border-white/25 flex items-center justify-center backdrop-blur-md transition-all shadow-sm cursor-pointer active:scale-90"
-                          title={`Change ${config.label} photo`}
-                        >
-                          <RefreshCw className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={(e) => onRemovePhoto(imgUrl, e)}
-                          className="w-6.5 h-6.5 sm:w-7 sm:h-7 rounded-full bg-black/65 hover:bg-rose-600 text-white border border-white/25 hover:border-rose-400 flex items-center justify-center backdrop-blur-md transition-all shadow-sm cursor-pointer active:scale-90"
-                          title={`Remove ${config.label} photo`}
-                        >
-                          <X className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                        </button>
-                      </div>
+                      {/* Top Right Cross Button matching room card cross button size */}
+                      <button
+                        type="button"
+                        onClick={(e) => onRemovePhoto(imgUrl, e)}
+                        className="pointer-events-auto z-20 w-[27px] h-[27px] sm:w-[29px] sm:h-[29px] rounded-full flex items-center justify-center bg-rose-500 hover:bg-rose-600 active:bg-rose-700 text-white border border-white/40 shadow-md shadow-rose-950/30 transition-all duration-150 active:scale-90 cursor-pointer"
+                        title="Remove photo"
+                      >
+                        <span className="material-symbols-outlined text-[15px] sm:text-[16px] font-bold leading-none">close</span>
+                      </button>
                     </div>
 
                     {/* Bottom Action Bar */}
                     <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3 flex items-center justify-between z-10 pointer-events-none">
-                      {!isCover ? (
-                        <button
-                          type="button"
-                          onClick={(e) => onSetCoverPhoto(imgUrl, e)}
-                          className="pointer-events-auto px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-black/65 hover:bg-[#006C4A] text-white text-[10px] sm:text-xs font-semibold border border-white/20 flex items-center gap-1 backdrop-blur-md transition-all shadow-sm cursor-pointer active:scale-95"
-                          title="Set as Front View (Cover Photo)"
-                        >
-                          <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-300" />
-                          <span>Make Front View</span>
-                        </button>
-                      ) : (
+                      {isCover ? (
                         <span className="text-[10px] sm:text-xs font-semibold text-emerald-300 flex items-center gap-1 drop-shadow-sm">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />
                           <span>Front View • Shown first</span>
                         </span>
-                      )}
+                      ) : <div />}
 
                       <span className="text-[10px] text-white/70 font-medium hidden sm:inline-block drop-shadow-sm">
                         Drag to reorder
@@ -363,14 +295,6 @@ export function UploadPhotosTab({
                         </span>
                       )}
                     </div>
-
-                    <span
-                      className="text-[10px] sm:text-xs mt-0.5 line-clamp-1
-                      max-md:text-slate-500 max-md:font-medium
-                      md:text-slate-400"
-                    >
-                      Landscape recommended • {config.desc}
-                    </span>
                   </button>
                 </div>
               );

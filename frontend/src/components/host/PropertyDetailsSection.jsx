@@ -44,9 +44,16 @@ export function PropertyDetailsSection({
 
   const propertyName = hostProperty?.propertyName || hostProperty?.title || '—';
   const propertyCategory = hostProperty?.propertyType || hostProperty?.category || 'PG';
-  const genderType = hostProperty?.genderType
-    ? hostProperty.genderType.charAt(0).toUpperCase() + hostProperty.genderType.slice(1).toLowerCase()
-    : 'Female';
+  const rawGender = Array.isArray(hostProperty?.genderType)
+    ? hostProperty.genderType.join(', ')
+    : typeof hostProperty?.genderType === 'string'
+    ? hostProperty.genderType
+    : typeof hostProperty?.gender === 'string'
+    ? hostProperty.gender
+    : 'Both';
+  const genderType = rawGender
+    ? rawGender.charAt(0).toUpperCase() + rawGender.slice(1).toLowerCase()
+    : 'Both';
   const rating =
     (Number(hostProperty?.reviewsCount) > 0 || (Array.isArray(hostProperty?.reviews) && hostProperty.reviews.length > 0)) && Number(hostProperty?.rating) > 0
       ? Number(hostProperty.rating).toFixed(1)

@@ -89,6 +89,7 @@ export function calculateSubscriptionPlans({
     Villa: 40,
     Resort: 50,
     Flat: 25,
+    'Independent Room': 20,
     ...(propertyPricing || {}),
   };
 

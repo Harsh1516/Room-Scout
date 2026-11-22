@@ -48,17 +48,14 @@ export function UploadRoomsPricingTab({
  max-md:bg-white/85 max-md:backdrop-blur-xl max-md:border max-md:border-white/95 max-md:p-4.5 max-md:shadow-[0_12px_32px_-4px_rgba(14,116,144,0.07),0_2px_8px_rgba(0,0,0,0.02),inset_0_1px_0_rgba(255,255,255,1)]
  md:bg-white md:border-slate-200/90 md:p-5 md:sm:p-5.5 md:shadow-black/5"
  >
- {/* Mobile Header Inside Card: Title on Left, + Add Room Type in Top Right Corner */}
- <div className="flex md:hidden items-center justify-between pb-3.5 mb-3 border-b border-slate-100">
- <span className="text-[15.5px] font-bold text-slate-800 tracking-tight">
- Room Categories ({(formData.roomRates || []).length})
- </span>
+ {/* Mobile Header Inside Card: + Add Room Type in Top Right Corner */}
+ <div className="flex md:hidden items-center justify-end pb-3.5 mb-3 border-b border-slate-100">
  <button
  type="button"
  onClick={onAddCategory}
- className="min-h-[48px] sm:min-h-[52px] px-7 rounded-full bg-gradient-to-r from-[#0ea5e9] to-[#0284c7] hover:from-[#0284c7] hover:to-[#0369a1] active:scale-95 text-white font-semibold shadow-xs text-sm md:text-xs font-medium shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5 shrink-0"
+ className="h-11 sm:h-12 px-6 sm:px-7 rounded-full bg-white hover:bg-slate-100 active:scale-95 text-slate-900 font-bold text-[14px] sm:text-[15px] border border-slate-200/90 shadow-md transition-all cursor-pointer inline-flex items-center gap-2 shrink-0"
  >
- <Plus className="w-4 h-4 stroke-[2.5]" />
+ <Plus className="w-4 h-4 stroke-[3]" />
  <span>Add Room Type</span>
  </button>
  </div>
@@ -72,10 +69,10 @@ export function UploadRoomsPricingTab({
  <button
  type="button"
  onClick={onAddCategory}
- className="min-h-[48px] sm:min-h-[52px] px-7 rounded-full bg-[#006C4A] hover:bg-[#005a3e] text-white text-sm md:text-xs font-medium shadow-xs transition-all active:scale-95 cursor-pointer shrink-0 absolute right-0 top-0 inline-flex items-center gap-1.5"
+ className="h-11 sm:h-12 px-6 sm:px-7 rounded-full bg-white hover:bg-slate-100 active:scale-95 text-slate-900 font-bold text-[14px] sm:text-[15px] border border-slate-200/90 shadow-md transition-all cursor-pointer shrink-0 absolute right-0 top-0 inline-flex items-center gap-2"
  title="Add a new room category"
  >
- <Plus className="w-4 h-4 stroke-[2.5]" />
+ <Plus className="w-4 h-4 stroke-[3]" />
  <span>Add Room Type</span>
  </button>
  </div>
@@ -163,7 +160,7 @@ export function UploadRoomsPricingTab({
  }`}
  />
  {fieldErrors.description && (
- <p className="text-xs text-rose-300 md:text-rose-500 font-medium pl-1">{fieldErrors.description}</p>
+ <p className="text-xs text-rose-500 font-medium pl-1">{fieldErrors.description}</p>
  )}
  <div className="flex justify-end pr-1 md:hidden">
  <span className="text-[11.5px] font-mono text-slate-400">

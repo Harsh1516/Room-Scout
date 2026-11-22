@@ -186,13 +186,17 @@ export function useHostPhotoUpload({ formData, setFormData, showToast = () => {}
           if (slotIndex < updated.length) {
             updated[slotIndex] = compressedDataUrl;
           } else {
-            updated.push(compressedDataUrl);
+            while (updated.length < slotIndex) {
+              updated.push('');
+            }
+            updated[slotIndex] = compressedDataUrl;
           }
           const trimmed = updated.slice(0, MAX_PHOTOS);
+          const firstValid = trimmed.find(Boolean) || '';
           return {
             ...prev,
             images: trimmed,
-            image: trimmed[0] || '',
+            image: trimmed[0] || firstValid,
           };
         });
         const PHOTO_LABELS = ['Front View', 'Side View', 'Balcony', 'Parking'];
