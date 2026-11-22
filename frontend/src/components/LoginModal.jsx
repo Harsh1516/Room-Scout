@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { z } from 'zod';
 import { useAuth } from '../context/AuthContext';
-import { authAPI } from '../services/api';
+import { authAPI, adminAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
 import { LoginFormTab } from './auth/LoginFormTab';
 import { RegisterFormTab } from './auth/RegisterFormTab';
@@ -73,6 +74,33 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
     verifyRegisterOtp,
     resendOtp,
   } = useAuth();
+
+  const navigate = useNavigate();
+
+  const handlePostAuthNavigation = async (authenticatedData, explicitRole) => {
+    const effectiveRole = explicitRole || authenticatedData?.role || accountType;
+    if (effectiveRole === 'host') {
+      const email = authenticatedData?.email || formData.email.trim() || otpEmail.trim();
+      let hasProp = Boolean(authenticatedData?.hasProperty);
+
+      if (!hasProp && email) {
+        try {
+          const check = await adminAPI.getHostByEmail(email);
+          if (check?.hasProperty) {
+            hasProp = true;
+          }
+        } catch {
+          hasProp = false;
+        }
+      }
+
+      if (hasProp) {
+        navigate('/host/dashboard');
+      } else {
+        navigate('/host/upload');
+      }
+    }
+  };
 
   const [accountType, setAccountType] = useState(initialRole);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
@@ -247,6 +275,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
         setIsVerifyingOtp(false);
         setIsOtpMode(false);
         onClose();
+        handlePostAuthNavigation(res.data, accountType);
         return;
       }
 
@@ -264,6 +293,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
       setIsVerifyingOtp(false);
       setIsOtpMode(false);
       onClose();
+      handlePostAuthNavigation(res.data, accountType);
     } catch (err) {
       setErrorMessage(err.message || 'Verification failed.');
       setIsVerifyingOtp(false);
@@ -334,6 +364,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
         setFormData({ name: '', email: '', phone: '', password: '', confirmPassword: '' });
         setIsSubmitting(false);
         onClose();
+        handlePostAuthNavigation(res.data, accountType);
         return;
       }
 
@@ -372,6 +403,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
       setSuccessMessage('');
       setIsSubmitting(false);
       onClose();
+      handlePostAuthNavigation(res.data, accountType);
     } catch (err) {
       let msg = err.message || 'Invalid Credentials';
       if (
@@ -420,6 +452,7 @@ export function LoginModal({ isOpen, onClose, initialRole = 'user', promptMessag
       setFormData({ name: '', email: '', phone: '', password: '', confirmPassword: '' });
       setIsSubmitting(false);
       onClose();
+      handlePostAuthNavigation(res.data, accountType);
     } catch (err) {
       const msg = err.message || 'Google sign-in error';
       setErrorMessage(msg);

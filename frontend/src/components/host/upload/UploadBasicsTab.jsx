@@ -65,6 +65,64 @@ export function UploadBasicsTab({
   fieldErrors = {},
   setFieldErrors,
 }) {
+  // Swipe pan gesture handlers for sliding window toggles
+  const handleCategoryPanEnd = (e, info) => {
+    const currentIndex = PROPERTY_TYPES.findIndex((pt) => pt.label === formData.propertyType);
+    if (info.offset.x < -35 && currentIndex >= 0 && currentIndex < PROPERTY_TYPES.length - 1) {
+      const nextType = PROPERTY_TYPES[currentIndex + 1].label;
+      setFormData((prev) => ({ ...prev, propertyType: nextType }));
+      if (fieldErrors.propertyType && setFieldErrors) {
+        setFieldErrors((prev) => {
+          const next = { ...prev };
+          delete next.propertyType;
+          return next;
+        });
+      }
+    } else if (info.offset.x > 35 && currentIndex > 0) {
+      const prevType = PROPERTY_TYPES[currentIndex - 1].label;
+      setFormData((prev) => ({ ...prev, propertyType: prevType }));
+      if (fieldErrors.propertyType && setFieldErrors) {
+        setFieldErrors((prev) => {
+          const next = { ...prev };
+          delete next.propertyType;
+          return next;
+        });
+      }
+    }
+  };
+
+  const getNormalizedGender = (val) => {
+    if (val === 'Boys') return 'Male';
+    if (val === 'Girls') return 'Female';
+    if (val === 'Unisex' || val === 'Family') return 'Both';
+    return val || 'Male';
+  };
+
+  const handleGenderPanEnd = (e, info) => {
+    const currentVal = getNormalizedGender(formData.genderType);
+    const currentIndex = GENDER_OPTIONS.findIndex((g) => g.value === currentVal);
+    if (info.offset.x < -35 && currentIndex >= 0 && currentIndex < GENDER_OPTIONS.length - 1) {
+      const nextGender = GENDER_OPTIONS[currentIndex + 1].value;
+      setFormData((prev) => ({ ...prev, genderType: nextGender }));
+      if (fieldErrors.genderType && setFieldErrors) {
+        setFieldErrors((prev) => {
+          const next = { ...prev };
+          delete next.genderType;
+          return next;
+        });
+      }
+    } else if (info.offset.x > 35 && currentIndex > 0) {
+      const prevGender = GENDER_OPTIONS[currentIndex - 1].value;
+      setFormData((prev) => ({ ...prev, genderType: prevGender }));
+      if (fieldErrors.genderType && setFieldErrors) {
+        setFieldErrors((prev) => {
+          const next = { ...prev };
+          delete next.genderType;
+          return next;
+        });
+      }
+    }
+  };
   return (
     <motion.div
       key="step-1"
@@ -246,12 +304,19 @@ export function UploadBasicsTab({
             )}
           </div>
 
-          {/* Property Type Grid */}
+          {/* Property Category Sliding Window */}
           <div className="space-y-2">
-            <label className="block text-xs sm:text-sm md:text-[11px] font-bold uppercase tracking-wider max-md:text-slate-800 max-md:font-bold max-md:uppercase max-md:text-xs max-md:tracking-wider md:text-slate-700">
+            <label className="block text-xs sm:text-sm md:text-[11px] font-bold uppercase tracking-wider max-md:text-slate-800 md:text-slate-700">
               Property Category <span className="text-rose-300 md:text-rose-500">*</span>
             </label>
-            <div className="grid grid-cols-3 gap-3 sm:gap-4">
+            <motion.div
+              onPanEnd={handleCategoryPanEnd}
+              className={`relative w-full rounded-2xl sm:rounded-3xl md:rounded-2xl p-1 sm:p-1.5 border grid grid-cols-3 gap-0 select-none overflow-hidden touch-pan-y transition-colors ${
+                fieldErrors.propertyType
+                  ? 'bg-rose-50/50 border-rose-300/80 ring-2 ring-rose-500/10'
+                  : 'max-md:bg-slate-200/50 max-md:backdrop-blur-sm max-md:border-slate-300/60 md:bg-slate-100/80 md:border-slate-200/90 shadow-inner md:shadow-xs'
+              }`}
+            >
               {PROPERTY_TYPES.map((pt) => {
                 const isSelected = formData.propertyType === pt.label;
                 const IconComp = pt.icon;
@@ -260,41 +325,73 @@ export function UploadBasicsTab({
                   <button
                     key={pt.label}
                     type="button"
-                    onClick={() => setFormData({ ...formData, propertyType: pt.label })}
-                    className={`group relative aspect-square p-3 sm:p-5 max-md:rounded-2xl md:aspect-auto md:py-2 md:px-2 md:rounded-xl border transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center gap-2 md:gap-1 select-none active:scale-95 ${
-                      isSelected
-                        ? 'max-md:bg-gradient-to-br max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:border-0 max-md:shadow-[0_8px_20px_rgba(14,165,233,0.32),inset_0_1px_1px_rgba(255,255,255,0.4)] md:bg-emerald-50/70 md:border-2 md:border-[#006C4A] shadow-sm'
-                        : 'max-md:bg-white/75 max-md:backdrop-blur-md max-md:border max-md:border-slate-300/80 max-md:hover:bg-white max-md:shadow-[0_2px_8px_rgba(15,23,42,0.04)] md:bg-slate-50/60 md:hover:bg-slate-100/80 md:border-slate-200'
-                    }`}
+                    onClick={() => {
+                      setFormData((prev) => ({ ...prev, propertyType: pt.label }));
+                      if (fieldErrors.propertyType && setFieldErrors) {
+                        setFieldErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.propertyType;
+                          return next;
+                        });
+                      }
+                    }}
+                    className="relative aspect-square sm:aspect-auto sm:py-4 md:py-2.5 p-2 sm:p-3 flex flex-col items-center justify-center text-center gap-2 md:gap-1.5 rounded-[18px] sm:rounded-2xl md:rounded-xl cursor-pointer select-none transition-colors group z-10 active:scale-[0.98]"
                   >
+                    {/* Sliding Window Highlight Pill/Card */}
+                    {isSelected && (
+                      <motion.div
+                        layoutId="activePropertyCategorySlidingWindow"
+                        transition={{
+                          type: 'spring',
+                          stiffness: 450,
+                          damping: 32,
+                          mass: 0.8,
+                        }}
+                        className="absolute inset-0 rounded-[18px] sm:rounded-2xl md:rounded-xl max-md:bg-gradient-to-br max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:shadow-[0_8px_20px_rgba(14,165,233,0.32),inset_0_1px_1px_rgba(255,255,255,0.4)] md:bg-white md:border-2 md:border-[#006C4A] md:shadow-sm z-0 pointer-events-none"
+                      />
+                    )}
+
                     <span
-                      className={`w-12 h-12 sm:w-14 sm:h-14 md:w-8 md:h-8 rounded-2xl md:rounded-lg flex items-center justify-center transition-colors ${
+                      className={`relative z-10 w-12 h-12 sm:w-14 sm:h-14 md:w-8 md:h-8 rounded-2xl md:rounded-lg flex items-center justify-center transition-all duration-200 ${
                         isSelected
-                          ? 'max-md:bg-white max-md:text-[#0284c7] max-md:shadow-xs md:bg-[#006C4A] md:text-white shadow-xs'
-                          : 'max-md:bg-white max-md:text-slate-800 max-md:border max-md:border-slate-200 max-md:shadow-2xs md:bg-white md:text-slate-700 md:border md:border-slate-200/80'
+                          ? 'max-md:bg-white max-md:text-[#0284c7] max-md:shadow-xs md:bg-[#006C4A] md:text-white shadow-xs scale-105'
+                          : 'max-md:bg-white/85 max-md:text-slate-800 max-md:border max-md:border-slate-200/80 max-md:shadow-2xs md:bg-white md:text-slate-700 md:border md:border-slate-200/80 group-hover:bg-white'
                       }`}
                     >
                       <IconComp className="w-6 h-6 sm:w-7 sm:h-7 md:w-4 md:h-4" />
                     </span>
 
-                    <span className={`text-sm sm:text-base md:text-xs ${isSelected ? "max-md:text-white font-bold" : "max-md:text-slate-900 font-bold"} md:text-slate-900`}>
+                    <span
+                      className={`relative z-10 text-sm sm:text-base md:text-xs tracking-tight transition-colors duration-200 ${
+                        isSelected
+                          ? 'max-md:text-white font-bold md:text-slate-900 md:font-bold'
+                          : 'max-md:text-slate-900 font-bold md:text-slate-900'
+                      }`}
+                    >
                       {pt.label}
                     </span>
                   </button>
                 );
               })}
-            </div>
+            </motion.div>
             {fieldErrors.propertyType && (
               <p className="text-xs sm:text-sm text-rose-300 md:text-rose-500 font-medium pl-1">{fieldErrors.propertyType}</p>
             )}
           </div>
 
-          {/* Available For Gender Preference */}
+          {/* Available For Gender Preference Sliding Window */}
           <div className="space-y-2">
-            <label className="block text-xs sm:text-sm md:text-[11px] font-bold uppercase tracking-wider max-md:text-slate-800 max-md:font-bold max-md:uppercase max-md:text-xs max-md:tracking-wider md:text-slate-700">
+            <label className="block text-xs sm:text-sm md:text-[11px] font-bold uppercase tracking-wider max-md:text-slate-800 md:text-slate-700">
               Available For (Gender Policy) <span className="text-rose-300 md:text-rose-500">*</span>
             </label>
-            <div className="grid grid-cols-3 gap-3 sm:gap-4">
+            <motion.div
+              onPanEnd={handleGenderPanEnd}
+              className={`relative w-full rounded-2xl sm:rounded-3xl md:rounded-2xl p-1 sm:p-1.5 border grid grid-cols-3 gap-0 select-none overflow-hidden touch-pan-y transition-colors ${
+                fieldErrors.genderType
+                  ? 'bg-rose-50/50 border-rose-300/80 ring-2 ring-rose-500/10'
+                  : 'max-md:bg-slate-200/50 max-md:backdrop-blur-sm max-md:border-slate-300/60 md:bg-slate-100/80 md:border-slate-200/90 shadow-inner md:shadow-xs'
+              }`}
+            >
               {GENDER_OPTIONS.map((g) => {
                 const isSelected =
                   formData.genderType === g.value ||
@@ -306,30 +403,55 @@ export function UploadBasicsTab({
                   <button
                     key={g.value}
                     type="button"
-                    onClick={() => setFormData({ ...formData, genderType: g.value })}
-                    className={`group relative aspect-square p-3 sm:p-5 max-md:rounded-2xl md:aspect-auto md:py-2 md:px-2 md:rounded-xl border transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center gap-2 md:gap-1 select-none active:scale-95 ${
-                      isSelected
-                        ? 'max-md:bg-gradient-to-br max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:border-0 max-md:shadow-[0_8px_20px_rgba(14,165,233,0.32),inset_0_1px_1px_rgba(255,255,255,0.4)] md:bg-emerald-50/70 md:border-2 md:border-[#006C4A] shadow-sm'
-                        : 'max-md:bg-white/75 max-md:backdrop-blur-md max-md:border max-md:border-slate-300/80 max-md:hover:bg-white max-md:shadow-[0_2px_8px_rgba(15,23,42,0.04)] md:bg-slate-50/60 md:hover:bg-slate-100/80 md:border-slate-200'
-                    }`}
+                    onClick={() => {
+                      setFormData((prev) => ({ ...prev, genderType: g.value }));
+                      if (fieldErrors.genderType && setFieldErrors) {
+                        setFieldErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.genderType;
+                          return next;
+                        });
+                      }
+                    }}
+                    className="relative aspect-square sm:aspect-auto sm:py-4 md:py-2.5 p-2 sm:p-3 flex flex-col items-center justify-center text-center gap-2 md:gap-1.5 rounded-[18px] sm:rounded-2xl md:rounded-xl cursor-pointer select-none transition-colors group z-10 active:scale-[0.98]"
                   >
+                    {/* Sliding Window Highlight Pill/Card */}
+                    {isSelected && (
+                      <motion.div
+                        layoutId="activeGenderPolicySlidingWindow"
+                        transition={{
+                          type: 'spring',
+                          stiffness: 450,
+                          damping: 32,
+                          mass: 0.8,
+                        }}
+                        className="absolute inset-0 rounded-[18px] sm:rounded-2xl md:rounded-xl max-md:bg-gradient-to-br max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:shadow-[0_8px_20px_rgba(14,165,233,0.32),inset_0_1px_1px_rgba(255,255,255,0.4)] md:bg-white md:border-2 md:border-[#006C4A] md:shadow-sm z-0 pointer-events-none"
+                      />
+                    )}
+
                     <span
-                      className={`w-12 h-12 sm:w-14 sm:h-14 md:w-8 md:h-8 rounded-2xl md:rounded-lg flex items-center justify-center transition-colors ${
+                      className={`relative z-10 w-12 h-12 sm:w-14 sm:h-14 md:w-8 md:h-8 rounded-2xl md:rounded-lg flex items-center justify-center transition-all duration-200 ${
                         isSelected
-                          ? 'max-md:bg-white max-md:text-[#0284c7] max-md:shadow-xs md:bg-[#006C4A] md:text-white shadow-xs'
-                          : 'max-md:bg-white max-md:text-slate-800 max-md:border max-md:border-slate-200 max-md:shadow-2xs md:bg-white md:text-slate-700 md:border md:border-slate-200/80'
+                          ? 'max-md:bg-white max-md:text-[#0284c7] max-md:shadow-xs md:bg-[#006C4A] md:text-white shadow-xs scale-105'
+                          : 'max-md:bg-white/85 max-md:text-slate-800 max-md:border max-md:border-slate-200/80 max-md:shadow-2xs md:bg-white md:text-slate-700 md:border md:border-slate-200/80 group-hover:bg-white'
                       }`}
                     >
                       {g.icon}
                     </span>
 
-                    <span className={`text-sm sm:text-base md:text-xs ${isSelected ? "max-md:text-white font-bold" : "max-md:text-slate-900 font-bold"} md:text-slate-900`}>
+                    <span
+                      className={`relative z-10 text-sm sm:text-base md:text-xs tracking-tight transition-colors duration-200 ${
+                        isSelected
+                          ? 'max-md:text-white font-bold md:text-slate-900 md:font-bold'
+                          : 'max-md:text-slate-900 font-bold md:text-slate-900'
+                      }`}
+                    >
                       {g.label}
                     </span>
                   </button>
                 );
               })}
-            </div>
+            </motion.div>
             {fieldErrors.genderType && (
               <p className="text-xs sm:text-sm text-rose-300 md:text-rose-500 font-medium pl-1">{fieldErrors.genderType}</p>
             )}

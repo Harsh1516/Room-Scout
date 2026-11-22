@@ -173,7 +173,7 @@ function AppContent() {
  navigate('/host/upload');
  }
  } catch {
- navigate('/host/dashboard');
+ navigate('/host/upload');
  }
  }
  setPendingAction(null);

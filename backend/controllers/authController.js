@@ -682,6 +682,14 @@ export const googleAuth = async (req, res, next) => {
         }
       }
 
+      let hasProperty = false;
+      try {
+        const stayExists = await Stay.findOne({ hostId: host._id }).select('_id').lean();
+        hasProperty = Boolean(stayExists);
+      } catch {
+        hasProperty = false;
+      }
+
       token = await host.generateToken();
       authenticatedAccount = {
         _id: host._id.toString(),
@@ -692,6 +700,7 @@ export const googleAuth = async (req, res, next) => {
         avatar: host.avatar || 'HO',
         role: 'host',
         status: host.status,
+        hasProperty,
         authProvider: host.authProvider || 'google',
         hasPassword: Boolean(host.password),
       };
@@ -1118,6 +1127,12 @@ export const getUserProfile = async (req, res, next) => {
         const hostObj = host.toObject();
         hostObj.hasPassword = Boolean(host.password);
         delete hostObj.password;
+        try {
+          const stayExists = await Stay.findOne({ hostId: host._id }).select('_id').lean();
+          hostObj.hasProperty = Boolean(stayExists);
+        } catch {
+          hostObj.hasProperty = false;
+        }
         return res.json(hostObj);
       }
     } else {
