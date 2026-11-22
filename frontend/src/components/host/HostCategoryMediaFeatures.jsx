@@ -87,7 +87,7 @@ export default function HostCategoryMediaFeatures({
     try {
       const validation = await validate16x9Ratio(file);
       if (!validation.valid) {
-        toast.error('Photos must be 16:9 ratio');
+        toast.error(validation.message || 'Please upload a valid image file');
         return;
       }
 
@@ -192,10 +192,6 @@ export default function HostCategoryMediaFeatures({
           <div className="flex items-center gap-2">
             <span className="text-[13.5px] sm:text-[14px] font-bold max-md:text-[#0b0b0b] md:text-[#1f1b16] tracking-tight">
               Category Photos
-            </span>
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              16:9 photos only
             </span>
           </div>
 
@@ -329,9 +325,6 @@ export default function HostCategoryMediaFeatures({
                       <div className="flex items-center gap-1">
                         <span className="text-[12px] font-bold text-slate-700 group-hover:text-emerald-800">
                           {slot.label}
-                        </span>
-                        <span className="text-[10px] text-slate-400 group-hover:text-emerald-600">
-                          (16:9)
                         </span>
                       </div>
                       <span className="text-[10px] text-slate-400 group-hover:text-slate-600 flex items-center gap-0.5">
