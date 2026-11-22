@@ -43,46 +43,69 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
         setActiveDotIndex?.(cIdx);
       }}
       className={`group relative flex flex-col justify-between ${
-        compact ? 'p-3 sm:p-3.5' : 'p-3.5 sm:p-4'
-      } w-[calc((100%-20px)/2.5)] min-w-[calc((100%-20px)/2.5)] max-w-[calc((100%-20px)/2.5)] sm:w-[calc((100%-20px)/3)] sm:min-w-[calc((100%-20px)/3)] sm:max-w-[calc((100%-20px)/3)] ${
-        compact ? 'h-[136px] sm:h-[142px]' : 'h-[150px] sm:h-[158px]'
-      } shrink-0 snap-start transition-all duration-200 cursor-pointer select-none outline-none transform-gpu ${
+        compact ? 'p-3 sm:p-3.5' : 'p-4 sm:p-4.5'
+      } ${
+        compact
+          ? 'w-[150px] min-w-[150px] sm:w-[160px] sm:min-w-[160px] h-[163px] sm:h-[174px]'
+          : 'w-[168px] min-w-[168px] sm:w-[180px] sm:min-w-[180px] h-[183px] sm:h-[196px]'
+      } shrink-0 snap-start transition-all duration-200 cursor-pointer select-none outline-none transform-gpu overflow-hidden ${
         isCardSelected ? 'scale-[1.02] z-10' : 'hover:scale-[1.01] opacity-95 hover:opacity-100'
       }`}
       style={{
-        maskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath fill='white' d='M 16 0 L 66 0 Q 72 0 76 4 L 96 28 Q 100 34 100 40 L 100 84 Q 100 100 84 100 L 16 100 Q 0 100 0 84 L 0 16 Q 0 0 16 0 Z'/%3E%3C/svg%3E")`,
+        maskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath fill='white' d='M 14 0 L 68 0 Q 73 0 78 3.5 L 95 27 Q 99 32 100 38 L 100 86 Q 100 100 86 100 L 14 100 Q 0 100 0 86 L 0 14 Q 0 0 14 0 Z'/%3E%3C/svg%3E")`,
         maskSize: '100% 100%',
-        WebkitMaskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath fill='white' d='M 16 0 L 66 0 Q 72 0 76 4 L 96 28 Q 100 34 100 40 L 100 84 Q 100 100 84 100 L 16 100 Q 0 100 0 84 L 0 16 Q 0 0 16 0 Z'/%3E%3C/svg%3E")`,
+        WebkitMaskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath fill='white' d='M 14 0 L 68 0 Q 73 0 78 3.5 L 95 27 Q 99 32 100 38 L 100 86 Q 100 100 86 100 L 14 100 Q 0 100 0 86 L 0 14 Q 0 0 14 0 Z'/%3E%3C/svg%3E")`,
         WebkitMaskSize: '100% 100%',
         background: isBookedToday
-          ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.22) 0%, rgba(180, 83, 9, 0.08) 100%)'
+          ? 'linear-gradient(135deg, rgba(254, 240, 138, 0.30) 0%, rgba(245, 158, 11, 0.30) 30%, rgba(180, 83, 9, 0.55) 60%, rgba(69, 26, 3, 0.90) 100%)'
           : isCardSelected
-          ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.10) 100%)'
-          : 'linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.05) 100%)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
+          ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.40) 0%, rgba(56, 189, 248, 0.35) 25%, rgba(14, 116, 144, 0.55) 60%, rgba(2, 6, 23, 0.92) 100%)'
+          : 'linear-gradient(135deg, rgba(255, 255, 255, 0.28) 0%, rgba(56, 189, 248, 0.22) 25%, rgba(14, 116, 144, 0.38) 55%, rgba(2, 6, 23, 0.88) 100%)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
         boxShadow: isCardSelected
-          ? '0 12px 28px -4px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.3)'
-          : '0 6px 16px -2px rgba(0, 0, 0, 0.25)',
+          ? '0 16px 36px -8px rgba(2, 132, 199, 0.5), 0 0 24px 2px rgba(56, 189, 248, 0.25), inset 0 1px 1px 0 rgba(255, 255, 255, 0.4)'
+          : '0 10px 25px -5px rgba(0, 0, 0, 0.35), 0 0 15px rgba(56, 189, 248, 0.1), inset 0 1px 1px 0 rgba(255, 255, 255, 0.25)',
       }}
     >
-      {/* Precision Cut-Corner SVG Border Outline matching User-Side Stay Room Cards */}
+      {/* Ambient Glass Glow Highlight matching Pic 1 */}
+      <div className="absolute -top-10 -left-10 w-28 h-28 rounded-full bg-cyan-400/20 blur-xl pointer-events-none" />
+      <div className="absolute -bottom-10 -right-10 w-28 h-28 rounded-full bg-blue-600/15 blur-xl pointer-events-none" />
+
+      {/* Precision Cut-Corner SVG Glass Border Outline matching Pic 1 */}
       <svg
         className="absolute inset-0 w-full h-full pointer-events-none z-10"
         viewBox="0 0 100 100"
         preserveAspectRatio="none"
       >
+        <defs>
+          <linearGradient id={`glassStroke_${cardId}`} x1="0%" y1="0%" x2="100%" y2="100%">
+            {isCardSelected ? (
+              <>
+                <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
+                <stop offset="35%" stopColor="#38bdf8" stopOpacity="0.85" />
+                <stop offset="100%" stopColor="#0284c7" stopOpacity="0.5" />
+              </>
+            ) : isBookedToday ? (
+              <>
+                <stop offset="0%" stopColor="#fef08a" stopOpacity="0.8" />
+                <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="#b45309" stopOpacity="0.4" />
+              </>
+            ) : (
+              <>
+                <stop offset="0%" stopColor="#ffffff" stopOpacity="0.65" />
+                <stop offset="40%" stopColor="#bae6fd" stopOpacity="0.35" />
+                <stop offset="100%" stopColor="#ffffff" stopOpacity="0.15" />
+              </>
+            )}
+          </linearGradient>
+        </defs>
         <path
-          d="M 16 1.2 L 66 1.2 Q 72 1.2 75.8 4.8 L 95.2 28 Q 98.8 33.8 98.8 40 L 98.8 84 Q 98.8 98.8 84 98.8 L 16 98.8 Q 1.2 98.8 1.2 84 L 1.2 16 Q 1.2 1.2 16 1.2 Z"
+          d="M 14 1 L 68 1 Q 73 1 77.8 4.4 L 94.6 27.2 Q 99 32 99 38 L 99 86 Q 99 99 86 99 L 14 99 Q 1 99 1 86 L 1 14 Q 1 1 14 1 Z"
           fill="none"
-          stroke={
-            isCardSelected
-              ? 'rgba(255, 255, 255, 0.95)'
-              : isBookedToday
-              ? 'rgba(245, 158, 11, 0.65)'
-              : 'rgba(255, 255, 255, 0.38)'
-          }
-          strokeWidth={isCardSelected ? '2.2' : '1.2'}
+          stroke={`url(#glassStroke_${cardId})`}
+          strokeWidth={isCardSelected ? '1.8' : '1.2'}
           vectorEffect="non-scaling-stroke"
         />
       </svg>
@@ -151,7 +174,7 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
       )}
 
       {/* Top: Status Tag with Sub-label & Delete Button */}
-      <div className="flex items-start justify-between w-full z-20">
+      <div className="flex items-start justify-between w-full z-20 pr-7">
         <div className="flex flex-col items-start leading-none">
           <span
             className={`text-[12px] sm:text-[13px] font-extrabold leading-tight tracking-wider ${
@@ -165,14 +188,14 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
           </span>
         </div>
 
-        {/* Remove Button in the top right cut-corner zone */}
+        {/* Remove Button safely inset inside the card boundary */}
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             setConfirmDelete(true);
           }}
-          className="w-5 h-5 rounded-full flex items-center justify-center text-white/60 hover:text-rose-400 hover:bg-white/10 transition-colors cursor-pointer mr-1 -mt-0.5"
+          className="w-5 h-5 rounded-full flex items-center justify-center text-white/60 hover:text-rose-400 hover:bg-white/10 transition-colors cursor-pointer -mt-0.5"
           title="Remove room"
         >
           <span className="material-symbols-outlined text-[13px] leading-none">close</span>
@@ -180,8 +203,8 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
       </div>
 
       {/* Center: ROOM label and Room Number Input */}
-      <div className="flex flex-col items-center justify-center my-auto py-0.5 text-center z-20">
-        <span className="block text-[10px] sm:text-xs mb-0.5 font-bold tracking-wider text-white/80 leading-none">
+      <div className="flex flex-col items-center justify-center my-auto py-1 text-center z-20">
+        <span className="block text-[11px] sm:text-xs mb-1 font-bold tracking-widest text-cyan-200/90 uppercase leading-none">
           ROOM
         </span>
         <input
@@ -202,20 +225,20 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
           }}
           maxLength={8}
           placeholder="101"
-          className="block w-full text-center bg-transparent border-none outline-none focus:ring-0 p-0 leading-none text-[25px] sm:text-[28px] text-white font-black tracking-tight"
+          className="block w-full text-center bg-transparent border-none outline-none focus:ring-0 p-0 leading-none text-[28px] sm:text-[32px] text-white font-black tracking-tight"
         />
       </div>
 
       {/* Bottom: Signature Blue CAP Pill */}
-      <div className="w-full flex items-center justify-between z-20">
+      <div className="w-full flex items-center justify-start z-20 pt-1">
         <div
-          className="w-fit inline-flex items-center gap-1.5 px-2 py-0.5 rounded-none bg-[#0066ff] shadow-sm select-none cursor-default"
+          className="w-fit inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gradient-to-r from-blue-600 to-sky-500 shadow-md select-none cursor-default"
           onClick={(e) => e.stopPropagation()}
         >
-          <span className="text-[11px] font-bold text-white tracking-wider leading-none">
+          <span className="text-[10px] sm:text-[11px] font-bold text-white/90 tracking-wider leading-none">
             CAP
           </span>
-          <span className="text-xs font-black text-white leading-none">
+          <span className="text-xs sm:text-[13px] font-black text-white leading-none">
             {capacity}
           </span>
         </div>
