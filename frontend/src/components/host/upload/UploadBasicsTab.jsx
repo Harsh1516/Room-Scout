@@ -311,7 +311,7 @@ export function UploadBasicsTab({
             </label>
             <motion.div
               onPanEnd={handleCategoryPanEnd}
-              className={`relative w-full rounded-2xl sm:rounded-3xl md:rounded-2xl p-1 sm:p-1.5 border grid grid-cols-3 gap-0 select-none overflow-hidden touch-pan-y transition-colors ${
+              className={`relative w-full rounded-[28px] sm:rounded-3xl md:rounded-2xl p-1.5 border grid grid-cols-3 gap-0 select-none overflow-hidden touch-pan-y transition-colors ${
                 fieldErrors.propertyType
                   ? 'bg-rose-50/50 border-rose-300/80 ring-2 ring-rose-500/10'
                   : 'max-md:bg-slate-200/50 max-md:backdrop-blur-sm max-md:border-slate-300/60 md:bg-slate-100/80 md:border-slate-200/90 shadow-inner md:shadow-xs'
@@ -335,7 +335,7 @@ export function UploadBasicsTab({
                         });
                       }
                     }}
-                    className="relative aspect-square sm:aspect-auto sm:py-4 md:py-2.5 p-2 sm:p-3 flex flex-col items-center justify-center text-center gap-2 md:gap-1.5 rounded-[18px] sm:rounded-2xl md:rounded-xl cursor-pointer select-none transition-colors group z-10 active:scale-[0.98]"
+                    className="relative aspect-square sm:aspect-auto sm:py-4 md:py-2.5 p-2 sm:p-3 flex flex-col items-center justify-center text-center gap-2 md:gap-1.5 rounded-[22px] sm:rounded-[22px] md:rounded-xl cursor-pointer select-none transition-colors group z-10 active:scale-[0.98]"
                   >
                     {/* Sliding Window Highlight Pill/Card */}
                     {isSelected && (
@@ -347,7 +347,7 @@ export function UploadBasicsTab({
                           damping: 32,
                           mass: 0.8,
                         }}
-                        className="absolute inset-0 rounded-[18px] sm:rounded-2xl md:rounded-xl max-md:bg-gradient-to-br max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:shadow-[0_8px_20px_rgba(14,165,233,0.32),inset_0_1px_1px_rgba(255,255,255,0.4)] md:bg-white md:border-2 md:border-[#006C4A] md:shadow-sm z-0 pointer-events-none"
+                        className="absolute inset-0 rounded-[22px] sm:rounded-[22px] md:rounded-xl max-md:bg-gradient-to-br max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:shadow-[0_8px_20px_rgba(14,165,233,0.32),inset_0_1px_1px_rgba(255,255,255,0.4)] md:bg-white md:border-2 md:border-[#006C4A] md:shadow-sm z-0 pointer-events-none"
                       />
                     )}
 
@@ -386,7 +386,7 @@ export function UploadBasicsTab({
             </label>
             <motion.div
               onPanEnd={handleGenderPanEnd}
-              className={`relative w-full rounded-2xl sm:rounded-3xl md:rounded-2xl p-1 sm:p-1.5 border grid grid-cols-3 gap-0 select-none overflow-hidden touch-pan-y transition-colors ${
+              className={`relative w-full rounded-[28px] sm:rounded-3xl md:rounded-2xl p-1.5 border grid grid-cols-3 gap-0 select-none overflow-hidden touch-pan-y transition-colors ${
                 fieldErrors.genderType
                   ? 'bg-rose-50/50 border-rose-300/80 ring-2 ring-rose-500/10'
                   : 'max-md:bg-slate-200/50 max-md:backdrop-blur-sm max-md:border-slate-300/60 md:bg-slate-100/80 md:border-slate-200/90 shadow-inner md:shadow-xs'
@@ -413,7 +413,7 @@ export function UploadBasicsTab({
                         });
                       }
                     }}
-                    className="relative aspect-square sm:aspect-auto sm:py-4 md:py-2.5 p-2 sm:p-3 flex flex-col items-center justify-center text-center gap-2 md:gap-1.5 rounded-[18px] sm:rounded-2xl md:rounded-xl cursor-pointer select-none transition-colors group z-10 active:scale-[0.98]"
+                    className="relative aspect-square sm:aspect-auto sm:py-4 md:py-2.5 p-2 sm:p-3 flex flex-col items-center justify-center text-center gap-2 md:gap-1.5 rounded-[22px] sm:rounded-[22px] md:rounded-xl cursor-pointer select-none transition-colors group z-10 active:scale-[0.98]"
                   >
                     {/* Sliding Window Highlight Pill/Card */}
                     {isSelected && (
@@ -425,7 +425,7 @@ export function UploadBasicsTab({
                           damping: 32,
                           mass: 0.8,
                         }}
-                        className="absolute inset-0 rounded-[18px] sm:rounded-2xl md:rounded-xl max-md:bg-gradient-to-br max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:shadow-[0_8px_20px_rgba(14,165,233,0.32),inset_0_1px_1px_rgba(255,255,255,0.4)] md:bg-white md:border-2 md:border-[#006C4A] md:shadow-sm z-0 pointer-events-none"
+                        className="absolute inset-0 rounded-[22px] sm:rounded-[22px] md:rounded-xl max-md:bg-gradient-to-br max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:shadow-[0_8px_20px_rgba(14,165,233,0.32),inset_0_1px_1px_rgba(255,255,255,0.4)] md:bg-white md:border-2 md:border-[#006C4A] md:shadow-sm z-0 pointer-events-none"
                       />
                     )}
 

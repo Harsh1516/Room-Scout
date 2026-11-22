@@ -171,31 +171,16 @@ export function UploadUpiTab({
             )}
           </div>
 
-          {/* Feature Highlights / Trust Badges */}
-          <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
-            <div className="p-3 sm:p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/60 flex items-start gap-2.5">
-              <div className="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 mt-0.5">
-                <ShieldCheck className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-emerald-950">100% Direct Payouts</h4>
-                <p className="text-[11px] text-emerald-800 leading-tight mt-0.5 font-medium">
-                  Guest payments transfer straight to your linked bank account with 0% platform deductions.
-                </p>
-              </div>
-            </div>
-
-            <div className="p-3 sm:p-3.5 rounded-2xl bg-sky-50/70 border border-sky-200/60 flex items-start gap-2.5">
-              <div className="w-7 h-7 rounded-xl bg-sky-100 text-sky-800 flex items-center justify-center shrink-0 mt-0.5">
-                <Zap className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-sky-950">Instant Direct Settlement</h4>
-                <p className="text-[11px] text-sky-800 leading-tight mt-0.5 font-medium">
-                  Supports payments from GPay, PhonePe, Paytm, and any UPI-enabled banking app.
-                </p>
-              </div>
-            </div>
+          {/* Feature Highlights / Trust Badges - Clean & Minimal */}
+          <div className="pt-1.5 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/70 text-xs font-medium">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              Direct Bank Payouts (0% fee)
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200/70 text-xs font-medium">
+              <Zap className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+              Instant via GPay, PhonePe & Paytm
+            </span>
           </div>
         </div>
       </section>

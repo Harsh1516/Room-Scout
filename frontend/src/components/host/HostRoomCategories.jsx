@@ -274,178 +274,180 @@ function CategoryRoomCarousel({
  const disabledTooltip = `Please fill ${missingFields.join(', ')} before adding room cards`;
 
  return (
- <div className={`flex flex-col ${compact ? 'pt-0.5 gap-1' : 'pt-1 gap-1.5'}`}>
- <div className="relative flex items-center justify-between gap-2">
- <div className="flex items-center gap-1.5 min-w-0">
- <span className="text-[14px] sm:text-[15.5px] font-medium max-md:text-[#0b0b0b] font-bold md:text-[#1f1b16] tracking-tight truncate leading-none">
- Rooms ({matchingRooms.length})
- </span>
- </div>
+  <div
+   className={`flex flex-col ${
+     compact ? 'py-1 gap-2' : 'py-1.5 gap-2.5'
+    } relative my-1 w-full max-w-full`}
+  >
+   <div className="relative flex items-center justify-between gap-2">
+    <div className="flex items-center gap-1.5 min-w-0">
+     <span className="text-[14px] sm:text-[15.5px] font-extrabold text-white tracking-tight truncate leading-none drop-shadow-xs">
+      Rooms ({matchingRooms.length})
+     </span>
+    </div>
 
- {/* Center: Left/Right Arrow Navigation with bigger size and full rounded corners */}
- {matchingRooms.length > 3 && (
- <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center z-10 pointer-events-auto">
- <div className="flex items-center gap-4 max-md:bg-white/15 max-md:border-white/20 md:bg-slate-100 rounded-full p-1 px-2.5 border md:border-slate-200/80 shadow-xs">
- <button
- type="button"
- onClick={handleScrollLeft}
- disabled={!canScrollLeft}
- className="w-6 h-6 sm:w-6.5 sm:h-6.5 rounded-full flex items-center justify-center max-md:text-slate-600 max-md:hover:text-slate-900 max-md:hover:bg-slate-100 md:text-slate-600 md:hover:text-[#1f1b16] md:hover:bg-white transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
- title="Previous room"
- >
- <span className="material-symbols-outlined text-[15px] sm:text-[16px]">chevron_left</span>
- </button>
- <button
- type="button"
- onClick={handleScrollRight}
- disabled={!canScrollRight}
- className="w-6 h-6 sm:w-6.5 sm:h-6.5 rounded-full flex items-center justify-center max-md:text-slate-600 max-md:hover:text-slate-900 max-md:hover:bg-slate-100 md:text-slate-600 md:hover:text-[#1f1b16] md:hover:bg-white transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
- title="Next room"
- >
- <span className="material-symbols-outlined text-[15px] sm:text-[16px]">chevron_right</span>
- </button>
- </div>
- </div>
- )}
+    {/* Center: Left/Right Arrow Navigation with bigger size and full rounded corners */}
+    {matchingRooms.length > 2 && (
+     <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center z-10 pointer-events-auto">
+      <div className="flex items-center gap-3 bg-white/20 backdrop-blur-md rounded-full p-1 px-2.5 border border-white/25 shadow-xs">
+       <button
+        type="button"
+        onClick={handleScrollLeft}
+        disabled={!canScrollLeft}
+        className="w-6 h-6 sm:w-6.5 sm:h-6.5 rounded-full flex items-center justify-center text-white hover:text-white hover:bg-white/20 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+        title="Previous room"
+       >
+        <span className="material-symbols-outlined text-[15px] sm:text-[16px]">chevron_left</span>
+       </button>
+       <button
+        type="button"
+        onClick={handleScrollRight}
+        disabled={!canScrollRight}
+        className="w-6 h-6 sm:w-6.5 sm:h-6.5 rounded-full flex items-center justify-center text-white hover:text-white hover:bg-white/20 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+        title="Next room"
+       >
+        <span className="material-symbols-outlined text-[15px] sm:text-[16px]">chevron_right</span>
+       </button>
+      </div>
+     </div>
+    )}
 
- <div className="flex items-center shrink-0">
- <button
- type="button"
- disabled={!isCategoryComplete}
- onClick={(e) => {
- e.stopPropagation();
- if (!isCategoryComplete) return;
- onSelectCategoryIndex(categoryIndex);
- markCategoryDirty?.(categoryIndex);
- if (typeof onAddRoomCard === 'function') onAddRoomCard({ ...rate, rateUnit: effectiveRateUnit });
- }}
- className={`h-11 max-md:h-12 md:h-9 px-6 sm:px-8 md:px-6 rounded-full text-sm md:text-xs font-medium transition-all shadow-xs flex items-center gap-1.5 leading-none shrink-0 ${
- isCategoryComplete
- ? 'max-md:bg-[#0b0b0b] max-md:hover:bg-[#1a1a1a] max-md:text-white max-md:font-semibold shadow-xs md:bg-[#c0c1ff] md:hover:bg-[#d5d4ff] md:text-[#07006c] cursor-pointer active:scale-95'
- : 'max-md:bg-slate-100 max-md:text-slate-400 md:bg-slate-200 md:text-slate-400 cursor-not-allowed opacity-60 border max-md:border-slate-200 md:border-slate-300'
- }`}
- title={!isCategoryComplete ? disabledTooltip : `Add new room to ${rate.type || 'this category'}`}
- >
- <Plus className="w-4 h-4 stroke-[2.5] shrink-0" />
- <span className="leading-none">Add Room</span>
- </button>
- </div>
- </div>
+    <div className="flex items-center shrink-0">
+     <button
+      type="button"
+      disabled={!isCategoryComplete}
+      onClick={(e) => {
+       e.stopPropagation();
+       if (!isCategoryComplete) return;
+       onSelectCategoryIndex(categoryIndex);
+       markCategoryDirty?.(categoryIndex);
+       if (typeof onAddRoomCard === 'function') onAddRoomCard({ ...rate, rateUnit: effectiveRateUnit });
+      }}
+      className={`h-9 sm:h-10 px-5 sm:px-6 rounded-full text-xs sm:text-sm font-bold transition-all shadow-md flex items-center gap-1.5 leading-none shrink-0 ${
+       isCategoryComplete
+        ? 'bg-white hover:bg-white/95 text-slate-900 cursor-pointer active:scale-95 shadow-black/20'
+        : 'bg-white/20 text-white/50 border border-white/20 cursor-not-allowed opacity-60'
+      }`}
+      title={!isCategoryComplete ? disabledTooltip : `Add new room to ${rate.type || 'this category'}`}
+     >
+      <Plus className="w-4 h-4 stroke-[2.8] shrink-0" />
+      <span className="leading-none">Add Room</span>
+     </button>
+    </div>
+   </div>
 
- {matchingRooms.length === 0 ? (
- <div className="p-3 sm:p-4 rounded-xl text-center border border-dashed max-md:border-slate-200 max-md:bg-slate-50 max-md:text-slate-600 md:border-slate-300 md:text-slate-500 md:bg-[#f7f4ee]/50 space-y-1.5 my-1">
- <p className="text-xs">0 room cards added for <span className="max-md:text-slate-900 md:text-slate-800 font-semibold">{rate.type || 'this category'}</span> yet.</p>
- <button
- type="button"
- disabled={!isCategoryComplete}
- onClick={(e) => {
- e.stopPropagation();
- if (!isCategoryComplete) return;
- onSelectCategoryIndex(categoryIndex);
- markCategoryDirty?.(categoryIndex);
- if (typeof onAddRoomCard === 'function') onAddRoomCard({ ...rate, rateUnit: effectiveRateUnit });
- }}
- className={isCategoryComplete ? 'font-medium max-md:text-sky-600 max-md:hover:text-sky-800 md:text-[#006C4A] hover:underline cursor-pointer text-xs' : 'font-medium max-md:text-slate-400 md:text-slate-400 cursor-not-allowed opacity-75 text-xs'}
- title={!isCategoryComplete ? disabledTooltip : 'Add first room'}
- >
- + Add First Room
- </button>
- {!isCategoryComplete && (
- <p className="text-[10.5px] max-md:text-amber-300/90 md:text-amber-600 font-medium">
- Fill {missingFields.join(', ')} above to unlock room cards.
- </p>
- )}
- </div>
- ) : (
- <div className="space-y-0.5">
- <div
- ref={setScrollRef}
- onScroll={handleScroll}
- className={`flex items-stretch ${compact ? 'gap-2 pt-6 pb-7 px-6 -mx-2 -mt-3 -mb-3.5 scroll-pl-6 scroll-pr-6' : 'gap-2.5 pt-6 pb-8 px-7 -mx-2 -mt-3 -mb-4 scroll-pl-7 scroll-pr-7'} scroll-smooth overscroll-x-contain no-scrollbar ${
- matchingRooms.length > 3
- ? 'overflow-x-auto snap-x snap-mandatory'
- : 'overflow-visible'
- }`}
- style={{
- scrollbarWidth: 'none',
- msOverflowStyle: 'none',
- }}
- >
- {matchingRooms.map((card, cIdx) => {
- const cardId = card._id || `room_${card.roomNumber || cIdx}`;
- const isCardSelected = Boolean(
- (selectedRoomNumber && String(card.roomNumber || '').trim() === String(selectedRoomNumber).trim()) ||
- (selectedRoomCardId &&
- (isSameRoom(card, selectedRoomCardId) ||
- selectedRoomCardId === cardId ||
- (card._id && selectedRoomCardId === card._id) ||
- String(selectedRoomCardId) === String(card.roomNumber)))
- );
+   {matchingRooms.length === 0 ? (
+    <div className="p-4 sm:p-5 rounded-2xl text-center border border-dashed border-white/30 bg-white/10 backdrop-blur-md text-white/90 space-y-2 my-1">
+     <p className="text-xs sm:text-sm">0 room cards added for <span className="text-white font-bold">{rate.type || 'this category'}</span> yet.</p>
+     <button
+      type="button"
+      disabled={!isCategoryComplete}
+      onClick={(e) => {
+       e.stopPropagation();
+       if (!isCategoryComplete) return;
+       onSelectCategoryIndex(categoryIndex);
+       markCategoryDirty?.(categoryIndex);
+       if (typeof onAddRoomCard === 'function') onAddRoomCard({ ...rate, rateUnit: effectiveRateUnit });
+      }}
+      className={isCategoryComplete ? 'font-bold text-slate-900 bg-white hover:bg-white/90 px-4 py-1.5 rounded-full text-xs transition-all shadow-sm cursor-pointer' : 'font-medium text-white/40 cursor-not-allowed text-xs'}
+      title={!isCategoryComplete ? disabledTooltip : 'Add first room'}
+     >
+      + Add First Room
+     </button>
+     {!isCategoryComplete && (
+      <p className="text-[11px] text-amber-200 font-medium">
+       Fill {missingFields.join(', ')} above to unlock room cards.
+      </p>
+     )}
+    </div>
+   ) : (
+    <div className="space-y-1 w-full max-w-full overflow-hidden">
+     <div
+      ref={setScrollRef}
+      onScroll={handleScroll}
+      className={`flex items-center ${compact ? 'gap-2.5 py-2 px-1' : 'gap-3 py-2.5 px-1.5'} overflow-x-auto scroll-smooth overscroll-x-contain no-scrollbar snap-x snap-mandatory w-full max-w-full touch-pan-x`}
+      style={{
+       scrollbarWidth: 'none',
+       msOverflowStyle: 'none',
+       WebkitOverflowScrolling: 'touch',
+       overscrollBehaviorX: 'contain',
+      }}
+     >
+      {matchingRooms.map((card, cIdx) => {
+       const cardId = card._id || `room_${card.roomNumber || cIdx}`;
+       const isCardSelected = Boolean(
+        (selectedRoomNumber && String(card.roomNumber || '').trim() === String(selectedRoomNumber).trim()) ||
+        (selectedRoomCardId &&
+         (isSameRoom(card, selectedRoomCardId) ||
+          selectedRoomCardId === cardId ||
+          (card._id && selectedRoomCardId === card._id) ||
+          String(selectedRoomCardId) === String(card.roomNumber)))
+       );
 
- const roomKey = String(card.roomNumber || card._id || cIdx);
- const baseCapacity = Math.max(1, Math.min(10, Number(card.capacity) || Number(rate.capacity) || 1));
- const capacity = localCapacities[roomKey] !== undefined ? localCapacities[roomKey] : baseCapacity;
- const occupiedCount = isMonthly
- ? Math.min(capacity, getRoomOccupiedCountInMonth(card, currentMonthKey, guests))
- : (isRoomOccupiedOnDate(card, todayISO, guests) ? 1 : 0);
- const isCardOccupied = isMonthly
- ? (occupiedCount >= capacity)
- : isRoomOccupiedOnDate(card, todayISO, guests);
- const isCardPartiallyOccupied = isMonthly && occupiedCount > 0 && occupiedCount < capacity;
+       const roomKey = String(card.roomNumber || card._id || cIdx);
+       const baseCapacity = Math.max(1, Math.min(10, Number(card.capacity) || Number(rate.capacity) || 1));
+       const capacity = localCapacities[roomKey] !== undefined ? localCapacities[roomKey] : baseCapacity;
+       const occupiedCount = isMonthly
+        ? Math.min(capacity, getRoomOccupiedCountInMonth(card, currentMonthKey, guests))
+        : (isRoomOccupiedOnDate(card, todayISO, guests) ? 1 : 0);
+       const isCardOccupied = isMonthly
+        ? (occupiedCount >= capacity)
+        : isRoomOccupiedOnDate(card, todayISO, guests);
+       const isCardPartiallyOccupied = isMonthly && occupiedCount > 0 && occupiedCount < capacity;
 
- return (
- <HostRoomCardItem
- key={cardId}
- card={card}
- cIdx={cIdx}
- categoryIndex={categoryIndex}
- cardId={cardId}
- isCardSelected={isCardSelected}
- isCardOccupied={isCardOccupied}
- isCardPartiallyOccupied={isCardPartiallyOccupied}
- capacity={capacity}
- occupiedCount={occupiedCount}
- isMonthly={isMonthly}
- compact={compact}
- onSelectCategoryIndex={onSelectCategoryIndex}
- onSelectRoomCardId={onSelectRoomCardId}
- setActiveDotIndex={setActiveDotIndex}
- onRemoveRoomCard={(cId, cData) => {
- markCategoryDirty?.(categoryIndex);
- return onRemoveRoomCard?.(cId, cData);
- }}
- onUpdateRoomNumber={(cId, newNum, idx, cData) => {
- markCategoryDirty?.(categoryIndex);
- return onUpdateRoomNumber?.(cId, newNum, idx, cData);
- }}
- onSaveCategory={onSaveCategory}
- onStepCapacity={handleStepCapacity}
- />
- );
- })}
- </div>
+       return (
+        <HostRoomCardItem
+         key={cardId}
+         card={card}
+         cIdx={cIdx}
+         categoryIndex={categoryIndex}
+         cardId={cardId}
+         isCardSelected={isCardSelected}
+         isCardOccupied={isCardOccupied}
+         isCardPartiallyOccupied={isCardPartiallyOccupied}
+         capacity={capacity}
+         occupiedCount={occupiedCount}
+         isMonthly={isMonthly}
+         compact={compact}
+         onSelectCategoryIndex={onSelectCategoryIndex}
+         onSelectRoomCardId={onSelectRoomCardId}
+         setActiveDotIndex={setActiveDotIndex}
+         onRemoveRoomCard={(cId, cData) => {
+          markCategoryDirty?.(categoryIndex);
+          return onRemoveRoomCard?.(cId, cData);
+         }}
+         onUpdateRoomNumber={(cId, newNum, idx, cData) => {
+          markCategoryDirty?.(categoryIndex);
+          return onUpdateRoomNumber?.(cId, newNum, idx, cData);
+         }}
+         onSaveCategory={onSaveCategory}
+         onStepCapacity={handleStepCapacity}
+        />
+       );
+      })}
+     </div>
 
- {/* Pager Dots for carousel when more than 3 rooms */}
- {matchingRooms.length > 3 && (
- <div className={`flex items-center justify-center ${compact ? 'gap-1 py-0.5' : 'gap-1.5 py-1'} select-none`}>
- {matchingRooms.map((rm, dotIdx) => (
- <button
- key={rm._id || `dot_${dotIdx}`}
- type="button"
- onClick={(e) => scrollToItem(dotIdx, e)}
- className={`transition-all duration-300 rounded-full cursor-pointer ${
- activeDotIndex === dotIdx
- ? compact ? 'w-4 h-1 max-md:bg-[#0284c7] md:bg-[#c0c1ff]' : 'w-5 h-1.5 max-md:bg-[#0284c7] md:bg-[#c0c1ff]'
- : compact ? 'w-1 h-1 max-md:bg-white/30 md:bg-slate-300 hover:bg-slate-400' : 'w-1.5 h-1.5 max-md:bg-white/30 md:bg-slate-300 hover:bg-slate-400'
- }`}
- title={`Room ${rm.roomNumber || dotIdx + 1}`}
- />
- ))}
- </div>
- )}
- </div>
- )}
- </div>
+     {/* Pager Dots for carousel when more than 2 rooms */}
+     {matchingRooms.length > 2 && (
+      <div className={`flex items-center justify-center ${compact ? 'gap-1.5 py-1' : 'gap-2 py-1.5'} select-none`}>
+       {matchingRooms.map((rm, dotIdx) => (
+        <button
+         key={rm._id || `dot_${dotIdx}`}
+         type="button"
+         onClick={(e) => scrollToItem(dotIdx, e)}
+         className={`transition-all duration-300 rounded-full cursor-pointer ${
+          activeDotIndex === dotIdx
+           ? compact ? 'w-5 h-1.5 bg-[#c0c1ff] shadow-xs' : 'w-6 h-1.5 bg-[#c0c1ff] shadow-xs'
+           : compact ? 'w-1.5 h-1.5 bg-white/35 hover:bg-white/60' : 'w-2 h-2 bg-white/35 hover:bg-white/60'
+         }`}
+         title={`Room ${rm.roomNumber || dotIdx + 1}`}
+        />
+       ))}
+      </div>
+     )}
+    </div>
+   )}
+  </div>
  );
 }
 
@@ -789,31 +791,26 @@ export default function HostRoomCategories({
 
         return createPortal(
           <div
-            className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 bg-[#121418]/60 backdrop-blur-xs cursor-pointer animate-in fade-in duration-200"
             onClick={() => setActiveModalCategoryIndex(null)}
           >
             <div
-              className="relative w-full max-w-xl sm:max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-150"
+              style={{
+                background:
+                  'linear-gradient(180deg, #5b9fe3 0%, #307ecf 8%, #1f67c7 18%, #144ba6 30%, #103788 44%, #0a2768 58%, #051640 72%, #020b20 86%, #000000 100%)',
+              }}
+              className="relative w-full max-w-xl sm:max-w-2xl rounded-3xl sm:rounded-[32px] shadow-[0_25px_60px_rgba(0,0,0,0.5)] border border-white/20 overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-150 cursor-default select-none"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Modal Header */}
-              <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <span className="material-symbols-outlined text-[24px] text-emerald-600">bedroom_parent</span>
-                  <div>
-                    <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight leading-tight truncate">
-                      {activeRate.type ? `${activeRate.type} Configuration` : 'New Room Category'}
-                    </h2>
-                    <p className="text-[11px] sm:text-xs text-slate-500 font-medium">
-                      Configure category details, pricing, room cards and photos
-                    </p>
-                  </div>
-                </div>
-
+              {/* Minimal Modal Header (matching LeftPropertiesPanel) */}
+              <div className="relative flex items-center justify-center px-4 py-3.5 sm:py-4 border-b border-white/15 shrink-0 bg-transparent">
+                <h2 className="text-[20px] sm:text-[22px] font-bold text-white tracking-tight leading-none text-center drop-shadow-xs">
+                  {activeRate.type ? `${activeRate.type} Configuration` : 'Room Configuration'}
+                </h2>
                 <button
                   type="button"
                   onClick={() => setActiveModalCategoryIndex(null)}
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-800 hover:bg-slate-200/70 transition-colors cursor-pointer active:scale-95 shrink-0"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-white/20 transition-colors cursor-pointer active:scale-95 shrink-0"
                   title="Close tab"
                 >
                   <span className="material-symbols-outlined text-[20px]">close</span>
@@ -821,7 +818,7 @@ export default function HostRoomCategories({
               </div>
 
               {/* Modal Body (Scrollable with all original fields just as it is) */}
-              <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1 overscroll-contain">
+              <div className="p-4 sm:p-5 overflow-y-auto overflow-x-hidden space-y-4 flex-1 overscroll-contain">
                 {/* 1. Category Name Preset Dropdown & Custom Input */}
                 <div className="flex flex-col gap-2">
                   <div className="relative flex items-center w-full">
@@ -844,7 +841,7 @@ export default function HostRoomCategories({
                           }
                         }
                       }}
-                      className="w-full h-12 rounded-xl pl-4 pr-10 text-[14px] sm:text-[15px] font-semibold text-slate-900 bg-white border border-slate-200 transition-all shadow-2xs focus:outline-none appearance-none cursor-pointer"
+                      className="w-full h-12 rounded-xl pl-4 pr-10 text-[14px] sm:text-[15px] font-semibold text-slate-900 bg-white/95 backdrop-blur-md border border-white/40 transition-all shadow-sm focus:outline-none appearance-none cursor-pointer"
                     >
                       <option value="" disabled className="text-slate-400">
                         Select Category (e.g. Single Bed, Double Bed...)
@@ -880,7 +877,7 @@ export default function HostRoomCategories({
                           onUpdateCategory(modalIndex, 'type', textOnly);
                         }}
                         placeholder="Enter Custom Category Name (e.g. Deluxe Suite)"
-                        className="w-full h-12 rounded-xl px-4 text-[14px] sm:text-[15px] font-semibold text-slate-900 bg-white border border-slate-200 transition-all shadow-2xs focus:outline-none"
+                        className="w-full h-12 rounded-xl px-4 text-[14px] sm:text-[15px] font-semibold text-slate-900 bg-white/95 backdrop-blur-md border border-white/40 transition-all shadow-sm focus:outline-none"
                         autoFocus
                       />
                     </motion.div>
@@ -888,7 +885,7 @@ export default function HostRoomCategories({
                 </div>
 
                 {/* 2. Price, Billing Cycle, and Capacity in ONE ROW */}
-                <div className="grid grid-cols-3 gap-2.5 items-center pb-3.5 border-b border-slate-100">
+                <div className="grid grid-cols-3 gap-2.5 items-center pb-3.5 border-b border-white/15">
                   {/* Price */}
                   <div className="relative flex items-center">
                     <input
@@ -900,7 +897,7 @@ export default function HostRoomCategories({
                         onUpdateCategory(modalIndex, 'price', numOnly ? `₹${numOnly}` : '');
                       }}
                       placeholder={isPg ? "₹ Price/person" : "₹ Price"}
-                      className="w-full h-12 rounded-xl px-3 text-[14px] sm:text-base font-semibold text-center text-emerald-700 bg-white border border-slate-200 shadow-2xs focus:outline-none transition-all"
+                      className="w-full h-12 rounded-xl px-3 text-[14px] sm:text-base font-bold text-center text-emerald-700 bg-white/95 backdrop-blur-md border border-white/40 shadow-sm focus:outline-none transition-all placeholder:text-slate-400"
                     />
                   </div>
 
@@ -912,7 +909,7 @@ export default function HostRoomCategories({
                         markCategoryDirty(modalIndex);
                         onUpdateCategory(modalIndex, 'rateUnit', e.target.value);
                       }}
-                      className="w-full h-12 rounded-xl pl-3 pr-7 text-[13px] font-medium bg-[#f7f4ee]/80 border border-slate-200 text-slate-800 shadow-2xs focus:outline-none transition-all appearance-none cursor-pointer truncate"
+                      className="w-full h-12 rounded-xl pl-3 pr-7 text-[13px] font-semibold bg-white/95 backdrop-blur-md border border-white/40 text-slate-900 shadow-sm focus:outline-none transition-all appearance-none cursor-pointer truncate"
                     >
                       <option value="/month">Per Month</option>
                       <option value="/night">Per Night</option>
@@ -923,7 +920,7 @@ export default function HostRoomCategories({
                   </div>
 
                   {/* Capacity Stepper */}
-                  <div className="w-full h-12 rounded-xl px-1.5 flex items-center justify-between bg-[#f7f4ee]/80 border border-slate-200 shadow-2xs">
+                  <div className="w-full h-12 rounded-xl px-1.5 flex items-center justify-between bg-white/95 backdrop-blur-md border border-white/40 shadow-sm">
                     <button
                       type="button"
                       disabled={Number(activeRate.capacity || 1) <= 1}
@@ -934,7 +931,7 @@ export default function HostRoomCategories({
                           onUpdateCategory(modalIndex, 'capacity', currentCap - 1);
                         }
                       }}
-                      className="w-10 h-10 flex items-center justify-center rounded-full bg-transparent text-slate-600 hover:text-slate-900 transition-all cursor-pointer font-medium text-2xl leading-none active:scale-125 disabled:opacity-20 disabled:cursor-not-allowed shrink-0"
+                      className="w-10 h-10 flex items-center justify-center rounded-full bg-transparent text-slate-700 hover:text-slate-950 transition-all cursor-pointer font-medium text-2xl leading-none active:scale-125 disabled:opacity-20 disabled:cursor-not-allowed shrink-0"
                       title="Decrease capacity"
                     >
                       −
@@ -961,7 +958,7 @@ export default function HostRoomCategories({
                 </div>
 
                 {/* 3. Rooms Carousel (Add Room Card + List) */}
-                <div>
+                <div className="w-full max-w-full overflow-hidden">
                   <CategoryRoomCarousel
                     matchingRooms={matchingRooms}
                     rate={activeRate}
@@ -994,16 +991,16 @@ export default function HostRoomCategories({
               </div>
 
               {/* Modal Footer */}
-              <div className="p-3.5 sm:p-4 px-5 border-t border-slate-100 bg-slate-50/90 flex items-center justify-between">
+              <div className="p-3.5 sm:p-4 px-5 border-t border-white/15 bg-black/60 backdrop-blur-md flex items-center justify-between">
                 <div className="flex items-center gap-2 shrink-0">
                   {isCategoryDirty ? (
-                    <div className="flex items-center gap-2 text-amber-600 font-semibold">
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
+                    <div className="flex items-center gap-2 text-amber-400 font-semibold">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" />
                       <span className="text-xs sm:text-sm">Unsaved changes</span>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2 text-emerald-600 font-semibold">
-                      <span className="material-symbols-outlined text-[20px] text-emerald-500">check_circle</span>
+                    <div className="flex items-center gap-2 text-emerald-400 font-semibold">
+                      <span className="material-symbols-outlined text-[20px] text-emerald-400">check_circle</span>
                       <span className="text-xs sm:text-sm">Saved</span>
                     </div>
                   )}
@@ -1017,7 +1014,7 @@ export default function HostRoomCategories({
                       onClick={async () => {
                         await handleUpdateCategoryClick(modalIndex);
                       }}
-                      className="h-10 px-5 rounded-full bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-semibold text-xs transition-all cursor-pointer shadow-sm"
+                      className="h-10 px-5 rounded-full bg-amber-500 hover:bg-amber-400 active:scale-95 text-white font-bold text-xs transition-all cursor-pointer shadow-sm"
                     >
                       {updatingCategoryIdx === modalIndex ? 'Saving...' : 'Save Changes'}
                     </button>
@@ -1026,7 +1023,7 @@ export default function HostRoomCategories({
                   <button
                     type="button"
                     onClick={() => setActiveModalCategoryIndex(null)}
-                    className="h-10 px-6 rounded-full bg-slate-900 hover:bg-black active:scale-95 text-white font-semibold text-xs transition-all cursor-pointer shadow-sm"
+                    className="h-10 px-6 rounded-full bg-white hover:bg-slate-100 active:scale-95 text-slate-900 font-bold text-xs transition-all cursor-pointer shadow-sm"
                   >
                     Done
                   </button>

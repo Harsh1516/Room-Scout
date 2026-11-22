@@ -270,7 +270,7 @@ export function UploadPerksRulesTab({
  <div className="space-y-2.5 sm:space-y-3">
  {/* Mobile-Only Heading (Outside, Centered) */}
  <div className="md:hidden text-center px-1 mb-2 mt-4">
- <h2 className="text-[22px] sm:text-2xl font-medium text-[#0c4a6e] font-bold tracking-tight">
+ <h2 className="text-[22px] font-bold text-slate-900 tracking-tight">
  House Rules & Policies
  </h2>
  </div>

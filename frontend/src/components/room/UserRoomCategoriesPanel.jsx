@@ -142,7 +142,7 @@ function UserCategoryRoomCarousel({
  <div
  ref={setScrollRef}
  onScroll={handleScroll}
- className={`flex items-stretch gap-2.5 pt-6 pb-7 px-6 -mx-2 -mt-3 -mb-3.5 scroll-pl-6 scroll-pr-6 scroll-smooth overscroll-x-contain no-scrollbar ${
+ className={`flex items-center gap-2.5 pt-6 pb-7 px-6 -mx-2 -mt-3 -mb-3.5 scroll-pl-6 scroll-pr-6 scroll-smooth overscroll-x-contain no-scrollbar ${
  matchingRooms.length > 2 ? 'overflow-x-auto snap-x snap-mandatory' : 'overflow-visible'
  }`}
  style={{
@@ -197,65 +197,95 @@ function UserCategoryRoomCarousel({
  onSelectRoom?.(rm);
  setActiveDotIndex(cIdx);
  }}
-  className={`group relative flex flex-col justify-between p-4 sm:p-5 w-[calc((100%-20px)/2.5)] min-w-[calc((100%-20px)/2.5)] max-w-[calc((100%-20px)/2.5)] h-[148px] sm:h-[158px] shrink-0 snap-start transition-opacity duration-150 select-none outline-none cursor-pointer ${
+  className={`group relative flex flex-col justify-between self-center p-2.5 sm:p-3 w-[140px] min-w-[140px] sm:w-[155px] sm:min-w-[155px] aspect-[180/196] shrink-0 snap-start transition-opacity duration-150 select-none outline-none cursor-pointer overflow-hidden ${
    isCardBooked ? isCardSelected ? 'opacity-100 z-10' : 'opacity-85 hover:opacity-100'
    : isCardSelected ? 'opacity-100 z-10' : 'opacity-90 hover:opacity-100'
    }`}
    style={{
-     maskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath fill='white' d='M 16 0 L 66 0 Q 72 0 76 4 L 96 28 Q 100 34 100 40 L 100 84 Q 100 100 84 100 L 16 100 Q 0 100 0 84 L 0 16 Q 0 0 16 0 Z'/%3E%3C/svg%3E")`,
+     maskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath fill='white' d='M 11 0 L 64 0 Q 69 0 73.8 4.6 L 95.5 25.5 Q 100 29.5 100 34 L 100 89 Q 100 100 89 100 L 11 100 Q 0 100 0 89 L 0 11 Q 0 0 11 0 Z'/%3E%3C/svg%3E")`,
      maskSize: '100% 100%',
-     WebkitMaskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath fill='white' d='M 16 0 L 66 0 Q 72 0 76 4 L 96 28 Q 100 34 100 40 L 100 84 Q 100 100 84 100 L 16 100 Q 0 100 0 84 L 0 16 Q 0 0 16 0 Z'/%3E%3C/svg%3E")`,
+     WebkitMaskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath fill='white' d='M 11 0 L 64 0 Q 69 0 73.8 4.6 L 95.5 25.5 Q 100 29.5 100 34 L 100 89 Q 100 100 89 100 L 11 100 Q 0 100 0 89 L 0 11 Q 0 0 11 0 Z'/%3E%3C/svg%3E")`,
      WebkitMaskSize: '100% 100%',
      background: isCardBooked
-        ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.04) 100%)'
+        ? 'linear-gradient(135deg, rgba(254, 240, 138, 0.28) 0%, rgba(245, 158, 11, 0.28) 30%, rgba(180, 83, 9, 0.50) 60%, rgba(69, 26, 3, 0.88) 100%)'
         : isCardSelected
-        ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.10) 100%)'
-        : 'linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.05) 100%)',
-     backdropFilter: 'blur(16px)',
-     WebkitBackdropFilter: 'blur(16px)',
+        ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.40) 0%, rgba(56, 189, 248, 0.35) 25%, rgba(14, 116, 144, 0.55) 60%, rgba(2, 6, 23, 0.92) 100%)'
+        : 'linear-gradient(135deg, rgba(255, 255, 255, 0.28) 0%, rgba(56, 189, 248, 0.22) 25%, rgba(14, 116, 144, 0.38) 55%, rgba(2, 6, 23, 0.88) 100%)',
+     backdropFilter: 'blur(20px)',
+     WebkitBackdropFilter: 'blur(20px)',
+     boxShadow: isCardSelected
+       ? '0 16px 36px -8px rgba(2, 132, 199, 0.5), 0 0 24px 2px rgba(56, 189, 248, 0.25), inset 0 1px 1px 0 rgba(255, 255, 255, 0.4)'
+       : '0 10px 25px -5px rgba(0, 0, 0, 0.35), 0 0 15px rgba(56, 189, 248, 0.1), inset 0 1px 1px 0 rgba(255, 255, 255, 0.25)',
    }}
  >
-   {/* Crisp SVG Glass Border Outline matching Pic 2 */}
-   <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+   {/* Ambient Glass Glow Highlight matching Pic 1 */}
+   <div className="absolute -top-10 -left-10 w-28 h-28 rounded-full bg-cyan-400/20 blur-xl pointer-events-none" />
+   <div className="absolute -bottom-10 -right-10 w-28 h-28 rounded-full bg-blue-600/15 blur-xl pointer-events-none" />
+
+   {/* Crisp SVG Glass Border Outline matching Pic 1 */}
+   <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 100 100" preserveAspectRatio="none">
+     <defs>
+       <linearGradient id={`glassUserStroke_${cardId}`} x1="0%" y1="0%" x2="100%" y2="100%">
+         {isCardSelected ? (
+           <>
+             <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
+             <stop offset="35%" stopColor="#38bdf8" stopOpacity="0.85" />
+             <stop offset="100%" stopColor="#0284c7" stopOpacity="0.5" />
+           </>
+         ) : isCardBooked ? (
+           <>
+             <stop offset="0%" stopColor="#fef08a" stopOpacity="0.8" />
+             <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.6" />
+             <stop offset="100%" stopColor="#b45309" stopOpacity="0.4" />
+           </>
+         ) : (
+           <>
+             <stop offset="0%" stopColor="#ffffff" stopOpacity="0.65" />
+             <stop offset="40%" stopColor="#bae6fd" stopOpacity="0.35" />
+             <stop offset="100%" stopColor="#ffffff" stopOpacity="0.15" />
+           </>
+         )}
+       </linearGradient>
+     </defs>
      <path
-       d="M 16 1.2 L 66 1.2 Q 72 1.2 75.8 4.8 L 95.2 28 Q 98.8 33.8 98.8 40 L 98.8 84 Q 98.8 98.8 84 98.8 L 16 98.8 Q 1.2 98.8 1.2 84 L 1.2 16 Q 1.2 1.2 16 1.2 Z"
+       d="M 11 1 L 64 1 Q 69 1 73.6 5.4 L 94.6 25.6 Q 99 29.5 99 34 L 99 89 Q 99 99 89 99 L 11 99 Q 1 99 1 89 L 1 11 Q 1 1 11 1 Z"
        fill="none"
-       stroke={isCardSelected ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.38)'}
-       strokeWidth={isCardSelected ? '2' : '1.2'}
+       stroke={`url(#glassUserStroke_${cardId})`}
+       strokeWidth={isCardSelected ? '1.8' : '1.2'}
        vectorEffect="non-scaling-stroke"
      />
    </svg>
 
        {/* Top: Status Tag with Sub-label */}
                     <div className="flex flex-col items-start leading-none z-10">
-                      <span className="text-[13px] sm:text-[14px] font-extrabold text-white leading-tight tracking-wider">
+                      <span className="text-[11px] sm:text-[12px] font-extrabold text-white leading-tight tracking-wider">
                         {isCardBooked ? 'BOOKED' : 'OPEN'}
                       </span>
-                      <span className="text-xs font-semibold text-white/85 tracking-wide mt-1">
+                      <span className="text-[9.5px] sm:text-[10px] font-semibold text-white/85 tracking-wide mt-0.5">
                         {isMonthly ? 'This Month' : 'Today'}
                       </span>
                     </div>
 
                     {/* Center: ROOM label and Room Number */}
                     <div className="flex flex-col items-center justify-center my-auto py-0.5 text-center z-10">
-                      <span className="block text-xs mb-0.5 font-bold tracking-wider text-white/90 leading-none">
+                      <span className="block text-[10px] sm:text-[11px] mb-0.5 font-bold tracking-wider text-white/90 leading-none">
                         ROOM
                       </span>
-                      <span className="block w-full text-center bg-transparent border-none outline-none p-0 leading-none text-[25px] sm:text-[28px] text-white font-black tracking-tight">
+                      <span className="block w-full text-center bg-transparent border-none outline-none p-0 leading-none text-[23px] sm:text-[26px] text-white font-black tracking-tight">
                         {cleanRoomNum}
                       </span>
                     </div>
 
                     {/* Bottom: CAP Pill on bottom-left, % Full on bottom-right (nightly only) */}
-                    <div className="w-full flex items-center justify-between z-10">
+                    <div className="w-full flex items-center justify-between z-10 pt-0.5">
                       <div
-                        className="w-fit inline-flex items-center gap-1.5 px-2 py-0.5 rounded-none bg-[#0066ff] shadow-sm select-none cursor-default"
+                        className="w-fit inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg bg-gradient-to-r from-blue-600 to-sky-500 shadow-md select-none cursor-default"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <span className="text-xs font-bold text-white tracking-wider leading-none">
+                        <span className="text-[9.5px] sm:text-[10px] font-bold text-white/90 tracking-wider leading-none">
                           CAP
                         </span>
-                        <span className="text-xs font-black text-white leading-none">
+                        <span className="text-[11px] sm:text-[12px] font-black text-white leading-none">
                           {roomCapacity}
                         </span>
                       </div>
