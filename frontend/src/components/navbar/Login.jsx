@@ -72,13 +72,18 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
  }, [dropdownOpen]);
 
 
- const handleLogout = () => {
- setActiveModal(null);
- setDropdownOpen(false);
- logout();
- toast.info('You have been logged out.');
- navigate('/');
- };
+ const handleLogout = async () => {
+    setActiveModal(null);
+    setDropdownOpen(false);
+    window.dispatchEvent(new Event('auth:logout'));
+    try {
+      await logout();
+    } catch (e) {
+      console.warn('Logout error:', e);
+    }
+    toast.info('You have been logged out.');
+    navigate('/');
+  };
 
  const markAllNotificationsRead = () => {
  setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
@@ -104,7 +109,7 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
  <button
  type="button"
  onClick={handleLoginClick}
- className="relative w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] rounded-full bg-[#4E75FF] hover:bg-[#3D64EE] text-white shadow-md flex items-center justify-center transition-all cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0"
+ className="relative w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] min-w-[54px] min-h-[54px] rounded-full bg-[#4E75FF] hover:bg-[#3D64EE] text-white shadow-md flex items-center justify-center transition-all cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0"
  title="Login"
  aria-label="Login"
  >
@@ -141,17 +146,17 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
  return (
  <>
  <div className="relative" ref={dropdownRef}>
- {/* Rounded Circular Profile Button */}
+ {/* Rounded Circular Profile Button (Exact same size as Back and Home buttons) */}
  <button
  type="button"
  onClick={() => setDropdownOpen((prev) => !prev)}
- className={`relative ${iconOnly ? "w-[54px] h-[54px] sm:w-[56px] sm:h-[56px]" : "w-13 h-13 sm:w-14 sm:h-14"} rounded-full text-white font-medium shadow-md border-2 border-white/40 hover:shadow-lg transition-all flex items-center justify-center cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 touch-manipulation bg-[#4E75FF] shrink-0`}
+ className="relative w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] min-w-[54px] min-h-[54px] rounded-full text-white font-medium shadow-md border-2 border-white/40 hover:shadow-lg transition-all flex items-center justify-center cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 touch-manipulation bg-[#4E75FF] shrink-0"
  title={`Logged in as ${user.name}`}
  aria-label="User profile menu"
  >
- <span className={`flex items-center justify-center leading-none select-none tracking-tight font-medium ${iconOnly ? "text-[15px] sm:text-base font-semibold" : "text-sm sm:text-base"}`}>{initials}</span>
+ <span className="flex items-center justify-center leading-none select-none tracking-tight font-semibold text-[15px] sm:text-base">{initials}</span>
  {/* Online indicator dot with white ring */}
- <span className={`absolute bottom-0 right-0 ${iconOnly ? "w-3.5 h-3.5 sm:w-4 sm:h-4" : "w-3.5 h-3.5 sm:w-4 sm:h-4"} rounded-full bg-[#10B981] ring-2 ring-white`} />
+ <span className="absolute bottom-0 right-0 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-[#10B981] ring-2 ring-white" />
  </button>
 
  {/* Small Sleek Dropdown Menu Tab (Pure White Background with No Transparency) */}
@@ -306,11 +311,11 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
 
  {/* Logout Button */}
  <button
- type="button"
- onClick={() => {
- setDropdownOpen(false);
- setActiveModal('logout');
- }}
+                  type="button"
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    setActiveModal('logout');
+                  }}
  className="group w-full text-left px-3.5 py-2.5 min-h-[46px] rounded-2xl text-[15px] sm:text-[16px] font-semibold text-rose-600 bg-transparent hover:bg-rose-50 border border-transparent hover:border-rose-200 flex items-center gap-3 cursor-pointer active:scale-98 transition-all duration-150 focus:outline-none focus:ring-0"
  >
  <div className="w-8 h-8 rounded-xl bg-rose-500/15 text-rose-600 flex items-center justify-center border border-rose-500/25 group-hover:scale-105 group-hover:bg-rose-500/25 transition-all duration-150 shrink-0">
@@ -336,7 +341,12 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
  <AnimatePresence>
  {/* 1. LOGOUT CONFIRMATION MODAL */}
  {activeModal === 'logout' && (
- <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+ <div
+                role="dialog"
+                aria-modal="true"
+                data-modal="true"
+                className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-auto"
+              >
  {/* Blurred Backdrop */}
  <motion.div
  initial={{ opacity: 0 }}

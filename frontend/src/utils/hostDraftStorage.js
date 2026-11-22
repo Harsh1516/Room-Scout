@@ -45,6 +45,14 @@ export const WIZARD_STEPS = [
     sub: 'Room categories & pricing',
     desc: 'Configure your room rates and room cards, then review before publishing live.',
   },
+  {
+    id: 6,
+    key: 'upi',
+    title: 'UPI & Payment Setup',
+    shortTitle: 'UPI & Payments',
+    sub: 'Direct UPI payment setup',
+    desc: 'Configure your UPI ID and display name to receive direct tenant bookings and rent.',
+  },
 ];
 
 export const hostPropertySchema = z
@@ -72,6 +80,14 @@ export const hostPropertySchema = z
       .trim()
       .min(10, 'Property description must be at least 10 characters')
       .max(MAX_DESCRIPTION_CHARS, `Property description cannot exceed ${MAX_DESCRIPTION_CHARS} characters`),
+    upiId: z
+      .string()
+      .trim()
+      .min(3, 'UPI ID is required')
+      .regex(/^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/, 'Invalid UPI ID format (e.g. user@bank)')
+      .optional()
+      .or(z.literal('')),
+    payeeName: z.string().trim().min(2, 'Payee display name must be at least 2 characters').optional().or(z.literal('')),
   })
   .passthrough();
 
@@ -97,6 +113,8 @@ export const DEFAULT_HOST_FORM_DATA = {
   images: [],
   instagramVideoUrl: '',
   description: '',
+  upiId: '',
+  payeeName: '',
   facilities: [],
   amenities: [],
   rules: [],

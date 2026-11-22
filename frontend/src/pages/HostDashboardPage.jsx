@@ -27,9 +27,6 @@ const PropertyDetailsSection = lazy(() =>
 const PropertyArchitecturalBackground = lazy(() =>
  import('../components/common/PropertyArchitecturalBackground').then((m) => ({ default: m.PropertyArchitecturalBackground }))
 );
-const HostPaymentSettingsSection = lazy(() =>
- import('../components/host/HostPaymentSettingsSection').then((m) => ({ default: m.HostPaymentSettingsSection }))
-);
 
 function DashboardSkeletonLoader() {
  return (
@@ -53,7 +50,7 @@ export function HostDashboardPage() {
  if (typeof window !== 'undefined' && window.sessionStorage) {
  try {
  const saved = window.sessionStorage.getItem('roomscout_host_active_tab');
- if (saved && ['property', 'room', 'users', 'paid', 'payment'].includes(saved)) {
+ if (saved && ['property', 'room', 'users', 'paid'].includes(saved)) {
  return saved;
  }
  } catch {
@@ -269,7 +266,7 @@ export function HostDashboardPage() {
  {/* Main Tab Workspace */}
  <main
  className={`w-full flex-1 relative bg-transparent text-slate-800 font-body-md antialiased flex flex-col selection:bg-[#a855f7] selection:text-[#1f1b16] ${
- activeTab === 'users' || activeTab === 'room' || activeTab === 'property'
+ activeTab === 'users' || activeTab === 'room'
  ? 'lg:h-[calc(100vh-4.75rem)] lg:overflow-hidden lg:min-h-0'
  : 'min-h-[calc(100vh-4rem)] overflow-x-hidden'
  }`}
@@ -402,17 +399,6 @@ export function HostDashboardPage() {
  </div>
  )}
 
- {/* 5. UPI & Payment Settings Tab */}
- {activeTab === 'payment' && (
- <div
- key="console-tab-payment"
- className="w-full flex-1 flex flex-col px-3 sm:px-6 pt-3 sm:pt-4 pb-28 sm:pb-32 lg:pb-8 max-w-[1200px] mx-auto overflow-y-auto"
- >
- <Suspense fallback={<DashboardSkeletonLoader />}>
- <HostPaymentSettingsSection hostProperty={hostProperty} />
- </Suspense>
- </div>
- )}
  </div>
  </main>
 

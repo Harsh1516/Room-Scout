@@ -362,6 +362,9 @@ export const createHost = async (req, res, next) => {
       instagramVideoUrl,
       description,
       status,
+      upiId,
+      payeeName,
+      upiSettings,
     } = req.body;
 
     const cleanEmail = (email || req.user?.email || '').trim().toLowerCase();
@@ -609,6 +612,21 @@ export const createHost = async (req, res, next) => {
       isApproved: isApprovedHost,
       isPublished: isApprovedHost && hasActiveSub,
     };
+
+    const cleanUpi = String(upiId || upiSettings?.upiId || '').trim();
+    const cleanPayee = String(payeeName || upiSettings?.payeeName || host.name || resolvedTitle).trim();
+    if (cleanUpi) {
+      host.upiSettings = {
+        upiId: cleanUpi,
+        payeeName: cleanPayee,
+        qrCodeUrl: host.upiSettings?.qrCodeUrl || '',
+        isConfigured: true,
+        isVerified: true,
+        updatedAt: new Date(),
+      };
+      await host.save();
+      stayPayload.upiSettings = host.upiSettings;
+    }
 
     const updatedStay = await Stay.findOneAndUpdate(
       { hostId: host._id },

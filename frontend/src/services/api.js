@@ -227,6 +227,7 @@ export const authAPI = {
  }),
 
  getProfile: () => request('/auth/me'),
+ logout: () => request('/auth/logout', { method: 'POST' }).catch(() => {}),
 };
 
 export const staysAPI = {

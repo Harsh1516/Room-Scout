@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { subscriptionsAPI, API_BASE_URL } from '../services/api';
 import { toast } from '../context/ToastContext';
+import { Left } from '../components/navbar/Left';
+import { Login } from '../components/navbar/Login';
 import { getSocket } from '../services/socket';
 
 // Local storage caching helpers to prevent any reload, flash, or blank frame
@@ -205,43 +207,46 @@ export function HostSubscriptionPage() {
       </div>
 
       {/* ── Top Header Navigation Bar (Matches Host Dashboard & Bottom Console size) ── */}
-      <header className="relative w-full h-16 sm:h-20 pointer-events-none select-none z-50 font-body-md antialiased">
-        {/* Left Floating Island: Back Button */}
-        <div className="fixed top-2.5 sm:top-5 left-2.5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none h-12 sm:h-13">
+      <header className="relative w-full h-[70px] sm:h-[88px] pointer-events-none select-none z-50 font-body-md antialiased">
+        {/* Left Floating Island: Circular Back Button (<Left />) */}
+        <Left showBadge={false} onBack={handleBack} fallbackUrl="/host/dashboard" />
+
+        {/* Right Floating Island: Buy / Renew Plan Button + User Dashboard + Profile */}
+        <div className="fixed top-2.5 sm:top-5 right-2.5 sm:right-6 z-50 flex items-center gap-2 sm:gap-2.5 pointer-events-auto select-none h-[54px] sm:h-[56px]">
           <button
             type="button"
-            onClick={handleBack}
+            onClick={() => navigate('/host/subscription/buy')}
+            className="hidden sm:inline-flex items-center justify-center h-[54px] sm:h-[56px] px-5 sm:px-6 gap-1.5 rounded-full bg-[#1f1b16] hover:bg-black text-white text-sm sm:text-base font-semibold shadow-sm transition-all cursor-pointer select-none active:scale-95 shrink-0 tracking-tight"
+            title="Buy or Renew Subscription Plan"
+          >
+            <svg className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 stroke-[1.8]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+            <span>Buy Plan</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/')}
             data-no-hover="true"
-            className="inline-flex items-center justify-center h-11 sm:h-12 md:h-13 px-4.5 sm:px-5.5 gap-2 rounded-full bg-white text-slate-700 text-sm md:text-base font-medium shadow-[0_4px_16px_rgba(0,0,0,0.06)] md:shadow-md border border-slate-200/90 hover:bg-slate-50 md:hover:bg-[#f7f4ee] transition-all cursor-pointer select-none active:scale-95 shrink-0"
-            title="Return to Dashboard"
+            className="w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] min-w-[54px] min-h-[54px] rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-sm hover:bg-[#f7f4ee] flex items-center justify-center transition-all cursor-pointer select-none active:scale-95 shrink-0"
+            title="Switch to User Dashboard"
+            aria-label="User Dashboard"
           >
             <svg
-              className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-slate-600 stroke-[2] shrink-0"
+              className="w-6 h-6 sm:w-6.5 sm:h-6.5 text-slate-700 stroke-[2.2] shrink-0"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <path d="M15.75 19.5L8.25 12l7.5-7.5" />
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
             </svg>
-            <span className="flex items-center justify-center leading-none tracking-tight">Back</span>
           </button>
-        </div>
-
-        {/* Right Floating Island: Buy / Renew Plan Button */}
-        <div className="fixed top-2.5 sm:top-5 right-2.5 sm:right-6 z-50 flex items-center gap-2 pointer-events-auto select-none h-12 sm:h-13">
-          <button
-            type="button"
-            onClick={() => navigate('/host/subscription/buy')}
-            className="inline-flex items-center justify-center min-h-[48px] sm:min-h-[52px] px-5 sm:px-6 gap-1.5 rounded-full bg-slate-900 hover:bg-black md:bg-sky-600 md:hover:bg-sky-500 text-white text-sm sm:text-base font-semibold shadow-[0_4px_16px_rgba(15,23,42,0.15)] md:shadow-md md:shadow-sky-600/25 transition-all cursor-pointer select-none active:scale-95 shrink-0 tracking-tight"
-            title="Buy or Renew Subscription Plan"
-          >
-            <svg className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 stroke-[1.8]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-            </svg>
-            <span className="flex items-center justify-center leading-none tracking-tight">Buy Plan</span>
-          </button>
+          <div className="relative flex items-center justify-center h-[54px] sm:h-[56px] shrink-0">
+            <Login />
+          </div>
         </div>
       </header>
 

@@ -12,9 +12,16 @@ export function Right({ onLoginClick, onOpenBookings, bookingsCount, isHidden = 
   const menuRef = useRef(null);
 
   useEffect(() => {
+    const handleAuthLogout = () => setMobileMenuOpen(false);
+    window.addEventListener('auth:logout', handleAuthLogout);
+    return () => window.removeEventListener('auth:logout', handleAuthLogout);
+  }, []);
+
+  useEffect(() => {
     if (!mobileMenuOpen) return;
 
     const handlePointerDown = (e) => {
+      if (e.target?.closest?.('.apple-profile-dropdown, [role="dialog"], [data-modal="true"], .fixed')) return;
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setMobileMenuOpen(false);
       }

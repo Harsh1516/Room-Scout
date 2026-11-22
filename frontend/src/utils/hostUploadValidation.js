@@ -121,6 +121,38 @@ export const validateHostStep = (stepNumber, formData, setFieldErrors = () => {}
     return true;
   }
 
+  if (stepNumber === 6) {
+    const cleanUpi = (formData?.upiId || '').trim();
+    const cleanPayee = (formData?.payeeName || '').trim();
+    const isValidVpa = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/.test(cleanUpi);
+
+    if (!cleanUpi) {
+      if (shouldSetErrors) {
+        setFieldErrors((prev) => ({ ...prev, upiId: 'Host UPI ID (VPA) is required.' }));
+        toast.error('Enter UPI ID (e.g. mobile@upi)');
+      }
+      return false;
+    }
+
+    if (!isValidVpa) {
+      if (shouldSetErrors) {
+        setFieldErrors((prev) => ({ ...prev, upiId: 'Invalid UPI ID format. Expected: username@bank.' }));
+        toast.error('Invalid UPI ID format');
+      }
+      return false;
+    }
+
+    if (!cleanPayee || cleanPayee.length < 2) {
+      if (shouldSetErrors) {
+        setFieldErrors((prev) => ({ ...prev, payeeName: 'Payee display name must be at least 2 characters.' }));
+        toast.error('Payee name min 2 chars');
+      }
+      return false;
+    }
+
+    return true;
+  }
+
   return true;
 };
 

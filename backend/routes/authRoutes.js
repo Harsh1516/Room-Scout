@@ -14,6 +14,7 @@ import {
   deleteAccount,
   getUserProfile,
   testEmailService,
+  logoutUser,
 } from '../controllers/authController.js';
 import { protect, requireAdmin } from '../middleware/authMiddleware.js';
 import validate from '../middleware/validateMiddleware.js';
@@ -44,6 +45,7 @@ router.route('/login').post(authCampusCeilingLimiter, authLimiter, validate(logi
 router.route('/verify-login-otp').post(authCampusCeilingLimiter, authLimiter, validate(verifyOtpSchema), verifyLoginOtp);
 router.route('/resend-otp').post(authCampusCeilingLimiter, authLimiter, validate(resendOtpSchema), resendOtp);
 router.route('/google').post(authCampusCeilingLimiter, authLimiter, googleAuth);
+router.route('/logout').post(logoutUser).get(logoutUser);
 router.route('/forgot-password').post(passwordResetCampusCeilingLimiter, passwordResetLimiter, validate(forgotPasswordSchema), forgotPassword);
 router.route('/test-email').post(passwordResetLimiter, protect, requireAdmin, testEmailService);
 

@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { adminAPI, staysAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
+import { Left } from '../components/navbar/Left';
 import { Login } from '../components/navbar/Login';
 
 export function HostRoomsPage() {
@@ -226,45 +227,55 @@ export function HostRoomsPage() {
  return (
  <div className="min-h-screen bg-white text-slate-800 flex flex-col host-page-scope font-body-md antialiased overflow-x-clip selection:bg-custom-btn-primary selection:text-white relative">
  {/* Top Header Navbar */}
- <header className="sticky top-0 z-40 bg-white/95 border-b border-slate-200/80 shadow-2xs">
- <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 h-15 flex items-center justify-between gap-3">
- <div className="flex items-center gap-2">
- <button
- type="button"
- onClick={handleBackToDashboard}
- className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-100/80 text-slate-700 text-xs font-semibold transition-all cursor-pointer shadow-2xs active:scale-[0.98]"
- title="Back to Dashboard"
- >
- <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
- <line x1="19" y1="12" x2="5" y2="12" />
- <polyline points="12 19 5 12 12 5" />
- </svg>
- <span>Back</span>
- </button>
- </div>
+ <header className="relative w-full h-[70px] sm:h-[88px] pointer-events-none select-none z-50 font-body-md antialiased">
+        {/* Left Floating Island: Circular Back Button */}
+        <Left showBadge={false} onBack={handleBackToDashboard} fallbackUrl="/host/dashboard" />
 
- <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl border border-slate-200/60 shadow-inner">
- <span className="px-4 py-1.5 rounded-xl text-xs font-semibold bg-white text-[#1f1b16] shadow-xs">
- Room Cards Manager • {activeRate.type} ({activeRate.price}{activeRate.rateUnit})
- </span>
- </div>
+        {/* Center Floating Island: Room Info Pill */}
+        <div className="hidden sm:flex fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 items-center pointer-events-auto select-none h-[54px] sm:h-[56px]">
+          <div className="flex items-center px-4 sm:px-5 h-[54px] sm:h-[56px] rounded-full bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-sm text-xs sm:text-sm font-semibold text-[#1f1b16]">
+            Room Cards Manager • {activeRate.type} ({activeRate.price}{activeRate.rateUnit})
+          </div>
+        </div>
 
- <div className="flex items-center gap-2.5 shrink-0">
- <button
- type="button"
- disabled={isSaving}
- onClick={handleSaveAndReturn}
- className="px-4 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-all cursor-pointer disabled:opacity-50 shadow-xs active:scale-95 flex items-center gap-1.5"
- >
- {isSaving ? 'Saving...' : 'Save Rooms'}
- </button>
- <Login />
- </div>
- </div>
- </header>
+        {/* Right Floating Island: Save Rooms Button + User Dashboard + Profile */}
+        <div className="fixed top-2.5 sm:top-5 right-2.5 sm:right-6 z-50 flex items-center gap-2 sm:gap-2.5 pointer-events-auto select-none h-[54px] sm:h-[56px]">
+          <button
+            type="button"
+            disabled={isSaving}
+            onClick={handleSaveAndReturn}
+            className="inline-flex items-center justify-center h-[54px] sm:h-[56px] px-5 sm:px-6 rounded-full bg-[#1f1b16] hover:bg-black text-white text-xs sm:text-sm font-semibold transition-all cursor-pointer disabled:opacity-50 shadow-sm active:scale-95"
+          >
+            {isSaving ? 'Saving...' : 'Save Rooms'}
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            data-no-hover="true"
+            className="w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] min-w-[54px] min-h-[54px] rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-sm hover:bg-[#f7f4ee] flex items-center justify-center transition-all cursor-pointer select-none active:scale-95 shrink-0"
+            title="Switch to User Dashboard"
+            aria-label="User Dashboard"
+          >
+            <svg
+              className="w-6 h-6 sm:w-6.5 sm:h-6.5 text-slate-700 stroke-[2.2] shrink-0"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+          </button>
+          <div className="relative flex items-center justify-center h-[54px] sm:h-[56px] shrink-0">
+            <Login />
+          </div>
+        </div>
+      </header>
 
  {/* Main Content Area */}
- <main className="flex-1 w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 py-6 space-y-6 overflow-x-clip">
+ <main className="flex-1 w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 pt-24 pb-12 px-3 sm:px-6 lg:px-8 space-y-6 overflow-x-clip">
  <div className="p-5 rounded-xl bg-white border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
  <div>
  <div className="flex items-center gap-2">

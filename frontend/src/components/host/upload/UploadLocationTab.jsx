@@ -74,24 +74,19 @@ export function UploadLocationTab({
  )}
  </div>
 
- {/* Import Button */}
+ {/* Import Button (Circular with icon in center) */}
  <button
  type="button"
  onClick={handleImportGoogleMaps}
  disabled={isImportingGMap || !googleMapsUrl?.trim()}
- className="h-9 sm:h-10 px-3.5 sm:px-5 rounded-full max-md:bg-gradient-to-r max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:text-white md:bg-[#006C4A] md:hover:bg-[#005a3e] md:text-white text-xs sm:text-sm font-semibold shadow-xs active:scale-95 transition-all shrink-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+ className="w-10 h-10 sm:w-11 sm:h-11 min-w-[40px] min-h-[40px] rounded-full max-md:bg-gradient-to-r max-md:from-[#0ea5e9] max-md:to-[#0284c7] max-md:text-white md:bg-[#006C4A] md:hover:bg-[#005a3e] md:text-white shadow-xs active:scale-95 transition-all shrink-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center"
  title="Import location coordinates and address"
+ aria-label="Import location"
  >
  {isImportingGMap ? (
- <>
- <div className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin shrink-0" />
- <span className="hidden sm:inline">Importing...</span>
- </>
+ <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin shrink-0" />
  ) : (
- <>
- <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
- <span>Import</span>
- </>
+ <Download className="w-4.5 h-4.5 sm:w-5 sm:h-5 shrink-0 stroke-[2.2]" />
  )}
  </button>
  </div>

@@ -1179,3 +1179,21 @@ export const testEmailService = async (req, res, next) => {
     return next(error);
   }
 };
+
+// @desc    Logout user and clear auth cookie
+// @route   POST /api/auth/logout
+// @access  Public
+export const logoutUser = async (req, res) => {
+  try {
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.clearCookie('roomscout_token', {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+      path: '/',
+    });
+    return res.status(200).json({ success: true, message: 'Logged out successfully.' });
+  } catch (err) {
+    return res.status(200).json({ success: true, message: 'Logged out.' });
+  }
+};

@@ -5,7 +5,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { z } from 'zod';
 import { ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { adminAPI, staysAPI } from '../services/api';
+import { adminAPI, staysAPI, paymentsAPI } from '../services/api';
+import { Left } from '../components/navbar/Left';
 import { Login } from '../components/navbar/Login';
 import { toast } from '../context/ToastContext';
 import { HostUploadTabs } from '../components/host/HostUploadTabs';
@@ -18,6 +19,7 @@ import { UploadLocationTab } from '../components/host/upload/UploadLocationTab';
 import { UploadPerksRulesTab } from '../components/host/upload/UploadPerksRulesTab';
 import { UploadPhotosTab } from '../components/host/upload/UploadPhotosTab';
 import { UploadRoomsPricingTab } from '../components/host/upload/UploadRoomsPricingTab';
+import { UploadUpiTab } from '../components/host/upload/UploadUpiTab';
 import { saveImagesToIndexedDB, loadImagesFromIndexedDB, clearImagesFromIndexedDB } from '../utils/draftStorage';
 
 import {
@@ -45,13 +47,13 @@ export function HostUploadPage() {
   const { user, updateUserSession } = useAuth();
 
 
-  // Stepper state (1 to 5) initialized from navigation state or draft
+  // Stepper state (1 to 6) initialized from navigation state or draft
   const [activeStep, setActiveStep] = useState(() => {
-    if (location.state?.initialStep && Number(location.state.initialStep) >= 1 && Number(location.state.initialStep) <= 5) {
+    if (location.state?.initialStep && Number(location.state.initialStep) >= 1 && Number(location.state.initialStep) <= 6) {
       return Number(location.state.initialStep);
     }
     const draft = loadDraftFromStorage(user);
-    if (draft?.activeStep && Number(draft.activeStep) >= 1 && Number(draft.activeStep) <= 5) {
+    if (draft?.activeStep && Number(draft.activeStep) >= 1 && Number(draft.activeStep) <= 6) {
       return Number(draft.activeStep);
     }
     return 1;
@@ -236,6 +238,27 @@ export function HostUploadPage() {
         });
       }
     });
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.email, user?._id]);
+
+  // Pre-hydrate host UPI account settings if available on backend
+  useEffect(() => {
+    let isMounted = true;
+    paymentsAPI
+      .getHostPaymentSettings()
+      .then((res) => {
+        if (!isMounted) return;
+        if (res?.success && res?.upiSettings) {
+          setFormData((prev) => ({
+            ...prev,
+            upiId: prev.upiId || res.upiSettings.upiId || '',
+            payeeName: prev.payeeName || res.upiSettings.payeeName || prev.propertyName || prev.name || user?.name || '',
+          }));
+        }
+      })
+      .catch(() => {});
     return () => {
       isMounted = false;
     };
@@ -656,7 +679,14 @@ export function HostUploadPage() {
     const isValid = validateStep(activeStep, true);
     if (!isValid) return;
 
-    if (activeStep < 5) {
+    if (activeStep === 5 && !formData.payeeName) {
+      setFormData((prev) => ({
+        ...prev,
+        payeeName: prev.payeeName || prev.propertyName || prev.name || user?.name || '',
+      }));
+    }
+
+    if (activeStep < WIZARD_STEPS.length) {
       setActiveStep((prev) => prev + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -715,8 +745,8 @@ export function HostUploadPage() {
       return;
     }
 
-    // Verify all 5 steps are completely filled before submitting
-    for (let s = 1; s <= 5; s++) {
+    // Verify all steps are completely filled before submitting
+    for (let s = 1; s <= WIZARD_STEPS.length; s++) {
       if (!validateStep(s, true)) {
         setActiveStep(s);
         const stepMeta = WIZARD_STEPS.find((st) => st.id === s);
@@ -813,11 +843,31 @@ export function HostUploadPage() {
 
     try {
       setIsSubmitting(true);
+
+      // Persist host UPI settings via dedicated payment settings endpoint
+      if (formData.upiId && formData.payeeName) {
+        try {
+          await paymentsAPI.updateHostPaymentSettings({
+            upiId: formData.upiId.trim(),
+            payeeName: formData.payeeName.trim(),
+          });
+        } catch (upiErr) {
+          console.warn('Could not update host payment settings via paymentsAPI:', upiErr);
+        }
+      }
+
       const res = await adminAPI.createHost({
         ...formData,
         name: formData.name.trim(),
         email: (formData.email || user?.email || '').trim().toLowerCase(),
         phone: formattedHostPhone,
+        upiId: (formData.upiId || '').trim(),
+        payeeName: (formData.payeeName || '').trim(),
+        upiSettings: {
+          upiId: (formData.upiId || '').trim(),
+          payeeName: (formData.payeeName || '').trim(),
+          isConfigured: true,
+        },
         facilities: (formData.facilities?.length > 0 ? formData.facilities : formData.amenities) || [],
         amenities: (formData.facilities?.length > 0 ? formData.facilities : formData.amenities) || [],
         rules: formData.rules || [],
@@ -888,37 +938,21 @@ export function HostUploadPage() {
     <div className="bg-[#F4F4F6] text-slate-800 host-page-scope font-body-md antialiased min-h-screen flex flex-col justify-between relative selection:bg-[#006C4A] selection:text-white transition-colors duration-300">
 
       {/* ── Top Header Navigation Bar (Floating Liquid Glass Islands matching Host Dashboard / Pic 2) ── */}
-      <header className="relative w-full h-[70px] sm:h-[88px] pointer-events-none select-none z-50 font-body-md host-font-scope antialiased">
-        {/* ── 1. LEFT FLOATING ISLAND: BACK BUTTON (Only visible after host registers a property) ── */}
+      <header className="relative w-full h-[70px] sm:h-[88px] pointer-events-none select-none z-50 font-body-md antialiased">
+        {/* ── 1. LEFT FLOATING ISLAND: CIRCULAR BACK BUTTON ── */}
         {hasUploadedProperty && (
-          <div className="fixed top-2.5 sm:top-5 left-2.5 sm:left-6 z-50 flex items-center gap-2 pointer-events-auto select-none h-13 sm:h-[54px]">
-            <button
-              type="button"
-              onClick={() => {
-                saveDraftToStorage(formData, activeStep, googleMapsUrl, user);
-                navigate('/host/dashboard');
-              }}
-              data-no-hover="true"
-              className="inline-flex items-center justify-center h-13 sm:h-[54px] px-4 sm:px-5.5 gap-2 rounded-full bg-white text-slate-800 text-sm sm:text-base font-semibold shadow-sm border border-slate-200/90 hover:bg-slate-50 transition-colors cursor-pointer select-none active:scale-95 shrink-0"
-              title="Return to Host Dashboard"
-            >
-              <svg
-                className="w-4.5 h-4.5 text-slate-700 stroke-[2.2] shrink-0"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M15.75 19.5L8.25 12l7.5-7.5" />
-              </svg>
-              <span className="flex items-center justify-center leading-none tracking-tight">Back</span>
-            </button>
-          </div>
+          <Left
+            showBadge={false}
+            onBack={() => {
+              saveDraftToStorage(formData, activeStep, googleMapsUrl, user);
+              navigate('/host/dashboard');
+            }}
+            fallbackUrl="/host/dashboard"
+          />
         )}
 
         {/* ── 2. CENTER FLOATING ISLAND: NAVIGATION TABS (DESKTOP) & STEP COUNTER (MOBILE) ── */}
-        <div className="hidden md:flex fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 items-center pointer-events-auto select-none h-13 sm:h-[54px]">
+        <div className="hidden md:flex fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 items-center pointer-events-auto select-none h-[54px] sm:h-[56px]">
           <HostUploadTabs
             steps={WIZARD_STEPS}
             activeStep={activeStep}
@@ -928,33 +962,25 @@ export function HostUploadPage() {
           />
         </div>
 
-        {/* Mobile Center Step Count Badge */}
-        <div className="md:hidden fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 pointer-events-auto select-none h-13 sm:h-[54px] flex items-center">
-          <div className="inline-flex items-center justify-center h-13 sm:h-[54px] px-4.5 sm:px-5.5 rounded-full bg-white text-slate-800 text-sm sm:text-base font-bold shadow-sm border border-slate-200/90 shrink-0 select-none">
-            <span className="tracking-tight uppercase leading-none flex items-center justify-center">
-              Step {activeStep} of {WIZARD_STEPS.length}
-            </span>
-          </div>
+        {/* Mobile Center Step Count Badge (Background removed) */}
+        <div className="md:hidden fixed top-2.5 sm:top-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none select-none h-[54px] sm:h-[56px] flex items-center justify-center">
+          <span className="text-slate-800 text-xs sm:text-sm font-extrabold tracking-wider uppercase leading-none select-none">
+            Step {activeStep} of {WIZARD_STEPS.length}
+          </span>
         </div>
 
-        {/* ── 3. RIGHT FLOATING ISLAND: USER AVATAR + USER DASHBOARD ── */}
-        <div className="fixed top-2.5 sm:top-5 right-2.5 sm:right-6 z-50 flex flex-col items-end gap-2 pointer-events-auto select-none">
-          <div className="flex items-center gap-2 h-13 sm:h-[54px]">
-            <div className="relative flex items-center justify-center h-13 sm:h-[54px]">
-              <Login />
-            </div>
-          </div>
-
-          {/* User Dashboard Circular Button at bottom of Profile Icon */}
+        {/* ── 3. RIGHT FLOATING ISLAND: USER DASHBOARD BUTTON + PROFILE BUTTON ── */}
+        <div className="fixed top-2.5 sm:top-5 right-2.5 sm:right-6 z-50 flex items-center gap-2 sm:gap-2.5 pointer-events-auto select-none h-[54px] sm:h-[56px]">
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="relative w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-sm hover:bg-slate-50 hover:shadow-md flex items-center justify-center font-bold transition-all cursor-pointer select-none active:scale-95 shrink-0"
+            data-no-hover="true"
+            className="w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] min-w-[54px] min-h-[54px] rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-sm hover:bg-[#f7f4ee] flex items-center justify-center transition-all cursor-pointer select-none active:scale-95 shrink-0"
             title="Switch to User Dashboard"
             aria-label="User Dashboard"
           >
             <svg
-              className="w-5.5 h-5.5 sm:w-6 sm:h-6 text-purple-600 stroke-[2.2] shrink-0"
+              className="w-6 h-6 sm:w-6.5 sm:h-6.5 text-slate-700 stroke-[2.2] shrink-0"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -965,6 +991,9 @@ export function HostUploadPage() {
               <polyline points="9 22 9 12 15 12 15 22" />
             </svg>
           </button>
+          <div className="relative flex items-center justify-center h-[54px] sm:h-[56px] shrink-0">
+            <Login />
+          </div>
         </div>
       </header>
 
@@ -1213,6 +1242,15 @@ export function HostUploadPage() {
                 />
               </div>
             )}
+
+            {activeStep === 6 && (
+              <UploadUpiTab
+                formData={formData}
+                setFormData={setFormData}
+                fieldErrors={fieldErrors}
+                setFieldErrors={setFieldErrors}
+              />
+            )}
           </AnimatePresence>
         </ErrorBoundary>
       </main>
@@ -1262,7 +1300,7 @@ export function HostUploadPage() {
 
           {/* Right Action: Next / Publish Button (Airbnb-inspired high-contrast pill button) */}
           <div className="flex items-center">
-            {activeStep < 5 ? (
+            {activeStep < WIZARD_STEPS.length ? (
               <button
                 type="button"
                 onClick={handleNextStep}

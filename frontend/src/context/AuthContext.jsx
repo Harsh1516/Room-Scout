@@ -501,9 +501,18 @@ export function AuthProvider({ children }) {
  }
  }, [user, effectiveUser]);
 
- const logout = () => {
- syncAuthState(null, null);
- };
+ const logout = useCallback(async () => {
+   try {
+     await authAPI.logout();
+   } catch {}
+   try {
+     document.cookie = 'roomscout_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+     document.cookie = 'stayhub_jwt_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+   } catch {}
+   syncAuthState(null, null);
+   window.dispatchEvent(new Event('auth:logout'));
+   window.dispatchEvent(new Event('stayhub_auth_changed'));
+ }, [syncAuthState]);
 
  const updateUserSession = useCallback((updatedUser, newToken) => {
  try {
