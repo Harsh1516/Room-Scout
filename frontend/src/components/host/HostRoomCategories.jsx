@@ -795,15 +795,16 @@ export default function HostRoomCategories({
             onClick={() => setActiveModalCategoryIndex(null)}
           >
             <div
-              style={{
-                background:
-                  'linear-gradient(180deg, #5b9fe3 0%, #307ecf 8%, #1f67c7 18%, #144ba6 30%, #103788 44%, #0a2768 58%, #051640 72%, #020b20 86%, #000000 100%)',
-              }}
-              className="relative w-full max-w-xl sm:max-w-2xl rounded-3xl sm:rounded-[32px] shadow-[0_25px_60px_rgba(0,0,0,0.5)] border border-white/20 overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-150 cursor-default select-none"
+              className="relative w-full max-w-xl sm:max-w-2xl bg-black rounded-3xl sm:rounded-[32px] shadow-[0_25px_60px_rgba(0,0,0,0.5)] border border-white/20 overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-150 cursor-default select-none"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Minimal Modal Header (matching LeftPropertiesPanel) */}
-              <div className="relative flex items-center justify-center px-4 py-3.5 sm:py-4 border-b border-white/15 shrink-0 bg-transparent">
+              <div
+                style={{
+                  background: 'linear-gradient(180deg, #5b9fe3 0%, #3ca0ea 100%)',
+                }}
+                className="relative flex items-center justify-center px-4 py-3.5 sm:py-4 border-b border-white/20 shrink-0"
+              >
                 <h2 className="text-[20px] sm:text-[22px] font-bold text-white tracking-tight leading-none text-center drop-shadow-xs">
                   {activeRate.type ? `${activeRate.type} Configuration` : 'Room Configuration'}
                 </h2>
@@ -817,8 +818,16 @@ export default function HostRoomCategories({
                 </button>
               </div>
 
-              {/* Modal Body (Scrollable with all original fields just as it is) */}
-              <div className="p-4 sm:p-5 overflow-y-auto overflow-x-hidden space-y-4 flex-1 overscroll-contain">
+              {/* Modal Body (Scrollable) */}
+              <div className="overflow-y-auto overflow-x-hidden flex-1 overscroll-contain flex flex-col bg-black">
+                {/* Upper Section: Blue gradient expanding from top down through room carousel */}
+                <div
+                  style={{
+                    background:
+                      'linear-gradient(180deg, #3ca0ea 0%, #2578d6 20%, #175bb8 45%, #0e4499 65%, #082d70 82%, #020f30 94%, #000000 100%)',
+                  }}
+                  className="p-4 sm:p-5 pb-3 space-y-4 w-full"
+                >
                 {/* 1. Category Name Preset Dropdown & Custom Input */}
                 <div className="flex flex-col gap-2">
                   <div className="relative flex items-center w-full">
@@ -981,17 +990,22 @@ export default function HostRoomCategories({
                   />
                 </div>
 
-                {/* 4. Category Media Photos (16:9 only, Max 3) & Features */}
-                <HostCategoryMediaFeatures
-                  rate={activeRate}
-                  categoryIndex={modalIndex}
-                  onUpdateCategory={onUpdateCategory}
-                  markCategoryDirty={markCategoryDirty}
-                />
+                </div>
+
+                {/* Lower Section: Whole Black (Category Photos & Features) */}
+                <div className="p-4 sm:p-5 pt-3 space-y-4 bg-black w-full flex-1">
+                  {/* 4. Category Media Photos (16:9 only, Max 3) & Features */}
+                  <HostCategoryMediaFeatures
+                    rate={activeRate}
+                    categoryIndex={modalIndex}
+                    onUpdateCategory={onUpdateCategory}
+                    markCategoryDirty={markCategoryDirty}
+                  />
+                </div>
               </div>
 
-              {/* Modal Footer */}
-              <div className="p-3.5 sm:p-4 px-5 border-t border-white/15 bg-black/60 backdrop-blur-md flex items-center justify-between">
+              {/* Modal Footer (Whole Black) */}
+              <div className="p-3.5 sm:p-4 px-5 border-t border-white/15 bg-black flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2 shrink-0">
                   {isCategoryDirty ? (
                     <div className="flex items-center gap-2 text-amber-400 font-semibold">

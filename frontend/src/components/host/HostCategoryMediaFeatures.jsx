@@ -184,7 +184,7 @@ export default function HostCategoryMediaFeatures({
   };
 
   return (
-    <div className="w-full space-y-4 pt-3 border-t border-white/15">
+    <div className="w-full space-y-4">
       {/* ── SECTION 1: ROOM CATEGORY PHOTOS (16:9, Max 3: Room, Bathroom, Kitchen) ── */}
       <div className="space-y-2">
         {/* Photo Header Bar */}
@@ -253,8 +253,8 @@ export default function HostCategoryMediaFeatures({
                   }}
                   className={`relative aspect-[16/9] rounded-xl sm:rounded-2xl overflow-hidden border-2 transition-all select-none group flex flex-col items-center justify-center ${
                     hasPhoto
-                      ? 'border-white/20 hover:border-white/40 bg-black/60 shadow-xs'
-                      : 'border-dashed border-white/25 hover:border-emerald-400 bg-white/5 hover:bg-white/10 cursor-pointer shadow-xs active:scale-[0.99]'
+                      ? 'border-white/20 hover:border-white/40 bg-black shadow-xs'
+                      : 'border-dashed border-white/25 hover:border-emerald-400 bg-black hover:bg-neutral-900 cursor-pointer shadow-xs active:scale-[0.99]'
                   }`}
                 >
                   {isProcessing ? (
@@ -341,7 +341,7 @@ export default function HostCategoryMediaFeatures({
       </div>
 
       {/* ── SECTION 2: ROOM CATEGORY FEATURES & AMENITIES ── */}
-      <div className="space-y-2 pt-1" onClick={(e) => e.stopPropagation()}>
+      <div className="space-y-2 pt-2 border-t border-white/10" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <span className="text-[13.5px] sm:text-[14px] font-bold text-white tracking-tight">
             Category Features
