@@ -165,16 +165,20 @@ function AppContent() {
  // Allow any authenticated account to become a host
 
  setIsLoginOpen(false);
- try {
- const check = await adminAPI.getHostByEmail(user?.email);
- if (check?.hasProperty) {
- navigate('/host/dashboard');
- } else {
- navigate('/host/upload');
- }
- } catch {
- navigate('/host/upload');
- }
+				if (user?.hasProperty) {
+					navigate('/host/dashboard');
+				} else {
+	 try {
+	 const check = await adminAPI.getHostByEmail(user?.email);
+	 if (check?.hasProperty) {
+	 navigate('/host/dashboard');
+	 } else {
+	 navigate('/host/upload');
+	 }
+	 } catch {
+	 navigate('/host/upload');
+	 }
+				}
  }
  setPendingAction(null);
  }
@@ -219,6 +223,10 @@ function AppContent() {
       return;
     }
 
+    if (user?.hasProperty) {
+      navigate('/host/dashboard');
+      return;
+    }
     adminAPI.getHostByEmail(user?.email)
       .then((check) => {
         if (check?.hasProperty) {

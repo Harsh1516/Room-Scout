@@ -19,8 +19,8 @@ const propertyPricingSchema = new mongoose.Schema(
   {
     PG: { type: Number, default: 10, min: 0 },
     Hotel: { type: Number, default: 50, min: 0 },
-    Resort: { type: Number, default: 50, min: 0 },
     Flat: { type: Number, default: 25, min: 0 },
+    'Independent Room': { type: Number, default: 20, min: 0 },
   },
   { _id: false }
 );
@@ -46,8 +46,8 @@ const platformPaymentSettingsSchema = new mongoose.Schema(
       default: () => ({
         PG: 10,
         Hotel: 50,
-        Resort: 50,
         Flat: 25,
+        'Independent Room': 20,
       }),
     },
     discounts: {

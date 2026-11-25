@@ -1,6 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Minus, Plus, ImagePlus, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { isPerPersonPricing } from '../../utils/priceUtils';
+import { compressImage } from '../../utils/imageUtils';
+import { toast } from '../../context/ToastContext';
 
 /**
  * UserGuestConfirmationCard
@@ -32,6 +36,8 @@ export function UserGuestConfirmationCard({
   roomCapacity = 1,
   guestAadhar = '',
   setGuestAadhar = () => {},
+  guestAadharPhoto = '',
+  setGuestAadharPhoto = () => {},
   submitting = false,
   onSubmitBooking,
   isMonthly = false,
@@ -48,8 +54,7 @@ export function UserGuestConfirmationCard({
   const user = propUser !== undefined ? propUser : authUser;
   const isUserLoggedIn = Boolean((user && (user._id || user.email)) || authIsAuthenticated);
 
-  const resolvedType = String(propertyType || stay?.propertyType || stay?.type || 'PG').trim().toLowerCase();
-  const isPerPerson = resolvedType === 'pg' || resolvedType === 'hostel';
+  const isPerPerson = isPerPersonPricing(propertyType || stay, selectedRoom);
 
   const handleFormSubmit = (e) => {
     if (e && typeof e.preventDefault === 'function') {
@@ -244,7 +249,7 @@ export function UserGuestConfirmationCard({
             checkInTime: '12:00 PM',
             checkOutDate: `${nextDayName}, ${nextMonthDay ? nextMonthDay.replace('Sep', 'Sept') : ''}`,
             checkOutTime: '11:59 AM',
-            priceBreakdown: `₹${nightlyPrice.toLocaleString('en-IN')} × ${nights} night${nights > 1 ? 's' : ''}`,
+            priceBreakdown: `₹${nightlyPrice.toLocaleString('en-IN')} × ${nights} night${nights > 1 ? 's' : ''}${isPerPerson && safePersonCount > 1 ? ` × ${safePersonCount} persons` : ''}`,
             unitPrice: nightlyPrice,
             totalPrice,
           };
@@ -293,7 +298,12 @@ export function UserGuestConfirmationCard({
           }
         }
 
-        const totalPrice = nightlyPrice * nightsCount;
+        const pendingPersonCount = Math.max(1, Number(pendingBooking?.personCount || personCount) || 1);
+        const effectiveMultiplier = isPerPerson ? pendingPersonCount : 1;
+        const totalPrice = pendingBooking?.totalAmount
+          ? Number(pendingBooking.totalAmount)
+          : (nightlyPrice * nightsCount * effectiveMultiplier);
+        const personBreakdown = isPerPerson && pendingPersonCount > 1 ? ` × ${pendingPersonCount} persons` : '';
 
         return {
           isMonthly: false,
@@ -303,7 +313,7 @@ export function UserGuestConfirmationCard({
           checkInTime: '12:00 PM',
           checkOutDate: checkOutDate || 'Check-out',
           checkOutTime: '11:59 AM',
-          priceBreakdown: `₹${nightlyPrice.toLocaleString('en-IN')} × ${nightsCount} night${nightsCount > 1 ? 's' : ''}`,
+          priceBreakdown: `₹${nightlyPrice.toLocaleString('en-IN')} × ${nightsCount} night${nightsCount > 1 ? 's' : ''}${personBreakdown}`,
           unitPrice: nightlyPrice,
           totalPrice,
           status: pendingBooking?.status || 'Pending Host Approval',
@@ -331,297 +341,409 @@ export function UserGuestConfirmationCard({
   const displayGuestName = isPendingBooking ? (pendingBooking?.fullName || pendingBooking?.guestName || guestName) : guestName;
   const displayGuestPhone = isPendingBooking ? (pendingBooking?.phone || pendingBooking?.guestPhone || guestPhone) : guestPhone;
   const displayGuestAadhar = isPendingBooking ? (pendingBooking?.aadharNumber || pendingBooking?.guestAadhar || guestAadhar) : guestAadhar;
+  const displayGuestAadharPhoto = isPendingBooking ? (pendingBooking?.aadharPhoto || pendingBooking?.guestAadharPhoto || guestAadharPhoto) : guestAadharPhoto;
   const displayPersonCount = isPendingBooking ? (Number(pendingBooking?.personCount) || personCount) : personCount;
+  const aadharPhotoInputRef = useRef(null);
+  const [compressingAadharPhoto, setCompressingAadharPhoto] = useState(false);
+
+  const handleAadharPhotoChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select a valid image file for Aadhar card.');
+      return;
+    }
+    setCompressingAadharPhoto(true);
+    try {
+      const compressed = await compressImage(file);
+      setGuestAadharPhoto?.(compressed);
+    } catch (err) {
+      toast.error(err?.message || 'Could not process Aadhar card photo.');
+    } finally {
+      setCompressingAadharPhoto(false);
+      e.target.value = '';
+    }
+  };
 
   const isNameFieldReadOnly = isNameReadOnly || isPendingBooking;
   const isPhoneFieldReadOnly = isPhoneReadOnly || isPendingBooking;
 
-  // The Form Body (Matching Register / Create Account styling)
-  const formContent = (
-    <div className="flex flex-col gap-3 select-none">
-      {/* Reservation Stay Summary Pod / Instruction Box */}
-      {reservationDetails ? (
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-[#f7f4ee]/80 border border-slate-200/90 flex items-center justify-between gap-3 shadow-2xs">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[15px] sm:text-[16px] font-bold text-[#1f1b16]">{roomDisplay}</span>
-              <span className="text-xs font-semibold text-slate-700 bg-white px-2.5 py-0.5 rounded-full border border-slate-200/80 shadow-2xs">
-                {selectedRoom?.type || 'Standard Room'}
-              </span>
-              {reservationDetails.isPending && (
-                <span className="text-xs font-bold text-blue-700 bg-blue-100 px-2.5 py-0.5 rounded-full border border-blue-200 inline-flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                  Waiting Approval
-                </span>
-              )}
-            </div>
-            <p className="text-xs sm:text-[13px] text-slate-500 mt-1 font-medium truncate">
-              {reservationDetails.checkInDate && reservationDetails.checkOutDate ? (
-                reservationDetails.checkInDate === reservationDetails.checkOutDate ? (
-                  reservationDetails.checkInDate
-                ) : (
-                  `${reservationDetails.checkInDate} → ${reservationDetails.checkOutDate}`
-                )
-              ) : (
-                reservationDetails.checkInDate || reservationDetails.checkOutDate || (isMonthly ? 'Selected Months' : 'Selected Dates')
-              )}
-            </p>
+  const selectedCount = isMonthly ? sortedSelectedMonths.length : sortedSelected.length;
+  const cleanRoomTitle = roomDisplay
+    ? String(roomDisplay).startsWith('Room')
+      ? roomDisplay
+      : `Room ${roomDisplay}`
+    : 'Room';
+
+  const handleClearEditableFields = () => {
+    if (!isNameFieldReadOnly) setGuestName('');
+    if (!isPhoneFieldReadOnly) setGuestPhone('');
+    if (!isPendingBooking) {
+      setGuestAadhar?.('');
+      setGuestAadharPhoto?.('');
+      setPersonCount?.(1);
+    }
+  };
+
+  // Unified Card Shell matching HostBookingForm (theme="white")
+  const cardContent = (
+    <section
+      className={`w-full flex flex-col overflow-hidden transition-all select-none relative rounded-[28px] bg-white text-[#1f1b16] ${
+        isModal
+          ? 'border border-slate-200/90 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.18)] max-w-[365px] sm:max-w-[375px] w-full my-auto max-h-[90vh]'
+          : 'border border-slate-200/80 shadow-xl'
+      }`}
+    >
+      {/* Header matching HostBookingForm */}
+      <div className="px-4 pt-3 pb-2 border-b relative z-10 bg-white border-slate-100 text-[#1f1b16]">
+        <div className="flex flex-col gap-1.5 w-full">
+          {/* Row 1: Centered "Guest Details" Title */}
+          <div className="flex items-center justify-center w-full">
+            <h3 className="font-medium tracking-tight text-[16px] sm:text-[17px] text-center leading-none text-[#1f1b16]">
+              {isPendingBooking ? 'Booking Request' : 'Guest Details'}
+            </h3>
           </div>
-          <div className="text-right shrink-0">
-            <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300 inline-block">
+
+          {/* Row 2: Room info centered */}
+          <div className="flex items-center justify-center gap-2 w-full pt-1.5 border-t text-xs leading-tight font-semibold border-slate-100 text-slate-500 text-center">
+            <span className="font-medium text-[10.5px] text-slate-600 truncate">
+              {cleanRoomTitle} • {selectedRoom?.type || 'Online Request'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Body matching HostBookingForm */}
+      <div className="px-4 pb-4 pt-2.5 flex flex-col gap-2 relative z-10 bg-white overflow-y-auto">
+        {/* Pending Status Banner or Hint Box */}
+        {reservationDetails?.isPending ? (
+          <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-200/80 flex items-center justify-between gap-2 shadow-2xs">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold text-blue-900 truncate flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse shrink-0" />
+                <span>Waiting for Host Approval</span>
+              </p>
+              <p className="text-[10.5px] text-blue-700 truncate mt-0.5">
+                {reservationDetails.checkInDate && reservationDetails.checkOutDate
+                  ? reservationDetails.checkInDate === reservationDetails.checkOutDate
+                    ? reservationDetails.checkInDate
+                    : `${reservationDetails.checkInDate} → ${reservationDetails.checkOutDate}`
+                  : reservationDetails.durationLabel}
+              </p>
+            </div>
+            <span className="text-[10.5px] font-semibold text-blue-800 bg-white px-2 py-0.5 rounded-full border border-blue-200 shrink-0">
+              ₹{reservationDetails.totalPrice?.toLocaleString('en-IN') || '0'}
+            </span>
+          </div>
+        ) : reservationDetails ? (
+          <div className="p-2 rounded-xl text-[11px] leading-snug flex items-center justify-between gap-2 border bg-[#f7f4ee] border-slate-200/60 text-slate-600">
+            <span className="truncate font-medium">
+              {reservationDetails.checkInDate && reservationDetails.checkOutDate
+                ? reservationDetails.checkInDate === reservationDetails.checkOutDate
+                  ? reservationDetails.checkInDate
+                  : `${reservationDetails.checkInDate} → ${reservationDetails.checkOutDate}`
+                : reservationDetails.durationLabel}
+            </span>
+            <span className="text-[10.5px] font-semibold text-emerald-700 shrink-0">
               {reservationDetails.durationLabel}
             </span>
-            {reservationDetails.totalPrice > 0 && (
-              <div>
-                <p className="text-[15px] sm:text-[16px] font-bold text-[#1f1b16] mt-1">
-                  ₹{reservationDetails.totalPrice.toLocaleString('en-IN')}
-                </p>
-                {isMonthly && isPerPerson && (Number(displayPersonCount) || 1) > 1 && (
-                  <p className="text-[10.5px] font-semibold text-slate-500 whitespace-nowrap">
-                    ₹{(reservationDetails.unitPrice || 0).toLocaleString('en-IN')}/person
-                  </p>
-                )}
-              </div>
-            )}
           </div>
-        </div>
-      ) : (
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-[#f7f4ee]/80 border border-slate-200/90 text-slate-600 shadow-2xs">
-          <span className="text-xs sm:text-sm font-medium leading-relaxed block">
-            {isMonthly
-              ? 'Select month(s) in the schedule to view stay details.'
-              : 'Select date slot(s) in the calendar to view stay details.'}
-          </span>
-        </div>
-      )}
-
-      {/* Guest Form (Matching Register Tab Fields) */}
-      <form noValidate onSubmit={handleFormSubmit} className="space-y-3 pt-1">
-        {/* 1. Full Name */}
-        <div className="flex items-center bg-[#f7f4ee]/80 border border-slate-200/90 py-2.5 sm:py-3 transition-all duration-200 rounded-full px-4 sm:px-5 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-200/60">
-          <svg className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-            <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <input
-            type="text"
-            readOnly={isNameFieldReadOnly}
-            value={displayGuestName}
-            onChange={(e) => {
-              if (isNameFieldReadOnly) return;
-              setGuestName(e.target.value.replace(/[^a-zA-Z\s]/g, ''));
-            }}
-            placeholder="Full Name"
-            className={`w-full bg-transparent p-0 border-0 text-[13.5px] text-[#1f1b16] placeholder:text-slate-400 focus:ring-0 focus:outline-none outline-none focus-visible:outline-none ${
-              isNameFieldReadOnly ? 'cursor-not-allowed text-slate-600' : ''
-            }`}
-            style={{ outline: 'none', boxShadow: 'none' }}
-          />
-        </div>
-
-        {/* 2. Mobile Number */}
-        <div className="flex items-center bg-[#f7f4ee]/80 border border-slate-200/90 py-2.5 sm:py-3 transition-all duration-200 rounded-full px-4 sm:px-5 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-200/60">
-          <span className="text-xs font-medium text-slate-600 select-none shrink-0 mr-1.5">+91</span>
-          <div className="h-4 w-px bg-slate-300 mr-2 shrink-0" />
-          <input
-            type="tel"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            maxLength={10}
-            readOnly={isPhoneFieldReadOnly}
-            value={displayGuestPhone}
-            onChange={(e) => {
-              if (isPhoneFieldReadOnly) return;
-              setGuestPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
-            }}
-            placeholder="10-digit Mobile Number"
-            className={`w-full bg-transparent p-0 border-0 text-[13.5px] text-[#1f1b16] placeholder:text-slate-400 focus:ring-0 focus:outline-none outline-none focus-visible:outline-none ${
-              isPhoneFieldReadOnly ? 'cursor-not-allowed text-slate-600' : ''
-            }`}
-            style={{ outline: 'none', boxShadow: 'none' }}
-          />
-        </div>
-
-        {/* 3. Person Count */}
-        <div>
-          <div className="flex items-center justify-between bg-[#f7f4ee]/80 border border-slate-200/90 py-2 sm:py-2.5 transition-all duration-200 rounded-full px-4 sm:px-5">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="text-[13.5px] font-semibold text-[#1f1b16] truncate">
-                {displayPersonCount} {displayPersonCount === 1 ? 'Person' : 'Persons'}
-              </span>
-              <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-white text-slate-600 border border-slate-200 shadow-2xs shrink-0">
-                Max {maxAllowedPersons}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => setPersonCount((prev) => Math.max(1, prev - 1))}
-                disabled={isPendingBooking || personCount <= 1}
-                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-sm font-bold bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 shadow-2xs disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition-all"
-                title="Decrease person count"
-              >
-                −
-              </button>
-              <span className="text-[13.5px] font-bold text-[#1f1b16] w-6 text-center">
-                {displayPersonCount}
-              </span>
-              <button
-                type="button"
-                onClick={() => setPersonCount((prev) => Math.min(maxAllowedPersons, prev + 1))}
-                disabled={isPendingBooking || personCount >= maxAllowedPersons}
-                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-sm font-bold bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 shadow-2xs disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition-all"
-                title="Increase person count"
-              >
-                +
-              </button>
-            </div>
-          </div>
-          {displayPersonCount > 1 && (
-            <p className="text-[11.5px] text-slate-500 px-3 mt-1.5 font-medium">
-              {isPerPerson
-                ? `Occupies ${displayPersonCount} of ${roomCapacity} beds in Room ${roomDisplay}.`
-                : `${displayPersonCount} of max ${roomCapacity} guests in ${roomDisplay}.`}
-            </p>
-          )}
-        </div>
-
-        {/* 4. Aadhar ID */}
-        <div className="flex items-center bg-[#f7f4ee]/80 border border-slate-200/90 py-2.5 sm:py-3 transition-all duration-200 rounded-full px-4 sm:px-5 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-200/60">
-          <svg className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z" />
-          </svg>
-          <input
-            type="text"
-            readOnly={isPendingBooking}
-            maxLength={14}
-            value={displayGuestAadhar}
-            onChange={(e) => {
-              if (isPendingBooking) return;
-              const digits = e.target.value.replace(/\D/g, '').slice(0, 12);
-              const formatted = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
-              setGuestAadhar?.(formatted);
-            }}
-            placeholder="12-digit Aadhar Number"
-            className={`w-full bg-transparent p-0 border-0 text-[13.5px] text-[#1f1b16] placeholder:text-slate-400 focus:ring-0 focus:outline-none outline-none focus-visible:outline-none ${
-              isPendingBooking ? 'cursor-not-allowed text-slate-600' : ''
-            }`}
-            style={{ outline: 'none', boxShadow: 'none' }}
-          />
-        </div>
-
-        {/* 5. Total Payable Summary Row */}
-        <div className="flex items-center justify-between bg-[#f7f4ee]/80 border border-slate-200/90 py-2.5 sm:py-3 px-4 sm:px-5 rounded-full">
-          <span className="text-[13.5px] font-semibold text-slate-700">
-            {isPendingBooking ? 'Total Amount' : 'Total Payable'}
-          </span>
-          <div className="flex items-baseline gap-1 text-[#1f1b16]">
-            <span className="text-xs font-semibold text-slate-400">₹</span>
-            <span className="text-[16px] sm:text-[17px] font-bold">
-              {reservationDetails?.totalPrice ? reservationDetails.totalPrice.toLocaleString('en-IN') : '0'}
+        ) : (
+          <div className="p-2 rounded-xl text-[11px] leading-snug flex items-center gap-2 border bg-[#f7f4ee] border-slate-200/60 text-slate-600">
+            <span className="material-symbols-outlined text-[15px] shrink-0 text-slate-400">info</span>
+            <span>
+              Tip: Select available {isMonthly ? 'month(s)' : 'date(s)'} on the schedule before confirming.
             </span>
           </div>
-        </div>
+        )}
 
-        {/* Primary Submit Button: Matching Register Button */}
-        <div className="pt-1 flex justify-center w-full">
-          {isPendingBooking ? (
-            <div className="flex items-center gap-2 w-full justify-center">
-              <div className="h-[40px] px-5 rounded-full font-semibold text-xs sm:text-sm bg-blue-100 border border-blue-300 text-blue-800 flex items-center justify-center gap-2 select-none shadow-xs">
-                <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-                <span>Waiting for Host Approval</span>
+        {/* Guest Form matching HostBookingForm */}
+        <form noValidate onSubmit={handleFormSubmit} className="space-y-2 sm:space-y-2.5">
+          {/* Field 1: Full Name */}
+          <div
+            className={`relative flex items-center min-h-[35px] sm:min-h-[37px] px-3 rounded-xl transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)] ${
+              isNameFieldReadOnly
+                ? 'bg-slate-100 border border-slate-200 cursor-not-allowed select-none'
+                : 'bg-slate-100/90 hover:bg-slate-100 focus-within:bg-white border border-slate-200/90 focus-within:border-slate-800 focus-within:ring-2 focus-within:ring-slate-900/5'
+            }`}
+          >
+            <input
+              type="text"
+              readOnly={isNameFieldReadOnly}
+              value={displayGuestName}
+              onChange={(e) => {
+                if (isNameFieldReadOnly) return;
+                setGuestName(e.target.value.replace(/[^a-zA-Z\s]/g, ''));
+              }}
+              placeholder="Guest full name"
+              className={`w-full bg-transparent text-xs sm:text-[13px] font-medium placeholder:font-normal placeholder:text-[11px] sm:placeholder:text-[12px] focus:outline-none text-[#1f1b16] placeholder:text-slate-400 ${
+                isNameFieldReadOnly ? 'cursor-not-allowed text-slate-600' : ''
+              }`}
+            />
+          </div>
+
+          {/* Field 2: Mobile Number */}
+          <div
+            className={`relative flex items-center min-h-[35px] sm:min-h-[37px] px-3 rounded-xl transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)] ${
+              isPhoneFieldReadOnly
+                ? 'bg-slate-100 border border-slate-200 cursor-not-allowed select-none'
+                : 'bg-slate-100/90 hover:bg-slate-100 focus-within:bg-white border border-slate-200/90 focus-within:border-slate-800 focus-within:ring-2 focus-within:ring-slate-900/5'
+            }`}
+          >
+            <span className="text-[12px] font-medium pr-2.5 mr-2.5 border-r select-none shrink-0 text-slate-700 border-slate-300">
+              +91
+            </span>
+            <input
+              type="tel"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={10}
+              readOnly={isPhoneFieldReadOnly}
+              value={displayGuestPhone}
+              onChange={(e) => {
+                if (isPhoneFieldReadOnly) return;
+                setGuestPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
+              }}
+              placeholder="10-digit mobile number"
+              className={`w-full bg-transparent text-xs sm:text-[13px] font-medium placeholder:font-normal placeholder:text-[11px] sm:placeholder:text-[12px] focus:outline-none text-[#1f1b16] placeholder:text-slate-400 ${
+                isPhoneFieldReadOnly ? 'cursor-not-allowed text-slate-600' : ''
+              }`}
+            />
+          </div>
+
+          {/* Field 3: Person Count (Two parts matching HostBookingForm) */}
+          <div>
+            <div className="flex items-center justify-between gap-2 w-full">
+              {/* Left Part: Person count display */}
+              <div
+                className={`w-fit shrink-0 flex items-center gap-1.5 sm:gap-2 min-h-[35px] sm:min-h-[37px] px-3 rounded-xl transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)] ${
+                  isPendingBooking
+                    ? 'bg-slate-100 border border-slate-200 cursor-not-allowed select-none'
+                    : 'bg-slate-100/90 border border-slate-200/90'
+                }`}
+              >
+                <span className="text-xs sm:text-[12.5px] font-semibold whitespace-nowrap select-none text-[#1f1b16]">
+                  {displayPersonCount} {displayPersonCount === 1 ? 'Person' : 'Persons'}
+                </span>
+                <span className="text-[10px] sm:text-[10.5px] font-medium shrink-0 select-none text-slate-400">
+                  (Max {maxAllowedPersons})
+                </span>
               </div>
-              {onCancelPendingBooking && (
+
+              {/* Right Part: 3-part capsule */}
+              <div className="shrink-0 grid grid-cols-3 w-[114px] sm:w-[126px] h-[35px] sm:h-[37px] rounded-full border overflow-hidden shadow-2xs select-none transition-all divide-x border-slate-300/90 divide-slate-300/90 bg-slate-100/90">
+                <button
+                  type="button"
+                  onClick={() => setPersonCount((prev) => Math.max(1, prev - 1))}
+                  disabled={isPendingBooking || personCount <= 1}
+                  className="h-full flex items-center justify-center cursor-pointer select-none transition-colors active:scale-95 disabled:opacity-35 disabled:cursor-not-allowed bg-slate-200 hover:bg-slate-300/80 active:bg-slate-300 text-slate-700 hover:text-black"
+                  title="Decrease person count"
+                  aria-label="Decrease person count"
+                >
+                  <Minus className="w-4 h-4 sm:w-[18px] sm:h-[18px] stroke-[2.6]" />
+                </button>
+
+                <div className="h-full flex items-center justify-center text-[13px] sm:text-[14px] font-bold font-mono select-none leading-none bg-slate-100 text-slate-800">
+                  {displayPersonCount}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setPersonCount((prev) => Math.min(maxAllowedPersons, prev + 1))}
+                  disabled={isPendingBooking || personCount >= maxAllowedPersons}
+                  className="h-full flex items-center justify-center cursor-pointer select-none transition-colors active:scale-95 disabled:opacity-35 disabled:cursor-not-allowed bg-slate-200 hover:bg-slate-300/80 active:bg-slate-300 text-slate-700 hover:text-black"
+                  title="Increase person count"
+                  aria-label="Increase person count"
+                >
+                  <Plus className="w-4 h-4 sm:w-[18px] sm:h-[18px] stroke-[2.6]" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Field 4: Aadhar ID */}
+          <div
+            className={`relative flex items-center min-h-[35px] sm:min-h-[37px] px-3 rounded-xl transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)] ${
+              isPendingBooking
+                ? 'bg-slate-100 border border-slate-200 cursor-not-allowed select-none'
+                : 'bg-slate-100/90 hover:bg-slate-100 focus-within:bg-white border border-slate-200/90 focus-within:border-slate-800 focus-within:ring-2 focus-within:ring-slate-900/5'
+            }`}
+          >
+            <input
+              type="text"
+              readOnly={isPendingBooking}
+              maxLength={14}
+              value={displayGuestAadhar}
+              onChange={(e) => {
+                if (isPendingBooking) return;
+                const digits = e.target.value.replace(/\D/g, '').slice(0, 12);
+                const formatted = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+                setGuestAadhar?.(formatted);
+              }}
+              placeholder="12-digit Aadhar number"
+              className={`w-full bg-transparent text-xs sm:text-[13px] font-medium placeholder:font-normal placeholder:text-[11px] sm:placeholder:text-[12px] focus:outline-none tracking-wide text-[#1f1b16] placeholder:text-slate-400 ${
+                isPendingBooking ? 'cursor-not-allowed text-slate-600' : ''
+              }`}
+            />
+          </div>
+
+          {/* Field 4b: Aadhar Card Photo Upload */}
+          <div>
+            <input
+              ref={aadharPhotoInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAadharPhotoChange}
+              disabled={isPendingBooking || compressingAadharPhoto}
+              className="hidden"
+            />
+            <div
+              onClick={() => {
+                if (!isPendingBooking && !compressingAadharPhoto) {
+                  aadharPhotoInputRef.current?.click();
+                }
+              }}
+              className={`relative flex items-center justify-between gap-2 min-h-[38px] sm:min-h-[40px] px-3 py-1.5 rounded-xl transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)] ${
+                isPendingBooking
+                  ? 'bg-slate-100 border border-slate-200 cursor-not-allowed select-none'
+                  : 'bg-slate-100/90 hover:bg-slate-100 border border-slate-200/90 cursor-pointer'
+              }`}
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                {displayGuestAadharPhoto ? (
+                  <img
+                    src={displayGuestAadharPhoto}
+                    alt="Aadhar card preview"
+                    className="w-7 h-7 rounded-lg object-cover border border-slate-300 shrink-0"
+                  />
+                ) : (
+                  <ImagePlus className="w-4 h-4 text-slate-500 shrink-0" />
+                )}
+                <span className={`text-xs sm:text-[13px] truncate ${displayGuestAadharPhoto ? 'font-medium text-[#1f1b16]' : 'text-slate-400'}`}>
+                  {compressingAadharPhoto
+                    ? 'Processing photo...'
+                    : displayGuestAadharPhoto
+                    ? 'Aadhar card photo added'
+                    : 'Upload Aadhar card photo *'}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                {displayGuestAadharPhoto && !isPendingBooking && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setGuestAadharPhoto?.('');
+                    }}
+                    className="w-6 h-6 rounded-full bg-slate-200/80 hover:bg-rose-100 text-slate-600 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
+                    title="Remove Aadhar photo"
+                    aria-label="Remove Aadhar photo"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {!isPendingBooking && (
+                  <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white text-slate-700 border border-slate-200 shadow-2xs">
+                    {displayGuestAadharPhoto ? 'Change' : 'Upload'}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Field 5: Total Payable */}
+          <div className="relative flex items-center justify-between min-h-[35px] sm:min-h-[37px] px-3 rounded-xl bg-slate-100/90 border border-slate-200/90 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+            <span className="text-xs sm:text-[13px] font-medium text-slate-700">
+              {isPendingBooking ? 'Total Amount' : 'Total Payable'}
+            </span>
+            <span className="text-xs sm:text-[13px] font-semibold text-[#1f1b16]">
+              ₹{reservationDetails?.totalPrice ? reservationDetails.totalPrice.toLocaleString('en-IN') : '0'}
+            </span>
+          </div>
+
+          {/* Bottom Action Bar matching HostBookingForm */}
+          <div className="pt-3.5 sm:pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+            {isPendingBooking && onCancelPendingBooking ? (
+              <>
+                {isModal ? (
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="h-11 sm:h-12 px-6 sm:px-7 rounded-full text-sm font-semibold active:scale-95 transition-all cursor-pointer border bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200/90 shadow-2xs"
+                  >
+                    Close
+                  </button>
+                ) : (
+                  <div />
+                )}
                 <button
                   type="button"
                   disabled={cancelling}
                   onClick={onCancelPendingBooking}
-                  className="h-[40px] px-4 rounded-full font-semibold text-xs border border-rose-300 text-rose-700 hover:bg-rose-50 transition-all cursor-pointer disabled:opacity-50"
-                  title="Cancel pending booking request"
+                  className="h-11 sm:h-12 px-6 sm:px-7 rounded-full font-semibold text-sm border border-rose-300 text-rose-700 bg-rose-50 hover:bg-rose-100 transition-all cursor-pointer disabled:opacity-50"
                 >
-                  {cancelling ? 'Cancelling...' : 'Cancel'}
+                  {cancelling ? 'Cancelling...' : 'Cancel Request'}
                 </button>
-              )}
-            </div>
-          ) : (
-            <button
-              type="submit"
-              disabled={submitting}
-              onClick={handleFormSubmit}
-              className="w-full sm:w-[280px] h-[40px] min-h-[40px] bg-[#059669] hover:bg-[#047857] active:scale-[0.98] text-white font-semibold text-[15px] flex items-center justify-center space-x-2 shadow-md shadow-emerald-700/20 transition-all duration-200 rounded-full cursor-pointer disabled:opacity-50"
-            >
-              {submitting ? (
-                <>
-                  <svg className="animate-spin h-4 w-4 text-white mr-2" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                  </svg>
-                  <span>Processing...</span>
-                </>
-              ) : (
-                <>
-                  <span>Request Slot</span>
-                  <svg className="w-4 h-4 stroke-[2.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </>
-              )}
-            </button>
-          )}
-        </div>
-      </form>
-    </div>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={isModal ? onClose : handleClearEditableFields}
+                  className="h-11 sm:h-12 px-6 sm:px-7 rounded-full text-sm font-semibold active:scale-95 transition-all cursor-pointer border bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200/90 shadow-2xs"
+                >
+                  {isModal ? 'Close' : 'Clear'}
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={submitting || selectedCount === 0}
+                  onClick={handleFormSubmit}
+                  className={`w-auto shrink-0 h-11 sm:h-12 px-7 sm:px-8 rounded-full font-semibold text-sm shadow-md active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                    selectedCount > 0
+                      ? 'bg-[#0f766e] hover:bg-emerald-500 text-white shadow-emerald-700/25'
+                      : 'bg-slate-200 text-slate-400 border border-slate-300/40 cursor-not-allowed'
+                  }`}
+                >
+                  {submitting && (
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                    </svg>
+                  )}
+                  <span>{submitting ? 'Processing...' : 'Request Slot'}</span>
+                </button>
+              </>
+            )}
+          </div>
+        </form>
+      </div>
+    </section>
   );
 
-  // If in Modal Mode: Render via Portal to Document Body
+  // If in Modal Mode: Render via Portal to Document Body matching HostBookingForm
   if (isModal) {
     if (!isOpen) return null;
 
     return createPortal(
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-        {/* Backdrop matching Register Modal */}
         <div
           onClick={onClose}
-          className="fixed inset-0 bg-[#121418]/60 backdrop-blur-xs cursor-pointer"
+          className="fixed inset-0 bg-black/20 backdrop-blur-xs cursor-pointer transition-opacity"
         />
-
-        {/* Modal Card matching Register Modal */}
-        <div
-          onClick={(e) => e.stopPropagation()}
-          className="relative z-10 w-full max-w-lg rounded-[30px] sm:rounded-[32px] bg-white border border-slate-200/90 shadow-[0_20px_50px_rgba(0,0,0,0.22)] overflow-hidden flex flex-col my-auto max-h-[90vh] p-5 sm:p-7"
-        >
-          {/* Header */}
-          <header className="text-center pt-2 pb-4">
-            <h1 className="text-[30px] font-bold tracking-tight text-[#1f1b16] leading-none">
-              Guest Details
-            </h1>
-          </header>
-
-          {/* Modal Body */}
-          <div className="overflow-y-auto">
-            {formContent}
-          </div>
+        <div onClick={(e) => e.stopPropagation()} className="relative z-10 w-full max-w-[365px] sm:max-w-[375px] my-auto">
+          {cardContent}
         </div>
       </div>,
       document.body
     );
   }
 
-  // Embedded Desktop Mode (Tab 3) - Retains exact position in grid/layout
+  // Embedded Desktop Mode (Tab 3)
   return (
     <div className="w-full flex flex-col justify-center my-auto min-h-0">
-      <section className="flex flex-col rounded-[30px] sm:rounded-[32px] bg-white border border-slate-200/90 shadow-[0_20px_50px_rgba(0,0,0,0.22)] overflow-hidden select-none transition-all p-5 sm:p-7">
-        {/* Header: Exact matching Create Account / Register tab */}
-        <header className="text-center pt-2 pb-4">
-          <h1 className="text-[30px] font-bold tracking-tight text-[#1f1b16] leading-none">
-            Guest Details
-          </h1>
-        </header>
-
-        <div>
-          {formContent}
-        </div>
-      </section>
+      {cardContent}
     </div>
   );
 }

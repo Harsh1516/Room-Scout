@@ -28,19 +28,32 @@ function UserCategoryRoomCarousel({
   upcomingMonths = [],
 }) {
  const scrollRef = useRef(null);
+ const trackRef = useRef(null);
  const tickingRef = useRef(false);
  const [activeDotIndex, setActiveDotIndex] = useState(0);
+ const [scrollProgress, setScrollProgress] = useState(0);
+ const [thumbWidthPercent, setThumbWidthPercent] = useState(50);
  const [canScrollLeft, setCanScrollLeft] = useState(false);
  const [canScrollRight, setCanScrollRight] = useState(false);
 
  const updateScrollState = useCallback(() => {
  const el = scrollRef.current;
  if (!el) return;
+ const maxScroll = el.scrollWidth - el.clientWidth;
  const atStart = el.scrollLeft <= 2;
- const atEnd = el.scrollLeft >= el.scrollWidth - el.clientWidth - 2;
+ const atEnd = el.scrollLeft >= maxScroll - 2;
  setCanScrollLeft((prev) => (prev !== !atStart ? !atStart : prev));
  const canRight = !atEnd && el.scrollWidth > el.clientWidth;
  setCanScrollRight((prev) => (prev !== canRight ? canRight : prev));
+
+ if (maxScroll > 2) {
+   setScrollProgress(Math.min(1, Math.max(0, el.scrollLeft / maxScroll)));
+   const visibleRatio = Math.min(1, el.clientWidth / el.scrollWidth);
+   setThumbWidthPercent(Math.max(25, Math.min(75, visibleRatio * 100)));
+ } else {
+   setScrollProgress(0);
+   setThumbWidthPercent(100);
+ }
 
  if (matchingRooms.length > 1) {
  const scrollLeft = el.scrollLeft;
@@ -117,6 +130,16 @@ function UserCategoryRoomCarousel({
  const cardWidth = el.firstElementChild ? el.firstElementChild.offsetWidth + 10 : 130;
  el.scrollBy({ left: -cardWidth, behavior: 'smooth' });
  setTimeout(updateScrollState, 150);
+ };
+
+ const handleTrackClick = (e) => {
+ e.stopPropagation();
+ if (!scrollRef.current || !trackRef.current) return;
+ const rect = trackRef.current.getBoundingClientRect();
+ const clickX = e.clientX - rect.left;
+ const ratio = Math.max(0, Math.min(1, clickX / rect.width));
+ const maxScroll = scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
+ scrollRef.current.scrollTo({ left: ratio * maxScroll, behavior: 'smooth' });
  };
 
  const handleScrollRight = (e) => {
@@ -197,153 +220,154 @@ function UserCategoryRoomCarousel({
  onSelectRoom?.(rm);
  setActiveDotIndex(cIdx);
  }}
-  className={`group relative flex flex-col justify-between self-center p-3.5 sm:p-4.5 md:p-5 w-[155px] min-w-[155px] sm:w-[170px] sm:min-w-[170px] md:w-[185px] md:min-w-[185px] aspect-[175/195] shrink-0 snap-start transition-[transform,opacity] duration-150 ease-out select-none outline-none cursor-pointer overflow-hidden transform-gpu will-change-transform touch-manipulation active:scale-[0.99] ${
-   isCardBooked ? isCardSelected ? 'opacity-100 z-10' : 'opacity-85 hover:opacity-100'
-   : isCardSelected ? 'opacity-100 z-10' : 'opacity-90 hover:opacity-100'
+  className={`group relative flex flex-col justify-between self-center p-2.5 sm:p-3.5 w-[124px] min-w-[124px] sm:w-[136px] sm:min-w-[136px] aspect-[175/195] shrink-0 snap-start transition-[transform,opacity] duration-150 ease-out select-none outline-none cursor-pointer overflow-hidden transform-gpu will-change-transform touch-manipulation active:scale-[0.99] ${
+   isCardSelected ? 'opacity-100 z-20' : 'opacity-90 hover:opacity-100 z-10'
    }`}
    style={{
-     maskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath fill='white' d='M 11 0 L 64 0 Q 69 0 73.8 4.6 L 95.5 25.5 Q 100 29.5 100 34 L 100 89 Q 100 100 89 100 L 11 100 Q 0 100 0 89 L 0 11 Q 0 0 11 0 Z'/%3E%3C/svg%3E")`,
+     maskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath fill='black' d='M 14 0 L 64 0 Q 71 0 76 5 L 94.5 23.5 Q 100 28 100 35 L 100 86 Q 100 100 86 100 L 14 100 Q 0 100 0 86 L 0 14 Q 0 0 14 0 Z'/%3E%3C/svg%3E")`,
+     WebkitMaskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath fill='black' d='M 14 0 L 64 0 Q 71 0 76 5 L 94.5 23.5 Q 100 28 100 35 L 100 86 Q 100 100 86 100 L 14 100 Q 0 100 0 86 L 0 14 Q 0 0 14 0 Z'/%3E%3C/svg%3E")`,
      maskSize: '100% 100%',
-     WebkitMaskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath fill='white' d='M 11 0 L 64 0 Q 69 0 73.8 4.6 L 95.5 25.5 Q 100 29.5 100 34 L 100 89 Q 100 100 89 100 L 11 100 Q 0 100 0 89 L 0 11 Q 0 0 11 0 Z'/%3E%3C/svg%3E")`,
      WebkitMaskSize: '100% 100%',
-     background: isCardBooked
-        ? 'linear-gradient(135deg, rgba(254, 240, 138, 0.35) 0%, rgba(245, 158, 11, 0.20) 35%, rgba(255, 255, 255, 0.08) 70%, rgba(245, 158, 11, 0.14) 100%)'
-        : isCardSelected
-        ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.48) 40%, rgba(255, 255, 255, 0.28) 75%, rgba(255, 255, 255, 0.38) 100%)'
-        : 'linear-gradient(135deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.10) 40%, rgba(255, 255, 255, 0.03) 70%, rgba(255, 255, 255, 0.08) 100%)',
-     backdropFilter: isCardSelected ? 'blur(28px) saturate(180%)' : 'blur(24px) saturate(160%)',
-     WebkitBackdropFilter: isCardSelected ? 'blur(28px) saturate(180%)' : 'blur(24px) saturate(160%)',
-     boxShadow: isCardSelected
-       ? '0 20px 40px -10px rgba(0, 0, 0, 0.5), 0 0 24px rgba(255, 255, 255, 0.45), inset 0 2px 3px rgba(255, 255, 255, 0.95)'
-       : '0 12px 28px -8px rgba(0, 0, 0, 0.35), inset 0 1px 1.5px rgba(255, 255, 255, 0.35)',
+     background: isCardSelected
+       ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.65) 40%, rgba(240, 246, 255, 0.50) 75%, rgba(220, 238, 255, 0.60) 100%)'
+       : 'linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.20) 40%, rgba(219, 234, 254, 0.25) 70%, rgba(191, 219, 254, 0.40) 100%)',
+     backdropFilter: 'blur(8px)',
+     WebkitBackdropFilter: 'blur(8px)',
    }}
  >
-   {/* Top-Half Ambient Glass Sheen matching Image 1 */}
+   {/* Top-Half Ambient Glass Sheen */}
    <div
      className={`absolute inset-x-0 top-0 h-[50%] bg-gradient-to-b ${
        isCardSelected
-         ? 'from-white/55 via-white/25 to-transparent'
-         : 'from-white/20 via-white/5 to-transparent'
-     } pointer-events-none rounded-t-3xl`}
+         ? 'from-white/50 via-white/20 to-transparent'
+         : 'from-white/18 via-white/5 to-transparent'
+     } pointer-events-none`}
    />
 
-   {/* Crisp SVG Glass Border Outline matching Pic 1 */}
+   {/* Precision Pentagon SVG Frosted Glass Border matching HostRoomCardItem */}
    <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" viewBox="0 0 100 100" preserveAspectRatio="none">
      <defs>
-       <linearGradient id={`glassUserStroke_${cardId}`} x1="0%" y1="0%" x2="100%" y2="100%">
-         {isCardSelected ? (
-           <>
-             <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
-             <stop offset="45%" stopColor="#ffffff" stopOpacity="0.92" />
-             <stop offset="100%" stopColor="#ffffff" stopOpacity="0.75" />
-           </>
-         ) : isCardBooked ? (
-           <>
-             <stop offset="0%" stopColor="#fef08a" stopOpacity="0.9" />
-             <stop offset="45%" stopColor="#ffffff" stopOpacity="0.55" />
-             <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.35" />
-           </>
-         ) : (
-           <>
-             <stop offset="0%" stopColor="#ffffff" stopOpacity="0.85" />
-             <stop offset="40%" stopColor="#ffffff" stopOpacity="0.50" />
-             <stop offset="75%" stopColor="#ffffff" stopOpacity="0.25" />
-             <stop offset="100%" stopColor="#ffffff" stopOpacity="0.45" />
-           </>
-         )}
+       <linearGradient id={`glassUserStroke_${cardId}`} x1="0%" y1="0%" x2="0%" y2="100%">
+         <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
+         <stop offset="40%" stopColor="#ffffff" stopOpacity="0.55" />
+         <stop offset="75%" stopColor="#ffffff" stopOpacity="0.3" />
+         <stop offset="100%" stopColor="#ffffff" stopOpacity="0.45" />
        </linearGradient>
      </defs>
      <path
-       d="M 11 1 L 64 1 Q 69 1 73.6 5.4 L 94.6 25.6 Q 99 29.5 99 34 L 99 89 Q 99 99 89 99 L 11 99 Q 1 99 1 89 L 1 11 Q 1 1 11 1 Z"
+       d="M 14 0 L 64 0 Q 71 0 76 5 L 94.5 23.5 Q 100 28 100 35 L 100 86 Q 100 100 86 100 L 14 100 Q 0 100 0 86 L 0 14 Q 0 0 14 0 Z"
        fill="none"
        stroke={`url(#glassUserStroke_${cardId})`}
-       strokeWidth={isCardSelected ? '1.8' : '1.2'}
+       strokeWidth="1.6"
+       strokeLinejoin="round"
+       strokeLinecap="round"
        vectorEffect="non-scaling-stroke"
      />
    </svg>
 
-       {/* Top: Status Tag with Sub-label */}
-                    <div className="flex flex-col items-start leading-none z-10">
-                      <span
-                        className={`text-[11px] sm:text-[12px] font-extrabold leading-tight tracking-wider ${
-                          isCardSelected
-                            ? isCardBooked ? 'text-amber-900' : 'text-black'
-                            : 'text-white'
-                        }`}
-                      >
-                        {isCardBooked ? 'BOOKED' : 'OPEN'}
-                      </span>
-                      <span
-                        className={`text-[9.5px] sm:text-[10px] font-semibold tracking-wide mt-0.5 ${
-                          isCardSelected ? 'text-black/80 font-bold' : 'text-white/85'
-                        }`}
-                      >
-                        {isMonthly ? 'This Month' : 'Today'}
-                      </span>
-                    </div>
+       {/* Top: Availability Status Tag matching HostRoomCardItem */}
+       {(() => {
+         const roomPercentFull = roomStat.percentFull ?? (100 - (roomStat.percentFree ?? 100));
+         const availInRoom = isCardBooked ? 0 : roomCapacity;
+         return (
+           <div className="flex items-start justify-start w-full z-20 min-h-[26px]">
+             <div className="flex flex-col items-start leading-none">
+               <span
+                 className={`text-[11px] sm:text-[11.5px] font-black tracking-wider leading-none uppercase ${
+                   isMonthly
+                     ? isCardBooked
+                       ? isCardSelected
+                         ? 'text-amber-600'
+                         : 'text-amber-300'
+                       : isCardSelected
+                       ? 'text-black'
+                       : 'text-white'
+                     : roomPercentFull >= 75
+                     ? isCardSelected
+                       ? 'text-rose-900'
+                       : 'text-rose-300'
+                     : roomPercentFull > 0
+                     ? isCardSelected
+                       ? 'text-amber-600'
+                       : 'text-amber-300'
+                     : isCardSelected
+                     ? 'text-black'
+                     : 'text-white'
+                 }`}
+               >
+                 {isMonthly
+                   ? `${availInRoom} AVAIL`
+                   : `${roomPercentFull}% FULL.`}
+               </span>
+               <span
+                 className={`text-[8.5px] sm:text-[9px] font-bold tracking-wider uppercase mt-1 ${
+                   isCardSelected ? 'text-black/80' : 'text-white/70'
+                 }`}
+               >
+                 {isMonthly ? 'THIS MONTH' : 'NEXT 30 DAYS'}
+               </span>
+             </div>
+           </div>
+         );
+       })()}
 
                     {/* Center: ROOM label and Room Number */}
-                    <div className="flex flex-col items-center justify-center my-auto py-0.5 text-center z-10">
+                    <div className="flex flex-col items-center justify-center my-auto py-0.5 text-center z-20">
                       <span
-                        className={`block text-[10px] sm:text-[11px] mb-0.5 font-bold tracking-wider leading-none ${
-                          isCardSelected ? 'text-black/75 font-extrabold' : 'text-white/90'
+                        className={`block text-[8.5px] sm:text-[9px] mb-0.5 font-bold tracking-[0.22em] uppercase leading-none ${
+                          isCardSelected ? 'text-black/75 font-extrabold' : 'text-white/75'
                         }`}
                       >
                         ROOM
                       </span>
                       <span
-                        className={`block w-full text-center bg-transparent border-none outline-none p-0 leading-none text-[23px] sm:text-[26px] font-black tracking-tight ${
-                          isCardSelected ? 'text-black' : 'text-white'
+                        className={`block w-full text-center bg-transparent border-none outline-none p-0 leading-none text-[24px] sm:text-[27px] font-black tracking-tight ${
+                          isCardSelected ? 'text-black' : 'text-white drop-shadow-xs'
                         }`}
                       >
                         {cleanRoomNum}
                       </span>
                     </div>
 
-                    {/* Bottom: CAP Pill on bottom-left, % Full on bottom-right (nightly only) */}
-                    <div className="w-full flex items-center justify-between z-10 pt-0.5">
+                    {/* Bottom: Centered CAP Pill matching HostRoomCardItem */}
+                    <div className="w-full flex items-center justify-center z-20 pt-0.5">
                       <div
-                        className="w-fit inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0066ff] hover:bg-[#0057e0] shadow-md shadow-blue-950/40 select-none cursor-default transition-all"
+                        className="w-fit inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-[#0066ff] hover:bg-[#0057e0] shadow-md shadow-blue-950/40 select-none cursor-default transition-transform duration-100 active:scale-95 touch-manipulation"
                         onClick={(e) => e.stopPropagation()}
+                        title={`Room capacity: ${roomCapacity} ${roomCapacity === 1 ? 'person' : 'people'}`}
                       >
-                        <span className="text-[10px] font-black text-white tracking-widest leading-none uppercase">
+                        <span className="text-[9px] sm:text-[9.5px] font-black text-white tracking-widest leading-none uppercase">
                           CAP
                         </span>
-                        <span className="text-[12px] font-black text-white leading-none">
+                        <span className="text-[10.5px] sm:text-[11.5px] font-black text-white leading-none">
                           {roomCapacity}
                         </span>
                       </div>
-
-                      {!isMonthly && (
-                        <span
-                          className={`text-xs font-semibold leading-none select-none shrink-0 ${
-                            isCardSelected ? 'text-black/80 font-bold' : 'text-white'
-                          }`}
-                        >
-                          {roomStat.percentFull ?? (100 - roomStat.percentFree)}% Full
-                        </span>
-                      )}
                     </div>
                   </div>
                 );
               })}
             </div>
 
-          {/* Centered pager dots at bottom center of room category section */}
+          {/* Horizontal Scroll Indicator Bar matching HostRoomCategories */}
       {matchingRooms.length > 1 && (
-        <div className="flex items-center justify-center gap-2 pt-2 pb-3.5 select-none">
-          {matchingRooms.map((rm, dotIdx) => (
-            <button
-              key={rm._id || rm.id || `dot_${dotIdx}`}
-              type="button"
-              onClick={(e) => scrollToItem(dotIdx, e)}
-              className="p-2 inline-flex items-center justify-center cursor-pointer"
-              title={`Room ${rm.roomNumber || dotIdx + 1}`}
-              aria-label={`Go to room ${rm.roomNumber || dotIdx + 1}`}
-            >
-              <span className={`transition-all duration-300 rounded-full ${activeDotIndex === dotIdx ? "w-10 h-3 bg-[#c0c1ff]" : "w-3 h-3 bg-white/40 hover:bg-white/60"}`} />
-            </button>
-          ))}
+        <div className="flex items-center justify-center pt-2.5 pb-0.5 select-none w-full">
+          <div
+            ref={trackRef}
+            onClick={handleTrackClick}
+            className="w-24 sm:w-28 h-2 sm:h-2.5 bg-white/20 hover:bg-white/30 rounded-full overflow-hidden cursor-pointer relative transition-colors"
+            title="Room cards scroll indicator"
+            role="progressbar"
+            aria-label="Room cards scroll progress"
+          >
+            <div
+              className="absolute top-0 bottom-0 rounded-full bg-white shadow-sm transition-all duration-100 ease-out"
+              style={{
+                width: `${thumbWidthPercent}%`,
+                left: `${scrollProgress * (100 - thumbWidthPercent)}%`,
+              }}
+            />
+          </div>
         </div>
       )}
 
@@ -539,7 +563,7 @@ export function UserRoomCategoriesPanel({
   })();
 
  return (
- <div className="w-full relative flex flex-col justify-center my-auto min-h-full overflow-hidden rounded-b-[2rem]">
+ <div className="w-full relative flex flex-col justify-center my-auto min-h-full overflow-hidden rounded-b-[40px] sm:rounded-b-[48px]">
  {categories.length > 0 ? (
  <div className="space-y-3.5 w-full flex flex-col justify-center my-auto">
  {categoriesToRender.map(({ rate, originalIndex: index }) => {

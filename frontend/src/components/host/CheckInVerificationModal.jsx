@@ -106,6 +106,22 @@ export function CheckInVerificationModal({
  // Lightbox for receipt screenshot
  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
+ // Keyboard shortcut listener (Esc closes Lightbox first, then Modal)
+ useEffect(() => {
+ if (!isOpen) return;
+ const handleKeyDown = (e) => {
+ if (e.key === 'Escape') {
+ if (isLightboxOpen) {
+ setIsLightboxOpen(false);
+ } else {
+ onClose();
+ }
+ }
+ };
+ window.addEventListener('keydown', handleKeyDown);
+ return () => window.removeEventListener('keydown', handleKeyDown);
+ }, [isOpen, isLightboxOpen, onClose]);
+
  if (!isOpen || !booking) return null;
 
  const currentBooking = localBooking || booking;
@@ -207,21 +223,6 @@ export function CheckInVerificationModal({
  localBooking?.upiPayment?.submissionCount || currentBooking?.upiPayment?.submissionCount || 1
  );
  const canGuestResubmit = submissionCount < 2;
-
- // Keyboard shortcut listener (Esc closes Lightbox first, then Modal)
- useEffect(() => {
- const handleKeyDown = (e) => {
- if (e.key === 'Escape') {
- if (isLightboxOpen) {
- setIsLightboxOpen(false);
- } else {
- onClose();
- }
- }
- };
- window.addEventListener('keydown', handleKeyDown);
- return () => window.removeEventListener('keydown', handleKeyDown);
- }, [isLightboxOpen, onClose]);
 
  const handleCopy = (text, type) => {
  if (!text) return;

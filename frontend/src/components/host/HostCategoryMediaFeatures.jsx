@@ -200,18 +200,18 @@ export default function HostCategoryMediaFeatures({
         {/* Photo Header Bar */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="text-[13.5px] sm:text-[14px] font-bold text-white tracking-tight">
+            <span className="text-[13.5px] sm:text-[14px] font-bold text-slate-900 tracking-tight">
               Category Photos
             </span>
           </div>
 
           <div className="flex items-center gap-1.5">
             {totalBytes > 0 && (
-              <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-white/10 text-white/70 border border-white/15">
+              <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-slate-100 text-slate-600 border border-slate-200">
                 {formatMemorySize(totalBytes)}
               </span>
             )}
-            <span className="text-[11px] font-semibold text-white/80 bg-white/10 px-2.5 py-0.5 rounded-full border border-white/15">
+            <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
               {photosList.length} / 3 Photos
             </span>
           </div>
@@ -263,8 +263,8 @@ export default function HostCategoryMediaFeatures({
                   }}
                   className={`relative aspect-[16/9] rounded-xl sm:rounded-2xl overflow-hidden border-2 transition-[border-color,background-color,transform] duration-150 select-none group flex flex-col items-center justify-center touch-manipulation ${
                     hasPhoto
-                      ? 'border-white/20 hover:border-white/40 bg-black shadow-xs'
-                      : 'border-dashed border-white/25 hover:border-emerald-400 bg-black hover:bg-neutral-900 cursor-pointer shadow-xs active:scale-[0.98]'
+                      ? 'border-slate-200 hover:border-slate-300 bg-slate-100 shadow-xs'
+                      : 'border-dashed border-slate-300 hover:border-emerald-500 bg-slate-50 hover:bg-emerald-50/40 cursor-pointer shadow-xs active:scale-[0.98]'
                   }`}
                 >
                   {isProcessing ? (
@@ -305,14 +305,14 @@ export default function HostCategoryMediaFeatures({
                   ) : (
                     /* Empty Slot Upload Placeholder */
                     <div className="flex flex-col items-center justify-center gap-1 text-center p-2">
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 group-hover:bg-emerald-500/20 text-white/70 group-hover:text-emerald-300 flex items-center justify-center transition-colors">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white border border-slate-200 group-hover:bg-emerald-50 text-slate-600 group-hover:text-emerald-600 flex items-center justify-center transition-colors shadow-2xs">
                         <Icon className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
                       </div>
-                      <span className="text-[13px] sm:text-[14px] font-bold text-white/90 group-hover:text-emerald-300 truncate">
+                      <span className="text-[13px] sm:text-[14px] font-bold text-slate-800 group-hover:text-emerald-700 truncate">
                         {slot.label}
                       </span>
-                      <span className="text-[10.5px] sm:text-[11px] text-white/50 group-hover:text-white/80 flex items-center gap-1.5">
-                        <Camera className="w-3.5 h-3.5 text-white/50 group-hover:text-white/80 shrink-0" />
+                      <span className="text-[10.5px] sm:text-[11px] text-slate-500 group-hover:text-slate-700 flex items-center gap-1.5">
+                        <Camera className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 shrink-0" />
                         <span>Click to add</span>
                       </span>
                     </div>
@@ -325,13 +325,13 @@ export default function HostCategoryMediaFeatures({
       </div>
 
       {/* ── SECTION 2: ROOM CATEGORY FEATURES & AMENITIES ── */}
-      <div className="space-y-3 pt-2 border-t border-white/10" onClick={(e) => e.stopPropagation()}>
+      <div className="space-y-3 pt-2 border-t border-slate-200" onClick={(e) => e.stopPropagation()}>
         {/* Header: Category Features + Count */}
         <div className="flex items-center justify-between">
-          <span className="text-[15px] sm:text-[16.5px] font-extrabold text-white tracking-tight">
+          <span className="text-[15px] sm:text-[16.5px] font-extrabold text-slate-900 tracking-tight">
             Category Features
           </span>
-          <span className="text-[12.5px] sm:text-[13px] font-semibold text-white/70">
+          <span className="text-[12.5px] sm:text-[13px] font-semibold text-slate-500">
             {featuresList.length} selected
           </span>
         </div>
@@ -343,12 +343,12 @@ export default function HostCategoryMediaFeatures({
             value={customFeatureInput}
             onChange={(e) => setCustomFeatureInput(e.target.value)}
             placeholder="Add custom feature (e.g. King Bed, Mini Fridge, Study Table)..."
-            className="flex-1 h-10 sm:h-11 rounded-none px-3.5 text-[13px] sm:text-[14px] font-medium bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/20 transition-all"
+            className="flex-1 h-10 sm:h-11 rounded-none px-3.5 text-[13px] sm:text-[14px] font-medium bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all"
           />
           <button
             type="submit"
             disabled={!customFeatureInput.trim()}
-            className="h-10 sm:h-11 px-4 sm:px-5 rounded-none bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed text-slate-900 text-[13px] sm:text-[14px] font-bold flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0 outline-none focus:outline-none"
+            className="h-10 sm:h-11 px-4 sm:px-5 rounded-none bg-[#1f1b16] hover:bg-black disabled:opacity-40 disabled:cursor-not-allowed text-white text-[13px] sm:text-[14px] font-bold flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0 outline-none focus:outline-none"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>Add</span>
@@ -358,29 +358,29 @@ export default function HostCategoryMediaFeatures({
         {/* 2. Custom Added Features (if any), aligned in rows one below one with no rounded border */}
         {customFeaturesList.length > 0 && (
           <div className="space-y-1.5">
-            <span className="text-[11.5px] sm:text-[12px] font-bold text-white/60 tracking-wider uppercase select-none">
+            <span className="text-[11.5px] sm:text-[12px] font-bold text-slate-500 tracking-wider uppercase select-none">
               Custom Added:
             </span>
             <div className="flex flex-col gap-1.5">
               {customFeaturesList.map((feat, cIdx) => (
                 <div
                   key={`custom-${cIdx}-${feat}`}
-                  className="w-full h-10 px-3.5 flex items-center justify-between rounded-none border border-emerald-500/40 bg-emerald-500/15 text-emerald-300 select-none"
+                  className="w-full h-10 px-3.5 flex items-center justify-between rounded-none border border-emerald-300 bg-emerald-50 text-emerald-800 select-none"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <Check className="w-4 h-4 text-emerald-400 stroke-[2.5] shrink-0" />
+                    <Check className="w-4 h-4 text-emerald-600 stroke-[2.5] shrink-0" />
                     <span className="text-[13px] sm:text-[14px] font-semibold truncate">
                       {feat}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-none border border-emerald-500/30">
+                    <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-none border border-emerald-200">
                       Added
                     </span>
                     <button
                       type="button"
                       onClick={() => handleToggleFeature(feat)}
-                      className="w-6 h-6 flex items-center justify-center text-emerald-300 hover:text-white hover:bg-emerald-500/30 rounded-none cursor-pointer outline-none focus:outline-none"
+                      className="w-6 h-6 flex items-center justify-center text-emerald-600 hover:text-emerald-900 hover:bg-emerald-200/60 rounded-none cursor-pointer outline-none focus:outline-none"
                       title={`Remove ${feat}`}
                     >
                       <X className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -394,7 +394,7 @@ export default function HostCategoryMediaFeatures({
 
         {/* 3. Suggestion Features JUST BOTTOM of the input field, aligned in rows one below one with no rounded border */}
         <div className="space-y-1.5">
-          <span className="text-[11.5px] sm:text-[12px] font-bold text-white/60 tracking-wider uppercase select-none">
+          <span className="text-[11.5px] sm:text-[12px] font-bold text-slate-500 tracking-wider uppercase select-none">
             Suggested Features:
           </span>
 
@@ -408,28 +408,28 @@ export default function HostCategoryMediaFeatures({
                   onClick={() => handleToggleFeature(sug)}
                   className={`w-full h-10 sm:h-10.5 px-3.5 flex items-center justify-between rounded-none border cursor-pointer text-left select-none group outline-none focus:outline-none ${
                     isSelected
-                      ? 'bg-emerald-500/15 hover:bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
-                      : 'bg-white/5 hover:bg-white/10 border-white/15 text-white/90 hover:text-white'
+                      ? 'bg-emerald-50 hover:bg-emerald-100/70 border-emerald-300 text-emerald-800'
+                      : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700 hover:text-slate-900'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     {isSelected ? (
-                      <Check className="w-4 h-4 text-emerald-400 stroke-[2.5] shrink-0" />
+                      <Check className="w-4 h-4 text-emerald-600 stroke-[2.5] shrink-0" />
                     ) : (
-                      <Plus className="w-4 h-4 text-white/40 group-hover:text-white/70 stroke-[2] shrink-0 transition-colors" />
+                      <Plus className="w-4 h-4 text-slate-400 group-hover:text-slate-700 stroke-[2] shrink-0 transition-colors" />
                     )}
-                    <span className={`text-[13px] sm:text-[14px] truncate ${isSelected ? 'font-semibold text-emerald-300' : 'font-medium'}`}>
+                    <span className={`text-[13px] sm:text-[14px] truncate ${isSelected ? 'font-semibold text-emerald-800' : 'font-medium'}`}>
                       {sug}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-1.5 shrink-0">
                     {isSelected ? (
-                      <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-none border border-emerald-500/30">
+                      <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-none border border-emerald-200">
                         Added
                       </span>
                     ) : (
-                      <span className="text-[11.5px] font-medium text-white/40 group-hover:text-white/80 transition-colors">
+                      <span className="text-[11.5px] font-medium text-slate-400 group-hover:text-slate-700 transition-colors">
                         + Add
                       </span>
                     )}
@@ -443,7 +443,7 @@ export default function HostCategoryMediaFeatures({
             <button
               type="button"
               onClick={() => setShowAllSuggestions((prev) => !prev)}
-              className="w-full py-2 text-center text-xs font-semibold text-white/60 hover:text-white border border-dashed border-white/15 hover:border-white/30 bg-white/5 hover:bg-white/10 rounded-none cursor-pointer mt-1 outline-none focus:outline-none"
+              className="w-full py-2 text-center text-xs font-semibold text-slate-600 hover:text-slate-900 border border-dashed border-slate-300 hover:border-slate-400 bg-slate-50 hover:bg-slate-100 rounded-none cursor-pointer mt-1 outline-none focus:outline-none"
             >
               {showAllSuggestions ? 'Show Less Suggestions' : `+ Show ${SUGGESTED_FEATURES.length - 6} More Suggestions`}
             </button>

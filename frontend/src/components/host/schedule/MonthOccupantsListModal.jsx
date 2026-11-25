@@ -1,19 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
-/**
- * Calculates total months of stay for a given monthly booking occupant record.
- */
 function getOccupantStayMonths(occ) {
  if (!occ) return '1 Month';
 
- // 1. Direct bookedMonths array (used for monthly bookings)
  if (Array.isArray(occ.bookedMonths) && occ.bookedMonths.length > 0) {
  const count = occ.bookedMonths.length;
  return `${count} ${count === 1 ? 'Month' : 'Months'}`;
  }
 
- // 2. Check checkIn and checkOut dates
  const rawIn = occ.checkInISO || occ.checkIn;
  const rawOut = occ.checkOutISO || occ.checkOut;
  if (rawIn && rawOut) {
@@ -29,7 +24,6 @@ function getOccupantStayMonths(occ) {
  }
  }
 
- // 3. Fallback to durationLabel or months properties
  if (occ.durationLabel && occ.durationLabel.toLowerCase().includes('month')) {
  return occ.durationLabel;
  }
@@ -53,7 +47,6 @@ function formatOccupantMonthsRange(occ) {
  return `${parseM(sorted[0])} – ${parseM(sorted[sorted.length - 1])} (${sorted.length} Months)`;
  }
 
- // Daily / Nightly stay range formatting
  const rawIn = occ.checkInISO || occ.checkIn;
  const rawOut = occ.checkOutISO || occ.checkOut;
  if (rawIn && rawOut) {
@@ -70,11 +63,6 @@ function formatOccupantMonthsRange(occ) {
  return getOccupantStayMonths(occ);
 }
 
-/**
- * MonthOccupantsListModal
- * Displays a clean white popup with all booked occupants for the room.
- * Uses createPortal into document.body so the modal covers the entire viewport properly.
- */
 export function MonthOccupantsListModal({
  monthData,
  roomDisplay,
@@ -84,25 +72,21 @@ export function MonthOccupantsListModal({
  onBookOpenSlot,
  isOccupantModalOpen = false,
 }) {
+ const [currentPage, setCurrentPage] = useState(1);
+
+ const monthKey = monthData?.monthKey;
+ useEffect(() => {
+ setCurrentPage(1);
+ }, [monthKey]);
+
  if (!monthData || isOccupantModalOpen) return null;
  if (typeof document === 'undefined') return null;
 
  const {
- monthKey,
- monthShort,
- year,
- dateTitle,
  occupiedCount = 0,
  roomCapacity = 1,
  occupants = [],
- isFullyBooked = false,
  } = monthData;
-
- const [currentPage, setCurrentPage] = useState(1);
-
- useEffect(() => {
- setCurrentPage(1);
- }, [monthKey]);
 
  const ITEMS_PER_PAGE = 5;
  const totalPages = Math.ceil(occupants.length / ITEMS_PER_PAGE) || 1;
@@ -121,30 +105,27 @@ export function MonthOccupantsListModal({
  : '';
 
  return createPortal(
+ <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
  <div
- className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/50 transition-all overflow-y-auto"
  onClick={onClose}
- >
+ className="fixed inset-0 bg-black/20 backdrop-blur-xs cursor-pointer transition-opacity"
+ />
  <div
- className="relative w-full max-w-[400px] bg-white text-[#1f1b16] rounded-[28px] shadow-[0_24px_60px_-12px_rgba(0,0,0,0.18)] border border-slate-200/90 overflow-hidden my-auto select-none transition-all"
+ className="relative z-10 w-full max-w-[400px] bg-white text-[#1f1b16] rounded-[28px] shadow-[0_24px_60px_-12px_rgba(0,0,0,0.18)] border border-slate-200/90 overflow-hidden my-auto select-none transition-all"
  onClick={(e) => e.stopPropagation()}
  >
- {/* Header: Exact style matching Pic 1 Guest Details */}
+ {/* Header */}
  <div className="px-5 pt-4 pb-2.5 border-b border-slate-100 bg-white text-[#1f1b16] relative z-10">
  <div className="flex flex-col gap-1.5 w-full">
- {/* Row 1: Centered "Occupants" Title */}
  <div className="flex items-center justify-center w-full">
  <h3 className="font-medium tracking-tight text-[16px] sm:text-[17px] text-center leading-none text-[#1f1b16]">
  Occupants
  </h3>
  </div>
-
- {/* Row 2: Room info on Left, Guest count badge on Right */}
  <div className="flex items-center justify-between gap-2 w-full pt-1.5 border-t border-slate-100 text-xs leading-tight font-semibold">
  <span className="font-medium text-[10.5px] text-slate-600 truncate">
  {cleanRoomName || 'Room'}{roomTypeDisplay ? ` (${roomTypeDisplay})` : ''}
  </span>
-
  <span className="text-[10.5px] font-medium px-2.5 py-0.5 rounded-full border border-black bg-black text-white tracking-wide shrink-0 shadow-xs">
  {occupants.length} {occupants.length === 1 ? 'Guest' : 'Guests'}
  </span>
@@ -152,8 +133,8 @@ export function MonthOccupantsListModal({
  </div>
  </div>
 
- {/* Occupants List Body */}
- <div className="p-4 sm:p-5 pb-5 sm:pb-6 space-y-2.5 max-h-[60vh] overflow-y-auto custom-scrollbar">
+ {/* Occupants List Body — no max-height, no scroll */}
+ <div className="p-4 sm:p-5 pb-5 sm:pb-6 space-y-2.5">
  {occupants.length === 0 ? (
  <div className="p-8 text-center border border-dashed border-slate-200 rounded-2xl text-xs text-slate-400 space-y-1">
  <div>No occupants booked for this room yet.</div>
@@ -181,13 +162,10 @@ export function MonthOccupantsListModal({
  className="p-3.5 sm:p-4 rounded-2xl bg-slate-100/90 hover:bg-slate-100 border border-slate-200/90 hover:border-slate-300 transition-all duration-150 ease-out cursor-pointer group select-none active:scale-[0.99]"
  title={`Click to open Resident ID Pass for ${name}`}
  >
- {/* Top Row: Name | Online/Offline Tag | Price */}
  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
  <h4 className="text-[14.5px] sm:text-[15.5px] font-medium text-[#1f1b16] group-hover:text-[#1f1b16] transition-colors truncate leading-snug">
  {name}
  </h4>
-
- {/* Center: Online / Offline Tag (Centered in Name & Price row) */}
  <div className="flex items-center justify-center px-1">
  <span className={`text-[10px] sm:text-[10.5px] font-medium px-2 py-0.5 rounded-full border whitespace-nowrap ${
  isOnline
@@ -197,8 +175,6 @@ export function MonthOccupantsListModal({
  {isOnline ? 'Online' : 'Offline'}
  </span>
  </div>
-
- {/* Right: Price */}
  <div className="flex justify-end items-center">
  {paid > 0 ? (
  <span className="text-[13.5px] sm:text-[14.5px] font-medium text-emerald-600 tracking-tight leading-none">
@@ -210,12 +186,10 @@ export function MonthOccupantsListModal({
  </div>
  </div>
 
- {/* Bottom Row: Stay Months & View Pass */}
  <div className="flex items-center justify-between gap-2 mt-1.5">
  <div className="text-[11.5px] sm:text-xs font-medium text-slate-500 truncate min-w-0">
  {stayMonths}
  </div>
-
  <span className="text-[13.5px] sm:text-[14.5px] font-medium text-sky-600 flex items-center transition-colors group-hover:text-sky-700 leading-none whitespace-nowrap shrink-0">
  <span>View Pass</span>
  <span className="text-[16px] sm:text-[17px] font-medium ml-0.5 leading-none">›</span>
@@ -225,7 +199,7 @@ export function MonthOccupantsListModal({
  );
  })}
 
- {/* Pagination Controls when occupants count > 5 */}
+ {/* Pagination Controls */}
  {totalPages > 1 && (
  <div className="flex items-center justify-between pt-3 px-1 select-none">
  <button
@@ -261,7 +235,7 @@ export function MonthOccupantsListModal({
  )}
  </div>
 
- {/* Modal Footer: Action button if open slots remain */}
+ {/* Footer: Book Bed button */}
  {remainingSlots > 0 && typeof onBookOpenSlot === 'function' && (
  <div className="px-5 py-3.5 border-t border-slate-100 bg-white flex items-center justify-end">
  <button

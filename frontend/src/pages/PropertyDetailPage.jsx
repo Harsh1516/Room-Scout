@@ -5,6 +5,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { useBookings } from '../context/BookingsContext';
 import { staysAPI } from '../services/api';
+import { getSocket } from '../services/socket';
 import { getStayPricing } from '../utils/priceUtils';
 import { PropertyMediaSection } from '../components/room/PropertyMediaSection';
 import { PropertyOverviewSection } from '../components/room/PropertyOverviewSection';
@@ -168,6 +169,19 @@ export function PropertyDetailPage({ onLoginClick }) {
 
     fetchStayData(true);
 
+    const socket = getSocket();
+    const handleSocketSync = (payload) => {
+      if (payload?.stayId && String(payload.stayId) !== String(id)) return;
+      fetchStayData(false);
+    };
+    socket.on('stay:availability_changed', handleSocketSync);
+    socket.on('stay:updated', handleSocketSync);
+    socket.on('booking:new', handleSocketSync);
+    socket.on('booking:updated', handleSocketSync);
+    socket.on('booking:status_changed', handleSocketSync);
+    socket.on('booking:confirmed', handleSocketSync);
+    socket.on('payment:verified', handleSocketSync);
+
     const interval = setInterval(() => {
       fetchStayData(false);
     }, 3000);
@@ -217,6 +231,13 @@ export function PropertyDetailPage({ onLoginClick }) {
 
     return () => {
       clearInterval(interval);
+      socket.off('stay:availability_changed', handleSocketSync);
+      socket.off('stay:updated', handleSocketSync);
+      socket.off('booking:new', handleSocketSync);
+      socket.off('booking:updated', handleSocketSync);
+      socket.off('booking:status_changed', handleSocketSync);
+      socket.off('booking:confirmed', handleSocketSync);
+      socket.off('payment:verified', handleSocketSync);
       window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('storage', handleStorage);
@@ -373,7 +394,7 @@ export function PropertyDetailPage({ onLoginClick }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 transition-colors duration-300 font-body-md host-font-scope antialiased">
+    <div className="min-h-screen bg-white sm:bg-slate-50 text-slate-900 transition-colors duration-300 font-body-md host-font-scope antialiased">
       {/* ── TOP FLOATING NAVIGATION CAPSULES (MATCHING SEARCH / EXPLORE NAVBAR STYLE) ── */}
       <header className="relative w-full pointer-events-none select-none z-50">
         {/* 1. Left Island: Back button (Property type badge shifted to media section image) */}
@@ -460,7 +481,7 @@ export function PropertyDetailPage({ onLoginClick }) {
       <main
         className={`max-w-[1600px] mx-auto ${
           activeCenterTab === 'property'
-            ? 'px-0 sm:px-6 lg:px-8 pt-0 sm:pt-24 pb-28 sm:pb-32 md:pb-24'
+            ? 'px-0 sm:px-6 lg:px-8 pt-0 sm:pt-24 pb-0 sm:pb-32 md:pb-24'
             : 'px-3.5 sm:px-6 lg:px-8 pt-[88px] sm:pt-24 pb-28 sm:pb-32 md:pb-24'
         } min-h-screen transition-all duration-300`}
       >

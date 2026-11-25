@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef, useLayoutEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { groupDaysByMonth } from '../../utils/dateUtils';
 import { PersonOccupancyGrid } from '../common/PersonOccupancyGrid';
+import { isPerPersonPricing } from '../../utils/priceUtils';
 
 /**
  * UserMonthlySlotCard (Mid Tab)
@@ -114,8 +115,7 @@ export function UserMonthlySlotCard({
       const rawPrice = activeRoom?.price || stay?.price || 0;
       const unitPrice = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/\D/g, '')) || 0;
       const safePersons = Math.max(1, Number(personCount) || 1);
-      const resolvedType = String(stay?.propertyType || stay?.type || 'PG').trim().toLowerCase();
-      const isPerPerson = resolvedType === 'pg' || resolvedType === 'hostel';
+      const isPerPerson = isPerPersonPricing(stay, activeRoom);
       const effectiveMultiplier = isPerPerson ? safePersons : 1;
       const totalPrice = unitPrice * durationMonths * effectiveMultiplier;
 
@@ -126,7 +126,7 @@ export function UserMonthlySlotCard({
         checkInTime: '12:00 AM',
         checkOutDate: `${lastMonth.daysInMonth} ${lastMonth.monthShort} ${lastMonth.year}`,
         checkOutTime: '11:59 PM',
-        priceBreakdown: `₹${unitPrice.toLocaleString('en-IN')}/mo × ${durationMonths} mo${durationMonths > 1 ? 's' : ''}`,
+        priceBreakdown: `₹${unitPrice.toLocaleString('en-IN')}/mo × ${durationMonths} mo${durationMonths > 1 ? 's' : ''}${isPerPerson && safePersons > 1 ? ` × ${safePersons} persons` : ''}`,
         unitPrice,
         totalPrice,
       };
@@ -146,7 +146,10 @@ export function UserMonthlySlotCard({
 
     const rawPrice = activeRoom?.price || stay?.price || 0;
     const nightlyPrice = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/\D/g, '')) || 0;
-    const totalPrice = nightlyPrice * durationNights;
+    const safePersons = Math.max(1, Number(personCount) || 1);
+    const isPerPerson = isPerPersonPricing(stay, activeRoom);
+    const effectiveMultiplier = isPerPerson ? safePersons : 1;
+    const totalPrice = nightlyPrice * durationNights * effectiveMultiplier;
 
     return {
       isMonthly: false,
@@ -158,7 +161,7 @@ export function UserMonthlySlotCard({
       checkInTime: '12:00 PM',
       checkOutDate: `${checkoutDayName}, ${checkoutMonthDay} ${checkoutYear}`,
       checkOutTime: '11:59 AM',
-      priceBreakdown: `₹${nightlyPrice.toLocaleString('en-IN')} × ${durationNights} night${durationNights > 1 ? 's' : ''}`,
+      priceBreakdown: `₹${nightlyPrice.toLocaleString('en-IN')} × ${durationNights} night${durationNights > 1 ? 's' : ''}${isPerPerson && safePersons > 1 ? ` × ${safePersons} persons` : ''}`,
       unitPrice: nightlyPrice,
       totalPrice,
     };

@@ -11,6 +11,7 @@ import { Payment } from '../models/Payment.js';
 import { generateToken, isAdminUser, adminKeyIsValid } from '../middleware/authMiddleware.js';
 import { uploadSecureImage } from '../utils/imageSecurity.js';
 import { isBookingRequestExpired } from './bookingController.js';
+import { sendPropertyApprovedToHostEmail } from '../services/emailService.js';
 
 // @desc    Get all users list (Online Accounts + Offline Booking Occupants)
 // @route   GET /api/admin/users
@@ -724,6 +725,34 @@ export const bulkApproveHosts = async (req, res, next) => {
     emitToAdmin('admin:hosts_bulk_approved', { hostIds });
     emitToGlobal('stay:updated', { hostIds });
 
+    // Notify approved hosts via email (fire-and-forget)
+    Promise.all([
+      Host.find({ _id: { $in: hostIds } }).select('name email subscription').lean(),
+      Stay.find({ hostId: { $in: hostIds } }).select('hostId propertyName title type propertyType').lean(),
+    ])
+      .then(([approvedHosts, staysList]) => {
+        const stayByHost = new Map(staysList.map((s) => [String(s.hostId), s]));
+        const now = new Date();
+        approvedHosts.forEach((h) => {
+          const st = stayByHost.get(String(h._id));
+          const isLive = Boolean(
+            h.subscription?.status === 'ACTIVE' &&
+            h.subscription?.expiresAt &&
+            new Date(h.subscription.expiresAt) > now
+          );
+          if (h.email) {
+            sendPropertyApprovedToHostEmail({
+              hostEmail: h.email,
+              hostName: h.name,
+              propertyName: st?.propertyName || st?.title || 'Your Property',
+              propertyType: st?.type || st?.propertyType || 'Stay',
+              isLive,
+            }).catch((err) => console.warn('[Email Warning] Bulk property approval email failed:', err.message));
+          }
+        });
+      })
+      .catch((err) => console.warn('[Email Warning] Bulk property approval lookup failed:', err.message));
+
     return res.json({
       success: true,
       message: `Successfully approved ${hostIds.length} host${hostIds.length === 1 ? '' : 's'}!`,
@@ -741,7 +770,7 @@ export const approveHost = async (req, res, next) => {
   try {
     const { id } = req.params;
     // Fast lightweight verification selecting only _id without transferring large stay documents
-    const existingStay = await Stay.findOne({ hostId: id }).select('_id').lean();
+    const existingStay = await Stay.findOne({ hostId: id }).select('_id propertyName title type propertyType').lean();
     if (!existingStay) {
       return res.status(400).json({
         success: false,
@@ -794,6 +823,19 @@ export const approveHost = async (req, res, next) => {
       status: 'Approved',
     });
     emitToGlobal('stay:updated', { stayId: existingStay._id, hostId: host._id });
+
+    // Notify host via email that their property was approved
+    if (host.email) {
+      sendPropertyApprovedToHostEmail({
+        hostEmail: host.email,
+        hostName: host.name,
+        propertyName: existingStay.propertyName || existingStay.title || 'Your Property',
+        propertyType: existingStay.type || existingStay.propertyType || 'Stay',
+        isLive: hasActiveSub,
+      }).catch((emailErr) => {
+        console.warn('[Email Warning] Property approval email to host failed:', emailErr.message);
+      });
+    }
 
     return res.json({
       success: true,

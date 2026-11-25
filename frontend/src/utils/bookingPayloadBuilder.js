@@ -1,3 +1,5 @@
+import { isPerPersonPricing } from './priceUtils';
+
 export function buildBookingPayload({
   isMonthly,
   selectedRoom,
@@ -7,6 +9,7 @@ export function buildBookingPayload({
   cleanPhone,
   guestEmail,
   cleanAadhar,
+  guestAadharPhoto = '',
   safePersons,
   user,
   selectedMonthIndices,
@@ -33,8 +36,7 @@ export function buildBookingPayload({
   const rawPrice = selectedRoom?.price || stay?.price || 0;
   const unitPrice =
     typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/[^0-9]/g, '')) || 0;
-  const resolvedType = String(stay?.propertyType || stay?.type || 'PG').trim().toLowerCase();
-  const isPerPerson = resolvedType === 'pg' || resolvedType === 'hostel';
+  const isPerPerson = isPerPersonPricing(stay, selectedRoom);
   const effectiveMultiplier = isPerPerson ? safePersons : 1;
 
   if (isMonthly) {
@@ -98,6 +100,7 @@ export function buildBookingPayload({
       personCount: safePersons,
       guestAadhar: cleanAadhar,
       aadharId: cleanAadhar,
+      aadharPhoto: guestAadharPhoto || '',
       userId: user?._id || 'guest_user',
       hostEmail: stay?.hostEmail || stay?.email || '',
       hostPhone: stay?.hostPhone || stay?.phone || '',
@@ -175,6 +178,7 @@ export function buildBookingPayload({
     personCount: safePersons,
     guestAadhar: cleanAadhar,
     aadharId: cleanAadhar,
+    aadharPhoto: guestAadharPhoto || '',
     userId: user?._id || 'guest_user',
     hostEmail: stay?.hostEmail || stay?.email || '',
     hostPhone: stay?.hostPhone || stay?.phone || '',

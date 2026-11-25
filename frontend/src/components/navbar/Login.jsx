@@ -14,7 +14,7 @@ function getInitials(name) {
  return name.trim().slice(0, 2).toUpperCase();
 }
 
-export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
+export function Login({ onLoginClick, iconOnly = false }) {
  const navigate = useNavigate();
  const location = useLocation();
  const { user, isAuthenticated, isHost, logout } = useAuth();
@@ -205,31 +205,6 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
  <span className="truncate">Account</span>
  </button>
 
- {/* Activity Button (shown for hosts or when on host routes or onOpenActivity provided) */}
- {(isHost || location.pathname.startsWith('/host') || onOpenActivity) && (
- <button
- type="button"
- onClick={() => {
- setDropdownOpen(false);
- if (typeof onOpenActivity === 'function') {
- onOpenActivity();
- } else if (location.pathname !== '/host/dashboard') {
- navigate('/host/dashboard?telemetry=true');
- } else {
- window.dispatchEvent(new CustomEvent('host:open_activity'));
- }
- }}
- className="group w-full text-left px-3.5 py-2.5 min-h-[48px] rounded-2xl text-[16px] sm:text-[17px] font-semibold transition-all duration-150 flex items-center gap-3 cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-transparent hover:bg-slate-100 border border-transparent hover:border-slate-200/80 text-slate-800 hover:text-[#1f1b16]"
- >
- <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center border border-emerald-500/20 group-hover:scale-105 group-hover:bg-emerald-500/20 transition-all duration-150 shrink-0">
- <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
- <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
- </svg>
- </div>
- <span className="truncate">Activity</span>
- </button>
- )}
-
  {/* 2. Settings Button */}
  <button
  type="button"
@@ -288,9 +263,10 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
  </button>
  </div>
 
- {/* 5. Switch to User Dashboard & Logout */}
+ {/* 5. Switch Dashboard (Host <-> User) & Logout */}
  <div className="pt-2 border-t border-slate-100 space-y-1">
- {/* User Dashboard Switch */}
+ {/* Contextual Dashboard Switch */}
+ {location.pathname.startsWith('/host') ? (
  <button
  type="button"
  onClick={() => {
@@ -308,6 +284,25 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
  </div>
  <span className="truncate">User Dashboard</span>
  </button>
+ ) : (
+ <button
+ type="button"
+ onClick={() => {
+ setDropdownOpen(false);
+ navigate(user?.hasProperty || isHost ? '/host/dashboard' : '/host/upload');
+ }}
+ className="group w-full text-left px-3.5 py-2.5 min-h-[46px] rounded-2xl text-[15px] sm:text-[16px] font-semibold transition-all duration-150 flex items-center gap-3 cursor-pointer active:scale-98 focus:outline-none focus:ring-0 bg-transparent hover:bg-purple-50 border border-transparent hover:border-purple-200/80 text-purple-700 hover:text-purple-800"
+ title="Switch to Host Dashboard"
+ >
+ <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center border border-purple-500/20 group-hover:scale-105 group-hover:bg-purple-500/20 transition-all duration-150 shrink-0">
+ <svg className="w-4.5 h-4.5 stroke-[2.2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+ <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+ <polyline points="9 22 9 12 15 12 15 22" />
+ </svg>
+ </div>
+ <span className="truncate">Host Dashboard</span>
+ </button>
+ )}
 
  {/* Logout Button */}
  <button
@@ -352,7 +347,7 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
  initial={{ opacity: 0 }}
  animate={{ opacity: 1 }}
  exit={{ opacity: 0 }}
- className="fixed inset-0 bg-[#1f1b16]/80 "
+ className="fixed inset-0 bg-[#121418]/60 backdrop-blur-xs"
  onClick={() => setActiveModal(null)}
  />
 
@@ -385,7 +380,7 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
  <button
  type="button"
  onClick={() => setActiveModal(null)}
- className="py-2.5 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition-colors cursor-pointer"
+ className="min-h-[46px] sm:min-h-[48px] py-3 px-5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm flex items-center justify-center transition-colors cursor-pointer active:scale-95"
  >
  Cancel
  </button>
@@ -393,7 +388,7 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
  <button
  type="button"
  onClick={handleLogout}
- className="py-2.5 px-4 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-medium text-xs shadow-md shadow-rose-600/30 transition-all cursor-pointer active:scale-95"
+ className="min-h-[46px] sm:min-h-[48px] py-3 px-5 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm flex items-center justify-center shadow-md shadow-rose-600/30 transition-all cursor-pointer active:scale-95"
  >
  Logout
  </button>
@@ -409,7 +404,7 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
  initial={{ opacity: 0 }}
  animate={{ opacity: 1 }}
  exit={{ opacity: 0 }}
- className="fixed inset-0 bg-[#1f1b16]/80 "
+ className="fixed inset-0 bg-[#121418]/60 backdrop-blur-xs"
  onClick={() => setActiveModal(null)}
  />
 
@@ -491,7 +486,7 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
  initial={{ opacity: 0 }}
  animate={{ opacity: 1 }}
  exit={{ opacity: 0 }}
- className="fixed inset-0 bg-[#1f1b16]/80 "
+ className="fixed inset-0 bg-[#121418]/60 backdrop-blur-xs"
  onClick={() => setActiveModal(null)}
  />
 
@@ -565,7 +560,7 @@ export function Login({ onLoginClick, onOpenActivity, iconOnly = false }) {
  initial={{ opacity: 0 }}
  animate={{ opacity: 1 }}
  exit={{ opacity: 0 }}
- className="fixed inset-0 bg-[#1f1b16]/80 "
+ className="fixed inset-0 bg-[#121418]/60 backdrop-blur-xs"
  onClick={() => setActiveModal(null)}
  />
 

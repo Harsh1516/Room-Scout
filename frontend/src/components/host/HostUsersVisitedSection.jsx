@@ -95,6 +95,8 @@ export function HostUsersVisitedSection({
  onSelectUserRequest = () => {},
  subTab: externalSubTab,
  setSubTab: externalSetSubTab,
+  roomRates = [],
+  rooms = [],
 }) {
  const [internalSubTab, setInternalSubTab] = useState('requests');
  const activeSubTab = externalSubTab || internalSubTab;
@@ -725,7 +727,7 @@ export function HostUsersVisitedSection({
  };
 
  return (
- <div className="w-full flex-1 min-h-0 flex flex-col space-y-2.5">
+ <div className="w-full flex-1 lg:min-h-0 flex flex-col lg:space-y-2.5 lg:overflow-hidden">
  {/* Top command bar: segmented scope toggle + calendar date info */}
  {activeSubTab !== 'paid' && (
  <VisitedSubNavbar
@@ -750,12 +752,14 @@ export function HostUsersVisitedSection({
 
  {/* When Paid Users is selected, render the dedicated Paid Users Roster */}
  {activeSubTab === 'paid' ? (
- <div className="w-full flex-1 flex flex-col min-h-0 pt-1">
+ <div className="w-full flex-1 flex flex-col min-h-0 pt-1 overflow-y-auto overscroll-y-contain">
  <PaidUsersList
  guests={activePaidUsers}
  allGuests={mergedGuests}
  setGuests={setGuests}
  hostProperty={hostProperty}
+            roomRates={roomRates.length > 0 ? roomRates : hostProperty?.roomRates || []}
+            rooms={rooms.length > 0 ? rooms : hostProperty?.rooms || []}
  showToast={showToast}
  refreshGuests={refreshGuests}
  broadcastStayUpdate={broadcastStayUpdate}
@@ -764,7 +768,7 @@ export function HostUsersVisitedSection({
  />
  </div>
  ) : (
- <div className="w-full flex-1 min-h-0 flex flex-col">
+ <div className="w-full flex-1 lg:min-h-0 flex flex-col lg:overflow-hidden">
  <VisitedRequestsView
  subTab={activeSubTab}
  displayedGuests={displayedGuests}
@@ -772,6 +776,8 @@ export function HostUsersVisitedSection({
  allGuests={mergedGuests}
  categoriesWithRooms={visibleCategoriesWithRooms}
  hostProperty={hostProperty}
+						roomRates={roomRates.length > 0 ? roomRates : hostProperty?.roomRates || []}
+						rooms={rooms.length > 0 ? rooms : hostProperty?.rooms || []}
  selectedCategory={selectedCategory}
  onSelectCategory={setSelectedCategory}
  selectedRoomNumber={selectedRoomNumber}

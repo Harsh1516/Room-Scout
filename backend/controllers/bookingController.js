@@ -13,6 +13,7 @@ import {
   sendBookingConfirmedEmail,
 } from '../services/emailService.js';
 import { emitToHost, emitToUser, emitToGlobal } from '../services/socketService.js';
+import { uploadSecureImage } from '../utils/imageSecurity.js';
 
 const BOOKING_STATUS_ENUM = [
   'PENDING',
@@ -394,6 +395,52 @@ export const computeBookingTimings = ({
   }
 };
 
+// Helper to determine if pricing should be per person
+// Rule: For PG, Hostel, and Independent Rooms category, pricing must be per person (online and offline).
+function isPerPersonPricing(stayOrProperty, categoryOrRoom) {
+  const pType = String(
+    (typeof stayOrProperty === 'string'
+      ? stayOrProperty
+      : (stayOrProperty?.propertyType || stayOrProperty?.type || stayOrProperty?.category)) || ''
+  ).trim().toLowerCase();
+
+  const rType = String(
+    (typeof categoryOrRoom === 'string'
+      ? categoryOrRoom
+      : (categoryOrRoom?.type || categoryOrRoom?.categoryName || categoryOrRoom?.name)) || ''
+  ).trim().toLowerCase();
+
+  const isHotelOrFlat = (pType === 'hotel' || pType === 'flat') && !pType.includes('independent') && !rType.includes('independent');
+  if (isHotelOrFlat) {
+    return false;
+  }
+
+  if (
+    pType === 'pg' ||
+    pType === 'hostel' ||
+    pType === 'independent room' ||
+    pType === 'independent_room' ||
+    pType === 'independent' ||
+    pType.includes('pg') ||
+    pType.includes('independent') ||
+    rType === 'pg' ||
+    rType === 'hostel' ||
+    rType === 'independent room' ||
+    rType === 'independent_room' ||
+    rType === 'independent' ||
+    rType.includes('independent') ||
+    rType.includes('pg')
+  ) {
+    return true;
+  }
+
+  if (!pType && !rType) {
+    return true;
+  }
+
+  return false;
+}
+
 // @desc    Create a new online booking
 // @route   POST /api/bookings
 // @access  Private / User
@@ -474,8 +521,7 @@ export const createBooking = async (req, res, next) => {
     const roomBaseRate = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/[^0-9]/g, '')) || 0;
 
     const safePersons = Math.max(1, Number(body.personCount) || 1);
-    const resolvedType = String(stay.type || stay.propertyType || 'PG').trim().toLowerCase();
-    const isPerPerson = resolvedType === 'pg' || resolvedType === 'hostel';
+    const isPerPerson = isPerPersonPricing(stay, targetRoom);
     const effectiveMultiplier = isPerPerson ? safePersons : 1;
     const baseAmount = roomBaseRate * unitCount * effectiveMultiplier;
     const serverTotal = (typeof body.totalAmount === 'number' && body.totalAmount >= 0)
@@ -501,6 +547,23 @@ export const createBooking = async (req, res, next) => {
       finalRefId = `BK-${Date.now().toString().slice(-8)}-${Math.random().toString(36).slice(2, 6)}`;
     }
 
+    let uploadedAadharPhoto = '';
+    const rawAadharPhoto = String(body.aadharPhoto || body.guestAadharPhoto || '').trim();
+    if (!rawAadharPhoto) {
+      return res.status(400).json({
+        success: false,
+        message: 'Aadhar card photo is required.',
+      });
+    }
+    try {
+      uploadedAadharPhoto = await uploadSecureImage(rawAadharPhoto, 'roomscout/aadhar');
+    } catch (imgErr) {
+      return res.status(400).json({
+        success: false,
+        message: imgErr.message || 'Invalid Aadhar card photo format.',
+      });
+    }
+
     const bookingPayload = {
       stayId: stay._id,
       hostId: stay.hostId,
@@ -512,6 +575,7 @@ export const createBooking = async (req, res, next) => {
       phone: String(body.phone || body.guestPhone || '').replace(/\D/g, '').slice(-10),
       gender: body.gender || body.guestGender || 'Other',
       aadharNumber: resolveAadhar(body),
+      aadharPhoto: uploadedAadharPhoto,
       roomNumber,
       roomType: body.roomType || targetRoom?.type || 'Standard',
       rateUnit: isMonthly ? '/month' : '/night',
@@ -820,6 +884,17 @@ export const createOfflineBooking = async (req, res, next) => {
 
     const refId = `OFF-${roomNumber}-${Date.now().toString().slice(-5)}`;
 
+    const rawPrice = targetRoom?.price || matchingRate?.price || stay.price || 0;
+    const roomBaseRate = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/[^0-9]/g, '')) || 0;
+    const unitCount = isMonthlyRoom ? (timings.durationMonths || (req.body.bookedMonths?.length) || 1) : (timings.durationDays || (cleanDates?.length) || 1);
+    const safePersons = Math.max(1, Number(req.body?.personCount || personCount) || 1);
+    const isPerPerson = isPerPersonPricing(stay, targetRoom || matchingRate);
+    const effectiveMultiplier = isPerPerson ? safePersons : 1;
+    const computedBaseAmount = roomBaseRate * unitCount * effectiveMultiplier;
+    const finalTotalAmount = (totalAmount !== undefined && totalAmount !== null && Number(totalAmount) > 0)
+      ? Number(totalAmount)
+      : computedBaseAmount;
+
     // 1. Create Master Reservation in Booking Collection
     const newBooking = await Booking.create({
       stayId: stay._id,
@@ -835,14 +910,14 @@ export const createOfflineBooking = async (req, res, next) => {
       phone: cleanPhone,
       email: (email || guestEmail || '').trim().toLowerCase(),
       aadharNumber: (aadhar || guestAadhar || '').trim(),
-      personCount: Number(req.body?.personCount || personCount) || 1,
+      personCount: safePersons,
       gender: gender || 'Other',
       checkIn: startDate,
       checkOut: endDate,
       durationDisplay,
       bookedDates: isMonthlyRoom ? [] : (cleanDates.length > 0 ? cleanDates : (timings.cleanDates || [])),
       bookedMonths: isMonthlyRoom ? (Array.isArray(req.body.bookedMonths) && req.body.bookedMonths.length > 0 ? req.body.bookedMonths : (timings.cleanMonths || [])) : [],
-      totalAmount: Number(totalAmount) || 0,
+      totalAmount: finalTotalAmount,
       bookingReferenceId: refId,
       status: 'CHECKED_IN',
       isOccupied: true,
@@ -858,7 +933,7 @@ export const createOfflineBooking = async (req, res, next) => {
       stayId: stay._id,
       hostId: host._id,
       userId: null,
-      amount: Number(totalAmount) || 0,
+      amount: finalTotalAmount,
       paymentMethod: 'OFFLINE',
       paymentStatus: 'COMPLETED',
       transactionId: `OFF-TXN-${Date.now().toString().slice(-6)}`,
@@ -1031,6 +1106,7 @@ export const getHostBookings = async (req, res, next) => {
       bookingId: b._id.toString(),
       userName: b.fullName,
       guestAadhar: b.aadharNumber,
+      guestAadharPhoto: b.aadharPhoto || '',
     }));
 
     return res.json({

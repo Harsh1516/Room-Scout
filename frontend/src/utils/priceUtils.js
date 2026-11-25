@@ -207,3 +207,53 @@ export function getOtherStayPrices(stay, lowestPriceNum) {
 
  return list;
 }
+
+
+// Helper to determine if pricing should be per person
+// Rule: For PG, Hostel, and Independent Rooms category, pricing must be per person (online and offline).
+export function isPerPersonPricing(stayOrProperty, categoryOrRoom) {
+  const pType = String(
+    (typeof stayOrProperty === 'string'
+      ? stayOrProperty
+      : (stayOrProperty?.propertyType || stayOrProperty?.type || stayOrProperty?.category)) || ''
+  ).trim().toLowerCase();
+
+  const rType = String(
+    (typeof categoryOrRoom === 'string'
+      ? categoryOrRoom
+      : (categoryOrRoom?.type || categoryOrRoom?.categoryName || categoryOrRoom?.name)) || ''
+  ).trim().toLowerCase();
+
+  // If explicitly Hotel or Flat and not independent room, pricing is per unit/room
+  const isHotelOrFlat = (pType === 'hotel' || pType === 'flat') && !pType.includes('independent') && !rType.includes('independent');
+  if (isHotelOrFlat) {
+    return false;
+  }
+
+  // PG, Hostel, or Independent Room (either as propertyType or room category)
+  if (
+    pType === 'pg' ||
+    pType === 'hostel' ||
+    pType === 'independent room' ||
+    pType === 'independent_room' ||
+    pType === 'independent' ||
+    pType.includes('pg') ||
+    pType.includes('independent') ||
+    rType === 'pg' ||
+    rType === 'hostel' ||
+    rType === 'independent room' ||
+    rType === 'independent_room' ||
+    rType === 'independent' ||
+    rType.includes('independent') ||
+    rType.includes('pg')
+  ) {
+    return true;
+  }
+
+  // System default fallback: default property type is PG
+  if (!pType && !rType) {
+    return true;
+  }
+
+  return false;
+}

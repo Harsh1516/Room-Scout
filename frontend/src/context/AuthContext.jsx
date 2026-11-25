@@ -457,11 +457,31 @@ export function AuthProvider({ children }) {
   const loginWithGoogle = async ({ credential, accessToken, role = 'user' }) => {
  setLoading(true);
  try {
- const data = await authAPI.googleAuth({ credential, accessToken, role });
- const authToken = data.token || (data.user && data.user.token);
- if (authToken) {
- syncAuthState(data, authToken);
- }
+      const data = await authAPI.googleAuth({ credential, accessToken, role });
+      const authToken = data.token || (data.user && data.user.token);
+      if (authToken) {
+        syncAuthState(data, authToken);
+        if (data?.email) {
+          adminAPI.getHostByEmail(data.email).then((hCheck) => {
+            if (hCheck?.hasProperty || hCheck?.host?.status === 'Approved') {
+              setUser((prev) => {
+                if (!prev) return prev;
+                const nextUser = {
+                  ...prev,
+                  role: 'host',
+                  status: 'Approved',
+                  isApproved: true,
+                  hasProperty: true,
+                };
+                try {
+                  localStorage.setItem('roomscout_user', JSON.stringify(nextUser));
+                } catch {}
+                return nextUser;
+              });
+            }
+          }).catch(() => {});
+        }
+      }
  setLoading(false);
  return { success: true, data };
  } catch (error) {

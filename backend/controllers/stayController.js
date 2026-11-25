@@ -5,6 +5,8 @@ import { Host } from '../models/Host.js';
 import { Booking } from '../models/Booking.js';
 import { isAdminUser, idsMatch } from '../middleware/authMiddleware.js';
 import { uploadSecureImage } from '../utils/imageSecurity.js';
+import { sendPropertySubmissionToAdminEmail } from '../services/emailService.js';
+import { emitToAdmin, emitToGlobal } from '../services/socketService.js';
 
 // @desc    Get all published property stays with filters, sorting, and pagination
 // @route   GET /api/stays
@@ -387,6 +389,28 @@ export const createStay = async (req, res, next) => {
     }
 
     const newStay = await Stay.create(stayPayload);
+
+    // Real-time WebSocket update to Admin & Global so admin sees new property immediately
+    emitToAdmin('admin:host_updated', {
+      stayId: newStay._id,
+      hostId,
+      action: 'PROPERTY_SUBMITTED',
+    });
+    emitToGlobal('stay:updated', { stayId: newStay._id, hostId });
+
+    // Notify admin via email that a new property awaits approval
+    sendPropertySubmissionToAdminEmail({
+      hostName: hostDoc?.name || req.user?.name || 'Host',
+      hostEmail: hostDoc?.email || req.user?.email || '',
+      hostPhone: hostDoc?.phone || req.user?.phone || '',
+      propertyName: newStay.propertyName || newStay.title,
+      propertyType: newStay.type || newStay.propertyType,
+      location: newStay.location || newStay.city,
+      roomCount: Array.isArray(newStay.roomGrid) ? newStay.roomGrid.length : 0,
+    }).catch((emailErr) => {
+      console.warn('[Email Warning] Admin property submission email failed:', emailErr.message);
+    });
+
     return res.status(201).json(newStay);
   } catch (error) {
     console.error('Error creating stay:', error);
@@ -567,6 +591,8 @@ export const updateStayRooms = async (req, res, next) => {
     }
 
     await stay.save();
+    emitToGlobal('stay:availability_changed', { stayId: stay._id });
+    emitToGlobal('stay:updated', { stayId: stay._id });
     return res.json({
       success: true,
       message: 'Room counts updated successfully',

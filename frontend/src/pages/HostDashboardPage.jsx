@@ -2,9 +2,10 @@ import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from '../context/ToastContext';
+import { adminAPI, subscriptionsAPI } from '../services/api';
+import { getSocket } from '../services/socket';
 import HostDashboardNavbar from '../components/host/HostDashboardNavbar';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
-import { PropertyTelemetryModal } from '../components/host/property/PropertyTelemetryModal';
 import { HostRoomsTab } from '../components/host/tabs/HostRoomsTab';
 
 // Custom Hooks for Modular Architecture
@@ -61,8 +62,83 @@ export function HostDashboardPage() {
  });
 
  const [visitedSubTab, setVisitedSubTab] = useState('requests');
- const [showPropertyTelemetry, setShowPropertyTelemetry] = useState(false);
  const [propertySubTabIndex, setPropertySubTabIndex] = useState(0);
+
+ // ── Host Subscription Live State ──
+ const [subscriptionInfo, setSubscriptionInfo] = useState(() => {
+   try {
+     const raw = localStorage.getItem('stayhub_host_subscription_cache');
+     return raw ? JSON.parse(raw) : null;
+   } catch {
+     return null;
+   }
+ });
+
+ const loadSubscriptionData = useCallback(async () => {
+   try {
+     const res = await subscriptionsAPI.getMySubscription().catch(() => null);
+     if (res && res.success) {
+       setSubscriptionInfo(res);
+       try {
+         localStorage.setItem('stayhub_host_subscription_cache', JSON.stringify(res));
+       } catch {
+         /* ignore */
+       }
+     }
+   } catch (err) {
+     console.warn('Failed to load host subscription in dashboard:', err);
+   }
+ }, []);
+
+ useEffect(() => {
+   loadSubscriptionData();
+
+   const handleSubUpdated = () => {
+     loadSubscriptionData();
+   };
+
+   window.addEventListener('stayhub_subscription_updated', handleSubUpdated);
+
+   let bc = null;
+   try {
+     if (typeof BroadcastChannel !== 'undefined') {
+       bc = new BroadcastChannel('stayhub_live_channel');
+       bc.onmessage = (event) => {
+         if (
+           event.data?.type === 'SUBSCRIPTION_CREATED' ||
+           event.data?.type === 'SUBSCRIPTION_VERIFIED' ||
+           event.data?.type === 'SUBSCRIPTION_UPDATED' ||
+           event.data?.type === 'HOST_APPROVED'
+         ) {
+           loadSubscriptionData();
+         }
+       };
+     }
+   } catch (err) {
+     console.warn('BroadcastChannel error:', err);
+   }
+
+   const socket = getSocket();
+   socket.on('subscription:created', handleSubUpdated);
+   socket.on('subscription:verified', handleSubUpdated);
+   socket.on('subscription:updated', handleSubUpdated);
+
+   const handleStorage = (e) => {
+     if (e.key === 'stayhub_host_subscription_cache' || e.key === 'stayhub_admin_sync_ts') {
+       loadSubscriptionData();
+     }
+   };
+   window.addEventListener('storage', handleStorage);
+
+   return () => {
+     window.removeEventListener('stayhub_subscription_updated', handleSubUpdated);
+     window.removeEventListener('storage', handleStorage);
+     if (bc) bc.close();
+     socket.off('subscription:created', handleSubUpdated);
+     socket.off('subscription:verified', handleSubUpdated);
+     socket.off('subscription:updated', handleSubUpdated);
+   };
+ }, [loadSubscriptionData]);
 
  const handleTabSwitch = useCallback((nextTab) => {
  setActiveTab(nextTab);
@@ -135,10 +211,33 @@ export function HostDashboardPage() {
 
   // Guard: If host has not registered any property yet, redirect to upload flow
   useEffect(() => {
+    let isMounted = true;
     if (!loading && hasInitialFetched && !user?.hasProperty && !hostProperty?.propertyName && !hostProperty?._id) {
-      navigate('/host/upload', { replace: true });
+      if (user?.email) {
+        adminAPI
+          .getHostByEmail(user.email)
+          .then((check) => {
+            if (!isMounted) return;
+            if (check?.hasProperty) {
+              fetchHostData();
+            } else {
+              navigate('/host/upload', { replace: true });
+            }
+          })
+          .catch(() => {
+            // Cold-start or network glitch: retry fetching instead of prematurely bouncing to upload
+            setTimeout(() => {
+              if (isMounted) fetchHostData();
+            }, 2500);
+          });
+      } else {
+        navigate('/host/upload', { replace: true });
+      }
     }
-  }, [loading, hasInitialFetched, user?.hasProperty, hostProperty?.propertyName, hostProperty?._id, navigate]);
+    return () => {
+      isMounted = false;
+    };
+  }, [loading, hasInitialFetched, user?.hasProperty, user?.email, hostProperty?.propertyName, hostProperty?._id, navigate, fetchHostData]);
 
  // 2. Room & Category CRUD Hook
  const {
@@ -218,19 +317,23 @@ export function HostDashboardPage() {
  selectedRoomNumberRef,
  });
 
- const isApproved = hostProperty?.status === 'Approved';
+ const isApproved = Boolean(
+    hostProperty?.isApproved === true ||
+    hostProperty?.status === 'Approved' ||
+    hostProperty?.hostId?.status === 'Approved'
+  );
  const isPending = !isApproved;
 
  return (
  <div
- className={`min-h-screen w-full flex flex-col host-page-scope font-body-md antialiased text-slate-800 max-md:bg-transparent bg-[#f7f4ee] selection:bg-purple-500 selection:text-white relative transition-colors duration-200 ${
- activeTab === 'users' || activeTab === 'room' ? 'lg:h-screen lg:max-h-screen lg:overflow-hidden' : ''
+ className={`w-full flex flex-col host-page-scope font-body-md antialiased text-slate-800 bg-[#ebedf0] selection:bg-purple-500 selection:text-white relative transition-colors duration-200 ${
+ activeTab === 'users'
+ ? 'min-h-screen lg:h-[100dvh] lg:max-h-[100dvh] lg:overflow-hidden'
+ : activeTab === 'room'
+ ? 'min-h-screen lg:h-screen lg:max-h-screen lg:overflow-hidden'
+ : 'min-h-screen'
  }`}
  >
- {/* Precision Background */}
- <Suspense fallback={null}>
- <PropertyArchitecturalBackground />
- </Suspense>
 
  {/* Primary Host Console Navbar */}
  <HostDashboardNavbar
@@ -239,6 +342,7 @@ export function HostDashboardPage() {
  isApproved={isApproved}
  onBack={handleBack}
  propertyType={hostProperty?.propertyType || hostProperty?.category || 'PG'}
+ hostProperty={hostProperty}
  onEditDetails={() =>
  navigate('/host/upload', {
  state: {
@@ -259,16 +363,19 @@ export function HostDashboardPage() {
  pendingRequestsCount={pendingRequestsCount}
  checkInsCount={checkInsCount}
  checkOutsCount={checkOutsCount}
- onOpenPropertyTelemetry={() => setShowPropertyTelemetry(true)}
  propertyOccupancyRate={propertyOccupancyRate}
+ subscriptionInfo={subscriptionInfo}
+ subscription={subscriptionInfo?.subscription || hostProperty?.subscription}
  />
 
  {/* Main Tab Workspace */}
  <main
  className={`w-full flex-1 relative bg-transparent text-slate-800 font-body-md antialiased flex flex-col selection:bg-[#a855f7] selection:text-[#1f1b16] ${
- activeTab === 'users' || activeTab === 'room'
+ activeTab === 'users'
+ ? 'flex-1 lg:min-h-0 lg:overflow-hidden'
+ : activeTab === 'room'
  ? 'lg:h-[calc(100vh-4.75rem)] lg:overflow-hidden lg:min-h-0'
- : 'min-h-[calc(100vh-4rem)] overflow-x-hidden'
+ : 'min-h-[calc(100vh-4rem)] overflow-x-clip'
  }`}
  >
  <div className="w-full flex-1 h-full flex flex-col min-h-0">
@@ -276,7 +383,7 @@ export function HostDashboardPage() {
  {activeTab === 'property' && (
  <div
  key="console-tab-property"
- className="w-full flex-1 h-full min-h-0 flex flex-col max-md:px-0 px-3 sm:px-6 max-md:pt-0 pt-8 sm:pt-10 max-md:pb-0 pb-24 sm:pb-28 lg:pb-10 max-w-[1600px] mx-auto overflow-visible relative"
+ className="w-full flex-1 flex flex-col px-0 pt-0 pb-0 max-w-full overflow-visible relative"
  >
  <ErrorBoundary>
  <Suspense fallback={<DashboardSkeletonLoader />}>
@@ -293,6 +400,13 @@ export function HostDashboardPage() {
  }
  onSaveProperty={handleAutoSyncProperty}
  guests={guests}
+ allGuests={guests}
+ setGuests={setGuests}
+ showToast={showToast}
+ refreshGuests={refreshGuests}
+ broadcastStayUpdate={broadcastStayUpdate}
+ onSelectUserRequest={handleSelectUserRequest}
+ activePaidUsers={activePaidUsers}
  onSwitchTab={handleTabSwitch}
  activeSubTabIndex={propertySubTabIndex}
  onSubTabChange={setPropertySubTabIndex}
@@ -353,8 +467,9 @@ export function HostDashboardPage() {
  {activeTab === 'users' && (
  <div
  key="console-tab-users"
- className="w-full flex-1 min-h-0 flex flex-col px-3 sm:px-6 max-md:pt-3.5 pt-1.5 pb-28 sm:pb-32 lg:pt-2 lg:pb-4 max-w-[1600px] mx-auto overflow-y-auto lg:overflow-hidden"
+ className="w-full flex-1 min-h-0 flex flex-col px-0 lg:px-6 max-md:pt-0 pt-1.5 max-md:pb-0 md:pb-4 lg:pt-2 max-w-[1600px] mx-auto lg:overflow-hidden"
  >
+ <ErrorBoundary>
  <Suspense fallback={<DashboardSkeletonLoader />}>
  <HostUsersVisitedSection
  guests={guests}
@@ -371,6 +486,7 @@ export function HostDashboardPage() {
  setSubTab={setVisitedSubTab}
  />
  </Suspense>
+ </ErrorBoundary>
  </div>
  )}
 
@@ -378,8 +494,9 @@ export function HostDashboardPage() {
  {activeTab === 'paid' && (
  <div
  key="console-tab-paid"
- className="w-full flex-1 flex flex-col px-3 sm:px-6 pt-3 sm:pt-4 pb-28 sm:pb-32 lg:pb-4 max-w-[1600px] mx-auto overflow-y-auto lg:overflow-hidden"
+ className="w-full flex-1 flex flex-col px-0 pt-0 pb-28 sm:pb-32 lg:pb-4 overflow-y-auto lg:overflow-hidden"
  >
+ <ErrorBoundary>
  <Suspense fallback={<DashboardSkeletonLoader />}>
  <PaidUsersList
  guests={activePaidUsers}
@@ -396,24 +513,12 @@ export function HostDashboardPage() {
  onSelectUserRequest={handleSelectUserRequest}
  />
  </Suspense>
+ </ErrorBoundary>
  </div>
  )}
 
  </div>
  </main>
-
- {/* Property Telemetry & Quick Actions Modal */}
- <PropertyTelemetryModal
- isOpen={showPropertyTelemetry}
- onClose={() => setShowPropertyTelemetry(false)}
- hostProperty={hostProperty || DEFAULT_HOST_PROPERTY}
- guests={guests}
- onSwitchTab={handleTabSwitch}
- onSelectSubTab={(subIdx) => {
- setPropertySubTabIndex(subIdx);
- handleTabSwitch('property');
- }}
- />
  </div>
  );
 }

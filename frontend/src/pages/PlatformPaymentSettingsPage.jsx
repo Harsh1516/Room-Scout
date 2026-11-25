@@ -5,8 +5,8 @@ import { toast } from '../context/ToastContext';
 const DEFAULT_PROPERTY_PRICING = {
  PG: 10,
  Hotel: 50,
- Resort: 50,
  Flat: 25,
+ 'Independent Room': 20,
 };
 
 const DEFAULT_DISCOUNTS = {
@@ -15,12 +15,24 @@ const DEFAULT_DISCOUNTS = {
 };
 
 const PROPERTY_TYPES = [
- { key: 'PG', label: 'PG', desc: 'Paying Guest & Student Co-living' },
- { key: 'Hotel', label: 'Hotel', desc: 'Hotels, Motels & Inns' },
-
- { key: 'Resort', label: 'Resort', desc: 'Resorts & Retreat Properties' },
- { key: 'Flat', label: 'Flat', desc: 'Apartments & Service Flats' },
+ { key: 'PG', label: 'PG', desc: 'Paying Guest / Student co-living stay' },
+ { key: 'Hotel', label: 'Hotel', desc: 'Private hospitality suites & rooms' },
+ { key: 'Flat', label: 'Flat', desc: 'Independent apartment or studio unit' },
+ { key: 'Independent Room', label: 'Independent Room', desc: 'Private individual room rental' },
 ];
+
+const sanitizePropertyPricing = (pricing = {}) => {
+ const clean = {};
+ for (const pt of PROPERTY_TYPES) {
+ const val = pricing[pt.key] !== undefined
+ ? pricing[pt.key]
+ : (pt.key === 'Independent Room' && pricing.independentRoom !== undefined
+ ? pricing.independentRoom
+ : DEFAULT_PROPERTY_PRICING[pt.key]);
+ clean[pt.key] = val === '' ? '' : Math.max(0, Number(val));
+ }
+ return clean;
+};
 
 const getStoredPaymentSettings = () => {
  try {
@@ -44,10 +56,7 @@ export default function PlatformPaymentSettingsPage() {
  const [form, setForm] = useState(() => ({
  payeeName: cached?.payeeName || '',
  upiId: cached?.upiId || '',
- propertyPricing: {
- ...DEFAULT_PROPERTY_PRICING,
- ...(cached?.propertyPricing || {}),
- },
+ propertyPricing: sanitizePropertyPricing(cached?.propertyPricing),
  discounts: {
  ...DEFAULT_DISCOUNTS,
  ...(cached?.discounts || {}),
@@ -69,10 +78,7 @@ export default function PlatformPaymentSettingsPage() {
  const newForm = {
  payeeName: settings.payeeName || '',
  upiId: settings.upiId || '',
- propertyPricing: {
- ...DEFAULT_PROPERTY_PRICING,
- ...(settings.propertyPricing || {}),
- },
+ propertyPricing: sanitizePropertyPricing(settings.propertyPricing),
  discounts: {
  ...DEFAULT_DISCOUNTS,
  ...(settings.discounts || {}),
@@ -164,7 +170,7 @@ export default function PlatformPaymentSettingsPage() {
  const payload = {
  payeeName: form.payeeName,
  upiId: form.upiId,
- propertyPricing: form.propertyPricing,
+ propertyPricing: sanitizePropertyPricing(form.propertyPricing),
  discounts: form.discounts,
  plans: generatedPlans,
  };
@@ -173,10 +179,7 @@ export default function PlatformPaymentSettingsPage() {
  const updatedForm = {
  payeeName: result.settings?.payeeName || form.payeeName,
  upiId: result.settings?.upiId || form.upiId,
- propertyPricing: {
- ...DEFAULT_PROPERTY_PRICING,
- ...(result.settings?.propertyPricing || form.propertyPricing),
- },
+ propertyPricing: sanitizePropertyPricing(result.settings?.propertyPricing || form.propertyPricing),
  discounts: {
  ...DEFAULT_DISCOUNTS,
  ...(result.settings?.discounts || form.discounts),
@@ -301,7 +304,7 @@ export default function PlatformPaymentSettingsPage() {
  Configure the base rate per room per month for each property type. When a host views subscription plans, RoomScout multiplies their total room count by this rate.
  </p>
 
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+ <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
  {PROPERTY_TYPES.map((pt) => {
  const currentRate = form.propertyPricing[pt.key] ?? '';
  const example10Rooms = Number(currentRate) > 0 ? Number(currentRate) * 10 : 0;

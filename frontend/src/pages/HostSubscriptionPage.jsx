@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { subscriptionsAPI, API_BASE_URL } from '../services/api';
 import { toast } from '../context/ToastContext';
 import { Left } from '../components/navbar/Left';
-import { Login } from '../components/navbar/Login';
 import { getSocket } from '../services/socket';
 
 // Local storage caching helpers to prevent any reload, flash, or blank frame
@@ -69,6 +68,11 @@ export function HostSubscriptionPage() {
       loadSubscriptionData(true);
     };
 
+    const handleSubCreated = () => {
+      loadSubscriptionData(false);
+    };
+
+    socket.on('subscription:created', handleSubCreated);
     socket.on('subscription:verified', handleSubVerified);
     socket.on('subscription:rejected', handleSubRejected);
     socket.on('subscription:updated', handleSubVerified);
@@ -116,11 +120,12 @@ export function HostSubscriptionPage() {
         bc = new BroadcastChannel('stayhub_live_channel');
         bc.onmessage = (event) => {
           if (
+            event.data?.type === 'SUBSCRIPTION_CREATED' ||
             event.data?.type === 'SUBSCRIPTION_VERIFIED' ||
             event.data?.type === 'SUBSCRIPTION_UPDATED' ||
             event.data?.type === 'HOST_APPROVED'
           ) {
-            loadSubscriptionData(true);
+            loadSubscriptionData(false);
           }
         };
       }
@@ -152,6 +157,7 @@ export function HostSubscriptionPage() {
     window.addEventListener('popstate', handlePopState);
 
     return () => {
+      socket.off('subscription:created', handleSubCreated);
       socket.off('subscription:verified', handleSubVerified);
       socket.off('subscription:rejected', handleSubRejected);
       socket.off('subscription:updated', handleSubVerified);
@@ -170,8 +176,31 @@ export function HostSubscriptionPage() {
   }, [navigate]);
 
   const subscription = subscriptionInfo?.subscription;
- const stay = subscriptionInfo?.stay;
- const history = (subscriptionInfo?.history || []).slice(0, 3);
+  const stay = subscriptionInfo?.stay;
+  const history = useMemo(() => {
+    if (Array.isArray(subscriptionInfo?.history) && subscriptionInfo.history.length > 0) {
+      return subscriptionInfo.history.slice(0, 3);
+    }
+    // Fallback: If host has active subscription but history array is empty or delayed, show active verified plan
+    if (subscription?.status === 'ACTIVE' || (subscription?.daysRemaining && subscription.daysRemaining > 0)) {
+      return [
+        {
+          _id: 'active-subscription-record',
+          createdAt: subscription.startDate || new Date().toISOString(),
+          planLabel:
+            subscription.planLabel ||
+            (subscription.durationMonths
+              ? `${subscription.durationMonths} Month${subscription.durationMonths > 1 ? 's' : ''}`
+              : 'Active Plan'),
+          durationMonths: subscription.durationMonths || 1,
+          amount: subscription.amountPaid || 0,
+          transactionRef: subscription.lastPaymentRef || 'ADMIN_VERIFIED',
+          status: 'VERIFIED',
+        },
+      ];
+    }
+    return [];
+  }, [subscriptionInfo?.history, subscription]);
 
  const isLive = Boolean(subscription?.isLive);
  const status = subscription?.status || 'NONE';
@@ -211,42 +240,19 @@ export function HostSubscriptionPage() {
         {/* Left Floating Island: Circular Back Button (<Left />) */}
         <Left showBadge={false} onBack={handleBack} fallbackUrl="/host/dashboard" />
 
-        {/* Right Floating Island: Buy / Renew Plan Button + User Dashboard + Profile */}
-        <div className="fixed top-2.5 sm:top-5 right-2.5 sm:right-6 z-50 flex items-center gap-2 sm:gap-2.5 pointer-events-auto select-none h-[54px] sm:h-[56px]">
+        {/* Right Floating Island: Buy Plan Button */}
+        <div className="fixed top-2.5 sm:top-5 right-2.5 sm:right-6 z-50 flex items-center pointer-events-auto select-none h-[54px] sm:h-[56px]">
           <button
             type="button"
             onClick={() => navigate('/host/subscription/buy')}
-            className="hidden sm:inline-flex items-center justify-center h-[54px] sm:h-[56px] px-5 sm:px-6 gap-1.5 rounded-full bg-[#1f1b16] hover:bg-black text-white text-sm sm:text-base font-semibold shadow-sm transition-all cursor-pointer select-none active:scale-95 shrink-0 tracking-tight"
+            className="inline-flex items-center justify-center h-[54px] sm:h-[56px] px-5 sm:px-6 gap-2 rounded-full bg-[#0066ff] hover:bg-[#0057e0] active:bg-[#004ac2] text-white text-sm sm:text-base font-semibold shadow-md shadow-blue-600/30 transition-all cursor-pointer select-none active:scale-95 shrink-0 tracking-tight"
             title="Buy or Renew Subscription Plan"
           >
-            <svg className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 stroke-[1.8]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[1.8] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
             </svg>
             <span>Buy Plan</span>
           </button>
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            data-no-hover="true"
-            className="w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] min-w-[54px] min-h-[54px] rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-sm hover:bg-[#f7f4ee] flex items-center justify-center transition-all cursor-pointer select-none active:scale-95 shrink-0"
-            title="Switch to User Dashboard"
-            aria-label="User Dashboard"
-          >
-            <svg
-              className="w-6 h-6 sm:w-6.5 sm:h-6.5 text-slate-700 stroke-[2.2] shrink-0"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-              <polyline points="9 22 9 12 15 12 15 22" />
-            </svg>
-          </button>
-          <div className="relative flex items-center justify-center h-[54px] sm:h-[56px] shrink-0">
-            <Login />
-          </div>
         </div>
       </header>
 

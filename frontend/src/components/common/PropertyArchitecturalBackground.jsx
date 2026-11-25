@@ -9,7 +9,7 @@ export function PropertyArchitecturalBackground() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-0 overflow-hidden select-none max-md:bg-gradient-to-b max-md:from-[#EAEFF4] max-md:via-[#EFF2F6] max-md:to-[#E6EBF1] bg-[#f7f4ee]"
+      className="pointer-events-none fixed inset-0 -z-10 overflow-hidden select-none max-md:bg-gradient-to-b max-md:from-[#EAEFF4] max-md:via-[#EFF2F6] max-md:to-[#E6EBF1] bg-[#f7f4ee]"
     >
       {/* ── Mobile Architectural Studio Geometry (Pic 2 Minimal Aesthetic) ── */}
       <div className="md:hidden absolute -top-28 -left-28 w-[400px] h-[400px] rounded-full border border-white/60 pointer-events-none" />

@@ -142,10 +142,10 @@ export function PropertyOverviewSection({
  transition={{ duration: 0.22, ease: 'easeOut' }}
  >
  {/* Main Unified Container */}
- <div className={`w-full min-h-[calc(100vh-280px)] px-4 pt-6 pb-6 sm:p-8 lg:p-10 relative overflow-hidden transition-colors duration-300 ${
+ <div className={`w-full min-h-[calc(100vh-280px)] px-4 pt-6 sm:p-8 lg:p-10 relative overflow-hidden transition-colors duration-300 ${
  activeCenterTab === 'host' || activeCenterTab === 'reviews'
- ? 'bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-xs sm:shadow-xl'
- : 'bg-white rounded-none sm:rounded-3xl border-0 sm:border sm:border-slate-200 shadow-none sm:shadow-2xl'
+ ? 'pb-6 bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-xs sm:shadow-xl'
+ : 'pb-28 sm:pb-8 lg:pb-10 bg-white rounded-none sm:rounded-3xl border-0 sm:border sm:border-slate-200 shadow-none sm:shadow-2xl'
  }`}>
  {/* TAB 1: PROPERTY DETAILS VIEW */}
  {activeCenterTab === 'property' && (
@@ -621,11 +621,22 @@ export function PropertyOverviewSection({
               }}
               className="relative z-10 pointer-events-auto w-full max-w-[calc(100vw-20px)] sm:max-w-xl md:max-w-2xl flex flex-col bg-white border border-slate-200/90 shadow-[0_20px_50px_rgba(0,0,0,0.25)] max-h-[calc(100dvh-28px)] sm:max-h-[85vh] will-change-transform select-none rounded-[28px] sm:rounded-[32px] overflow-hidden"
             >
-              {/* Header: Centered tab heading with no icon, count, or cross button */}
-              <div className="relative flex items-center justify-center px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 shrink-0 bg-white">
+              {/* Header: Centered tab heading with top-right close button */}
+              <div className="relative flex items-center justify-center px-12 sm:px-14 py-3.5 sm:py-4 border-b border-slate-100 shrink-0 bg-white">
                 <h2 className="text-[20px] sm:text-[22px] font-bold text-[#1f1b16] tracking-tight leading-none text-center">
                   {activeModalTab === 'rules' ? 'Rules' : 'Facilities'}
                 </h2>
+                <button
+                  type="button"
+                  onClick={() => setActiveModalTab(null)}
+                  aria-label="Close"
+                  className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+                >
+                  <svg className="w-4 h-4 sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
               </div>
 
               {/* Content List: Height fits items, space-y-2.5, clean white cards matching LeftPropertiesPanel */}

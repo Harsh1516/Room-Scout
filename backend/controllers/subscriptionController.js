@@ -85,9 +85,6 @@ export function calculateSubscriptionPlans({
   const validRates = {
     PG: 10,
     Hotel: 50,
-    Hostel: 15,
-    Villa: 40,
-    Resort: 50,
     Flat: 25,
     'Independent Room': 20,
     ...(propertyPricing || {}),
@@ -320,7 +317,12 @@ export async function getSubscriptionPlans(req, res, next) {
       roomCount: dynamicCalculation.roomCount,
       ratePerRoom: dynamicCalculation.ratePerRoom,
       monthlyBase: dynamicCalculation.monthlyBase,
-      propertyPricing: settings.propertyPricing || { PG: 10, Hotel: 50, Flat: 25 },
+      propertyPricing: settings.propertyPricing || {
+        PG: 10,
+        Hotel: 50,
+        Flat: 25,
+        'Independent Room': 20,
+      },
       discounts: settings.discounts || { quarterly: 5, halfYearly: 10 },
       plans,
     });
@@ -383,17 +385,52 @@ export async function getHostSubscriptionStatus(req, res, next) {
 
     // Fetch latest pending payment request
     const pendingPayment = await HostSubscriptionPayment.findOne({
-      hostId: host._id,
+      $or: [{ hostId: host._id }, ...(stay?._id ? [{ stayId: stay._id }] : [])],
       status: 'PENDING',
     })
       .sort({ createdAt: -1 })
       .lean();
 
     // Fetch recent payment history (strictly latest 3 records)
-    const history = await HostSubscriptionPayment.find({ hostId: host._id })
+    let history = await HostSubscriptionPayment.find({
+      $or: [{ hostId: host._id }, ...(stay?._id ? [{ stayId: stay._id }] : [])],
+    })
       .sort({ createdAt: -1 })
       .limit(3)
       .lean();
+
+    // Self-healing: If host has an active subscription or verified plan, but no payment history record exists
+    // (e.g. direct admin activation, legacy record, or deleted request), auto-create and persist verified payment record!
+    if ((!history || history.length === 0) && (hasActiveSubscription || currentStatus === 'ACTIVE')) {
+      const fallbackAmount = Number(host.subscription?.amountPaid) || 40;
+      const fallbackPlanCode = host.subscription?.planCode || 'monthly';
+      const fallbackDuration = Number(host.subscription?.durationMonths) || 1;
+      const fallbackPlanLabel = host.subscription?.planLabel || `${fallbackDuration} Month(s)`;
+      const fallbackRef = host.subscription?.lastPaymentRef || 'ADMIN_VERIFIED';
+
+      try {
+        const createdRecord = await HostSubscriptionPayment.create({
+          hostId: host._id,
+          stayId: stay?._id || null,
+          planCode: fallbackPlanCode,
+          planLabel: fallbackPlanLabel,
+          durationMonths: fallbackDuration,
+          amount: fallbackAmount,
+          transactionRef: fallbackRef,
+          startOption: 'CURRENT',
+          status: 'VERIFIED',
+          verifiedAt: host.subscription?.lastVerifiedAt || host.subscription?.startDate || now,
+          verifiedBy: 'ADMIN',
+          activatedStartDate: host.subscription?.startDate || now,
+          activatedExpiresAt: expiresAt,
+          createdAt: host.subscription?.startDate || now,
+          adminNotes: 'Auto-synchronized active plan payment record',
+        });
+        history = [createdRecord.toObject ? createdRecord.toObject() : createdRecord];
+      } catch (backfillErr) {
+        console.warn('Error backfilling active subscription payment record:', backfillErr.message);
+      }
+    }
 
     return res.json({
       success: true,
@@ -619,6 +656,59 @@ export async function submitHostSubscriptionPayment(req, res, next) {
       delete host.subscription.lockedStartOption;
     }
     await host.save();
+
+    // Real-Time WebSocket emission to Admin & Host for instant 0ms sync
+    try {
+      const populatedRecord = await HostSubscriptionPayment.findById(paymentRecord._id)
+        .populate('hostId', 'name email phone avatar subscription')
+        .populate('stayId', 'title location city images')
+        .lean();
+
+      const [pendingCount, verifiedCount, rejectedCount] = await Promise.all([
+        HostSubscriptionPayment.countDocuments({ status: 'PENDING' }),
+        HostSubscriptionPayment.countDocuments({ status: 'VERIFIED' }),
+        HostSubscriptionPayment.countDocuments({ status: 'REJECTED' }),
+      ]);
+      const counts = {
+        pending: pendingCount,
+        verified: verifiedCount,
+        rejected: rejectedCount,
+        total: pendingCount + verifiedCount + rejectedCount,
+      };
+
+      const socketPayload = {
+        payment: populatedRecord || paymentRecord,
+        counts,
+        hostId: host._id,
+        status: 'PENDING',
+      };
+
+      // Emit to Admin & Global rooms
+      emitToAdmin('admin:subscription_created', socketPayload);
+      emitToAdmin('subscription:new', socketPayload);
+      emitToAdmin('admin:subscription_updated', socketPayload);
+      emitToGlobal('subscription:new', socketPayload);
+
+      // Emit to Host rooms
+      const hostKeys = [
+        String(host._id),
+        host.email ? host.email.toLowerCase().trim() : null,
+        host.userId ? String(host.userId) : null,
+      ].filter(Boolean);
+
+      hostKeys.forEach((key) => {
+        emitToHost(key, 'subscription:created', {
+          payment: populatedRecord || paymentRecord,
+          subscription: host.subscription,
+        });
+        emitToHost(key, 'subscription:updated', {
+          payment: populatedRecord || paymentRecord,
+          subscription: host.subscription,
+        });
+      });
+    } catch (socketErr) {
+      console.warn('[Subscription Socket Warning]:', socketErr.message);
+    }
 
     // Send automated email alert to Admin
     sendSubscriptionRequestToAdminEmail({
@@ -921,6 +1011,30 @@ export async function manualActivateSubscription(req, res, next) {
     };
     await host.save();
 
+    // Record manual activation in HostSubscriptionPayment so Payment History is never empty
+    try {
+      const stay = await Stay.findOne({ hostId: host._id }).select('_id').lean();
+      await HostSubscriptionPayment.create({
+        hostId: host._id,
+        stayId: stay?._id || null,
+        planCode: code,
+        planLabel: host.subscription.planLabel,
+        durationMonths: monthsToAdd,
+        amount: 0,
+        transactionRef: 'ADMIN_GRANTED',
+        startOption: 'CURRENT',
+        status: 'VERIFIED',
+        verifiedAt: now,
+        verifiedBy: req.user?._id?.toString() || req.user?.email || (req.isAdminKey ? 'ADMIN' : 'SYSTEM'),
+        activatedStartDate: newStartDate,
+        activatedExpiresAt: newExpiresAt,
+        adminNotes: String(adminNotes || 'Directly activated by admin').trim(),
+      });
+      await pruneHostSubscriptionHistory(host._id);
+    } catch (manualPaymentErr) {
+      console.warn('Failed to record manual activation in HostSubscriptionPayment:', manualPaymentErr.message);
+    }
+
     const isApprovedHost = host.status === 'Approved';
     await Stay.updateMany(
       { hostId: host._id },
@@ -942,6 +1056,21 @@ export async function manualActivateSubscription(req, res, next) {
       expiresAt: newExpiresAt,
       status: 'ACTIVE',
     });
+
+    if (host.email) {
+      sendSubscriptionActivatedToHostEmail({
+        hostEmail: host.email,
+        hostName: host.name,
+        planLabel: host.subscription.planLabel,
+        durationMonths: monthsToAdd,
+        amount: 0,
+        transactionRef: 'ADMIN_GRANTED',
+        validUntil: formatValidityDate(newExpiresAt),
+        isApprovedHost,
+      }).catch((err) => {
+        console.warn('[Email Warning] Manual subscription activation email failed:', err.message);
+      });
+    }
 
     return res.json({
       success: true,
@@ -994,6 +1123,9 @@ export async function deleteSubscriptionRequest(req, res, next) {
       }
     }
 
+    emitToAdmin('admin:subscription_deleted', { id, deletedId: id });
+    emitToAdmin('admin:subscription_updated', { id, action: 'DELETE' });
+
     return res.json({
       success: true,
       message: 'Subscription payment entry deleted successfully.',
@@ -1032,6 +1164,9 @@ export async function deleteAllSubscriptionRequests(req, res, next) {
         }
       }
     }
+
+    emitToAdmin('admin:subscription_deleted', { action: 'DELETE_ALL' });
+    emitToAdmin('admin:subscription_updated', { action: 'DELETE_ALL' });
 
     return res.json({
       success: true,
@@ -1181,6 +1316,9 @@ export async function bulkVerifySubscriptions(req, res, next) {
       }
     }
 
+    emitToAdmin('admin:subscription_verified', { count: verifiedRecords.length });
+    emitToAdmin('admin:subscription_updated', { action: 'BULK_VERIFY' });
+
     return res.json({
       success: true,
       message: `Successfully verified and activated ${verifiedRecords.length} host subscription(s)!`,
@@ -1249,6 +1387,9 @@ export async function bulkRejectSubscriptions(req, res, next) {
         transactionRef: request.transactionRef,
       });
     }
+
+    emitToAdmin('admin:subscription_rejected', { count: rejectedRecords.length });
+    emitToAdmin('admin:subscription_updated', { action: 'BULK_REJECT' });
 
     return res.json({
       success: true,
@@ -1364,8 +1505,17 @@ export async function notifyHostSubscriptionVerified(hostIdOrIdentifier, data = 
     // Real-time WebSockets notification to host and admin
     for (const key of keysToNotify) {
       emitToHost(key, 'subscription:verified', data);
+      emitToHost(key, 'subscription:updated', data);
+      if (data.status === 'REJECTED') {
+        emitToHost(key, 'subscription:rejected', data);
+      }
     }
     emitToAdmin('admin:subscription_verified', data);
+    emitToAdmin('admin:subscription_updated', data);
+    emitToAdmin('subscription:updated', data);
+    if (data.status === 'REJECTED') {
+      emitToAdmin('admin:subscription_rejected', data);
+    }
     emitToGlobal('stay:updated', {});
 
     const payload = `data: ${JSON.stringify({ type: 'SUBSCRIPTION_VERIFIED', ...data })}\n\n`;

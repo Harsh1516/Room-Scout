@@ -340,14 +340,15 @@ export function StayCinematicShowcase({
       }
 
       return {
-        display: `${availableCount}/${totalCount} Avail`,
+        display: `${availableCount}`,
+        headlineDisplay: `${availableCount} Available`,
         availableCount,
         totalCount,
         isMonthly: true,
       };
     }
 
-    // NIGHTLY (HOTEL) OCCUPANCY FORMAT: "% Full"
+    // NIGHTLY (HOTEL) OCCUPANCY FORMAT: "% Full" & "% Available"
     const freeStats = calculateCategoryFreePercentage({
       rooms: targetRooms,
       rate: rateObj,
@@ -360,8 +361,10 @@ export function StayCinematicShowcase({
     if (freeStats && freeStats.totalPossible > 0) {
       const bookedUnits = freeStats.totalPossible - freeStats.totalUnbooked;
       const pctFull = Math.max(0, Math.min(100, Math.round((bookedUnits / freeStats.totalPossible) * 100)));
+      const pctAvailable = Math.max(0, Math.min(100, Math.round((freeStats.totalUnbooked / freeStats.totalPossible) * 100)));
       return {
         display: `${pctFull}% Full`,
+        headlineDisplay: `${pctAvailable}% Available`,
         availableCount: freeStats.totalUnbooked,
         totalCount: freeStats.totalPossible,
         isMonthly: false,
@@ -381,8 +384,10 @@ export function StayCinematicShowcase({
     });
     if (totalCap > 0 && occupiedCap > 0) {
       const pct = Math.round((occupiedCap / totalCap) * 100);
+      const pctAvailable = Math.max(0, 100 - pct);
       return {
         display: `${pct}% Full`,
+        headlineDisplay: `${pctAvailable}% Available`,
         availableCount: totalCap - occupiedCap,
         totalCount: totalCap,
         isMonthly: false,
@@ -391,6 +396,7 @@ export function StayCinematicShowcase({
 
     return {
       display: `${fallbackSeed}% Full`,
+      headlineDisplay: `${Math.max(0, 100 - fallbackSeed)}% Available`,
       availableCount: targetRooms.length,
       totalCount: targetRooms.length || 1,
       isMonthly: false,
@@ -400,7 +406,7 @@ export function StayCinematicShowcase({
   // Overall stay availability for the title
   const overallStayOccupancy = useMemo(() => {
     const res = getRoomTypeAvailability(currentStay, null, 0);
-    return res.display;
+    return res.headlineDisplay || res.display;
   }, [currentStay, getRoomTypeAvailability]);
 
   // Gender label computation
@@ -644,7 +650,7 @@ export function StayCinematicShowcase({
               <div className="flex items-baseline gap-2.5 mt-0.5">
                 <span>{titleLine2 || titleLine1}</span>
                 <span className="text-slate-400 font-extrabold text-2xl sm:text-3xl md:text-4xl tracking-normal">
-                  ( {totalRoomsCount} {totalRoomsCount === 1 ? 'Room' : 'Rooms'} - {overallStayOccupancy} )
+                  ({totalRoomsCount} {totalRoomsCount === 1 ? 'Room' : 'Rooms'} - {overallStayOccupancy})
                 </span>
               </div>
             </h1>

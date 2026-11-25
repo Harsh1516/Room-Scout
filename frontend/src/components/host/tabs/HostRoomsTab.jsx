@@ -112,7 +112,7 @@ export function HostRoomsTab({
 					<div className="xl:col-span-4 flex flex-col justify-start items-stretch min-h-0 w-full relative z-0">
 						<section
 							id="room-categories-section"
-							className="w-full flex-1 max-md:rounded-none max-md:border-0 max-md:bg-transparent max-md:shadow-none rounded-b-2xl sm:rounded-b-3xl md:rounded-2xl md:sm:rounded-3xl overflow-hidden shadow-xs border border-slate-200/80 max-xl:bg-white/95 transition-all scroll-mt-14"
+							className="w-full flex-1 rounded-t-none rounded-b-[36px] sm:rounded-b-[44px] overflow-hidden shadow-xs max-xl:bg-transparent transition-all scroll-mt-14"
 						>
 							<ErrorBoundary>
 								<HostRoomCategories
@@ -138,13 +138,14 @@ export function HostRoomsTab({
 									onUpdateRoomNumber={handleUpdateRoomNumber}
 									onUpdateRoomCapacity={handleUpdateRoomCapacity}
 									compact={true}
+									roundedTop={false}
 								/>
 							</ErrorBoundary>
 						</section>
 					</div>
 
 					{/* COLUMN 2+3 (xl:col-span-8): Calendar (Schedule) & Occupants in Series */}
-					<div className="xl:col-span-8 flex flex-col min-h-0 w-full gap-5 max-xl:gap-3 max-md:px-3 sm:max-md:px-4 relative z-10">
+					<div className="xl:col-span-8 flex flex-col min-h-0 w-full gap-5 max-xl:gap-3 px-0 relative z-10">
 						<ErrorBoundary>
 							{selectedRoomCard && HostWeeklySlotScheduleComponent ? (
 								<Suspense fallback={<DashboardSkeletonLoader />}>

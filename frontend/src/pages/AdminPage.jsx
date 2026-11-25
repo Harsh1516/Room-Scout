@@ -184,6 +184,14 @@ export function AdminPage() {
     // ── Real-Time WebSockets Listener (Instant 0ms surgical sync for Admin Panel) ──
     const socket = getSocket();
 
+    // Authenticate socket and explicitly join admin room for 0ms push updates
+    socket.emit('authenticate', {
+      isAdmin: true,
+      role: 'admin',
+      adminKey: adminAPI.getAdminKey(),
+    });
+    socket.emit('join_admin_room');
+
     const handleHostApproved = (payload) => {
       const hId = payload?.hostId;
       if (!hId) return;
@@ -217,6 +225,36 @@ export function AdminPage() {
       );
     };
 
+    const handleSubscriptionCreated = (payload) => {
+      const newPayment = payload?.payment;
+      if (newPayment) {
+        setSubscriptions((prev) => {
+          const exists = prev.some((s) => String(s._id) === String(newPayment._id));
+          const updated = exists
+            ? prev.map((s) => (String(s._id) === String(newPayment._id) ? { ...s, ...newPayment } : s))
+            : [newPayment, ...prev];
+          saveStoredAdminSubscriptions(updated);
+          return updated;
+        });
+
+        if (payload?.counts) {
+          setSubscriptionCounts(payload.counts);
+          saveStoredAdminSubscriptions(undefined, payload.counts);
+        } else {
+          setSubscriptionCounts((prev) => ({
+            ...prev,
+            pending: (prev.pending || 0) + (newPayment.status === 'PENDING' ? 1 : 0),
+            total: (prev.total || 0) + 1,
+          }));
+        }
+      }
+      fetchSubscriptions(true);
+    };
+
+    const handleSubscriptionSync = () => {
+      fetchSubscriptions(true);
+    };
+
     const handleAdminSync = () => fetchData(true);
 
     socket.on('admin:host_updated', handleHostUpdated);
@@ -224,6 +262,40 @@ export function AdminPage() {
     socket.on('admin:hosts_bulk_approved', handleAdminSync);
     socket.on('admin:host_rejected', handleAdminSync);
     socket.on('stay:updated', handleAdminSync);
+
+    // Subscription real-time socket events
+    socket.on('admin:subscription_created', handleSubscriptionCreated);
+    socket.on('subscription:new', handleSubscriptionCreated);
+    socket.on('admin:subscription_verified', handleSubscriptionSync);
+    socket.on('admin:subscription_rejected', handleSubscriptionSync);
+    socket.on('admin:subscription_updated', handleSubscriptionSync);
+    socket.on('admin:subscription_deleted', handleSubscriptionSync);
+    socket.on('subscription:updated', handleSubscriptionSync);
+    socket.on('subscription:verified', handleSubscriptionSync);
+
+    // Cross-tab BroadcastChannel listener for 0ms instant local sync across tabs
+    let bc = null;
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        bc = new BroadcastChannel('stayhub_live_channel');
+        bc.onmessage = (event) => {
+          if (
+            event.data?.type === 'SUBSCRIPTION_CREATED' ||
+            event.data?.type === 'SUBSCRIPTION_VERIFIED' ||
+            event.data?.type === 'SUBSCRIPTION_UPDATED' ||
+            event.data?.type === 'SUBSCRIPTION_DELETED'
+          ) {
+            if (event.data?.payment) {
+              handleSubscriptionCreated({ payment: event.data.payment });
+            } else {
+              fetchSubscriptions(true);
+            }
+          }
+        };
+      }
+    } catch (bcErr) {
+      console.warn('Admin BroadcastChannel error:', bcErr);
+    }
 
  const handleFocus = () => fetchData(true);
  window.addEventListener('focus', handleFocus);
@@ -249,6 +321,15 @@ export function AdminPage() {
       socket.off('admin:hosts_bulk_approved', handleAdminSync);
       socket.off('admin:host_rejected', handleAdminSync);
       socket.off('stay:updated', handleAdminSync);
+      socket.off('admin:subscription_created', handleSubscriptionCreated);
+      socket.off('subscription:new', handleSubscriptionCreated);
+      socket.off('admin:subscription_verified', handleSubscriptionSync);
+      socket.off('admin:subscription_rejected', handleSubscriptionSync);
+      socket.off('admin:subscription_updated', handleSubscriptionSync);
+      socket.off('admin:subscription_deleted', handleSubscriptionSync);
+      socket.off('subscription:updated', handleSubscriptionSync);
+      socket.off('subscription:verified', handleSubscriptionSync);
+      if (bc) bc.close();
  window.removeEventListener('focus', handleFocus);
  document.removeEventListener('visibilitychange', handleVisibility);
  window.removeEventListener('storage', handleStorage);

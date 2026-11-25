@@ -384,18 +384,20 @@ export function HostUploadPage() {
 
   // Load existing property details if already registered (strictly scoped to this host)
   useEffect(() => {
+    let isMounted = true;
     async function loadExisting() {
       const targetEmail = (user?.email || '').trim().toLowerCase();
       if (!targetEmail || loadedEmailRef.current === targetEmail) return;
-      loadedEmailRef.current = targetEmail;
+
       try {
-        const targetEmail = (user.email || '').trim().toLowerCase();
-        const targetId = (user._id || '').toString();
+        const targetId = (user?._id || '').toString();
 
         const [hostRes, staysRes] = await Promise.all([
-          adminAPI.getHostByEmail(user.email).catch(() => null),
+          adminAPI.getHostByEmail(targetEmail).catch(() => null),
           staysAPI.getHostProperties().catch(() => []),
         ]);
+
+        if (!isMounted) return;
 
         // STRICT MULTI-TENANT FILTER: Stays must strictly match targetEmail or user._id
         const matchingStays = (Array.isArray(staysRes) ? staysRes : []).filter((s) => {
@@ -410,14 +412,7 @@ export function HostUploadPage() {
 
         // Check if host profile has a verified stay belonging to this host
         const hostHasStay = Boolean(
-          hostRes?.hasProperty &&
-          hostRes?.stay &&
-          (
-            !hostRes.stay.email ||
-            hostRes.stay.email.trim().toLowerCase() === targetEmail ||
-            (hostRes.stay.hostEmail && hostRes.stay.hostEmail.trim().toLowerCase() === targetEmail) ||
-            (targetId && (String(hostRes.stay.hostId?._id || hostRes.stay.hostId) === targetId))
-          )
+          hostRes?.hasProperty && (hostRes?.stay || hostRes?.host)
         );
 
         let prop = null;
@@ -426,6 +421,8 @@ export function HostUploadPage() {
             ...(hostRes?.host || {}),
             ...(hostRes?.stay || {}),
             ...stayProp,
+            propertyName: stayProp.propertyName || stayProp.title || hostRes?.host?.propertyName || hostRes?.stay?.title || '',
+            title: stayProp.title || stayProp.propertyName || hostRes?.stay?.title || hostRes?.host?.propertyName || '',
             roomRates: (Array.isArray(stayProp.roomRates) && stayProp.roomRates.length > 0)
               ? stayProp.roomRates
               : (hostRes?.stay?.roomRates || hostRes?.host?.roomRates || []),
@@ -434,15 +431,20 @@ export function HostUploadPage() {
               : (hostRes?.stay?.rooms || hostRes?.host?.rooms || []),
           };
         } else if (hostHasStay) {
+          const hStay = hostRes.stay || {};
+          const hHost = hostRes.host || {};
           prop = {
-            ...(hostRes.stay || {}),
-            ...(hostRes.host || {}),
-            roomRates: hostRes.stay?.roomRates || hostRes.host?.roomRates || [],
-            rooms: hostRes.stay?.rooms || hostRes.host?.rooms || [],
+            ...hStay,
+            ...hHost,
+            propertyName: hHost.propertyName || hStay.title || hStay.propertyName || '',
+            title: hStay.title || hHost.propertyName || '',
+            roomRates: hStay.roomRates || hHost.roomRates || [],
+            rooms: hStay.rooms || hHost.rooms || [],
           };
         }
 
         if (prop && (prop.propertyName || prop.title || (Array.isArray(prop.rooms) && prop.rooms.length > 0))) {
+          loadedEmailRef.current = targetEmail;
           setIsEditing(true);
           setHasUploadedProperty(true);
 
@@ -469,46 +471,55 @@ export function HostUploadPage() {
             const currentDraft = loadDraftFromStorage(user);
             const draftFormData = currentDraft?.formData || {};
 
-            const mergedRules = (Array.isArray(prev.rules) && prev.rules.length > 0)
-              ? prev.rules
-              : (Array.isArray(draftFormData.rules) ? draftFormData.rules : (prop.rules || []));
+            const mergedRules = (Array.isArray(prop.rules) && prop.rules.length > 0)
+              ? prop.rules
+              : (Array.isArray(prev.rules) && prev.rules.length > 0
+                ? prev.rules
+                : (Array.isArray(draftFormData.rules) ? draftFormData.rules : []));
 
-            const mergedFacilities = (Array.isArray(prev.facilities) && prev.facilities.length > 0)
-              ? prev.facilities
-              : (Array.isArray(draftFormData.facilities) ? draftFormData.facilities : (prop.facilities || prop.amenities || []));
+            const mergedFacilities = (Array.isArray(prop.facilities) && prop.facilities.length > 0)
+              ? prop.facilities
+              : (Array.isArray(prop.amenities) && prop.amenities.length > 0
+                ? prop.amenities
+                : (Array.isArray(prev.facilities) && prev.facilities.length > 0
+                  ? prev.facilities
+                  : (Array.isArray(draftFormData.facilities) ? draftFormData.facilities : [])));
 
-            const prevImages = (Array.isArray(prev.images) && prev.images.length > 0) ? prev.images : [];
-            const mergedImages = prevImages.length > 0 ? prevImages : cleanExistingImages;
+            const mergedImages = cleanExistingImages.length > 0
+              ? cleanExistingImages
+              : ((Array.isArray(prev.images) && prev.images.length > 0) ? prev.images : []);
 
-            const prevRooms = (Array.isArray(prev.rooms) && prev.rooms.length > 0) ? prev.rooms : [];
-            const mergedRooms = prevRooms.length > 0 ? prevRooms : loadedRooms;
+            const mergedRooms = loadedRooms.length > 0
+              ? loadedRooms
+              : ((Array.isArray(prev.rooms) && prev.rooms.length > 0) ? prev.rooms : []);
 
-            const prevRates = (Array.isArray(prev.roomRates) && prev.roomRates.length > 0) ? prev.roomRates : [];
-            const mergedRates = prevRates.length > 0 ? prevRates : loadedRates;
+            const mergedRates = loadedRates.length > 0
+              ? loadedRates
+              : ((Array.isArray(prev.roomRates) && prev.roomRates.length > 0) ? prev.roomRates : []);
 
             const updated = {
               ...prev,
               name: prop.name || user?.name || prev.name || '',
               email: prop.email || user?.email || prev.email || '',
               phone: prop.phone || user?.phone || prev.phone || '',
-              propertyName: prev.propertyName || prop.propertyName || prop.title || '',
-              propertyType: prev.propertyType || prop.propertyType || prop.type || 'PG',
-              genderType: prev.genderType || prop.genderType || 'Both',
-              price: prev.price || (prop.price ? String(prop.price).replace(/[^0-9]/g, '') : (mergedRates[0]?.price ? String(mergedRates[0].price).replace(/[^0-9]/g, '') : '')),
-              rateUnit: prev.rateUnit || prop.rateUnit || mergedRates[0]?.rateUnit || '/month',
-              roadArea: prev.roadArea || prop.roadArea || '',
-              pincode: prev.pincode || prop.pincode || '',
-              city: prev.city || prop.city || '',
-              state: prev.state || prop.state || '',
-              latitude: (prev.latitude && prev.latitude !== 29.3919) ? prev.latitude : (Number(prop.latitude) || 29.3919),
-              longitude: (prev.longitude && prev.longitude !== 79.4542) ? prev.longitude : (Number(prop.longitude) || 79.4542),
+              propertyName: prop.propertyName || prop.title || prev.propertyName || '',
+              propertyType: prop.propertyType || prop.type || prev.propertyType || 'PG',
+              genderType: prop.genderType || prev.genderType || 'Both',
+              price: prop.price ? String(prop.price).replace(/[^0-9]/g, '') : (mergedRates[0]?.price ? String(mergedRates[0].price).replace(/[^0-9]/g, '') : (prev.price || '')),
+              rateUnit: prop.rateUnit || mergedRates[0]?.rateUnit || prev.rateUnit || '/month',
+              roadArea: prop.roadArea || prev.roadArea || '',
+              pincode: prop.pincode || prev.pincode || '',
+              city: prop.city || prev.city || '',
+              state: prop.state || prev.state || '',
+              latitude: Number(prop.latitude) || ((prev.latitude && prev.latitude !== 29.3919) ? prev.latitude : 29.3919),
+              longitude: Number(prop.longitude) || ((prev.longitude && prev.longitude !== 79.4542) ? prev.longitude : 79.4542),
               totalRooms: (mergedRooms && mergedRooms.length > 0) ? mergedRooms.length : (prop.totalRooms || loadedRooms.length || 0),
               availableRooms: (mergedRooms && mergedRooms.length > 0) ? mergedRooms.filter((r) => r.status === 'Available').length : (prop.availableRooms !== undefined ? prop.availableRooms : loadedRooms.filter((r) => r.status === 'Available').length),
               rating: Number(prop.rating) || prev.rating || 5.0,
-              image: mergedImages[0] || prev.image || prop.image || '',
+              image: mergedImages[0] || prop.image || prev.image || '',
               images: mergedImages,
-              instagramVideoUrl: prev.instagramVideoUrl || prop.instagramVideoUrl || '',
-              description: prev.description || prop.description || '',
+              instagramVideoUrl: prop.instagramVideoUrl || prev.instagramVideoUrl || '',
+              description: prop.description || prev.description || '',
               facilities: mergedFacilities,
               amenities: mergedFacilities,
               rules: mergedRules,
@@ -523,8 +534,9 @@ export function HostUploadPage() {
             saveDraftToStorage(updated, preservedStep, googleMapsUrl, user);
             return updated;
           });
-        } else {
-          // THIS HOST HAS NO REGISTERED PROPERTY YET
+        } else if (hostRes && hostRes.hasProperty === false) {
+          // THIS HOST HAS CONFIRMED NO REGISTERED PROPERTY YET
+          loadedEmailRef.current = targetEmail;
           setIsEditing(false);
           setHasUploadedProperty(false);
           const currentDraft = loadDraftFromStorage(user);
@@ -553,13 +565,30 @@ export function HostUploadPage() {
               };
             });
           }
+        } else {
+          // API request may have suffered cold-start or temporary network failure:
+          // Do not permanently lock loadedEmailRef so retry can succeed
+          setTimeout(() => {
+            if (isMounted && loadedEmailRef.current !== targetEmail) {
+              loadExisting();
+            }
+          }, 3000);
         }
       } catch (err) {
         console.warn('Could not prefill host:', err);
+        // On error, allow retry
+        setTimeout(() => {
+          if (isMounted && loadedEmailRef.current !== targetEmail) {
+            loadExisting();
+          }
+        }, 3000);
       }
     }
     loadExisting();
-  }, [user?.email, user?.name, user?.phone]);
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.email, user?._id, user?.hasProperty, location.state, navigate]);
 
   const showToast = (msg, type = 'info') => {
     if (!msg) return;
@@ -973,7 +1002,7 @@ export function HostUploadPage() {
   
 
   return (
-    <div className="bg-[#F4F4F6] text-slate-800 host-page-scope font-body-md antialiased min-h-screen flex flex-col justify-between relative selection:bg-[#006C4A] selection:text-white transition-colors duration-300">
+    <div className="bg-[#ebedf0] text-slate-800 host-page-scope font-body-md antialiased min-h-screen flex flex-col justify-between relative selection:bg-[#006C4A] selection:text-white transition-colors duration-300">
 
       {/* ── Top Header Navigation Bar (Floating Liquid Glass Islands matching Host Dashboard / Pic 2) ── */}
       <header className="relative w-full h-[70px] sm:h-[88px] pointer-events-none select-none z-50 font-body-md antialiased">
@@ -1071,9 +1100,9 @@ export function HostUploadPage() {
                 className="pointer-events-auto w-80 sm:w-88 max-w-[calc(100vw-24px)] flex flex-col bg-white border border-slate-200/90 shadow-[0_20px_50px_rgba(0,0,0,0.22)] max-h-[calc(100dvh-24px)] sm:max-h-[calc(100dvh-40px)] will-change-transform select-none rounded-[28px] sm:rounded-[32px] overflow-hidden"
               >
                 {/* Header: Centered Upload Steps title */}
-                <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 shrink-0">
+                <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 border-b border-slate-100 shrink-0">
                   <div className="w-7" />
-                  <h2 className="text-[22px] sm:text-[24px] font-bold text-[#1f1b16] tracking-tight leading-none text-center">
+                  <h2 className="text-lg sm:text-xl font-bold text-[#1f1b16] tracking-tight leading-none text-center">
                     Upload Steps
                   </h2>
                   <button
@@ -1086,130 +1115,54 @@ export function HostUploadPage() {
                   </button>
                 </div>
 
-                {/* List of Step Cards (Matching LeftPropertiesPanel Card Anatomy) */}
-                <div className="overflow-y-auto p-3.5 space-y-2.5 flex-1">
+                {/* Minimal Step Rows */}
+                <div className="overflow-y-auto p-3 space-y-1.5 flex-1">
                   {WIZARD_STEPS.map((step) => {
                     const isActive = step.id === activeStep;
                     const isCompleted = validateStep(step.id, false);
                     const isAccessible = canAccessStep(step.id);
 
                     return (
-                      <div
+                      <button
                         key={step.id}
-                        className={`rounded-xl border transition-colors duration-150 overflow-hidden ${
+                        type="button"
+                        disabled={!isAccessible && !isActive}
+                        onClick={() => {
+                          if (isAccessible || isActive) {
+                            handleSelectStep(step.id);
+                            setMobileNavOpen(false);
+                          }
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl border text-left transition-all duration-150 ${
                           isActive
-                            ? 'border-slate-400 bg-[#f7f4ee]/60 shadow-xs'
+                            ? 'border-[#1f1b16] bg-[#1f1b16] text-white shadow-sm cursor-pointer'
                             : isAccessible
-                            ? 'border-slate-200 bg-white hover:border-slate-300'
-                            : 'border-slate-200/60 bg-slate-50/50 opacity-60'
+                            ? 'border-slate-200/80 bg-white hover:bg-slate-50 text-[#1f1b16] cursor-pointer active:scale-[0.99]'
+                            : 'border-slate-200/50 bg-slate-50/50 text-slate-400 opacity-60 cursor-not-allowed'
                         }`}
                       >
-                        {/* Top: Step Number / Status Icon + Info */}
                         <div
-                          className={`flex gap-3 p-3 ${isAccessible || isActive ? 'cursor-pointer' : 'cursor-not-allowed'}`}
-                          onClick={() => {
-                            if (isAccessible || isActive) {
-                              handleSelectStep(step.id);
-                              setMobileNavOpen(false);
-                            }
-                          }}
+                          className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-xs font-bold ${
+                            isActive
+                              ? 'bg-white text-[#1f1b16]'
+                              : isCompleted
+                              ? 'bg-emerald-100 text-emerald-700'
+                              : 'bg-slate-100 text-slate-500'
+                          }`}
                         >
-                          {/* Thumbnail / Step Number Icon Container */}
-                          <div
-                            className={`w-[52px] h-[52px] rounded-lg overflow-hidden shrink-0 border flex items-center justify-center font-bold text-base transition-colors ${
-                              isActive
-                                ? 'bg-[#006C4A] text-white border-[#006C4A] shadow-xs'
-                                : isCompleted
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-300/60'
-                                : 'bg-slate-100 text-slate-500 border-slate-200/60'
-                            }`}
-                          >
-                            {isCompleted && !isActive ? (
-                              <Check className="w-5 h-5 stroke-[2.5]" />
-                            ) : (
-                              <span>{step.id}</span>
-                            )}
-                          </div>
-
-                          {/* Info */}
-                          <div className="flex-1 min-w-0 flex flex-col justify-center">
-                            <div className="flex items-center justify-between gap-2">
-                              <span
-                                className={`text-[13px] font-semibold leading-snug truncate ${
-                                  isActive ? 'text-[#006C4A] font-bold' : 'text-[#1f1b16]'
-                                }`}
-                              >
-                                {step.title}
-                              </span>
-                              {isActive && (
-                                <span className="text-[9.5px] uppercase tracking-wider font-extrabold text-[#006C4A] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60 shrink-0">
-                                  Current
-                                </span>
-                              )}
-                            </div>
-
-                            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                              <span className="text-[12px] text-slate-400 truncate">
-                                {step.sub || step.desc}
-                              </span>
-                            </div>
-                          </div>
+                          {isCompleted && !isActive ? (
+                            <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                          ) : (
+                            <span>{step.id}</span>
+                          )}
                         </div>
 
-                        {/* Action Row */}
-                        <div
-                          className="flex items-center justify-between px-3 pb-2.5 pt-2 border-t border-slate-100"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <span className="text-[11px] text-slate-400">
-                            {isCompleted
-                              ? 'Step completed'
-                              : isActive
-                              ? 'Currently editing'
-                              : isAccessible
-                              ? 'Ready to fill'
-                              : 'Complete previous'}
-                          </span>
-                          <button
-                            type="button"
-                            disabled={!isAccessible && !isActive}
-                            onClick={() => {
-                              handleSelectStep(step.id);
-                              setMobileNavOpen(false);
-                            }}
-                            className={`text-xs font-medium px-4 py-1.5 min-h-[30px] rounded-full transition-all inline-flex items-center gap-1.5 shadow-xs ${
-                              isActive
-                                ? 'bg-[#006C4A] text-white border border-[#006C4A] active:scale-95 cursor-pointer'
-                                : isAccessible
-                                ? 'bg-[#2b2c37] hover:bg-[#343542] text-white border border-[#3b3d4d] active:scale-95 cursor-pointer'
-                                : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-60'
-                            }`}
-                          >
-                            <span>{isActive ? 'Active' : isCompleted ? 'Edit' : 'Open'}</span>
-                            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
+                        <span className="flex-1 text-sm font-semibold tracking-tight truncate">
+                          {step.title}
+                        </span>
+                      </button>
                     );
                   })}
-                </div>
-
-                {/* ── Bottom Section: Overall Progress Bar styled matching LeftPropertiesPanel footer ── */}
-                <div className="p-3 sm:p-3.5 pt-2.5 border-t border-slate-100 shrink-0 bg-[#faf8f5]/60 space-y-2">
-                  <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
-                    <span className="text-[#1f1b16] font-medium">Overall Progress</span>
-                    <span className="font-mono-data font-bold text-[#006C4A]">
-                      {Math.round(((activeStep - 1) / (WIZARD_STEPS.length - 1)) * 100)}%
-                    </span>
-                  </div>
-                  <div className="w-full h-1.5 bg-slate-200/80 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-[#006C4A] rounded-full transition-all duration-300"
-                      style={{ width: `${((activeStep - 1) / (WIZARD_STEPS.length - 1)) * 100}%` }}
-                    />
-                  </div>
                 </div>
               </motion.div>
             </div>
@@ -1244,7 +1197,7 @@ export function HostUploadPage() {
 
       {/* ── Main Viewport-Fitted Canvas (Natural Smooth Scroll, Generous Bottom Padding) ── */}
       <main
-        className="flex-1 w-full relative z-10 max-md:rounded-t-[2.5rem] sm:max-md:rounded-t-[3rem] max-md:bg-gradient-to-b max-md:from-[rgba(215,236,252,0.88)] max-md:via-[rgba(202,230,250,0.82)] max-md:to-[rgba(215,236,252,0.92)] max-md:backdrop-blur-2xl max-md:backdrop-saturate-[160%] max-md:border-t max-md:border-white/80 max-md:shadow-[0_-12px_40px_rgba(14,116,144,0.1),inset_0_1px_1px_rgba(255,255,255,0.9)] max-md:px-4 max-md:py-6 max-md:pb-32 md:max-w-6xl md:mx-auto md:px-4 md:sm:px-6 md:lg:px-8 md:py-1 md:pb-36"
+        className="flex-1 w-full relative z-10 max-md:rounded-t-[2.5rem] sm:max-md:rounded-t-[3rem] max-md:bg-[#f4f6f9] max-md:border-t max-md:border-slate-200/80 max-md:shadow-[0_-12px_36px_rgba(0,0,0,0.06)] max-md:px-4 max-md:py-6 max-md:pb-32 md:max-w-6xl md:mx-auto md:px-4 md:sm:px-6 md:lg:px-8 md:py-1 md:pb-36"
       >
         <ErrorBoundary>
           <AnimatePresence mode="wait">
@@ -1352,7 +1305,7 @@ export function HostUploadPage() {
         {/* Hairline Continuous Progress Indicator Line */}
         <div className="w-full h-1 relative overflow-hidden max-md:bg-slate-200/60 md:bg-slate-100">
           <motion.div
-            className="h-full bg-gradient-to-r from-[#006C4A] to-teal-500 rounded-r-full transition-all duration-300"
+            className="h-full bg-gradient-to-r from-[#0ea5e9] to-[#0284c7] rounded-r-full transition-all duration-300 shadow-[0_0_8px_rgba(14,165,233,0.4)]"
             style={{ width: `${(activeStep / WIZARD_STEPS.length) * 100}%` }}
           />
         </div>

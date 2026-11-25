@@ -12,6 +12,7 @@ import {
 import { HostScheduleCalendar } from './schedule/HostScheduleCalendar';
 import { HostOccupantsList } from './schedule/HostOccupantsList';
 import { HostBookingForm } from './schedule/HostBookingForm';
+import { isPerPersonPricing } from '../../utils/priceUtils';
 
 const ResidentIdPassModal = lazy(() =>
  import('./schedule/ResidentIdPassModal').then((m) => ({ default: m.ResidentIdPassModal }))
@@ -644,8 +645,7 @@ export default function HostWeeklySlotSchedule({
  const rawPrice = selectedRoomCard?.price || activeCategory?.price || hostProperty?.price || 0;
  const unitPrice = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/\D/g, '')) || 0;
  const safePersons = Math.max(1, Number(hostPersonCount) || 1);
-			const resolvedType = String(hostProperty?.propertyType || hostProperty?.type || 'PG').trim().toLowerCase();
-			const isPerPerson = resolvedType === 'pg' || resolvedType === 'hostel';
+			const isPerPerson = isPerPersonPricing(hostProperty, selectedRoomCard || activeCategory);
 			const effectiveMultiplier = isPerPerson ? safePersons : 1;
 			const totalPrice = unitPrice * durationMonths * effectiveMultiplier;
 
@@ -656,7 +656,7 @@ export default function HostWeeklySlotSchedule({
  checkInTime: '12:00 AM',
  checkOutDate: `${lastMonth.daysInMonth} ${lastMonth.monthShort} ${lastMonth.year}`,
  checkOutTime: '11:59 PM',
- priceBreakdown: `₹${unitPrice.toLocaleString('en-IN')}/mo × ${durationMonths} mo${durationMonths > 1 ? 's' : ''}`,
+ priceBreakdown: `₹${unitPrice.toLocaleString('en-IN')}/mo × ${durationMonths} mo${durationMonths > 1 ? 's' : ''}${isPerPerson && safePersons > 1 ? ` × ${safePersons} persons` : ''}`,
  unitPrice,
  totalPrice,
  };
@@ -675,7 +675,10 @@ export default function HostWeeklySlotSchedule({
 
  const rawPrice = selectedRoomCard?.price || activeCategory?.price || hostProperty?.price || 0;
  const nightlyPrice = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/\D/g, '')) || 0;
- const totalPrice = nightlyPrice * durationNights;
+ const safePersons = Math.max(1, Number(hostPersonCount) || 1);
+ const isPerPerson = isPerPersonPricing(hostProperty, selectedRoomCard || activeCategory);
+ const effectiveMultiplier = isPerPerson ? safePersons : 1;
+ const totalPrice = nightlyPrice * durationNights * effectiveMultiplier;
 
  return {
  isMonthly: false,
@@ -687,7 +690,7 @@ export default function HostWeeklySlotSchedule({
  checkInTime: '12:00 PM',
  checkOutDate: `${checkoutDayName}, ${checkoutMonthDay} ${checkoutYear}`,
  checkOutTime: '11:59 AM',
- priceBreakdown: `₹${nightlyPrice.toLocaleString('en-IN')} × ${durationNights} night${durationNights > 1 ? 's' : ''}`,
+ priceBreakdown: `₹${nightlyPrice.toLocaleString('en-IN')} × ${durationNights} night${durationNights > 1 ? 's' : ''}${isPerPerson && safePersons > 1 ? ` × ${safePersons} persons` : ''}`,
  unitPrice: nightlyPrice,
  totalPrice,
  };
@@ -697,10 +700,24 @@ export default function HostWeeklySlotSchedule({
  if (reservationDetails && reservationDetails.totalPrice !== undefined) {
  // eslint-disable-next-line react-hooks/set-state-in-effect
  setHostPaidAmount(String(reservationDetails.totalPrice));
+ } else if (sortedSelected.length === 0) {
+ const rawPrice = selectedRoomCard?.price || activeCategory?.price || hostProperty?.price || 0;
+ const unitPrice = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/\D/g, '')) || 0;
+ if (unitPrice > 0) {
+ const safePersons = Math.max(1, Number(hostPersonCount) || 1);
+ const isPerPerson = isPerPersonPricing(hostProperty, selectedRoomCard || activeCategory);
+ const effectiveMultiplier = isPerPerson ? safePersons : 1;
+ // eslint-disable-next-line react-hooks/set-state-in-effect
+ setHostPaidAmount(String(unitPrice * effectiveMultiplier));
  } else {
+ // eslint-disable-next-line react-hooks/set-state-in-effect
  setHostPaidAmount('');
  }
- }, [reservationDetails]);
+ } else {
+ // eslint-disable-next-line react-hooks/set-state-in-effect
+ setHostPaidAmount('');
+ }
+ }, [reservationDetails, hostPersonCount, selectedRoomCard, activeCategory, hostProperty, sortedSelected.length]);
 
  const handleHostMarkSlotBooked = async () => {
  if (isUserRequestSelection && isExpiredRequest) {

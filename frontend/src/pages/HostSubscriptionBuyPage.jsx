@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { subscriptionsAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
 import { Left } from '../components/navbar/Left';
-import { Login } from '../components/navbar/Login';
 
 export const getMonthDetails = () => {
  const now = new Date();
@@ -167,11 +166,25 @@ export function HostSubscriptionBuyPage() {
  transactionRef: cleanUtr,
  });
 
- if (res.success) {
- toast.success('Payment submitted! Awaiting verification');
- setTransactionRef('');
- // Return to subscription status & history page where request is now visible
- navigate('/host/subscription');
+      if (res.success) {
+        try {
+          localStorage.removeItem('stayhub_host_subscription_cache');
+          localStorage.setItem('stayhub_admin_sync_ts', Date.now().toString());
+          window.dispatchEvent(new Event('stayhub_subscription_updated'));
+          if (typeof BroadcastChannel !== 'undefined') {
+            const bc = new BroadcastChannel('stayhub_live_channel');
+            bc.postMessage({
+              type: 'SUBSCRIPTION_CREATED'
+            });
+            bc.close();
+          }
+        } catch {
+          /* ignore */
+        }
+        toast.success('Payment submitted! Awaiting verification');
+        setTransactionRef('');
+        // Return to subscription status & history page where request is now visible
+        navigate('/host/subscription');
  } else {
  toast.error(res.message || 'Payment submission failed');
  }
@@ -259,33 +272,6 @@ export function HostSubscriptionBuyPage() {
       <header className="relative w-full h-[70px] sm:h-[88px] pointer-events-none select-none z-50 font-body-md antialiased">
         {/* Left Floating Island: Circular Back Button */}
         <Left showBadge={false} onBack={handleBack} fallbackUrl="/host/subscription" />
-
-        {/* Right Floating Island: User Dashboard + Profile */}
-        <div className="fixed top-2.5 sm:top-5 right-2.5 sm:right-6 z-50 flex items-center gap-2 sm:gap-2.5 pointer-events-auto select-none h-[54px] sm:h-[56px]">
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            data-no-hover="true"
-            className="w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] min-w-[54px] min-h-[54px] rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-sm hover:bg-[#f7f4ee] flex items-center justify-center transition-all cursor-pointer select-none active:scale-95 shrink-0"
-            title="Switch to User Dashboard"
-            aria-label="User Dashboard"
-          >
-            <svg
-              className="w-6 h-6 sm:w-6.5 sm:h-6.5 text-slate-700 stroke-[2.2] shrink-0"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-              <polyline points="9 22 9 12 15 12 15 22" />
-            </svg>
-          </button>
-          <div className="relative flex items-center justify-center h-[54px] sm:h-[56px] shrink-0">
-            <Login />
-          </div>
-        </div>
       </header>
 
       {/* ── MAIN CONTENT CONTAINER ── */}

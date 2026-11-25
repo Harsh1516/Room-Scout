@@ -7,6 +7,7 @@ import {
  ChevronLeft, ChevronRight, RotateCcw,
 } from 'lucide-react';
 import { bookingsAPI, staysAPI } from '../../../services/api';
+import { VisitedGuestCard } from '../visited/VisitedGuestCard';
 
 const ResidentIdPassModal = lazy(() =>
  import('../schedule/ResidentIdPassModal').then((m) => ({ default: m.ResidentIdPassModal }))
@@ -31,6 +32,7 @@ export function PaidUsersList({
  broadcastStayUpdate = () => {},
  onBack = () => {},
  onSelectUserRequest = () => {},
+ showBackButton = false,
 }) {
  const [searchQuery, setSearchQuery] = useState('');
  const [filterStatus, setFilterStatus] = useState('ALL');
@@ -679,302 +681,196 @@ export function PaidUsersList({
  };
 
  return (
- <div className="w-full flex-1 flex flex-col min-h-0 select-none antialiased font-body-md py-1">
- {/* ────────────────── MAIN TAB CONTAINER (ROUNDED AS SAME LIKE PIC 2 DESIGN) ────────────────── */}
+ <div className="w-full flex-1 flex flex-col min-h-0 select-none antialiased font-body-md">
+ {/* ────────────────── FULL-WIDTH PAID RESIDENTS CONTAINER ────────────────── */}
  <motion.div
  layout="position"
  transition={{
  layout: { duration: 0.36, ease: [0.25, 1, 0.5, 1] },
  }}
- className="w-full flex flex-col rounded-[26px] bg-white border border-slate-200/90 shadow-[0_8px_30px_rgb(0,0,0,0.06)] overflow-hidden select-none"
+ className="w-full flex-1 flex flex-col bg-[#ebedf0] select-none"
  >
  {/* Top Header Banner - Clean text without pill backgrounds, with larger prominent Revenue font */}
- <div className="px-4 sm:px-6 pt-3 sm:pt-3.5 pb-2.5 sm:pb-3 border-b border-sky-200/80 bg-sky-100/85">
- <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
- {/* Left: Back button + Large Revenue Text + Clean Unboxed Metrics */}
- <div className="flex items-center gap-3 sm:gap-4 flex-wrap min-w-0">
- <button
- type="button"
- onClick={onBack}
- className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-sky-300/80 bg-white/95 hover:bg-white text-sky-900 text-xs font-medium transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
- title="Return to Check-in view"
- >
- <ArrowLeft className="w-3.5 h-3.5 text-sky-700" />
- <span>Back</span>
- </button>
+        <div className="px-4 sm:px-6 pt-3 sm:pt-3.5 pb-2.5 sm:pb-3 border-b border-sky-200/80 bg-sky-100/85">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            {/* Left: Back button + Large Revenue Text + Clean Unboxed Metrics */}
+            <div className="flex items-center gap-3 sm:gap-4 flex-wrap min-w-0 sm:flex-1 justify-start">
+              {showBackButton && typeof onBack === 'function' && (
+                <button
+                  type="button"
+                  onClick={onBack}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-sky-300/80 bg-white/95 hover:bg-white text-sky-900 text-xs font-medium transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
+                  title="Return to Check-in view"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5 text-sky-700" />
+                  <span>Back</span>
+                </button>
+              )}
 
- {/* Prominent Revenue Text (Bigger size, NO background box) */}
- <div className="flex items-baseline gap-2 shrink-0">
- <span className="text-[11px] font-medium text-sky-950/70">
- Revenue
- </span>
- <span className="text-xl sm:text-2xl font-medium text-emerald-700 font-mono tracking-tight leading-none">
- ₹{totalRevenue.toLocaleString('en-IN')}
- </span>
- </div>
+              {/* Prominent Revenue Text (Bigger size, NO background box) */}
+              <div className="flex items-baseline gap-2 shrink-0">
+                <span className="text-[11px] font-medium text-sky-950/70">
+                  Revenue
+                </span>
+                <span className="text-xl sm:text-2xl font-medium text-emerald-700 font-mono tracking-tight leading-none">
+                  ₹{totalRevenue.toLocaleString('en-IN')}
+                </span>
+              </div>
 
- {/* Manual Reset to ₹0 Button */}
- <div className="flex items-center gap-1.5 shrink-0">
- <button
- type="button"
- onClick={() => setShowResetModal(true)}
- title="Manually reset revenue counter to ₹0"
- className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-white/95 hover:bg-white text-sky-900 border border-sky-300/90 shadow-2xs hover:shadow-xs transition-all cursor-pointer active:scale-95"
- >
- <RotateCcw className="w-3 h-3 text-sky-700" />
- <span>Reset</span>
- </button>
- {isResetActive && (
- <button
- type="button"
- onClick={() => setShowResetModal(true)}
- className="text-[10px] font-semibold text-sky-900/80 underline underline-offset-2 hover:text-sky-950 cursor-pointer transition-colors"
- title="Revenue counter is reset for this cycle. Click to view or restore all-time."
- >
- (Cycle Reset · All-Time ₹{rawTotalRevenue.toLocaleString('en-IN')})
- </button>
- )}
- </div>
+              {/* Manual Reset to ₹0 Button */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setShowResetModal(true)}
+                  title="Manually reset revenue counter to ₹0"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold tracking-tight bg-[#1f1b16]/5 hover:bg-[#1f1b16] text-slate-700 hover:text-white border border-slate-300/70 hover:border-[#1f1b16] transition-all duration-200 cursor-pointer active:scale-95"
+                >
+                  <RotateCcw className="w-3 h-3 stroke-[2.2]" />
+                  <span>Reset</span>
+                </button>
+                {isResetActive && (
+                  <button
+                    type="button"
+                    onClick={() => setShowResetModal(true)}
+                    className="text-[10px] font-semibold text-sky-900/80 underline underline-offset-2 hover:text-sky-950 cursor-pointer transition-colors"
+                    title="Revenue counter is reset for this cycle. Click to view or restore all-time."
+                  >
+                    (Cycle Reset · All-Time ₹{rawTotalRevenue.toLocaleString('en-IN')})
+                  </button>
+                )}
+              </div>
 
- {/* Clean breakdown text (NO background boxes) */}
- <div className="hidden sm:flex items-center gap-2 text-xs shrink-0">
- <span className="text-sky-400/80 font-medium">|</span>
- <span className="inline-flex items-center gap-1 font-medium font-mono text-indigo-700">
- <Globe className="w-3.5 h-3.5 text-indigo-600" />
- <span>₹{onlineRevenue.toLocaleString('en-IN')}</span>
- </span>
- <span className="text-sky-400/80 font-medium">·</span>
- <span className="inline-flex items-center gap-1 font-medium font-mono text-teal-800">
- <Store className="w-3.5 h-3.5 text-teal-600" />
- <span>₹{offlineRevenue.toLocaleString('en-IN')}</span>
- </span>
- </div>
+              {/* Clean breakdown text (NO background boxes) */}
+              <div className="hidden xl:flex items-center gap-2 text-xs shrink-0">
+                <span className="text-sky-400/80 font-medium">|</span>
+                <span className="inline-flex items-center gap-1 font-medium font-mono text-indigo-700">
+                  <Globe className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>₹{onlineRevenue.toLocaleString('en-IN')}</span>
+                </span>
+                <span className="text-sky-400/80 font-medium">·</span>
+                <span className="inline-flex items-center gap-1 font-medium font-mono text-teal-800">
+                  <Store className="w-3.5 h-3.5 text-teal-600" />
+                  <span>₹{offlineRevenue.toLocaleString('en-IN')}</span>
+                </span>
+              </div>
 
- {/* Clean in-house status indicator (NO background boxes) */}
- <div className="hidden md:flex items-center gap-2 shrink-0 text-xs font-semibold">
- <span className="text-sky-400/80">|</span>
- <span className="inline-flex items-center gap-1.5 text-emerald-800">
- <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
- <span>{checkedInCount} In-House</span>
- </span>
- </div>
- </div>
+              {/* Clean in-house status indicator (NO background boxes) */}
+              <div className="hidden 2xl:flex items-center gap-2 shrink-0 text-xs font-semibold">
+                <span className="text-sky-400/80">|</span>
+                <span className="inline-flex items-center gap-1.5 text-emerald-800">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                  <span>{checkedInCount} In-House</span>
+                </span>
+              </div>
+            </div>
 
- {/* Right: Date text + Premium Capsule Tab Switcher */}
- <div className="flex items-center gap-3 shrink-0">
- {/* Calendar date info matching Room page */}
- <div className="hidden lg:flex items-center gap-1.5 text-xs font-semibold text-sky-950 select-none">
- <Calendar className="w-3.5 h-3.5 text-[#3525CD]" />
- <span>Today: {todayFormatted}</span>
- </div>
+            {/* Center: High-Level Segmented Tabs Capsule (Online/Offline Console in Center) */}
+            <div className="flex items-center justify-center w-full sm:w-auto shrink-0">
+              <div className="inline-flex items-center p-1 rounded-full bg-white/90 border border-slate-200/90 shadow-xs relative select-none shrink-0 gap-0.5">
+                {/* Online Tab Button */}
+                <button
+                  type="button"
+                  onClick={() => switchTab('ONLINE')}
+                  className={`relative px-3.5 sm:px-4 py-1.5 rounded-full text-xs transition-colors duration-200 flex items-center gap-1.5 cursor-pointer z-10 select-none ${
+                    sectionFilter === 'ONLINE'
+                      ? 'text-white font-semibold'
+                      : 'text-slate-600 hover:text-[#1f1b16] font-medium'
+                  }`}
+                >
+                  {sectionFilter === 'ONLINE' && (
+                    <motion.div
+                      layoutId="paidUsersTabIndicator"
+                      className="absolute inset-0 rounded-full bg-[#1f1b16] shadow-[0_2px_8px_rgba(31,27,22,0.25)] z-0 pointer-events-none"
+                      transition={{
+                        type: 'spring',
+                        stiffness: 450,
+                        damping: 32,
+                        mass: 0.8,
+                      }}
+                    />
+                  )}
+                  <Globe className="relative z-10 w-3.5 h-3.5" />
+                  <span className="relative z-10">Online</span>
+                  <span
+                    className={`relative z-10 min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-mono font-medium leading-none inline-flex items-center justify-center ${
+                      sectionFilter === 'ONLINE'
+                        ? 'bg-white/20 text-white'
+                        : 'bg-slate-200/70 text-slate-600'
+                    }`}
+                  >
+                    {onlineGuests.length}
+                  </span>
+                </button>
 
- {/* High-Level Segmented Tabs Capsule matching VisitedSubNavbar */}
- <div className="inline-flex items-center p-1 rounded-full bg-white/90 border border-sky-300/80 shadow-inner relative select-none shrink-0">
- {/* Online Tab Button */}
- <button
- type="button"
- onClick={() => switchTab('ONLINE')}
- className={`relative px-3.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs transition-all duration-200 flex items-center gap-1.5 cursor-pointer z-10 select-none ${
- sectionFilter === 'ONLINE'
- ? 'text-[#3525CD] font-medium'
- : 'text-slate-600 hover:text-[#1f1b16] font-medium'
- }`}
- >
- {sectionFilter === 'ONLINE' && (
- <motion.div
- layoutId="paidUsersTabIndicator"
- className="absolute inset-0 rounded-full bg-white shadow-sm shadow-indigo-500/15 border border-slate-200/60 z-0 pointer-events-none"
- transition={{
- type: 'spring',
- stiffness: 450,
- damping: 32,
- mass: 0.8,
- }}
- />
- )}
- {/* Dual-ring beacon dot */}
- <span className="relative flex h-2 w-2 shrink-0">
- {sectionFilter === 'ONLINE' && (
- <span className=" absolute inline-flex h-full w-full rounded-full bg-indigo-500 opacity-75" />
- )}
- <span
- className={`relative inline-flex rounded-full h-2 w-2 ${
- sectionFilter === 'ONLINE'
- ? 'bg-[#3525CD]'
- : 'bg-slate-400'
- }`}
- />
- </span>
- <Globe className="relative z-10 w-3.5 h-3.5" />
- <span className="relative z-10">Online</span>
- <span
- className={`min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-mono font-medium leading-none inline-flex items-center justify-center ${
- sectionFilter === 'ONLINE'
- ? 'bg-[#E2DFFF] text-[#3525CD]'
- : 'bg-slate-200/70 text-slate-600'
- }`}
- >
- {onlineGuests.length}
- </span>
- </button>
+                {/* Offline Tab Button */}
+                <button
+                  type="button"
+                  onClick={() => switchTab('OFFLINE')}
+                  className={`relative px-3.5 sm:px-4 py-1.5 rounded-full text-xs transition-colors duration-200 flex items-center gap-1.5 cursor-pointer z-10 select-none ${
+                    sectionFilter === 'OFFLINE'
+                      ? 'text-white font-semibold'
+                      : 'text-slate-600 hover:text-[#1f1b16] font-medium'
+                  }`}
+                >
+                  {sectionFilter === 'OFFLINE' && (
+                    <motion.div
+                      layoutId="paidUsersTabIndicator"
+                      className="absolute inset-0 rounded-full bg-[#1f1b16] shadow-[0_2px_8px_rgba(31,27,22,0.25)] z-0 pointer-events-none"
+                      transition={{
+                        type: 'spring',
+                        stiffness: 450,
+                        damping: 32,
+                        mass: 0.8,
+                      }}
+                    />
+                  )}
+                  <Store className="relative z-10 w-3.5 h-3.5" />
+                  <span className="relative z-10">Offline</span>
+                  <span
+                    className={`relative z-10 min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-mono font-medium leading-none inline-flex items-center justify-center ${
+                      sectionFilter === 'OFFLINE'
+                        ? 'bg-white/20 text-white'
+                        : 'bg-slate-200/70 text-slate-600'
+                    }`}
+                  >
+                    {offlineGuests.length}
+                  </span>
+                </button>
+              </div>
+            </div>
 
- {/* Offline Tab Button */}
- <button
- type="button"
- onClick={() => switchTab('OFFLINE')}
- className={`relative px-3.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs transition-all duration-200 flex items-center gap-1.5 cursor-pointer z-10 select-none ${
- sectionFilter === 'OFFLINE'
- ? 'text-teal-700 font-medium'
- : 'text-slate-600 hover:text-[#1f1b16] font-medium'
- }`}
- >
- {sectionFilter === 'OFFLINE' && (
- <motion.div
- layoutId="paidUsersTabIndicator"
- className="absolute inset-0 rounded-full bg-white shadow-sm shadow-teal-500/15 border border-slate-200/60 z-0 pointer-events-none"
- transition={{
- type: 'spring',
- stiffness: 450,
- damping: 32,
- mass: 0.8,
- }}
- />
- )}
- {/* Dual-ring beacon dot */}
- <span className="relative flex h-2 w-2 shrink-0">
- {sectionFilter === 'OFFLINE' && (
- <span className=" absolute inline-flex h-full w-full rounded-full bg-teal-500 opacity-75" />
- )}
- <span
- className={`relative inline-flex rounded-full h-2 w-2 ${
- sectionFilter === 'OFFLINE'
- ? 'bg-teal-600'
- : 'bg-slate-400'
- }`}
- />
- </span>
- <Store className="w-3.5 h-3.5" />
- <span className="relative z-10">Offline</span>
- <span
- className={`min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-mono font-medium leading-none inline-flex items-center justify-center ${
- sectionFilter === 'OFFLINE'
- ? 'bg-teal-100 text-teal-800'
- : 'bg-slate-200/70 text-slate-600'
- }`}
- >
- {offlineGuests.length}
- </span>
- </button>
- </div>
- </div>
- </div>
- </div>
+            {/* Right: Date text or balancing spacer */}
+            <div className="hidden sm:flex items-center gap-3 shrink-0 sm:flex-1 justify-end">
+              {/* Calendar date info matching Room page */}
+              <div className="hidden lg:flex items-center gap-1.5 text-xs font-semibold text-sky-950 select-none">
+                <Calendar className="w-3.5 h-3.5 text-[#3525CD]" />
+                <span>Today: {todayFormatted}</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
- {/* Card Body - Crisp background for cards to elevate and pop */}
- <div className="p-4 sm:p-5 lg:p-6 flex flex-col gap-4 flex-1 min-h-0 bg-slate-50/70">
- {/* Sub-header with Channel Title + Revenue sub-pill and Search */}
- <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200/70">
- <div className="flex items-center gap-3">
- <div
- className={`w-9 h-9 rounded-2xl flex items-center justify-center text-white shadow-sm shrink-0 ${
- sectionFilter === 'ONLINE'
- ? 'r shadow-indigo-500/20'
- : 'r shadow-teal-500/20'
- }`}
- >
- {sectionFilter === 'ONLINE' ? <Globe className="w-4 h-4" /> : <Store className="w-4 h-4" />}
- </div>
- <div>
- <div className="flex items-center gap-2">
- <h2 className="text-sm font-medium text-[#1f1b16]">
- {sectionFilter === 'ONLINE' ? 'Online Paid Bookings' : 'Offline Registered Guests'}
- </h2>
- <span
- className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium font-mono border ${
- sectionFilter === 'ONLINE'
- ? 'bg-indigo-50 text-indigo-700 border-indigo-200/70'
- : 'bg-teal-50 text-teal-700 border-teal-200/70'
- }`}
- >
- ₹{currentRevenue.toLocaleString('en-IN')}
- </span>
- </div>
- <p className="text-[11px] text-slate-400 mt-0.5">
- {sectionFilter === 'ONLINE'
- ? 'Verified bookings via Direct UPI / Bank credit'
- : 'Walk-ins and counter registrations recorded by host'}
- </p>
- </div>
- </div>
-
- {/* Filter Pills & Search Box */}
- <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
- {/* Status Filter Tabs: All, In-House, Checked Out */}
- <div className="inline-flex items-center p-0.5 rounded-xl bg-slate-200/70 border border-slate-300/60 text-xs shrink-0 select-none">
- <button
- type="button"
- onClick={() => { setFilterStatus('ALL'); setCurrentPage(0); }}
- className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
- filterStatus === 'ALL'
- ? 'bg-white text-[#1f1b16] shadow-2xs'
- : 'text-slate-600 hover:text-[#1f1b16]'
- }`}
- >
- All ({listForSection.length})
- </button>
- <button
- type="button"
- onClick={() => { setFilterStatus('CHECKED_IN'); setCurrentPage(0); }}
- className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1 ${
- filterStatus === 'CHECKED_IN'
- ? 'bg-white text-emerald-600 shadow-2xs'
- : 'text-slate-600 hover:text-[#1f1b16]'
- }`}
- >
- <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
- In-House ({inHouseCountForSection})
- </button>
- <button
- type="button"
- onClick={() => { setFilterStatus('CHECKED_OUT'); setCurrentPage(0); }}
- className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1 ${
- filterStatus === 'CHECKED_OUT'
- ? 'bg-white text-purple-600 shadow-2xs'
- : 'text-slate-600 hover:text-[#1f1b16]'
- }`}
- >
- <CheckCircle2 className="w-3 h-3 text-purple-500" />
- Checked Out ({checkedOutCountForSection})
- </button>
- </div>
-
- {/* Search Box */}
- <div className="relative w-full sm:w-64">
- <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+        {/* Card Body - Clean #ebedf0 background for cards to elevate and pop */}
+ <div className="p-4 sm:p-5 lg:p-6 flex flex-col gap-4 flex-1 min-h-0 bg-[#ebedf0]">
+ {/* Full-Width Search Input */}
+ <div className="relative w-full">
+ <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
  <input
  type="text"
  value={searchQuery}
- onChange={(e) => {
- setSearchQuery(e.target.value);
- setCurrentPage(0);
- }}
+ onChange={(e) => setSearchQuery(e.target.value)}
  placeholder="Search guest, phone, room..."
- className="w-full pl-9 pr-8 py-2 rounded-xl text-xs bg-white text-[#1f1b16] border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 placeholder:text-slate-400 transition-all shadow-2xs"
+ className="w-full pl-10 pr-9 py-2.5 rounded-2xl text-xs sm:text-sm bg-white text-[#1f1b16] border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 placeholder:text-slate-400 transition-all shadow-2xs"
  />
  {searchQuery && (
  <button
  type="button"
- onClick={() => {
- setSearchQuery('');
- setCurrentPage(0);
- }}
- className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-0.5"
+ onClick={() => setSearchQuery('')}
+ className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-0.5"
  >
  <X className="w-3.5 h-3.5" />
  </button>
  )}
- </div>
- </div>
  </div>
 
  {/* Tab Content with Directional Framer-Motion Slide */}
@@ -1031,58 +927,22 @@ export function PaidUsersList({
  ) : (
  <div className="flex flex-col gap-4">
  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
- {paginatedGuests.map(renderGuestCard)}
- </div>
-
- {/* Horizontal Dots Carousel Pagination Bar */}
- <div className="pt-3 border-t border-slate-200/70 flex items-center justify-between select-none shrink-0 mt-1">
- <div className="w-16 hidden sm:block" />
-
- {/* Dots Carousel Navigator */}
- <div className="flex items-center gap-2">
- <button
- type="button"
- disabled={validPage === 0}
- onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
- className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-500 hover:text-[#1f1b16] disabled:opacity-30 disabled:pointer-events-none hover:bg-slate-100 transition-all cursor-pointer"
- aria-label="Previous Page"
- >
- <ChevronLeft className="w-4 h-4" />
- </button>
-
- {/* Horizontal Dots */}
- <div className="flex items-center gap-1.5 px-1 max-w-[240px] overflow-x-auto no-scrollbar">
- {Array.from({ length: totalPages }).map((_, pIdx) => (
- <button
- key={pIdx}
- type="button"
- onClick={() => setCurrentPage(pIdx)}
- aria-label={`Go to page ${pIdx + 1}`}
- className={`transition-all duration-300 rounded-full cursor-pointer shrink-0 ${
- validPage === pIdx
- ? sectionFilter === 'ONLINE'
- ? 'w-6 h-2 bg-indigo-600 shadow-xs'
- : 'w-6 h-2 bg-teal-600 shadow-xs'
- : 'w-2 h-2 bg-slate-200 hover:bg-slate-400'
- }`}
+ {currentGuests.map((g, idx) => {
+ const bookingId = g.bookingId || g._id || g.bookingReferenceId;
+ const st = String(g.status || '').toUpperCase();
+ const isCheckedOut = st === 'CHECKED_OUT' || st === 'COMPLETED';
+ return (
+ <VisitedGuestCard
+ key={bookingId || idx}
+ guest={g}
+ subTab={isCheckedOut ? 'checkout' : 'checkin'}
+ hostProperty={hostProperty}
+ onOpenModal={handleOpenOccupantModal}
+ onSelectSlot={handleOpenOccupantModal}
+ onSelectUserRequest={handleOpenOccupantModal}
  />
- ))}
- </div>
-
- <button
- type="button"
- disabled={validPage >= totalPages - 1}
- onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
- className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-500 hover:text-[#1f1b16] disabled:opacity-30 disabled:pointer-events-none hover:bg-slate-100 transition-all cursor-pointer"
- aria-label="Next Page"
- >
- <ChevronRight className="w-4 h-4" />
- </button>
- </div>
-
- <span className="text-[11px] font-medium text-slate-400 w-16 text-right">
- Page {validPage + 1} of {totalPages}
- </span>
+ );
+ })}
  </div>
  </div>
  )}

@@ -192,6 +192,23 @@ describe('Host Subscription System Tests', () => {
       assert.strictEqual(halfYearly.price, 2700);
     });
 
+    it('should calculate correct plans for Independent Room with 10 rooms (20rs/room/mo, 200/mo, 570 3-mo, 1080 6-mo)', () => {
+      const result = calculateSubscriptionPlans({
+        propertyType: 'Independent Room',
+        roomCount: 10,
+      });
+
+      assert.strictEqual(result.propertyType, 'Independent Room');
+      assert.strictEqual(result.roomCount, 10);
+      assert.strictEqual(result.ratePerRoom, 20);
+      assert.strictEqual(result.monthlyBase, 200);
+
+      const [monthly, quarterly, halfYearly] = result.plans;
+      assert.strictEqual(monthly.price, 200);
+      assert.strictEqual(quarterly.price, 570);
+      assert.strictEqual(halfYearly.price, 1080);
+    });
+
     it('should calculate correct plans with custom admin rates and custom discounts', () => {
       const customRates = {
         PG: 12,

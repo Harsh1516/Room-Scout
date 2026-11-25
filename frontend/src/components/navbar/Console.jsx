@@ -168,11 +168,15 @@ export function Console({
             }
           }}
           title={!isExpanded ? 'Click to expand search options' : (canSearch ? 'Search verified stays' : 'Select filters or search')}
-          className={`relative font-bold ${!isExpanded ? "w-full min-w-[125px] sm:min-w-[140px] px-4 sm:px-5" : "px-3 sm:px-4 pr-4 sm:pr-5"} h-12 min-h-[48px] rounded-full shrink-0 select-none flex items-center justify-center gap-2 sm:gap-2.5 text-slate-900 hover:text-black cursor-pointer active:scale-95 focus:outline-none transition-all duration-150 whitespace-nowrap`}
+          className={`relative font-bold ${
+            !isExpanded
+              ? "w-full min-w-[125px] sm:min-w-[140px] px-4 sm:px-5 h-12 min-h-[48px] text-slate-900 hover:text-black"
+              : "px-4 sm:px-5 h-11 sm:h-12 bg-[#0078d4] hover:bg-[#006bbd] active:bg-[#005ba3] text-white border border-[#0078d4] shadow-xs"
+          } rounded-full shrink-0 select-none flex items-center justify-center gap-2 sm:gap-2.5 cursor-pointer active:scale-95 focus:outline-none transition-all duration-150 whitespace-nowrap`}
         >
           {/* Search Magnifying Glass or Spinner */}
           <svg
-            className={`w-5 h-5 sm:w-[20px] sm:h-[20px] shrink-0 text-slate-900 stroke-[2.5] ${isSearching ? 'animate-spin' : ''}`}
+            className={`w-5 h-5 sm:w-[20px] sm:h-[20px] shrink-0 ${isExpanded ? 'text-white' : 'text-slate-900'} stroke-[2.5] ${isSearching ? 'animate-spin' : ''}`}
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -190,7 +194,7 @@ export function Console({
           </svg>
 
           {/* Label */}
-          <span className="font-bold tracking-tight text-[14px] sm:text-[15px] text-slate-900 whitespace-nowrap leading-none">
+          <span className={`font-bold tracking-tight text-[14px] sm:text-[15px] ${isExpanded ? 'text-white' : 'text-slate-900'} whitespace-nowrap leading-none`}>
             {isSearching ? '...' : 'Search'}
           </span>
 

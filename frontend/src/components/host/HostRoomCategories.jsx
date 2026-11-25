@@ -111,6 +111,7 @@ function CategoryRoomCarousel({
  onAddRoomCard,
  onSaveCategory,
  markCategoryDirty,
+ showAvailability = true,
 }) {
  const scrollRef = useRef(null);
  const tickingRef = useRef(false);
@@ -293,7 +294,7 @@ function CategoryRoomCarousel({
      <span className="text-[14px] sm:text-[15.5px] font-extrabold text-white tracking-tight truncate leading-none drop-shadow-xs">
       Rooms ({matchingRooms.length})
      </span>
-     {matchingRooms.length > 0 && (
+     {matchingRooms.length > 0 && showAvailability && (
       <span className="h-5 px-2 text-[10.5px] rounded-full bg-white/20 border border-white/25 text-white font-bold select-none flex items-center justify-center leading-none">
        {isMonthly
          ? `${matchingRooms.filter((r) => !isRoomOccupiedInMonth(r, currentMonthKey || new Date().toISOString().slice(0, 7), guests)).length}/${matchingRooms.length} Avail.`
@@ -390,7 +391,7 @@ function CategoryRoomCarousel({
      <div
       ref={setScrollRef}
       onScroll={handleScroll}
-      className={`flex items-center ${compact ? 'gap-2.5 py-2 px-1' : 'gap-3 py-2.5 px-1.5'} overflow-x-auto overscroll-x-contain no-scrollbar snap-x snap-proximity w-full max-w-full touch-pan-x transform-gpu`}
+      className={`flex items-center ${compact ? 'gap-2.5 py-2 px-1' : 'gap-3 py-2.5 px-1.5 pb-3.5'} overflow-x-auto overscroll-x-contain no-scrollbar snap-x snap-proximity w-full max-w-full touch-pan-x transform-gpu`}
       style={{
        scrollbarWidth: 'none',
        msOverflowStyle: 'none',
@@ -445,6 +446,7 @@ function CategoryRoomCarousel({
          percentFull={roomPercentFull}
          isMonthly={isMonthly}
          compact={compact}
+         showAvailability={showAvailability}
          onSelectCategoryIndex={onSelectCategoryIndex}
          onSelectRoomCardId={onSelectRoomCardId}
          setActiveDotIndex={setActiveDotIndex}
@@ -500,9 +502,16 @@ export default function HostRoomCategories({
  onUpdateRoomNumber,
  onUpdateRoomCapacity,
  compact = false,
+ roundedTop = true,
  propertyType = 'PG',
   allowEdit = true,
+  subTab = null,
+  getRoomRequestCount = null,
+  getCategoryRequestTotal = null,
+  isUploadForm = false,
+  showAvailability = true,
 }) {
+  const effectiveShowAvailability = !isUploadForm && showAvailability !== false;
  const normType = String(propertyType || 'PG').trim().toUpperCase();
  const isPg = normType === 'PG' || normType === 'HOSTEL';
  const [confirmDeleteCatIdx, setConfirmDeleteCatIdx] = useState(null);
@@ -527,6 +536,73 @@ export default function HostRoomCategories({
 	const [activeModalCategoryIndex, setActiveModalCategoryIndex] = useState(
 		!allowEdit ? (selectedCategoryIndex ?? 0) : null
 	);
+
+  // Compact horizontal room cards scroll indicator state (Pic 2 indicator)
+  const compactScrollRef = useRef(null);
+  const compactTrackRef = useRef(null);
+  const compactTickingRef = useRef(false);
+  const [compactScrollProgress, setCompactScrollProgress] = useState(0);
+  const [compactThumbWidthPercent, setCompactThumbWidthPercent] = useState(50);
+  const [isCompactScrollable, setIsCompactScrollable] = useState(false);
+
+  const updateCompactScrollState = useCallback(() => {
+    if (!compactScrollRef.current) return;
+    const { scrollLeft, clientWidth, scrollWidth } = compactScrollRef.current;
+    const maxScroll = scrollWidth - clientWidth;
+    const overflow = maxScroll > 2;
+    setIsCompactScrollable(overflow);
+
+    if (overflow) {
+      const progress = Math.min(1, Math.max(0, scrollLeft / maxScroll));
+      setCompactScrollProgress(progress);
+      const visibleRatio = Math.min(1, clientWidth / scrollWidth);
+      setCompactThumbWidthPercent(Math.max(25, Math.min(75, visibleRatio * 100)));
+    } else {
+      setCompactScrollProgress(0);
+      setCompactThumbWidthPercent(100);
+    }
+  }, []);
+
+  const handleCompactScroll = () => {
+    if (compactTickingRef.current) return;
+    compactTickingRef.current = true;
+    window.requestAnimationFrame(() => {
+      updateCompactScrollState();
+      compactTickingRef.current = false;
+    });
+  };
+
+  const handleCompactTrackClick = (e) => {
+    e.stopPropagation();
+    if (!compactScrollRef.current || !compactTrackRef.current) return;
+    const rect = compactTrackRef.current.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const ratio = Math.max(0, Math.min(1, clickX / rect.width));
+    const maxScroll = compactScrollRef.current.scrollWidth - compactScrollRef.current.clientWidth;
+    compactScrollRef.current.scrollTo({ left: ratio * maxScroll, behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    if (!compact) return;
+    updateCompactScrollState();
+    window.addEventListener('resize', updateCompactScrollState);
+    return () => window.removeEventListener('resize', updateCompactScrollState);
+  }, [compact, updateCompactScrollState, rooms.length]);
+
+  useEffect(() => {
+    if (!compact) return;
+    const el = compactScrollRef.current;
+    if (!el) return;
+    const handleWheel = (e) => {
+      if (el.scrollWidth > el.clientWidth && e.deltaY !== 0) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+        updateCompactScrollState();
+      }
+    };
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, [compact, updateCompactScrollState]);
 
 	useEffect(() => {
 		if (!allowEdit && typeof selectedCategoryIndex === 'number' && selectedCategoryIndex >= 0) {
@@ -761,9 +837,15 @@ export default function HostRoomCategories({
     };
 
     return (
-      <div className="w-full flex flex-col max-md:rounded-t-none max-md:border-t-0 max-md:border-x-0 rounded-b-2xl sm:rounded-b-3xl md:rounded-2xl md:sm:rounded-3xl overflow-hidden shadow-lg border border-sky-400/30 select-none bg-[#3ca0ea]">
+      <div className={`w-full flex flex-col overflow-hidden shadow-[0_10px_24px_-4px_rgba(0,0,0,0.22),0_4px_10px_-2px_rgba(0,0,0,0.12)] select-none bg-transparent border-0 ${
+        compact
+          ? roundedTop
+            ? 'rounded-[36px] sm:rounded-[44px]'
+            : 'rounded-t-none rounded-b-[36px] sm:rounded-b-[44px]'
+          : 'max-md:rounded-t-none rounded-b-[36px] sm:rounded-b-[44px]'
+      }`}>
         {/* Category Header Row (Same blue color, two-row heading, top-right category switcher dropdown) */}
-        <div className="relative flex items-center justify-between px-4 sm:px-6 py-2.5 sm:py-3 bg-[#3ca0ea] border-b border-white/20 gap-3">
+        <div className="relative flex items-center justify-between px-4 sm:px-6 py-2.5 sm:py-3 bg-[#3ca0ea] gap-3">
           {/* Two-Row Heading */}
           <div className="flex flex-col min-w-0 justify-center">
             <h2 className="text-[16px] sm:text-[18px] font-black text-white truncate tracking-tight leading-snug drop-shadow-xs">
@@ -777,41 +859,66 @@ export default function HostRoomCategories({
             )}
           </div>
 
-          {/* Top Right Corner Actions: Availability Pill + Category Switcher Dropdown */}
-          <div className="relative flex items-center gap-2 shrink-0" ref={categoryDropdownRef}>
-            {/* Availability Pill */}
-            <span
-              className="h-7 px-2.5 text-[11px] sm:text-[11.5px] rounded-full bg-white/20 border border-white/30 text-white font-bold select-none flex items-center justify-center whitespace-nowrap shadow-xs"
-              title={
-                isMonthly
-                  ? `${stats.availableCount || 0} of ${stats.totalCount || 0} rooms are available this month`
-                  : `${stats.percentFull ?? 0}% full over the next 30 days`
-              }
-            >
-              {isMonthly
-                ? `${stats.availableCount || 0}/${stats.totalCount || 0} Avail.`
-                : `${stats.percentFull ?? 0}% Full.`}
-            </span>
+          {/* Top Right Corner Actions: Availability / Requests Pill + Category Switcher Dropdown */}
+          <div className="relative flex items-center gap-2.5 shrink-0" ref={categoryDropdownRef}>
+            {/* Availability / Requests Pill */}
+            {subTab ? (
+              (() => {
+                const catTotal =
+                  typeof getCategoryRequestTotal === 'function'
+                    ? getCategoryRequestTotal(activeRate?.type)
+                    : 0;
+                let pillLabel = '';
+                if (subTab === 'checkout') {
+                  pillLabel = catTotal === 1 ? '1 Check-out' : `${catTotal} Check-outs`;
+                } else if (subTab === 'checkin') {
+                  pillLabel = catTotal === 1 ? '1 Check-in' : `${catTotal} Check-ins`;
+                } else {
+                  pillLabel = catTotal === 1 ? '1 Request' : `${catTotal} Requests`;
+                }
+                return (
+                  <span
+                    className="h-9 sm:h-9.5 px-3.5 sm:px-4 text-[13px] sm:text-[13.5px] rounded-full bg-white/20 text-white font-semibold select-none flex items-center justify-center whitespace-nowrap shadow-sm"
+                    title={`${catTotal} total ${pillLabel.toLowerCase()} in ${activeRate?.type || 'this category'}`}
+                  >
+                    {pillLabel}
+                  </span>
+                );
+              })()
+            ) : (
+              <span
+                className="h-9 sm:h-9.5 px-3.5 sm:px-4 text-[13px] sm:text-[13.5px] rounded-full bg-white/20 text-white font-semibold select-none flex items-center justify-center whitespace-nowrap"
+                title={
+                  isMonthly
+                    ? `${stats.availableCount || 0} of ${stats.totalCount || 0} rooms are available this month`
+                    : `${stats.percentFull ?? 0}% full over the next 30 days`
+                }
+              >
+                {isMonthly
+                  ? `${stats.availableCount || 0}/${stats.totalCount || 0} Avail.`
+                  : `${stats.percentFull ?? 0}% Full.`}
+              </span>
+            )}
 
             {/* Category Switcher Dropdown Button */}
             <button
               type="button"
               onClick={() => setIsCategoryDropdownOpen((prev) => !prev)}
-              className={`flex items-center gap-1.5 h-7 px-2.5 sm:px-3 rounded-full text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-xs select-none ${
+              className={`flex items-center gap-2 h-9 sm:h-9.5 px-3.5 sm:px-4 rounded-full text-[13px] sm:text-[13.5px] font-semibold transition-colors cursor-pointer select-none ${
                 isCategoryDropdownOpen
-                  ? 'bg-white text-sky-800 shadow-md'
-                  : 'bg-white/20 hover:bg-white/30 text-white border border-white/30'
+                  ? 'bg-white text-sky-900 font-bold'
+                  : 'bg-white/20 hover:bg-white/30 text-white'
               }`}
               title="Switch room category"
               aria-label="Switch room category"
               aria-expanded={isCategoryDropdownOpen}
             >
-              <span className="truncate max-w-[80px] sm:max-w-none">
-                {safeRoomRates.length > 1 ? 'Categories' : (activeRate?.type || 'Category')}
+              <span className="truncate max-w-[90px] sm:max-w-none">
+                {activeRate?.type || 'Category'}
               </span>
               {safeRoomRates.length > 1 && (
                 <span
-                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+                  className={`w-5 h-5 rounded-full text-[11px] font-bold flex items-center justify-center shrink-0 ${
                     isCategoryDropdownOpen ? 'bg-sky-600 text-white' : 'bg-white text-sky-800'
                   }`}
                 >
@@ -819,7 +926,7 @@ export default function HostRoomCategories({
                 </span>
               )}
               <ChevronDown
-                className={`w-3.5 h-3.5 transition-transform duration-200 shrink-0 ${
+                className={`w-5 h-5 stroke-[2.5] transition-transform duration-200 shrink-0 ${
                   isCategoryDropdownOpen ? 'rotate-180' : ''
                 }`}
               />
@@ -872,7 +979,6 @@ export default function HostRoomCategories({
                           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 text-white/70">
                             {catMatching.length} rm
                           </span>
-                          {isSelected && <Check className="w-3.5 h-3.5 text-sky-300" />}
                         </div>
                       </button>
                     );
@@ -889,70 +995,107 @@ export default function HostRoomCategories({
             background:
               'linear-gradient(180deg, #3ca0ea 0%, #2578d6 20%, #175bb8 45%, #0e4499 65%, #082d70 82%, #020f30 94%, #000000 100%)',
           }}
-          className="p-3.5 sm:p-4 px-4 sm:px-6 w-full overflow-hidden"
+          className="p-3.5 sm:p-4 px-4 sm:px-6 w-full overflow-hidden flex flex-col items-center pb-4 sm:pb-5"
         >
           {matchingRooms.length > 0 ? (
-            <div className="flex items-center gap-3 sm:gap-3.5 overflow-x-auto pb-2 pt-1 no-scrollbar snap-x snap-proximity touch-pan-x">
-              {matchingRooms.map((card, cIdx) => {
-                const cardId = card._id || `room_${card.roomNumber || cIdx}`;
-                const isCardSelected = Boolean(
-                  (selectedRoomNumber && String(card.roomNumber || '').trim() === String(selectedRoomNumber).trim()) ||
-                  (selectedRoomCardId &&
-                    (isSameRoom(card, selectedRoomCardId) ||
-                      selectedRoomCardId === cardId ||
-                      (card._id && selectedRoomCardId === card._id) ||
-                      String(selectedRoomCardId) === String(card.roomNumber)))
-                );
+            <>
+              <div
+                ref={compactScrollRef}
+                onScroll={handleCompactScroll}
+                className="flex items-center gap-3 sm:gap-3.5 overflow-x-auto overflow-y-hidden py-2 no-scrollbar overscroll-x-contain scroll-smooth touch-pan-x w-full"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {matchingRooms.map((card, cIdx) => {
+                  const cardId = card._id || `room_${card.roomNumber || cIdx}`;
+                  const isCardSelected = Boolean(
+                    (selectedRoomNumber && String(card.roomNumber || '').trim() === String(selectedRoomNumber).trim()) ||
+                    (selectedRoomCardId &&
+                      (isSameRoom(card, selectedRoomCardId) ||
+                        selectedRoomCardId === cardId ||
+                        (card._id && selectedRoomCardId === card._id) ||
+                        String(selectedRoomCardId) === String(card.roomNumber)))
+                  );
 
-                const capacity = Math.max(1, Math.min(10, Number(card.capacity) || Number(activeRate.capacity) || 1));
-                const occupiedCount = isMonthly
-                  ? Math.min(capacity, getRoomOccupiedCountInMonth(card, currentMonthKey || new Date().toISOString().slice(0, 7), guests))
-                  : 0;
-                const isCardOccupied = isMonthly
-                  ? occupiedCount >= capacity
-                  : isRoomOccupiedOnDate(card, todayISO, guests);
-                const isCardPartiallyOccupied = isMonthly && occupiedCount > 0 && occupiedCount < capacity;
-
-                const upcoming30Days = !isMonthly ? getUpcoming30Days() : [];
-                const roomBookedDays = !isMonthly
-                  ? upcoming30Days.filter((d) => isRoomOccupiedOnDate(card, d.fullISO, guests)).length
-                  : 0;
-                const roomPercentFull =
-                  !isMonthly && upcoming30Days.length > 0
-                    ? Math.round((roomBookedDays / upcoming30Days.length) * 100)
+                  const capacity = Math.max(1, Math.min(10, Number(card.capacity) || Number(activeRate.capacity) || 1));
+                  const occupiedCount = isMonthly
+                    ? Math.min(capacity, getRoomOccupiedCountInMonth(card, currentMonthKey || new Date().toISOString().slice(0, 7), guests))
                     : 0;
+                  const isCardOccupied = isMonthly
+                    ? occupiedCount >= capacity
+                    : isRoomOccupiedOnDate(card, todayISO, guests);
+                  const isCardPartiallyOccupied = isMonthly && occupiedCount > 0 && occupiedCount < capacity;
 
-                return (
-                  <HostRoomCardItem
-                    key={cardId}
-                    card={card}
-                    cIdx={cIdx}
-                    categoryIndex={currentCatIdx}
-                    cardId={cardId}
-                    isCardSelected={isCardSelected}
-                    isCardOccupied={isCardOccupied}
-                    isCardPartiallyOccupied={isCardPartiallyOccupied}
-                    capacity={capacity}
-                    occupiedCount={occupiedCount}
-                    percentFull={roomPercentFull}
-                    isMonthly={isMonthly}
-                    compact={true}
-                    allowDelete={false}
-                    allowEdit={false}
-                    onSelectCategoryIndex={(idx) => {
-                      if (typeof onSelectCategoryIndex === 'function') {
-                        onSelectCategoryIndex(idx);
-                      }
-                    }}
-                    onSelectRoomCardId={(id, idx, cd) => {
-                      if (typeof onSelectRoomCardId === 'function') {
-                        onSelectRoomCardId(id, idx, cd);
-                      }
-                    }}
-                  />
-                );
-              })}
-            </div>
+                  const upcoming30Days = !isMonthly ? getUpcoming30Days() : [];
+                  const roomBookedDays = !isMonthly
+                    ? upcoming30Days.filter((d) => isRoomOccupiedOnDate(card, d.fullISO, guests)).length
+                    : 0;
+                  const roomPercentFull =
+                    !isMonthly && upcoming30Days.length > 0
+                      ? Math.round((roomBookedDays / upcoming30Days.length) * 100)
+                      : 0;
+
+                  const roomReqCount =
+                    subTab && typeof getRoomRequestCount === 'function'
+                      ? getRoomRequestCount(card.roomNumber, activeRate?.type)
+                      : undefined;
+
+                  return (
+                    <HostRoomCardItem
+                      key={cardId}
+                      card={card}
+                      cIdx={cIdx}
+                      categoryIndex={currentCatIdx}
+                      cardId={cardId}
+                      isCardSelected={isCardSelected}
+                      isCardOccupied={isCardOccupied}
+                      isCardPartiallyOccupied={isCardPartiallyOccupied}
+                      capacity={capacity}
+                      occupiedCount={occupiedCount}
+                      percentFull={roomPercentFull}
+                      isMonthly={isMonthly}
+                      compact={true}
+                      allowDelete={false}
+                      allowEdit={false}
+                      subTab={subTab}
+                      requestCount={roomReqCount}
+                      showAvailability={effectiveShowAvailability}
+                      onSelectCategoryIndex={(idx) => {
+                        if (typeof onSelectCategoryIndex === 'function') {
+                          onSelectCategoryIndex(idx);
+                        }
+                      }}
+                      onSelectRoomCardId={(id, idx, cd) => {
+                        if (typeof onSelectRoomCardId === 'function') {
+                          onSelectRoomCardId(id, idx, cd);
+                        }
+                      }}
+                    />
+                  );
+                })}
+              </div>
+
+              {/* Horizontal Scroll Indicator Bar (Normal size, matching Pic 2) */}
+              {matchingRooms.length > 1 && (
+                <div className="flex items-center justify-center pt-2.5 pb-0.5 select-none w-full">
+                  <div
+                    ref={compactTrackRef}
+                    onClick={handleCompactTrackClick}
+                    className="w-24 sm:w-28 h-2 sm:h-2.5 bg-white/20 hover:bg-white/30 rounded-full overflow-hidden cursor-pointer relative transition-colors"
+                    title="Room cards scroll indicator"
+                    role="progressbar"
+                    aria-label="Room cards scroll progress"
+                  >
+                    <div
+                      className="absolute top-0 bottom-0 rounded-full bg-white shadow-sm transition-all duration-100 ease-out"
+                      style={{
+                        width: `${compactThumbWidthPercent}%`,
+                        left: `${compactScrollProgress * (100 - compactThumbWidthPercent)}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <div className="py-6 text-center text-white/80">
               <p className="text-xs sm:text-sm font-medium">No room cards added for {activeRate.type || 'this category'} yet.</p>
@@ -1136,7 +1279,7 @@ export default function HostRoomCategories({
 
               {/* Modal Body (Scrollable) */}
               <div
-                className="overflow-y-auto overflow-x-hidden flex-1 overscroll-contain flex flex-col bg-black touch-pan-y transform-gpu scrollbar-thin scrollbar-thumb-white/20"
+                className="overflow-y-auto overflow-x-hidden flex-1 overscroll-contain flex flex-col bg-white touch-pan-y transform-gpu scrollbar-thin scrollbar-thumb-slate-300"
                 style={{
                   WebkitOverflowScrolling: 'touch',
                   overscrollBehaviorY: 'contain',
@@ -1148,7 +1291,7 @@ export default function HostRoomCategories({
                 <div
                   style={{
                     background:
-                      'linear-gradient(180deg, #3ca0ea 0%, #2578d6 20%, #175bb8 45%, #0e4499 65%, #082d70 82%, #020f30 94%, #000000 100%)',
+                      'linear-gradient(180deg, #3ca0ea 0%, #2578d6 22%, #1d6bc7 50%, #4696e5 75%, #8ec5f8 90%, #d8ecfd 100%)',
                   }}
                   className="p-3.5 sm:p-4 pb-2.5 space-y-3 w-full"
                 >
@@ -1311,13 +1454,14 @@ export default function HostRoomCategories({
                     onAddRoomCard={onAddRoomCard}
                     onSaveCategory={onSaveCategory}
                     markCategoryDirty={markCategoryDirty}
+                    showAvailability={effectiveShowAvailability}
                   />
                 </div>
 
                 </div>
 
-                {/* Lower Section: Whole Black (Category Photos & Features) */}
-                <div className="p-3.5 sm:p-4 pt-2.5 space-y-3 bg-black w-full">
+                {/* Lower Section: Clean White (Category Photos & Features) */}
+                <div className="p-3.5 sm:p-4 pt-2.5 space-y-3 bg-white w-full">
                   {/* 4. Category Media Photos (16:9 only, Max 3) & Features */}
                   <HostCategoryMediaFeatures
                     rate={activeRate}
@@ -1328,17 +1472,17 @@ export default function HostRoomCategories({
                 </div>
               </div>
 
-              {/* Modal Footer (Whole Black) */}
-              <div className="p-3.5 sm:p-4 px-5 sm:px-6 border-t border-white/15 bg-black flex items-center justify-between shrink-0">
+              {/* Modal Footer (Clean White) */}
+              <div className="p-3.5 sm:p-4 px-5 sm:px-6 border-t border-slate-200 bg-white flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2.5 shrink-0">
                   {isCategoryDirty ? (
-                    <div className="flex items-center gap-2.5 text-amber-400 font-bold">
-                      <span className="w-3 h-3 rounded-full bg-amber-400 shrink-0 shadow-[0_0_8px_#fbbf24]" />
+                    <div className="flex items-center gap-2.5 text-amber-600 font-bold">
+                      <span className="w-3 h-3 rounded-full bg-amber-500 shrink-0" />
                       <span className="text-[14.5px] sm:text-[16px] tracking-tight">Unsaved changes</span>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2.5 text-emerald-400 font-bold">
-                      <span className="material-symbols-outlined text-[24px] sm:text-[26px] text-emerald-400">check_circle</span>
+                    <div className="flex items-center gap-2.5 text-emerald-600 font-bold">
+                      <span className="material-symbols-outlined text-[24px] sm:text-[26px] text-emerald-600">check_circle</span>
                       <span className="text-[14.5px] sm:text-[16px] tracking-tight">Saved</span>
                     </div>
                   )}
@@ -1352,7 +1496,7 @@ export default function HostRoomCategories({
                       onClick={async () => {
                         await handleUpdateCategoryClick(modalIndex);
                       }}
-                      className="h-10 sm:h-11 px-5 sm:px-6 rounded-full bg-amber-500 hover:bg-amber-400 active:scale-95 text-white font-bold text-[13.5px] sm:text-[14.5px] transition-all cursor-pointer shadow-md whitespace-nowrap leading-none shrink-0"
+                      className="h-10 sm:h-11 px-5 sm:px-6 rounded-full bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold text-[13.5px] sm:text-[14.5px] transition-all cursor-pointer shadow-md whitespace-nowrap leading-none shrink-0"
                     >
                       {updatingCategoryIdx === modalIndex ? 'Saving...' : 'Save'}
                     </button>
@@ -1361,7 +1505,7 @@ export default function HostRoomCategories({
                   <button
                     type="button"
                     onClick={() => setActiveModalCategoryIndex(null)}
-                    className="h-11 sm:h-12 px-7 sm:px-8 rounded-full bg-white hover:bg-slate-100 active:scale-95 text-slate-900 font-bold text-[14.5px] sm:text-[15.5px] transition-transform duration-100 cursor-pointer shadow-md shadow-white/10 touch-manipulation"
+                    className="h-11 sm:h-12 px-7 sm:px-8 rounded-full bg-[#1f1b16] hover:bg-black active:scale-95 text-white font-bold text-[14.5px] sm:text-[15.5px] transition-transform duration-100 cursor-pointer shadow-md touch-manipulation"
                   >
                     Done
                   </button>

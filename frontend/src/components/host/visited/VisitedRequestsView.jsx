@@ -2,13 +2,21 @@ import { useState, useEffect, useMemo, useCallback, useDeferredValue } from 'rea
 import { motion, AnimatePresence } from 'framer-motion';
 import { VisitedGuestCard } from './VisitedGuestCard';
 import { VisitedSlotCalendarView } from './VisitedSlotCalendarView';
+import HostRoomCategories from '../HostRoomCategories';
+import { ErrorBoundary } from '../../common/ErrorBoundary';
 import {
- Building2,
- ChevronLeft,
- ChevronRight,
- ChevronDown,
- Bell,
+  Building2,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  Bell,
+  LogOut,
+  CheckCircle2,
+  Globe,
+  Store,
+  RotateCcw,
 } from 'lucide-react';
+import { isOnlineGuest } from '../../../utils/guestFilters';
 import { RoomCategoryCarousel } from './RoomCategoryCarousel';
 
 export function VisitedRequestsView({
@@ -17,7 +25,9 @@ export function VisitedRequestsView({
  allRequests = [],
  allGuests = [],
  categoriesWithRooms = [],
- hostProperty,
+  hostProperty,
+  roomRates = [],
+  rooms = [],
  selectedCategory = 'ALL',
  onSelectCategory = () => {},
  selectedRoomNumber = 'ALL',
@@ -36,12 +46,14 @@ export function VisitedRequestsView({
  scope = 'all',
 }) {
  const [currentPage, setCurrentPage] = useState(0);
+ const [sectionFilter, setSectionFilter] = useState('ONLINE'); // 'ONLINE' | 'OFFLINE'
+ const [filterStatus, setFilterStatus] = useState('ALL'); // 'ALL' | 'TODAY'
  const [expandedCategory, setExpandedCategory] = useState(
  selectedCategory && selectedCategory !== 'ALL' ? selectedCategory : null
  );
  const [activeSlotGuest, setActiveSlotGuest] = useState(null);
  const deferredSearchQuery = useDeferredValue(searchQuery);
- const CARDS_PER_PAGE = 4;
+ const CARDS_PER_PAGE = 5;
 
  const [prevCategory, setPrevCategory] = useState(selectedCategory);
  if (prevCategory !== selectedCategory) {
@@ -267,6 +279,68 @@ export function VisitedRequestsView({
  return roomRequestCounts.get(cleanRoom) || 0;
  }, [roomRequestCounts]);
 
+ const propRooms = hostProperty?.rooms;
+ const roomsList = useMemo(() => {
+ const sourceRooms =
+ Array.isArray(rooms) && rooms.length > 0
+ ? rooms
+ : Array.isArray(propRooms) && propRooms.length > 0
+ ? propRooms
+ : [];
+
+ if (sourceRooms.length > 0) {
+ return sourceRooms.map((rm, idx) => ({
+ ...rm,
+ _id: rm._id || `room_${rm.roomNumber || idx}`,
+ roomNumber: String(rm.roomNumber || '').replace(/\D/g, '') || String(101 + idx),
+ capacity: rm.capacity || 1,
+ }));
+ }
+
+ if (Array.isArray(categoriesWithRooms) && categoriesWithRooms.length > 0) {
+ return categoriesWithRooms.flatMap((c) =>
+ (c.rooms || []).map((rm, idx) => ({
+ ...rm,
+ type: c.type,
+ _id: rm._id || `room_${rm.roomNumber || idx}`,
+ roomNumber: String(rm.roomNumber || '').replace(/\D/g, '') || String(101 + idx),
+ capacity: rm.capacity || 1,
+ }))
+ );
+ }
+ return [];
+ }, [rooms, propRooms, categoriesWithRooms]);
+
+  const getCategoryRequestTotal = useCallback(
+    (catType) => {
+      if (!catType) return 0;
+      const norm = String(catType).trim().toLowerCase();
+      const source =
+        Array.isArray(allRequests) && allRequests.length > 0
+          ? allRequests
+          : Array.isArray(displayedGuests)
+          ? displayedGuests
+          : [];
+
+      const roomsInCat = new Set(
+        (roomsList || [])
+          .filter((r) => String(r.type || '').trim().toLowerCase() === norm)
+          .map((r) => String(r.roomNumber || '').replace(/\D/g, ''))
+          .filter(Boolean)
+      );
+
+      return source.filter((g) => {
+        const gType = String(g.roomType || '').trim().toLowerCase();
+        if (gType && gType === norm) return true;
+        const gRoom = String(g.roomNumber || '').replace(/\D/g, '');
+        if (gRoom && roomsInCat.has(gRoom)) return true;
+        if (!gType && norm === 'standard') return true;
+        return false;
+      }).length;
+    },
+    [allRequests, displayedGuests, roomsList]
+  );
+
  // Build category groups with their rooms (matching VisitedCategoriesPanel / Pic 1)
  const effectiveCategoriesWithRooms = useMemo(() => {
  // 1. If categoriesWithRooms prop is provided and non-empty, use it
@@ -433,358 +507,261 @@ export function VisitedRequestsView({
  });
  }, [displayedGuests, subTab]);
 
+ // Channel Segmentation (Online vs Offline) matching Pic 2
+ const onlineGuests = useMemo(() => sortedGuests.filter(isOnlineGuest), [sortedGuests]);
+ const offlineGuests = useMemo(() => sortedGuests.filter((g) => !isOnlineGuest(g)), [sortedGuests]);
+
+ const listForSection = useMemo(() => {
+   return sectionFilter === 'ONLINE' ? onlineGuests : offlineGuests;
+ }, [sectionFilter, onlineGuests, offlineGuests]);
+
+ const todayCountForSection = useMemo(() => {
+   const today = new Date().toISOString().slice(0, 10);
+   return listForSection.filter((g) => {
+     const d = (g.createdAt || g.checkInISO || g.checkIn || g.date || '').slice(0, 10);
+     return d === today;
+   }).length;
+ }, [listForSection]);
+
+ const filteredGuests = useMemo(() => {
+   if (filterStatus === 'TODAY') {
+     const today = new Date().toISOString().slice(0, 10);
+     return listForSection.filter((g) => {
+       const d = (g.createdAt || g.checkInISO || g.checkIn || g.date || '').slice(0, 10);
+       return d === today;
+     });
+   }
+   return listForSection;
+ }, [listForSection, filterStatus]);
+
  // Pagination Calculations
- const totalPages = Math.max(1, Math.ceil(sortedGuests.length / CARDS_PER_PAGE));
+ const totalPages = Math.max(1, Math.ceil(filteredGuests.length / CARDS_PER_PAGE));
  const validPage = Math.min(currentPage, totalPages - 1);
- const currentSlice = sortedGuests.slice(validPage * CARDS_PER_PAGE, (validPage + 1) * CARDS_PER_PAGE);
+ const currentSlice = filteredGuests.slice(validPage * CARDS_PER_PAGE, (validPage + 1) * CARDS_PER_PAGE);
+
+  const safeRoomRates = useMemo(() => {
+    if (Array.isArray(roomRates) && roomRates.length > 0) return roomRates;
+    if (Array.isArray(hostProperty?.roomRates) && hostProperty.roomRates.length > 0) return hostProperty.roomRates;
+    return [];
+  }, [roomRates, hostProperty?.roomRates]);
+
+  const currentCategoryIndex = useMemo(() => {
+    if (!selectedCategory || selectedCategory === 'ALL') return 0;
+    const idx = safeRoomRates.findIndex(
+      (r) => (r.type || '').trim().toLowerCase() === selectedCategory.trim().toLowerCase()
+    );
+    return idx >= 0 ? idx : 0;
+  }, [safeRoomRates, selectedCategory]);
+
+  const handleSelectCategoryIndex = (idx) => {
+    const rate = safeRoomRates[idx];
+    if (rate?.type) {
+      onSelectCategory(rate.type);
+      onSelectRoom('ALL');
+    }
+  };
+
+  const handleSelectRoomCard = (cardId, idx, card) => {
+    const activeCat = safeRoomRates[currentCategoryIndex]?.type || selectedCategory || 'ALL';
+    const rNum = String(card?.roomNumber || cardId || '').replace(/\D/g, '');
+    if (activeCat && activeCat !== 'ALL') {
+      onSelectCategory(activeCat);
+    }
+    if (selectedRoomNumber === rNum) {
+      onSelectRoom('ALL');
+    } else {
+      onSelectRoom(rNum);
+    }
+  };
 
  return (
- <div className="w-full flex-1 min-h-0 flex flex-col lg:flex-row gap-3 items-stretch lg:h-[calc(100vh-195px)] select-none overflow-y-auto lg:overflow-visible">
- {/* ────────────────── LEFT TAB: PERMANENT CATEGORIES PANEL ────────────────── */}
- <div className="w-full lg:w-[20%] shrink-0 flex flex-col justify-between rounded-[26px] bg-white border border-slate-200/90 shadow-[0_8px_30px_rgb(0,0,0,0.06)] p-3 sm:p-3.5 h-auto lg:h-full min-h-0 overflow-hidden">
- {/* Upper Header with crisp horizontal divider line */}
- <div className="flex items-center justify-between pb-2.5 border-b border-slate-200 shrink-0">
- <div className="flex items-center gap-2 min-w-0">
- <div className="w-7 h-7 rounded-xl bg-indigo-50 border border-indigo-200/70 flex items-center justify-center text-indigo-600 shadow-2xs shrink-0">
- <Building2 className="w-3.5 h-3.5" />
- </div>
- <h3 className="text-xs sm:text-sm font-medium text-[#1f1b16] tracking-tight truncate">
- {subTab === 'checkout'
- ? 'Check-Out Categories'
- : subTab === 'checkin'
- ? 'Check-In Categories'
- : 'Select Category'}
- </h3>
- </div>
- <div className="flex items-center gap-1.5 shrink-0">
- <span className="text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 shadow-2xs">
- {effectiveCategoriesWithRooms.length}{' '}
- {effectiveCategoriesWithRooms.length === 1 ? 'Wing' : 'Wings'}
- </span>
- </div>
- </div>
+ <div className="w-full flex-1 lg:min-h-0 lg:h-full flex flex-col lg:flex-row gap-3 items-stretch select-none lg:overflow-hidden">
+ {/* ────────────────── CATEGORIES & ROOMS PANEL (EXACT PIC 1 DESIGN) ────────────────── */}
+				<section className="max-lg:sticky max-lg:top-0 max-lg:z-10 w-full lg:w-[340px] xl:w-[380px] shrink-0 rounded-t-none rounded-b-[36px] sm:rounded-b-[44px] overflow-hidden shadow-lg select-none">
+					<ErrorBoundary>
+						<HostRoomCategories
+							allowEdit={false}
+							allowDelete={false}
+							propertyType={hostProperty?.propertyType || hostProperty?.type || 'PG'}
+							roomRates={safeRoomRates}
+							rooms={roomsList}
+							guests={allGuests}
+							todayISO={new Date().toISOString().slice(0, 10)}
+							selectedCategoryIndex={currentCategoryIndex}
+							onSelectCategoryIndex={handleSelectCategoryIndex}
+							selectedRoomCardId={selectedRoomNumber !== 'ALL' ? selectedRoomNumber : null}
+							selectedRoomNumber={selectedRoomNumber !== 'ALL' ? selectedRoomNumber : null}
+							onSelectRoomCardId={handleSelectRoomCard}
+							compact={true}
+							roundedTop={false}
+							subTab={subTab}
+							getRoomRequestCount={getRoomRequestCount}
+							getCategoryRequestTotal={getCategoryRequestTotal}
+						/>
+					</ErrorBoundary>
+				</section>
 
- {/* Room Categories - strictly occupies space between upper & lower lines, vertically scrollable without visible scrollbar */}
- <div
- className="flex-1 min-h-0 overflow-y-auto py-2 px-1.5 space-y-2 [&::-webkit-scrollbar]:hidden"
- style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
- >
- {effectiveCategoriesWithRooms.length === 0 ? (
- <div className="p-6 my-auto rounded-2xl bg-slate-50/70 border border-slate-200/80 text-center space-y-2 shadow-xs">
- <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-lg mx-auto text-slate-400">
- 
- </div>
- <p className="text-xs font-medium text-slate-500">
- {subTab === 'checkout'
- ? 'No check-out categories available'
- : subTab === 'checkin'
- ? 'No check-in categories available'
- : 'No request categories available'}
- </p>
- </div>
- ) : (
- effectiveCategoriesWithRooms.map((catGroup) => {
- const isSelectedCat =
- selectedCategory.trim().toLowerCase() === catGroup.type.trim().toLowerCase();
- const isExpanded =
- (expandedCategory || '').trim().toLowerCase() === catGroup.type.trim().toLowerCase();
+				{/* ────────────────── MID TAB: REQUESTS / DEPARTURES CARDS (SLIDING WINDOW MATCHING PIC 2) ────────────────── */}
+      <section
+        className={`${
+          activeSlotGuest ? 'hidden lg:flex' : 'flex'
+        } relative z-20 w-full flex-1 min-w-0 flex-col bg-white rounded-t-[36px] sm:rounded-t-[44px] lg:rounded-[32px] shadow-[0_-12px_36px_rgba(0,0,0,0.08),0_-4px_14px_rgba(0,0,0,0.04)] lg:shadow-md pt-5 sm:pt-6 pb-32 lg:pb-8 px-3 sm:px-5 lg:px-6 mt-2 lg:mt-0 max-lg:min-h-screen lg:min-h-0 lg:overflow-y-auto lg:overscroll-y-contain select-none`}
+      >
+        {/* Drag Handle + Centered Title + Pulsing Badge matching Pic 2 */}
+        <div className="flex flex-col items-center justify-center mb-4 sm:mb-5 w-full text-center shrink-0">
+          <div className="w-10 h-1 bg-slate-300/80 rounded-full mb-2.5" />
+          <h2 className="text-[20px] sm:text-[22px] font-bold text-[#1f1b16] tracking-tight leading-none text-center">
+            {subTab === 'checkout'
+              ? 'Guest Departures & Check-Outs'
+              : subTab === 'checkin'
+              ? 'Guest Check-Ins'
+              : 'Pending Booking Requests'}
+          </h2>
+        </div>
 
- const catTotalRequests = catGroup.rooms.reduce(
- (acc, rm) => acc + getRoomRequestCount(rm.roomNumber, catGroup.type),
- 0
- );
+        {/* Online/Offline Toggle Capsule */}
+        <div className="flex justify-center mb-4 shrink-0">
+          <div className="inline-flex items-center p-1 rounded-full bg-white/90 border border-slate-200/90 shadow-xs relative select-none shrink-0 gap-0.5">
+            <button
+              type="button"
+              onClick={() => { setSectionFilter('ONLINE'); setCurrentPage(0); }}
+              className={`relative px-3.5 sm:px-4 py-1.5 rounded-full text-xs transition-colors duration-200 flex items-center gap-1.5 cursor-pointer z-10 select-none ${
+                sectionFilter === 'ONLINE'
+                  ? 'text-white font-semibold'
+                  : 'text-slate-600 hover:text-[#1f1b16] font-medium'
+              }`}
+            >
+              {sectionFilter === 'ONLINE' && (
+                <motion.div
+                  layoutId="visitedUsersTabIndicator"
+                  className="absolute inset-0 rounded-full bg-[#1f1b16] shadow-[0_2px_8px_rgba(31,27,22,0.25)] z-0 pointer-events-none"
+                  transition={{
+                    type: 'spring',
+                    stiffness: 450,
+                    damping: 32,
+                    mass: 0.8,
+                  }}
+                />
+              )}
+              <Globe className="relative z-10 w-3.5 h-3.5" />
+              <span className="relative z-10">Online</span>
+              <span
+                className={`relative z-10 min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-mono font-medium leading-none inline-flex items-center justify-center ${
+                  sectionFilter === 'ONLINE' ? 'bg-white/20 text-white' : 'bg-slate-200/70 text-slate-600'
+                }`}
+              >
+                {onlineGuests.length}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setSectionFilter('OFFLINE'); setCurrentPage(0); }}
+              className={`relative px-3.5 sm:px-4 py-1.5 rounded-full text-xs transition-colors duration-200 flex items-center gap-1.5 cursor-pointer z-10 select-none ${
+                sectionFilter === 'OFFLINE'
+                  ? 'text-white font-semibold'
+                  : 'text-slate-600 hover:text-[#1f1b16] font-medium'
+              }`}
+            >
+              {sectionFilter === 'OFFLINE' && (
+                <motion.div
+                  layoutId="visitedUsersTabIndicator"
+                  className="absolute inset-0 rounded-full bg-[#1f1b16] shadow-[0_2px_8px_rgba(31,27,22,0.25)] z-0 pointer-events-none"
+                  transition={{
+                    type: 'spring',
+                    stiffness: 450,
+                    damping: 32,
+                    mass: 0.8,
+                  }}
+                />
+              )}
+              <Store className="relative z-10 w-3.5 h-3.5" />
+              <span className="relative z-10">Offline</span>
+              <span
+                className={`relative z-10 min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-mono font-medium leading-none inline-flex items-center justify-center ${
+                  sectionFilter === 'OFFLINE' ? 'bg-white/20 text-white' : 'bg-slate-200/70 text-slate-600'
+                }`}
+              >
+                {offlineGuests.length}
+              </span>
+            </button>
+          </div>
+        </div>
 
- return (
- <div
- key={catGroup.type}
- className={`rounded-2xl border overflow-hidden transition-all duration-300 ${
- isSelectedCat
- ? subTab === 'checkout'
- ? 'bg-white border-sky-500'
- : subTab === 'checkin'
- ? 'bg-white border-emerald-500'
- : 'bg-white border-orange-500'
- : 'bg-white border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_6px_20px_-2px_rgba(0,0,0,0.08)] ' + (
- subTab === 'checkout' ? 'hover:border-sky-300' : subTab === 'checkin' ? 'hover:border-emerald-300' : 'hover:border-orange-300'
- )
- }`}
- >
- {/* Category Heading Area (Click anywhere on heading to expand/collapse & filter) */}
- <div
- role="button"
- tabIndex={0}
- onClick={() => handleCategoryHeaderClick(catGroup.type)}
- onKeyDown={(e) => {
- if (e.key === 'Enter' || e.key === ' ') {
- e.preventDefault();
- handleCategoryHeaderClick(catGroup.type);
- }
- }}
- className="w-full px-3.5 py-3 flex items-center justify-between text-left cursor-pointer group select-none hover:bg-slate-50/80 transition-colors"
- >
- <div className="min-w-0 flex-1">
- <div
- className={`text-xs sm:text-[13px] font-medium text-slate-800 leading-tight transition-colors ${
- subTab === 'checkout'
- ? 'group-hover:text-sky-600'
- : subTab === 'checkin'
- ? 'group-hover:text-emerald-600'
- : 'group-hover:text-orange-600'
- }`}
- >
- {catGroup.type}
- </div>
- <div className="text-[10px] font-semibold text-slate-500 truncate flex items-center gap-1.5 mt-0.5">
- <span
- className={`w-1.5 h-1.5 rounded-full shrink-0 ${
- catTotalRequests > 0
- ? subTab === 'checkout'
- ? 'bg-sky-500'
- : subTab === 'checkin'
- ? 'bg-emerald-500'
- : 'bg-orange-500'
- : 'bg-slate-400'
- }`}
- />
- <span>
- {catTotalRequests}{' '}
- {subTab === 'checkout'
- ? catTotalRequests === 1 ? 'Departure' : 'Departures'
- : subTab === 'checkin'
- ? catTotalRequests === 1 ? 'Check-in' : 'Check-ins'
- : catTotalRequests === 1 ? 'Request' : 'Requests'}
- </span>
- </div>
- </div>
+        {/* Cards Area */}
+        <div className="px-1 sm:px-2">
+          {filteredGuests.length === 0 ? (
+            <div className="py-10 sm:py-14 text-center rounded-3xl bg-white border border-slate-200/80 flex flex-col items-center justify-center shadow-xs my-auto">
+              <div
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-3 shadow-xs ${
+                  subTab === 'checkout'
+                    ? 'bg-indigo-100/70 text-indigo-600'
+                    : subTab === 'checkin'
+                    ? 'bg-emerald-100/70 text-emerald-600'
+                    : 'bg-amber-100/70 text-amber-600'
+                }`}
+              >
+                {subTab === 'checkout' ? (
+                  <LogOut className="w-6 h-6" />
+                ) : subTab === 'checkin' ? (
+                  <CheckCircle2 className="w-6 h-6" />
+                ) : (
+                  <Bell className="w-6 h-6" />
+                )}
+              </div>
+              <h3 className="text-sm font-semibold text-slate-700">
+                {sectionFilter === 'ONLINE'
+                  ? subTab === 'checkout'
+                    ? 'No online guest departures'
+                    : subTab === 'checkin'
+                    ? 'No online scheduled check-ins'
+                    : 'No pending online booking requests'
+                  : subTab === 'checkout'
+                  ? 'No offline guest departures'
+                  : subTab === 'checkin'
+                  ? 'No offline check-ins'
+                  : 'No offline counter bookings'}
+              </h3>
+              <p className="text-xs text-slate-400 max-w-sm mt-1 leading-relaxed">
+                {subTab === 'checkout'
+                  ? 'When guests are due for check-out or departure, they will appear here.'
+                  : subTab === 'checkin'
+                  ? 'When guests are scheduled to arrive and check in, they will appear here.'
+                  : 'When prospective guests submit online booking requests, they will appear here for review and confirmation.'}
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3 w-full pb-2">
+              {filteredGuests.map((g, idx) => {
+                const cardKey =
+                  g.bookingId || g._id || g.bookingReferenceId || `req-${idx}`;
+                return (
+                  <VisitedGuestCard
+                    key={cardKey}
+                    guest={g}
+                    subTab={subTab}
+                    isLoading={actionLoadingId === (g.bookingId || g._id)}
+                    onOpenModal={onOpenModal}
+                    onSelectUserRequest={onSelectUserRequest}
+                    onSelectSlot={handleSlotClick}
+                    onApproveRequest={handleApproveWithClear}
+                    onRejectRequest={handleRejectWithClear}
+                    onMarkCheckIn={onMarkCheckIn}
+                    onMarkCheckOut={handleCheckOutWithClear}
+                    onVerifyPayment={onVerifyPayment}
+                    formatIdNumber={formatIdNumber}
+                    formatModalDate={formatModalDate}
+                    isSlotSelected={isGuestSlotActive(g)}
+                    hostProperty={hostProperty}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
 
- <div className="shrink-0 ml-1.5 flex items-center">
- <div
- className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300 ${
- isExpanded
- ? subTab === 'checkout'
- ? 'bg-sky-100 text-sky-700 rotate-180'
- : subTab === 'checkin'
- ? 'bg-emerald-100 text-emerald-700 rotate-180'
- : 'bg-orange-100 text-orange-700 rotate-180'
- : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'
- }`}
- >
- <ChevronDown className="w-3.5 h-3.5" />
- </div>
- </div>
- </div>
-
- {/* Horizontal Square Room Cards with Smooth AnimatePresence Expand/Collapse & < > Scroll */}
- <AnimatePresence initial={false}>
- {isExpanded && (
- <motion.div
- initial={{ height: 0, opacity: 0 }}
- animate={{ height: 'auto', opacity: 1 }}
- exit={{ height: 0, opacity: 0 }}
- transition={{ duration: 0.24, ease: 'easeInOut' }}
- className="overflow-hidden"
- >
- <div className="px-2.5 sm:px-3 pt-1.5 pb-2 sm:pt-2 sm:pb-2.5 bg-slate-50/80 border-t border-slate-200/80 space-y-1.5 sm:space-y-2">
- <RoomCategoryCarousel
- rooms={catGroup.rooms}
- catType={catGroup.type}
- selectedCategory={selectedCategory}
- selectedRoomNumber={selectedRoomNumber}
- onSelectRoom={handleRoomClick}
- getRoomRequestCount={getRoomRequestCount}
- subTab={subTab}
- />
- </div>
- </motion.div>
- )}
- </AnimatePresence>
- </div>
- );
- })
- )}
- </div>
-
- {/* Lower Horizontal Divider Line & Bottom Price Bar (only shown when a room category is clicked) */}
- <AnimatePresence>
- {selectedCategory && selectedCategory !== 'ALL' && (
- <motion.div
- initial={{ opacity: 0, height: 0 }}
- animate={{ opacity: 1, height: 'auto' }}
- exit={{ opacity: 0, height: 0 }}
- transition={{ duration: 0.2 }}
- className="overflow-hidden shrink-0"
- >
- <div className="pt-2.5 border-t border-slate-200 flex items-center justify-end">
- <div>
- <span className="text-lg sm:text-xl font-medium text-[#1f1b16] tracking-tight">
- ₹{(Number(activeCategoryInfo.price) || 3000).toLocaleString('en-IN')}
- </span>
- <span className="text-xs text-slate-500 ml-1 font-medium">
- {activeCategoryInfo.rateUnit || '/night'}
- </span>
- </div>
- </div>
- </motion.div>
- )}
- </AnimatePresence>
- </div>
-
- {/* ────────────────── MID TAB: REQUESTS / DEPARTURES CARDS ────────────────── */}
- <div className="w-full flex-1 min-w-0 flex flex-col justify-between rounded-[26px] bg-white border border-slate-200/90 shadow-[0_8px_30px_rgb(0,0,0,0.06)] p-3 sm:p-3.5 min-h-[420px] lg:h-full min-h-0 overflow-hidden">
- {/* Top Header */}
- <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 shrink-0 relative">
- <div className="flex items-center gap-2 min-w-0">
- <span
- className={`w-2 h-2 rounded-full ring-4 shrink-0 transition-colors duration-300 ${
- subTab === 'checkout'
- ? 'bg-indigo-500 ring-indigo-500/20'
- : subTab === 'checkin'
- ? 'bg-emerald-500 ring-emerald-500/20'
- : 'bg-amber-500 ring-amber-500/20'
- }`}
- />
- <h3 className="text-sm font-medium text-[#1f1b16] tracking-tight truncate">
- {subTab === 'checkout'
- ? scope === 'today'
- ? "Today's Departures"
- : 'All Departures'
- : subTab === 'checkin'
- ? scope === 'today'
- ? "Today's Check-Ins"
- : 'All Check-Ins'
- : 'All Pending Requests'}
- </h3>
- </div>
-
-
- <div className="flex items-center gap-2 shrink-0">
- {activeSlotGuest ? (
- <span className="text-[11px] font-semibold text-slate-500 hidden sm:inline">
- Viewing slot: <strong className="text-slate-800">{activeSlotGuest?.userName || activeSlotGuest?.fullName || 'Guest'}</strong> (Room {activeSlotGuest?.roomNumber})
- </span>
- ) : (
- <span className="text-[11px] font-semibold text-slate-500 hidden sm:inline">
- Schedule: <strong className="text-slate-800">Room {defaultRoomNumber}</strong>
- </span>
- )}
- </div>
- </div>
-
- {/* Two Rows Grid Area */}
- <div className="py-2.5 flex-1 min-h-0 overflow-y-auto flex flex-col justify-start [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full">
- {displayedGuests.length === 0 ? (
- <div className="p-8 sm:p-10 my-auto rounded-3xl bg-slate-50/70 border border-dashed border-slate-200/90 text-center space-y-3">
- <div
- className="w-12 h-12 rounded-full border border-slate-200 bg-white text-slate-600 flex items-center justify-center mx-auto shadow-xs"
- >
- <Bell className="w-5 h-5 text-slate-600" />
- </div>
- <div className="space-y-1">
- <h4 className="text-sm font-semibold text-slate-800">
- {subTab === 'checkout'
- ? scope === 'today'
- ? 'No departures scheduled for today'
- : 'No guest departures'
- : subTab === 'checkin'
- ? scope === 'today'
- ? 'No check-ins scheduled for today'
- : 'No scheduled check-ins'
- : 'No pending booking requests'}
- </h4>
- <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
- {subTab === 'checkout'
- ? 'When guests are due for check-out or departure, they will appear here.'
- : subTab === 'checkin'
- ? 'When guests are scheduled to arrive and check in, they will appear here.'
- : 'When prospective guests submit online booking requests, they will appear here for review and confirmation.'}
- </p>
- </div>
- </div>
- ) : (
- <div className={`grid ${isSlotActive ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'} gap-2.5 sm:gap-3 items-stretch content-start`}>
- {currentSlice.map((g, idx) => {
- const cardKey = g.bookingId || g._id || g.bookingReferenceId || `req-${validPage * CARDS_PER_PAGE + idx}`;
- return (
- <div
- key={cardKey}
- className="w-full flex justify-center"
- >
- <VisitedGuestCard
- guest={g}
- subTab={subTab}
- isLoading={actionLoadingId === (g.bookingId || g._id)}
- onOpenModal={onOpenModal}
- onSelectUserRequest={onSelectUserRequest}
- onSelectSlot={handleSlotClick}
- onApproveRequest={handleApproveWithClear}
- onRejectRequest={handleRejectWithClear}
- onMarkCheckIn={onMarkCheckIn}
- onMarkCheckOut={handleCheckOutWithClear}
- onVerifyPayment={onVerifyPayment}
- formatIdNumber={formatIdNumber}
- formatModalDate={formatModalDate}
- paletteIndex={validPage * CARDS_PER_PAGE + idx}
- isSlotSelected={isGuestSlotActive(g)}
- />
- </div>
- );
- })}
- </div>
- )}
- </div>
-
- {/* ── Horizontal Dots Carousel Pagination Bar ── */}
- <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between select-none shrink-0">
- <div className="w-16 hidden sm:block" />
-
- {/* Dots Carousel Navigator */}
- <div className="flex items-center gap-2">
- <button
- type="button"
- disabled={validPage === 0}
- onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
- className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 disabled:opacity-30 disabled:pointer-events-none hover:bg-slate-100 transition-all cursor-pointer"
- aria-label="Previous Page"
- >
- <ChevronLeft className="w-4 h-4" />
- </button>
-
- {/* Horizontal Dots */}
- <div className="flex items-center gap-1.5 px-1">
- {Array.from({ length: totalPages }).map((_, pIdx) => (
- <button
- key={pIdx}
- type="button"
- onClick={() => setCurrentPage(pIdx)}
- aria-label={`Go to page ${pIdx + 1}`}
- className={`transition-all duration-300 rounded-full cursor-pointer ${
- validPage === pIdx
- ? 'w-6 h-2 bg-slate-900 shadow-xs'
- : 'w-2 h-2 bg-slate-200 hover:bg-slate-400'
- }`}
- />
- ))}
- </div>
-
- <button
- type="button"
- disabled={validPage >= totalPages - 1}
- onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
- className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 disabled:opacity-30 disabled:pointer-events-none hover:bg-slate-100 transition-all cursor-pointer"
- aria-label="Next Page"
- >
- <ChevronRight className="w-4 h-4" />
- </button>
- </div>
-
- <span className="text-[11px] font-medium text-slate-400 w-16 text-right">
- Page {validPage + 1} of {totalPages}
- </span>
- </div>
- </div>
-
- {/* ────────────────── RIGHT TAB: EXACT ROOM SLOT SCHEDULE (PIC 2) ────────────────── */}
- <div className={`${!activeSlotGuest ? 'hidden lg:flex' : 'flex'} w-full lg:w-[380px] xl:w-[410px] 2xl:w-[440px] shrink-0 self-start h-fit max-h-full flex-col transition-all duration-300 max-lg:pb-32`}>
+      {/* ────────────────── RIGHT TAB: EXACT ROOM SLOT SCHEDULE (PIC 2) ────────────────── */}
+ <div className={`${!activeSlotGuest ? 'hidden lg:flex' : 'flex'} w-full flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-pan-y lg:flex-initial lg:w-[380px] xl:w-[410px] 2xl:w-[440px] lg:shrink-0 lg:self-start lg:h-fit lg:max-h-full lg:overflow-visible flex-col transition-all duration-300 max-lg:pb-4`}>
  <VisitedSlotCalendarView
  guest={activeSlotGuest}
  selectedRoomNumber={defaultRoomNumber}

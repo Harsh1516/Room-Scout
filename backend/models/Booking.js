@@ -59,6 +59,10 @@ const bookingSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    aadharPhoto: {
+      type: String,
+      default: '',
+    },
 
     // Reservation & Room Schedule (Strict Range Model)
     roomNumber: {

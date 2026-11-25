@@ -19,6 +19,7 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
   cardId,
   isCardSelected,
   isCardOccupied,
+  isCardPartiallyOccupied = false,
   capacity,
   compact = false,
   isMonthly = false,
@@ -26,6 +27,9 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
   percentFull = 0,
   allowDelete = true,
   allowEdit = true,
+  showAvailability = true,
+  subTab = null,
+  requestCount = undefined,
   onSelectCategoryIndex,
   onSelectRoomCardId,
   setActiveDotIndex,
@@ -34,8 +38,6 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const isBookedToday = Boolean(isCardOccupied);
 
   return (
     <div
@@ -132,115 +134,100 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
           }
           setActiveDotIndex?.(cIdx);
         }}
-        className={`relative flex flex-col justify-between w-full aspect-[175/195] transition-[transform,opacity] duration-150 ease-out cursor-pointer select-none outline-none transform-gpu will-change-transform touch-manipulation overflow-hidden ${
+        className={`relative flex flex-col justify-between w-full aspect-[175/195] cursor-pointer select-none outline-none transform-gpu touch-manipulation overflow-hidden ${
           compact ? 'p-2.5 sm:p-3.5' : 'p-3 sm:p-4'
         } ${
-          isCardSelected ? 'scale-[1.02]' : 'hover:scale-[1.01] active:scale-[0.99] opacity-95 hover:opacity-100'
+          isCardSelected ? 'opacity-100 z-10' : 'opacity-90 hover:opacity-100'
         }`}
         style={{
-          maskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath fill='white' d='M 11 0 L 64 0 Q 69 0 73.8 4.6 L 95.5 25.5 Q 100 29.5 100 34 L 100 89 Q 100 100 89 100 L 11 100 Q 0 100 0 89 L 0 11 Q 0 0 11 0 Z'/%3E%3C/svg%3E")`,
+          maskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath fill='black' d='M 14 0 L 64 0 Q 71 0 76 5 L 94.5 23.5 Q 100 28 100 35 L 100 86 Q 100 100 86 100 L 14 100 Q 0 100 0 86 L 0 14 Q 0 0 14 0 Z'/%3E%3C/svg%3E")`,
+          WebkitMaskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath fill='black' d='M 14 0 L 64 0 Q 71 0 76 5 L 94.5 23.5 Q 100 28 100 35 L 100 86 Q 100 100 86 100 L 14 100 Q 0 100 0 86 L 0 14 Q 0 0 14 0 Z'/%3E%3C/svg%3E")`,
           maskSize: '100% 100%',
-          WebkitMaskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath fill='white' d='M 11 0 L 64 0 Q 69 0 73.8 4.6 L 95.5 25.5 Q 100 29.5 100 34 L 100 89 Q 100 100 89 100 L 11 100 Q 0 100 0 89 L 0 11 Q 0 0 11 0 Z'/%3E%3C/svg%3E")`,
           WebkitMaskSize: '100% 100%',
-          background: isBookedToday
-            ? 'linear-gradient(135deg, rgba(254, 240, 138, 0.35) 0%, rgba(245, 158, 11, 0.20) 35%, rgba(255, 255, 255, 0.08) 70%, rgba(245, 158, 11, 0.14) 100%)'
-            : isCardSelected
-            ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.48) 40%, rgba(255, 255, 255, 0.28) 75%, rgba(255, 255, 255, 0.38) 100%)'
-            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.10) 40%, rgba(255, 255, 255, 0.03) 70%, rgba(255, 255, 255, 0.08) 100%)',
-          backdropFilter: isCardSelected ? 'blur(28px) saturate(180%)' : 'blur(24px) saturate(160%)',
-          WebkitBackdropFilter: isCardSelected ? 'blur(28px) saturate(180%)' : 'blur(24px) saturate(160%)',
-          boxShadow: isCardSelected
-            ? '0 20px 40px -10px rgba(0, 0, 0, 0.5), 0 0 24px rgba(255, 255, 255, 0.45), inset 0 2px 3px rgba(255, 255, 255, 0.95)'
-            : '0 12px 28px -8px rgba(0, 0, 0, 0.35), inset 0 1px 1.5px rgba(255, 255, 255, 0.35)',
+          background: isCardSelected
+            ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.65) 40%, rgba(240, 246, 255, 0.50) 75%, rgba(220, 238, 255, 0.60) 100%)'
+            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.20) 40%, rgba(219, 234, 254, 0.25) 70%, rgba(191, 219, 254, 0.40) 100%)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
         }}
       >
         {/* Top-Half Ambient Glass Sheen */}
         <div
           className={`absolute inset-x-0 top-0 h-[50%] bg-gradient-to-b ${
             isCardSelected
-              ? 'from-white/55 via-white/25 to-transparent'
-              : 'from-white/20 via-white/5 to-transparent'
-          } pointer-events-none rounded-t-3xl`}
+              ? 'from-white/50 via-white/20 to-transparent'
+              : 'from-white/18 via-white/5 to-transparent'
+          } pointer-events-none`}
         />
 
-        {/* Precision Cut-Corner SVG Frosted Glass Border matching Image 1 */}
+        {/* Precision Pentagon SVG Frosted Glass Border */}
         <svg
           className="absolute inset-0 w-full h-full pointer-events-none z-10"
           viewBox="0 0 100 100"
           preserveAspectRatio="none"
         >
           <defs>
-            <linearGradient id={`glassStroke_${cardId}`} x1="0%" y1="0%" x2="100%" y2="100%">
-              {isCardSelected ? (
-                <>
-                  <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
-                  <stop offset="45%" stopColor="#ffffff" stopOpacity="0.92" />
-                  <stop offset="100%" stopColor="#ffffff" stopOpacity="0.75" />
-                </>
-              ) : isBookedToday ? (
-                <>
-                  <stop offset="0%" stopColor="#fef08a" stopOpacity="0.9" />
-                  <stop offset="45%" stopColor="#ffffff" stopOpacity="0.55" />
-                  <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.35" />
-                </>
-              ) : (
-                <>
-                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0.85" />
-                  <stop offset="40%" stopColor="#ffffff" stopOpacity="0.50" />
-                  <stop offset="75%" stopColor="#ffffff" stopOpacity="0.25" />
-                  <stop offset="100%" stopColor="#ffffff" stopOpacity="0.45" />
-                </>
-              )}
+            <linearGradient id={`glassStroke_${cardId}`} x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
+              <stop offset="40%" stopColor="#ffffff" stopOpacity="0.55" />
+              <stop offset="75%" stopColor="#ffffff" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0.45" />
             </linearGradient>
           </defs>
           <path
-            d="M 11 1 L 64 1 Q 69 1 73.6 5.4 L 94.6 25.6 Q 99 29.5 99 34 L 99 89 Q 99 99 89 99 L 11 99 Q 1 99 1 89 L 1 11 Q 1 1 11 1 Z"
+            d="M 14 0 L 64 0 Q 71 0 76 5 L 94.5 23.5 Q 100 28 100 35 L 100 86 Q 100 100 86 100 L 14 100 Q 0 100 0 86 L 0 14 Q 0 0 14 0 Z"
             fill="none"
             stroke={`url(#glassStroke_${cardId})`}
-            strokeWidth={isCardSelected ? '1.8' : '1.2'}
+            strokeWidth="1.6"
+            strokeLinejoin="round"
+            strokeLinecap="round"
             vectorEffect="non-scaling-stroke"
           />
         </svg>
 
         {/* Top: Availability Status Tag */}
-        <div className="flex items-start justify-start w-full z-20">
-          <div className="flex flex-col items-start leading-none">
-            <span
-              className={`text-[11px] sm:text-[11.5px] font-black tracking-wider leading-none uppercase ${
-                isMonthly
-                  ? isCardOccupied
+        {showAvailability ? (
+          <div className="flex items-start justify-start w-full z-20 min-h-[26px]">
+            <div className="flex flex-col items-start leading-none">
+              <span
+                className={`text-[11px] sm:text-[11.5px] font-black tracking-wider leading-none uppercase ${
+                  isMonthly
+                    ? isCardOccupied || isCardPartiallyOccupied
+                      ? isCardSelected
+                        ? 'text-amber-600'
+                        : 'text-amber-300'
+                      : isCardSelected
+                      ? 'text-black'
+                      : 'text-white'
+                    : percentFull >= 75
                     ? isCardSelected
-                      ? 'text-amber-900'
+                      ? 'text-rose-900'
+                      : 'text-rose-300'
+                    : percentFull > 0
+                    ? isCardSelected
+                      ? 'text-amber-600'
                       : 'text-amber-300'
                     : isCardSelected
                     ? 'text-black'
                     : 'text-white'
-                  : percentFull >= 75
-                  ? isCardSelected
-                    ? 'text-rose-900'
-                    : 'text-rose-300'
-                  : percentFull > 0
-                  ? isCardSelected
-                    ? 'text-amber-900'
-                    : 'text-amber-300'
-                  : isCardSelected
-                  ? 'text-black'
-                  : 'text-white'
-              }`}
-            >
-              {isMonthly
-                ? `${Math.max(0, capacity - occupiedCount)}/${capacity} AVAIL.`
-                : `${percentFull}% FULL.`}
-            </span>
-            <span
-              className={`text-[8.5px] sm:text-[9px] font-bold tracking-wider uppercase mt-1 ${
-                isCardSelected ? 'text-black/80' : 'text-white/70'
-              }`}
-            >
-              {isMonthly ? 'THIS MONTH' : 'NEXT 30 DAYS'}
-            </span>
+                }`}
+              >
+                {isMonthly
+                  ? `${Math.max(0, capacity - occupiedCount)} AVAIL`
+                  : `${percentFull}% FULL.`}
+              </span>
+              <span
+                className={`text-[8.5px] sm:text-[9px] font-bold tracking-wider uppercase mt-1 ${
+                  isCardSelected ? 'text-black/80' : 'text-white/70'
+                }`}
+              >
+                {isMonthly ? 'THIS MONTH' : 'NEXT 30 DAYS'}
+              </span>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="w-full min-h-[14px] z-20" />
+        )}
 
         {/* Center: ROOM label and Room Number Input */}
         <div className="flex flex-col items-center justify-center my-auto py-0.5 text-center z-20">
@@ -282,20 +269,43 @@ export const HostRoomCardItem = memo(function HostRoomCardItem({
           />
         </div>
 
-        {/* Bottom: Signature Blue Button matching 'LEARN MORE' in Image 1 */}
-        <div className="w-full flex items-center justify-start z-20 pt-0.5">
-          <div
-            className="w-fit inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1 rounded-md sm:rounded-lg bg-[#0066ff] hover:bg-[#0057e0] shadow-md shadow-blue-950/40 select-none cursor-default transition-transform duration-100 active:scale-95 touch-manipulation"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <span className="text-[9px] sm:text-[9.5px] font-black text-white tracking-widest leading-none uppercase">
-              CAP
-            </span>
-            <span className="text-[10.5px] sm:text-[11.5px] font-black text-white leading-none">
-              {capacity}
-            </span>
+        {/* Bottom Pill: In SubTab mode (Requests/Check-in/Check-out), show centered requests pill; otherwise centered capacity count pill */}
+        {subTab && requestCount !== undefined ? (
+          <div className="w-full flex items-center justify-center z-20 pt-0.5">
+            <div
+              className="w-fit inline-flex items-center justify-center px-2.5 py-1 sm:px-3 sm:py-1 rounded-full bg-[#0066ff] hover:bg-[#0057e0] shadow-md shadow-blue-950/40 select-none cursor-default transition-transform duration-100 active:scale-95 touch-manipulation"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <span className="text-[10px] sm:text-[10.5px] font-bold text-white leading-none whitespace-nowrap">
+                {(() => {
+                  const c = Number(requestCount) || 0;
+                  if (subTab === 'checkout') {
+                    return c === 1 ? '1 Check-out' : `${c} Check-outs`;
+                  }
+                  if (subTab === 'checkin') {
+                    return c === 1 ? '1 Check-in' : `${c} Check-ins`;
+                  }
+                  return c === 1 ? '1 Request' : `${c} Requests`;
+                })()}
+              </span>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="w-full flex items-center justify-center z-20 pt-0.5">
+            <div
+              className="w-fit inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-[#0066ff] hover:bg-[#0057e0] shadow-md shadow-blue-950/40 select-none cursor-default transition-transform duration-100 active:scale-95 touch-manipulation"
+              onClick={(e) => e.stopPropagation()}
+              title={`Room capacity: ${capacity} ${capacity === 1 ? 'person' : 'people'}`}
+            >
+              <span className="text-[9px] sm:text-[9.5px] font-black text-white tracking-widest leading-none uppercase">
+                CAP
+              </span>
+              <span className="text-[10.5px] sm:text-[11.5px] font-black text-white leading-none">
+                {capacity}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

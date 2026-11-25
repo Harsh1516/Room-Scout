@@ -58,6 +58,10 @@ export function Left({
  window.dispatchEvent(new CustomEvent('auth:open_login', { detail: { role: 'host' } }));
  return;
  }
+    if (user?.hasProperty) {
+      navigate('/host/dashboard');
+      return;
+    }
  adminAPI.getHostByEmail(user?.email)
  .then((check) => {
  if (check?.hasProperty) navigate('/host/dashboard');

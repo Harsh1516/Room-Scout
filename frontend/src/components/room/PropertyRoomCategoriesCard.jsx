@@ -143,7 +143,7 @@ export function PropertyRoomCategoriesCard({
       <div
         className="relative overflow-hidden rounded-3xl p-6 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl"
         style={{
-          background: 'linear-gradient(135deg, #2563eb 0%, #60a5fa 45%, #bfdbfe 80%, #eff6ff 100%)',
+          background: 'linear-gradient(135deg, #050505 0%, #141416 48%, #3f3f46 78%, #d4d4d8 92%, #fafafa 100%)',
         }}
       >
         {/* Soft noise overlay for depth */}
@@ -172,7 +172,7 @@ export function PropertyRoomCategoriesCard({
                     key={idx}
                     type="button"
                     onClick={() => onSelectRateIdx?.(idx)}
-                    className={`h-[38px] sm:h-[40px] px-4 sm:px-4.5 rounded-full text-[13px] sm:text-[14px] font-semibold tracking-tight cursor-pointer select-none outline-none transition-all duration-150 inline-flex items-center justify-center active:scale-95 ${isSelected ? "bg-white text-blue-900 border-2 border-white shadow-md ring-2 ring-blue-400/40" : "bg-white/25 hover:bg-white/35 text-white border-2 border-white/40 shadow-xs"}`}
+                    className={`h-[38px] sm:h-[40px] px-4 sm:px-4.5 rounded-full text-[13px] sm:text-[14px] font-semibold tracking-tight cursor-pointer select-none outline-none transition-all duration-150 inline-flex items-center justify-center active:scale-95 ${isSelected ? "bg-white text-zinc-900 border-2 border-white shadow-md ring-2 ring-white/25" : "bg-white/10 hover:bg-white/20 text-white border-2 border-white/30 shadow-xs"}`}
                   >
                     {rate.type || `Type ${idx + 1}`}
                   </button>
@@ -183,7 +183,7 @@ export function PropertyRoomCategoriesCard({
         )}
 
         {/* 2. Price display with View Room Pic button on the right side */}
-        <div className="relative bg-white/25 backdrop-blur-md rounded-3xl px-5 py-4 sm:px-7 sm:py-5 min-h-[76px] sm:min-h-[88px] flex items-center justify-between gap-3 shadow-inner border-2 border-white/40">
+        <div className="relative bg-white/10 backdrop-blur-md rounded-3xl px-5 py-4 sm:px-7 sm:py-5 min-h-[76px] sm:min-h-[88px] flex items-center justify-between gap-3 shadow-inner border-2 border-white/30">
           <div className="flex items-baseline gap-2 min-w-0">
             <span className="text-[28px] sm:text-[32px] md:text-4xl font-extrabold text-white tracking-tight drop-shadow-xs">
               {displayExactPrice}
@@ -197,7 +197,7 @@ export function PropertyRoomCategoriesCard({
           <button
             type="button"
             onClick={() => setShowPicsModal(true)}
-            className="w-auto shrink-0 inline-flex items-center gap-2 h-[36px] sm:h-[38px] px-4 sm:px-4.5 rounded-full bg-slate-950/80 hover:bg-slate-950 text-white text-xs sm:text-[13px] font-medium tracking-tight shadow-[0_2px_14px_rgba(0,0,0,0.35)] backdrop-blur-md border border-white/25 transition-all duration-200 cursor-pointer active:scale-95 hover:scale-105 select-none"
+            className="w-auto shrink-0 inline-flex items-center gap-2 h-[36px] sm:h-[38px] px-4 sm:px-4.5 rounded-full bg-black/80 hover:bg-black text-white text-xs sm:text-[13px] font-medium tracking-tight shadow-[0_2px_14px_rgba(0,0,0,0.45)] backdrop-blur-md border border-white/40 transition-all duration-200 cursor-pointer active:scale-95 hover:scale-105 select-none"
             title="View Room Photos"
           >
             <svg
@@ -230,7 +230,7 @@ export function PropertyRoomCategoriesCard({
             </div>
 
             {/* Row wise series with rectangular background border */}
-            <div className="bg-white/20 backdrop-blur-md rounded-2xl border-2 border-white/35 divide-y divide-white/20 overflow-hidden shadow-inner">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl border-2 border-white/30 divide-y divide-white/15 overflow-hidden shadow-inner">
               {categoryFacilities.map((facility, fIdx) => (
                 <div
                   key={fIdx}
@@ -263,15 +263,18 @@ export function PropertyRoomCategoriesCard({
           <button
             type="button"
             onClick={() => onNavigateToRooms?.(activeRateObj?.type)}
-            className="w-full flex items-center justify-between bg-white rounded-full pl-6 pr-2.5 py-2.5 sm:pl-7 sm:pr-3 sm:py-3 shadow-xl shadow-blue-950/20 border-2 border-white/60 ring-2 ring-white/30 hover:border-white/80 hover:ring-white/45 backdrop-blur-md cursor-pointer active:scale-[0.98] transition-all duration-200 group select-none"
+            className="relative overflow-hidden w-full flex items-center justify-between bg-white rounded-full pl-6 pr-2.5 py-2.5 sm:pl-7 sm:pr-3 sm:py-3 shadow-xl shadow-black/30 border-2 border-white/60 ring-2 ring-white/30 hover:border-white/80 hover:ring-white/45 backdrop-blur-md cursor-pointer active:scale-[0.98] transition-all duration-200 group select-none"
           >
+            {/* Left-to-right flash sweep */}
+            <span className="button-flash-sweep pointer-events-none" />
+
             {/* Left: label text (2x) */}
-            <span className="text-lg sm:text-xl font-bold text-blue-900/80 select-none">
+            <span className="relative z-10 text-lg sm:text-xl font-bold text-zinc-900 select-none">
               See Room
             </span>
 
-            {/* Right: solid blue circle icon button (2x) */}
-            <span className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-blue-500 group-hover:bg-blue-600 transition-colors duration-200 flex items-center justify-center shadow-lg shrink-0">
+            {/* Right: solid black circle icon button (2x) */}
+            <span className="relative z-10 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-black group-hover:bg-zinc-800 transition-colors duration-200 flex items-center justify-center shadow-lg shrink-0">
               <svg
                 className="w-6 h-6 sm:w-7 sm:h-7 text-white group-hover:translate-x-1 transition-transform duration-200"
                 viewBox="0 0 24 24"

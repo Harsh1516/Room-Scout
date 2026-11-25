@@ -234,7 +234,7 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
  const prevUserEmailRef = useRef(currentEmail);
 
  const [hostProperty, setHostProperty] = useState(() =>
- getInitialHostProperty(user?.email, locationState?.updatedHost)
+ getInitialHostProperty(user?.email, locationState?.updatedHost || locationState?.hostProperty)
  );
  const [guests, setGuests] = useState(() =>
  getInitialGuests(user?.email)
@@ -335,8 +335,15 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
  const hostMatchesTarget = hostByEmailRes?.host && (!hostByEmailRes.host.email || hostByEmailRes.host.email.trim().toLowerCase() === targetEmail);
 
  let foundHost = myStays.length > 0 ? myStays[0] : null;
- if (!foundHost && hostMatchesTarget) {
- foundHost = hostByEmailRes.host;
+ if (!foundHost && (hostMatchesTarget || hostByEmailRes?.hasProperty)) {
+ const hStay = hostByEmailRes?.stay || {};
+ const hHost = hostByEmailRes?.host || {};
+ foundHost = {
+ ...hStay,
+ ...hHost,
+ propertyName: hHost.propertyName || hStay.title || hStay.propertyName || '',
+ title: hStay.title || hHost.propertyName || '',
+ };
  }
 
  if (foundHost) {
@@ -362,10 +369,12 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
  }
  if (
  typeof updateUserSession === 'function' &&
- user?.status !== 'Approved'
+ (!user?.hasProperty || user?.status !== 'Approved')
  ) {
  updateUserSession((prev) => ({
  ...(prev || {}),
+ role: 'host',
+ hasProperty: true,
  status: 'Approved',
  }));
  }
@@ -654,6 +663,8 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
     socket.on('host:status_updated', handleHostStatus);
     socket.on('host:property_saved', handleRealtimeRefresh);
     socket.on('stay:updated', handleRealtimeRefresh);
+    socket.on('subscription:created', handleRealtimeRefresh);
+    socket.on('subscription:updated', handleRealtimeRefresh);
     socket.on('subscription:verified', handleRealtimeRefresh);
     socket.on('booking:new', handleBookingNew);
     socket.on('booking:created', handleBookingNew);
@@ -717,6 +728,8 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
       socket.off('host:status_updated', handleHostStatus);
       socket.off('host:property_saved', handleRealtimeRefresh);
       socket.off('stay:updated', handleRealtimeRefresh);
+      socket.off('subscription:created', handleRealtimeRefresh);
+      socket.off('subscription:updated', handleRealtimeRefresh);
       socket.off('subscription:verified', handleRealtimeRefresh);
       socket.off('booking:new', handleBookingNew);
       socket.off('booking:created', handleBookingNew);

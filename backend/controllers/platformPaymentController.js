@@ -9,10 +9,8 @@ const DEFAULT_PLANS = [
 const DEFAULT_PROPERTY_PRICING = {
   PG: 10,
   Hotel: 50,
-  Hostel: 15,
-  Villa: 40,
-  Resort: 50,
   Flat: 25,
+  'Independent Room': 20,
 };
 
 const DEFAULT_DISCOUNTS = {
@@ -34,6 +32,19 @@ export async function getPlatformPaymentSettings(req, res, next) {
     }
     if (!settings.propertyPricing) {
       settings.propertyPricing = DEFAULT_PROPERTY_PRICING;
+    } else {
+      settings.propertyPricing = {
+        PG: Number(settings.propertyPricing.PG !== undefined ? settings.propertyPricing.PG : 10),
+        Hotel: Number(settings.propertyPricing.Hotel !== undefined ? settings.propertyPricing.Hotel : 50),
+        Flat: Number(settings.propertyPricing.Flat !== undefined ? settings.propertyPricing.Flat : 25),
+        'Independent Room': Number(
+          settings.propertyPricing['Independent Room'] !== undefined
+            ? settings.propertyPricing['Independent Room']
+            : (settings.propertyPricing.independentRoom !== undefined
+                ? settings.propertyPricing.independentRoom
+                : 20)
+        ),
+      };
     }
     if (!settings.discounts) {
       settings.discounts = DEFAULT_DISCOUNTS;
@@ -69,10 +80,17 @@ export async function updatePlatformPaymentSettings(req, res, next) {
     const cleanPropertyPricing = {
       PG: Math.max(0, Number(propertyPricing?.PG !== undefined ? propertyPricing.PG : 10)),
       Hotel: Math.max(0, Number(propertyPricing?.Hotel !== undefined ? propertyPricing.Hotel : 50)),
-      Hostel: Math.max(0, Number(propertyPricing?.Hostel !== undefined ? propertyPricing.Hostel : 15)),
-      Villa: Math.max(0, Number(propertyPricing?.Villa !== undefined ? propertyPricing.Villa : 40)),
-      Resort: Math.max(0, Number(propertyPricing?.Resort !== undefined ? propertyPricing.Resort : 50)),
       Flat: Math.max(0, Number(propertyPricing?.Flat !== undefined ? propertyPricing.Flat : 25)),
+      'Independent Room': Math.max(
+        0,
+        Number(
+          propertyPricing?.['Independent Room'] !== undefined
+            ? propertyPricing['Independent Room']
+            : (propertyPricing?.independentRoom !== undefined
+                ? propertyPricing.independentRoom
+                : 20)
+        )
+      ),
     };
 
     const cleanDiscounts = {

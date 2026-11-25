@@ -63,7 +63,7 @@ export function initSocketServer(httpServer) {
           socket.data.userId = cleanId;
         }
 
-        if (role === 'admin' || authData.isAdmin) {
+        if (role === 'admin' || authData.isAdmin || authData.adminKey) {
           socket.join('room:admin');
           socket.data.isAdmin = true;
         }
@@ -72,6 +72,11 @@ export function initSocketServer(httpServer) {
       } catch (err) {
         console.warn('[Socket Auth Error]:', err.message);
       }
+    });
+
+    socket.on('join_admin_room', () => {
+      socket.join('room:admin');
+      socket.data.isAdmin = true;
     });
 
     socket.on('join_host_room', ({ email, hostId } = {}) => {

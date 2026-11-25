@@ -1006,6 +1006,127 @@ export async function sendSubscriptionActivatedToHostEmail({
 }
 
 /**
+ * 7b. Send New Property Submission Alert to Admin (Fired when host submits property for approval)
+ */
+export async function sendPropertySubmissionToAdminEmail({
+  hostName,
+  hostEmail,
+  hostPhone,
+  propertyName,
+  propertyType,
+  location,
+  roomCount = 0,
+}) {
+  const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
+  if (!adminEmail) return { success: false, reason: 'No admin email configured' };
+
+  try {
+    const transporter = await getTransporter();
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Room-Scout Admin" <noreply@roomscout.com>';
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const adminUrl = `${clientUrl}/admin`;
+
+    const htmlContent = buildBrandedEmailHtml({
+      badgeText: 'Property Approval Request',
+      title: 'New Property Submitted for Approval',
+      subtitle: `Host <strong>${hostName || 'Partner'}</strong> has submitted <strong>${propertyName || 'a new property'}</strong> for admin verification.`,
+      detailsRows: [
+        { label: 'Host Name', value: hostName || 'N/A' },
+        { label: 'Host Email', value: hostEmail || 'N/A' },
+        { label: 'Host Phone', value: hostPhone || 'N/A' },
+        { label: 'Property Name', value: propertyName || 'Untitled Property' },
+        { label: 'Property Type', value: propertyType || 'Stay' },
+        { label: 'Location', value: location || 'N/A' },
+        { label: 'Total Rooms', value: String(roomCount || 0) },
+      ],
+      ctaText: 'Review in Admin Panel',
+      ctaUrl: adminUrl,
+      footerNote: 'Please review the property details in the Admin Dashboard to approve or reject this listing.',
+    });
+
+    if (!transporter) {
+      console.log(`[LOCAL EMAIL SIMULATOR] Property submission alert to admin: ${adminEmail}`);
+      return { success: true, simulated: true };
+    }
+
+    const mailOptions = {
+      from: fromAddress,
+      to: adminEmail,
+      subject: `New Property Approval Request: ${propertyName || 'Listing'} by ${hostName || 'Host'}`,
+      text: `Hello Admin,\n\nHost ${hostName || 'Partner'} (${hostEmail || 'N/A'}) submitted "${propertyName || 'Listing'}" (${propertyType || 'Stay'}) in ${location || 'N/A'} for approval.\n\nReview at: ${adminUrl}\n\nRoomScout Team`,
+      html: htmlContent,
+    };
+
+    const info = await sendRawMail(mailOptions);
+    console.log(`✅ Real Admin Property Submission Alert dispatched to [${adminEmail}] (Message ID: ${info.messageId})`);
+    return { success: true, messageId: info.messageId };
+  } catch (err) {
+    console.error(`❌ Failed to send property submission alert to admin [${adminEmail}]:`, err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * 7c. Send Property Approved Email to Host (Fired when admin approves property)
+ */
+export async function sendPropertyApprovedToHostEmail({
+  hostEmail,
+  hostName,
+  propertyName,
+  propertyType,
+  isLive = false,
+}) {
+  if (!hostEmail) return { success: false, reason: 'No host email address provided' };
+
+  try {
+    const transporter = await getTransporter();
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Room-Scout Host" <noreply@roomscout.com>';
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const hostDashboardUrl = `${clientUrl}/host-dashboard`;
+
+    const htmlContent = buildBrandedEmailHtml({
+      badgeText: 'Property Approved',
+      title: 'Your Property Has Been Approved',
+      subtitle: `Great news <strong>${hostName || 'Host'}</strong>! Your property <strong>${propertyName || 'listing'}</strong> has been approved by the RoomScout administration. ${
+        isLive
+          ? 'Your listing is now <strong>LIVE</strong> and visible to guests.'
+          : 'Purchase and verify a subscription plan from your Host Dashboard to make your listing live to guests.'
+      }`,
+      detailsRows: [
+        { label: 'Host Partner', value: hostName || 'N/A' },
+        { label: 'Property Name', value: propertyName || 'Your Property' },
+        { label: 'Property Type', value: propertyType || 'Stay' },
+        { label: 'Approval Status', value: 'Approved' },
+        { label: 'Listing Visibility', value: isLive ? 'Live & Accepting Bookings' : 'Awaiting Active Plan' },
+      ],
+      ctaText: 'Open Host Dashboard',
+      ctaUrl: hostDashboardUrl,
+      footerNote: 'You can manage your rooms, pricing, and bookings anytime from your Host Dashboard.',
+    });
+
+    if (!transporter) {
+      console.log(`[LOCAL EMAIL SIMULATOR] Property approved email to host: ${hostEmail}`);
+      return { success: true, simulated: true };
+    }
+
+    const mailOptions = {
+      from: fromAddress,
+      to: hostEmail,
+      subject: `Property Approved: ${propertyName || 'Your Listing'} is Verified`,
+      text: `Hello ${hostName || 'Host'},\n\nYour property "${propertyName || 'Listing'}" has been approved by the RoomScout admin.${isLive ? ' Your listing is now LIVE.' : ' Activate a subscription plan to go live.'}\n\nOpen Dashboard: ${hostDashboardUrl}\n\nRoomScout Team`,
+      html: htmlContent,
+    };
+
+    const info = await sendRawMail(mailOptions);
+    console.log(`✅ Real Host Property Approved email dispatched to [${hostEmail}] (Message ID: ${info.messageId})`);
+    return { success: true, messageId: info.messageId };
+  } catch (err) {
+    console.error(`❌ Failed to send property approved email to host [${hostEmail}]:`, err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
  * 8. Send Subscription Rejected Email to Host (Fired when admin rejects plan payment)
  */
 export async function sendSubscriptionRejectedToHostEmail({

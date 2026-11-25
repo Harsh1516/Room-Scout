@@ -125,15 +125,16 @@ export function HeroSection() {
     <button
       type="button"
       onClick={() => navigate('/search')}
-      className="w-auto inline-flex items-center justify-center gap-2 py-3 px-6 sm:py-3.5 sm:px-7 min-h-[44px] sm:min-h-[48px] rounded-full bg-sky-500 hover:bg-sky-400 active:bg-sky-600 text-white font-bold text-xs sm:text-sm tracking-wider uppercase border-2 border-white/50 shadow-lg shadow-sky-500/30 backdrop-blur-xs active:scale-95 transition-all duration-150 cursor-pointer select-none group mx-auto lg:mx-0"
+      className="relative overflow-hidden w-auto inline-flex items-center justify-center gap-2 py-3 px-6 sm:py-3.5 sm:px-7 min-h-[44px] sm:min-h-[48px] rounded-full bg-sky-500 hover:bg-sky-400 active:bg-sky-600 text-white font-bold text-xs sm:text-sm tracking-wider uppercase border-2 border-white/50 shadow-lg shadow-sky-500/30 backdrop-blur-xs active:scale-95 transition-all duration-150 cursor-pointer select-none group mx-auto lg:mx-0"
     >
-      <span className="tracking-[0.14em]">
+      <span className="button-flash-sweep button-flash-sweep-light pointer-events-none" />
+      <span className="relative z-10 tracking-[0.14em]">
         {stats.staysCount !== null && stats.staysCount !== undefined
           ? `Explore ${stats.staysCount > 999 ? `${(stats.staysCount / 1000).toFixed(1)}k+` : stats.staysCount.toLocaleString()} ${stats.staysCount === 1 ? 'Stay' : 'Stays'}`
           : 'Explore Stays'}
       </span>
       <svg
-        className="w-4 h-4 text-white transition-transform group-hover:translate-x-1"
+        className="relative z-10 w-4 h-4 text-white transition-transform group-hover:translate-x-1"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"

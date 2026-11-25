@@ -69,7 +69,7 @@ export function VisitedSubNavbar({
 			: 'All Check-ins';
 
 	return (
-		<div className="w-full select-none pb-1">
+		<div className="w-full shrink-0 select-none pb-1 max-lg:bg-[#3ca0ea] max-lg:px-2.5 max-lg:pt-3 max-lg:pb-2">
 			{/* Top Command & Filter Bar: Same Row with Left (req, in, out) and Right (today, all) */}
 			<div className="w-full flex items-center justify-between gap-1.5 sm:gap-3 pt-0.5 pb-1">
 				{/* Left Side: Primary Sub-Tabs (Requests | Check-in | Check-out) matching footer console configuration */}

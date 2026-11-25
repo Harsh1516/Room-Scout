@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { generateEntryPassPdf } from '../../../utils/entryPassPdf';
 
@@ -32,6 +32,8 @@ export function ResidentIdPassModal({
  handleRemoveOccupant,
  handleStartEditFromModal,
 }) {
+ const [previewAadharPhoto, setPreviewAadharPhoto] = useState('');
+
  if (!selectedOccupantForModal) return null;
 
  const rawStatus = String(selectedOccupantForModal.status || '').toUpperCase();
@@ -77,6 +79,15 @@ export function ResidentIdPassModal({
  selectedOccupantForModal.isPaid === true ||
  isCheckedIn ||
  (!isOnline && !isPendingApproval && !isAwaitingPayment && !isRejected);
+
+ // Clean phone digits for instant Call action
+ const occupantRawPhone =
+ selectedOccupantForModal.phone ||
+ selectedOccupantForModal.userPhone ||
+ selectedOccupantForModal.guestPhone ||
+ modalPhone ||
+ '';
+ const cleanPhoneDigits = String(occupantRawPhone).replace(/\D/g, '').slice(-10);
 
  // Status badge styling
  let statusBadgeLabel = selectedOccupantForModal.status || 'CONFIRMED';
@@ -174,22 +185,28 @@ export function ResidentIdPassModal({
  if (typeof document === 'undefined') return null;
 
  return createPortal(
+ <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
  <div
- className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6 bg-slate-900/50 transition-all overflow-y-auto"
  onClick={() => !isUpdatingSlot && handleCloseOccupantModal()}
- >
+ className="fixed inset-0 bg-black/20 backdrop-blur-xs cursor-pointer transition-opacity"
+ style={{
+ backdropFilter: 'blur(4px)',
+ WebkitBackdropFilter: 'blur(4px)',
+ }}
+ />
  <div
- className="relative w-full max-w-[400px] bg-white text-[#1f1b16] rounded-[28px] shadow-[0_24px_60px_-12px_rgba(0,0,0,0.18)] border border-slate-200/90 overflow-hidden my-auto select-none transition-all"
+ className="relative z-10 w-full max-w-[400px] bg-white text-[#1f1b16] rounded-[28px] shadow-[0_24px_60px_-12px_rgba(0,0,0,0.18)] border border-slate-200/90 overflow-hidden my-auto select-none transition-all"
  onClick={(e) => e.stopPropagation()}
  >
  {/* Header: Exact style matching Pic 2 */}
  <div className="px-5 pt-4 pb-2.5 border-b border-slate-100 bg-white text-[#1f1b16] relative z-10">
  <div className="flex flex-col gap-1.5 w-full">
- {/* Row 1: Centered Title */}
- <div className="flex items-center justify-center w-full">
+ {/* Row 1: Centered Title & Header Close Button */}
+ <div className="relative flex items-center justify-center w-full">
  <h3 className="font-medium tracking-tight text-[16px] sm:text-[17px] text-center leading-none text-[#1f1b16]">
  {isPendingApproval ? 'Booking Request Pass' : 'Resident ID Pass'}
  </h3>
+ 
  </div>
 
  {/* Row 2: Room info */}
@@ -309,6 +326,21 @@ export function ResidentIdPassModal({
  <span className="font-medium text-[#1f1b16] mt-0.5 block text-[13px] sm:text-[14px]">
  {formatAadharNumber(selectedOccupantForModal.aadhar) || 'N/A'}
  </span>
+ {(selectedOccupantForModal.aadharPhoto || selectedOccupantForModal.guestAadharPhoto) && (
+ <button
+ type="button"
+ onClick={() => setPreviewAadharPhoto(selectedOccupantForModal.aadharPhoto || selectedOccupantForModal.guestAadharPhoto)}
+ className="mt-1.5 inline-flex items-center gap-2 p-1.5 pr-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 transition-colors cursor-pointer active:scale-95"
+ title="Open Aadhar card photo"
+ >
+ <img
+ src={selectedOccupantForModal.aadharPhoto || selectedOccupantForModal.guestAadharPhoto}
+ alt="Guest Aadhar Card"
+ className="w-9 h-7 rounded-md object-cover border border-slate-200"
+ />
+ <span className="text-[11px] font-semibold text-blue-600">View Aadhar Photo</span>
+ </button>
+ )}
  </div>
 
  <div>
@@ -493,14 +525,30 @@ export function ResidentIdPassModal({
  )}
 
  <div className="flex items-center gap-2">
+ {cleanPhoneDigits.length === 10 ? (
+ <a
+ href={`tel:+91${cleanPhoneDigits}`}
+ className="min-h-[48px] px-5 rounded-full border border-slate-200 bg-white text-slate-800 hover:bg-[#f7f4ee] text-sm sm:text-base font-semibold cursor-pointer transition-all shadow-2xs flex items-center justify-center gap-1.5 active:scale-95 select-none"
+ title={`Call +91 ${cleanPhoneDigits}`}
+ >
+ <svg className="w-4 h-4 text-emerald-600 fill-current shrink-0" viewBox="0 0 24 24">
+ <path d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
+ </svg>
+ <span>Call</span>
+ </a>
+ ) : (
  <button
  type="button"
- disabled={isUpdatingSlot}
- onClick={handleCloseOccupantModal}
- className="min-h-[48px] px-5 rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-[#f7f4ee] text-sm sm:text-base font-semibold cursor-pointer transition-all shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+ disabled
+ className="min-h-[48px] px-5 rounded-full border border-slate-200 bg-slate-100 text-slate-400 text-sm sm:text-base font-semibold cursor-not-allowed flex items-center justify-center gap-1.5"
+ title="No mobile number available"
  >
- Close
+ <svg className="w-4 h-4 opacity-40 fill-current shrink-0" viewBox="0 0 24 24">
+ <path d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
+ </svg>
+ <span>Call</span>
  </button>
+ )}
  <button
  type="button"
  disabled={isUpdatingSlot}
@@ -514,6 +562,32 @@ export function ResidentIdPassModal({
  </div>
  )}
  </div>
+
+ {/* Fullscreen Aadhar Card Photo Lightbox */}
+ {previewAadharPhoto && (
+ <div
+ onClick={() => setPreviewAadharPhoto('')}
+ className="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-xs flex flex-col items-center justify-center p-4 sm:p-6 cursor-pointer"
+ >
+ <button
+ type="button"
+ onClick={() => setPreviewAadharPhoto('')}
+ aria-label="Close Aadhar photo preview"
+ className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 text-white border border-white/25 flex items-center justify-center cursor-pointer transition-all"
+ >
+ <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+ <line x1="18" y1="6" x2="6" y2="18" />
+ <line x1="6" y1="6" x2="18" y2="18" />
+ </svg>
+ </button>
+ <img
+ src={previewAadharPhoto}
+ alt="Guest Aadhar Card Full View"
+ onClick={(e) => e.stopPropagation()}
+ className="max-h-[82vh] max-w-[92vw] object-contain rounded-2xl shadow-2xl border border-white/20 bg-white cursor-default"
+ />
+ </div>
+ )}
  </div>,
  document.body
  );

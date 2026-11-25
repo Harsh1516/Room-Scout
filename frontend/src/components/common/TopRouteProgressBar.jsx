@@ -86,7 +86,7 @@ export function TopRouteProgressBar() {
       style={{ opacity: isVisible ? 1 : 0 }}
     >
       <div
-        className="h-full bg-gradient-to-r from-emerald-500 via-[#006C4A] to-cyan-400 shadow-[0_0_10px_rgba(16,185,129,0.7),0_0_4px_rgba(6,182,212,0.9)] transition-all duration-200 ease-out"
+        className="h-full bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-600 shadow-[0_0_10px_rgba(14,165,233,0.7),0_0_4px_rgba(59,130,246,0.9)] transition-all duration-200 ease-out"
         style={{
           width: `${progress}%`,
         }}

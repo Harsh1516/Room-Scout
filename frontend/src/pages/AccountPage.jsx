@@ -410,543 +410,541 @@ export function AccountPage({ onLoginClick }) {
  {/* Main Container */}
  <main className="max-w-3xl mx-auto px-3 sm:px-6 pt-20 sm:pt-24 lg:pt-28 pb-28 sm:pb-32 md:pb-16 min-h-[calc(100vh-4rem)]">
 
- {/* ── TAB 1: PROFILE DETAILS (GREEN THEMED CARD ON MOBILE) ── */}
- {activeTab === 'details' && (
- <motion.div
- initial={{ opacity: 0, y: 10 }}
- animate={{ opacity: 1, y: 0 }}
- className="max-md:bg-[#0b291b] max-md:rounded-[32px] sm:max-md:rounded-[36px] max-md:border max-md:border-emerald-400/20 max-md:p-4 sm:max-md:p-6 max-md:shadow-[0_12px_36px_rgba(11,41,27,0.45)] md:bg-white md:rounded-3xl md:border md:border-slate-200 md:p-8 md:shadow-xs space-y-4 sm:space-y-6 transition-all duration-300"
- >
- {/* Desktop Header */}
- <div className="hidden md:flex border-b border-slate-100 pb-4 items-center justify-between gap-3">
- <div className="min-w-0">
- <h2 className="text-2xl lg:text-3xl font-manrope font-medium text-[#1f1b16] tracking-tight">
- {isHost ? 'Host Profile Details' : 'Personal Profile Details'}
- </h2>
- </div>
- <div className="w-11 h-11 rounded-2xl bg-emerald-500/15 text-emerald-700 border border-emerald-500/30 font-manrope font-medium text-sm flex items-center justify-center shadow-xs shrink-0 select-none">
- {user?.name?.slice(0, 2)?.toUpperCase() || 'U'}
- </div>
- </div>
+ {/* ── TAB 1: PROFILE DETAILS (CLEAN WHITE THEME) ── */}
+        {activeTab === 'details' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-[28px] sm:rounded-3xl border border-slate-200/90 p-5 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] space-y-4 sm:space-y-6 transition-all duration-300"
+          >
+            {/* Desktop Header */}
+            <div className="hidden md:flex border-b border-slate-100 pb-4 items-center justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-2xl lg:text-3xl font-manrope font-bold text-[#1f1b16] tracking-tight">
+                  {isHost ? 'Host Profile Details' : 'Personal Profile Details'}
+                </h2>
+              </div>
+              <div className="w-11 h-11 rounded-2xl bg-slate-100 text-slate-700 border border-slate-200 font-manrope font-semibold text-sm flex items-center justify-center shadow-xs shrink-0 select-none">
+                {user?.name?.slice(0, 2)?.toUpperCase() || 'U'}
+              </div>
+            </div>
 
- {/* Mobile Centered Title (Matches Pic 1 style) */}
- <div className="md:hidden flex flex-col items-center justify-center pt-1 mb-5 sm:mb-6 w-full text-center">
- <h2 className="text-xl sm:text-2xl font-medium font-medium text-white tracking-normal text-center">
- {isHost ? 'Host Profile Details' : 'Personal Profile Details'}
- </h2>
- </div>
+            {/* Mobile Centered Title */}
+            <div className="md:hidden flex flex-col items-center justify-center pt-1 mb-5 sm:mb-6 w-full text-center">
+              <h2 className="text-xl sm:text-2xl font-bold text-[#1f1b16] tracking-tight text-center">
+                {isHost ? 'Host Profile Details' : 'Personal Profile Details'}
+              </h2>
+            </div>
 
- {/* Inner Section Card Covering Input Fields (Matches Pic 1 style) */}
- <section className="rounded-2xl sm:rounded-3xl border shadow-lg transition-colors max-md:bg-[#14422b] max-md:border-emerald-300/20 max-md:p-4 sm:max-md:p-5 max-md:shadow-black/20 md:bg-transparent md:border-none md:p-0 md:shadow-none space-y-4 relative overflow-hidden">
- <form onSubmit={handleUpdatePersonal} className="space-y-3.5 sm:space-y-4">
- {/* Full Name */}
- <div>
- <label className="block text-xs font-medium max-md:text-emerald-200 md:text-slate-700 mb-1.5">
- Full Name *
- </label>
- <input
- type="text"
- required
- value={personalForm.name}
- onChange={(e) => {
- const val = e.target.value;
- setPersonalForm((prev) => ({ ...prev, name: val }));
- if (personalErrors.name) validatePersonalField('name', val);
- }}
- onBlur={(e) => validatePersonalField('name', e.target.value)}
- placeholder="e.g. Happy Chhikara"
- className={`w-full h-11 px-4 rounded-xl border text-sm font-medium focus:outline-none transition-all shadow-xs ${
- personalErrors.name
- ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
- : 'max-md:bg-white/10 max-md:border-white/20 max-md:text-white max-md:placeholder:text-emerald-200/40 max-md:focus:border-white/60 max-md:focus:ring-2 max-md:focus:ring-white/20 md:bg-[#f7f4ee] md:border-slate-300 md:text-[#1f1b16] md:focus:border-emerald-500 md:focus:ring-2 md:focus:ring-emerald-500/20'
- }`}
- />
- {personalErrors.name && (
- <p className="text-[11px] sm:text-xs text-rose-400 font-medium mt-1.5 flex items-center gap-1">
- <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
- <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
- </svg>
- <span>{personalErrors.name}</span>
- </p>
- )}
- </div>
+            {/* Inner Section Card Covering Input Fields */}
+            <section className="rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-slate-50/70 p-4 sm:p-6 shadow-xs space-y-4 relative overflow-hidden">
+              <form onSubmit={handleUpdatePersonal} className="space-y-3.5 sm:space-y-4">
+                {/* Full Name */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={personalForm.name}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setPersonalForm((prev) => ({ ...prev, name: val }));
+                      if (personalErrors.name) validatePersonalField('name', val);
+                    }}
+                    onBlur={(e) => validatePersonalField('name', e.target.value)}
+                    placeholder="e.g. Happy Chhikara"
+                    className={`w-full h-11 px-4 rounded-xl border text-sm font-medium focus:outline-none transition-all shadow-xs ${
+                      personalErrors.name
+                        ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                        : 'bg-white border-slate-300 text-[#1f1b16] placeholder:text-slate-400 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10'
+                    }`}
+                  />
+                  {personalErrors.name && (
+                    <p className="text-[11px] sm:text-xs text-rose-500 font-medium mt-1.5 flex items-center gap-1">
+                      <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      <span>{personalErrors.name}</span>
+                    </p>
+                  )}
+                </div>
 
- <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
- {/* Email (Readonly) */}
- <div>
- <label className="block text-xs font-medium max-md:text-emerald-200 md:text-slate-700 mb-1.5">
- Email Address (Registered)
- </label>
- <input
- type="email"
- disabled
- value={personalForm.email}
- className="w-full min-h-[52px] px-4 rounded-xl border max-md:bg-white/5 max-md:border-white/10 max-md:text-white/80 md:bg-slate-100 md:border-slate-200 md:text-slate-600 text-base font-medium cursor-not-allowed shadow-xs"
- />
- </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+                  {/* Email (Readonly) */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Email Address (Registered)
+                    </label>
+                    <input
+                      type="email"
+                      disabled
+                      value={personalForm.email}
+                      className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-100 text-slate-600 text-sm font-medium cursor-not-allowed shadow-xs"
+                    />
+                  </div>
 
- {/* Phone Number */}
- <div>
- <label className="block text-xs font-medium max-md:text-emerald-200 md:text-slate-700 mb-1.5">
- Phone Number *
- </label>
- <div
- className={`relative flex items-center min-h-[52px] rounded-xl border overflow-hidden transition-all shadow-xs ${
- personalErrors.phone
- ? 'border-rose-500 focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-500/20'
- : 'max-md:bg-white/10 max-md:border-white/20 max-md:focus-within:border-white/60 max-md:focus-within:ring-2 max-md:focus-within:ring-white/20 md:bg-[#f7f4ee] md:border-slate-300 md:focus-within:border-emerald-500 md:focus-within:ring-2 md:focus-within:ring-emerald-500/20'
- }`}
- >
- {/* Left: Country Code Prefix */}
- <span className="pl-3.5 sm:pl-4 pr-2.5 text-xs sm:text-sm font-medium max-md:text-emerald-200 md:text-slate-700 select-none shrink-0 bg-transparent">
- +91
- </span>
+                  {/* Phone Number */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Phone Number *
+                    </label>
+                    <div
+                      className={`relative flex items-center h-11 rounded-xl border overflow-hidden transition-all shadow-xs ${
+                        personalErrors.phone
+                          ? 'border-rose-500 focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-500/20'
+                          : 'bg-white border-slate-300 focus-within:border-slate-900 focus-within:ring-2 focus-within:ring-slate-900/10'
+                      }`}
+                    >
+                      {/* Left: Country Code Prefix */}
+                      <span className="pl-3.5 sm:pl-4 pr-2.5 text-xs sm:text-sm font-semibold text-slate-700 select-none shrink-0 bg-transparent">
+                        +91
+                      </span>
 
- {/* Vertical Divider */}
- <div className={`h-4 sm:h-5 w-px ${personalErrors.phone ? 'bg-rose-400' : 'max-md:bg-white/20 md:bg-slate-300'} shrink-0`} />
+                      {/* Vertical Divider */}
+                      <div className={`h-4 sm:h-5 w-px ${personalErrors.phone ? 'bg-rose-400' : 'bg-slate-300'} shrink-0`} />
 
- {/* Right: Phone Input Field */}
- <input
- type="tel"
- required
- inputMode="numeric"
- pattern="[0-9]*"
- maxLength={10}
- autoComplete="tel-national"
- value={personalForm.phone}
- onChange={(e) => {
- const digits = e.target.value.replace(/\D/g, '');
- let clean = digits;
- if ((clean.length === 12 || clean.length === 11) && clean.startsWith('91')) {
- clean = clean.slice(2);
- } else if (clean.length === 11 && clean.startsWith('0')) {
- clean = clean.slice(1);
- }
- const updated = clean.slice(0, 10);
- setPersonalForm((prev) => ({ ...prev, phone: updated }));
- if (personalErrors.phone) validatePersonalField('phone', updated);
- }}
- onBlur={(e) => validatePersonalField('phone', personalForm.phone)}
- placeholder="Enter 10-digit mobile number"
- className="w-full flex-1 bg-transparent px-3 py-2 text-base font-medium max-md:text-white max-md:placeholder:text-emerald-200/40 md:text-[#1f1b16] md:placeholder:text-slate-400 focus:outline-none rounded-r-xl"
- />
- </div>
- {personalErrors.phone && (
- <p className="text-[11px] sm:text-xs text-rose-400 font-medium mt-1.5 flex items-center gap-1">
- <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
- <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
- </svg>
- <span>{personalErrors.phone}</span>
- </p>
- )}
- </div>
- </div>
+                      {/* Right: Phone Input Field */}
+                      <input
+                        type="tel"
+                        required
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={10}
+                        autoComplete="tel-national"
+                        value={personalForm.phone}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/\D/g, '');
+                          let clean = digits;
+                          if ((clean.length === 12 || clean.length === 11) && clean.startsWith('91')) {
+                            clean = clean.slice(2);
+                          } else if (clean.length === 11 && clean.startsWith('0')) {
+                            clean = clean.slice(1);
+                          }
+                          const updated = clean.slice(0, 10);
+                          setPersonalForm((prev) => ({ ...prev, phone: updated }));
+                          if (personalErrors.phone) validatePersonalField('phone', updated);
+                        }}
+                        onBlur={(e) => validatePersonalField('phone', personalForm.phone)}
+                        placeholder="Enter 10-digit mobile number"
+                        className="w-full flex-1 bg-transparent px-3 py-2 text-sm font-medium text-[#1f1b16] placeholder:text-slate-400 focus:outline-none rounded-r-xl"
+                      />
+                    </div>
+                    {personalErrors.phone && (
+                      <p className="text-[11px] sm:text-xs text-rose-500 font-medium mt-1.5 flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        <span>{personalErrors.phone}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
 
- <div className="pt-2 sm:pt-3">
- <button
- type="submit"
- disabled={!canSaveProfile || loading}
- className={`w-full min-h-[52px] sm:min-h-[54px] rounded-xl sm:rounded-2xl font-semibold text-base tracking-tight transition-all flex items-center justify-center gap-2 ${
- !canSaveProfile || loading
- ? 'max-md:bg-white/10 max-md:text-white/40 md:bg-slate-200 md:text-slate-400 cursor-not-allowed opacity-60'
- : 'max-md:bg-emerald-400 max-md:hover:bg-emerald-300 max-md:text-emerald-950 max-md:shadow-lg max-md:shadow-emerald-950/40 md:bg-[#0f766e] md:hover:bg-emerald-500 md:text-white md:shadow-md md:shadow-emerald-600/20 cursor-pointer active:scale-95'
- }`}
- title={!canSaveProfile ? 'Please fill your 10-digit phone number to enable saving' : 'Save Profile Changes'}
- >
- {loading ? 'Saving Changes...' : 'Save Profile Changes'}
- </button>
- </div>
- </form>
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={!canSaveProfile || loading}
+                    className={`w-full h-11 sm:h-12 rounded-xl sm:rounded-2xl font-semibold text-xs sm:text-sm tracking-tight transition-all flex items-center justify-center gap-2 ${
+                      !canSaveProfile || loading
+                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed opacity-60'
+                        : 'bg-[#111827] hover:bg-black text-white shadow-md shadow-black/10 cursor-pointer active:scale-95'
+                    }`}
+                    title={!canSaveProfile ? 'Please fill your 10-digit phone number to enable saving' : 'Save Profile Changes'}
+                  >
+                    {loading ? 'Saving Changes...' : 'Save Profile Changes'}
+                  </button>
+                </div>
+              </form>
 
- {/* If Host: Property Management CTA Banner */}
- {isHost && (
- <div className="pt-3.5 sm:pt-4 border-t max-md:border-white/15 md:border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 max-md:bg-white/10 max-md:border max-md:border-white/15 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl md:bg-emerald-500/10 md:border md:border-emerald-500/20">
- <h4 className="text-xs sm:text-sm font-medium max-md:text-white md:text-[#1f1b16] tracking-tight">
- Need to update your property details?
- </h4>
- <button
- type="button"
- onClick={() => navigate('/host/upload')}
- className="px-3.5 py-2 rounded-xl max-md:bg-white max-md:hover:bg-emerald-50 max-md:text-emerald-950 md:bg-[#0f766e] md:hover:bg-emerald-500 md:text-white text-xs font-medium tracking-tight transition-all shadow-xs shrink-0 cursor-pointer active:scale-95 w-full sm:w-auto text-center"
- >
- Property Form →
- </button>
- </div>
- )}
- </section>
- </motion.div>
- )}
+              {/* If Host: Property Management CTA Banner */}
+              {isHost && (
+                <div className="pt-3.5 sm:pt-4 border-t border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 bg-white border border-slate-200 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl shadow-2xs">
+                  <h4 className="text-xs sm:text-sm font-semibold text-[#1f1b16] tracking-tight">
+                    Need to update your property details?
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/host/upload')}
+                    className="px-4 py-2.5 rounded-xl bg-[#111827] hover:bg-black text-white text-xs font-semibold tracking-tight transition-all shadow-xs shrink-0 cursor-pointer active:scale-95 w-full sm:w-auto text-center"
+                  >
+                    Property Form →
+                  </button>
+                </div>
+              )}
+            </section>
+          </motion.div>
+        )}
 
- {/* ── TAB 2: PASSWORD (GREEN THEMED CARD ON MOBILE) ── */}
- {activeTab === 'password' && (
- <motion.div
- initial={{ opacity: 0, y: 10 }}
- animate={{ opacity: 1, y: 0 }}
- className="max-md:bg-[#0b291b] max-md:rounded-[32px] sm:max-md:rounded-[36px] max-md:border max-md:border-emerald-400/20 max-md:p-4 sm:max-md:p-6 max-md:shadow-[0_12px_36px_rgba(11,41,27,0.45)] md:bg-white md:rounded-3xl md:border md:border-slate-200 md:p-8 md:shadow-xs space-y-4 sm:space-y-6 transition-all duration-300"
- >
- {/* Desktop Header */}
- <div className="hidden md:block border-b border-slate-100 pb-4">
- <h2 className="text-2xl lg:text-3xl font-manrope font-medium text-[#1f1b16] tracking-tight">
- {user?.hasPassword ? 'Change Password' : 'Set Account Password'}
- </h2>
- </div>
+        {/* ── TAB 2: PASSWORD (CLEAN WHITE THEME) ── */}
+        {activeTab === 'password' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-[28px] sm:rounded-3xl border border-slate-200/90 p-5 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] space-y-4 sm:space-y-6 transition-all duration-300"
+          >
+            {/* Desktop Header */}
+            <div className="hidden md:block border-b border-slate-100 pb-4">
+              <h2 className="text-2xl lg:text-3xl font-manrope font-bold text-[#1f1b16] tracking-tight">
+                {user?.hasPassword ? 'Change Password' : 'Set Account Password'}
+              </h2>
+            </div>
 
- {/* Mobile Centered Title (Matches Pic 1 style) */}
- <div className="md:hidden flex flex-col items-center justify-center pt-1 mb-5 sm:mb-6 w-full text-center">
- <h2 className="text-xl sm:text-2xl font-medium font-medium text-white tracking-normal text-center">
- {user?.hasPassword ? 'Change Password' : 'Set Account Password'}
- </h2>
- </div>
+            {/* Mobile Centered Title */}
+            <div className="md:hidden flex flex-col items-center justify-center pt-1 mb-5 sm:mb-6 w-full text-center">
+              <h2 className="text-xl sm:text-2xl font-bold text-[#1f1b16] tracking-tight text-center">
+                {user?.hasPassword ? 'Change Password' : 'Set Account Password'}
+              </h2>
+            </div>
 
- {/* Inner Section Card Covering Password Fields (Matches Pic 1 style) */}
- <section className="rounded-2xl sm:rounded-3xl border shadow-lg transition-colors max-md:bg-[#14422b] max-md:border-emerald-300/20 max-md:p-4 sm:max-md:p-5 max-md:shadow-black/20 md:bg-transparent md:border-none md:p-0 md:shadow-none space-y-4 relative overflow-hidden">
- {/* If user does not have a password yet (Signed in with Google) */}
- {!user?.hasPassword ? (
- <div className="space-y-4">
- <div className="p-3.5 rounded-xl max-md:bg-white/10 max-md:border max-md:border-white/15 md:bg-[#f7f4ee] md:border md:border-slate-200 flex items-center justify-between gap-3">
- <div className="flex items-center gap-3">
- <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0 shadow-xs">
- <svg className="w-5 h-5" viewBox="0 0 24 24">
- <path
- fill="#4285F4"
- d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
- />
- <path
- fill="#34A853"
- d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
- />
- <path
- fill="#FBBC05"
- d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
- />
- <path
- fill="#EA4335"
- d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
- />
- </svg>
- </div>
- <div>
- <h3 className="text-sm font-medium max-md:text-white md:text-[#1f1b16]">
- Google Linked Account
- </h3>
- <p className="text-xs max-md:text-emerald-200/80 md:text-slate-500">
- {user?.email}
- </p>
- </div>
- </div>
- </div>
+            {/* Inner Section Card Covering Password Fields */}
+            <section className="rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-slate-50/70 p-4 sm:p-6 shadow-xs space-y-4 relative overflow-hidden">
+              {/* If user does not have a password yet (Signed in with Google) */}
+              {!user?.hasPassword ? (
+                <div className="space-y-4">
+                  <div className="p-3.5 rounded-xl bg-white border border-slate-200 flex items-center justify-between gap-3 shadow-2xs">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0 shadow-xs">
+                        <svg className="w-5 h-5" viewBox="0 0 24 24">
+                          <path
+                            fill="#4285F4"
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                          />
+                          <path
+                            fill="#34A853"
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                          />
+                          <path
+                            fill="#FBBC05"
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                          />
+                          <path
+                            fill="#EA4335"
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-semibold text-[#1f1b16]">
+                          Google Linked Account
+                        </h3>
+                        <p className="text-xs text-slate-500">
+                          {user?.email}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
 
- <form onSubmit={handleSavePassword} className="space-y-3.5">
- {/* New Password */}
- <div>
- <label className="block text-xs font-medium max-md:text-emerald-200 md:text-slate-700 mb-1.5">
- Create Password *
- </label>
- <div className="relative">
- <input
- type={showNewPass ? 'text' : 'password'}
- required
- minLength={6}
- value={passwordForm.newPassword}
- onChange={(e) => {
- const val = e.target.value;
- setPasswordForm((prev) => ({ ...prev, newPassword: val }));
- if (passwordErrors.newPassword) validatePasswordField('newPassword', val);
- }}
- onBlur={(e) => validatePasswordField('newPassword', e.target.value)}
- placeholder="Minimum 6 characters"
- className={`w-full h-11 pl-4 pr-12 rounded-xl border text-sm font-medium focus:outline-none transition-all shadow-xs ${
- passwordErrors.newPassword
- ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
- : 'max-md:bg-white/10 max-md:border-white/20 max-md:text-white max-md:placeholder:text-emerald-200/40 max-md:focus:border-white/60 max-md:focus:ring-2 max-md:focus:ring-white/20 md:bg-[#f7f4ee] md:border-slate-300 md:text-[#1f1b16] md:focus:border-emerald-500 md:focus:ring-2 md:focus:ring-emerald-500/20'
- }`}
- />
- <button
- type="button"
- onClick={() => setShowNewPass(!showNewPass)}
- className="absolute right-3.5 top-1/2 -translate-y-1/2 max-md:text-emerald-200 hover:max-md:text-white md:text-slate-400 hover:md:text-slate-600 text-xs font-medium cursor-pointer"
- >
- {showNewPass ? 'Hide' : 'Show'}
- </button>
- </div>
- {passwordErrors.newPassword && (
- <p className="text-[11px] sm:text-xs text-rose-400 font-medium mt-1.5 flex items-center gap-1">
- <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
- <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
- </svg>
- <span>{passwordErrors.newPassword}</span>
- </p>
- )}
- </div>
+                  <form onSubmit={handleSavePassword} className="space-y-3.5">
+                    {/* New Password */}
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                        Create Password *
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showNewPass ? 'text' : 'password'}
+                          required
+                          minLength={6}
+                          value={passwordForm.newPassword}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setPasswordForm((prev) => ({ ...prev, newPassword: val }));
+                            if (passwordErrors.newPassword) validatePasswordField('newPassword', val);
+                          }}
+                          onBlur={(e) => validatePasswordField('newPassword', e.target.value)}
+                          placeholder="Minimum 6 characters"
+                          className={`w-full h-11 pl-4 pr-12 rounded-xl border text-sm font-medium focus:outline-none transition-all shadow-xs ${
+                            passwordErrors.newPassword
+                              ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                              : 'bg-white border-slate-300 text-[#1f1b16] placeholder:text-slate-400 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10'
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPass(!showNewPass)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 text-xs font-medium cursor-pointer"
+                        >
+                          {showNewPass ? 'Hide' : 'Show'}
+                        </button>
+                      </div>
+                      {passwordErrors.newPassword && (
+                        <p className="text-[11px] sm:text-xs text-rose-500 font-medium mt-1.5 flex items-center gap-1">
+                          <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          <span>{passwordErrors.newPassword}</span>
+                        </p>
+                      )}
+                    </div>
 
- {/* Confirm Password */}
- <div>
- <label className="block text-xs font-medium max-md:text-emerald-200 md:text-slate-700 mb-1.5">
- Confirm Password *
- </label>
- <div className="relative">
- <input
- type={showConfirmPass ? 'text' : 'password'}
- required
- minLength={6}
- value={passwordForm.confirmPassword}
- onChange={(e) => {
- const val = e.target.value;
- setPasswordForm((prev) => ({ ...prev, confirmPassword: val }));
- if (passwordErrors.confirmPassword) validatePasswordField('confirmPassword', val);
- }}
- onBlur={(e) => validatePasswordField('confirmPassword', e.target.value)}
- placeholder="Re-enter your password"
- className={`w-full h-11 pl-4 pr-12 rounded-xl border text-sm font-medium focus:outline-none transition-all shadow-xs ${
- passwordErrors.confirmPassword
- ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
- : 'max-md:bg-white/10 max-md:border-white/20 max-md:text-white max-md:placeholder:text-emerald-200/40 max-md:focus:border-white/60 max-md:focus:ring-2 max-md:focus:ring-white/20 md:bg-[#f7f4ee] md:border-slate-300 md:text-[#1f1b16] md:focus:border-emerald-500 md:focus:ring-2 md:focus:ring-emerald-500/20'
- }`}
- />
- <button
- type="button"
- onClick={() => setShowConfirmPass(!showConfirmPass)}
- className="absolute right-3.5 top-1/2 -translate-y-1/2 max-md:text-emerald-200 hover:max-md:text-white md:text-slate-400 hover:md:text-slate-600 text-xs font-medium cursor-pointer"
- >
- {showConfirmPass ? 'Hide' : 'Show'}
- </button>
- </div>
- {passwordErrors.confirmPassword && (
- <p className="text-[11px] sm:text-xs text-rose-400 font-medium mt-1.5 flex items-center gap-1">
- <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
- <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
- </svg>
- <span>{passwordErrors.confirmPassword}</span>
- </p>
- )}
- </div>
+                    {/* Confirm Password */}
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                        Confirm Password *
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showConfirmPass ? 'text' : 'password'}
+                          required
+                          minLength={6}
+                          value={passwordForm.confirmPassword}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setPasswordForm((prev) => ({ ...prev, confirmPassword: val }));
+                            if (passwordErrors.confirmPassword) validatePasswordField('confirmPassword', val);
+                          }}
+                          onBlur={(e) => validatePasswordField('confirmPassword', e.target.value)}
+                          placeholder="Re-enter your password"
+                          className={`w-full h-11 pl-4 pr-12 rounded-xl border text-sm font-medium focus:outline-none transition-all shadow-xs ${
+                            passwordErrors.confirmPassword
+                              ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                              : 'bg-white border-slate-300 text-[#1f1b16] placeholder:text-slate-400 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10'
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPass(!showConfirmPass)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 text-xs font-medium cursor-pointer"
+                        >
+                          {showConfirmPass ? 'Hide' : 'Show'}
+                        </button>
+                      </div>
+                      {passwordErrors.confirmPassword && (
+                        <p className="text-[11px] sm:text-xs text-rose-500 font-medium mt-1.5 flex items-center gap-1">
+                          <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          <span>{passwordErrors.confirmPassword}</span>
+                        </p>
+                      )}
+                    </div>
 
- <div className="pt-2">
- <button
- type="submit"
- disabled={loading}
- className="w-full h-11 sm:h-12 rounded-xl sm:rounded-2xl max-md:bg-emerald-400 max-md:hover:bg-emerald-300 max-md:text-emerald-950 max-md:shadow-lg max-md:shadow-emerald-950/40 md:bg-[#0f766e] md:hover:bg-emerald-500 md:text-white font-medium text-xs sm:text-sm tracking-tight md:shadow-md md:shadow-emerald-600/20 transition-all cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
- >
- {loading ? 'Setting Password...' : 'Set Password'}
- </button>
- </div>
- </form>
- </div>
- ) : (
- <form onSubmit={handleSavePassword} className="space-y-3.5">
- {(user?.authProvider === 'google' || user?.googleId) && (
- <div className="flex items-center gap-2.5 p-3 rounded-xl max-md:bg-white/10 max-md:border max-md:border-white/15 max-md:text-emerald-100 md:bg-[#f7f4ee] md:border md:border-slate-200 text-xs md:text-slate-600">
- <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
- <path
- fill="#4285F4"
- d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
- />
- <path
- fill="#34A853"
- d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
- />
- <path
- fill="#FBBC05"
- d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
- />
- <path
- fill="#EA4335"
- d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
- />
- </svg>
- <span>
- Google account linked (<strong className="font-semibold max-md:text-white md:text-slate-800">{user?.email}</strong>)
- </span>
- </div>
- )}
+                    <div className="pt-2">
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full h-11 sm:h-12 rounded-xl sm:rounded-2xl bg-[#111827] hover:bg-black text-white font-semibold text-xs sm:text-sm tracking-tight shadow-md shadow-black/10 transition-all cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        {loading ? 'Setting Password...' : 'Set Password'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              ) : (
+                <form onSubmit={handleSavePassword} className="space-y-3.5">
+                  {(user?.authProvider === 'google' || user?.googleId) && (
+                    <div className="flex items-center gap-2.5 p-3 rounded-xl bg-white border border-slate-200 text-xs text-slate-600 shadow-2xs">
+                      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                        <path
+                          fill="#4285F4"
+                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                        />
+                        <path
+                          fill="#34A853"
+                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                        />
+                        <path
+                          fill="#FBBC05"
+                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                        />
+                        <path
+                          fill="#EA4335"
+                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                        />
+                      </svg>
+                      <span>
+                        Google account linked (<strong className="font-semibold text-slate-800">{user?.email}</strong>)
+                      </span>
+                    </div>
+                  )}
 
- {/* Old Password */}
- <div>
- <label className="block text-xs font-medium max-md:text-emerald-200 md:text-slate-700 mb-1.5">
- Current Password *
- </label>
- <div className="relative">
- <input
- type={showOldPass ? 'text' : 'password'}
- required
- value={passwordForm.oldPassword}
- onChange={(e) => {
- const val = e.target.value;
- setPasswordForm((prev) => ({ ...prev, oldPassword: val }));
- if (passwordErrors.oldPassword) validatePasswordField('oldPassword', val);
- }}
- onBlur={(e) => validatePasswordField('oldPassword', e.target.value)}
- placeholder="Enter your current password"
- className={`w-full h-11 pl-4 pr-12 rounded-xl border text-sm font-medium focus:outline-none transition-all shadow-xs ${
- passwordErrors.oldPassword
- ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
- : 'max-md:bg-white/10 max-md:border-white/20 max-md:text-white max-md:placeholder:text-emerald-200/40 max-md:focus:border-white/60 max-md:focus:ring-2 max-md:focus:ring-white/20 md:bg-[#f7f4ee] md:border-slate-300 md:text-[#1f1b16] md:focus:border-emerald-500 md:focus:ring-2 md:focus:ring-emerald-500/20'
- }`}
- />
- <button
- type="button"
- onClick={() => setShowOldPass(!showOldPass)}
- className="absolute right-3.5 top-1/2 -translate-y-1/2 max-md:text-emerald-200 hover:max-md:text-white md:text-slate-400 hover:md:text-slate-600 text-xs font-medium cursor-pointer"
- >
- {showOldPass ? 'Hide' : 'Show'}
- </button>
- </div>
- {passwordErrors.oldPassword && (
- <p className="text-[11px] sm:text-xs text-rose-400 font-medium mt-1.5 flex items-center gap-1">
- <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
- <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
- </svg>
- <span>{passwordErrors.oldPassword}</span>
- </p>
- )}
- </div>
+                  {/* Old Password */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Current Password *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showOldPass ? 'text' : 'password'}
+                        required
+                        value={passwordForm.oldPassword}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setPasswordForm((prev) => ({ ...prev, oldPassword: val }));
+                          if (passwordErrors.oldPassword) validatePasswordField('oldPassword', val);
+                        }}
+                        onBlur={(e) => validatePasswordField('oldPassword', e.target.value)}
+                        placeholder="Enter your current password"
+                        className={`w-full h-11 pl-4 pr-12 rounded-xl border text-sm font-medium focus:outline-none transition-all shadow-xs ${
+                          passwordErrors.oldPassword
+                            ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                            : 'bg-white border-slate-300 text-[#1f1b16] placeholder:text-slate-400 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10'
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowOldPass(!showOldPass)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 text-xs font-medium cursor-pointer"
+                      >
+                        {showOldPass ? 'Hide' : 'Show'}
+                      </button>
+                    </div>
+                    {passwordErrors.oldPassword && (
+                      <p className="text-[11px] sm:text-xs text-rose-500 font-medium mt-1.5 flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        <span>{passwordErrors.oldPassword}</span>
+                      </p>
+                    )}
+                  </div>
 
- {/* New Password */}
- <div>
- <label className="block text-xs font-medium max-md:text-emerald-200 md:text-slate-700 mb-1.5">
- New Password *
- </label>
- <div className="relative">
- <input
- type={showNewPass ? 'text' : 'password'}
- required
- minLength={6}
- value={passwordForm.newPassword}
- onChange={(e) => {
- const val = e.target.value;
- setPasswordForm((prev) => ({ ...prev, newPassword: val }));
- if (passwordErrors.newPassword) validatePasswordField('newPassword', val);
- }}
- onBlur={(e) => validatePasswordField('newPassword', e.target.value)}
- placeholder="Minimum 6 characters"
- className={`w-full h-11 pl-4 pr-12 rounded-xl border text-sm font-medium focus:outline-none transition-all shadow-xs ${
- passwordErrors.newPassword
- ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
- : 'max-md:bg-white/10 max-md:border-white/20 max-md:text-white max-md:placeholder:text-emerald-200/40 max-md:focus:border-white/60 max-md:focus:ring-2 max-md:focus:ring-white/20 md:bg-[#f7f4ee] md:border-slate-300 md:text-[#1f1b16] md:focus:border-emerald-500 md:focus:ring-2 md:focus:ring-emerald-500/20'
- }`}
- />
- <button
- type="button"
- onClick={() => setShowNewPass(!showNewPass)}
- className="absolute right-3.5 top-1/2 -translate-y-1/2 max-md:text-emerald-200 hover:max-md:text-white md:text-slate-400 hover:md:text-slate-600 text-xs font-medium cursor-pointer"
- >
- {showNewPass ? 'Hide' : 'Show'}
- </button>
- </div>
- {passwordErrors.newPassword && (
- <p className="text-[11px] sm:text-xs text-rose-400 font-medium mt-1.5 flex items-center gap-1">
- <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
- <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
- </svg>
- <span>{passwordErrors.newPassword}</span>
- </p>
- )}
- </div>
+                  {/* New Password */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      New Password *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showNewPass ? 'text' : 'password'}
+                        required
+                        minLength={6}
+                        value={passwordForm.newPassword}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setPasswordForm((prev) => ({ ...prev, newPassword: val }));
+                          if (passwordErrors.newPassword) validatePasswordField('newPassword', val);
+                        }}
+                        onBlur={(e) => validatePasswordField('newPassword', e.target.value)}
+                        placeholder="Minimum 6 characters"
+                        className={`w-full h-11 pl-4 pr-12 rounded-xl border text-sm font-medium focus:outline-none transition-all shadow-xs ${
+                          passwordErrors.newPassword
+                            ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                            : 'bg-white border-slate-300 text-[#1f1b16] placeholder:text-slate-400 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10'
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPass(!showNewPass)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 text-xs font-medium cursor-pointer"
+                      >
+                        {showNewPass ? 'Hide' : 'Show'}
+                      </button>
+                    </div>
+                    {passwordErrors.newPassword && (
+                      <p className="text-[11px] sm:text-xs text-rose-500 font-medium mt-1.5 flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        <span>{passwordErrors.newPassword}</span>
+                      </p>
+                    )}
+                  </div>
 
- {/* Confirm Password */}
- <div>
- <label className="block text-xs font-medium max-md:text-emerald-200 md:text-slate-700 mb-1.5">
- Confirm New Password *
- </label>
- <div className="relative">
- <input
- type={showConfirmPass ? 'text' : 'password'}
- required
- minLength={6}
- value={passwordForm.confirmPassword}
- onChange={(e) => {
- const val = e.target.value;
- setPasswordForm((prev) => ({ ...prev, confirmPassword: val }));
- if (passwordErrors.confirmPassword) validatePasswordField('confirmPassword', val);
- }}
- onBlur={(e) => validatePasswordField('confirmPassword', e.target.value)}
- placeholder="Re-enter your new password"
- className={`w-full h-11 pl-4 pr-12 rounded-xl border text-sm font-medium focus:outline-none transition-all shadow-xs ${
- passwordErrors.confirmPassword
- ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
- : 'max-md:bg-white/10 max-md:border-white/20 max-md:text-white max-md:placeholder:text-emerald-200/40 max-md:focus:border-white/60 max-md:focus:ring-2 max-md:focus:ring-white/20 md:bg-[#f7f4ee] md:border-slate-300 md:text-[#1f1b16] md:focus:border-emerald-500 md:focus:ring-2 md:focus:ring-emerald-500/20'
- }`}
- />
- <button
- type="button"
- onClick={() => setShowConfirmPass(!showConfirmPass)}
- className="absolute right-3.5 top-1/2 -translate-y-1/2 max-md:text-emerald-200 hover:max-md:text-white md:text-slate-400 hover:md:text-slate-600 text-xs font-medium cursor-pointer"
- >
- {showConfirmPass ? 'Hide' : 'Show'}
- </button>
- </div>
- {passwordErrors.confirmPassword && (
- <p className="text-[11px] sm:text-xs text-rose-400 font-medium mt-1.5 flex items-center gap-1">
- <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
- <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
- </svg>
- <span>{passwordErrors.confirmPassword}</span>
- </p>
- )}
- </div>
+                  {/* Confirm Password */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Confirm New Password *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showConfirmPass ? 'text' : 'password'}
+                        required
+                        minLength={6}
+                        value={passwordForm.confirmPassword}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setPasswordForm((prev) => ({ ...prev, confirmPassword: val }));
+                          if (passwordErrors.confirmPassword) validatePasswordField('confirmPassword', val);
+                        }}
+                        onBlur={(e) => validatePasswordField('confirmPassword', e.target.value)}
+                        placeholder="Re-enter your new password"
+                        className={`w-full h-11 pl-4 pr-12 rounded-xl border text-sm font-medium focus:outline-none transition-all shadow-xs ${
+                          passwordErrors.confirmPassword
+                            ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                            : 'bg-white border-slate-300 text-[#1f1b16] placeholder:text-slate-400 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10'
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPass(!showConfirmPass)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 text-xs font-medium cursor-pointer"
+                      >
+                        {showConfirmPass ? 'Hide' : 'Show'}
+                      </button>
+                    </div>
+                    {passwordErrors.confirmPassword && (
+                      <p className="text-[11px] sm:text-xs text-rose-500 font-medium mt-1.5 flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        <span>{passwordErrors.confirmPassword}</span>
+                      </p>
+                    )}
+                  </div>
 
- <div className="pt-2">
- <button
- type="submit"
- disabled={loading}
- className="w-full h-11 sm:h-12 rounded-xl sm:rounded-2xl max-md:bg-emerald-400 max-md:hover:bg-emerald-300 max-md:text-emerald-950 max-md:shadow-lg max-md:shadow-emerald-950/40 md:bg-[#0f766e] md:hover:bg-emerald-500 md:text-white font-medium text-xs sm:text-sm tracking-tight md:shadow-md md:shadow-emerald-600/20 transition-all cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
- >
- {loading ? 'Updating Password...' : 'Change Password'}
- </button>
- </div>
- </form>
- )}
- </section>
- </motion.div>
- )}
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full h-11 sm:h-12 rounded-xl sm:rounded-2xl bg-[#111827] hover:bg-black text-white font-semibold text-xs sm:text-sm tracking-tight shadow-md shadow-black/10 transition-all cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {loading ? 'Updating Password...' : 'Change Password'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </section>
+          </motion.div>
+        )}
 
- {/* ── TAB 3: DELETE ACCOUNT (CRIMSON RED THEMED CARD ON MOBILE) ── */}
- {activeTab === 'delete' && (
- <motion.div
- initial={{ opacity: 0, y: 10 }}
- animate={{ opacity: 1, y: 0 }}
- className="max-md:bg-[#310c0c] max-md:rounded-[32px] sm:max-md:rounded-[36px] max-md:border max-md:border-rose-400/25 max-md:p-4 sm:max-md:p-6 max-md:shadow-[0_12px_36px_rgba(49,12,12,0.5)] md:bg-white md:rounded-3xl md:border md:border-rose-500/30 md:p-8 md:shadow-xs space-y-4 sm:space-y-6 transition-all duration-300"
- >
- {/* Desktop Header */}
- <div className="hidden md:block border-b border-slate-100 pb-4">
- <h2 className="text-2xl lg:text-3xl font-manrope font-medium text-rose-600 flex items-center gap-2 tracking-tight">
- <span></span>
- <span>Delete Account Permanently</span>
- </h2>
- </div>
+        {/* ── TAB 3: DELETE ACCOUNT (CLEAN WHITE THEME WITH ROSE ACCENT) ── */}
+        {activeTab === 'delete' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-[28px] sm:rounded-3xl border border-rose-200/90 p-5 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] space-y-4 sm:space-y-6 transition-all duration-300"
+          >
+            {/* Desktop Header */}
+            <div className="hidden md:block border-b border-slate-100 pb-4">
+              <h2 className="text-2xl lg:text-3xl font-manrope font-bold text-rose-600 flex items-center gap-2 tracking-tight">
+                <span>Delete Account Permanently</span>
+              </h2>
+            </div>
 
- {/* Mobile Centered Title (Matches Pic 1 style) */}
- <div className="md:hidden flex flex-col items-center justify-center pt-1 mb-5 sm:mb-6 w-full text-center">
- <h2 className="text-xl sm:text-2xl font-medium font-medium text-white tracking-normal text-center flex items-center justify-center gap-2">
- <span></span>
- <span>Delete Account Permanently</span>
- </h2>
- </div>
+            {/* Mobile Centered Title */}
+            <div className="md:hidden flex flex-col items-center justify-center pt-1 mb-5 sm:mb-6 w-full text-center">
+              <h2 className="text-xl sm:text-2xl font-bold text-rose-600 tracking-tight text-center flex items-center justify-center gap-2">
+                <span>Delete Account Permanently</span>
+              </h2>
+            </div>
 
- {/* Inner Section Card Covering Consequences Box (Matches Pic 1 style) */}
- <section className="rounded-2xl sm:rounded-3xl border shadow-lg transition-colors max-md:bg-[#481212] max-md:border-rose-300/20 max-md:p-4 sm:max-md:p-5 max-md:shadow-black/20 md:bg-transparent md:border-none md:p-0 md:shadow-none space-y-4 relative overflow-hidden">
- <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl max-md:bg-white/10 max-md:border max-md:border-white/15 max-md:text-rose-100 md:bg-rose-500/10 md:border md:border-rose-500/20 md:text-rose-800 text-xs sm:text-[13px] font-medium space-y-2 leading-relaxed">
- <p className="font-medium tracking-tight max-md:text-white md:text-rose-900">Please note the following consequences:</p>
- <ul className="list-disc pl-4 space-y-1 max-md:text-rose-200 md:text-rose-800">
- <li>Your profile and login access will be immediately terminated.</li>
- <li>{isHost ? 'Your listed property and host record will be permanently deleted.' : 'Your active bookings and wishlist history will be removed.'}</li>
- <li>This action is irreversible and cannot be undone.</li>
- </ul>
- </div>
+            {/* Inner Section Card Covering Consequences Box */}
+            <section className="rounded-2xl sm:rounded-3xl border border-rose-200/60 bg-rose-50/30 p-4 sm:p-6 space-y-4 relative overflow-hidden">
+              <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-white border border-rose-200/80 text-rose-900 text-xs sm:text-[13px] font-medium space-y-2 leading-relaxed shadow-2xs">
+                <p className="font-semibold tracking-tight text-rose-950">Please note the following consequences:</p>
+                <ul className="list-disc pl-4 space-y-1 text-rose-800">
+                  <li>Your profile and login access will be immediately terminated.</li>
+                  <li>{isHost ? 'Your listed property and host record will be permanently deleted.' : 'Your active bookings and wishlist history will be removed.'}</li>
+                  <li>This action is irreversible and cannot be undone.</li>
+                </ul>
+              </div>
 
- <div className="pt-2">
- <button
- type="button"
- onClick={() => setShowDeleteModal(true)}
- className="w-full min-h-[52px] sm:min-h-[54px] rounded-xl sm:rounded-2xl max-md:bg-rose-500 max-md:hover:bg-rose-400 max-md:text-white max-md:shadow-lg max-md:shadow-rose-950/40 md:bg-rose-600 md:hover:bg-rose-700 md:text-white font-medium text-xs sm:text-sm tracking-tight md:shadow-md md:shadow-rose-600/20 transition-all cursor-pointer active:scale-95"
- >
- Permanently Delete My Account
- </button>
- </div>
- </section>
- </motion.div>
- )}
- </main>
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(true)}
+                  className="w-full min-h-[52px] sm:min-h-[54px] rounded-xl sm:rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs sm:text-sm tracking-tight shadow-md shadow-rose-600/20 transition-all cursor-pointer active:scale-95"
+                >
+                  Permanently Delete My Account
+                </button>
+              </div>
+            </section>
+          </motion.div>
+        )}
+      </main>
 
  {/* Confirmation Modal for Delete */}
  <AnimatePresence>

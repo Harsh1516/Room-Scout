@@ -497,21 +497,33 @@ export function HostScheduleCalendar({
  return (
  <div
  ref={calendarCardRef}
- className="w-full flex-1 flex flex-col max-xl:rounded-3xl max-xl:border max-xl:border-white/90 xl:rounded-[26px] overflow-hidden transition-all max-xl:bg-white/95 max-xl:backdrop-blur-xl max-xl:shadow-xs xl:bg-[#0284c7] xl:border xl:border-sky-300/30 xl:shadow-[0_12px_40px_rgba(2,132,199,0.35)] select-none relative min-h-0 max-xl:pb-36 sm:max-xl:pb-40 xl:pb-6"
+ className="w-full flex-1 flex flex-col select-none relative min-h-0 bg-transparent border-0 shadow-none pb-20 sm:pb-24"
  >
- {/* Room Detail Banner — Exact match to user side room page */}
-		<div className="px-4 sm:px-5 py-2.5 sm:py-3 border-b max-xl:border-slate-100 max-xl:bg-transparent xl:border-white/15 xl:bg-white/10 relative z-10">
-			<div className="flex items-center justify-center w-full">
-				<div className="inline-flex items-center justify-center px-5 sm:px-6 py-1.5 sm:py-2 rounded-full border max-xl:border-slate-300 max-xl:bg-white max-xl:shadow-2xs xl:bg-white/20 xl:border-white/35 xl:text-white shadow-2xs select-none">
-					<h2 className="text-[17px] sm:text-xl md:text-[22px] font-black tracking-tight leading-none flex items-center gap-1.5">
+ {/* Room Detail Banner & Add Guest Action */}
+		<div className="px-2.5 sm:px-4 py-2 sm:py-2.5 border-b max-xl:border-slate-100 max-xl:bg-transparent xl:border-white/15 xl:bg-white/10 relative z-10 w-full">
+			<div className="flex items-center justify-between w-full gap-2">
+				<div className="inline-flex items-center justify-center py-1 select-none">
+					<h2 className="text-[16px] sm:text-lg md:text-xl font-black tracking-tight leading-none flex items-center gap-1.5">
 						<span className="max-xl:text-black xl:text-white">Room No.</span>
 						<span className="max-xl:text-slate-400 xl:text-sky-100 font-semibold">{cleanRoomNum || 'Room'}</span>
 					</h2>
 				</div>
+
+				{typeof onOpenAddGuestModal === 'function' && (
+					<button
+						type="button"
+						onClick={onOpenAddGuestModal}
+						className="inline-flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#1f1b16] hover:bg-black text-white font-medium text-xs sm:text-[13.5px] shadow-sm border border-white/20 transition-all active:scale-95 cursor-pointer shrink-0"
+						title="Add a new guest to this room"
+					>
+						<span className="material-symbols-outlined text-[17px] sm:text-[18px] text-emerald-400 font-medium">person_add</span>
+						<span className="leading-none tracking-tight">Add Guest</span>
+					</button>
+				)}
 			</div>
 		</div>
 
-		<div className="px-4 sm:px-5 pb-3.5 sm:pb-4 pt-2.5 sm:pt-3 flex flex-col gap-2.5 max-xl:text-[#0b0b0b] font-bold xl:text-white">
+		<div className="px-1.5 sm:px-3 pb-3 sm:pb-3.5 pt-2 sm:pt-2.5 flex flex-col gap-2 max-xl:text-[#0b0b0b] font-bold xl:text-white w-full">
 
 		{/* User Request Display-Only Banner */}
  <AnimatePresence initial={false} mode="sync">
@@ -746,23 +758,11 @@ export function HostScheduleCalendar({
  </span>
  </div>
  )}
- {!hideMonthCardExtras && !isUserRequestSelection && sortedSelected.length > 0 && (
- <div className="flex items-center justify-end pt-0.5">
- <span className={`text-[13.5px] sm:text-[14.5px] font-medium ${
- isMonthly ? 'text-emerald-300' : 'text-emerald-300'
- }`}>
- {isMonthly
- ? `${sortedSelected.length} Month(s) Selected`
- : `${sortedSelected.length} Night(s) Selected`}
- </span>
- </div>
- )}
-
  {/* Schedule Matrix */}
  {isMonthly ? (
  <div className="space-y-4">
- <div className="p-2.5 sm:p-3.5 rounded-2xl sm:rounded-3xl max-xl:bg-slate-100/70 max-xl:border max-xl:border-slate-200/80 max-xl:shadow-inner xl:bg-sky-950/30 xl:border xl:border-white/15 xl:shadow-inner ">
- <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+ <div className="w-full bg-transparent border-0 shadow-none p-0">
+							<div className="grid grid-cols-4 gap-1.5 sm:gap-2">
  {(() => {
  const roomCapacity = Math.max(
  1,
@@ -840,7 +840,7 @@ export function HostScheduleCalendar({
  handleToggleSlotMonth(m.index);
  }
  }}
- className={`relative aspect-square p-1.5 sm:p-2.5 rounded-2xl sm:rounded-3xl border select-none transition-all flex flex-col justify-between items-center text-center outline-none ${
+ className={`relative aspect-square p-1 sm:p-1.5 sm:p-2 rounded-xl sm:rounded-2xl border select-none transition-all flex flex-col justify-between items-center text-center outline-none ${
  isSelectedBookedMonth
  ? isSelectedMonthOnline
  ? 'animate-slot-flash border-2 font-medium shadow-md cursor-pointer'
@@ -874,7 +874,7 @@ export function HostScheduleCalendar({
  ? 'Click to view occupants list'
  : undefined
  }
- className={`text-[13px] sm:text-[14px] font-semibold px-2.5 py-0.5 rounded-full tracking-wide truncate max-w-[95%] leading-snug ${
+ className={`text-[11px] sm:text-[12px] font-semibold px-1.5 sm:px-2 py-0.5 rounded-full tracking-tight truncate max-w-[95%] leading-snug ${
  isFullyBooked
  ? 'max-xl:bg-amber-100 max-xl:text-amber-800 max-xl:border max-xl:border-amber-300 xl:bg-amber-400/25 xl:text-amber-100 xl:border xl:border-amber-300/60 font-medium'
  : isLocked
@@ -899,12 +899,12 @@ export function HostScheduleCalendar({
  </span>
 
  <div className="my-auto py-0.5 flex items-baseline justify-center gap-1.5 whitespace-nowrap">
- <span className={`text-2xl sm:text-[26px] font-bold leading-tight tracking-tight ${
+ <span className={`text-base sm:text-lg md:text-xl font-bold leading-tight tracking-tight ${
  isSelected && !isUserRequestSelection
  ? 'text-[#1f1b16]'
  : 'max-xl:text-slate-900 text-white'
  }`}>{m.monthShort}</span>
- <span className={`text-lg sm:text-[21px] font-medium leading-tight ${
+ <span className={`text-xs sm:text-sm font-medium leading-tight ${
  isSelected && !isUserRequestSelection
  ? 'text-slate-600 font-medium'
  : isFullyBooked
@@ -918,7 +918,7 @@ export function HostScheduleCalendar({
  capacity={roomCapacity}
  occupiedCount={occupiedCount}
  className="py-1"
- iconClassName="w-5.5 h-5.5 sm:w-6 sm:h-6 stroke-[1.6]"
+ iconClassName="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[1.6]"
  occupiedColor={
  isSelected && !isUserRequestSelection
  ? 'text-[#1f1b16]'
@@ -976,7 +976,7 @@ export function HostScheduleCalendar({
  </div>
  )}
 
- <div className="flex flex-col rounded-2xl sm:rounded-3xl max-xl:bg-white max-xl:border-slate-200/90 max-xl:text-slate-900 border border-white/15 bg-sky-950/30 shadow-inner p-3.5 sm:p-4 text-white">
+ <div className="flex flex-col w-full bg-transparent border-0 shadow-none p-0 max-xl:text-slate-900 text-white">
  <div className="grid grid-cols-7 text-center text-[11px] sm:text-xs font-semibold max-xl:text-slate-500 text-sky-200 pb-3 pt-0.5 select-none">
  {WEEKDAYS.map((wd) => (
  <span key={wd}>{wd}</span>
@@ -1181,26 +1181,6 @@ export function HostScheduleCalendar({
  </div>
  </motion.div>
  </div>
- </div>
- )}
-
- {/* "Add Guest" Button on the bottom of slot schedule tab */}
- {typeof onOpenAddGuestModal === 'function' && (
- <div className="pt-5 pb-3 w-full flex items-center justify-center">
- <button
- type="button"
- onClick={onOpenAddGuestModal}
- className="w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 sm:py-3 rounded-full bg-[#1f1b16] hover:bg-black text-white font-medium text-sm sm:text-[15px] shadow-xl shadow-black/30 border border-white/20 transition-all active:scale-95 cursor-pointer shrink-0"
- title="Add a new guest to this room"
- >
- <span className="material-symbols-outlined text-[20px] text-emerald-400 font-medium">person_add</span>
- <span className="leading-none tracking-tight">Add Guest</span>
- {sortedSelected.length > 0 && (
- <span className="ml-1 text-[11px] px-2 py-0.5 rounded-full bg-white/20 text-white font-medium">
- {sortedSelected.length} {isMonthly ? 'Month' : 'Night'}{sortedSelected.length > 1 ? 's' : ''}
- </span>
- )}
- </button>
  </div>
  )}
 
