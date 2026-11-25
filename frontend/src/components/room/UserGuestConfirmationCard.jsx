@@ -83,8 +83,16 @@ export function UserGuestConfirmationCard({
     }
   };
 
-  const isNameReadOnly = Boolean(user && user.name && String(user.name).trim().length > 0);
-  const isPhoneReadOnly = Boolean(user && user.phone && String(user.phone).replace(/\D/g, '').length >= 10);
+  const isNameReadOnly = Boolean(
+    user &&
+      user.name &&
+      /^[a-zA-Z\s.'()-]{2,80}$/.test(String(user.name).trim())
+  );
+  const isPhoneReadOnly = Boolean(
+    user &&
+      user.phone &&
+      /^[6-9]\d{9}$/.test(String(user.phone).replace(/\D/g, '').slice(-10))
+  );
 
   const allDays = upcomingDays.length > 0 ? upcomingDays : upcomingWeek;
 
@@ -473,7 +481,7 @@ export function UserGuestConfirmationCard({
               value={displayGuestName}
               onChange={(e) => {
                 if (isNameFieldReadOnly) return;
-                setGuestName(e.target.value.replace(/[^a-zA-Z\s]/g, ''));
+                setGuestName(e.target.value.replace(/[^a-zA-Z\s.'()-]/g, ''));
               }}
               placeholder="Guest full name"
               className={`w-full bg-transparent text-xs sm:text-[13px] font-medium placeholder:font-normal placeholder:text-[11px] sm:placeholder:text-[12px] focus:outline-none text-[#1f1b16] placeholder:text-slate-400 ${
@@ -571,6 +579,8 @@ export function UserGuestConfirmationCard({
           >
             <input
               type="text"
+              inputMode="numeric"
+              pattern="[0-9\s]*"
               readOnly={isPendingBooking}
               maxLength={14}
               value={displayGuestAadhar}

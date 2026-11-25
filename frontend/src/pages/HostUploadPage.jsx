@@ -852,7 +852,6 @@ export function HostUploadPage() {
         price: (r.price || '').trim(),
         rateUnit: r.rateUnit || '/month',
         capacity: Number(r.capacity) || 1,
-        features: Array.isArray(r.features) ? r.features : [],
         photos: Array.isArray(r.photos) ? r.photos : [],
         images: Array.isArray(r.images) ? r.images : [],
       }))

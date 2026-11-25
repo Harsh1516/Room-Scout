@@ -50,30 +50,68 @@ export function PropertyMediaSection({
           )}
 
 
-          {/* Center "View Full" Pill Button (balanced capsule height & width) */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpenLightbox?.(true);
-            }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 inline-flex items-center gap-2 h-[36px] sm:h-[38px] px-4 sm:px-4.5 rounded-full bg-slate-950/80 hover:bg-slate-950 text-white text-xs sm:text-[13px] font-medium tracking-tight shadow-[0_2px_14px_rgba(0,0,0,0.35)] backdrop-blur-md border border-white/25 transition-all duration-200 cursor-pointer active:scale-95 hover:scale-105 select-none"
-          >
-            <svg
-              className="w-3.5 h-3.5 text-white stroke-[2]"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          {/* Center Row: Previous (<), "View Full", and Next (>) Buttons */}
+          <div className="absolute top-1/2 -translate-y-1/2 inset-x-3 sm:inset-x-4 z-20 flex items-center justify-between pointer-events-none">
+            {allImages.length > 1 ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActivePhotoIdx?.((prev) => (prev <= 0 ? allImages.length - 1 : prev - 1));
+                }}
+                aria-label="Previous photo"
+                className="pointer-events-auto w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-950/80 hover:bg-slate-950 text-white shadow-[0_2px_14px_rgba(0,0,0,0.35)] backdrop-blur-md border border-white/25 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-95 hover:scale-105 select-none"
+              >
+                <svg className="w-4 h-4 stroke-[2.4]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+            ) : (
+              <span className="w-9 h-9 sm:w-10 sm:h-10" />
+            )}
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenLightbox?.(true);
+              }}
+              className="pointer-events-auto inline-flex items-center gap-2 h-[36px] sm:h-[38px] px-4 sm:px-4.5 rounded-full bg-slate-950/80 hover:bg-slate-950 text-white text-xs sm:text-[13px] font-medium tracking-tight shadow-[0_2px_14px_rgba(0,0,0,0.35)] backdrop-blur-md border border-white/25 transition-all duration-200 cursor-pointer active:scale-95 hover:scale-105 select-none"
             >
-              <polyline points="15 3 21 3 21 9" />
-              <polyline points="9 21 3 21 3 15" />
-              <line x1="21" y1="3" x2="14" y2="10" />
-              <line x1="3" y1="21" x2="10" y2="14" />
-            </svg>
-            <span>View Full</span>
-          </button>
+              <svg
+                className="w-3.5 h-3.5 text-white stroke-[2]"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="15 3 21 3 21 9" />
+                <polyline points="9 21 3 21 3 15" />
+                <line x1="21" y1="3" x2="14" y2="10" />
+                <line x1="3" y1="21" x2="10" y2="14" />
+              </svg>
+              <span>View Full</span>
+            </button>
+
+            {allImages.length > 1 ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActivePhotoIdx?.((prev) => (prev >= allImages.length - 1 ? 0 : prev + 1));
+                }}
+                aria-label="Next photo"
+                className="pointer-events-auto w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-950/80 hover:bg-slate-950 text-white shadow-[0_2px_14px_rgba(0,0,0,0.35)] backdrop-blur-md border border-white/25 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-95 hover:scale-105 select-none"
+              >
+                <svg className="w-4 h-4 stroke-[2.4]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            ) : (
+              <span className="w-9 h-9 sm:w-10 sm:h-10" />
+            )}
+          </div>
 
           {/* Top-Right Heart Save Button (min 48x48px tap target) */}
           {onToggleSave && (

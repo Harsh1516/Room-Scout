@@ -447,6 +447,35 @@ export function StayCinematicShowcase({
     }
   }, [rawJoinDate]);
 
+  // Host average response time computation (from backend aggregation or stay bookings, with New Host fallback)
+  const formattedResponseTime = useMemo(() => {
+    let ms = currentStay?.hostAvgResponseMs;
+    let count = Number(currentStay?.hostResponseCount || 0);
+
+    if (typeof ms !== 'number' || !Number.isFinite(ms) || count <= 0) {
+      const stayBookings = (currentStay?._id && stayBookingsMap[currentStay._id]) || [];
+      const diffs = stayBookings
+        .filter((b) => b && b.approvedAt && b.createdAt)
+        .map((b) => new Date(b.approvedAt).getTime() - new Date(b.createdAt).getTime())
+        .filter((d) => Number.isFinite(d) && d >= 0 && d <= 7 * 24 * 60 * 60 * 1000);
+      if (diffs.length > 0) {
+        ms = diffs.reduce((sum, d) => sum + d, 0) / diffs.length;
+        count = diffs.length;
+      }
+    }
+
+    if (typeof ms !== 'number' || !Number.isFinite(ms) || ms < 0 || count <= 0) {
+      return { text: 'Response: New Host', isMeasured: false };
+    }
+    if (ms < 60_000) return { text: 'Avg. response: < 1 min', isMeasured: true };
+    const mins = Math.round(ms / 60_000);
+    if (mins < 60) return { text: `Avg. response: ~${mins} ${mins === 1 ? 'min' : 'mins'}`, isMeasured: true };
+    const hrs = Math.round(ms / 3_600_000);
+    if (hrs < 24) return { text: `Avg. response: ~${hrs} ${hrs === 1 ? 'hr' : 'hrs'}`, isMeasured: true };
+    const days = Math.round(ms / 86_400_000);
+    return { text: `Avg. response: ~${days} ${days === 1 ? 'day' : 'days'}`, isMeasured: true };
+  }, [currentStay?._id, currentStay?.hostAvgResponseMs, currentStay?.hostResponseCount, stayBookingsMap]);
+
   // Room configurations for table display (Shows ALL actual room types, respective room counts & % Full)
   const roomConfigurations = useMemo(() => {
     if (!currentStay) return [];
@@ -699,10 +728,10 @@ export function StayCinematicShowcase({
             - Starts right from the bottom border of original photo
             - Contains Hotel Living subtitle at top with comfortable breathing space
         */}
-        <div className="relative w-full bg-[#1c1d27] px-4 sm:px-6 pt-4 sm:pt-5 pb-5 sm:pb-6 flex flex-col gap-2.5 z-20">
+        <div className="relative w-full bg-[#1c1d27] px-4 sm:px-6 pt-0 pb-4 sm:pb-5 flex flex-col gap-1 z-20">
           
-          {/* Subtitle: Hotel Living sitting in the bottom blur portion */}
-          <div className="flex flex-col text-left mb-2 sm:mb-2.5">
+          {/* Subtitle: Hotel Living sitting just below stay name */}
+          <div className="flex flex-col text-left -mt-2.5 sm:-mt-3 mb-1.5 sm:mb-2">
             <p className="italic text-lg sm:text-xl md:text-2xl font-semibold text-slate-200 tracking-wide drop-shadow-lg">
               {currentStay.tagline || (currentStay.type ? `${currentStay.type} Living` : 'Hotel Living')}
             </p>
@@ -713,19 +742,56 @@ export function StayCinematicShowcase({
             {/* Spacer for left poster top half */}
             <div className="w-48 sm:w-60 md:w-68 shrink-0 pointer-events-none" />
 
-            {/* Right: Line 1 & Line 2 */}
-            <div className="flex-1 min-w-0 flex flex-col gap-2.5">
-              {/* Line 1: Host Name (replaces Hotel / NEW) */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-5 py-2.5 sm:px-6 sm:py-3 rounded-2xl bg-[#2D2F40] text-slate-100 font-black text-base sm:text-xl md:text-2xl shadow-xs border border-white/10 truncate max-w-full">
-                  {hostDisplayName}
+            {/* Right: Minimum Stay Price (no background), Location & Gender */}
+            <div className="flex-1 min-w-0 flex flex-col gap-2.5 pt-4 sm:pt-5">
+              <div className="flex items-baseline gap-1.5 flex-wrap">
+                <span className="text-slate-300 font-bold text-lg sm:text-xl md:text-2xl">
+                  Min :
+                </span>
+                <span className="text-emerald-400 font-black text-4xl sm:text-5xl md:text-6xl tracking-tight leading-none">
+                  ₹{pricing.primaryPrice}
+                </span>
+                <span className="text-slate-300 font-semibold text-lg sm:text-xl md:text-2xl">
+                  {pricing.primaryUnit}
                 </span>
               </div>
 
-              {/* Line 2: Joined Date (background tightly wrapped) */}
+              <div className="flex items-center gap-2 text-base sm:text-xl md:text-2xl font-bold tracking-normal text-slate-200 min-w-0">
+                <svg className="w-4.5 h-4.5 sm:w-5.5 sm:h-5.5 text-sky-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                <span className="truncate">{city.toUpperCase()}, {state.toUpperCase()}</span>
+              </div>
+
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-5 py-2.5 sm:px-6 sm:py-3 rounded-2xl bg-[#2D2F40] text-slate-200 font-black text-base sm:text-xl md:text-2xl shadow-xs border border-white/10 truncate max-w-full">
-                  {formattedJoinedDate}
+                <span className="inline-flex items-center gap-2 text-slate-100 font-bold text-base sm:text-lg md:text-xl tracking-tight select-none">
+                  {genderLabel === 'Male only' ? (
+                    <svg className="w-4.5 h-4.5 sm:w-5.5 sm:h-5.5 text-sky-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="10" cy="14" r="5" />
+                      <line x1="19" y1="5" x2="13.6" y2="10.4" />
+                      <polyline points="15 5 19 5 19 9" />
+                    </svg>
+                  ) : genderLabel === 'Female only' ? (
+                    <svg className="w-4.5 h-4.5 sm:w-5.5 sm:h-5.5 text-pink-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="9" r="5" />
+                      <line x1="12" y1="14" x2="12" y2="21" />
+                      <line x1="9" y1="18" x2="15" y2="18" />
+                    </svg>
+                  ) : genderLabel === 'Family' ? (
+                    <svg className="w-4.5 h-4.5 sm:w-5.5 sm:h-5.5 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                      <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4.5 h-4.5 sm:w-5.5 sm:h-5.5 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                  )}
+                  <span>{genderLabel}</span>
                 </span>
               </div>
             </div>
@@ -785,22 +851,41 @@ export function StayCinematicShowcase({
             - pt-5 sm:pt-6 provides EXACT same gap from the border as Joined Date (pb-5 sm:pb-6)
             - items-start ensures location starts immediately with exact symmetric gap
         */}
-        <div className="relative flex items-start gap-4 sm:gap-6 pt-5 sm:pt-6 pb-10 sm:pb-12 z-20">
+        <div className="relative flex items-start gap-4 sm:gap-6 pt-5 sm:pt-6 pb-16 sm:pb-20 z-20">
           {/* Spacer for left poster bottom half */}
           <div className="w-48 sm:w-60 md:w-68 shrink-0 pointer-events-none" />
 
-          {/* Right: Line 3 & Line 4 */}
+          {/* Right: Host Name, Joined Date & Avg Response Pills */}
           <div className="flex-1 min-w-0 flex flex-col gap-2.5">
-            {/* Line 3: Breadcrumb Category (Slate text on white) */}
-            <div className="text-base sm:text-xl md:text-2xl font-bold tracking-normal text-slate-700 truncate capitalize">
-              <span>{city.toUpperCase()}, {state.toUpperCase()}</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center px-4 py-1.5 sm:px-5 sm:py-2 rounded-full bg-slate-100 text-slate-800 font-bold text-base sm:text-lg md:text-xl border border-slate-300/90 truncate max-w-full">
+                {hostDisplayName}
+              </span>
+              <span className="inline-flex items-center px-4 py-1.5 sm:px-5 sm:py-2 rounded-full bg-slate-100 text-slate-700 font-bold text-base sm:text-lg md:text-xl border border-slate-300/90 truncate max-w-full">
+                {formattedJoinedDate}
+              </span>
             </div>
-
-            {/* Line 4: Gender Badge below location */}
-            <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
-              <span className="inline-flex items-center gap-2 px-4.5 py-1.5 sm:px-5 sm:py-2 rounded-full bg-slate-100 hover:bg-slate-200/70 text-slate-800 font-extrabold text-sm sm:text-base md:text-lg shadow-2xs border border-slate-300/90 tracking-tight select-none transition-colors">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
-                <span>{genderLabel}</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span
+                className={`inline-flex items-center gap-1.5 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full font-bold text-base sm:text-lg md:text-xl border truncate max-w-full ${
+                  formattedResponseTime.isMeasured
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200/90'
+                    : 'bg-slate-100 text-slate-700 border-slate-300/90'
+                }`}
+              >
+                <svg
+                  className={`w-4 h-4 shrink-0 ${formattedResponseTime.isMeasured ? 'text-emerald-600' : 'text-slate-500'}`}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                <span className="truncate">{formattedResponseTime.text}</span>
               </span>
             </div>
           </div>
@@ -812,9 +897,10 @@ export function StayCinematicShowcase({
         <button
           type="button"
           onClick={() => onStayClick && onStayClick(currentStay)}
-          className="w-fit mx-auto py-3.5 sm:py-4 px-8 sm:px-10 rounded-full bg-sky-500/80 hover:bg-sky-500 active:bg-sky-600 backdrop-blur-md text-white font-black text-base sm:text-xl md:text-2xl tracking-wide shadow-lg shadow-sky-500/25 border-2 border-sky-300/60 flex items-center justify-center transition-all cursor-pointer active:scale-95 select-none mt-1"
+          className="group relative overflow-hidden w-fit mx-auto py-3.5 sm:py-4 px-8 sm:px-10 rounded-full bg-sky-500/80 hover:bg-sky-500 active:bg-sky-600 backdrop-blur-md text-white font-black text-base sm:text-xl md:text-2xl tracking-wide shadow-lg shadow-sky-500/25 border-2 border-sky-300/60 flex items-center justify-center transition-all cursor-pointer active:scale-95 select-none mt-1"
         >
-          <span>Explore Stay</span>
+          <span aria-hidden="true" className="button-flash-sweep button-flash-sweep-light" />
+          <span className="relative z-10">Explore Stay</span>
         </button>
 
         {/* ── Other Room Configurations (Table Format: Room Type, Price per cycle, % Full) ── */}

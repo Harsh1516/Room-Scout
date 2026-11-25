@@ -28,6 +28,8 @@ export const createBookingSchema = z
     guestGender: z.string().trim().optional(),
     aadharNumber: z.string().trim().optional(),
     guestAadhar: z.string().trim().optional(),
+    aadharPhoto: z.string().trim().optional(),
+    guestAadharPhoto: z.string().trim().optional(),
     roomType: z.string().trim().optional(),
     personCount: z.coerce.number().int().min(1).default(1),
     totalAmount: z.coerce.number().min(0, { message: 'Total amount cannot be negative' }).optional(),
@@ -69,6 +71,33 @@ export const createBookingSchema = z
     {
       message: 'Check-in date cannot be in the past',
       path: ['checkIn'],
+    }
+  )
+  .refine(
+    (data) => {
+      const rawPhone = String(data.phone || data.guestPhone || '').replace(/\D/g, '');
+      if (!rawPhone) return true;
+      const p = rawPhone.length === 12 && rawPhone.startsWith('91') ? rawPhone.slice(2) : rawPhone;
+      if (!/^[6-9]\d{9}$/.test(p)) return false;
+      if (/^(\d)\1{9}$/.test(p) || p === '1234567890' || p === '0123456789') return false;
+      return true;
+    },
+    {
+      message: 'Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9',
+      path: ['phone'],
+    }
+  )
+  .refine(
+    (data) => {
+      const rawAadhar = String(data.aadharNumber || data.guestAadhar || '').replace(/\D/g, '');
+      if (!rawAadhar) return true;
+      if (!/^[2-9]\d{11}$/.test(rawAadhar)) return false;
+      if (/^(\d)\1{11}$/.test(rawAadhar)) return false;
+      return true;
+    },
+    {
+      message: 'Please enter a valid 12-digit Aadhar number (cannot start with 0 or 1)',
+      path: ['aadharNumber'],
     }
   );
 

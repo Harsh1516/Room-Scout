@@ -19,7 +19,6 @@ export function useHostRoomForm({ formData, setFormData, showToast = () => {} })
         price: '',
         rateUnit: '/month',
         capacity: 1,
-        features: [],
         photos: [],
         images: [],
       };

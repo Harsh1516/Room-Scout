@@ -117,27 +117,6 @@ export function PropertyRoomCategoriesCard({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showPicsModal, categoryPics.length]);
 
-  // Extract facilities/features associated with active room category
-  const categoryFacilities = useMemo(() => {
-    if (!activeRateObj) return [];
-    if (Array.isArray(activeRateObj.features) && activeRateObj.features.length > 0) {
-      return activeRateObj.features.filter(Boolean);
-    }
-    if (Array.isArray(activeRateObj.facilities) && activeRateObj.facilities.length > 0) {
-      return activeRateObj.facilities.filter(Boolean);
-    }
-    if (Array.isArray(activeRateObj.amenities) && activeRateObj.amenities.length > 0) {
-      return activeRateObj.amenities.filter(Boolean);
-    }
-    if (Array.isArray(stay?.facilities) && stay.facilities.length > 0) {
-      return stay.facilities.slice(0, 4);
-    }
-    if (Array.isArray(stay?.amenities) && stay.amenities.length > 0) {
-      return stay.amenities.slice(0, 4);
-    }
-    return ['Attached Washroom', 'Wi-Fi', 'Power Backup'];
-  }, [activeRateObj, stay]);
-
   return (
     <>
       <div
@@ -217,48 +196,7 @@ export function PropertyRoomCategoriesCard({
           </button>
         </div>
 
-        {/* 3. Facilities associated with that room category (row-wise series with rectangular background border) */}
-        {categoryFacilities.length > 0 && (
-          <div className="space-y-2 pt-0.5">
-            <div className="flex items-center justify-between text-xs sm:text-sm font-bold tracking-tight text-white/95">
-              <span className="uppercase tracking-wider text-sm sm:text-[15px] text-white font-bold flex items-center gap-1.5">
-                Room Facilities
-              </span>
-              <span className="text-sm sm:text-[15px] text-white/90 font-semibold">
-                {categoryFacilities.length} items
-              </span>
-            </div>
-
-            {/* Row wise series with rectangular background border */}
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl border-2 border-white/30 divide-y divide-white/15 overflow-hidden shadow-inner">
-              {categoryFacilities.map((facility, fIdx) => (
-                <div
-                  key={fIdx}
-                  className="flex items-center min-h-[52px] px-4 py-3 text-white text-base font-medium select-none hover:bg-white/10 transition-colors"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="w-6 h-6 rounded-md bg-white/25 flex items-center justify-center shrink-0 border border-white/40">
-                      <svg
-                        className="w-4 h-4 text-white stroke-[2.5]"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    </span>
-                    <span className="tracking-tight truncate">{facility}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 5. A little gap and See Room button at the bottom */}
+        {/* 3. A little gap and See Room button at the bottom */}
         <div className="pt-2">
           <button
             type="button"

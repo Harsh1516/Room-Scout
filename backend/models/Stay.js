@@ -138,7 +138,6 @@ const staySchema = new mongoose.Schema(
           price: { type: mongoose.Schema.Types.Mixed, default: 0 },
           rateUnit: { type: String, default: '' },
           capacity: { type: Number, default: 1, min: 1, max: 10 },
-          features: [{ type: String, trim: true }],
           photos: { type: mongoose.Schema.Types.Mixed, default: [] },
           images: [{ type: String }],
         },

@@ -1,5 +1,5 @@
 import { useRef, useState, useMemo } from 'react';
-import { Camera, X, Plus, Check, BedDouble, Bath, UtensilsCrossed } from 'lucide-react';
+import { Camera, BedDouble, Bath, UtensilsCrossed } from 'lucide-react';
 import { toast } from '../../context/ToastContext';
 import {
   validate16x9Ratio,
@@ -15,27 +15,12 @@ const PHOTO_SLOTS = [
   { key: 'kitchen', label: 'Kitchen', icon: UtensilsCrossed },
 ];
 
-const SUGGESTED_FEATURES = [
-  'Attached Washroom',
-  'AC',
-  'Balcony',
-  'Geyser',
-  'Study Desk & Chair',
-  'Wardrobe',
-  'High-Speed Wi-Fi',
-  'Smart TV',
-  'Window View',
-  'Power Backup',
-];
-
 export default function HostCategoryMediaFeatures({
   rate = {},
   categoryIndex,
   onUpdateCategory,
   markCategoryDirty,
 }) {
-  const [customFeatureInput, setCustomFeatureInput] = useState('');
-  const [showAllSuggestions, setShowAllSuggestions] = useState(false);
   const [processingSlot, setProcessingSlot] = useState(null);
   const fileInputsRef = useRef({});
 
@@ -59,23 +44,6 @@ export default function HostCategoryMediaFeatures({
     }
     return [];
   }, [rate.photos, rate.images]);
-
-  // Normalize features
-  const featuresList = useMemo(() => {
-    if (Array.isArray(rate.features)) {
-      return rate.features.filter(Boolean);
-    }
-    return [];
-  }, [rate.features]);
-
-  // Features added that are not in default suggestions
-  const customFeaturesList = useMemo(() => {
-    return featuresList.filter(
-      (feat) => !SUGGESTED_FEATURES.some((sug) => sug.toLowerCase() === feat.toLowerCase())
-    );
-  }, [featuresList]);
-
-  const visibleSuggestions = showAllSuggestions ? SUGGESTED_FEATURES : SUGGESTED_FEATURES.slice(0, 6);
 
   // Find photo by slot label (case-insensitive)
   const getPhotoForSlot = (slotLabel) => {
@@ -156,41 +124,6 @@ export default function HostCategoryMediaFeatures({
       });
     }
     toast.info(`${cleanLabel} photo removed.`);
-  };
-
-  // Add / Toggle Feature
-  const handleToggleFeature = (featureName) => {
-    const clean = featureName.trim();
-    if (!clean) return;
-    const exists = featuresList.some((f) => f.toLowerCase() === clean.toLowerCase());
-    let updated;
-    if (exists) {
-      updated = featuresList.filter((f) => f.toLowerCase() !== clean.toLowerCase());
-    } else {
-      updated = [...featuresList, clean];
-    }
-    markCategoryDirty?.(categoryIndex);
-    if (typeof onUpdateCategory === 'function') {
-      onUpdateCategory(categoryIndex, 'features', updated);
-    }
-  };
-
-  // Add Custom Feature from Input
-  const handleAddCustomFeature = (e) => {
-    e?.preventDefault?.();
-    const clean = customFeatureInput.trim();
-    if (!clean) return;
-    if (featuresList.some((f) => f.toLowerCase() === clean.toLowerCase())) {
-      toast.info('Feature already added.');
-      setCustomFeatureInput('');
-      return;
-    }
-    const updated = [...featuresList, clean];
-    markCategoryDirty?.(categoryIndex);
-    if (typeof onUpdateCategory === 'function') {
-      onUpdateCategory(categoryIndex, 'features', updated);
-    }
-    setCustomFeatureInput('');
   };
 
   return (
@@ -321,133 +254,6 @@ export default function HostCategoryMediaFeatures({
               </div>
             );
           })}
-        </div>
-      </div>
-
-      {/* ── SECTION 2: ROOM CATEGORY FEATURES & AMENITIES ── */}
-      <div className="space-y-3 pt-2 border-t border-slate-200" onClick={(e) => e.stopPropagation()}>
-        {/* Header: Category Features + Count */}
-        <div className="flex items-center justify-between">
-          <span className="text-[15px] sm:text-[16.5px] font-extrabold text-slate-900 tracking-tight">
-            Category Features
-          </span>
-          <span className="text-[12.5px] sm:text-[13px] font-semibold text-slate-500">
-            {featuresList.length} selected
-          </span>
-        </div>
-
-        {/* 1. Custom Feature Input on TOP */}
-        <form onSubmit={handleAddCustomFeature} className="flex items-center gap-2">
-          <input
-            type="text"
-            value={customFeatureInput}
-            onChange={(e) => setCustomFeatureInput(e.target.value)}
-            placeholder="Add custom feature (e.g. King Bed, Mini Fridge, Study Table)..."
-            className="flex-1 h-10 sm:h-11 rounded-none px-3.5 text-[13px] sm:text-[14px] font-medium bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all"
-          />
-          <button
-            type="submit"
-            disabled={!customFeatureInput.trim()}
-            className="h-10 sm:h-11 px-4 sm:px-5 rounded-none bg-[#1f1b16] hover:bg-black disabled:opacity-40 disabled:cursor-not-allowed text-white text-[13px] sm:text-[14px] font-bold flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0 outline-none focus:outline-none"
-          >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>Add</span>
-          </button>
-        </form>
-
-        {/* 2. Custom Added Features (if any), aligned in rows one below one with no rounded border */}
-        {customFeaturesList.length > 0 && (
-          <div className="space-y-1.5">
-            <span className="text-[11.5px] sm:text-[12px] font-bold text-slate-500 tracking-wider uppercase select-none">
-              Custom Added:
-            </span>
-            <div className="flex flex-col gap-1.5">
-              {customFeaturesList.map((feat, cIdx) => (
-                <div
-                  key={`custom-${cIdx}-${feat}`}
-                  className="w-full h-10 px-3.5 flex items-center justify-between rounded-none border border-emerald-300 bg-emerald-50 text-emerald-800 select-none"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <Check className="w-4 h-4 text-emerald-600 stroke-[2.5] shrink-0" />
-                    <span className="text-[13px] sm:text-[14px] font-semibold truncate">
-                      {feat}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-none border border-emerald-200">
-                      Added
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleToggleFeature(feat)}
-                      className="w-6 h-6 flex items-center justify-center text-emerald-600 hover:text-emerald-900 hover:bg-emerald-200/60 rounded-none cursor-pointer outline-none focus:outline-none"
-                      title={`Remove ${feat}`}
-                    >
-                      <X className="w-3.5 h-3.5 stroke-[2.5]" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 3. Suggestion Features JUST BOTTOM of the input field, aligned in rows one below one with no rounded border */}
-        <div className="space-y-1.5">
-          <span className="text-[11.5px] sm:text-[12px] font-bold text-slate-500 tracking-wider uppercase select-none">
-            Suggested Features:
-          </span>
-
-          <div className="flex flex-col gap-1.5">
-            {visibleSuggestions.map((sug) => {
-              const isSelected = featuresList.some((f) => f.toLowerCase() === sug.toLowerCase());
-              return (
-                <button
-                  key={`sug-${sug}`}
-                  type="button"
-                  onClick={() => handleToggleFeature(sug)}
-                  className={`w-full h-10 sm:h-10.5 px-3.5 flex items-center justify-between rounded-none border cursor-pointer text-left select-none group outline-none focus:outline-none ${
-                    isSelected
-                      ? 'bg-emerald-50 hover:bg-emerald-100/70 border-emerald-300 text-emerald-800'
-                      : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700 hover:text-slate-900'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    {isSelected ? (
-                      <Check className="w-4 h-4 text-emerald-600 stroke-[2.5] shrink-0" />
-                    ) : (
-                      <Plus className="w-4 h-4 text-slate-400 group-hover:text-slate-700 stroke-[2] shrink-0 transition-colors" />
-                    )}
-                    <span className={`text-[13px] sm:text-[14px] truncate ${isSelected ? 'font-semibold text-emerald-800' : 'font-medium'}`}>
-                      {sug}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {isSelected ? (
-                      <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-none border border-emerald-200">
-                        Added
-                      </span>
-                    ) : (
-                      <span className="text-[11.5px] font-medium text-slate-400 group-hover:text-slate-700 transition-colors">
-                        + Add
-                      </span>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {SUGGESTED_FEATURES.length > 6 && (
-            <button
-              type="button"
-              onClick={() => setShowAllSuggestions((prev) => !prev)}
-              className="w-full py-2 text-center text-xs font-semibold text-slate-600 hover:text-slate-900 border border-dashed border-slate-300 hover:border-slate-400 bg-slate-50 hover:bg-slate-100 rounded-none cursor-pointer mt-1 outline-none focus:outline-none"
-            >
-              {showAllSuggestions ? 'Show Less Suggestions' : `+ Show ${SUGGESTED_FEATURES.length - 6} More Suggestions`}
-            </button>
-          )}
         </div>
       </div>
     </div>

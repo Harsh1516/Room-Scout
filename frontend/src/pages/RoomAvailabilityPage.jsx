@@ -801,19 +801,36 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  toast.warn('Enter your full name');
  return;
  }
- if (!/^[a-zA-Z\s.']{2,50}$/.test(cleanName)) {
+ if (!/^[a-zA-Z\s.'()-]{2,80}$/.test(cleanName)) {
  toast.error('Name: letters only');
  return;
  }
 
- const cleanPhone = guestPhone.trim().replace(/\D/g, '');
+ const rawPhoneDigits = guestPhone.trim().replace(/\D/g, '');
+ const cleanPhone = rawPhoneDigits.length === 12 && rawPhoneDigits.startsWith('91') ? rawPhoneDigits.slice(2) : rawPhoneDigits;
  if (!cleanPhone || cleanPhone.length !== 10) {
+ toast.error('Enter valid 10-digit mobile');
+ return;
+ }
+ if (!/^[6-9]/.test(cleanPhone)) {
+ toast.error('Mobile must start with 6-9');
+ return;
+ }
+ if (/^(\d)\1{9}$/.test(cleanPhone) || cleanPhone === '1234567890' || cleanPhone === '0123456789') {
  toast.error('Enter valid 10-digit mobile');
  return;
  }
 
  const cleanAadhar = guestAadhar.trim().replace(/\D/g, '');
  if (!cleanAadhar || cleanAadhar.length !== 12) {
+ toast.error('Enter valid 12-digit Aadhar');
+ return;
+ }
+ if (/^[01]/.test(cleanAadhar)) {
+ toast.error('Aadhar cannot start with 0 or 1');
+ return;
+ }
+ if (/^(\d)\1{11}$/.test(cleanAadhar)) {
  toast.error('Enter valid 12-digit Aadhar');
  return;
  }

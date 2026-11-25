@@ -14,6 +14,16 @@ const parseNumericPrice = (priceVal) => {
  return parseInt(String(priceVal || 0).replace(/[^0-9]/g, ''), 10) || 0;
 };
 
+// Helper: Resolve measurable host average response time (ms); unmeasured hosts sort after measured ones
+const getHostResponseTimeMs = (stay) => {
+ const ms = stay?.hostAvgResponseMs;
+ const count = Number(stay?.hostResponseCount || 0);
+ if (typeof ms === 'number' && Number.isFinite(ms) && ms >= 0 && count > 0) {
+ return ms;
+ }
+ return Number.POSITIVE_INFINITY;
+};
+
 export function useStaySearch() {
  const [allStays, setAllStays] = useState(() => {
  if (memoryCacheStays && Array.isArray(memoryCacheStays)) {
@@ -344,8 +354,14 @@ export function useStaySearch() {
  );
  });
 
- // Apply Sorting
+ // Apply Sorting (Compulsory priority: fastest host response time first)
  return result.sort((a, b) => {
+ const respA = getHostResponseTimeMs(a);
+ const respB = getHostResponseTimeMs(b);
+ if (respA !== respB) {
+ return respA - respB;
+ }
+
  const priceA = parseNumericPrice(a.price);
  const priceB = parseNumericPrice(b.price);
 

@@ -75,12 +75,12 @@ export const PropertyCard = memo(function PropertyCard({
       onMouseEnter={() => onHover && onHover(stayId)}
       onMouseLeave={() => onLeave && onLeave()}
       onClick={() => onStayClick && onStayClick(stay)}
-      className={`group relative cursor-pointer select-none bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-200 ${className}`}
+      className={`group relative cursor-pointer select-none bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-200 ${className}`}
     >
       {/* Foreground Content Stack */}
       <div className="relative z-10 flex flex-col h-full justify-between">
         {/* 1. TOP SECTION: Media Box */}
-        <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#efe9df]">
+        <div className="relative aspect-[3/2] sm:aspect-[4/3] w-full overflow-hidden bg-[#efe9df]">
           {/* Background Image */}
           <img
             src={getOptimizedImageUrl(displayImage, 640)}
@@ -99,11 +99,11 @@ export const PropertyCard = memo(function PropertyCard({
               e.stopPropagation();
               toggleWishlist(stay);
             }}
-            className="absolute top-3.5 right-3.5 p-1 flex items-center justify-center hover:scale-115 active:scale-90 transition-transform duration-150 z-20 cursor-pointer"
+            className="absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 p-1 flex items-center justify-center hover:scale-115 active:scale-90 transition-transform duration-150 z-20 cursor-pointer"
             title={saved ? 'Remove from Wishlist' : 'Save to Wishlist'}
           >
             <svg
-              className="w-8 h-8 sm:w-[32px] sm:h-[32px] transition-all duration-200"
+              className="w-6 h-6 sm:w-[32px] sm:h-[32px] transition-all duration-200"
               viewBox="0 0 32 32"
               fill={saved ? "#FF385C" : "rgba(255, 56, 92, 0.08)"}
               stroke="#FF385C"
@@ -116,20 +116,20 @@ export const PropertyCard = memo(function PropertyCard({
           </button>
 
           {/* Bottom Overlay: Stay name on left, Rating tag on bottom right corner */}
-          <div className="absolute inset-x-0 bottom-0 pt-10 pb-3.5 px-3.5 sm:px-4 bg-gradient-to-t from-black/90 via-black/45 to-transparent flex items-end justify-between gap-2 z-10 pointer-events-none">
-            <h3 className="text-[16px] sm:text-[17px] font-bold text-white line-clamp-1 leading-tight tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">
+          <div className="absolute inset-x-0 bottom-0 pt-8 pb-2.5 px-3 sm:pt-10 sm:pb-3.5 sm:px-4 bg-gradient-to-t from-black/90 via-black/45 to-transparent flex items-end justify-between gap-2 z-10 pointer-events-none">
+            <h3 className="text-[14px] sm:text-[17px] font-bold text-white line-clamp-1 leading-tight tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">
               {stay.title || stay.propertyName}
             </h3>
 
             {/* Rating / New tag shifted to bottom right corner of pic */}
             <div className="shrink-0 mb-0.5 pointer-events-auto">
               {isNewStay ? (
-                <span className="inline-flex items-center text-xs sm:text-sm font-bold text-slate-950 bg-amber-400 px-2.5 py-1 rounded-md shadow-xs border border-amber-300/80">
+                <span className="inline-flex items-center text-[11px] sm:text-sm font-bold text-slate-950 bg-amber-400 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md shadow-xs border border-amber-300/80">
                   New
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-slate-950 bg-amber-400 px-2.5 py-1 rounded-md shadow-xs border border-amber-300/80">
-                  <svg className="w-3.5 h-3.5 text-slate-950 fill-slate-950" viewBox="0 0 20 20">
+                <span className="inline-flex items-center gap-1 text-[11px] sm:text-sm font-bold text-slate-950 bg-amber-400 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md shadow-xs border border-amber-300/80">
+                  <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-950 fill-slate-950" viewBox="0 0 20 20">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
                   <span>{computedRating}</span>
@@ -140,14 +140,14 @@ export const PropertyCard = memo(function PropertyCard({
         </div>
 
         {/* Info Area Below Photo */}
-        <div className="p-4 sm:p-4.5 space-y-2">
+        <div className="p-3 sm:p-4.5 space-y-1.5 sm:space-y-2">
           {/* Category & Gender Badges (Shifted above location, transparent background) */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs sm:text-[13px] font-bold text-slate-900">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <span className="text-[11px] sm:text-[13px] font-bold text-slate-900">
               {propertyType}
             </span>
-            <span className="text-slate-300 text-xs select-none">•</span>
-            <span className="inline-flex items-center gap-1.5 text-xs sm:text-[13px] font-semibold text-slate-700">
+            <span className="text-slate-300 text-[10px] sm:text-xs select-none">•</span>
+            <span className="inline-flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-[13px] font-semibold text-slate-700">
               {genderCategory === 'boys' ? (
                 <svg className="w-3.5 h-3.5 text-blue-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="10" cy="14" r="5" />
@@ -178,8 +178,8 @@ export const PropertyCard = memo(function PropertyCard({
           </div>
 
           {/* Location */}
-          <div className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-600 font-medium">
-            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <div className="flex items-center gap-1.5 text-[11px] sm:text-sm text-slate-600 font-medium">
+            <svg className="w-3 h-3 sm:w-4 sm:h-4 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
@@ -187,12 +187,12 @@ export const PropertyCard = memo(function PropertyCard({
           </div>
 
           {/* Pricing & Fully Rounded Details Button */}
-          <div className="flex items-center justify-between gap-3 pt-2.5 border-t border-slate-100">
+          <div className="flex items-center justify-between gap-2 sm:gap-3 pt-2 sm:pt-2.5 border-t border-slate-100">
             <div>
-              <div className="text-[11px] sm:text-xs font-medium text-slate-500 mb-0.5">Starting price</div>
-              <div className="text-[25px] sm:text-[28px] font-black text-[#1f1b16] tracking-tight leading-none">
+              <div className="text-[10px] sm:text-xs font-medium text-slate-500 mb-0.5">Starting price</div>
+              <div className="text-[19px] sm:text-[28px] font-black text-[#1f1b16] tracking-tight leading-none">
                 ₹{pricing.primaryPrice}
-                <span className="text-xs sm:text-sm font-semibold text-slate-500 ml-1.5 align-baseline">{pricing.primaryUnit}</span>
+                <span className="text-[11px] sm:text-sm font-semibold text-slate-500 ml-1 sm:ml-1.5 align-baseline">{pricing.primaryUnit}</span>
               </div>
             </div>
             <button
@@ -201,7 +201,7 @@ export const PropertyCard = memo(function PropertyCard({
                 e.stopPropagation();
                 if (onStayClick) onStayClick(stay);
               }}
-              className="min-h-[44px] min-w-[98px] sm:min-w-[106px] px-6.5 sm:px-7 py-2.5 rounded-full bg-[#1f1b16] text-white font-bold text-[16px] sm:text-[17px] hover:bg-[#0f766e] transition-all cursor-pointer inline-flex items-center justify-center shadow-xs active:scale-95 shrink-0"
+              className="min-h-[34px] sm:min-h-[44px] min-w-[74px] sm:min-w-[106px] px-4 sm:px-7 py-1.5 sm:py-2.5 rounded-full bg-[#1f1b16] text-white font-bold text-[13px] sm:text-[17px] hover:bg-[#0f766e] transition-all cursor-pointer inline-flex items-center justify-center shadow-xs active:scale-95 shrink-0"
             >
               Details
             </button>

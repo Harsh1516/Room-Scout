@@ -535,7 +535,6 @@ export const createHost = async (req, res, next) => {
                 price: rr.price,
                 rateUnit: rr.rateUnit,
                 capacity: Number(rr.capacity) || 1,
-                features: Array.isArray(rr.features) ? rr.features : [],
                 photos: normalizedPhotos,
                 images: [],
               };

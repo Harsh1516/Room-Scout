@@ -648,7 +648,6 @@ export default function HostRoomCategories({
  price: String(r?.price || '').replace(/[^0-9]/g, ''),
  rateUnit: String(r?.rateUnit || '').trim(),
  capacity: Number(r?.capacity) || 1,
- features: (Array.isArray(r?.features) ? r.features : []).slice().sort(),
  photos: Array.isArray(r?.photos) ? r.photos.map((p) => ({ label: p?.label, urlLen: p?.url?.length || 0 })) : 0,
  rooms: (mRooms || [])
  .map((rm) => ({
@@ -1460,9 +1459,9 @@ export default function HostRoomCategories({
 
                 </div>
 
-                {/* Lower Section: Clean White (Category Photos & Features) */}
+                {/* Lower Section: Clean White (Category Photos) */}
                 <div className="p-3.5 sm:p-4 pt-2.5 space-y-3 bg-white w-full">
-                  {/* 4. Category Media Photos (16:9 only, Max 3) & Features */}
+                  {/* 4. Category Media Photos (16:9 only, Max 3) */}
                   <HostCategoryMediaFeatures
                     rate={activeRate}
                     categoryIndex={modalIndex}

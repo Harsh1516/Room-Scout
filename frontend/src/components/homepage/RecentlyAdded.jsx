@@ -138,7 +138,7 @@ export function RecentlyAdded({ onStayClick, onBookClick }) {
             {recentStays.map((room, idx) => (
               <div
                 key={room._id || idx}
-                className="w-[295px] sm:w-[330px] md:w-[350px] max-w-[360px] shrink-0 snap-start"
+                className="w-[235px] sm:w-[330px] md:w-[350px] max-w-[360px] shrink-0 snap-start"
               >
                 <PropertyCard
                   stay={room}

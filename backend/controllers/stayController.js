@@ -8,6 +8,71 @@ import { uploadSecureImage } from '../utils/imageSecurity.js';
 import { sendPropertySubmissionToAdminEmail } from '../services/emailService.js';
 import { emitToAdmin, emitToGlobal } from '../services/socketService.js';
 
+/**
+ * Computes and attaches each host's average online booking approval response time (in ms)
+ * from real Booking timestamps (approvedAt - createdAt) in a single aggregation query.
+ */
+async function attachHostAvgResponseTimes(staysList) {
+  const list = Array.isArray(staysList) ? staysList : [];
+  if (list.length === 0) return list;
+
+  const hostIds = [];
+  const seen = new Set();
+  for (const s of list) {
+    const rawId = s?.hostId?._id || s?.hostId;
+    if (!rawId) continue;
+    const strId = String(rawId);
+    if (!seen.has(strId) && mongoose.Types.ObjectId.isValid(strId)) {
+      seen.add(strId);
+      hostIds.push(new mongoose.Types.ObjectId(strId));
+    }
+  }
+
+  if (hostIds.length === 0) return list;
+
+  try {
+    const stats = await Booking.aggregate([
+      {
+        $match: {
+          hostId: { $in: hostIds },
+          bookingSource: 'ONLINE',
+          approvedAt: { $ne: null },
+        },
+      },
+      {
+        $project: {
+          hostId: 1,
+          diffMs: { $subtract: ['$approvedAt', '$createdAt'] },
+        },
+      },
+      {
+        $match: {
+          diffMs: { $gte: 0, $lte: 7 * 24 * 60 * 60 * 1000 },
+        },
+      },
+      {
+        $group: {
+          _id: '$hostId',
+          avgResponseMs: { $avg: '$diffMs' },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const statsMap = new Map(stats.map((row) => [String(row._id), row]));
+    for (const s of list) {
+      const strId = String(s?.hostId?._id || s?.hostId || '');
+      const row = statsMap.get(strId);
+      s.hostAvgResponseMs = row ? Math.round(row.avgResponseMs) : null;
+      s.hostResponseCount = row ? row.count : 0;
+    }
+  } catch (err) {
+    console.warn('Could not aggregate host response times:', err.message);
+  }
+
+  return list;
+}
+
 // @desc    Get all published property stays with filters, sorting, and pagination
 // @route   GET /api/stays
 // @access  Public
@@ -106,6 +171,7 @@ export const getAllStays = async (req, res, next) => {
       const totalPages = Math.ceil(total / limitNum) || 1;
 
       const paginatedStays = await staysQuery.skip((pageNum - 1) * limitNum).limit(limitNum);
+      await attachHostAvgResponseTimes(paginatedStays);
 
       return res.json({
         stays: paginatedStays,
@@ -120,6 +186,7 @@ export const getAllStays = async (req, res, next) => {
     }
 
     const stays = await staysQuery;
+    await attachHostAvgResponseTimes(stays);
     return res.json(stays);
   } catch (error) {
     return next(error);
@@ -144,6 +211,8 @@ export const getStayById = async (req, res, next) => {
     if (!stay) {
       return res.status(404).json({ message: 'Stay property not found in database.' });
     }
+
+    await attachHostAvgResponseTimes([stay]);
 
     const isCallerAdmin = isAdminUser(req) || req.isAdminKey;
     const callerEmail = (req.user?.email || req.hostAccount?.email || '').toLowerCase().trim();
@@ -341,7 +410,6 @@ export const createStay = async (req, res, next) => {
             price: rr?.price,
             rateUnit: rr?.rateUnit,
             capacity: Number(rr?.capacity) || 1,
-            features: Array.isArray(rr?.features) ? rr.features : [],
             photos: Array.isArray(rr?.photos)
               ? rr.photos
               : (rr?.photos && typeof rr.photos === 'object' ? Object.entries(rr.photos).map(([label, url]) => ({ label, url })) : []),

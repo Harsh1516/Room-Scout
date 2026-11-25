@@ -16,9 +16,11 @@ export function Left({
  const navigate = useNavigate();
  const { isAuthenticated, user, isHost } = useAuth();  const [hasFetchedHostProperty, setHasFetchedHostProperty] = useState(false);
 
+  const isHostSession = isAuthenticated && ['host', 'admin'].includes(String(user?.role || '').toLowerCase());
+
   useEffect(() => {
     let mounted = true;
-    if (isAuthenticated && user?.email) {
+    if (isHostSession && user?.email) {
       adminAPI.getHostByEmail(user.email)
         .then((check) => {
           if (!mounted) return;
@@ -31,10 +33,10 @@ export function Left({
     return () => {
       mounted = false;
     };
-  }, [isAuthenticated, user?.email]);
+  }, [isHostSession, user?.email]);
 
-  const hasHostProperty = Boolean(user?.hasProperty || isHost || (isAuthenticated && hasFetchedHostProperty));
-  const isHostWithProperty = isAuthenticated && (hasHostProperty || user?.role === 'host' || user?.role === 'admin');
+  const hasHostProperty = Boolean(user?.hasProperty || isHost || hasFetchedHostProperty);
+  const isHostWithProperty = isHostSession && hasHostProperty;
 
  const handleBack = () => {
  if (typeof onBack === 'function') {

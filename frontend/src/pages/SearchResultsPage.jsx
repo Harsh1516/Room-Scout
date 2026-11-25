@@ -15,11 +15,46 @@ function MapSkeletonLoader() {
  );
 }
 
+const STAY_TYPE_OPTIONS = ['All', 'PG', 'Hostel', 'Flat', 'Independent Room', 'Hotel'];
+const GENDER_OPTIONS = [
+  { label: 'All', value: 'All' },
+  { label: 'Boys', value: 'Boys' },
+  { label: 'Girls', value: 'Girls' },
+  { label: 'Both', value: 'Both' },
+  { label: 'Family', value: 'Family' },
+];
+const SORT_OPTIONS = [
+  { label: 'Newest', value: 'recent' },
+  { label: 'Price: Low to High', value: 'price-asc' },
+  { label: 'Price: High to Low', value: 'price-desc' },
+  { label: 'Top Rated', value: 'rating-desc' },
+];
+const BUDGET_OPTIONS = [
+  { label: 'Any', min: null, max: null },
+  { label: 'Under ₹4,000', min: null, max: 4000 },
+  { label: '₹4,000 – ₹7,000', min: 4000, max: 7000 },
+  { label: '₹7,000 – ₹10,000', min: 7000, max: 10000 },
+  { label: '₹10,000+', min: 10000, max: null },
+];
+const RATING_OPTIONS = [
+  { label: 'Any', value: 0 },
+  { label: '3.0★+', value: 3 },
+  { label: '4.0★+', value: 4 },
+  { label: '4.5★+', value: 4.5 },
+];
+const AMENITY_OPTIONS = ['Wi-Fi', 'AC', 'Food', 'Laundry', 'Parking', 'CCTV'];
+
 export function SearchResultsPage({
 	stays = [],
 	allFilteredStays = [],
 	isLoading = false,
 	filters = {},
+	setCategoryFilter,
+	setGenderFilter,
+	setSortOrder,
+	setMinRating,
+	setPriceRange,
+	toggleAmenity,
 	resetFilters,
 	onStayClick,
 	onBookClick,
@@ -27,6 +62,7 @@ export function SearchResultsPage({
  const [showcaseIndex, setShowcaseIndex] = useState(0);
  const [hoveredStayId, setHoveredStayId] = useState(null);
  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+ const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
  // Reset showcaseIndex only when stays list actually changes
  const prevStaysRef = useRef(stays);
@@ -37,16 +73,17 @@ export function SearchResultsPage({
  }
  }, [stays]);
 
- // Close map modal on Escape key press
+ // Close map / filter modal on Escape key press
  useEffect(() => {
  const handleKeyDown = (e) => {
  if (e.key === 'Escape') {
  if (isMapModalOpen) setIsMapModalOpen(false);
+ if (isFilterModalOpen) setIsFilterModalOpen(false);
  }
  };
  window.addEventListener('keydown', handleKeyDown);
  return () => window.removeEventListener('keydown', handleKeyDown);
- }, [isMapModalOpen]);
+ }, [isMapModalOpen, isFilterModalOpen]);
 
  // Compute active filters count
  const activeFiltersCount = useMemo(() => {
@@ -221,6 +258,258 @@ export function SearchResultsPage({
           </div>
         )}
       </div>
+
+  {/* ── FLOATING CIRCULAR FILTER TOGGLE BUTTON (BOTTOM-LEFT, SAME COLOR AS MAP BUTTON) ── */}
+  {!isLoading && (
+    <button
+      type="button"
+      onClick={() => setIsFilterModalOpen((prev) => !prev)}
+      className="fixed bottom-6 left-4 sm:left-6 z-40 w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-slate-300 bg-slate-700 hover:bg-slate-800 text-white shadow-2xl backdrop-blur-md transition-all cursor-pointer select-none active:scale-95 hover:scale-105 flex items-center justify-center"
+      title="Filter Stays"
+      aria-label="Open Filters"
+    >
+      <svg className="w-5.5 h-5.5 sm:w-6 sm:h-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="4" y1="21" x2="4" y2="14" />
+        <line x1="4" y1="10" x2="4" y2="3" />
+        <line x1="12" y1="21" x2="12" y2="12" />
+        <line x1="12" y1="8" x2="12" y2="3" />
+        <line x1="20" y1="21" x2="20" y2="16" />
+        <line x1="20" y1="12" x2="20" y2="3" />
+        <line x1="1" y1="14" x2="7" y2="14" />
+        <line x1="9" y1="8" x2="15" y2="8" />
+        <line x1="17" y1="16" x2="23" y2="16" />
+      </svg>
+      {activeFiltersCount > 0 && (
+        <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 rounded-full bg-emerald-500 text-white text-[11px] font-black flex items-center justify-center border-2 border-white shadow-sm">
+          {activeFiltersCount}
+        </span>
+      )}
+    </button>
+  )}
+
+  {/* ── FLOATING FILTER WINDOW (FULLY ROUNDED BORDER + WISHLIST-MATCHING BACKDROP BLUR) ── */}
+  <AnimatePresence>
+    {isFilterModalOpen && (
+      <div className="fixed inset-0 z-[9999] overflow-hidden">
+        {/* Backdrop matching WishlistDrawer */}
+        <motion.div
+          key="filter-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
+          className="absolute inset-0 bg-[#121418]/60 backdrop-blur-xs cursor-pointer"
+          onClick={() => setIsFilterModalOpen(false)}
+        />
+
+        {/* Floating Panel anchored bottom-left */}
+        <div className="fixed bottom-24 left-3 sm:left-6 pointer-events-none z-10 max-w-[calc(100vw-24px)]">
+          <motion.div
+            key="filter-drawer-panel"
+            initial={{ opacity: 0, y: 24, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.96 }}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            className="pointer-events-auto w-80 sm:w-92 max-w-[calc(100vw-24px)] flex flex-col bg-white border border-slate-200/90 shadow-[0_20px_50px_rgba(0,0,0,0.22)] max-h-[calc(100dvh-120px)] will-change-transform select-none rounded-[28px] sm:rounded-[32px] overflow-hidden"
+          >
+            {/* Header */}
+            <div className="relative flex items-center justify-center px-4 py-3.5 sm:py-4 border-b border-slate-100 shrink-0">
+              <h2 className="text-[22px] sm:text-[24px] font-bold text-[#1f1b16] tracking-tight leading-none">
+                Filters
+              </h2>
+              <button
+                type="button"
+                onClick={() => setIsFilterModalOpen(false)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+                aria-label="Close filters"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="overflow-y-auto p-4 space-y-4">
+              {/* Compulsory Priority Indicator */}
+              <div className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs font-semibold">
+                <svg className="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                <span>Fastest host response stays shown first</span>
+              </div>
+
+              {/* 1. Sort By */}
+              <div className="space-y-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Sort By</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {SORT_OPTIONS.map((opt) => {
+                    const active = (filters.sortOrder || 'price-desc') === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setSortOrder?.(opt.value)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                          active
+                            ? 'bg-[#1f1b16] text-white border-[#1f1b16]'
+                            : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 2. Stay Type */}
+              <div className="space-y-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Stay Type</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {STAY_TYPE_OPTIONS.map((opt) => {
+                    const active = (filters.type || 'All').toLowerCase() === opt.toLowerCase();
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setCategoryFilter?.(opt)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                          active
+                            ? 'bg-[#1f1b16] text-white border-[#1f1b16]'
+                            : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 3. Preferred For (Gender) */}
+              <div className="space-y-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Preferred For</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {GENDER_OPTIONS.map((opt) => {
+                    const active = (filters.gender || 'All').toLowerCase() === opt.value.toLowerCase();
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setGenderFilter?.(opt.value)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                          active
+                            ? 'bg-[#1f1b16] text-white border-[#1f1b16]'
+                            : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 4. Budget Range */}
+              <div className="space-y-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Monthly / Nightly Budget</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {BUDGET_OPTIONS.map((opt) => {
+                    const active =
+                      (filters.minPrice ?? null) === opt.min &&
+                      (filters.maxPrice ?? null) === opt.max;
+                    return (
+                      <button
+                        key={opt.label}
+                        type="button"
+                        onClick={() => setPriceRange?.(opt.min, opt.max)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                          active
+                            ? 'bg-[#1f1b16] text-white border-[#1f1b16]'
+                            : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 5. Minimum Rating */}
+              <div className="space-y-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Minimum Rating</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {RATING_OPTIONS.map((opt) => {
+                    const active = (Number(filters.minRating) || 0) === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setMinRating?.(opt.value)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                          active
+                            ? 'bg-[#1f1b16] text-white border-[#1f1b16]'
+                            : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 6. Key Facilities */}
+              <div className="space-y-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Facilities</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {AMENITY_OPTIONS.map((amenity) => {
+                    const selectedList = Array.isArray(filters.selectedAmenities) ? filters.selectedAmenities : [];
+                    const active = selectedList.includes(amenity);
+                    return (
+                      <button
+                        key={amenity}
+                        type="button"
+                        onClick={() => toggleAmenity?.(amenity)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                          active
+                            ? 'bg-emerald-600 text-white border-emerald-600'
+                            : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                        }`}
+                      >
+                        {amenity}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-4 py-3 border-t border-slate-100 bg-slate-50/70 flex items-center justify-between gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => resetFilters?.()}
+                className="px-4 py-2 rounded-full text-xs sm:text-sm font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-200/70 border border-slate-200 transition-colors cursor-pointer"
+              >
+                Reset
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsFilterModalOpen(false)}
+                className="px-5 py-2 rounded-full bg-[#1f1b16] hover:bg-[#0f766e] text-white text-xs sm:text-sm font-bold transition-colors cursor-pointer active:scale-95"
+              >
+                Show {allFilteredStays.length > 0 ? allFilteredStays.length : stays.length} Stays
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    )}
+  </AnimatePresence>
 
   {/* ── 2X CENTERED FLOATING "SEE MAP" BUTTON WITH FULL ROUNDED GRAY BORDER ── */}
  {stays.length > 0 && (

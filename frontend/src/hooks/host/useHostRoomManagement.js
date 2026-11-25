@@ -217,7 +217,6 @@ export function useHostRoomManagement({
  price: '',
  rateUnit: '/night',
  capacity: 1,
- features: [],
  photos: [],
  images: [],
  };
