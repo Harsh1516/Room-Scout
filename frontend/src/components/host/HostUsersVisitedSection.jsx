@@ -106,9 +106,16 @@ export function HostUsersVisitedSection({
  externalSetSubTab(nextTab);
  }
  setInternalSubTab(nextTab);
+ setSelectedCategory('ALL');
+ setSelectedRoomNumber('ALL');
  };
 
  const [scope, setScope] = useState('today');
+ const handleScopeChange = (nextScope) => {
+ setScope(nextScope);
+ setSelectedCategory('ALL');
+ setSelectedRoomNumber('ALL');
+ };
  const [searchQuery, setSearchQuery] = useState('');
  const deferredSearchQuery = useDeferredValue(searchQuery);
  const [selectedCategory, setSelectedCategory] = useState('ALL');
@@ -328,15 +335,36 @@ export function HostUsersVisitedSection({
  }));
  }, [activeSubTabGuests, activeRoomNumbers]);
 
+ const activeRoomCategoryMap = useMemo(() => {
+ const map = new Map();
+ if (!Array.isArray(hostProperty?.rooms)) return map;
+ hostProperty.rooms.forEach((rm) => {
+ const rNum = String(rm.roomNumber || '').replace(/[^0-9]/g, '');
+ const rType = String(rm.type || '').trim().toLowerCase();
+ if (!rNum) return;
+ if (!map.has(rNum)) map.set(rNum, new Set());
+ if (rType) map.get(rNum).add(rType);
+ });
+ return map;
+ }, [hostProperty]);
+
  const displayedGuests = useMemo(() => {
  const q = deferredSearchQuery.trim().toLowerCase();
+ const cleanSelectedRoom = String(selectedRoomNumber || '').replace(/[^0-9]/g, '');
+ const normSelectedCategory = String(selectedCategory || '').trim().toLowerCase();
+ const isDuplicateRoomNum = cleanSelectedRoom && (activeRoomCategoryMap.get(cleanSelectedRoom)?.size || 0) > 1;
+
  const filtered = activeSubTabGuests.filter((g) => {
  const gRoomType = (g.roomType || 'Standard').trim().toLowerCase();
  const gRoomNumber = String(g.roomNumber || '').replace(/[^0-9]/g, '');
 
  if (activeRoomNumbers.size > 0 && (!gRoomNumber || !activeRoomNumbers.has(gRoomNumber))) return false;
- if (selectedCategory !== 'ALL' && gRoomType !== selectedCategory.trim().toLowerCase()) return false;
- if (selectedRoomNumber !== 'ALL' && gRoomNumber !== selectedRoomNumber.replace(/[^0-9]/g, '')) return false;
+ if (selectedRoomNumber !== 'ALL') {
+ if (gRoomNumber !== cleanSelectedRoom) return false;
+ if (isDuplicateRoomNum && selectedCategory !== 'ALL' && gRoomType !== normSelectedCategory) return false;
+ } else if (selectedCategory !== 'ALL' && gRoomType !== normSelectedCategory) {
+ return false;
+ }
 
  if (q) {
  const name = String(g.userName || g.fullName || g.guestName || '').toLowerCase();
@@ -364,7 +392,7 @@ export function HostUsersVisitedSection({
  }
  return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
  });
- }, [activeSubTabGuests, activeSubTab, selectedCategory, selectedRoomNumber, activeRoomNumbers, deferredSearchQuery]);
+ }, [activeSubTabGuests, activeSubTab, selectedCategory, selectedRoomNumber, activeRoomNumbers, activeRoomCategoryMap, deferredSearchQuery]);
 
  const handleOpenOccupantModal = (guestRecord) => {
  if (!guestRecord) return;
@@ -772,7 +800,7 @@ export function HostUsersVisitedSection({
  operationTab={activeSubTab}
  setOperationTab={handleSubTabChange}
  scope={scope}
- setScope={setScope}
+ setScope={handleScopeChange}
  pendingCount={pendingRequests.length}
  todayPendingCount={todayPendingRequests.length}
  todayCheckInCount={todayCheckIns.length}

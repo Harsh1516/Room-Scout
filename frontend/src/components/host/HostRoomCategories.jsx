@@ -587,7 +587,7 @@ export default function HostRoomCategories({
     updateCompactScrollState();
     window.addEventListener('resize', updateCompactScrollState);
     return () => window.removeEventListener('resize', updateCompactScrollState);
-  }, [compact, updateCompactScrollState, rooms.length]);
+  }, [compact, updateCompactScrollState, rooms.length, subTab, selectedCategoryIndex]);
 
   useEffect(() => {
     if (!compact) return;
@@ -818,9 +818,19 @@ export default function HostRoomCategories({
 
     const activeRate = safeRoomRates[currentCatIdx] || safeRoomRates[0];
     const isMonthly = isMonthlyRateUnit(activeRate?.rateUnit);
-    const matchingRooms = (Array.isArray(rooms) ? rooms : []).filter((r) =>
+    const rawCategoryRooms = (Array.isArray(rooms) ? rooms : []).filter((r) =>
       isRoomMatchingCategory(r, activeRate, currentCatIdx, safeRoomRates)
     );
+    const roomsWithActivity =
+      subTab && typeof getRoomRequestCount === 'function'
+        ? rawCategoryRooms.filter((r) => getRoomRequestCount(r.roomNumber, activeRate?.type) > 0)
+        : [];
+    const matchingRooms =
+      subTab && typeof getRoomRequestCount === 'function'
+        ? roomsWithActivity.length > 0
+          ? roomsWithActivity
+          : rawCategoryRooms
+        : rawCategoryRooms;
     const rawPrice = String(activeRate?.price || '').replace(/\D/g, '');
     const priceDisplay = activeRate?.price ? (
       <span className="text-[13px] sm:text-[14px] text-blue-200 font-semibold shrink-0">
@@ -953,7 +963,7 @@ export default function HostRoomCategories({
                           if (typeof onSelectCategoryIndex === 'function') {
                             onSelectCategoryIndex(idx);
                           }
-                          if (catMatching.length > 0 && typeof onSelectRoomCardId === 'function') {
+                          if (!subTab && catMatching.length > 0 && typeof onSelectRoomCardId === 'function') {
                             const firstRm = catMatching[0];
                             onSelectRoomCardId(firstRm._id || `room_${firstRm.roomNumber || 0}`, 0, firstRm);
                           }
@@ -975,9 +985,26 @@ export default function HostRoomCategories({
                           )}
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 text-white/70">
-                            {catMatching.length} rm
-                          </span>
+                          {subTab && typeof getCategoryRequestTotal === 'function' ? (
+                            (() => {
+                              const catReqCount = getCategoryRequestTotal(rate?.type);
+                              return (
+                                <span
+                                  className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
+                                    catReqCount > 0
+                                      ? 'bg-emerald-400/25 text-emerald-100 border border-emerald-300/30'
+                                      : 'bg-white/10 text-white/70'
+                                  }`}
+                                >
+                                  {catReqCount > 0 ? catReqCount : `${catMatching.length} rm`}
+                                </span>
+                              );
+                            })()
+                          ) : (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 text-white/70">
+                              {catMatching.length} rm
+                            </span>
+                          )}
                         </div>
                       </button>
                     );

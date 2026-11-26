@@ -1,10 +1,11 @@
-import { useState, useMemo, lazy, Suspense } from 'react';
+import { useState, useMemo, useRef, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
  Phone, Eye, LogOut, Calendar, BedDouble, CheckCircle2,
  Sparkles, ShieldCheck, Globe, Store, Receipt,
  ArrowLeft, Search, X, Users, Key,
- ChevronLeft, ChevronRight, RotateCcw,
+ ChevronLeft, ChevronRight, RotateCcw, SlidersHorizontal,
+ ChevronDown, Check,
 } from 'lucide-react';
 import { bookingsAPI, staysAPI } from '../../../services/api';
 import { VisitedGuestCard } from '../visited/VisitedGuestCard';
@@ -17,6 +18,28 @@ const ResidentIdPassModal = lazy(() =>
 
 import { isOnlineGuest, isPaidGuest } from '../../../utils/guestFilters';
 export { isOnlineGuest, isPaidGuest };
+
+// Extract sortable epoch timestamp so paid records always sort newest-to-oldest
+const getRecordTimestamp = (g) => {
+  if (!g) return 0;
+  const rawDate =
+    g.upiPayment?.verifiedAt ||
+    g.paidAt ||
+    g.createdAt ||
+    g.bookedAt ||
+    g.updatedAt ||
+    g.checkInISO ||
+    g.checkIn;
+  if (rawDate) {
+    const ms = new Date(rawDate).getTime();
+    if (!Number.isNaN(ms)) return ms;
+  }
+  const idStr = String(g._id || '');
+  if (/^[0-9a-fA-F]{24}$/.test(idStr)) {
+    return parseInt(idStr.slice(0, 8), 16) * 1000;
+  }
+  return 0;
+};
 
 const tabVariants = {
  enter: (dir) => ({ opacity: 0, x: dir > 0 ? 30 : -30 }),
@@ -39,6 +62,8 @@ export function PaidUsersList({
 }) {
  const [searchQuery, setSearchQuery] = useState('');
  const [filterStatus, setFilterStatus] = useState('ALL');
+ const [isFilterOpen, setIsFilterOpen] = useState(false);
+ const filterMenuRef = useRef(null);
  const [sectionFilter, setSectionFilter] = useState('ONLINE');
  const [direction, setDirection] = useState(1);
  const [currentPage, setCurrentPage] = useState(0);
@@ -85,8 +110,29 @@ export function PaidUsersList({
  if (tab === sectionFilter) return;
  setDirection(tab === 'OFFLINE' ? 1 : -1);
  setSectionFilter(tab);
+ if (tab === 'OFFLINE' && filterStatus === 'CONFIRMED') {
+ setFilterStatus('ALL');
+ }
  setCurrentPage(0);
  };
+
+ useEffect(() => {
+ if (!isFilterOpen) return;
+ const handleOutside = (e) => {
+ if (filterMenuRef.current && !filterMenuRef.current.contains(e.target)) {
+ setIsFilterOpen(false);
+ }
+ };
+ const handleEscape = (e) => {
+ if (e.key === 'Escape') setIsFilterOpen(false);
+ };
+ document.addEventListener('mousedown', handleOutside);
+ document.addEventListener('keydown', handleEscape);
+ return () => {
+ document.removeEventListener('mousedown', handleOutside);
+ document.removeEventListener('keydown', handleEscape);
+ };
+ }, [isFilterOpen]);
 
  const formatIdNumber = (raw) => {
  if (!raw) return '';
@@ -116,12 +162,14 @@ export function PaidUsersList({
  });
  }, []);
 
- // Checked-out & completed bookings represent legitimate stays whose payments are added to the host's profit.
- // They are preserved here and must not be wiped out or reduced upon checkout.
- const activePaidGuests = useMemo(() => {
- const src = Array.isArray(allGuests) && allGuests.length > 0 ? allGuests : guests;
- return (Array.isArray(src) ? src : []).filter(isPaidGuest);
- }, [allGuests, guests]);
+  // Checked-out & completed bookings represent legitimate stays whose payments are added to the host's profit.
+  // They are preserved permanently (even after checkout) and sorted newest-to-oldest.
+  const activePaidGuests = useMemo(() => {
+    const src = Array.isArray(allGuests) && allGuests.length > 0 ? allGuests : guests;
+    return (Array.isArray(src) ? src : [])
+      .filter(isPaidGuest)
+      .sort((a, b) => getRecordTimestamp(b) - getRecordTimestamp(a));
+  }, [allGuests, guests]);
 
  const onlineGuests = useMemo(() => activePaidGuests.filter(isOnlineGuest), [activePaidGuests]);
  const offlineGuests = useMemo(() => activePaidGuests.filter((g) => !isOnlineGuest(g)), [activePaidGuests]);
@@ -228,6 +276,33 @@ export function PaidUsersList({
  return st === 'CHECKED_OUT' || st === 'COMPLETED';
  }).length;
  }, [listForSection]);
+
+ const waitingCheckInCountForSection = useMemo(() => {
+ return listForSection.filter((g) => {
+ const st = String(g.status || '').toUpperCase();
+ const online = isOnlineGuest(g);
+ const out = st === 'CHECKED_OUT' || st === 'COMPLETED';
+ const inhouse = !out && (st === 'CHECKED_IN' || !online);
+ return !out && !inhouse;
+ }).length;
+ }, [listForSection]);
+
+ const filterOptions = useMemo(() => {
+ const base = [
+ { key: 'ALL', label: 'All', count: listForSection.length },
+ { key: 'CHECKED_IN', label: 'Checked In', count: inHouseCountForSection },
+ { key: 'CHECKED_OUT', label: 'Checked Out', count: checkedOutCountForSection },
+ ];
+ if (sectionFilter === 'ONLINE') {
+ base.push({ key: 'CONFIRMED', label: 'Waiting Check-in', count: waitingCheckInCountForSection });
+ }
+ return base;
+ }, [listForSection.length, inHouseCountForSection, checkedOutCountForSection, waitingCheckInCountForSection, sectionFilter]);
+
+ const activeFilterOption = useMemo(
+ () => filterOptions.find((opt) => opt.key === filterStatus) || filterOptions[0],
+ [filterOptions, filterStatus]
+ );
 
  // 4 Cards per page limit
  const CARDS_PER_PAGE = 4;
@@ -711,9 +786,9 @@ export function PaidUsersList({
  >
  {/* Top Header Banner - Clean text without pill backgrounds, with larger prominent Revenue font */}
         <div className="px-4 sm:px-6 pt-3 sm:pt-3.5 pb-2.5 sm:pb-3 border-b border-sky-200/80 bg-sky-100/85">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 sm:gap-3">
             {/* Left: Back button + Large Revenue Text + Clean Unboxed Metrics */}
-            <div className="flex items-center gap-3 sm:gap-4 flex-wrap min-w-0 sm:flex-1 justify-start">
+            <div className="flex items-center gap-3 sm:gap-4 flex-wrap min-w-0 sm:flex-1 justify-start order-1">
               {showBackButton && typeof onBack === 'function' && (
                 <button
                   type="button"
@@ -784,7 +859,7 @@ export function PaidUsersList({
             </div>
 
             {/* Center: High-Level Segmented Tabs Capsule (Online/Offline Console in Center) */}
-            <div className="flex items-center justify-center w-full sm:w-auto shrink-0">
+            <div className="flex items-center justify-center w-full sm:w-auto shrink-0 order-3 sm:order-2">
               <div className="inline-flex items-center p-1 rounded-full bg-white/90 border border-slate-200/90 shadow-xs relative select-none shrink-0 gap-0.5">
                 {/* Online Tab Button */}
                 <button
@@ -858,12 +933,88 @@ export function PaidUsersList({
               </div>
             </div>
 
-            {/* Right: Date text or balancing spacer */}
-            <div className="hidden sm:flex items-center gap-3 shrink-0 sm:flex-1 justify-end">
+            {/* Right: Date text (desktop) + Single Multi-Option Status Filter Dropdown */}
+            <div className="flex items-center gap-2.5 sm:gap-3 shrink-0 sm:flex-1 justify-end order-2 sm:order-3">
               {/* Calendar date info matching Room page */}
               <div className="hidden lg:flex items-center gap-1.5 text-xs font-semibold text-sky-950 select-none">
                 <Calendar className="w-3.5 h-3.5 text-[#3525CD]" />
                 <span>Today: {todayFormatted}</span>
+              </div>
+
+              {/* Multi-option single-field Filter Dropdown */}
+              <div className="relative" ref={filterMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsFilterOpen((prev) => !prev)}
+                  aria-haspopup="listbox"
+                  aria-expanded={isFilterOpen}
+                  className={`inline-flex items-center gap-1.5 h-8 sm:h-9 px-3 rounded-full border text-xs font-semibold transition-all cursor-pointer active:scale-95 shadow-xs ${
+                    filterStatus !== 'ALL'
+                      ? 'bg-[#1f1b16] text-white border-[#1f1b16]'
+                      : 'bg-white/95 hover:bg-white text-[#1f1b16] border-sky-300/80'
+                  }`}
+                >
+                  <SlidersHorizontal className={`w-3.5 h-3.5 shrink-0 ${filterStatus !== 'ALL' ? 'text-white' : 'text-sky-700'}`} />
+                  <span className="truncate max-w-[110px]">{activeFilterOption.label}</span>
+                  <span
+                    className={`min-w-[18px] h-[18px] px-1 rounded-full text-[11px] font-mono leading-none inline-flex items-center justify-center ${
+                      filterStatus !== 'ALL'
+                        ? 'bg-white/20 text-white'
+                        : 'bg-slate-200/80 text-slate-700'
+                    }`}
+                  >
+                    {activeFilterOption.count}
+                  </span>
+                  <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${isFilterOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                <AnimatePresence>
+                  {isFilterOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 4, scale: 0.97 }}
+                      transition={{ duration: 0.15 }}
+                      role="listbox"
+                      aria-label="Status filter options"
+                      className="absolute right-0 mt-2 w-52 rounded-2xl bg-white border border-slate-200/90 shadow-xl py-1.5 px-1.5 z-40"
+                    >
+                      {filterOptions.map((opt) => {
+                        const selected = filterStatus === opt.key;
+                        return (
+                          <button
+                            key={opt.key}
+                            type="button"
+                            role="option"
+                            aria-selected={selected}
+                            onClick={() => {
+                              setFilterStatus(opt.key);
+                              setCurrentPage(0);
+                              setIsFilterOpen(false);
+                            }}
+                            className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-xs transition-colors cursor-pointer ${
+                              selected
+                                ? 'bg-[#1f1b16] text-white font-semibold'
+                                : 'text-slate-700 hover:bg-slate-100 font-medium'
+                            }`}
+                          >
+                            <span className="flex items-center gap-2 truncate">
+                              <Check className={`w-3.5 h-3.5 shrink-0 ${selected ? 'opacity-100' : 'opacity-0'}`} />
+                              <span className="truncate">{opt.label}</span>
+                            </span>
+                            <span
+                              className={`min-w-[20px] h-[20px] px-1.5 rounded-full text-[11px] font-mono leading-none inline-flex items-center justify-center ${
+                                selected ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+                              }`}
+                            >
+                              {opt.count}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           </div>
@@ -877,14 +1028,20 @@ export function PaidUsersList({
  <input
  type="text"
  value={searchQuery}
- onChange={(e) => setSearchQuery(e.target.value)}
+ onChange={(e) => {
+ setSearchQuery(e.target.value);
+ setCurrentPage(0);
+ }}
  placeholder="Search guest, phone, room..."
  className="w-full pl-10 pr-9 py-2.5 rounded-2xl text-xs sm:text-sm bg-white text-[#1f1b16] border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 placeholder:text-slate-400 transition-all shadow-2xs"
  />
  {searchQuery && (
  <button
  type="button"
- onClick={() => setSearchQuery('')}
+ onClick={() => {
+ setSearchQuery('');
+ setCurrentPage(0);
+ }}
  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-0.5"
  >
  <X className="w-3.5 h-3.5" />
@@ -917,29 +1074,40 @@ export function PaidUsersList({
  <h3 className="text-sm font-medium text-slate-700">
  {searchQuery
  ? 'No matching guests found'
+ : filterStatus === 'CHECKED_IN'
+ ? 'No checked-in guests'
+ : filterStatus === 'CHECKED_OUT'
+ ? 'No checked-out guests'
+ : filterStatus === 'CONFIRMED'
+ ? 'No guests waiting for check-in'
  : sectionFilter === 'ONLINE'
  ? 'No online paid bookings yet'
  : 'No offline registered guests yet'}
  </h3>
  <p className="text-xs text-slate-400 max-w-sm mt-1">
- {searchQuery
- ? `No records found matching "${searchQuery}". Clear your search to view all ${
+ {searchQuery || filterStatus !== 'ALL'
+ ? `No records match the current filter in ${
  sectionFilter === 'ONLINE' ? 'online' : 'offline'
  } guests.`
  : sectionFilter === 'ONLINE'
  ? 'Guests who pay online via Direct UPI will automatically appear here with their verified UTR transaction references.'
  : 'Walk-in residents or guests added manually via the schedule console will appear here.'}
  </p>
- {searchQuery && (
+ {(searchQuery || filterStatus !== 'ALL') && (
  <button
  type="button"
  onClick={() => {
  setSearchQuery('');
+ setFilterStatus('ALL');
  setCurrentPage(0);
  }}
  className="mt-4 px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer transition-all shadow-xs"
  >
- Clear Search Filter
+ {searchQuery && filterStatus !== 'ALL'
+ ? 'Clear Filters'
+ : searchQuery
+ ? 'Clear Search Filter'
+ : 'Show All Guests'}
  </button>
  )}
  </div>

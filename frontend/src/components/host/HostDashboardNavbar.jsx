@@ -234,7 +234,7 @@ export function HostDashboardNavbar({
               <motion.div
                 layoutId="hostNavbarActiveCapsuleTab"
                 className="absolute inset-0 bg-[#1f1b16] rounded-full shadow-[0_2px_8px_rgba(31,27,22,0.3)] z-0 pointer-events-none"
-                transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                transition={{ type: 'spring', stiffness: 520, damping: 36, mass: 0.75 }}
               />
             )}
             <svg className="relative z-10 w-4.5 h-4.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -261,7 +261,7 @@ export function HostDashboardNavbar({
               <motion.div
                 layoutId="hostNavbarActiveCapsuleTab"
                 className="absolute inset-0 bg-[#1f1b16] rounded-full shadow-[0_2px_8px_rgba(31,27,22,0.3)] z-0 pointer-events-none"
-                transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                transition={{ type: 'spring', stiffness: 520, damping: 36, mass: 0.75 }}
               />
             )}
             <svg className="relative z-10 w-4.5 h-4.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -295,7 +295,7 @@ export function HostDashboardNavbar({
               <motion.div
                 layoutId="hostNavbarActiveCapsuleTab"
                 className="absolute inset-0 bg-[#1f1b16] rounded-full shadow-[0_2px_8px_rgba(31,27,22,0.3)] z-0 pointer-events-none"
-                transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                transition={{ type: 'spring', stiffness: 520, damping: 36, mass: 0.75 }}
               />
             )}
             <svg className="relative z-10 w-4.5 h-4.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -421,7 +421,7 @@ export function HostDashboardNavbar({
               <motion.div
                 layoutId="hostNavbarMobileActiveCapsule"
                 className="absolute inset-0 bg-[#1f1b16] rounded-full shadow-[0_2px_8px_rgba(31,27,22,0.3)] z-0 pointer-events-none"
-                transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                transition={{ type: 'spring', stiffness: 520, damping: 36, mass: 0.75 }}
               />
             )}
             <span className="relative z-10">Property</span>
@@ -443,7 +443,7 @@ export function HostDashboardNavbar({
               <motion.div
                 layoutId="hostNavbarMobileActiveCapsule"
                 className="absolute inset-0 bg-[#1f1b16] rounded-full shadow-[0_2px_8px_rgba(31,27,22,0.3)] z-0 pointer-events-none"
-                transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                transition={{ type: 'spring', stiffness: 520, damping: 36, mass: 0.75 }}
               />
             )}
             <span className="relative z-10">Rooms</span>
@@ -465,7 +465,7 @@ export function HostDashboardNavbar({
               <motion.div
                 layoutId="hostNavbarMobileActiveCapsule"
                 className="absolute inset-0 bg-[#1f1b16] rounded-full shadow-[0_2px_8px_rgba(31,27,22,0.3)] z-0 pointer-events-none"
-                transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                transition={{ type: 'spring', stiffness: 520, damping: 36, mass: 0.75 }}
               />
             )}
             <span className="relative z-10">Users</span>
@@ -495,7 +495,7 @@ export function HostDashboardNavbar({
               <motion.div
                 layoutId="hostNavbarMobileActiveCapsule"
                 className="absolute inset-0 bg-[#1f1b16] rounded-full shadow-[0_2px_8px_rgba(31,27,22,0.3)] z-0 pointer-events-none"
-                transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                transition={{ type: 'spring', stiffness: 520, damping: 36, mass: 0.75 }}
               />
             )}
             <span className="relative z-10">Paid</span>

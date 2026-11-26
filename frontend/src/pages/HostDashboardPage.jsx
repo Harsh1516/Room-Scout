@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from '../context/ToastContext';
@@ -15,20 +15,28 @@ import { useHostRoomManagement } from '../hooks/host/useHostRoomManagement';
 import { useHostDashboardMetrics } from '../hooks/host/useHostDashboardMetrics';
 import { useHostGuestOperations } from '../hooks/host/useHostGuestOperations';
 
-// Dynamic On-Demand Sub-Modules for Host Dashboard
-const HostWeeklySlotSchedule = lazy(() => import('../components/host/HostWeeklySlotSchedule'));
-const HostUsersVisitedSection = lazy(() =>
- import('../components/host/HostUsersVisitedSection').then((m) => ({ default: m.HostUsersVisitedSection }))
-);
-const PaidUsersList = lazy(() =>
- import('../components/host/paid/PaidUsersList').then((m) => ({ default: m.PaidUsersList }))
-);
-const PropertyDetailsSection = lazy(() =>
- import('../components/host/PropertyDetailsSection').then((m) => ({ default: m.PropertyDetailsSection }))
-);
-const PropertyArchitecturalBackground = lazy(() =>
- import('../components/common/PropertyArchitecturalBackground').then((m) => ({ default: m.PropertyArchitecturalBackground }))
-);
+// Dynamic On-Demand Sub-Modules for Host Dashboard (with eager background warm-up)
+const loadHostWeeklySlotSchedule = () => import('../components/host/HostWeeklySlotSchedule');
+const loadHostUsersVisitedSection = () =>
+  import('../components/host/HostUsersVisitedSection').then((m) => ({ default: m.HostUsersVisitedSection }));
+const loadPaidUsersList = () =>
+  import('../components/host/paid/PaidUsersList').then((m) => ({ default: m.PaidUsersList }));
+const loadPropertyDetailsSection = () =>
+  import('../components/host/PropertyDetailsSection').then((m) => ({ default: m.PropertyDetailsSection }));
+
+const preloadHostDashboardTabs = () => {
+  loadPropertyDetailsSection().catch(() => {});
+  loadHostWeeklySlotSchedule().catch(() => {});
+  loadHostUsersVisitedSection().catch(() => {});
+  loadPaidUsersList().catch(() => {});
+};
+
+const HostWeeklySlotSchedule = lazy(loadHostWeeklySlotSchedule);
+const HostUsersVisitedSection = lazy(loadHostUsersVisitedSection);
+const PaidUsersList = lazy(loadPaidUsersList);
+const PropertyDetailsSection = lazy(loadPropertyDetailsSection);
+
+const TAB_ORDER = ['property', 'room', 'users', 'paid'];
 
 function DashboardSkeletonLoader() {
  return <DotGridWaveLoader fullScreen={false} className="flex-1 min-h-[calc(100dvh-10rem)]" />;
@@ -57,6 +65,30 @@ export function HostDashboardPage() {
 
  const [visitedSubTab, setVisitedSubTab] = useState('requests');
  const [propertySubTabIndex, setPropertySubTabIndex] = useState(0);
+ const [tabDirection, setTabDirection] = useState(1);
+ const [hasSwitchedTab, setHasSwitchedTab] = useState(false);
+ const [mountedTabs, setMountedTabs] = useState(() => ({
+   property: activeTab === 'property',
+   room: activeTab === 'room',
+   users: activeTab === 'users',
+   paid: activeTab === 'paid',
+ }));
+ const activeTabRef = useRef(activeTab);
+
+ useEffect(() => {
+   activeTabRef.current = activeTab;
+ }, [activeTab]);
+
+ // Eagerly warm up all dashboard tab chunks after initial render so tab switching never pauses on Suspense
+ useEffect(() => {
+   if (typeof window === 'undefined') return undefined;
+   if ('requestIdleCallback' in window) {
+     const id = window.requestIdleCallback(() => preloadHostDashboardTabs(), { timeout: 500 });
+     return () => window.cancelIdleCallback(id);
+   }
+   const id = window.setTimeout(() => preloadHostDashboardTabs(), 120);
+   return () => window.clearTimeout(id);
+ }, []);
 
  // ── Host Subscription Live State ──
  const [subscriptionInfo, setSubscriptionInfo] = useState(() => {
@@ -135,13 +167,27 @@ export function HostDashboardPage() {
  }, [loadSubscriptionData]);
 
  const handleTabSwitch = useCallback((nextTab) => {
- setActiveTab(nextTab);
- if (typeof window !== 'undefined' && window.sessionStorage) {
- try {
- window.sessionStorage.setItem('stayin_host_active_tab', nextTab);
- } catch {
- /* ignore */
+ const prevTab = activeTabRef.current;
+ if (prevTab !== nextTab) {
+   const prevIdx = TAB_ORDER.indexOf(prevTab);
+   const nextIdx = TAB_ORDER.indexOf(nextTab);
+   setTabDirection(nextIdx >= prevIdx ? 1 : -1);
+   setHasSwitchedTab(true);
+   activeTabRef.current = nextTab;
  }
+ setMountedTabs((prev) => (prev[nextTab] ? prev : { ...prev, [nextTab]: true }));
+ setActiveTab(nextTab);
+ if (typeof window !== 'undefined') {
+   if (window.scrollY > 0) {
+     window.scrollTo({ top: 0, behavior: 'auto' });
+   }
+   if (window.sessionStorage) {
+     try {
+       window.sessionStorage.setItem('stayin_host_active_tab', nextTab);
+     } catch {
+       /* ignore */
+     }
+   }
  }
  }, []);
 
@@ -303,7 +349,7 @@ export function HostDashboardPage() {
  broadcastStayUpdate,
  refreshGuests,
  showToast,
- setActiveTab,
+ setActiveTab: handleTabSwitch,
  setSelectedCategoryIndex,
  setSelectedRoomCardId,
  setSelectedRoomNumber,
@@ -317,6 +363,25 @@ export function HostDashboardPage() {
     hostProperty?.hostId?.status === 'Approved'
   );
  const isPending = !isApproved;
+
+ // Stagger pre-mounting of remaining approved tabs during browser idle time for instant 0ms first-tap switching
+ useEffect(() => {
+   if (loading || !isApproved || !hostProperty?._id) return undefined;
+   const remaining = TAB_ORDER.filter((t) => !mountedTabs[t]);
+   if (remaining.length === 0) return undefined;
+
+   const timer = window.setTimeout(() => {
+     const nextToWarm = remaining[0];
+     setMountedTabs((prev) => (prev[nextToWarm] ? prev : { ...prev, [nextToWarm]: true }));
+   }, 220);
+   return () => window.clearTimeout(timer);
+ }, [loading, isApproved, hostProperty?._id, mountedTabs]);
+
+ const tabEnterAnimClass = hasSwitchedTab
+   ? tabDirection >= 0
+     ? 'animate-host-tab-forward'
+     : 'animate-host-tab-backward'
+   : '';
 
  return (
  <div
@@ -375,12 +440,17 @@ export function HostDashboardPage() {
  : 'min-h-[calc(100vh-4rem)] overflow-x-clip'
  }`}
  >
- <div className="w-full flex-1 h-full flex flex-col min-h-0">
- {/* 1. Property Details Tab */}
- {activeTab === 'property' && (
+ <div className="w-full flex-1 h-full flex flex-col min-h-0 overflow-x-clip">
+ {/* 1. Property Details Tab (Keep-Alive for instant switching) */}
+ {mountedTabs.property && (
  <div
  key="console-tab-property"
- className="w-full flex-1 flex flex-col px-0 pt-0 pb-0 max-w-full overflow-visible relative"
+ aria-hidden={activeTab !== 'property'}
+ className={
+ activeTab === 'property'
+ ? `w-full flex-1 flex flex-col px-0 pt-0 pb-0 max-w-full overflow-visible relative ${tabEnterAnimClass}`
+ : 'hidden'
+ }
  >
  <ErrorBoundary>
  <Suspense fallback={<DashboardSkeletonLoader />}>
@@ -413,11 +483,16 @@ export function HostDashboardPage() {
  </div>
  )}
 
- {/* 2. Room Schedule & Bookings Tab */}
- {activeTab === 'room' && (
+ {/* 2. Room Schedule & Bookings Tab (Keep-Alive for instant switching) */}
+ {mountedTabs.room && (
  <div
  key="console-tab-room"
- className="w-full flex-1 flex flex-col min-h-0"
+ aria-hidden={activeTab !== 'room'}
+ className={
+ activeTab === 'room'
+ ? `w-full flex-1 flex flex-col min-h-0 ${tabEnterAnimClass}`
+ : 'hidden'
+ }
  >
  <HostRoomsTab
  HostWeeklySlotScheduleComponent={HostWeeklySlotSchedule}
@@ -454,17 +529,22 @@ export function HostDashboardPage() {
  activeCategory={activeCategory}
  onGoBackToVisited={() => {
  setVisitedSubTab('requests');
- setActiveTab('users');
+ handleTabSwitch('users');
  }}
  />
  </div>
  )}
 
- {/* 3. Users Visited Tab */}
- {activeTab === 'users' && (
+ {/* 3. Users Visited Tab (Keep-Alive for instant switching) */}
+ {mountedTabs.users && (
  <div
  key="console-tab-users"
- className="w-full flex-1 min-h-0 flex flex-col px-0 lg:px-6 max-md:pt-0 pt-1.5 max-md:pb-0 md:pb-4 lg:pt-2 max-w-[1600px] mx-auto lg:overflow-hidden"
+ aria-hidden={activeTab !== 'users'}
+ className={
+ activeTab === 'users'
+ ? `w-full flex-1 min-h-0 flex flex-col px-0 lg:px-6 max-md:pt-0 pt-1.5 max-md:pb-0 md:pb-4 lg:pt-2 max-w-[1600px] mx-auto lg:overflow-hidden ${tabEnterAnimClass}`
+ : 'hidden'
+ }
  >
  <ErrorBoundary>
  <Suspense fallback={<DashboardSkeletonLoader />}>
@@ -487,11 +567,16 @@ export function HostDashboardPage() {
  </div>
  )}
 
- {/* 4. Dedicated Paid Users Tab */}
- {activeTab === 'paid' && (
+ {/* 4. Dedicated Paid Users Tab (Keep-Alive for instant switching) */}
+ {mountedTabs.paid && (
  <div
  key="console-tab-paid"
- className="w-full flex-1 flex flex-col px-0 pt-0 pb-28 sm:pb-32 lg:pb-4 overflow-y-auto lg:overflow-hidden"
+ aria-hidden={activeTab !== 'paid'}
+ className={
+ activeTab === 'paid'
+ ? `w-full flex-1 flex flex-col px-0 pt-0 pb-28 sm:pb-32 lg:pb-4 overflow-y-auto lg:overflow-hidden ${tabEnterAnimClass}`
+ : 'hidden'
+ }
  >
  <ErrorBoundary>
  <Suspense fallback={<DashboardSkeletonLoader />}>
@@ -506,7 +591,7 @@ export function HostDashboardPage() {
  broadcastStayUpdate={broadcastStayUpdate}
  onBack={() => {
  setVisitedSubTab('requests');
- setActiveTab('users');
+ handleTabSwitch('users');
  }}
  onSelectUserRequest={handleSelectUserRequest}
  />
@@ -514,7 +599,6 @@ export function HostDashboardPage() {
  </ErrorBoundary>
  </div>
  )}
-
  </div>
  </main>
  </div>

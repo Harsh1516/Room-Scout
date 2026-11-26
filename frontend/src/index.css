@@ -1772,3 +1772,38 @@ button, a, input, select, textarea, [role="button"], label {
     -webkit-backdrop-filter: blur(14px) !important;
   }
 }
+
+/* 5. Zero-lag GPU-composited host dashboard tab entrance */
+@keyframes hostTabSlideForward {
+  from {
+    opacity: 0.72;
+    transform: translate3d(14px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes hostTabSlideBackward {
+  from {
+    opacity: 0.72;
+    transform: translate3d(-14px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-host-tab-forward {
+  animation: hostTabSlideForward 160ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.animate-host-tab-backward {
+  animation: hostTabSlideBackward 160ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}

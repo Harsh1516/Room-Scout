@@ -568,12 +568,15 @@ export function VisitedRequestsView({
   }, [roomRates, hostProperty?.roomRates]);
 
   const currentCategoryIndex = useMemo(() => {
-    if (!selectedCategory || selectedCategory === 'ALL') return 0;
-    const idx = safeRoomRates.findIndex(
-      (r) => (r.type || '').trim().toLowerCase() === selectedCategory.trim().toLowerCase()
-    );
-    return idx >= 0 ? idx : 0;
-  }, [safeRoomRates, selectedCategory]);
+    if (selectedCategory && selectedCategory !== 'ALL') {
+      const idx = safeRoomRates.findIndex(
+        (r) => (r.type || '').trim().toLowerCase() === selectedCategory.trim().toLowerCase()
+      );
+      return idx >= 0 ? idx : 0;
+    }
+    const activeIdx = safeRoomRates.findIndex((r) => getCategoryRequestTotal(r?.type) > 0);
+    return activeIdx >= 0 ? activeIdx : 0;
+  }, [safeRoomRates, selectedCategory, getCategoryRequestTotal]);
 
   const handleSelectCategoryIndex = (idx) => {
     const rate = safeRoomRates[idx];
@@ -586,14 +589,30 @@ export function VisitedRequestsView({
   const handleSelectRoomCard = (cardId, idx, card) => {
     const activeCat = safeRoomRates[currentCategoryIndex]?.type || selectedCategory || 'ALL';
     const rNum = String(card?.roomNumber || cardId || '').replace(/\D/g, '');
+    const cleanSelected = String(selectedRoomNumber || '').replace(/\D/g, '');
     if (activeCat && activeCat !== 'ALL') {
       onSelectCategory(activeCat);
     }
-    if (selectedRoomNumber === rNum) {
+    if (selectedRoomNumber !== 'ALL' && cleanSelected === rNum) {
       onSelectRoom('ALL');
-    } else {
-      onSelectRoom(rNum);
+      return;
     }
+    onSelectRoom(rNum);
+
+    // Automatically match the bottom Online/Offline channel to wherever this room's records live
+    if (rNum) {
+      const roomMatches = (Array.isArray(allRequests) ? allRequests : []).filter(
+        (g) => String(g.roomNumber || '').replace(/\D/g, '') === rNum
+      );
+      const hasOnline = roomMatches.some(isOnlineGuest);
+      const hasOffline = roomMatches.some((g) => !isOnlineGuest(g));
+      if (sectionFilter === 'ONLINE' && !hasOnline && hasOffline) {
+        setSectionFilter('OFFLINE');
+      } else if (sectionFilter === 'OFFLINE' && !hasOffline && hasOnline) {
+        setSectionFilter('ONLINE');
+      }
+    }
+    setCurrentPage(0);
   };
 
  return (
@@ -629,16 +648,29 @@ export function VisitedRequestsView({
           activeSlotGuest ? 'hidden lg:flex' : 'flex'
         } relative z-20 w-full flex-1 min-w-0 flex-col bg-white rounded-t-[36px] sm:rounded-t-[44px] lg:rounded-[32px] shadow-[0_-12px_36px_rgba(0,0,0,0.08),0_-4px_14px_rgba(0,0,0,0.04)] lg:shadow-md pt-5 sm:pt-6 pb-32 lg:pb-8 px-3 sm:px-5 lg:px-6 mt-2 lg:mt-0 max-lg:min-h-screen lg:min-h-0 lg:overflow-y-auto lg:overscroll-y-contain select-none`}
       >
-        {/* Drag Handle + Centered Title + Pulsing Badge matching Pic 2 */}
+        {/* Drag Handle + Centered Title + Active Room Filter Chip */}
         <div className="flex flex-col items-center justify-center mb-4 sm:mb-5 w-full text-center shrink-0">
           <div className="w-10 h-1 bg-slate-300/80 rounded-full mb-2.5" />
-          <h2 className="text-[20px] sm:text-[22px] font-bold text-[#1f1b16] tracking-tight leading-none text-center">
-            {subTab === 'checkout'
-              ? 'Guest Departures & Check-Outs'
-              : subTab === 'checkin'
-              ? 'Guest Check-Ins'
-              : 'Pending Booking Requests'}
-          </h2>
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            <h2 className="text-[20px] sm:text-[22px] font-bold text-[#1f1b16] tracking-tight leading-none text-center">
+              {subTab === 'checkout'
+                ? 'Guest Departures & Check-Outs'
+                : subTab === 'checkin'
+                ? 'Guest Check-Ins'
+                : 'Pending Booking Requests'}
+            </h2>
+            {selectedRoomNumber && selectedRoomNumber !== 'ALL' && (
+              <button
+                type="button"
+                onClick={() => onSelectRoom('ALL')}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#1f1b16] text-white text-[11px] font-semibold cursor-pointer hover:bg-slate-700 transition-colors active:scale-95"
+                title="Click to show records for all rooms"
+              >
+                <span>Room {String(selectedRoomNumber).replace(/\D/g, '')}</span>
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Online/Offline Toggle Capsule */}
