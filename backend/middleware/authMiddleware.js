@@ -52,7 +52,7 @@ export async function protect(req, res, next) {
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
   } else if (req.headers.cookie) {
-    const match = req.headers.cookie.match(/(?:^|;\s*)roomscout_token=([^;]+)/);
+    const match = req.headers.cookie.match(/(?:^|;\s*)stayin_token=([^;]+)/);
     if (match) {
       token = decodeURIComponent(match[1]);
     }
@@ -281,7 +281,7 @@ export async function optionalProtect(req, res, next) {
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
   } else if (req.headers.cookie) {
-    const match = req.headers.cookie.match(/(?:^|;\s*)roomscout_token=([^;]+)/);
+    const match = req.headers.cookie.match(/(?:^|;\s*)stayin_token=([^;]+)/);
     if (match) {
       token = decodeURIComponent(match[1]);
     }

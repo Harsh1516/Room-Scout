@@ -10,6 +10,7 @@ import { isBookingRequestExpired } from './bookingController.js';
 import { sendBookingConfirmedEmail, sendPaymentSubmittedToHostEmail, getPublicClientBaseUrl } from '../services/emailService.js';
 import { uploadSecureImage } from '../utils/imageSecurity.js';
 import { emitToHost, emitToUser, emitToGlobal } from '../services/socketService.js';
+import { generateUniqueBookingPassKey } from '../utils/passKeyGenerator.js';
 
 // Normalizes UPI transaction references (UTR / RRN)
 export function normalizeTransactionRef(raw) {
@@ -29,7 +30,7 @@ export function isValidUpiId(vpa) {
  */
 export function buildUpiPaymentUri({ upiId, payeeName, amount, bookingRef }) {
   const cleanUpi = String(upiId || '').trim();
-  const cleanName = String(payeeName || 'Room Scout Stay').trim();
+  const cleanName = String(payeeName || 'Stay In').trim();
   const cleanAmount = Number(amount || 0).toFixed(2);
   const cleanNote = String(bookingRef || 'Room Reservation').trim().slice(0, 40);
 
@@ -78,7 +79,7 @@ export const getBookingUpiPaymentDetails = async (req, res, next) => {
     const host = await Host.findById(booking.hostId).select('name upiSettings status').lean();
 
     const hostUpi = stay?.upiSettings?.upiId || host?.upiSettings?.upiId || '';
-    const payeeName = stay?.upiSettings?.payeeName || host?.upiSettings?.payeeName || host?.name || stay?.title || 'Room Scout Host';
+    const payeeName = stay?.upiSettings?.payeeName || host?.upiSettings?.payeeName || host?.name || stay?.title || 'Stay In Host';
 
     // Verify host has configured UPI
     if (!hostUpi || !isValidUpiId(hostUpi)) {
@@ -244,7 +245,7 @@ export const submitUpiPayment = async (req, res, next) => {
     let finalReceiptUrl = receiptUrl || '';
     if (receiptImage && typeof receiptImage === 'string') {
       try {
-        finalReceiptUrl = await uploadSecureImage(receiptImage, 'roomscout/receipts');
+        finalReceiptUrl = await uploadSecureImage(receiptImage, 'stayin/receipts');
       } catch (uploadErr) {
         console.warn('Receipt upload failed, using direct payload fallback:', uploadErr.message);
         if (receiptImage.startsWith('data:image/') || receiptImage.startsWith('http')) {
@@ -454,7 +455,7 @@ export const verifyHostPayment = async (req, res, next) => {
       booking.paymentStatus = 'PAID';
       booking.status = 'CONFIRMED';
       if (!booking.checkInCode) {
-        booking.checkInCode = Math.floor(10000000 + Math.random() * 90000000).toString();
+        booking.checkInCode = await generateUniqueBookingPassKey();
       }
       if (!booking.upiPayment) booking.upiPayment = {};
       booking.upiPayment.verificationStatus = 'VERIFIED';
@@ -530,10 +531,12 @@ export const verifyHostPayment = async (req, res, next) => {
         bookingId: booking._id,
         bookingReferenceId: booking.bookingReferenceId,
         bookingStatus: 'CONFIRMED',
+        checkInCode: booking.checkInCode,
       });
       emitToUser([booking.userId, booking.email], 'booking:confirmed', {
         bookingId: booking._id,
         bookingReferenceId: booking.bookingReferenceId,
+        checkInCode: booking.checkInCode,
         booking,
       });
       emitToHost([booking.hostId], 'booking:updated', {
@@ -541,6 +544,7 @@ export const verifyHostPayment = async (req, res, next) => {
         bookingReferenceId: booking.bookingReferenceId,
         status: 'CONFIRMED',
         paymentStatus: 'PAID',
+        checkInCode: booking.checkInCode,
         booking,
       });
       emitToGlobal('stay:availability_changed', {
@@ -551,6 +555,7 @@ export const verifyHostPayment = async (req, res, next) => {
       return res.json({
         success: true,
         message: `Payment of ₹${booking.totalAmount.toLocaleString('en-IN')} verified successfully! Booking ${booking.bookingReferenceId} is confirmed.`,
+        checkInCode: booking.checkInCode,
         booking,
       });
     }

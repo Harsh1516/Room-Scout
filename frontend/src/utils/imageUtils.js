@@ -1,5 +1,5 @@
 /**
- * Fast synchronous & async image utilities for RoomScout:
+ * Fast synchronous & async image utilities for Stay In:
  * - 16:9 Aspect Ratio Validation
  * - Canvas compression formula (downscaling to maxDim 1400, JPEG quality 0.82)
  * - Memory & file size estimation (KB / MB formatting)

@@ -9,7 +9,7 @@
  * Another host will never load or see another tenant's draft photos.
  */
 
-const DB_NAME = 'RoomScout_Host_Draft_DB';
+const DB_NAME = 'StayIn_Host_Draft_DB';
 const DB_VERSION = 1;
 const STORE_NAME = 'draft_images';
 

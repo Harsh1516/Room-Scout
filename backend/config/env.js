@@ -80,7 +80,7 @@ export const envSchema = z
 
     // 2. Reject known insecure fallback / placeholder strings
     const INSECURE_DEFAULTS = [
-      'dev_temporary_fallback_secret_key_roomscout_2026',
+      'dev_temporary_fallback_secret_key_stayin_2026',
       'supersecret',
       'secret',
       'changeme',

@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { StayCinematicShowcase } from '../components/common/StayCinematicShowcase';
+import { DotGridWaveLoader } from '../components/common/DotGridWaveLoader';
 
 const SearchInteractiveMap = lazy(() =>
  import('../components/SearchInteractiveMap').then((m) => ({ default: m.SearchInteractiveMap }))
@@ -200,16 +201,8 @@ export function SearchResultsPage({
  
  {/* Search Results Display (Showcase Only) */}
       <div className={`w-full ${!hasStays ? 'flex-1 flex flex-col items-center justify-center my-auto' : ''}`}>
-        {/* Loading Skeletons */}
-        {isLoading && (
-          <div className="w-full max-w-md sm:max-w-xl lg:max-w-2xl xl:max-w-3xl mx-auto rounded-[28px] sm:rounded-[36px] bg-slate-200/80 p-6 flex flex-col gap-4 border border-slate-300/40 animate-pulse my-auto">
-            <div className="w-full aspect-[16/10] sm:aspect-[16/9] lg:aspect-[21/9] max-h-[340px] bg-slate-300 rounded-2xl" />
-            <div className="h-6 w-48 bg-slate-300 rounded-lg" />
-            <div className="h-4 w-32 bg-slate-300 rounded-md" />
-            <div className="h-16 w-full bg-slate-300 rounded-2xl" />
-            <div className="h-12 w-full bg-slate-300 rounded-2xl" />
-          </div>
-        )}
+        {/* Centered Dot Grid Wave Loader while stays fetch */}
+        {isLoading && <DotGridWaveLoader />}
 
         {/* Search Results Display */}
         {!isLoading && stays.length > 0 && (

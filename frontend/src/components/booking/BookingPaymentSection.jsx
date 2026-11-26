@@ -1,4 +1,5 @@
 import { formatCountdown } from '../../utils/bookingPayment';
+import { formatUtrNumber } from '../../utils/bookingDetailsHelpers';
 
 export function BookingPaymentSection({
   booking,
@@ -70,7 +71,7 @@ export function BookingPaymentSection({
             </p>
             {booking?.upiPayment?.transactionRef && (
               <p className="text-xs text-slate-500 pt-1 font-medium">
-                Previously submitted reference: <span className="font-mono font-bold text-slate-700">{booking.upiPayment.transactionRef}</span>
+                Previously submitted reference: <span className="font-mono font-bold text-slate-700">{formatUtrNumber(booking.upiPayment.transactionRef)}</span>
               </p>
             )}
           </div>
@@ -257,10 +258,9 @@ export function BookingPaymentSection({
               <input
                 type="text"
                 inputMode="numeric"
-                pattern="\d{12}"
-                maxLength={12}
+                maxLength={14}
                 required
-                value={transactionRef}
+                value={formatUtrNumber(transactionRef)}
                 onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, '').slice(0, 12);
                   setTransactionRef(val);
@@ -344,7 +344,7 @@ export function BookingPaymentSection({
             <div className="flex items-center justify-between text-xs sm:text-sm">
               <span className="text-slate-400 font-bold uppercase tracking-wider">Submitted Reference (UTR):</span>
               <span className="font-mono font-bold text-[#1f1b16]">
-                {booking?.upiPayment?.transactionRef || transactionRef || '—'}
+                {formatUtrNumber(booking?.upiPayment?.transactionRef || transactionRef) || '—'}
               </span>
             </div>
             <div className="flex items-center justify-between text-xs sm:text-sm">
@@ -384,7 +384,7 @@ export function BookingPaymentSection({
           {(booking?.upiPayment?.transactionRef || transactionRef) && (
             <div className="flex items-center justify-between text-xs sm:text-sm pt-2 border-t border-slate-200/80">
               <span className="text-slate-500 font-medium">Submitted Reference (UTR):</span>
-              <span className="font-mono font-bold text-slate-800">{booking.upiPayment?.transactionRef || transactionRef}</span>
+              <span className="font-mono font-bold text-slate-800">{formatUtrNumber(booking.upiPayment?.transactionRef || transactionRef)}</span>
             </div>
           )}
         </div>

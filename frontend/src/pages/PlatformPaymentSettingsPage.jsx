@@ -264,7 +264,7 @@ export default function PlatformPaymentSettingsPage() {
  className={inputClass}
  value={form.payeeName}
  onChange={(e) => updateField('payeeName', e.target.value)}
- placeholder="e.g. Harsh Chhikara (RoomScout)"
+ placeholder="e.g. Harsh Chhikara (Stay In)"
  required
  />
  </label>
@@ -301,7 +301,7 @@ export default function PlatformPaymentSettingsPage() {
  </div>
 
  <p className="text-xs text-slate-500 leading-relaxed font-normal">
- Configure the base rate per room per month for each property type. When a host views subscription plans, RoomScout multiplies their total room count by this rate.
+ Configure the base rate per room per month for each property type. When a host views subscription plans, Stay In multiplies their total room count by this rate.
  </p>
 
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">

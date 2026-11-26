@@ -358,11 +358,11 @@ export const createStay = async (req, res, next) => {
     if (Array.isArray(images) && images.length > 0) {
       processedImages = (
         await Promise.all(
-          images.filter(Boolean).map((img) => uploadSecureImage(img, 'roomscout/stays'))
+          images.filter(Boolean).map((img) => uploadSecureImage(img, 'stayin/stays'))
         )
       ).filter(Boolean);
     } else if (image && typeof image === 'string' && image.trim()) {
-      const cleanImg = await uploadSecureImage(image.trim(), 'roomscout/stays');
+      const cleanImg = await uploadSecureImage(image.trim(), 'stayin/stays');
       if (cleanImg) processedImages = [cleanImg];
     }
 
@@ -1173,7 +1173,7 @@ export const resolveMapLink = async (req, res) => {
           const geoRes = await fetch(
             `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&addressdetails=1&limit=1${ccParam}`,
             {
-              headers: { 'User-Agent': 'RoomScout-Property-Locator/1.0 (contact@roomscout.in)' },
+              headers: { 'User-Agent': 'StayIn-Property-Locator/1.0 (contact@stayin.in)' },
               signal: AbortSignal.timeout(8000),
             }
           );

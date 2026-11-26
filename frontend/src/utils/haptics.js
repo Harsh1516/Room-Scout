@@ -1,5 +1,5 @@
 /**
- * Mobile Haptic & Micro-Audio Utility for RoomScout
+ * Mobile Haptic & Micro-Audio Utility for Stay In
  * Delivers native-feeling tactile feedback and subtle synthetic acoustic chimes.
  */
 

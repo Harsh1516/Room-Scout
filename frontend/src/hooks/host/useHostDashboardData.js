@@ -47,13 +47,13 @@ export function clearAllHostCaches() {
  const keysToRemove = [];
  for (let i = 0; i < window.sessionStorage.length; i++) {
  const key = window.sessionStorage.key(i);
- if (key && (key.startsWith('roomscout_cached_host_') || key.startsWith('roomscout_cached_guests_'))) {
+ if (key && (key.startsWith('stayin_cached_host_') || key.startsWith('stayin_cached_guests_'))) {
  keysToRemove.push(key);
  }
  }
  keysToRemove.forEach((k) => window.sessionStorage.removeItem(k));
- window.sessionStorage.removeItem('roomscout_cached_host_latest');
- window.sessionStorage.removeItem('roomscout_cached_guests_latest');
+ window.sessionStorage.removeItem('stayin_cached_host_latest');
+ window.sessionStorage.removeItem('stayin_cached_guests_latest');
  } catch {
  /* ignore */
  }
@@ -83,7 +83,7 @@ export function getInitialHostProperty(userEmail, stateUpdatedHost) {
  // 3. Look in sessionStorage strictly for THIS email key
  if (emailKey && typeof window !== 'undefined' && window.sessionStorage) {
  try {
- const raw = window.sessionStorage.getItem(`roomscout_cached_host_${emailKey}`);
+ const raw = window.sessionStorage.getItem(`stayin_cached_host_${emailKey}`);
  if (raw) {
  const parsed = JSON.parse(raw);
  if (parsed && (!parsed.email || parsed.email.trim().toLowerCase() === emailKey)) {
@@ -114,7 +114,7 @@ export function getInitialGuests(userEmail) {
 
  if (typeof window !== 'undefined' && window.sessionStorage) {
  try {
- const raw = window.sessionStorage.getItem(`roomscout_cached_guests_${emailKey}`);
+ const raw = window.sessionStorage.getItem(`stayin_cached_guests_${emailKey}`);
  if (raw) {
  const parsed = JSON.parse(raw);
  if (Array.isArray(parsed)) {
@@ -142,7 +142,7 @@ export function saveHostPropertyToCache(email, data) {
  cachedHostPropertyMap.set(emailKey, data);
  if (typeof window !== 'undefined' && window.sessionStorage) {
  try {
- window.sessionStorage.setItem(`roomscout_cached_host_${emailKey}`, JSON.stringify(data));
+ window.sessionStorage.setItem(`stayin_cached_host_${emailKey}`, JSON.stringify(data));
  } catch {
  /* ignore storage quota */
  }
@@ -156,7 +156,7 @@ export function saveGuestsToCache(email, data) {
  cachedGuestsMap.set(emailKey, data);
  if (typeof window !== 'undefined' && window.sessionStorage) {
  try {
- window.sessionStorage.setItem(`roomscout_cached_guests_${emailKey}`, JSON.stringify(data));
+ window.sessionStorage.setItem(`stayin_cached_guests_${emailKey}`, JSON.stringify(data));
  } catch {
  /* ignore storage quota */
  }
@@ -268,7 +268,11 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
  g._id === nextG._id &&
  g.status === nextG.status &&
  g.paymentStatus === nextG.paymentStatus &&
- g.updatedAt === nextG.updatedAt
+ g.updatedAt === nextG.updatedAt &&
+ (g.upiPayment?.verificationStatus || '') === (nextG.upiPayment?.verificationStatus || '') &&
+ (g.upiPayment?.transactionRef || g.transactionRef || '') === (nextG.upiPayment?.transactionRef || nextG.transactionRef || '') &&
+ (g.checkInCode || '') === (nextG.checkInCode || '') &&
+ (g.aadharPhoto || g.guestAadharPhoto || '') === (nextG.aadharPhoto || nextG.guestAadharPhoto || '')
  );
  });
  if (isSame) return prev;
@@ -313,7 +317,11 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
  g._id === nextG._id &&
  g.status === nextG.status &&
  g.paymentStatus === nextG.paymentStatus &&
- g.updatedAt === nextG.updatedAt
+ g.updatedAt === nextG.updatedAt &&
+ (g.upiPayment?.verificationStatus || '') === (nextG.upiPayment?.verificationStatus || '') &&
+ (g.upiPayment?.transactionRef || g.transactionRef || '') === (nextG.upiPayment?.transactionRef || nextG.transactionRef || '') &&
+ (g.checkInCode || '') === (nextG.checkInCode || '') &&
+ (g.aadharPhoto || g.guestAadharPhoto || '') === (nextG.aadharPhoto || nextG.guestAadharPhoto || '')
  );
  });
  if (isSame) return prev;
@@ -348,7 +356,7 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
 
  if (foundHost) {
  const propId = foundHost._id || foundHost.email || 'default';
- const notifiedKey = `roomscout_approved_notified_${propId}`;
+ const notifiedKey = `stayin_approved_notified_${propId}`;
  const legacyNotifiedKey = `stayhub_approved_notified_${propId}`;
  const isApproved = foundHost.status === 'Approved';
  const alreadyNotified =
@@ -676,7 +684,7 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
  if (
  e.key === 'stayhub_admin_sync_ts' ||
  e.key === 'stayhub_host_approved_ts' ||
- (e.key && (e.key.startsWith('stayhub_') || e.key.startsWith('roomscout_')))
+ (e.key && (e.key.startsWith('stayhub_') || e.key.startsWith('stayin_')))
  ) {
  fetchHostData();
  }

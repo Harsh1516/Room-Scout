@@ -10,58 +10,11 @@ import { getStayPricing } from '../utils/priceUtils';
 import { PropertyMediaSection } from '../components/room/PropertyMediaSection';
 import { PropertyOverviewSection } from '../components/room/PropertyOverviewSection';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
+import { DotGridWaveLoader, triggerGlobalLoader } from '../components/common/DotGridWaveLoader';
 import { toast } from '../context/ToastContext';
 
 import { Left } from '../components/navbar/Left';
 import { Right } from '../components/navbar/Right';
-
-function PropertyDetailSkeleton() {
-  return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans antialiased animate-pulse">
-      {/* ── Top Floating Navigation Skeleton ── */}
-      <header className="relative w-full pointer-events-none select-none z-50">
-        <div className="fixed top-2.5 sm:top-5 left-2.5 sm:left-6 z-50 flex items-center h-[54px] sm:h-[56px]">
-          <div className="w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] rounded-full bg-white/90 border border-slate-200/90 shadow-sm" />
-        </div>
-        <div className="fixed bottom-5 sm:bottom-6 md:bottom-auto md:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center h-[54px] sm:h-[56px]">
-          <div className="h-12 w-64 sm:w-80 rounded-full bg-white/90 border border-slate-200/90 shadow-sm" />
-        </div>
-        <div className="fixed top-2.5 sm:top-5 right-2.5 sm:right-6 z-50 flex items-center h-[54px] sm:h-[56px]">
-          <div className="w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] rounded-full bg-white/90 border border-slate-200/90 shadow-sm" />
-        </div>
-      </header>
-
-      {/* ── Main Skeleton Content ── */}
-      <main className="max-w-[1360px] mx-auto px-4 sm:px-8 pt-24 sm:pt-28 pb-16">
-        {/* Hero Gallery Skeleton */}
-        <div className="w-full h-[320px] sm:h-[460px] md:h-[520px] rounded-3xl bg-slate-200/80 border border-slate-300/40 mb-8" />
-
-        {/* Content Layout (Left Column & Right Sticky Card) */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 sm:gap-12">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="h-9 sm:h-11 w-3/4 bg-slate-200 rounded-xl" />
-            <div className="h-5 w-1/2 bg-slate-200 rounded-lg" />
-            <div className="h-px bg-slate-200/80 my-6" />
-            <div className="space-y-3">
-              <div className="h-4 w-full bg-slate-200 rounded-md" />
-              <div className="h-4 w-5/6 bg-slate-200 rounded-md" />
-              <div className="h-4 w-2/3 bg-slate-200 rounded-md" />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
-              <div className="h-32 rounded-2xl bg-slate-200/70 border border-slate-300/30" />
-              <div className="h-32 rounded-2xl bg-slate-200/70 border border-slate-300/30" />
-            </div>
-          </div>
-
-          {/* Right Floating Booking Widget Skeleton */}
-          <div className="hidden lg:block lg:col-span-1">
-            <div className="h-[420px] w-full rounded-3xl bg-slate-200/80 border border-slate-300/50 p-6 space-y-4 shadow-sm" />
-          </div>
-        </div>
-      </main>
-    </div>
-  );
-}
 
 export function PropertyDetailPage({ onLoginClick }) {
   const { id } = useParams();
@@ -286,7 +239,7 @@ export function PropertyDetailPage({ onLoginClick }) {
   }, [user, reviews]);
 
   if (loading) {
-    return <PropertyDetailSkeleton />;
+    return <DotGridWaveLoader />;
   }
 
   if (!stay) {
@@ -330,6 +283,7 @@ export function PropertyDetailPage({ onLoginClick }) {
       ? `/stay/${currentStayId}/rooms?type=${encodeURIComponent(categoryType)}`
       : `/stay/${currentStayId}/rooms`;
 
+    triggerGlobalLoader();
     navigate(url, {
       state: {
         stay,

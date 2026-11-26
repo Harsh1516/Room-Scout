@@ -25,6 +25,7 @@ export function UserMonthlySlotCard({
   // Monthly props
   upcomingMonths = [],
   bookedMonthsForRoom = new Set(),
+  bookedMonthCountsForRoom = {},
   requestedMonthsForRoom = new Set(),
   userBookedMonthsForRoom = new Set(),
   userRequestedMonthsForRoom = new Set(),
@@ -222,34 +223,48 @@ export function UserMonthlySlotCard({
                 {(() => {
                   const roomCapacity = Math.max(1, Math.min(10, Number(activeRoom?.capacity) || 1));
                   return upcomingMonths.map((m) => {
-                    const isBooked = bookedMonthsForRoom.has(m.monthKey);
-                    const isUserMonth = isBooked && userBookedMonthsForRoom.has(m.monthKey);
-                    const isUserMonthRequested = !isBooked && userRequestedMonthsForRoom.has(m.monthKey);
+                    const isBookedFull = bookedMonthsForRoom.has(m.monthKey);
+                    const isUserMonth = userBookedMonthsForRoom.has(m.monthKey);
+                    const rawOccupied = Number(bookedMonthCountsForRoom?.[m.monthKey] || 0);
+                    const occupiedCount =
+                      rawOccupied > 0
+                        ? Math.min(roomCapacity, rawOccupied)
+                        : isBookedFull || isUserMonth
+                        ? roomCapacity
+                        : 0;
+                    const isFullyBooked = occupiedCount >= roomCapacity;
+                    const isPartiallyBooked = occupiedCount > 0 && occupiedCount < roomCapacity;
+                    const hasAnyBooked = occupiedCount > 0 || isBookedFull || isUserMonth;
+                    const isUserMonthRequested = !hasAnyBooked && userRequestedMonthsForRoom.has(m.monthKey);
                     const isSelected = selectedMonthIndices.includes(m.index);
-                    const occupiedCount = isBooked ? roomCapacity : 0;
-                    const isBookedMonth = isBooked || isUserMonthRequested;
+                    const isSlotDisabled = isFullyBooked || isUserMonthRequested;
+                    const isHighlightedMonth = hasAnyBooked || isUserMonthRequested;
 
                     return (
                       <button
                         type="button"
                         key={m.monthKey}
-                        disabled={isBookedMonth}
+                        disabled={isSlotDisabled}
                         onClick={() => onToggleSlotMonth && onToggleSlotMonth(m.index)}
                         className={`group relative aspect-square w-full p-2.5 sm:p-3 rounded-2xl select-none flex flex-col justify-between items-center text-center outline-none overflow-hidden bg-white ${
-                          isBookedMonth
-                            ? 'border border-orange-500 cursor-not-allowed opacity-90'
-                            : isSelected
+                          isSelected
                             ? 'border-2 border-black cursor-pointer'
+                            : isHighlightedMonth
+                            ? `border border-orange-500 ${isSlotDisabled ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'}`
                             : 'border border-slate-200 hover:border-slate-300 cursor-pointer'
                         }`}
                       >
                         <span className={`relative z-10 text-xs sm:text-sm font-bold px-3 py-1 rounded-full tracking-wide truncate max-w-[130px] leading-tight ${
-                          isBookedMonth
+                          isHighlightedMonth
                             ? 'bg-orange-50 text-orange-600 border border-orange-200/80 font-bold'
                             : 'bg-blue-50/70 text-blue-700 border border-blue-100 font-bold'
                         }`}>
-                          {isBooked
-                            ? (isUserMonth ? '★ You' : 'Booked')
+                          {isUserMonth
+                            ? '★ You'
+                            : isFullyBooked
+                            ? 'Booked'
+                            : isPartiallyBooked
+                            ? `${occupiedCount}/${roomCapacity} Booked`
                             : isUserMonthRequested
                             ? 'Requested'
                             : 'Available'}
@@ -257,12 +272,12 @@ export function UserMonthlySlotCard({
 
                         <div className="relative z-10 my-auto flex flex-col items-center justify-center">
                           <span className={`text-[20px] sm:text-[23px] font-black leading-tight tracking-tight ${
-                            isBookedMonth ? 'text-slate-800' : 'text-slate-900'
+                            isHighlightedMonth ? 'text-slate-800' : 'text-slate-900'
                           }`}>
                             {m.monthShort}
                           </span>
                           <span className={`text-sm sm:text-base font-bold leading-tight ${
-                            isBookedMonth ? 'text-slate-400' : 'text-slate-500'
+                            isHighlightedMonth ? 'text-slate-400' : 'text-slate-500'
                           }`}>
                             {m.year}
                           </span>
@@ -276,10 +291,10 @@ export function UserMonthlySlotCard({
                             className="py-0.5"
                             iconClassName="w-4 h-4 sm:w-4.5 sm:h-4.5"
                             occupiedColor={
-                              isBookedMonth ? 'text-orange-500' : 'text-slate-900'
+                              isHighlightedMonth ? 'text-orange-500' : 'text-slate-900'
                             }
                             vacantColor={
-                              isBookedMonth ? 'text-orange-200' : 'text-slate-300'
+                              isHighlightedMonth ? 'text-orange-300' : 'text-slate-300'
                             }
                             customTitle={`${occupiedCount} of ${roomCapacity} slot${roomCapacity > 1 ? 's' : ''} occupied in ${m.monthShort} ${m.year}`}
                           />

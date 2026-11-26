@@ -31,7 +31,7 @@ export function useStaySearch() {
  }
  try {
  const cached =
- sessionStorage.getItem('roomscout_stays_cache') ||
+ sessionStorage.getItem('stayin_stays_cache') ||
  sessionStorage.getItem('stayhub_stays_cache');
  if (cached) {
  const parsed = JSON.parse(cached);
@@ -100,7 +100,7 @@ export function useStaySearch() {
  setAllStays(staysList);
 
  try {
- sessionStorage.setItem('roomscout_stays_cache', JSON.stringify(staysList));
+ sessionStorage.setItem('stayin_stays_cache', JSON.stringify(staysList));
  sessionStorage.removeItem('stayhub_stays_cache');
  } catch {
  // quota exceeded or private browsing

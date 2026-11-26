@@ -12,7 +12,7 @@ const saltRounds = 10;
 const hash = bcrypt.hashSync(password.trim(), saltRounds);
 
 console.log('\n======================================================');
-console.log('         ROOMSCOUT ADMIN PASSWORD HASHER             ');
+console.log('          STAY IN ADMIN PASSWORD HASHER              ');
 console.log('======================================================');
 console.log(`Original Password : ${password}`);
 console.log(`Bcrypt Hash (10)  : ${hash}`);

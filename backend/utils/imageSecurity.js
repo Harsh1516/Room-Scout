@@ -244,7 +244,7 @@ export function validateImageArray(
 /**
  * Securely uploads an image to Cloudinary using server-generated identifiers and forced WebP format.
  */
-export async function uploadSecureImage(imageInput, folder = 'roomscout/stays') {
+export async function uploadSecureImage(imageInput, folder = 'stayin/stays') {
   if (!imageInput || typeof imageInput !== 'string') return '';
 
   let trimmed = imageInput.trim();
@@ -290,7 +290,7 @@ export async function uploadSecureImage(imageInput, folder = 'roomscout/stays') 
         allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
         format: 'webp', // Force delivery format to WebP to eliminate polyglot attacks and optimize performance
         transformation: [{ quality: 'auto:good' }, { fetch_format: 'auto' }],
-        tags: ['roomscout', folder.replace(/[^a-zA-Z0-9_-]/g, '_')],
+        tags: ['stayin', folder.replace(/[^a-zA-Z0-9_-]/g, '_')],
       });
 
       return uploadRes.secure_url;

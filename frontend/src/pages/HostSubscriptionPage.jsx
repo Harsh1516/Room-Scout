@@ -79,7 +79,7 @@ export function HostSubscriptionPage() {
 
     // ── Real-Time Server-Sent Events (SSE) Listener Fallback ──
     // Listens for instant verification notification from Admin side without polling
-    const token = localStorage.getItem('roomscout_token') || localStorage.getItem('stayhub_jwt_token');
+    const token = localStorage.getItem('stayin_token') || localStorage.getItem('stayhub_jwt_token');
     let eventSource = null;
 
     if (token) {

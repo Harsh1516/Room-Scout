@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import { bookingsAPI, staysAPI } from '../../../services/api';
 import { VisitedGuestCard } from '../visited/VisitedGuestCard';
+import { SlotScheduleModal } from '../visited/SlotScheduleModal';
+import { formatUtrNumber } from '../../../utils/bookingDetailsHelpers';
 
 const ResidentIdPassModal = lazy(() =>
  import('../schedule/ResidentIdPassModal').then((m) => ({ default: m.ResidentIdPassModal }))
@@ -45,7 +47,7 @@ export function PaidUsersList({
  const [isResettingRevenue, setIsResettingRevenue] = useState(false);
 
  // Revenue Reset State with LocalStorage and Stay settings fallback
- const storageKey = `roomscout_rev_reset_${hostProperty?._id || 'default'}`;
+ const storageKey = `stayin_rev_reset_${hostProperty?._id || 'default'}`;
  const [revenueReset, setRevenueReset] = useState(() => {
  try {
  const saved = localStorage.getItem(storageKey);
@@ -67,6 +69,7 @@ export function PaidUsersList({
 
  // Modal occupant state
  const [selectedOccupantForModal, setSelectedOccupantForModal] = useState(null);
+ const [slotModalGuest, setSlotModalGuest] = useState(null);
  const [isModalEditing, setIsModalEditing] = useState(false);
  const [modalName, setModalName] = useState('');
  const [modalPhone, setModalPhone] = useState('');
@@ -377,6 +380,8 @@ export function PaidUsersList({
  aadhar: formatIdNumber(cleanAadhar || rawAadhar),
  aadharNumber: rawAadhar,
  guestAadhar: rawAadhar,
+ aadharPhoto: occupant.aadharPhoto || occupant.guestAadharPhoto || '',
+ guestAadharPhoto: occupant.guestAadharPhoto || occupant.aadharPhoto || '',
  };
 
  setSelectedOccupantForModal(normalizedOccupant);
@@ -545,7 +550,7 @@ export function PaidUsersList({
  <>
  <span>·</span>
  <span className="font-mono text-[11px] text-indigo-600 font-medium">
- UTR: {g.upiPayment?.transactionRef || g.transactionRef}
+ UTR: {formatUtrNumber(g.upiPayment?.transactionRef || g.transactionRef)}
  </span>
  </>
  )}
@@ -938,7 +943,7 @@ export function PaidUsersList({
  subTab={isCheckedOut ? 'checkout' : 'checkin'}
  hostProperty={hostProperty}
  onOpenModal={handleOpenOccupantModal}
- onSelectSlot={handleOpenOccupantModal}
+ onSelectSlot={(guestItem) => setSlotModalGuest(guestItem)}
  onSelectUserRequest={handleOpenOccupantModal}
  />
  );
@@ -1090,6 +1095,15 @@ export function PaidUsersList({
  />
  </Suspense>
  )}
+
+ <SlotScheduleModal
+ isOpen={Boolean(slotModalGuest)}
+ guest={slotModalGuest}
+ hostProperty={hostProperty}
+ allGuests={allGuests.length > 0 ? allGuests : guests}
+ subTab="checkin"
+ onClose={() => setSlotModalGuest(null)}
+ />
  </div>
  );
 }

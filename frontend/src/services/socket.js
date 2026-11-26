@@ -28,8 +28,8 @@ export function getSocket() {
     } else {
       // Auto-extract from localStorage
       try {
-        const token = localStorage.getItem('roomscout_token') || localStorage.getItem('stayhub_jwt_token');
-        const rawUser = localStorage.getItem('roomscout_user') || localStorage.getItem('stayhub_auth_user');
+        const token = localStorage.getItem('stayin_token') || localStorage.getItem('stayhub_jwt_token');
+        const rawUser = localStorage.getItem('stayin_user') || localStorage.getItem('stayhub_auth_user');
         const user = rawUser ? JSON.parse(rawUser) : null;
         if (user || token) {
           authenticateSocket(user);
@@ -48,8 +48,8 @@ export function getSocket() {
  */
 export function authenticateSocket(user) {
   const socket = getSocket();
-  const token = localStorage.getItem('roomscout_token') || localStorage.getItem('stayhub_jwt_token');
-  const adminKey = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('roomscout_admin_key') : null;
+  const token = localStorage.getItem('stayin_token') || localStorage.getItem('stayhub_jwt_token');
+  const adminKey = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('stayin_admin_key') : null;
 
   currentAuthPayload = {
     token: token || null,

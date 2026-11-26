@@ -12,6 +12,7 @@ import {
 import { isBookingRequestExpired } from '../utils/dateUtils';
 import { Left } from '../components/navbar/Left';
 import { Right } from '../components/navbar/Right';
+import { DotGridWaveLoader } from '../components/common/DotGridWaveLoader';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 import { getSocket } from '../services/socket';
 import {
@@ -19,6 +20,7 @@ import {
   formatRequestedTiming,
   formatBookedMonths,
   getBookingStatusMeta,
+  formatEntryPassCode,
 } from '../utils/bookingDetailsHelpers';
 import { BookingPaymentSection } from '../components/booking/BookingPaymentSection';
 import { BookingCancelModal } from '../components/booking/BookingCancelModal';
@@ -356,7 +358,7 @@ export function BookingDetailsPage({ onLoginClick }) {
     stayData?.upiSettings?.payeeName ||
     hostData?.upiSettings?.payeeName ||
     hostData?.name ||
-    'Room Scout Host';
+    'Stay In Host';
 
   const submissionCount = Number(
     upiDetails?.submissionCount ?? booking?.upiPayment?.submissionCount ?? 0
@@ -531,14 +533,7 @@ export function BookingDetailsPage({ onLoginClick }) {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen pt-24 pb-16 px-4 bg-[#ebedf0] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-9 h-9 rounded-full border-3 border-emerald-500/30 border-t-emerald-500 animate-spin" />
-          <p className="text-xs font-semibold text-slate-500">Loading booking status...</p>
-        </div>
-      </div>
-    );
+    return <DotGridWaveLoader />;
   }
 
   if (isPermanentlyTimedOut) {
@@ -894,7 +889,7 @@ export function BookingDetailsPage({ onLoginClick }) {
                 <h3 className="text-lg sm:text-xl font-black text-[#1f1b16]">Reservation Confirmed</h3>
                 {displayCheckInCode && (
                   <p className="text-xs sm:text-sm font-semibold text-emerald-800 mt-0.5">
-                    Entry Code: <span className="font-mono font-black tracking-wider text-base">{displayCheckInCode}</span>
+                    Entry Code: <span className="font-mono font-black tracking-wider text-base">{formatEntryPassCode(displayCheckInCode)}</span>
                   </p>
                 )}
               </div>

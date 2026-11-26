@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { adminAPI } from '../../services/api';
+import { HangingBrandCharm } from './HangingBrandCharm';
 
 export function Left({
  propertyType = 'PG',
@@ -14,7 +15,9 @@ export function Left({
  isHidden = false,
 }) {
  const navigate = useNavigate();
- const { isAuthenticated, user, isHost } = useAuth();  const [hasFetchedHostProperty, setHasFetchedHostProperty] = useState(false);
+ const { isAuthenticated, user, isHost } = useAuth();
+ const [hasFetchedHostProperty, setHasFetchedHostProperty] = useState(false);
+ const charmRef = useRef(null);
 
   const isHostSession = isAuthenticated && ['host', 'admin'].includes(String(user?.role || '').toLowerCase());
 
@@ -101,14 +104,19 @@ export function Left({
           type="button"
           onClick={() => navigate('/explore')}
           data-no-hover="true"
-          className="hidden md:inline-flex items-center justify-center h-[54px] sm:h-[56px] px-4 sm:px-5 gap-2 rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-sm cursor-pointer focus:outline-none focus:ring-0 select-none shrink-0 hover:bg-[#f7f4ee] transition-colors"
-          title="Go to Home"
-          aria-label="Go to Home"
+          className="hidden md:inline-flex items-center justify-center h-[54px] sm:h-[56px] px-4 rounded-full stayin-glass-capsule cursor-pointer select-none shrink-0"
+          title="Stay In — Go to Home"
+          aria-label="Stay In — Go to Home"
         >
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shrink-0" />
-          <span className="tracking-tight font-medium text-[#1f1b16] text-sm sm:text-base">
-            RoomScout
-          </span>
+          <picture className="flex items-center">
+            <source srcSet="/stayin_nav_logo.webp" type="image/webp" />
+            <img
+              src="/stayin_nav_logo.png"
+              alt="Stay In"
+              decoding="async"
+              className="h-7 w-auto object-contain stayin-logo-crisp pointer-events-none"
+            />
+          </picture>
         </button>
       </div>
     );
@@ -117,38 +125,32 @@ export function Left({
   if (showBrand) {
     return (
       <>
-        {/* Navbar Leftmost Stays Category Button + Desktop Brand & Actions */}
-        <div className={`fixed top-2.5 sm:top-5 left-2.5 sm:left-6 z-50 flex items-center gap-2 select-none h-[54px] sm:h-[56px] transition-all duration-300 ${isHidden ? 'opacity-0 pointer-events-none -translate-y-2' : 'opacity-100 pointer-events-auto translate-y-0'}`}>
-          {/* Stays Button */}
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new CustomEvent('leftpanel:toggle_request'))}
-            data-no-hover="true"
-            className="w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] min-w-[54px] min-h-[54px] rounded-full bg-white hover:bg-[#f7f4ee] text-slate-800 border border-slate-200/90 shadow-sm flex items-center justify-center font-medium transition-all cursor-pointer active:scale-95 shrink-0"
-            title="Explore Stays Categories"
-            aria-label="Open Stays Categories"
-          >
-            <svg className="w-6 h-6 sm:w-6.5 sm:h-6.5 text-emerald-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
-              <path d="M10 6h4" />
-              <path d="M10 10h4" />
-            </svg>
-          </button>
+        {/* Navbar Leftmost Stays Category Button (with hanging Stay In glass logo) + Desktop Actions */}
+        <div className={`fixed top-2.5 sm:top-5 left-7 sm:left-10 z-50 flex items-center gap-2 select-none h-[54px] sm:h-[56px] transition-all duration-300 ${isHidden ? 'opacity-0 pointer-events-none -translate-y-2' : 'opacity-100 pointer-events-auto translate-y-0'}`}>
+          {/* Stays Button + Hanging Golden Chain & Shining Glass Logo Capsule */}
+          <div className="relative flex flex-col items-center shrink-0">
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('leftpanel:toggle_request'))}
+              onMouseEnter={() => charmRef.current?.poke()}
+              data-no-hover="true"
+              className="relative z-10 w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] min-w-[54px] min-h-[54px] rounded-full bg-white hover:bg-[#f7f4ee] text-slate-800 border border-slate-200/90 shadow-sm flex items-center justify-center font-medium transition-all cursor-pointer active:scale-95 shrink-0"
+              title="Explore Stays Categories"
+              aria-label="Open Stays Categories"
+            >
+              <svg className="w-6 h-6 sm:w-6.5 sm:h-6.5 text-emerald-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
+                <path d="M10 6h4" />
+                <path d="M10 10h4" />
+              </svg>
+            </button>
 
-          {/* Desktop Brand Pill */}
-          <button
-            type="button"
-            onClick={() => navigate('/explore')}
-            data-no-hover="true"
-            className="hidden md:inline-flex items-center justify-center h-[54px] sm:h-[56px] px-4 sm:px-5 gap-2 rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-sm cursor-pointer focus:outline-none focus:ring-0 select-none shrink-0 hover:bg-[#f7f4ee] transition-colors active:scale-95"
-            title="Go to Home"
-            aria-label="Go to Home"
-          >
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shrink-0" />
-            <span className="font-medium text-[#1f1b16] text-sm">
-              RoomScout
-            </span>
-          </button>
+            <HangingBrandCharm
+              ref={charmRef}
+              isHidden={isHidden}
+              onNavigateHome={() => navigate('/explore')}
+            />
+          </div>
 
           {/* Host Dashboard (if already a host with property) or Upload Property — Desktop Only */}
           {isHostWithProperty ? (

@@ -53,7 +53,7 @@ function condenseToastMessage(raw) {
     [/reservation\s*has\s*been\s*cancelled/i, 'Reservation cancelled'],
     [/all\s*notifications\s*marked/i, 'Notifications marked read'],
     [/settings\s*saved/i, 'Settings saved'],
-    [/welcome\s*to\s*room-?scout/i, 'Welcome to RoomScout!'],
+    [/welcome\s*to\s*stay\s*in/i, 'Welcome to Stay In!'],
     [/fresh\s*verification\s*code|new\s*code/i, 'New code sent to email'],
     [/verification\s*code\s*sent/i, 'Code sent to email'],
     [/security\s*code\s*sent/i, 'Security code sent'],

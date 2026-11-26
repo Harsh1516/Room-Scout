@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { staysAPI } from '../../services/api';
+import { triggerGlobalLoader } from '../common/DotGridWaveLoader';
 
 export function HeroSection() {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ export function HeroSection() {
     let cachedStaysCount = null;
     try {
       const cached =
-        sessionStorage.getItem('roomscout_stays_cache') ||
+        sessionStorage.getItem('stayin_stays_cache') ||
         sessionStorage.getItem('stayhub_stays_cache');
       if (cached) {
         const parsed = JSON.parse(cached);
@@ -124,7 +125,10 @@ export function HeroSection() {
   const exploreButton = (
     <button
       type="button"
-      onClick={() => navigate('/search')}
+      onClick={() => {
+        triggerGlobalLoader();
+        navigate('/search');
+      }}
       className="relative overflow-hidden w-auto inline-flex items-center justify-center gap-2 py-3 px-6 sm:py-3.5 sm:px-7 min-h-[44px] sm:min-h-[48px] rounded-full bg-sky-500 hover:bg-sky-400 active:bg-sky-600 text-white font-bold text-xs sm:text-sm tracking-wider uppercase border-2 border-white/50 shadow-lg shadow-sky-500/30 backdrop-blur-xs active:scale-95 transition-all duration-150 cursor-pointer select-none group mx-auto lg:mx-0"
     >
       <span className="button-flash-sweep button-flash-sweep-light pointer-events-none" />
@@ -146,7 +150,7 @@ export function HeroSection() {
   );
 
   return (
-    <div className="relative w-full min-h-0 lg:min-h-[calc(100vh-4rem)] flex flex-col justify-center pt-24 sm:pt-28 md:pt-32 lg:pt-36 pb-8 sm:pb-12 lg:pb-16 px-4 sm:px-8 lg:px-14 2xl:px-24">
+    <div className="relative w-full min-h-0 lg:min-h-[calc(100vh-4rem)] flex flex-col justify-center pt-36 sm:pt-40 lg:pt-44 pb-8 sm:pb-12 lg:pb-16 px-4 sm:px-8 lg:px-14 2xl:px-24">
       {/* ── Upper Section Wallpaper Background (Extended height so rounded corners gap is 100% filled) ── */}
       <div 
         aria-hidden="true" 
@@ -251,7 +255,7 @@ export function HeroSection() {
             </motion.div>
           </div>
 
-          {/* Mobile CTA Action Button (Exchanged Position: Directly Below Metric Section) */}
+          {/* Mobile CTA Action Button (Centered directly below 0% Commission metric capsule) */}
           <motion.div
             initial={{ opacity: shouldReduceMotion ? 1 : 0, y: offset }}
             animate={{ opacity: 1, y: 0 }}

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useDeferredValue } from 'rea
 import { motion, AnimatePresence } from 'framer-motion';
 import { VisitedGuestCard } from './VisitedGuestCard';
 import { VisitedSlotCalendarView } from './VisitedSlotCalendarView';
+import { SlotScheduleModal } from './SlotScheduleModal';
 import HostRoomCategories from '../HostRoomCategories';
 import { ErrorBoundary } from '../../common/ErrorBoundary';
 import {
@@ -37,6 +38,7 @@ export function VisitedRequestsView({
  onOpenModal,
  onSelectUserRequest,
  onApproveRequest,
+ onAcceptUtr,
  onRejectRequest,
  onMarkCheckIn = () => {},
  onMarkCheckOut = () => {},
@@ -52,6 +54,7 @@ export function VisitedRequestsView({
  selectedCategory && selectedCategory !== 'ALL' ? selectedCategory : null
  );
  const [activeSlotGuest, setActiveSlotGuest] = useState(null);
+ const [slotModalGuest, setSlotModalGuest] = useState(null);
  const deferredSearchQuery = useDeferredValue(searchQuery);
  const CARDS_PER_PAGE = 5;
 
@@ -186,11 +189,25 @@ export function VisitedRequestsView({
  if (isGuestSlotActive(guest)) {
  setActiveSlotGuest(null);
  }
+ setSlotModalGuest(null);
  if (typeof onApproveRequest === 'function') {
  return onApproveRequest(guest);
  }
  },
  [isGuestSlotActive, onApproveRequest]
+ );
+
+ const handleAcceptUtrWithClear = useCallback(
+ async (guest) => {
+ if (isGuestSlotActive(guest)) {
+ setActiveSlotGuest(null);
+ }
+ setSlotModalGuest(null);
+ if (typeof onAcceptUtr === 'function') {
+ return onAcceptUtr(guest);
+ }
+ },
+ [isGuestSlotActive, onAcceptUtr]
  );
 
  // Wrapped reject handler that immediately clears stale active slot request
@@ -199,6 +216,7 @@ export function VisitedRequestsView({
  if (isGuestSlotActive(guest)) {
  setActiveSlotGuest(null);
  }
+ setSlotModalGuest(null);
  if (typeof onRejectRequest === 'function') {
  return onRejectRequest(guest);
  }
@@ -212,6 +230,7 @@ export function VisitedRequestsView({
  if (isGuestSlotActive(guest)) {
  setActiveSlotGuest(null);
  }
+ setSlotModalGuest(null);
  if (typeof onMarkCheckOut === 'function') {
  return onMarkCheckOut(guest);
  }
@@ -743,7 +762,9 @@ export function VisitedRequestsView({
                     onOpenModal={onOpenModal}
                     onSelectUserRequest={onSelectUserRequest}
                     onSelectSlot={handleSlotClick}
+                    onOpenSlotModal={(gItem) => setSlotModalGuest(gItem)}
                     onApproveRequest={handleApproveWithClear}
+                    onAcceptUtr={handleAcceptUtrWithClear}
                     onRejectRequest={handleRejectWithClear}
                     onMarkCheckIn={onMarkCheckIn}
                     onMarkCheckOut={handleCheckOutWithClear}
@@ -772,6 +793,18 @@ export function VisitedRequestsView({
  subTab={subTab}
  />
  </div>
+
+      {/* Centered Slot Schedule Modal Window */}
+      <SlotScheduleModal
+        isOpen={Boolean(slotModalGuest)}
+        guest={slotModalGuest}
+        selectedRoomNumber={defaultRoomNumber}
+        selectedCategory={defaultRoomCategory}
+        hostProperty={hostProperty}
+        allGuests={allGuests.length > 0 ? allGuests : (allRequests.length > 0 ? allRequests : displayedGuests)}
+        subTab={subTab}
+        onClose={() => setSlotModalGuest(null)}
+      />
  </div>
  );
 }

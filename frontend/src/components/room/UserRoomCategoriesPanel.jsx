@@ -24,6 +24,7 @@ function UserCategoryRoomCarousel({
   isMonthly = false,
   allRoomsBookedSlots = {},
   allRoomsBookedMonths = {},
+  allRoomsBookedMonthCounts = {},
   upcomingWeek = [],
   upcomingMonths = [],
 }) {
@@ -174,34 +175,43 @@ function UserCategoryRoomCarousel({
  }}
  >
  {matchingRooms.map((rm, cIdx) => {
- const cardId = rm._id || rm.id || `room_${rm.roomNumber || cIdx}`;
- const currentMonthKey = upcomingMonths[0]?.monthKey;
-  const isRoomBookedThisMonth = Boolean(
-    (currentMonthKey && allRoomsBookedMonths && (
-      allRoomsBookedMonths[rm._id]?.has?.(currentMonthKey) ||
-      allRoomsBookedMonths[rm.id]?.has?.(currentMonthKey) ||
-      allRoomsBookedMonths[String(rm.roomNumber)?.trim()]?.has?.(currentMonthKey)
-    )) ||
-    (todayBookedRoomIds && (
-      todayBookedRoomIds.has(rm._id) ||
-      todayBookedRoomIds.has(rm.id) ||
-      todayBookedRoomIds.has(String(rm.roomNumber).trim())
-    ))
-  );
-  const isBookedToday = Boolean(
- todayBookedRoomIds &&
- (todayBookedRoomIds.has(rm._id) ||
- todayBookedRoomIds.has(rm.id) ||
- todayBookedRoomIds.has(String(rm.roomNumber).trim()))
- );
- const isCardBooked = isMonthly ? isRoomBookedThisMonth : isBookedToday;
-  const isCardSelected = Boolean(
- (selectedRoom?._id && rm._id && String(selectedRoom._id) === String(rm._id)) ||
- (selectedRoom?.id && rm.id && String(selectedRoom.id) === String(rm.id)) ||
- (selectedRoom?.roomNumber && rm.roomNumber && String(selectedRoom.roomNumber).trim() === String(rm.roomNumber).trim())
- );
- const roomCapacity = Number(rm.capacity) || rate.capacity || 1;
- const cleanRoomNum = String(rm.roomNumber || rm.roomNumInt || cIdx + 101).replace(/[^0-9]/g, '') || rm.roomNumber;
+                 const cardId = rm._id || rm.id || `room_${rm.roomNumber || cIdx}`;
+                 const currentMonthKey = upcomingMonths[0]?.monthKey;
+                 const roomCapacity = Number(rm.capacity) || rate.capacity || 1;
+                 const occupiedThisMonth = Number(
+                   (currentMonthKey && allRoomsBookedMonthCounts && (
+                     allRoomsBookedMonthCounts[rm._id]?.[currentMonthKey] ??
+                     allRoomsBookedMonthCounts[rm.id]?.[currentMonthKey] ??
+                     allRoomsBookedMonthCounts[String(rm.roomNumber)?.trim()]?.[currentMonthKey]
+                   )) || 0
+                 );
+                 const isRoomBookedThisMonth = Boolean(
+                   occupiedThisMonth >= roomCapacity ||
+                   (occupiedThisMonth === 0 && currentMonthKey && allRoomsBookedMonths && (
+                     allRoomsBookedMonths[rm._id]?.has?.(currentMonthKey) ||
+                     allRoomsBookedMonths[rm.id]?.has?.(currentMonthKey) ||
+                     allRoomsBookedMonths[String(rm.roomNumber)?.trim()]?.has?.(currentMonthKey)
+                   )) ||
+                   (occupiedThisMonth === 0 && todayBookedRoomIds && (
+                     todayBookedRoomIds.has(rm._id) ||
+                     todayBookedRoomIds.has(rm.id) ||
+                     todayBookedRoomIds.has(String(rm.roomNumber).trim())
+                   ))
+                 );
+                 const isBookedToday = Boolean(
+                   todayBookedRoomIds &&
+                   (todayBookedRoomIds.has(rm._id) ||
+                   todayBookedRoomIds.has(rm.id) ||
+                   todayBookedRoomIds.has(String(rm.roomNumber).trim()))
+                 );
+                 const isCardBooked = isMonthly ? isRoomBookedThisMonth : isBookedToday;
+                 const isCardPartial = isMonthly && occupiedThisMonth > 0 && occupiedThisMonth < roomCapacity;
+                 const isCardSelected = Boolean(
+                   (selectedRoom?._id && rm._id && String(selectedRoom._id) === String(rm._id)) ||
+                   (selectedRoom?.id && rm.id && String(selectedRoom.id) === String(rm.id)) ||
+                   (selectedRoom?.roomNumber && rm.roomNumber && String(selectedRoom.roomNumber).trim() === String(rm.roomNumber).trim())
+                 );
+                 const cleanRoomNum = String(rm.roomNumber || rm.roomNumInt || cIdx + 101).replace(/[^0-9]/g, '') || rm.roomNumber;
 
  const roomStat = calculateRoomFreePercentage({
  room: rm,
@@ -265,23 +275,25 @@ function UserCategoryRoomCarousel({
      />
    </svg>
 
-       {/* Top: Availability Status Tag matching HostRoomCardItem */}
-       {(() => {
-         const roomPercentFull = roomStat.percentFull ?? (100 - (roomStat.percentFree ?? 100));
-         const availInRoom = isCardBooked ? 0 : roomCapacity;
-         return (
-           <div className="flex items-start justify-start w-full z-20 min-h-[26px]">
-             <div className="flex flex-col items-start leading-none">
-               <span
-                 className={`text-[11px] sm:text-[11.5px] font-black tracking-wider leading-none uppercase ${
-                   isMonthly
-                     ? isCardBooked
-                       ? isCardSelected
-                         ? 'text-amber-600'
-                         : 'text-amber-300'
-                       : isCardSelected
-                       ? 'text-black'
-                       : 'text-white'
+        {/* Top: Availability Status Tag matching HostRoomCardItem */}
+        {(() => {
+          const roomPercentFull = roomStat.percentFull ?? (100 - (roomStat.percentFree ?? 100));
+          const availInRoom = isMonthly
+            ? Math.max(0, roomCapacity - (occupiedThisMonth > 0 ? occupiedThisMonth : (isCardBooked ? roomCapacity : 0)))
+            : (isCardBooked ? 0 : roomCapacity);
+          return (
+            <div className="flex items-start justify-start w-full z-20 min-h-[26px]">
+              <div className="flex flex-col items-start leading-none">
+                <span
+                  className={`text-[11px] sm:text-[11.5px] font-black tracking-wider leading-none uppercase ${
+                    isMonthly
+                      ? (isCardBooked || isCardPartial)
+                        ? isCardSelected
+                          ? 'text-amber-600'
+                          : 'text-amber-300'
+                        : isCardSelected
+                        ? 'text-black'
+                        : 'text-white'
                      : roomPercentFull >= 75
                      ? isCardSelected
                        ? 'text-rose-900'
@@ -399,6 +411,7 @@ export function UserRoomCategoriesPanel({
  onSelectCategoryFilter,
  allRoomsBookedSlots = {},
  allRoomsBookedMonths = {},
+ allRoomsBookedMonthCounts = {},
  upcomingWeek = [],
  upcomingMonths = [],
 }) {
@@ -438,6 +451,17 @@ export function UserRoomCategoriesPanel({
     const totalCount = matchingRooms.length;
     const availableCount = matchingRooms.filter((rm) => {
       if (isCatMonthly) {
+        const rmCap = Math.max(1, Number(rm.capacity) || rate.capacity || 1);
+        const occupiedThisMonth = Number(
+          (currentMonthKey && allRoomsBookedMonthCounts && (
+            allRoomsBookedMonthCounts[rm._id]?.[currentMonthKey] ??
+            allRoomsBookedMonthCounts[rm.id]?.[currentMonthKey] ??
+            allRoomsBookedMonthCounts[String(rm.roomNumber)?.trim()]?.[currentMonthKey]
+          )) || 0
+        );
+        if (occupiedThisMonth > 0) {
+          return occupiedThisMonth < rmCap;
+        }
         const isMonthBooked = Boolean(
           (currentMonthKey && allRoomsBookedMonths && (
             allRoomsBookedMonths[rm._id]?.has?.(currentMonthKey) ||
@@ -482,7 +506,7 @@ export function UserRoomCategoriesPanel({
     };
   });
   return map;
-}, [categories, roomGrid, todayBookedRoomIds, allRoomsBookedSlots, allRoomsBookedMonths, upcomingWeek, upcomingMonths]);
+}, [categories, roomGrid, todayBookedRoomIds, allRoomsBookedSlots, allRoomsBookedMonths, allRoomsBookedMonthCounts, upcomingWeek, upcomingMonths]);
 
  // Initial state: -1 (all collapsed) unless a room or filter was explicitly passed
  const initialOpenIdx = useMemo(() => {
@@ -638,6 +662,7 @@ export function UserRoomCategoriesPanel({
  isMonthly={isMonthly}
  allRoomsBookedSlots={allRoomsBookedSlots}
  allRoomsBookedMonths={allRoomsBookedMonths}
+ allRoomsBookedMonthCounts={allRoomsBookedMonthCounts}
  upcomingWeek={upcomingWeek}
  upcomingMonths={upcomingMonths}
                            />

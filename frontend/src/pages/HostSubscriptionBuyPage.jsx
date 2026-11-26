@@ -55,7 +55,7 @@ let memoryCachedPlans = null;
 const getStoredPlansData = () => {
  if (memoryCachedPlans) return memoryCachedPlans;
  try {
- const raw = localStorage.getItem('roomscout_cached_plans_data');
+ const raw = localStorage.getItem('stayin_cached_plans_data');
  if (raw) {
  memoryCachedPlans = JSON.parse(raw);
  return memoryCachedPlans;
@@ -68,7 +68,7 @@ const saveStoredPlansData = (data) => {
  if (!data) return;
  memoryCachedPlans = data;
  try {
- localStorage.setItem('roomscout_cached_plans_data', JSON.stringify(data));
+ localStorage.setItem('stayin_cached_plans_data', JSON.stringify(data));
  } catch (e) {}
 };
 
@@ -702,8 +702,8 @@ export function HostSubscriptionBuyPage() {
                       href={
                         selectedPlan.upiUri ||
                         `upi://pay?pa=${encodeURIComponent(plansData.upiId)}&pn=${encodeURIComponent(
-                          plansData.payeeName || 'Room Scout Platform'
-                        )}&am=${selectedPlan.price}&cu=INR&tn=${encodeURIComponent(`RoomScout ${selectedPlan.label}`)}`
+                          plansData.payeeName || 'Stay In Platform'
+                        )}&am=${selectedPlan.price}&cu=INR&tn=${encodeURIComponent(`Stay In ${selectedPlan.label}`)}`
                       }
                       className="md:hidden w-full py-3.5 px-6 rounded-full bg-slate-900 hover:bg-black text-white font-medium text-sm shadow-[0_10px_25px_-5px_rgba(15,23,42,0.25)] active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer text-center tracking-tight"
                     >
@@ -715,8 +715,8 @@ export function HostSubscriptionBuyPage() {
                       href={
                         selectedPlan.upiUri ||
                         `upi://pay?pa=${encodeURIComponent(plansData.upiId)}&pn=${encodeURIComponent(
-                          plansData.payeeName || 'Room Scout Platform'
-                        )}&am=${selectedPlan.price}&cu=INR&tn=${encodeURIComponent(`RoomScout ${selectedPlan.label}`)}`
+                          plansData.payeeName || 'Stay In Platform'
+                        )}&am=${selectedPlan.price}&cu=INR&tn=${encodeURIComponent(`Stay In ${selectedPlan.label}`)}`
                       }
                       className="hidden md:flex w-full py-3.5 px-4 rounded-2xl text-center font-medium text-sm sm:text-base bg-slate-900 hover:bg-slate-800 text-white shadow-md active:scale-98 transition-all items-center justify-center gap-2 cursor-pointer"
                     >

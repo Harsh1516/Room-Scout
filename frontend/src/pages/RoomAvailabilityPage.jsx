@@ -8,10 +8,10 @@ import { toast } from '../context/ToastContext';
 import { UserRoomCategoriesPanel } from '../components/room/UserRoomCategoriesPanel';
 import { UserMonthlySlotCard } from '../components/room/UserMonthlySlotCard';
 import { UserGuestConfirmationCard } from '../components/room/UserGuestConfirmationCard';
-import { PaymentCountdownBanner } from '../components/room/PaymentCountdownBanner';
 import { cancelUserBooking } from '../utils/bookingPayment';
 import { Left } from '../components/navbar/Left';
 import { Right } from '../components/navbar/Right';
+import { DotGridWaveLoader } from '../components/common/DotGridWaveLoader';
 import { getSocket } from '../services/socket';
 import { useRoomSlotSelection } from '../hooks/useRoomSlotSelection';
 import { useRoomBookingData } from '../hooks/useRoomBookingData';
@@ -446,13 +446,13 @@ export function RoomAvailabilityPage({ onLoginClick }) {
   const {
     allKnownBookings,
     checkIsUserBooking,
-    userAwaitingPaymentBooking,
     userConfirmedBooking,
     allRoomsBookedSlots,
     allRoomsRequestedSlots,
     allRoomsUserBookedSlots,
     allRoomsUserRequestedSlots,
     allRoomsBookedMonths,
+    allRoomsBookedMonthCounts,
     allRoomsRequestedMonths,
     allRoomsUserBookedMonths,
     allRoomsUserRequestedMonths,
@@ -601,6 +601,18 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  const numKey = selectedRoom.roomNumber ? String(selectedRoom.roomNumber).trim() : '';
  return (rKey && allRoomsBookedMonths[rKey]) || (numKey && allRoomsBookedMonths[numKey]) || new Set();
  }, [selectedRoom, allRoomsBookedMonths]);
+
+ const bookedMonthCountsForRoom = useMemo(() => {
+ if (!selectedRoom) return {};
+ const rKey = getRoomKey(selectedRoom);
+ const numKey = selectedRoom.roomNumber ? String(selectedRoom.roomNumber).trim() : '';
+ return (
+ (rKey && allRoomsBookedMonthCounts[rKey]) ||
+ (numKey && allRoomsBookedMonthCounts[numKey]) ||
+ (selectedRoom._id && allRoomsBookedMonthCounts[selectedRoom._id]) ||
+ {}
+ );
+ }, [selectedRoom, allRoomsBookedMonthCounts]);
 
  const requestedMonthsForRoom = useMemo(() => {
  if (!selectedRoom) return new Set();
@@ -1118,14 +1130,7 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  };
 
  if (loading) {
- return (
- <div className="min-h-screen bg-[#f7f4ee] flex flex-col items-center justify-center p-6 font-sans">
- <div className="w-8 h-8 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin mb-3" />
- <p className="text-slate-500 font-medium text-xs">
- Loading 2D Room Grid...
- </p>
- </div>
- );
+ return <DotGridWaveLoader />;
  }
 
  return (
@@ -1161,20 +1166,6 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  {/* MAIN CONTAINER */}
  <main className="flex-1 w-full flex flex-col justify-center my-auto min-h-0 overflow-y-auto xl:overflow-y-visible pt-24 sm:pt-24 xl:pt-16 pb-4 relative z-10">
  <div className="w-full max-w-[1680px] mx-auto px-0 sm:px-6 lg:px-8 py-0 sm:py-3 flex-1 flex flex-col justify-center my-auto min-h-0 space-y-3 sm:space-y-4">
- {/* Active 5-Minute Payment Countdown Banner */}
- {userAwaitingPaymentBooking && (
- <PaymentCountdownBanner
- booking={userAwaitingPaymentBooking}
- stayTitle={stay?.title || stay?.propertyName}
- onPaymentSuccess={() => {
- fetchStayBookings();
- }}
- onBookingCancelled={() => {
- fetchStayBookings();
- }}
- />
- )}
-
  {/* 3-COLUMN OR 2-COLUMN ARCHITECTURE (VERTICALLY CENTERED) */}
  <div className={`grid grid-cols-1 ${
  showGuestDetailsTab
@@ -1197,6 +1188,7 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  onSelectCategoryFilter={handleSelectCategoryFilter}
  allRoomsBookedSlots={allRoomsBookedSlots}
  allRoomsBookedMonths={allRoomsBookedMonths}
+ allRoomsBookedMonthCounts={allRoomsBookedMonthCounts}
  upcomingWeek={upcomingWeek}
  upcomingMonths={upcomingMonths}
  />
@@ -1223,6 +1215,7 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  isMonthly={isMonthly}
  upcomingMonths={upcomingMonths}
  bookedMonthsForRoom={bookedMonthsForRoom}
+ bookedMonthCountsForRoom={bookedMonthCountsForRoom}
  requestedMonthsForRoom={requestedMonthsForRoom}
  userBookedMonthsForRoom={userBookedMonthsForRoom}
  userRequestedMonthsForRoom={userRequestedMonthsForRoom}

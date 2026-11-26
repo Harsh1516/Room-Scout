@@ -137,6 +137,7 @@ export function HostScheduleCalendar({
  hideMonthCardExtras = false,
  hideBookedGuestBanner = false,
  onOpenAddGuestModal = null,
+ forceLight = false,
 }) {
  const [activeMonthModalKey, setActiveMonthModalKey] = useState(null);
  const [activeDateModalISO, setActiveDateModalISO] = useState(null);
@@ -497,15 +498,15 @@ export function HostScheduleCalendar({
  return (
  <div
  ref={calendarCardRef}
- className="w-full flex-1 flex flex-col select-none relative min-h-0 bg-transparent border-0 shadow-none pb-20 sm:pb-24"
+ className={`w-full flex-1 flex flex-col select-none relative min-h-0 bg-transparent border-0 shadow-none ${forceLight ? 'pb-2' : 'pb-20 sm:pb-24'}`}
  >
  {/* Room Detail Banner & Add Guest Action */}
-		<div className="px-2.5 sm:px-4 py-2 sm:py-2.5 border-b max-xl:border-slate-100 max-xl:bg-transparent xl:border-white/15 xl:bg-white/10 relative z-10 w-full">
+		<div className={`px-2.5 sm:px-4 py-2 sm:py-2.5 border-b relative z-10 w-full ${forceLight ? 'border-slate-100 bg-transparent' : 'max-xl:border-slate-100 max-xl:bg-transparent xl:border-white/15 xl:bg-white/10'}`}>
 			<div className="flex items-center justify-between w-full gap-2">
 				<div className="inline-flex items-center justify-center py-1 select-none">
 					<h2 className="text-[16px] sm:text-lg md:text-xl font-black tracking-tight leading-none flex items-center gap-1.5">
-						<span className="max-xl:text-black xl:text-white">Room No.</span>
-						<span className="max-xl:text-slate-400 xl:text-sky-100 font-semibold">{cleanRoomNum || 'Room'}</span>
+						<span className={forceLight ? 'text-black' : 'max-xl:text-black xl:text-white'}>Room No.</span>
+						<span className={`${forceLight ? 'text-slate-400' : 'max-xl:text-slate-400 xl:text-sky-100'} font-semibold`}>{cleanRoomNum || 'Room'}</span>
 					</h2>
 				</div>
 
@@ -523,7 +524,7 @@ export function HostScheduleCalendar({
 			</div>
 		</div>
 
-		<div className="px-1.5 sm:px-3 pb-3 sm:pb-3.5 pt-2 sm:pt-2.5 flex flex-col gap-2 max-xl:text-[#0b0b0b] font-bold xl:text-white w-full">
+		<div className={`px-1.5 sm:px-3 pb-3 sm:pb-3.5 pt-2 sm:pt-2.5 flex flex-col gap-2 font-bold w-full ${forceLight ? 'text-[#0b0b0b]' : 'max-xl:text-[#0b0b0b] xl:text-white'}`}>
 
 		{/* User Request Display-Only Banner */}
  <AnimatePresence initial={false} mode="sync">
@@ -841,23 +842,35 @@ export function HostScheduleCalendar({
  }
  }}
  className={`relative aspect-square p-1 sm:p-1.5 sm:p-2 rounded-xl sm:rounded-2xl border select-none transition-all flex flex-col justify-between items-center text-center outline-none ${
- isSelectedBookedMonth
+ isSelectedBookedMonth && !forceLight
  ? isSelectedMonthOnline
  ? 'animate-slot-flash border-2 font-medium shadow-md cursor-pointer'
  : 'animate-booked-slot-flash border-2 font-medium shadow-md cursor-pointer'
  : isFullyBooked
- ? 'max-xl:bg-amber-50 max-xl:text-amber-900 max-xl:border-2 max-xl:border-amber-400 text-white border-2 border-amber-400 cursor-pointer hover:border-amber-300'
+ ? forceLight
+ ? 'bg-amber-50 text-amber-900 border-2 border-amber-400 cursor-pointer hover:border-amber-300'
+ : 'max-xl:bg-amber-50 max-xl:text-amber-900 max-xl:border-2 max-xl:border-amber-400 text-white border-2 border-amber-400 cursor-pointer hover:border-amber-300'
  : isLocked
  ? 'bg-white/5 border border-dashed border-white/20 text-white/40 cursor-not-allowed opacity-50'
- : isSelected
- ? isUserRequestSelection
- ? 'animate-slot-flash border-2 font-medium shadow-md cursor-default pointer-events-none'
- : 'bg-white text-[#1f1b16] border-2 border-slate-900 z-10 cursor-pointer shadow-sm'
+ : isSelected && !isUserRequestSelection
+ ? 'bg-white text-[#1f1b16] border-2 border-slate-900 z-10 cursor-pointer shadow-sm'
  : isPartiallyBooked
- ? 'max-xl:bg-amber-50/70 max-xl:border-2 max-xl:border-amber-300 max-xl:text-amber-900 xl:bg-amber-950/40 xl:border-2 xl:border-amber-300 xl:text-amber-100 font-medium hover:border-amber-200 cursor-pointer'
+ ? forceLight
+ ? 'bg-amber-50/70 border-2 border-amber-300 text-amber-900 font-medium hover:border-amber-200 cursor-pointer'
+ : 'max-xl:bg-amber-50/70 max-xl:border-2 max-xl:border-amber-300 max-xl:text-amber-900 xl:bg-amber-950/40 xl:border-2 xl:border-amber-300 xl:text-amber-100 font-medium hover:border-amber-200 cursor-pointer'
  : isUserRequestSelection
- ? 'bg-white/10 border border-white/20 text-white/40 cursor-not-allowed pointer-events-none'
+ ? forceLight
+ ? 'bg-white border border-slate-200/90 text-slate-900 cursor-default pointer-events-none'
+ : 'bg-white/10 border border-white/20 text-white/40 cursor-not-allowed pointer-events-none'
+ : forceLight
+ ? 'bg-white border border-slate-200/90 shadow-xs text-slate-900 cursor-pointer active:scale-95'
  : 'max-xl:bg-white max-xl:border max-xl:border-slate-200/90 max-xl:shadow-xs xl:bg-white/15 xl:border xl:border-white/20 hover:border-white/40 hover:bg-white/25 text-white cursor-pointer shadow-xs active:scale-95'
+ } ${
+ isSelected && isUserRequestSelection
+ ? '!border animate-border-flash z-10'
+ : forceLight && isSelectedBookedMonth
+ ? '!border-2 !border-orange-300 z-10'
+ : ''
  }`}
  >
  <span
@@ -876,23 +889,27 @@ export function HostScheduleCalendar({
  }
  className={`text-[11px] sm:text-[12px] font-semibold px-1.5 sm:px-2 py-0.5 rounded-full tracking-tight truncate max-w-[95%] leading-snug ${
  isFullyBooked
- ? 'max-xl:bg-amber-100 max-xl:text-amber-800 max-xl:border max-xl:border-amber-300 xl:bg-amber-400/25 xl:text-amber-100 xl:border xl:border-amber-300/60 font-medium'
+ ? forceLight
+ ? 'bg-amber-100 text-amber-800 border border-amber-300 font-medium'
+ : 'max-xl:bg-amber-100 max-xl:text-amber-800 max-xl:border max-xl:border-amber-300 xl:bg-amber-400/25 xl:text-amber-100 xl:border xl:border-amber-300/60 font-medium'
  : isLocked
  ? 'bg-white/10 text-white/60'
- : isSelected
- ? isUserRequestSelection
- ? 'animate-badge-flash font-medium border'
- : 'bg-slate-900 text-white font-medium shadow-xs'
+ : isSelected && !isUserRequestSelection
+ ? 'bg-slate-900 text-white font-medium shadow-xs'
  : isPartiallyBooked
- ? 'max-xl:bg-amber-100 max-xl:text-amber-800 max-xl:border max-xl:border-amber-300 xl:bg-amber-400/30 xl:text-amber-100 xl:border xl:border-amber-300'
+ ? forceLight
+ ? 'bg-amber-100 text-amber-800 border border-amber-300'
+ : 'max-xl:bg-amber-100 max-xl:text-amber-800 max-xl:border max-xl:border-amber-300 xl:bg-amber-400/30 xl:text-amber-100 xl:border xl:border-amber-300'
+ : forceLight
+ ? 'bg-slate-100 text-slate-700 border border-slate-200/80'
  : 'max-xl:bg-slate-100 max-xl:text-slate-700 max-xl:border max-xl:border-slate-200/80 xl:bg-emerald-400/25 xl:text-emerald-100 xl:border xl:border-emerald-400/40'
  }`}>
  {isFullyBooked
  ? (roomCapacity > 1 ? `${roomCapacity}/${roomCapacity} Booked` : (primaryOccupant?.userName ? primaryOccupant.userName.split(' ')[0] : 'Booked'))
  : isLocked
  ? ' Locked'
- : isSelected
- ? (isUserRequestSelection ? 'Requested' : 'Stay')
+ : isSelected && !isUserRequestSelection
+ ? 'Stay'
  : isPartiallyBooked
  ? `${occupiedCount}/${roomCapacity} Booked`
  : 'Available'}
@@ -902,14 +919,16 @@ export function HostScheduleCalendar({
  <span className={`text-base sm:text-lg md:text-xl font-bold leading-tight tracking-tight ${
  isSelected && !isUserRequestSelection
  ? 'text-[#1f1b16]'
+ : forceLight
+ ? 'text-slate-900'
  : 'max-xl:text-slate-900 text-white'
  }`}>{m.monthShort}</span>
  <span className={`text-xs sm:text-sm font-medium leading-tight ${
  isSelected && !isUserRequestSelection
  ? 'text-slate-600 font-medium'
  : isFullyBooked
- ? 'max-xl:text-amber-700 text-amber-200'
- : 'max-xl:text-slate-500 text-sky-200'
+ ? forceLight ? 'text-amber-700' : 'max-xl:text-amber-700 text-amber-200'
+ : forceLight ? 'text-slate-500' : 'max-xl:text-slate-500 text-sky-200'
  }`}>{m.year}</span>
  </div>
 
@@ -917,21 +936,31 @@ export function HostScheduleCalendar({
  <PersonOccupancyGrid
  capacity={roomCapacity}
  occupiedCount={occupiedCount}
+ requestedCount={
+ isSelected && isUserRequestSelection
+ ? Math.max(1, Number(requestedUserBooking?.personCount) || 1)
+ : 0
+ }
+ requestedColor={forceLight ? 'text-[#1f1b16]' : 'max-xl:text-[#1f1b16] text-white'}
  className="py-1"
  iconClassName="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[1.6]"
  occupiedColor={
  isSelected && !isUserRequestSelection
  ? 'text-[#1f1b16]'
  : isFullyBooked
- ? 'max-xl:text-amber-600 text-amber-300'
- : 'max-xl:text-slate-800 text-white'
+ ? forceLight ? 'text-amber-600' : 'max-xl:text-amber-600 text-amber-300'
+ : forceLight ? 'text-slate-800' : 'max-xl:text-slate-800 text-white'
  }
  vacantColor={
  isSelected && !isUserRequestSelection
  ? 'text-slate-400'
- : 'max-xl:text-slate-300 text-sky-100'
+ : forceLight ? 'text-slate-300' : 'max-xl:text-slate-300 text-sky-100'
  }
- customTitle={`${occupiedCount} of ${roomCapacity} slot${roomCapacity > 1 ? 's' : ''} occupied in ${m.monthShort} ${m.year} (solid = booked, outline = available)`}
+ customTitle={
+ isSelected && isUserRequestSelection
+ ? `${Math.max(1, Number(requestedUserBooking?.personCount) || 1)} person slot${(Number(requestedUserBooking?.personCount) || 1) > 1 ? 's' : ''} requested in ${m.monthShort} ${m.year}`
+ : `${occupiedCount} of ${roomCapacity} slot${roomCapacity > 1 ? 's' : ''} occupied in ${m.monthShort} ${m.year} (solid = booked, outline = available)`
+ }
  />
  </button>
  );
@@ -976,8 +1005,8 @@ export function HostScheduleCalendar({
  </div>
  )}
 
- <div className="flex flex-col w-full bg-transparent border-0 shadow-none p-0 max-xl:text-slate-900 text-white">
- <div className="grid grid-cols-7 text-center text-[11px] sm:text-xs font-semibold max-xl:text-slate-500 text-sky-200 pb-3 pt-0.5 select-none">
+ <div className={`flex flex-col w-full bg-transparent border-0 shadow-none p-0 ${forceLight ? 'text-slate-900' : 'max-xl:text-slate-900 text-white'}`}>
+ <div className={`grid grid-cols-7 text-center text-[11px] sm:text-xs font-semibold pb-3 pt-0.5 select-none ${forceLight ? 'text-slate-500' : 'max-xl:text-slate-500 text-sky-200'}`}>
  {WEEKDAYS.map((wd) => (
  <span key={wd}>{wd}</span>
  ))}
@@ -1105,25 +1134,30 @@ export function HostScheduleCalendar({
  capsuleTrack = 'w-12.5 h-12.5 sm:w-13 sm:h-13 max-w-[96%] rounded-full mx-auto border-2 border-amber-400 aspect-square shrink-0';
  }
  } else if (isUserReqSelected) {
+ const reqBorderClass = forceLight ? 'animate-border-flash' : 'border-sky-400';
  if ((hasPrevInRow || wrapsFromPrevRow) && (hasNextInRow || wrapsToNextRow)) {
- capsuleTrack = 'w-full h-12.5 sm:h-13 rounded-none border-y-2 border-sky-400';
+ capsuleTrack = `w-full h-12.5 sm:h-13 rounded-none border-y-2 ${reqBorderClass}`;
  } else if ((hasPrevInRow || wrapsFromPrevRow) && !hasNextInRow) {
- capsuleTrack = 'w-full h-12.5 sm:h-13 rounded-r-full rounded-l-none border-y-2 border-r-2 border-sky-400';
+ capsuleTrack = `w-full h-12.5 sm:h-13 rounded-r-full rounded-l-none border-y-2 border-r-2 ${reqBorderClass}`;
  } else if (!hasPrevInRow && (hasNextInRow || wrapsToNextRow)) {
- capsuleTrack = 'w-full h-12.5 sm:h-13 rounded-l-full rounded-r-none border-y-2 border-l-2 border-sky-400';
+ capsuleTrack = `w-full h-12.5 sm:h-13 rounded-l-full rounded-r-none border-y-2 border-l-2 ${reqBorderClass}`;
  } else {
- capsuleTrack = 'w-12.5 h-12.5 sm:w-13 sm:h-13 max-w-[96%] rounded-full mx-auto border-2 border-sky-400 aspect-square shrink-0';
+ capsuleTrack = `w-12.5 h-12.5 sm:w-13 sm:h-13 max-w-[96%] rounded-full mx-auto border-2 ${reqBorderClass} aspect-square shrink-0`;
  }
  }
 
  const capsuleBg = isThisSlotSelectedGuest
- ? isSelectedGuestOnline
+ ? forceLight
+ ? 'text-slate-900 font-medium !border-orange-300'
+ : isSelectedGuestOnline
  ? 'animate-slot-flash bg-[#E0F2FE] text-[#1f1b16] border-[#38BDF8] font-medium shadow-md'
  : 'animate-booked-slot-flash bg-[#E0F2FE] text-[#1f1b16] border-[#38BDF8] font-medium shadow-md'
  : isBooked
  ? 'bg-[#a86500] text-white font-semibold'
  : isUserReqSelected
- ? 'animate-slot-flash bg-[#E0F2FE] text-[#1f1b16] border-[#38BDF8] shadow-md'
+ ? forceLight
+ ? 'bg-transparent text-slate-900'
+ : 'animate-slot-flash bg-[#E0F2FE] text-[#1f1b16] border-[#38BDF8] shadow-md'
  : '';
 
  const isCheckInDay = isBooked && !isSameAsPrev;
@@ -1148,14 +1182,14 @@ export function HostScheduleCalendar({
  : isUserReqSelected
  ? `${capsuleBg} font-medium cursor-default pointer-events-none`
  : isUserRequestSelection
-										? 'text-white flex items-center justify-center font-normal hover:bg-white/10 transition-colors cursor-pointer rounded-full'
+										? `${forceLight ? 'text-slate-700 hover:bg-slate-100' : 'text-white hover:bg-white/10'} flex items-center justify-center font-normal transition-colors cursor-pointer rounded-full`
 										: isSelected
 										? 'bg-white text-[#1f1b16] font-normal cursor-pointer border-2 border-white rounded-full z-10'
-										: 'text-white flex items-center justify-center font-normal hover:bg-white/10 transition-colors cursor-pointer rounded-full'
+										: `${forceLight ? 'text-slate-700 hover:bg-slate-100' : 'text-white hover:bg-white/10'} flex items-center justify-center font-normal transition-colors cursor-pointer rounded-full`
  }`}
  >
  <span className={`text-[23px] sm:text-[25px] font-normal leading-none tracking-normal select-none flex items-center justify-center ${
- isSelected ? 'text-[#1f1b16]' : 'max-xl:text-slate-900 text-white'
+ isSelected ? 'text-[#1f1b16]' : forceLight ? 'text-slate-900' : 'max-xl:text-slate-900 text-white'
  }`}>{slot.dayNum}</span>
  {isCheckInDay ? (
  <span
@@ -1164,7 +1198,7 @@ export function HostScheduleCalendar({
  >
  {guestName}
  </span>
- ) : isUserReqSelected && !isReqSameAsPrev ? (
+ ) : !forceLight && isUserReqSelected && !isReqSameAsPrev ? (
  <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-10 px-2.5 py-0.5 rounded-full bg-[#E0F2FE] border border-[#7DD3FC] text-[#0369A1] text-[12px] sm:text-[12.5px] leading-tight font-normal whitespace-nowrap shadow-xs animate-badge-flash">
  {requestedUserBooking?.userName ? requestedUserBooking.userName.split(' ')[0] : (requestedUserBooking?.fullName ? requestedUserBooking.fullName.split(' ')[0] : (requestedUserBooking?.guestName ? requestedUserBooking.guestName.split(' ')[0] : 'Requested'))}
  </span>

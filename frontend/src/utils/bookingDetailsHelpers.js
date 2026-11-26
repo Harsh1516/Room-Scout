@@ -238,3 +238,22 @@ export function getBookingStatusMeta(rawStatus, booking = null) {
     type: 'confirmed',
   };
 }
+
+export function formatEntryPassCode(rawCode) {
+  if (!rawCode) return '';
+  const clean = String(rawCode).replace(/\s+/g, '').trim();
+  if (/^\d{8}$/.test(clean)) {
+    return `${clean.slice(0, 4)} ${clean.slice(4)}`;
+  }
+  return String(rawCode).trim();
+}
+
+export function formatUtrNumber(rawUtr) {
+  if (!rawUtr) return '';
+  const clean = String(rawUtr).replace(/\s+/g, '').trim();
+  if (!clean) return '';
+  if (/^[a-zA-Z0-9]+$/.test(clean) && clean.length <= 12) {
+    return clean.match(/.{1,4}/g)?.join(' ') || clean;
+  }
+  return String(rawUtr).trim();
+}

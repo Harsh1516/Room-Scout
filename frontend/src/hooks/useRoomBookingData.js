@@ -25,11 +25,62 @@ export function useRoomBookingData({
   stayBookings = [],
   roomGrid = [],
 }) {
-  // Combined bookings from global context and direct stay fetch
-  const allKnownBookings = useMemo(
-    () => [...(Array.isArray(bookings) ? bookings : []), ...(Array.isArray(stayBookings) ? stayBookings : [])],
-    [bookings, stayBookings]
-  );
+  // Combined deduplicated bookings from global context and direct stay fetch
+  const allKnownBookings = useMemo(() => {
+    const combined = [
+      ...(Array.isArray(stayBookings) ? stayBookings : []),
+      ...(Array.isArray(bookings) ? bookings : []),
+    ];
+    const deduped = [];
+    const indexByKey = new Map();
+
+    combined.forEach((b) => {
+      if (!b) return;
+      const keys = [
+        b._id ? `id:${String(b._id)}` : null,
+        b.bookingId ? `id:${String(b.bookingId)}` : null,
+        b.bookingReferenceId ? `ref:${String(b.bookingReferenceId)}` : null,
+        b.slotBookingId ? `slot:${String(b.slotBookingId)}` : null,
+      ].filter(Boolean);
+
+      let matchedIdx = -1;
+      for (const k of keys) {
+        if (indexByKey.has(k)) {
+          matchedIdx = indexByKey.get(k);
+          break;
+        }
+      }
+
+      if (matchedIdx !== -1) {
+        const existing = deduped[matchedIdx];
+        const merged = {
+          ...b,
+          ...existing,
+          personCount: Math.max(
+            Number(existing.personCount) || 0,
+            Number(b.personCount) || 0,
+            1
+          ),
+          bookedMonths:
+            Array.isArray(existing.bookedMonths) && existing.bookedMonths.length > 0
+              ? existing.bookedMonths
+              : b.bookedMonths,
+          bookedDates:
+            Array.isArray(existing.bookedDates) && existing.bookedDates.length > 0
+              ? existing.bookedDates
+              : b.bookedDates,
+        };
+        deduped[matchedIdx] = merged;
+        keys.forEach((k) => indexByKey.set(k, matchedIdx));
+      } else {
+        const nextIdx = deduped.length;
+        deduped.push(b);
+        keys.forEach((k) => indexByKey.set(k, nextIdx));
+      }
+    });
+
+    return deduped;
+  }, [bookings, stayBookings]);
 
   // Check if booking belongs to current online user
   const checkIsUserBooking = useCallback(
@@ -233,9 +284,16 @@ export function useRoomBookingData({
     };
   }, [roomGrid, allKnownBookings, stayBookings, stay, id, checkIsUserBooking]);
 
-  // Map of booked and requested months for EVERY room in the property
-  const { allRoomsBookedMonths, allRoomsRequestedMonths, allRoomsUserBookedMonths, allRoomsUserRequestedMonths } = useMemo(() => {
+  // Map of booked, requested, and exact per-month occupied person counts for EVERY room in the property
+  const {
+    allRoomsBookedMonths,
+    allRoomsBookedMonthCounts,
+    allRoomsRequestedMonths,
+    allRoomsUserBookedMonths,
+    allRoomsUserRequestedMonths,
+  } = useMemo(() => {
     const bookedMap = {};
+    const bookedCountsMap = {};
     const requestedMap = {};
     const userBookedMap = {};
     const userRequestedMap = {};
@@ -244,10 +302,15 @@ export function useRoomBookingData({
 
     roomGrid.forEach((rm) => {
       const bookedMonthSet = new Set();
+      const monthCounts = {};
       const requestedMonthSet = new Set();
       const userBookedMonthSet = new Set();
       const userRequestedMonthSet = new Set();
       const numRm = String(rm.roomNumber || '').replace(/[^0-9]/g, '');
+      const matchedRate = (Array.isArray(stay?.roomRates) ? stay.roomRates : []).find(
+        (r) => (r.type || '').trim().toLowerCase() === String(rm.type || '').trim().toLowerCase()
+      );
+      const roomCapacity = Math.max(1, Number(rm.capacity) || Number(matchedRate?.capacity) || 1);
 
       allKnownBookings.forEach((b) => {
         if (!b) return;
@@ -288,21 +351,16 @@ export function useRoomBookingData({
 
         if (isSameStay && isSameRoom) {
           const isUserBooking = checkIsUserBooking(b);
-          const targetSet = isPending ? requestedMonthSet : bookedMonthSet;
+          const bookingPersons = Math.max(1, Number(b.personCount) || 1);
           const userTargetSet = isUserBooking ? (isPending ? userRequestedMonthSet : userBookedMonthSet) : null;
+          const bookingMonthsSet = new Set();
 
           if (Array.isArray(b.bookedMonths) && b.bookedMonths.length > 0) {
-            b.bookedMonths.forEach((m) => {
-              targetSet.add(m);
-              if (userTargetSet) userTargetSet.add(m);
-            });
+            b.bookedMonths.forEach((m) => bookingMonthsSet.add(m));
           } else if (Array.isArray(b.bookedDates) && b.bookedDates.length > 0) {
             b.bookedDates.forEach((d) => {
               const mKey = String(d).slice(0, 7);
-              if (mKey.length === 7) {
-                targetSet.add(mKey);
-                if (userTargetSet) userTargetSet.add(mKey);
-              }
+              if (mKey.length === 7) bookingMonthsSet.add(mKey);
             });
           } else if (b.checkIn && b.checkOut) {
             const inD = new Date(b.checkIn);
@@ -313,13 +371,26 @@ export function useRoomBookingData({
               while (currM <= endM) {
                 const y = currM.getUTCFullYear();
                 const m = String(currM.getUTCMonth() + 1).padStart(2, '0');
-                const mKey = `${y}-${m}`;
-                targetSet.add(mKey);
-                if (userTargetSet) userTargetSet.add(mKey);
+                bookingMonthsSet.add(`${y}-${m}`);
                 currM.setUTCMonth(currM.getUTCMonth() + 1);
               }
             }
           }
+
+          bookingMonthsSet.forEach((mKey) => {
+            if (isPending) {
+              requestedMonthSet.add(mKey);
+            } else {
+              monthCounts[mKey] = (monthCounts[mKey] || 0) + bookingPersons;
+            }
+            if (userTargetSet) userTargetSet.add(mKey);
+          });
+        }
+      });
+
+      Object.entries(monthCounts).forEach(([mKey, count]) => {
+        if (count >= roomCapacity) {
+          bookedMonthSet.add(mKey);
         }
       });
 
@@ -336,6 +407,7 @@ export function useRoomBookingData({
 
       keysToRegister.forEach((k) => {
         bookedMap[k] = bookedMonthSet;
+        bookedCountsMap[k] = monthCounts;
         requestedMap[k] = requestedMonthSet;
         userBookedMap[k] = userBookedMonthSet;
         userRequestedMap[k] = userRequestedMonthSet;
@@ -344,6 +416,7 @@ export function useRoomBookingData({
 
     return {
       allRoomsBookedMonths: bookedMap,
+      allRoomsBookedMonthCounts: bookedCountsMap,
       allRoomsRequestedMonths: requestedMap,
       allRoomsUserBookedMonths: userBookedMap,
       allRoomsUserRequestedMonths: userRequestedMap,
@@ -360,6 +433,7 @@ export function useRoomBookingData({
     allRoomsUserBookedSlots,
     allRoomsUserRequestedSlots,
     allRoomsBookedMonths,
+    allRoomsBookedMonthCounts,
     allRoomsRequestedMonths,
     allRoomsUserBookedMonths,
     allRoomsUserRequestedMonths,

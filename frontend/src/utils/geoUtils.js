@@ -18,7 +18,7 @@ export async function fetchAddressFromCoords(lat, lng, options = {}) {
  // 1. High precision reverse geocode (street / landmark level)
  const res = await fetch(
  `https://nominatim.openstreetmap.org/reverse?format=json&lat=${fixedLat}&lon=${fixedLng}&zoom=18&addressdetails=1`,
- { headers: { 'User-Agent': 'RoomScout-Property-Locator/1.0' } }
+ { headers: { 'User-Agent': 'StayIn-Property-Locator/1.0' } }
  );
 
  if (!res.ok) {
@@ -74,7 +74,7 @@ export async function fetchAddressFromCoords(lat, lng, options = {}) {
  try {
  const zRes = await fetch(
  `https://nominatim.openstreetmap.org/reverse?format=json&lat=${fixedLat}&lon=${fixedLng}&zoom=${z}&addressdetails=1`,
- { headers: { 'User-Agent': 'RoomScout-Property-Locator/1.0' } }
+ { headers: { 'User-Agent': 'StayIn-Property-Locator/1.0' } }
  );
  if (zRes.ok) {
  const zData = await zRes.json();

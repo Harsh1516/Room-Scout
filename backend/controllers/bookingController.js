@@ -7,13 +7,13 @@ import { User } from '../models/User.js';
 import { actorId, assertSelfHostOrAdmin, idsMatch, isAdminUser } from '../middleware/authMiddleware.js';
 import {
   sendBookingRequestToHostEmail,
-  sendBookingSubmittedToGuestEmail,
   sendBookingApprovedToGuestEmail,
   sendBookingRejectedToGuestEmail,
   sendBookingConfirmedEmail,
 } from '../services/emailService.js';
 import { emitToHost, emitToUser, emitToGlobal } from '../services/socketService.js';
 import { uploadSecureImage } from '../utils/imageSecurity.js';
+import { generateUniqueBookingPassKey } from '../utils/passKeyGenerator.js';
 
 const BOOKING_STATUS_ENUM = [
   'PENDING',
@@ -556,7 +556,7 @@ export const createBooking = async (req, res, next) => {
       });
     }
     try {
-      uploadedAadharPhoto = await uploadSecureImage(rawAadharPhoto, 'roomscout/aadhar');
+      uploadedAadharPhoto = await uploadSecureImage(rawAadharPhoto, 'stayin/aadhar');
     } catch (imgErr) {
       return res.status(400).json({
         success: false,
@@ -684,7 +684,7 @@ export const createBooking = async (req, res, next) => {
 
         return createdBooking;
       });
-      // Send automated branded email alerts (Host new request & Guest confirmation)
+      // Send automated branded email alert to host (new booking request)
       if (hostDoc?.email) {
         sendBookingRequestToHostEmail({
           hostEmail: hostDoc.email,
@@ -703,20 +703,6 @@ export const createBooking = async (req, res, next) => {
           bookingReferenceId: newBooking.bookingReferenceId,
         }).catch((err) => {
           console.warn('[Email Warning] Could not send host booking request alert:', err.message);
-        });
-      }
-
-      if (newBooking.email) {
-        sendBookingSubmittedToGuestEmail({
-          guestEmail: newBooking.email,
-          guestName: newBooking.fullName,
-          stayTitle: stay.title,
-          roomNumber: newBooking.roomNumber,
-          totalAmount: newBooking.totalAmount,
-          bookingId: newBooking._id,
-          bookingReferenceId: newBooking.bookingReferenceId,
-        }).catch((err) => {
-          console.warn('[Email Warning] Could not send guest booking submitted alert:', err.message);
         });
       }
 
@@ -1215,7 +1201,7 @@ export const getBookingById = async (req, res, next) => {
       (booking.status === 'CONFIRMED' || booking.status === 'CHECKED_IN' || booking.upiPayment?.verificationStatus === 'VERIFIED') &&
       !booking.checkInCode
     ) {
-      const generatedCode = Math.floor(10000000 + Math.random() * 90000000).toString();
+      const generatedCode = await generateUniqueBookingPassKey();
       await Booking.updateOne({ _id: booking._id }, { $set: { checkInCode: generatedCode } });
       booking.checkInCode = generatedCode;
     }
@@ -1510,7 +1496,7 @@ export const updateBookingStatus = async (req, res, next) => {
       req.body.bookingSource === 'OFFLINE_HOST'
     );
     if (!isOfflineTarget && (req.body.status === 'CONFIRMED' || req.body.status === 'CHECKED_IN') && !booking.checkInCode) {
-      updateFields.checkInCode = Math.floor(10000000 + Math.random() * 90000000).toString();
+      updateFields.checkInCode = await generateUniqueBookingPassKey();
     }
 
     if (isPropertyHost || isAdmin) {
@@ -2150,7 +2136,7 @@ export const getBookingsByStayId = async (req, res, next) => {
       status: { $nin: ['CANCELLED', 'REJECTED', 'CHECKED_OUT', 'EXPIRED'] },
     })
       .select(
-        'roomNumber roomType checkIn checkOut status fullName durationDisplay rateUnit userId phone email bookedDates bookedMonths paymentDeadline approvedAt paymentStatus paymentMethod totalAmount bookingReferenceId slotBookingId guestType'
+        'stayId roomNumber roomType checkIn checkOut status fullName durationDisplay rateUnit userId phone email bookedDates bookedMonths personCount paymentDeadline approvedAt paymentStatus paymentMethod bookingSource source upiPayment.verificationStatus totalAmount bookingReferenceId slotBookingId guestType'
       )
       .lean();
 

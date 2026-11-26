@@ -13,6 +13,12 @@ import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { TopRouteProgressBar } from './components/common/TopRouteProgressBar';
+import {
+  DotGridWaveLoader,
+  GlobalNavigationLoaderOverlay,
+  triggerGlobalLoader,
+  stopGlobalLoader,
+} from './components/common/DotGridWaveLoader';
 
 const GOOGLE_CLIENT_ID =
  import.meta.env.VITE_GOOGLE_CLIENT_ID ||
@@ -42,29 +48,9 @@ const WishlistDrawer = lazy(() => import('./components/WishlistDrawer').then((m)
 const BookedPlacesDrawer = lazy(() => import('./components/BookedPlacesDrawer').then((m) => ({ default: m.BookedPlacesDrawer })));
 const LeftPropertiesPanel = lazy(() => import('./components/homepage/LeftPropertiesPanel').then((m) => ({ default: m.LeftPropertiesPanel })));
 
-// Intelligent Route Fallback with 200ms Delay-to-Show (Eliminates micro-stutter flash on fast chunk loads)
+// Centered Dot Grid Wave Fallback (renders immediately to prevent duplicate clicks while route chunks load)
 function PageFallback() {
-  const [show, setShow] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShow(true), 200);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (!show) {
-    return null;
-  }
-
-  return (
-    <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center p-6 animate-in fade-in duration-200">
-      <div className="flex flex-col items-center gap-3 p-5 sm:p-6 rounded-3xl bg-white border border-slate-200/90 shadow-sm max-w-[240px] w-full text-center">
-        <div className="w-8 h-8 rounded-full border-[2.5px] border-emerald-500/20 border-t-emerald-600 animate-spin" />
-        <span className="text-[12px] font-semibold text-slate-600 tracking-tight">
-          Loading page...
-        </span>
-      </div>
-    </div>
-  );
+  return <DotGridWaveLoader />;
 }
 
 // Route guard component that handles auth hydration and role checks seamlessly without bouncing on refresh
@@ -224,9 +210,11 @@ function AppContent() {
     }
 
     if (user?.hasProperty) {
+      triggerGlobalLoader();
       navigate('/host/dashboard');
       return;
     }
+    triggerGlobalLoader();
     adminAPI.getHostByEmail(user?.email)
       .then((check) => {
         if (check?.hasProperty) {
@@ -235,10 +223,12 @@ function AppContent() {
           navigate('/host/upload');
         }
       })
-      .catch(() => navigate('/host/upload'));
+      .catch(() => navigate('/host/upload'))
+      .finally(() => stopGlobalLoader());
   };
 
  const onSearch = (searchData) => {
+ triggerGlobalLoader();
  handleSearchSubmit(searchData);
  navigate('/search');
  };
@@ -273,6 +263,7 @@ function AppContent() {
  const isFullStay = Boolean(
  stay.roomRates || stay.images || (stay.title && stay.location && !stay.bookingReferenceId)
  );
+ triggerGlobalLoader();
  navigate(`/stay/${stayId}`, { state: isFullStay ? { stay } : undefined });
  };
 
@@ -305,6 +296,7 @@ function AppContent() {
  <div className={`min-h-screen ${isHostPage ? 'host-page-scope font-body-md selection:bg-custom-btn-primary selection:text-white bg-white' : (normalizedPath === '/' || normalizedPath === '/explore' || normalizedPath === '/account' ? 'bg-white' : 'bg-slate-100')} text-[#1f1b16]`}>
  <ScrollToTop />
 			<TopRouteProgressBar />
+			<GlobalNavigationLoaderOverlay />
  {shouldShowNavbar && (
  <Navbar
  onSearchSubmit={onSearch}

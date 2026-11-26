@@ -4,7 +4,7 @@ import { Check } from 'lucide-react';
 
 /**
  * HostUploadTabs
- * Airbnb-inspired stepper navigation for the Room Scout Host Property Upload wizard.
+ * Airbnb-inspired stepper navigation for the Stay In Host Property Upload wizard.
  * Displays completed checkmarks, step numbers, and animated active pill glider.
  */
 export function HostUploadTabs({

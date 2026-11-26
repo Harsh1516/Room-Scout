@@ -97,7 +97,7 @@ export function sanitizeUserSession(rawUserData) {
 export function AuthProvider({ children }) {
  const [token, setToken] = useState(() => {
  try {
- return localStorage.getItem('roomscout_token') || localStorage.getItem('stayhub_jwt_token') || null;
+ return localStorage.getItem('stayin_token') || localStorage.getItem('stayhub_jwt_token') || null;
  } catch {
  return null;
  }
@@ -106,7 +106,7 @@ export function AuthProvider({ children }) {
  // Synchronously initialize user from local storage or decode from valid JWT token for 0ms hydration
  const [user, setUser] = useState(() => {
  try {
- const cached = localStorage.getItem('roomscout_user');
+ const cached = localStorage.getItem('stayin_user');
  if (cached) {
  const parsed = JSON.parse(cached);
  const clean = sanitizeUserSession(parsed);
@@ -120,13 +120,13 @@ export function AuthProvider({ children }) {
  (parsed.role !== 'host' && parsed.status === 'Pending Approval')
  ) {
  try {
- localStorage.setItem('roomscout_user', JSON.stringify(clean));
+ localStorage.setItem('stayin_user', JSON.stringify(clean));
  } catch {}
  }
  return clean;
  }
  }
- const rawToken = localStorage.getItem('roomscout_token') || localStorage.getItem('stayhub_jwt_token');
+ const rawToken = localStorage.getItem('stayin_token') || localStorage.getItem('stayhub_jwt_token');
  const decoded = decodeJwt(rawToken);
  if (decoded) {
  return sanitizeUserSession({
@@ -146,7 +146,7 @@ export function AuthProvider({ children }) {
  // Loading starts true only if a token is present and needs verification
  const [loading, setLoading] = useState(() => {
  try {
- const storedToken = localStorage.getItem('roomscout_token') || localStorage.getItem('stayhub_jwt_token');
+ const storedToken = localStorage.getItem('stayin_token') || localStorage.getItem('stayhub_jwt_token');
  return Boolean(storedToken);
  } catch {
  return false;
@@ -161,29 +161,29 @@ export function AuthProvider({ children }) {
  localStorage.removeItem('stayhub_jwt_token');
 
  if (jwtToken) {
- localStorage.setItem('roomscout_token', jwtToken);
+ localStorage.setItem('stayin_token', jwtToken);
  setToken(jwtToken);
  } else {
- localStorage.removeItem('roomscout_token');
+ localStorage.removeItem('stayin_token');
  setToken(null);
  }
 
  const cleanUser = sanitizeUserSession(userData);
       if (cleanUser) {
         try {
-          const prevUserRaw = localStorage.getItem('roomscout_user');
+          const prevUserRaw = localStorage.getItem('stayin_user');
           if (prevUserRaw) {
             const prevUser = JSON.parse(prevUserRaw);
             const prevEmail = (prevUser?.email || '').trim().toLowerCase();
             const nextEmail = (cleanUser.email || '').trim().toLowerCase();
             if (prevEmail && nextEmail && prevEmail !== nextEmail) {
               clearAllHostCaches();
-              localStorage.removeItem('roomscout_host_upload_draft');
-              localStorage.removeItem('roomscout_upload_draft_guest');
+              localStorage.removeItem('stayin_host_upload_draft');
+              localStorage.removeItem('stayin_upload_draft_guest');
               const keysToRemove = [];
               for (let i = 0; i < localStorage.length; i++) {
                 const k = localStorage.key(i);
-                if (k && k.startsWith('roomscout_upload_draft_')) {
+                if (k && k.startsWith('stayin_upload_draft_')) {
                   keysToRemove.push(k);
                 }
               }
@@ -194,20 +194,20 @@ export function AuthProvider({ children }) {
         } catch {}
 
         try {
-          localStorage.setItem('roomscout_user', JSON.stringify(cleanUser));
+          localStorage.setItem('stayin_user', JSON.stringify(cleanUser));
         } catch {}
         setUser(cleanUser);
       } else {
-        localStorage.removeItem('roomscout_user');
+        localStorage.removeItem('stayin_user');
         setUser(null);
         clearAllHostCaches();
         try {
-          localStorage.removeItem('roomscout_host_upload_draft');
-          localStorage.removeItem('roomscout_upload_draft_guest');
+          localStorage.removeItem('stayin_host_upload_draft');
+          localStorage.removeItem('stayin_upload_draft_guest');
           const keysToRemove = [];
           for (let i = 0; i < localStorage.length; i++) {
             const k = localStorage.key(i);
-            if (k && k.startsWith('roomscout_upload_draft_')) {
+            if (k && k.startsWith('stayin_upload_draft_')) {
               keysToRemove.push(k);
             }
           }
@@ -237,7 +237,7 @@ export function AuthProvider({ children }) {
           hasProperty: true,
         };
         try {
-          localStorage.setItem('roomscout_user', JSON.stringify(updated));
+          localStorage.setItem('stayin_user', JSON.stringify(updated));
         } catch {}
         return updated;
       });
@@ -266,9 +266,9 @@ export function AuthProvider({ children }) {
 
  Object.keys(localStorage).forEach((key) => {
  if (key.startsWith('stayhub_') && key !== 'stayhub_jwt_token') {
- // Migrate old approval notification flag to roomscout_ prefix
+ // Migrate old approval notification flag to stayin_ prefix
  if (key.startsWith('stayhub_approved_notified_')) {
- const newKey = key.replace('stayhub_', 'roomscout_');
+ const newKey = key.replace('stayhub_', 'stayin_');
  localStorage.setItem(newKey, 'true');
  }
  localStorage.removeItem(key);
@@ -277,13 +277,13 @@ export function AuthProvider({ children }) {
  } catch {}
 
  if (localStorage.getItem('stayhub_jwt_token')) {
- if (!localStorage.getItem('roomscout_token')) {
- localStorage.setItem('roomscout_token', localStorage.getItem('stayhub_jwt_token'));
+ if (!localStorage.getItem('stayin_token')) {
+ localStorage.setItem('stayin_token', localStorage.getItem('stayhub_jwt_token'));
  }
  localStorage.removeItem('stayhub_jwt_token');
  }
 
- const storedToken = localStorage.getItem('roomscout_token');
+ const storedToken = localStorage.getItem('stayin_token');
  if (!storedToken) {
  setUser(null);
  clearAllHostCaches();
@@ -300,7 +300,7 @@ export function AuthProvider({ children }) {
         setUser((prev) => {
           const updated = sanitizeUserSession({ ...(prev || {}), ...cleanProfile });
           try {
-            localStorage.setItem('roomscout_user', JSON.stringify(updated));
+            localStorage.setItem('stayin_user', JSON.stringify(updated));
           } catch {}
           return updated;
         });
@@ -318,7 +318,7 @@ export function AuthProvider({ children }) {
                   hasProperty: true,
                 };
                 try {
-                  localStorage.setItem('roomscout_user', JSON.stringify(nextUser));
+                  localStorage.setItem('stayin_user', JSON.stringify(nextUser));
                 } catch {}
                 return nextUser;
               });
@@ -356,7 +356,7 @@ export function AuthProvider({ children }) {
  };
 
  const handleFocus = () => {
- if (localStorage.getItem('roomscout_token') || localStorage.getItem('stayhub_jwt_token')) {
+ if (localStorage.getItem('stayin_token') || localStorage.getItem('stayhub_jwt_token')) {
  verifyToken();
  }
  };
@@ -474,7 +474,7 @@ export function AuthProvider({ children }) {
                   hasProperty: true,
                 };
                 try {
-                  localStorage.setItem('roomscout_user', JSON.stringify(nextUser));
+                  localStorage.setItem('stayin_user', JSON.stringify(nextUser));
                 } catch {}
                 return nextUser;
               });
@@ -495,7 +495,7 @@ export function AuthProvider({ children }) {
  if (user && (user._id || user.email)) return user;
  if (!token) return null;
  try {
- const cached = localStorage.getItem('roomscout_user');
+ const cached = localStorage.getItem('stayin_user');
  if (cached) {
  const clean = sanitizeUserSession(JSON.parse(cached));
  if (clean) return clean;
@@ -526,7 +526,7 @@ export function AuthProvider({ children }) {
      await authAPI.logout();
    } catch {}
    try {
-     document.cookie = 'roomscout_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+     document.cookie = 'stayin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
      document.cookie = 'stayhub_jwt_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
    } catch {}
    syncAuthState(null, null);
@@ -540,7 +540,7 @@ export function AuthProvider({ children }) {
  newToken ||
  token ||
  (typeof localStorage !== 'undefined'
- ? localStorage.getItem('roomscout_token') || localStorage.getItem('stayhub_jwt_token')
+ ? localStorage.getItem('stayin_token') || localStorage.getItem('stayhub_jwt_token')
  : null);
 
  setUser((prevUser) => {
@@ -556,7 +556,7 @@ export function AuthProvider({ children }) {
  let baseUser = prevUser || effectiveUser;
  if (!baseUser && typeof localStorage !== 'undefined') {
  try {
- const cached = localStorage.getItem('roomscout_user');
+ const cached = localStorage.getItem('stayin_user');
  if (cached) baseUser = JSON.parse(cached);
  } catch {}
  }
@@ -581,11 +581,11 @@ export function AuthProvider({ children }) {
  const cleanUser = sanitizeUserSession(merged);
  if (cleanUser) {
  try {
- localStorage.setItem('roomscout_user', JSON.stringify(cleanUser));
+ localStorage.setItem('stayin_user', JSON.stringify(cleanUser));
  } catch {}
  if (finalToken) {
  try {
- localStorage.setItem('roomscout_token', finalToken);
+ localStorage.setItem('stayin_token', finalToken);
  } catch {}
  setToken(finalToken);
  }

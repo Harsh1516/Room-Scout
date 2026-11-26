@@ -1,5 +1,5 @@
 import { useState, useMemo, useDeferredValue, lazy, Suspense } from 'react';
-import { bookingsAPI } from '../../services/api';
+import { bookingsAPI, paymentsAPI } from '../../services/api';
 
 const ResidentIdPassModal = lazy(() =>
  import('./schedule/ResidentIdPassModal').then((m) => ({ default: m.ResidentIdPassModal }))
@@ -382,6 +382,8 @@ export function HostUsersVisitedSection({
  aadhar: rawAadhar,
  aadharNumber: rawAadhar,
  guestAadhar: rawAadhar,
+ aadharPhoto: guestRecord.aadharPhoto || guestRecord.guestAadharPhoto || '',
+ guestAadharPhoto: guestRecord.guestAadharPhoto || guestRecord.aadharPhoto || '',
  totalAmount: guestRecord.totalAmount !== undefined ? guestRecord.totalAmount : guestRecord.price || 0,
  adults: Number(guestRecord.adults) || 1,
  children: Number(guestRecord.children) || 0,
@@ -660,6 +662,68 @@ export function HostUsersVisitedSection({
  }
  };
 
+ const handleAcceptUtr = async (request) => {
+ const mongoBookingId = request._id || request.bookingId;
+ const actionKey = request.bookingId || request._id;
+ if (!mongoBookingId) return;
+ setActionLoadingId(actionKey);
+
+ try {
+ const res = await paymentsAPI.verifyReference({
+ bookingId: mongoBookingId,
+ action: 'VERIFY',
+ verificationNote: 'Verified UTR and accepted by host',
+ });
+
+ const passKey = res?.checkInCode || res?.booking?.checkInCode || request.checkInCode || '';
+
+ setGuests((prev) =>
+ prev.map((item) => {
+ const isTarget =
+ (item._id && item._id === request._id) ||
+ (item.bookingId && item.bookingId === request.bookingId);
+ if (!isTarget) return item;
+ return {
+ ...item,
+ status: 'CONFIRMED',
+ paymentStatus: 'PAID',
+ checkInCode: passKey,
+ upiPayment: {
+ ...(item.upiPayment || {}),
+ verificationStatus: 'VERIFIED',
+ },
+ };
+ })
+ );
+
+ const propId = hostProperty?._id;
+ if (propId) broadcastStayUpdate(propId);
+ broadcastBookingChange({
+ bookingId: mongoBookingId,
+ status: 'CONFIRMED',
+ paymentStatus: 'PAID',
+ verificationStatus: 'VERIFIED',
+ checkInCode: passKey,
+ stayId: propId,
+ sender: 'HostAcceptUtr',
+ });
+
+ showToast(
+ passKey
+ ? `UTR accepted! Confirmation & Pass Key (${passKey}) sent`
+ : `UTR accepted! Room ${request.roomNumber} confirmed`,
+ 'success'
+ );
+ refreshGuests();
+ } catch (err) {
+ console.error('Error accepting UTR:', err);
+ showToast(err?.message || 'Failed to accept UTR', 'error');
+ refreshGuests();
+ } finally {
+ setActionLoadingId(null);
+ }
+ };
+
  const handleRejectRequest = async (request) => {
  const bookingId = request.bookingId || request._id;
  if (!bookingId) return;
@@ -793,6 +857,7 @@ export function HostUsersVisitedSection({
  onOpenModal={handleOpenOccupantModal}
  onSelectUserRequest={onSelectUserRequest}
  onApproveRequest={handleApproveRequest}
+ onAcceptUtr={handleAcceptUtr}
  onRejectRequest={handleRejectRequest}
  onMarkCheckIn={handleMarkCheckIn}
  onMarkCheckOut={handleMarkCheckOut}

@@ -19,7 +19,7 @@ const getApiBaseUrl = () => {
  return import.meta.env.VITE_API_URL;
  }
 
- return 'https://room-scout-backend.onrender.com/api';
+ return 'https://stayin-backend.onrender.com/api';
  }
 
  return import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -40,8 +40,8 @@ async function request(endpoint, options = {}) {
  }
 
  const executeRequest = async () => {
- const token = localStorage.getItem('roomscout_token') || localStorage.getItem('stayhub_jwt_token');
- const adminKey = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('roomscout_admin_key') : null;
+ const token = localStorage.getItem('stayin_token') || localStorage.getItem('stayhub_jwt_token');
+ const adminKey = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('stayin_admin_key') : null;
 
  const headers = {
  'Content-Type': 'application/json',
@@ -90,10 +90,10 @@ async function request(endpoint, options = {}) {
 
  if (data.status === 'ACCOUNT_DELETED' || response.status === 401) {
  if (data.status === 'ACCOUNT_DELETED' || (data.message && data.message.includes('Account not found'))) {
- localStorage.removeItem('roomscout_token');
+ localStorage.removeItem('stayin_token');
  localStorage.removeItem('stayhub_jwt_token');
  localStorage.removeItem('mal_practice_user');
- localStorage.removeItem('roomscout_user');
+ localStorage.removeItem('stayin_user');
  if (typeof window !== 'undefined') {
  window.dispatchEvent(
  new CustomEvent('auth:account_deleted', {
@@ -549,10 +549,10 @@ export const adminAPI = {
 
  setAdminKey: (key) => {
  if (typeof sessionStorage !== 'undefined') {
- if (key) sessionStorage.setItem('roomscout_admin_key', key.trim());
- else sessionStorage.removeItem('roomscout_admin_key');
+ if (key) sessionStorage.setItem('stayin_admin_key', key.trim());
+ else sessionStorage.removeItem('stayin_admin_key');
  }
  },
 
- getAdminKey: () => (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('roomscout_admin_key') : null),
+ getAdminKey: () => (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('stayin_admin_key') : null),
 };

@@ -26,6 +26,7 @@ import {
 import { bookingsAPI, paymentsAPI } from '../../services/api';
 import { toast } from '../../context/ToastContext';
 import { broadcastBookingChange } from '../../utils/bookingPayment';
+import { formatUtrNumber } from '../../utils/bookingDetailsHelpers';
 
 function parseCleanDate(rawStr) {
  if (!rawStr) return null;
@@ -764,7 +765,7 @@ export function CheckInVerificationModal({
 
  <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-[#f7f4ee] border border-slate-200">
  <span className="font-mono font-medium text-sm sm:text-base text-[#1f1b16] select-all truncate">
- {transactionRef || 'N/A (Cash / Pay at Property)'}
+ {formatUtrNumber(transactionRef) || 'N/A (Cash / Pay at Property)'}
  </span>
 
  {transactionRef && (
@@ -838,7 +839,7 @@ export function CheckInVerificationModal({
  <div className="pt-2 border-t border-slate-200/60 space-y-2.5">
  <div className="rounded-xl p-3 bg-amber-500/10 border border-amber-500/25 text-xs text-amber-900 leading-relaxed">
  Verify ₹{totalAmount.toLocaleString('en-IN')} in your UPI/bank statement under UTR reference{' '}
- <strong className="font-mono font-medium">{transactionRef}</strong> before authorizing check-in.
+ <strong className="font-mono font-medium">{formatUtrNumber(transactionRef)}</strong> before authorizing check-in.
  </div>
 
  {showRejectInput ? (
@@ -1000,7 +1001,7 @@ export function CheckInVerificationModal({
  Payment Screenshot / Receipt
  </span>
  <span className="text-[11px] font-mono text-slate-400 block font-normal">
- UTR: <strong className="text-white">{transactionRef || 'N/A'}</strong> • Amount:{' '}
+ UTR: <strong className="text-white">{formatUtrNumber(transactionRef) || 'N/A'}</strong> • Amount:{' '}
  <strong className="text-emerald-400">₹{totalAmount.toLocaleString('en-IN')}</strong>
  </span>
  </div>

@@ -14,7 +14,7 @@ export function HomepageFooter() {
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm" />
-                <span className="text-sm font-extrabold tracking-wider uppercase text-slate-950">ROOM-SCOUT</span>
+                <span className="text-sm font-extrabold tracking-wider uppercase text-slate-950">STAY IN</span>
                 <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-semibold">
                   Verified Living
                 </span>
@@ -42,7 +42,7 @@ export function HomepageFooter() {
 
             {/* Copyright */}
             <div className="pt-3 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-500 font-medium">
-              <span>© 2026 ROOM-SCOUT Inc. All Rights Reserved.</span>
+              <span>© 2026 STAY IN Inc. All Rights Reserved.</span>
             </div>
           </div>
 
@@ -54,7 +54,7 @@ export function HomepageFooter() {
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-slate-900 shadow-sm" />
                   <span className="text-xl sm:text-2xl font-black text-slate-950 tracking-wider uppercase">
-                    ROOM-SCOUT
+                    STAY IN
                   </span>
                   <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-semibold border border-slate-200">
                     Verified Living
@@ -111,7 +111,7 @@ export function HomepageFooter() {
 
             {/* Bottom Bar */}
             <div className="pt-6 sm:pt-8 pb-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs sm:text-sm font-medium text-slate-500">
-              <div className="text-center sm:text-left">© 2026 ROOM-SCOUT Inc. All Rights Reserved.</div>
+              <div className="text-center sm:text-left">© 2026 STAY IN Inc. All Rights Reserved.</div>
               <div className="flex items-center gap-4 sm:gap-6 flex-wrap justify-center font-semibold text-slate-700">
                 <span onClick={() => navigate('/terms')} className="hover:text-slate-950 cursor-pointer transition-colors">Terms &amp; Conditions</span>
                 <span onClick={() => navigate('/policy')} className="hover:text-slate-950 cursor-pointer transition-colors">Policy</span>

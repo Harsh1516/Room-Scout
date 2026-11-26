@@ -13,7 +13,7 @@ export function ThemeProvider({ children }) {
  root.classList.remove('dark');
  root.classList.add('light');
  try {
- localStorage.removeItem('room_scout_theme');
+ localStorage.removeItem('stayin_theme');
  } catch {}
  }, []);
 

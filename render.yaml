@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: roomscout-backend
+    name: stayin-backend
     runtime: node
     plan: free
     rootDir: backend

@@ -17,7 +17,7 @@ export function NotFoundPage() {
  <Link to="/" className="flex items-center gap-2 group">
  <span className="w-3 h-3 rounded-full bg-cyan-500 group-hover:scale-125 transition-transform" />
  <span className="text-lg font-medium text-[#1f1b16]">
- RoomScout
+ Stay In
  </span>
  </Link>
  </header>
@@ -80,14 +80,14 @@ export function NotFoundPage() {
  </Link>
  <span>•</span>
  <Link to="/" className="hover:text-cyan-500 transition-colors">
- Room-Scout Home
+ Stay In Home
  </Link>
  </div>
  </motion.main>
 
  {/* Footer copyright */}
  <footer className="text-xs text-slate-400 mt-6 relative z-10 text-center">
- © 2026 Room-Scout. All rights reserved.
+ © 2026 Stay In. All rights reserved.
  </footer>
  </div>
  );

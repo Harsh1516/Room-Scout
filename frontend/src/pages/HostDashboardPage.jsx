@@ -50,7 +50,7 @@ export function HostDashboardPage() {
  if (location.state?.tab) return location.state.tab;
  if (typeof window !== 'undefined' && window.sessionStorage) {
  try {
- const saved = window.sessionStorage.getItem('roomscout_host_active_tab');
+ const saved = window.sessionStorage.getItem('stayin_host_active_tab');
  if (saved && ['property', 'room', 'users', 'paid'].includes(saved)) {
  return saved;
  }
@@ -144,7 +144,7 @@ export function HostDashboardPage() {
  setActiveTab(nextTab);
  if (typeof window !== 'undefined' && window.sessionStorage) {
  try {
- window.sessionStorage.setItem('roomscout_host_active_tab', nextTab);
+ window.sessionStorage.setItem('stayin_host_active_tab', nextTab);
  } catch {
  /* ignore */
  }

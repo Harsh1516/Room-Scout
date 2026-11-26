@@ -78,7 +78,7 @@ export async function sendRawMail({ from, to, subject, html, text }) {
   const fromAddress =
     from ||
     process.env.EMAIL_FROM ||
-    (process.env.EMAIL_USER ? `"Room-Scout" <${process.env.EMAIL_USER}>` : '"Room-Scout" <noreply@roomscout.com>');
+    (process.env.EMAIL_USER ? `"Stay In" <${process.env.EMAIL_USER}>` : '"Stay In" <noreply@stayin.com>');
 
   // 1. Resend API (Direct REST HTTPS)
   const resendKey = (process.env.RESEND_API_KEY || '').trim();
@@ -91,7 +91,7 @@ export async function sendRawMail({ from, to, subject, html, text }) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: fromAddress.includes('<') ? fromAddress : `"Room-Scout" <${fromAddress}>`,
+          from: fromAddress.includes('<') ? fromAddress : `"Stay In" <${fromAddress}>`,
           to: Array.isArray(to) ? to : [to],
           subject,
           html,
@@ -113,7 +113,7 @@ export async function sendRawMail({ from, to, subject, html, text }) {
   const brevoKey = (process.env.BREVO_API_KEY || '').trim();
   if (brevoKey) {
     try {
-      const senderEmail = process.env.EMAIL_USER || 'noreply@roomscout.com';
+      const senderEmail = process.env.EMAIL_USER || 'noreply@stayin.com';
       const res = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: {
@@ -121,7 +121,7 @@ export async function sendRawMail({ from, to, subject, html, text }) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          sender: { name: 'Room-Scout', email: senderEmail },
+          sender: { name: 'Stay In', email: senderEmail },
           to: [{ email: to }],
           subject,
           htmlContent: html,
@@ -179,7 +179,7 @@ export async function sendRawMail({ from, to, subject, html, text }) {
 export async function sendPasswordResetEmail({ to, name, tempPassword, role = 'user' }) {
   try {
     const transporter = await getTransporter();
-    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Room-Scout Support" <noreply@roomscout.com>';
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Stay In Support" <noreply@stayin.com>';
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
     const roleLabel = role === 'host' ? 'Host Partner' : 'Guest Member';
 
@@ -211,7 +211,7 @@ export async function sendPasswordResetEmail({ to, name, tempPassword, role = 'u
     <body>
       <div class="container">
         <div class="header">
-          <span class="brand">Room<span class="brand-accent">Scout</span></span>
+          <span class="brand">Stay <span class="brand-accent">In</span></span>
           <span class="badge">${roleLabel} • Password Recovery</span>
         </div>
         <div class="content">
@@ -230,7 +230,7 @@ export async function sendPasswordResetEmail({ to, name, tempPassword, role = 'u
           </div>
 
           <div class="btn-container">
-            <a href="${clientUrl}" class="btn" target="_blank">Sign In to RoomScout</a>
+            <a href="${clientUrl}" class="btn" target="_blank">Sign In to Stay In</a>
           </div>
 
           <div class="notice">
@@ -238,7 +238,7 @@ export async function sendPasswordResetEmail({ to, name, tempPassword, role = 'u
           </div>
         </div>
         <div class="footer">
-          &copy; ${new Date().getFullYear()} RoomScout Student Living & PG Portals • Direct Account Notification
+          &copy; ${new Date().getFullYear()} Stay In Student Living & PG Portals • Direct Account Notification
         </div>
       </div>
     </body>
@@ -253,8 +253,8 @@ export async function sendPasswordResetEmail({ to, name, tempPassword, role = 'u
     const mailOptions = {
       from: fromAddress,
       to,
-      subject: `🔑 Your New Room-Scout Password (${tempPassword})`,
-      text: `Hello ${name},\n\nYour new temporary password for Room-Scout is: ${tempPassword}\n\nLogin at: ${clientUrl}\n\nThank you,\nRoom-Scout Team`,
+      subject: `🔑 Your New Stay In Password (${tempPassword})`,
+      text: `Hello ${name},\n\nYour new temporary password for Stay In is: ${tempPassword}\n\nLogin at: ${clientUrl}\n\nThank you,\nStay In Team`,
       html: htmlContent,
     };
 
@@ -286,7 +286,7 @@ export async function sendPasswordResetEmail({ to, name, tempPassword, role = 'u
  * Diagnostic SMTP Tester: Verifies credentials & connection
  * @param {string} testEmail - Optional target email address to test delivery
  */
-export async function testEmailConnection(testEmail = 'test@roomscout.com') {
+export async function testEmailConnection(testEmail = 'test@stayin.com') {
   try {
     const emailUser = process.env.EMAIL_USER;
     const emailPass = process.env.EMAIL_PASS;
@@ -313,10 +313,10 @@ export async function testEmailConnection(testEmail = 'test@roomscout.com') {
     else if (isCustomSmtpConfigured) activeProvider = emailHost.includes('gmail') ? 'Gmail SMTP' : 'Custom SMTP';
 
     const info = await sendRawMail({
-      from: process.env.EMAIL_FROM || emailUser || '"Room-Scout Diagnostic" <noreply@roomscout.com>',
+      from: process.env.EMAIL_FROM || emailUser || '"Stay In Diagnostic" <noreply@stayin.com>',
       to: testEmail,
-      subject: `RoomScout Delivery Diagnostic (${activeProvider})`,
-      text: `Your RoomScout email delivery system is functioning properly!\n\nProvider: ${activeProvider}\nTimestamp: ${new Date().toISOString()}`,
+      subject: `Stay In Delivery Diagnostic (${activeProvider})`,
+      text: `Your Stay In email delivery system is functioning properly!\n\nProvider: ${activeProvider}\nTimestamp: ${new Date().toISOString()}`,
       html: `
         <!DOCTYPE html>
         <html lang="en">
@@ -340,7 +340,7 @@ export async function testEmailConnection(testEmail = 'test@roomscout.com') {
         <body>
           <div class="container">
             <div class="header">
-              <span class="brand">Room<span class="brand-accent">Scout</span></span>
+              <span class="brand">Stay <span class="brand-accent">In</span></span>
               <span class="badge">Diagnostic Verified</span>
             </div>
             <div class="content">
@@ -364,7 +364,7 @@ export async function testEmailConnection(testEmail = 'test@roomscout.com') {
               </div>
             </div>
             <div class="footer">
-              &copy; ${new Date().getFullYear()} RoomScout System Diagnostics
+              &copy; ${new Date().getFullYear()} Stay In System Diagnostics
             </div>
           </div>
         </body>
@@ -391,7 +391,7 @@ export async function testEmailConnection(testEmail = 'test@roomscout.com') {
 }
 
 /**
- * Executive HTML email wrapper for RoomScout transactional messages
+ * Executive HTML email wrapper for Stay In transactional messages
  */
 function buildBrandedEmailHtml({ badgeText, title, subtitle, detailsRows = [], ctaText, ctaUrl, footerNote }) {
   const cleanBadge = (badgeText || '').replace(/^[^\w\s]+/, '').trim();
@@ -432,7 +432,7 @@ function buildBrandedEmailHtml({ badgeText, title, subtitle, detailsRows = [], c
   <body>
     <div class="container">
       <div class="header">
-        <span class="brand">Room<span class="brand-accent">Scout</span></span>
+        <span class="brand">Stay <span class="brand-accent">In</span></span>
         ${cleanBadge ? `<span class="badge">${cleanBadge}</span>` : ''}
       </div>
       <div class="content">
@@ -464,7 +464,7 @@ function buildBrandedEmailHtml({ badgeText, title, subtitle, detailsRows = [], c
         ${footerNote ? `<div class="footer-note">${footerNote}</div>` : ''}
       </div>
       <div class="footer">
-        &copy; ${new Date().getFullYear()} RoomScout Student Living & PG Portals • Direct Verified Notification
+        &copy; ${new Date().getFullYear()} Stay In Student Living & PG Portals • Direct Verified Notification
       </div>
     </div>
   </body>
@@ -495,7 +495,7 @@ export async function sendBookingRequestToHostEmail({
 
   try {
     const transporter = await getTransporter();
-    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Room-Scout Support" <noreply@roomscout.com>';
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Stay In Support" <noreply@stayin.com>';
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
     const hostDashboardUrl = `${clientUrl}/host-dashboard`;
 
@@ -529,7 +529,7 @@ export async function sendBookingRequestToHostEmail({
       from: fromAddress,
       to: hostEmail,
       subject: `New Booking Request: Room ${roomNumber} at ${stayTitle} (${bookingReferenceId || bookingId})`,
-      text: `Hello ${hostName},\n\nYou have received a new booking request for Room ${roomNumber} at ${stayTitle} from ${guestName}.\nTotal: ₹${totalAmount}\n\nReview & Approve at: ${hostDashboardUrl}\n\nRoomScout Team`,
+      text: `Hello ${hostName},\n\nYou have received a new booking request for Room ${roomNumber} at ${stayTitle} from ${guestName}.\nTotal: ₹${totalAmount}\n\nReview & Approve at: ${hostDashboardUrl}\n\nStay In Team`,
       html: htmlContent,
     };
 
@@ -558,7 +558,7 @@ export async function sendBookingSubmittedToGuestEmail({
 
   try {
     const transporter = await getTransporter();
-    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Room-Scout Support" <noreply@roomscout.com>';
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Stay In Support" <noreply@stayin.com>';
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
     const bookingUrl = `${clientUrl}/booking/${bookingId}`;
 
@@ -587,7 +587,7 @@ export async function sendBookingSubmittedToGuestEmail({
       from: fromAddress,
       to: guestEmail,
       subject: `Booking Request Received: ${stayTitle} (${bookingReferenceId || bookingId})`,
-      text: `Hello ${guestName},\n\nYour booking request for Room ${roomNumber} at ${stayTitle} is pending host approval.\n\nTrack status: ${bookingUrl}\n\nRoomScout Team`,
+      text: `Hello ${guestName},\n\nYour booking request for Room ${roomNumber} at ${stayTitle} is pending host approval.\n\nTrack status: ${bookingUrl}\n\nStay In Team`,
       html: htmlContent,
     };
 
@@ -618,7 +618,7 @@ export async function sendBookingApprovedToGuestEmail({
 
   try {
     const transporter = await getTransporter();
-    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Room-Scout Support" <noreply@roomscout.com>';
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Stay In Support" <noreply@stayin.com>';
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
     const bookingUrl = customBookingUrl || `${clientUrl}/booking/${bookingId}`;
 
@@ -653,7 +653,7 @@ export async function sendBookingApprovedToGuestEmail({
       from: fromAddress,
       to: guestEmail,
       subject: `Slot Accepted: Pay within 10 Minutes for ${stayTitle} (Room ${roomNumber})`,
-      text: `Hello ${guestName},\n\nYour room slot request for Room ${roomNumber} at ${stayTitle} has been accepted by the host!\nPlease complete payment (₹${totalAmount}) within 10 minutes (${deadlineText}).\n\nInstant Payment Link: ${bookingUrl}\n\nRoomScout Team`,
+      text: `Hello ${guestName},\n\nYour room slot request for Room ${roomNumber} at ${stayTitle} has been accepted by the host!\nPlease complete payment (₹${totalAmount}) within 10 minutes (${deadlineText}).\n\nInstant Payment Link: ${bookingUrl}\n\nStay In Team`,
       html: htmlContent,
     };
 
@@ -680,7 +680,7 @@ export async function sendBookingRejectedToGuestEmail({
 
   try {
     const transporter = await getTransporter();
-    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Room-Scout Support" <noreply@roomscout.com>';
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Stay In Support" <noreply@stayin.com>';
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
 
     const htmlContent = buildBrandedEmailHtml({
@@ -695,7 +695,7 @@ export async function sendBookingRejectedToGuestEmail({
       ],
       ctaText: 'Explore Other Available Stays',
       ctaUrl: clientUrl,
-      footerNote: 'You have not been charged. Browse hundreds of verified student PGs and apartments on RoomScout.',
+      footerNote: 'You have not been charged. Browse hundreds of verified student PGs and apartments on Stay In.',
     });
 
     if (!transporter) {
@@ -707,7 +707,7 @@ export async function sendBookingRejectedToGuestEmail({
       from: fromAddress,
       to: guestEmail,
       subject: `Booking Request Declined: ${stayTitle} (${bookingReferenceId})`,
-      text: `Hello ${guestName},\n\nThe host was unable to accept your booking for Room ${roomNumber} at ${stayTitle}.\n\nExplore other stays: ${clientUrl}\n\nRoomScout Team`,
+      text: `Hello ${guestName},\n\nThe host was unable to accept your booking for Room ${roomNumber} at ${stayTitle}.\n\nExplore other stays: ${clientUrl}\n\nStay In Team`,
       html: htmlContent,
     };
 
@@ -737,9 +737,14 @@ export async function sendBookingConfirmedEmail({
 
   try {
     const transporter = await getTransporter();
-    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Room-Scout Support" <noreply@roomscout.com>';
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Stay In Support" <noreply@stayin.com>';
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
     const bookingUrl = `${clientUrl}/booking/${bookingId}`;
+
+    const cleanPassDigits = String(checkInCode || '').replace(/\s+/g, '');
+    const formattedPassCode = /^\d{8}$/.test(cleanPassDigits)
+      ? `${cleanPassDigits.slice(0, 4)} ${cleanPassDigits.slice(4)}`
+      : (checkInCode || '');
 
     const htmlContent = buildBrandedEmailHtml({
       badgeText: 'Booking Confirmed',
@@ -747,7 +752,7 @@ export async function sendBookingConfirmedEmail({
       subtitle: `Your payment has been verified by the host. Your reservation for <strong>Room ${roomNumber}</strong> at <strong>${stayTitle}</strong> is locked. Keep your check-in code handy upon arrival.`,
       detailsRows: [
         { label: 'Booking Reference', value: bookingReferenceId || bookingId },
-        { label: 'Check-In Pass Code', value: checkInCode || 'Issued on Pass' },
+        { label: 'Check-In Pass Code', value: formattedPassCode || 'Issued on Pass' },
         { label: 'Property', value: stayTitle },
         { label: 'Room', value: `Room ${roomNumber}` },
         { label: 'Amount Paid', value: `₹${Number(totalAmount || 0).toLocaleString('en-IN')}` },
@@ -766,8 +771,8 @@ export async function sendBookingConfirmedEmail({
     const mailOptions = {
       from: fromAddress,
       to: guestEmail,
-      subject: `Booking Confirmed: Your Stay at ${stayTitle} (Code: ${checkInCode || 'Verified'})`,
-      text: `Hello ${guestName},\n\nYour booking for Room ${roomNumber} at ${stayTitle} is confirmed!\nCheck-In Code: ${checkInCode}\n\nView Pass: ${bookingUrl}\n\nRoomScout Team`,
+      subject: `Booking Confirmed: Your Stay at ${stayTitle} (Code: ${formattedPassCode || 'Verified'})`,
+      text: `Hello ${guestName},\n\nYour booking for Room ${roomNumber} at ${stayTitle} is confirmed!\nCheck-In Code: ${formattedPassCode}\n\nView Pass: ${bookingUrl}\n\nStay In Team`,
       html: htmlContent,
     };
 
@@ -792,7 +797,7 @@ export async function sendBookingConfirmedEmail({
 export async function sendEmailVerificationOtp({ to, name, otp, purpose = 'Verification', role = 'user' }) {
   try {
     const transporter = await getTransporter();
-    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Room-Scout Security" <noreply@roomscout.com>';
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Stay In Security" <noreply@stayin.com>';
     const roleLabel = role === 'host' ? 'Host Partner' : 'Guest Member';
 
     const htmlContent = `
@@ -822,13 +827,13 @@ export async function sendEmailVerificationOtp({ to, name, otp, purpose = 'Verif
     <body>
       <div class="container">
         <div class="header">
-          <span class="brand">Room<span class="brand-accent">Scout</span></span>
+          <span class="brand">Stay <span class="brand-accent">In</span></span>
           <span class="badge">${roleLabel} • Verification</span>
         </div>
         <div class="content">
           <div class="greeting">Hello ${name || 'there'},</div>
           <div class="text">
-            Use the 6-digit verification code below to complete your <strong>${purpose}</strong> on RoomScout:
+            Use the 6-digit verification code below to complete your <strong>${purpose}</strong> on Stay In:
           </div>
           
           <div class="otp-card">
@@ -838,15 +843,15 @@ export async function sendEmailVerificationOtp({ to, name, otp, purpose = 'Verif
           </div>
           
           <div class="text" style="font-size: 13.5px; color: #64748b;">
-            Enter this code into your RoomScout prompt to verify your account email address (<strong>${to}</strong>).
+            Enter this code into your Stay In prompt to verify your account email address (<strong>${to}</strong>).
           </div>
 
           <div class="security-box">
-            Never share this verification code with anyone. RoomScout staff will never ask for your code.
+            Never share this verification code with anyone. Stay In staff will never ask for your code.
           </div>
         </div>
         <div class="footer">
-          &copy; ${new Date().getFullYear()} RoomScout Student Living & PG Portals • Direct Security Notification
+          &copy; ${new Date().getFullYear()} Stay In Student Living & PG Portals • Direct Security Notification
         </div>
       </div>
     </body>
@@ -862,7 +867,7 @@ export async function sendEmailVerificationOtp({ to, name, otp, purpose = 'Verif
       from: fromAddress,
       to,
       subject: `Verification Code: ${otp}`,
-      text: `Hello ${name},\n\nYour 6-digit verification code for RoomScout ${purpose} is: ${otp}\n\nThis code expires in 10 minutes.\n\nThank you,\nRoomScout Team`,
+      text: `Hello ${name},\n\nYour 6-digit verification code for Stay In ${purpose} is: ${otp}\n\nThis code expires in 10 minutes.\n\nThank you,\nStay In Team`,
       html: htmlContent,
     };
 
@@ -894,7 +899,7 @@ export async function sendSubscriptionRequestToAdminEmail({
 
   try {
     const transporter = await getTransporter();
-    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Room-Scout Admin" <noreply@roomscout.com>';
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Stay In Admin" <noreply@stayin.com>';
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
     const adminUrl = `${clientUrl}/admin`;
 
@@ -927,7 +932,7 @@ export async function sendSubscriptionRequestToAdminEmail({
       from: fromAddress,
       to: adminEmail,
       subject: `New Subscription Payment: ${hostName} (${planLabel}, UTR: ${transactionRef})`,
-      text: `Hello Admin,\n\nHost ${hostName} has submitted a payment of ₹${amount} for plan ${planLabel}.\nUTR: ${transactionRef}\n\nVerify at: ${adminUrl}\n\nRoomScout Team`,
+      text: `Hello Admin,\n\nHost ${hostName} has submitted a payment of ₹${amount} for plan ${planLabel}.\nUTR: ${transactionRef}\n\nVerify at: ${adminUrl}\n\nStay In Team`,
       html: htmlContent,
     };
 
@@ -957,14 +962,14 @@ export async function sendSubscriptionActivatedToHostEmail({
 
   try {
     const transporter = await getTransporter();
-    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Room-Scout Billing" <noreply@roomscout.com>';
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Stay In Billing" <noreply@stayin.com>';
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
     const hostDashboardUrl = `${clientUrl}/host-dashboard`;
 
     const htmlContent = buildBrandedEmailHtml({
       badgeText: 'Subscription Activated',
       title: 'Host Subscription Activated',
-      subtitle: `Your subscription payment has been verified by the RoomScout administration. ${
+      subtitle: `Your subscription payment has been verified by the Stay In administration. ${
         isApprovedHost
           ? 'Your property listing is now <strong>LIVE</strong> and actively visible to guests across the platform.'
           : 'Your host subscription is now active! Your property listing will go live as soon as final review is completed.'
@@ -992,7 +997,7 @@ export async function sendSubscriptionActivatedToHostEmail({
       from: fromAddress,
       to: hostEmail,
       subject: `Host Subscription Activated: ${planLabel} (Valid Until ${validUntil})`,
-      text: `Hello ${hostName},\n\nYour host subscription for ${planLabel} has been verified and activated!\nValid Until: ${validUntil}\n\nGo to Dashboard: ${hostDashboardUrl}\n\nRoomScout Team`,
+      text: `Hello ${hostName},\n\nYour host subscription for ${planLabel} has been verified and activated!\nValid Until: ${validUntil}\n\nGo to Dashboard: ${hostDashboardUrl}\n\nStay In Team`,
       html: htmlContent,
     };
 
@@ -1022,7 +1027,7 @@ export async function sendPropertySubmissionToAdminEmail({
 
   try {
     const transporter = await getTransporter();
-    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Room-Scout Admin" <noreply@roomscout.com>';
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Stay In Admin" <noreply@stayin.com>';
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
     const adminUrl = `${clientUrl}/admin`;
 
@@ -1053,7 +1058,7 @@ export async function sendPropertySubmissionToAdminEmail({
       from: fromAddress,
       to: adminEmail,
       subject: `New Property Approval Request: ${propertyName || 'Listing'} by ${hostName || 'Host'}`,
-      text: `Hello Admin,\n\nHost ${hostName || 'Partner'} (${hostEmail || 'N/A'}) submitted "${propertyName || 'Listing'}" (${propertyType || 'Stay'}) in ${location || 'N/A'} for approval.\n\nReview at: ${adminUrl}\n\nRoomScout Team`,
+      text: `Hello Admin,\n\nHost ${hostName || 'Partner'} (${hostEmail || 'N/A'}) submitted "${propertyName || 'Listing'}" (${propertyType || 'Stay'}) in ${location || 'N/A'} for approval.\n\nReview at: ${adminUrl}\n\nStay In Team`,
       html: htmlContent,
     };
 
@@ -1080,14 +1085,14 @@ export async function sendPropertyApprovedToHostEmail({
 
   try {
     const transporter = await getTransporter();
-    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Room-Scout Host" <noreply@roomscout.com>';
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Stay In Host" <noreply@stayin.com>';
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
     const hostDashboardUrl = `${clientUrl}/host-dashboard`;
 
     const htmlContent = buildBrandedEmailHtml({
       badgeText: 'Property Approved',
       title: 'Your Property Has Been Approved',
-      subtitle: `Great news <strong>${hostName || 'Host'}</strong>! Your property <strong>${propertyName || 'listing'}</strong> has been approved by the RoomScout administration. ${
+      subtitle: `Great news <strong>${hostName || 'Host'}</strong>! Your property <strong>${propertyName || 'listing'}</strong> has been approved by the Stay In administration. ${
         isLive
           ? 'Your listing is now <strong>LIVE</strong> and visible to guests.'
           : 'Purchase and verify a subscription plan from your Host Dashboard to make your listing live to guests.'
@@ -1113,7 +1118,7 @@ export async function sendPropertyApprovedToHostEmail({
       from: fromAddress,
       to: hostEmail,
       subject: `Property Approved: ${propertyName || 'Your Listing'} is Verified`,
-      text: `Hello ${hostName || 'Host'},\n\nYour property "${propertyName || 'Listing'}" has been approved by the RoomScout admin.${isLive ? ' Your listing is now LIVE.' : ' Activate a subscription plan to go live.'}\n\nOpen Dashboard: ${hostDashboardUrl}\n\nRoomScout Team`,
+      text: `Hello ${hostName || 'Host'},\n\nYour property "${propertyName || 'Listing'}" has been approved by the Stay In admin.${isLive ? ' Your listing is now LIVE.' : ' Activate a subscription plan to go live.'}\n\nOpen Dashboard: ${hostDashboardUrl}\n\nStay In Team`,
       html: htmlContent,
     };
 
@@ -1141,7 +1146,7 @@ export async function sendSubscriptionRejectedToHostEmail({
 
   try {
     const transporter = await getTransporter();
-    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Room-Scout Support" <noreply@roomscout.com>';
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Stay In Support" <noreply@stayin.com>';
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
     const retryUrl = `${clientUrl}/host-dashboard?tab=subscription`;
 
@@ -1170,7 +1175,7 @@ export async function sendSubscriptionRejectedToHostEmail({
       from: fromAddress,
       to: hostEmail,
       subject: `Subscription Payment Update: ${planLabel}`,
-      text: `Hello ${hostName},\n\nYour subscription payment for ${planLabel} could not be verified.\nReason: ${rejectionReason}\n\nRetry at: ${retryUrl}\n\nRoomScout Team`,
+      text: `Hello ${hostName},\n\nYour subscription payment for ${planLabel} could not be verified.\nReason: ${rejectionReason}\n\nRetry at: ${retryUrl}\n\nStay In Team`,
       html: htmlContent,
     };
 
@@ -1258,7 +1263,7 @@ export async function sendPaymentSubmittedToHostEmail({
 
   try {
     const transporter = await getTransporter();
-    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Room-Scout Payments" <noreply@roomscout.com>';
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Stay In Payments" <noreply@stayin.com>';
     const hostDashboardUrl = customDashboardUrl || `${getPublicClientBaseUrl()}/host-dashboard?tab=visited`;
 
     const isMonthly = rateUnit === '/month' || (Array.isArray(bookedMonths) && bookedMonths.length > 0);
@@ -1294,6 +1299,10 @@ export async function sendPaymentSubmittedToHostEmail({
     }
 
     const resolvedCategory = roomCategory || roomType || 'Standard';
+    const cleanUtr = String(transactionRef || '').replace(/\s+/g, '').trim();
+    const formattedUtr = /^[a-zA-Z0-9]{12}$/.test(cleanUtr)
+      ? `${cleanUtr.slice(0, 4)} ${cleanUtr.slice(4, 8)} ${cleanUtr.slice(8, 12)}`
+      : (transactionRef || '');
 
     const htmlContent = buildBrandedEmailHtml({
       badgeText: 'Payment Verification Required',
@@ -1306,7 +1315,7 @@ export async function sendPaymentSubmittedToHostEmail({
         { label: 'Duration', value: durationDisplay || (isMonthly ? '1 Month' : '1 Night') },
         { label: accommodationTimingLabel, value: accommodationTimingValue },
         { label: 'Paid Amount', value: `₹${Number(amount || 0).toLocaleString('en-IN')}` },
-        { label: 'UPI Reference (UTR)', value: transactionRef || 'N/A' },
+        { label: 'UPI Reference (UTR)', value: formattedUtr || 'N/A' },
         { label: 'Status', value: 'Pending Your Confirmation' },
       ],
       ctaText: 'Verify Payment & Unlock Pass',
@@ -1322,8 +1331,8 @@ export async function sendPaymentSubmittedToHostEmail({
     const mailOptions = {
       from: fromAddress,
       to: hostEmail,
-      subject: `Payment Submitted: ₹${amount} for Room ${roomNumber} by ${guestName} (UTR: ${transactionRef})`,
-      text: `Hello ${hostName},\n\nGuest ${guestName} has submitted UPI payment of ₹${amount} for Room ${roomNumber} (${resolvedCategory}).\nDuration: ${durationDisplay || ''}\n${accommodationTimingLabel}: ${accommodationTimingValue}\nUTR: ${transactionRef}\n\nVerify and Confirm at: ${hostDashboardUrl}\n\nRoomScout Team`,
+      subject: `Payment Submitted: ₹${amount} for Room ${roomNumber} by ${guestName} (UTR: ${formattedUtr})`,
+      text: `Hello ${hostName},\n\nGuest ${guestName} has submitted UPI payment of ₹${amount} for Room ${roomNumber} (${resolvedCategory}).\nDuration: ${durationDisplay || ''}\n${accommodationTimingLabel}: ${accommodationTimingValue}\nUTR: ${formattedUtr}\n\nVerify and Confirm at: ${hostDashboardUrl}\n\nStay In Team`,
       html: htmlContent,
     };
 

@@ -35,7 +35,7 @@ export function validateUpiReference(ref) {
  */
 export function buildUpiPaymentUri({ upiId, payeeName, amount, bookingRef }) {
  const cleanUpi = String(upiId || '').trim();
- const cleanName = String(payeeName || 'Room Scout Stay').trim();
+ const cleanName = String(payeeName || 'Stay In').trim();
  const cleanAmount = Number(amount || 0).toFixed(2);
  const cleanNote = String(bookingRef || 'Room Reservation').trim().slice(0, 40);
 

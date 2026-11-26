@@ -5,6 +5,7 @@ import { staysAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
 import { Left } from '../components/navbar/Left';
+import { DotGridWaveLoader } from '../components/common/DotGridWaveLoader';
 
 // Helper: Safely extract clean numeric price
 const parseNumericPrice = (val) => {
@@ -350,12 +351,7 @@ export function DataPage({ onStayClick, onBookClick }) {
  </div>
  </div>
 
- {loading && (
- <div className="py-20 flex flex-col items-center justify-center gap-3 text-slate-400">
- <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
- <p className="text-sm">Loading stays database...</p>
- </div>
- )}
+ {loading && <DotGridWaveLoader />}
 
  {!loading && filteredStays.length === 0 && (
  <div className="py-20 text-center bg-white rounded-2xl border border-slate-200 p-8">
@@ -429,7 +425,7 @@ export function DataPage({ onStayClick, onBookClick }) {
  {stay.title || stay.propertyName || 'Property Stay'}
  </div>
  <div className="text-[11px] text-slate-400 flex items-center gap-2">
- <span>{stay.hostName || stay.host?.name ? `Host: ${stay.hostName || stay.host?.name}` : 'RoomScout Verified'}</span>
+ <span>{stay.hostName || stay.host?.name ? `Host: ${stay.hostName || stay.host?.name}` : 'Stay In Verified'}</span>
  {roomsCount > 0 && (
  <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-slate-100 text-slate-600 font-semibold border border-slate-200">
  {roomsCount} {roomsCount === 1 ? 'Room' : 'Rooms'}

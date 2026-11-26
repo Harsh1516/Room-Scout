@@ -11,18 +11,21 @@ import React from 'react';
 export function PersonOccupancyGrid({
  capacity = 1,
  occupiedCount = 0,
+ requestedCount = 0,
  className = 'py-0.5',
  iconClassName = '',
  vacantColor = 'text-slate-400',
  occupiedColor = 'text-[#1f1b16]',
+ requestedColor = 'text-purple-600',
  customTitle,
 }) {
  const safeCapacity = Math.max(1, Math.min(10, Number(capacity) || 1));
  const safeOccupied = Math.max(0, Math.min(safeCapacity, Number(occupiedCount) || 0));
+ const safeRequested = Math.max(0, Math.min(safeCapacity - safeOccupied, Number(requestedCount) || 0));
 
  const defaultTitle = `${safeOccupied} of ${safeCapacity} person slot${
  safeCapacity > 1 ? 's' : ''
- } occupied (solid = booked, outline = available)`;
+ } occupied${safeRequested > 0 ? `, ${safeRequested} requested` : ''} (solid = booked, outline = available)`;
 
  const row1Count = Math.min(safeCapacity, 5);
  const row2Count = safeCapacity > 5 ? safeCapacity - 5 : 0;
@@ -30,12 +33,15 @@ export function PersonOccupancyGrid({
  const hasCustomSize = iconClassName && /\bw-\S+/.test(iconClassName);
  const sizeClass = hasCustomSize ? '' : 'w-3 h-3';
 
- const renderPersonIcon = (isOccupied, key) => {
- if (isOccupied) {
+ const renderPersonIcon = (dotIdx, key) => {
+ const isOccupied = dotIdx < safeOccupied;
+ const isRequested = !isOccupied && dotIdx < safeOccupied + safeRequested;
+
+ if (isOccupied || isRequested) {
  return (
  <svg
  key={key}
- className={`${sizeClass} shrink-0 transition-all duration-150 ${occupiedColor} ${iconClassName}`}
+ className={`${sizeClass} shrink-0 transition-all duration-150 ${isRequested ? requestedColor : occupiedColor} ${iconClassName}`}
  viewBox="0 0 16 16"
  fill="currentColor"
  aria-hidden="true"
@@ -80,10 +86,7 @@ export function PersonOccupancyGrid({
  >
  {/* Row 1: up to 5 person icons */}
  <div className="flex items-center justify-center gap-1.5 shrink-0">
- {Array.from({ length: row1Count }).map((_, dotIdx) => {
- const isOccupied = dotIdx < safeOccupied;
- return renderPersonIcon(isOccupied, dotIdx);
- })}
+ {Array.from({ length: row1Count }).map((_, dotIdx) => renderPersonIcon(dotIdx, dotIdx))}
  </div>
 
  {/* Row 2: icons 6 to 10 if capacity > 5 (5 5 proportion) */}
@@ -91,8 +94,7 @@ export function PersonOccupancyGrid({
  <div className="flex items-center justify-center gap-1.5 shrink-0">
  {Array.from({ length: row2Count }).map((_, i) => {
  const dotIdx = 5 + i;
- const isOccupied = dotIdx < safeOccupied;
- return renderPersonIcon(isOccupied, dotIdx);
+ return renderPersonIcon(dotIdx, dotIdx);
  })}
  </div>
  )}

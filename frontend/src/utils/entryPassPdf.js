@@ -46,7 +46,7 @@ function drawSecurityBarcode(doc, x, y, width, height, seedStr) {
  doc.setLineWidth(0.25);
  doc.roundedRect(x, y, width, height, 1.8, 1.8, 'FD');
 
- const cleanSeed = String(seedStr || 'ROOMSCOUT').toUpperCase();
+ const cleanSeed = String(seedStr || 'STAYIN').toUpperCase();
  const bars = [];
  for (let i = 0; i < cleanSeed.length; i++) {
  const code = cleanSeed.charCodeAt(i);
@@ -80,7 +80,7 @@ function drawSecurityBarcode(doc, x, y, width, height, seedStr) {
 }
 
 /**
- * Generates and downloads an ultra-premium executive RoomScout Entry Pass PDF.
+ * Generates and downloads an ultra-premium executive Stay In Entry Pass PDF.
  *
  * @param {Object} params
  * @param {Object} params.booking - The booking document
@@ -105,6 +105,10 @@ export function generateEntryPassPdf({ booking = {}, stay = {}, host = {}, check
  checkInCode ||
  booking.checkInCode ||
  String(refId).replace(/\D/g, '').slice(-8).padStart(8, '0'));
+ const cleanDigitsCode = String(finalCode || '').replace(/\s+/g, '');
+ const formattedFinalCode = /^\d{8}$/.test(cleanDigitsCode)
+ ? `${cleanDigitsCode.slice(0, 4)} ${cleanDigitsCode.slice(4)}`
+ : finalCode;
 
  const guestName = booking.fullName || booking.guestName || booking.userName || 'Guest Resident';
  const rawPhone = booking.phone || booking.guestPhone || booking.userPhone || '';
@@ -115,7 +119,7 @@ export function generateEntryPassPdf({ booking = {}, stay = {}, host = {}, check
  booking.aadharNumber || booking.guestAadhar || booking.aadharId || booking.aadhar
  );
 
- const stayTitle = stay.title || stay.propertyName || booking.stayTitle || 'RoomScout Verified Stay';
+ const stayTitle = stay.title || stay.propertyName || booking.stayTitle || 'Stay In Verified Stay';
  const stayAddress =
  stay.address?.street ||
  stay.address?.city ||
@@ -138,11 +142,15 @@ export function generateEntryPassPdf({ booking = {}, stay = {}, host = {}, check
 
  const totalAmount = Number(booking.totalAmount || booking.paidAmount || 0).toLocaleString('en-IN');
  const paymentMethod = booking.paymentDetails?.gateway || (booking.paymentMethod === 'UPI' ? 'Direct Host UPI' : booking.paymentMethod || 'Direct Host UPI');
- const utrRef =
+ const rawUtrRef =
  booking.upiPayment?.transactionRef ||
  booking.transactionRef ||
  booking.paymentDetails?.paymentId ||
  'VERIFIED-BY-HOST';
+ const cleanUtrDigits = String(rawUtrRef).replace(/\s+/g, '').trim();
+ const utrRef = /^[a-zA-Z0-9]{12}$/.test(cleanUtrDigits)
+ ? `${cleanUtrDigits.slice(0, 4)} ${cleanUtrDigits.slice(4, 8)} ${cleanUtrDigits.slice(8, 12)}`
+ : rawUtrRef;
  const payeeUpi = booking.upiPayment?.upiId || host.upiSettings?.upiId || '';
 
  // ──────────────────────────────────────────
@@ -177,7 +185,7 @@ export function generateEntryPassPdf({ booking = {}, stay = {}, host = {}, check
  doc.setTextColor(255, 255, 255);
  doc.setFont('helvetica', 'bold');
  doc.setFontSize(18);
- doc.text('ROOMSCOUT', 12, 13);
+ doc.text('STAY IN', 12, 13);
 
  doc.setFont('helvetica', 'normal');
  doc.setFontSize(7.5);
@@ -272,7 +280,7 @@ export function generateEntryPassPdf({ booking = {}, stay = {}, host = {}, check
  const gap = 2;
 
  for (let i = 0; i < 8; i++) {
- const cx = startX + i * (capW + gap);
+ const cx = startX + i * (capW + gap) + (i >= 4 ? 3 : 0);
  doc.setFillColor(...C_BG_CARD);
  doc.setDrawColor(203, 213, 225);
  doc.setLineWidth(0.3);
@@ -564,7 +572,7 @@ export function generateEntryPassPdf({ booking = {}, stay = {}, host = {}, check
  doc.text('4. RECEPTION ACCESS & VERIFICATION PROTOCOL', 18, y + 4.8);
 
  const rules = [
- `• Code Verification: Present the 8-Digit Entry Pass Code (${finalCode}) to the host at reception for instant check-in.`,
+ `• Code Verification: Present the 8-Digit Entry Pass Code (${formattedFinalCode}) to the host at reception for instant check-in.`,
  '• Govt. Photo ID: Carry an original government photo ID (Aadhaar / Passport / Driving License) matching this pass.',
  '• Key Handover: Physical room key handover and room inventory review will be completed upon reception verification.',
  '• Check-In & Support: Standard check-in is 12:00 PM. Contact the host in advance for early baggage drop or assistance.',
@@ -591,21 +599,21 @@ export function generateEntryPassPdf({ booking = {}, stay = {}, host = {}, check
  doc.setFontSize(7);
  doc.setTextColor(...C_TEXT_MUTED);
  doc.text(
- `RoomScout Digital Reservation System • Official Resident Entry Credential • Generated on ${new Date().toLocaleString('en-IN')}`,
+ `Stay In Digital Reservation System • Official Resident Entry Credential • Generated on ${new Date().toLocaleString('en-IN')}`,
  12,
  y + 5
  );
 
  doc.setFont('courier', 'bold');
  doc.text(
- `Pass Ref: ${refId} • Entry Code: ${finalCode}`,
+ `Pass Ref: ${refId} • Entry Code: ${formattedFinalCode}`,
  198,
  y + 5,
  { align: 'right' }
  );
 
  // Trigger browser download
- const filename = `RoomScout_Entry_Pass_${refId}.pdf`;
+ const filename = `StayIn_Entry_Pass_${refId}.pdf`;
  doc.save(filename);
  return filename;
 }

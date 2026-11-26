@@ -6,6 +6,7 @@ import {
  validateUpiReference,
  submitBookingUpiPayment,
 } from '../../utils/bookingPayment';
+import { formatUtrNumber } from '../../utils/bookingDetailsHelpers';
 
 export function DirectUpiPaymentModal({
  isOpen,
@@ -372,9 +373,8 @@ export function DirectUpiPaymentModal({
  <input
  type="text"
  inputMode="numeric"
- pattern="\d{12}"
- maxLength={12}
- value={transactionRef}
+ maxLength={14}
+ value={formatUtrNumber(transactionRef)}
  onChange={(e) => {
  const val = e.target.value.replace(/\D/g, '').slice(0, 12);
  setTransactionRef(val);

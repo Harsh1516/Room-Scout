@@ -124,12 +124,12 @@ export const DEFAULT_HOST_FORM_DATA = {
   isApproved: false,
 };
 
-export const CANONICAL_DRAFT_KEY = 'roomscout_host_upload_draft';
+export const CANONICAL_DRAFT_KEY = 'stayin_host_upload_draft';
 
 export const getDraftStorageKey = (user) => {
-  if (user?.email) return `roomscout_upload_draft_${user.email.trim().toLowerCase()}`;
-  if (user?._id) return `roomscout_upload_draft_${user._id}`;
-  return 'roomscout_upload_draft_guest';
+  if (user?.email) return `stayin_upload_draft_${user.email.trim().toLowerCase()}`;
+  if (user?._id) return `stayin_upload_draft_${user._id}`;
+  return 'stayin_upload_draft_guest';
 };
 
 export const saveDraftToStorage = (formData, activeStep, googleMapsUrl, user) => {
@@ -178,8 +178,8 @@ export const saveDraftToStorage = (formData, activeStep, googleMapsUrl, user) =>
 
     const primaryKey = getDraftStorageKey(user);
     localStorage.setItem(primaryKey, payload);
-    if (email) localStorage.setItem(`roomscout_upload_draft_${email}`, payload);
-    if (id) localStorage.setItem(`roomscout_upload_draft_${id}`, payload);
+    if (email) localStorage.setItem(`stayin_upload_draft_${email}`, payload);
+    if (id) localStorage.setItem(`stayin_upload_draft_${id}`, payload);
     localStorage.setItem(CANONICAL_DRAFT_KEY, payload);
   } catch (storageErr) {
     if (storageErr && (storageErr.name === 'QuotaExceededError' || storageErr.code === 22)) {
@@ -211,12 +211,12 @@ export const saveDraftToStorage = (formData, activeStep, googleMapsUrl, user) =>
 export const clearDraftFromStorage = (user) => {
   try {
     localStorage.removeItem(CANONICAL_DRAFT_KEY);
-    if (user?._id) localStorage.removeItem(`roomscout_upload_draft_${user._id}`);
+    if (user?._id) localStorage.removeItem(`stayin_upload_draft_${user._id}`);
     if (user?.email) {
-      localStorage.removeItem(`roomscout_upload_draft_${user.email}`);
-      localStorage.removeItem(`roomscout_upload_draft_${user.email.trim().toLowerCase()}`);
+      localStorage.removeItem(`stayin_upload_draft_${user.email}`);
+      localStorage.removeItem(`stayin_upload_draft_${user.email.trim().toLowerCase()}`);
     }
-    localStorage.removeItem('roomscout_upload_draft_guest');
+    localStorage.removeItem('stayin_upload_draft_guest');
     clearImagesFromIndexedDB(user?.email || user?._id || 'guest');
   } catch {
     /* ignore */
@@ -231,8 +231,8 @@ export const loadDraftFromStorage = (user) => {
     // 1. If user is authenticated, search only user-scoped keys
     if (targetEmail || targetId) {
       const candidateKeys = [];
-      if (targetEmail) candidateKeys.push(`roomscout_upload_draft_${targetEmail}`);
-      if (targetId) candidateKeys.push(`roomscout_upload_draft_${targetId}`);
+      if (targetEmail) candidateKeys.push(`stayin_upload_draft_${targetEmail}`);
+      if (targetId) candidateKeys.push(`stayin_upload_draft_${targetId}`);
 
       for (const key of candidateKeys) {
         const raw = localStorage.getItem(key);
@@ -274,7 +274,7 @@ export const loadDraftFromStorage = (user) => {
     }
 
     // 2. Unauthenticated guest fallback
-    const rawGuest = localStorage.getItem('roomscout_upload_draft_guest');
+    const rawGuest = localStorage.getItem('stayin_upload_draft_guest');
     if (rawGuest) {
       const parsed = JSON.parse(rawGuest);
       if (parsed && typeof parsed === 'object' && parsed.formData && !parsed.userEmail && !parsed.userId) {

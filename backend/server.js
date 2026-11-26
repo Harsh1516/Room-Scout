@@ -173,7 +173,7 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
     serverTime: new Date(),
-    service: 'RoomScout Node.js Express API',
+    service: 'Stay In Node.js Express API',
     mongoStatus: 'Active',
   });
 });
@@ -198,7 +198,7 @@ app.use('/api/enter', adminRoutes);
 
 // Root Route
 app.get('/', (req, res) => {
-  res.send('RoomScout Backend API running with Express, MongoDB, and Decoupled Architecture.');
+  res.send('Stay In Backend API running with Express, MongoDB, and Decoupled Architecture.');
 });
 
 // 404 Catch-All Handler (routes that don't match any declared endpoint)

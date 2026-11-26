@@ -206,6 +206,7 @@ export function VisitedSlotCalendarView({
  onClose = () => {},
  subTab = 'requests',
  hideBookedGuestBanner = false,
+ forceLight = false,
 }) {
  const isCheckInOutView = subTab === 'checkin' || subTab === 'checkout';
  const shouldHideBanner = hideBookedGuestBanner || isCheckInOutView;
@@ -324,13 +325,27 @@ export function VisitedSlotCalendarView({
  }, [hostProperty?.roomRates, hostProperty?.price, hostProperty?.rateUnit, effectiveGuest, selectedRoomCard, selectedCategory]);
 
  const isMonthly = useMemo(() => {
+ if (Array.isArray(effectiveGuest?.bookedMonths) && effectiveGuest.bookedMonths.length > 0) {
+ return true;
+ }
+ const durStr = String(effectiveGuest?.durationDisplay || effectiveGuest?.duration || '').toLowerCase();
+ if (durStr.includes('night')) return false;
+ if (durStr.includes('month')) return true;
  const candidateUnit =
  effectiveGuest?.rateUnit ||
  selectedRoomCard?.rateUnit ||
  activeCategory?.rateUnit ||
  hostProperty?.rateUnit;
  return isMonthlyRateUnit(candidateUnit);
- }, [effectiveGuest?.rateUnit, selectedRoomCard?.rateUnit, activeCategory?.rateUnit, hostProperty?.rateUnit]);
+ }, [
+ effectiveGuest?.bookedMonths,
+ effectiveGuest?.durationDisplay,
+ effectiveGuest?.duration,
+ effectiveGuest?.rateUnit,
+ selectedRoomCard?.rateUnit,
+ activeCategory?.rateUnit,
+ hostProperty?.rateUnit,
+ ]);
 
  // Normalize guest check-in / check-out dates for robust calendar slot matching
  const normalizedGuest = useMemo(() => {
@@ -532,6 +547,7 @@ export function VisitedSlotCalendarView({
  hideCheckInOutTimes={true}
  hideMonthCardExtras={true}
  hideBookedGuestBanner={shouldHideBanner}
+ forceLight={forceLight}
  reservationDetails={null}
  sortedSelected={[]}
  upcomingMonths={upcomingMonths}

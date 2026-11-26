@@ -400,7 +400,7 @@ export function AdminPage() {
  });
  if (res?.token && res?.user) {
  if (typeof window !== 'undefined' && window.sessionStorage) {
- window.sessionStorage.removeItem('roomscout_host_active_tab');
+ window.sessionStorage.removeItem('stayin_host_active_tab');
  }
  updateUserSession(res.user, res.token);
  toast.success(`Admin accessed Host Portal: ${res.user.name}`);
@@ -428,7 +428,7 @@ export function AdminPage() {
  isApproved: targetHost.status === 'Approved',
  };
  if (typeof window !== 'undefined' && window.sessionStorage) {
- window.sessionStorage.removeItem('roomscout_host_active_tab');
+ window.sessionStorage.removeItem('stayin_host_active_tab');
  }
  updateUserSession(fallbackHost, 'admin_impersonate_token');
  toast.success(`Admin accessed Host Portal: ${targetHost.name}`);
@@ -759,7 +759,7 @@ export function AdminPage() {
  });
  }, [hosts, hostStatusFilter, searchQuery, sortBy]);
 
- const handleExportCSV = (dataList, filename = 'roomscout-users.csv') => {
+ const handleExportCSV = (dataList, filename = 'stayin-users.csv') => {
  if (!dataList || dataList.length === 0) {
  toast.info('No records available to export.');
  return;
@@ -890,7 +890,7 @@ export function AdminPage() {
  onClick={() => navigate('/explore')}
  className="apple-liquid-nav flex items-center justify-center p-2 sm:px-3 sm:py-1.5 gap-2 rounded-full border border-slate-200/80 bg-white/70 shadow-xs cursor-pointer hover:scale-105 active:scale-95 transition-all duration-200 hover:border-purple-500/50 focus:outline-none focus:ring-0"
  title="Return to Explore Stays"
- aria-label="RoomScout Brand Home"
+ aria-label="Stay In Brand Home"
  >
  <div className="w-5 h-5 rounded-full r text-white flex items-center justify-center transition-transform duration-200 hover:rotate-12 shrink-0 shadow-xs">
  <svg
@@ -907,7 +907,7 @@ export function AdminPage() {
  </svg>
  </div>
  <span className="hidden sm:inline tracking-tight font-normal text-[#1f1b16] text-xs sm:text-sm">
- RoomScout
+ Stay In
  </span>
  <span className="hidden md:inline-flex text-[10px] font-normal px-2 py-0.5 rounded-full text-purple-700 border border-purple-500/30">
  Admin
@@ -1310,7 +1310,7 @@ export function AdminPage() {
 
  <button
  type="button"
- onClick={() => handleExportCSV(filteredUsers, 'roomscout-users.csv')}
+ onClick={() => handleExportCSV(filteredUsers, 'stayin-users.csv')}
  className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-normal text-slate-700 bg-[#f7f4ee]/80 hover:bg-slate-100 border border-slate-200/90 shadow-xs hover:border-purple-500/40 transition-all shrink-0 active:scale-95 cursor-pointer"
  title="Export as CSV"
  >
@@ -1481,7 +1481,7 @@ export function AdminPage() {
 
  <button
  type="button"
- onClick={() => handleExportCSV(filteredHosts, 'roomscout-hosts.csv')}
+ onClick={() => handleExportCSV(filteredHosts, 'stayin-hosts.csv')}
  className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-normal text-slate-700 bg-[#f7f4ee]/80 hover:bg-slate-100 border border-slate-200/90 shadow-xs hover:border-purple-500/40 transition-all shrink-0 active:scale-95 cursor-pointer"
  title="Export Hosts as CSV"
  >

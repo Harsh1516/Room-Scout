@@ -11,6 +11,7 @@ import {
   Key,
   LogOut,
 } from 'lucide-react';
+import { formatUtrNumber } from '../../../utils/bookingDetailsHelpers';
 
 function formatCleanDate(rawDate) {
   if (!rawDate) return '';
@@ -88,7 +89,9 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
   onOpenModal,
   onSelectUserRequest,
   onSelectSlot,
+  onOpenSlotModal,
   onApproveRequest,
+  onAcceptUtr,
   onRejectRequest,
   onMarkCheckIn,
   onMarkCheckOut,
@@ -103,6 +106,9 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
   const isCheckedOut = rawStatus === 'CHECKED_OUT' || rawStatus === 'COMPLETED';
   const isCheckedIn = !isCheckedOut && (rawStatus === 'CHECKED_IN' || (!isOnline && rawStatus === 'CONFIRMED'));
   const isAwaitingPayment = rawStatus === 'AWAITING_PAYMENT' || rawStatus === 'PAYMENT_PENDING';
+  const submittedUtr = String(guest.upiPayment?.transactionRef || guest.transactionRef || '').trim();
+  const isPendingVerification = guest.upiPayment?.verificationStatus === 'PENDING_VERIFICATION';
+  const hasPendingUtr = isPendingVerification && Boolean(submittedUtr);
   const isPending =
     (rawStatus.includes('PENDING') || guest.status === 'Pending Host Approval' || rawStatus === 'DRAFT') &&
     !isCheckedIn &&
@@ -118,11 +124,6 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
     guest.guestName ||
     guest.name ||
     'Rohit Sharma';
-
-  const rawPhone = guest.userPhone || guest.phone || guest.guestPhone || '';
-  const cleanPhone = String(rawPhone).replace(/\D/g, '').slice(-10);
-  const email = guest.email || guest.userEmail || '';
-  const contactSubtext = email || (cleanPhone ? `+91 ${cleanPhone}` : 'rohit@example.com');
 
   // 2. Room & Property Info
   const roomType = guest.roomType || 'Deluxe Room';
@@ -154,7 +155,18 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
     </span>
   );
 
-  if (guest.upiPayment?.verificationStatus === 'PENDING_VERIFICATION') {
+  if (hasPendingUtr) {
+    const formattedUtr = formatUtrNumber(submittedUtr);
+    statusBadge = (
+      <span
+        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-300"
+        title={`Submitted 12-digit UTR: ${formattedUtr}`}
+      >
+        <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
+        <span className="font-mono tracking-wide">UTR: {formattedUtr}</span>
+      </span>
+    );
+  } else if (isOnline && (isAwaitingPayment || isPendingVerification)) {
     statusBadge = (
       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-violet-50 text-violet-700 border border-violet-200">
         <ShieldCheck className="w-4 h-4 text-violet-600" />
@@ -211,11 +223,17 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
   return (
     <div
       onClick={handleCardClick}
-      className={`w-full flex flex-col justify-between p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.07)] transition-all duration-200 gap-3.5 sm:gap-4 select-none cursor-pointer ${
-        isSlotSelected ? 'ring-2 ring-blue-500/80 border-blue-400 bg-blue-50/10' : ''
+      className={`w-full flex flex-col justify-between p-4 sm:p-5 rounded-2xl bg-white shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.07)] transition-all duration-200 gap-3.5 sm:gap-4 select-none cursor-pointer ${
+        hasPendingUtr
+          ? 'border border-yellow-400'
+          : 'border border-slate-200/90'
+      } ${
+        isSlotSelected
+          ? `ring-2 ring-blue-500/80 bg-blue-50/10 ${hasPendingUtr ? '' : 'border-blue-400'}`
+          : ''
       }`}
     >
-      {/* ── Top Row: User Avatar + Name/Email on Left, Status Badge on Right ── */}
+      {/* ── Top Row: User Avatar + Name & Room/Category on Left, Status Badge on Right ── */}
       <div className="flex items-start sm:items-center justify-between gap-3">
         {/* Left: User Identity */}
         <div className="flex items-center gap-3 min-w-0">
@@ -226,8 +244,8 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
             <h3 className="text-[15.5px] sm:text-[16.5px] font-bold text-slate-900 tracking-tight leading-tight truncate">
               {displayName}
             </h3>
-            <span className="text-xs sm:text-[13px] text-slate-500 font-normal leading-tight mt-1 truncate">
-              {contactSubtext}
+            <span className="text-xs sm:text-[13px] text-slate-500 font-medium leading-tight mt-1 truncate">
+              {roomTitle}
             </span>
           </div>
         </div>
@@ -236,58 +254,85 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
         <div className="shrink-0">{statusBadge}</div>
       </div>
 
-      {/* ── Bottom Row: Room & Dates on Left, Action on Right ── */}
-      <div className="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap pt-1">
-        {/* Left Side: Room info | Divider | Check-in Dates */}
-        <div className="flex items-center gap-3 sm:gap-4 flex-wrap sm:flex-nowrap min-w-0">
-          {/* Bed Icon & Room / Property */}
-          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#eff4fc] text-[#3b82f6] flex items-center justify-center shrink-0">
-              <Bed className="w-5 h-5 text-[#3b82f6]" />
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-xs sm:text-[13.5px] font-bold text-slate-900 leading-tight truncate">
-                {roomTitle}
-              </span>
-              <span className="text-[11px] sm:text-xs text-slate-500 font-normal leading-tight mt-0.5 truncate">
-                {propertyTitle}
-              </span>
-            </div>
+      {/* ── Middle Info Row: Property & Check-in Dates ── */}
+      <div className="flex items-center gap-3 sm:gap-4 flex-wrap sm:flex-nowrap min-w-0 pt-0.5">
+        {/* Bed Icon & Property */}
+        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#eff4fc] text-[#3b82f6] flex items-center justify-center shrink-0">
+            <Bed className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#3b82f6]" />
           </div>
-
-          {/* Vertical Divider */}
-          <div className="h-8 w-px bg-slate-200 shrink-0 hidden sm:block" />
-
-          {/* Calendar & Check-in info */}
-          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            <Calendar className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-slate-500 shrink-0" />
-            <div className="flex flex-col min-w-0">
-              <span className="text-xs sm:text-[13px] font-medium text-slate-800 leading-tight whitespace-nowrap">
-                {dateLabel}: {formattedDateStr}
-              </span>
-              <span className="text-[11px] sm:text-xs text-slate-500 font-normal leading-tight mt-0.5 whitespace-nowrap">
-                {durationStr}
-              </span>
-            </div>
-          </div>
+          <span className="text-xs sm:text-[13px] font-medium text-slate-700 leading-tight truncate">
+            {propertyTitle}
+          </span>
         </div>
 
-        {/* Right Side: Quick Action + View Details > Button */}
+        {/* Vertical Divider */}
+        <div className="h-6 w-px bg-slate-200 shrink-0 hidden sm:block" />
+
+        {/* Calendar & Check-in info */}
+        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+          <Calendar className="w-4 h-4 text-slate-500 shrink-0" />
+          <span className="text-xs sm:text-[13px] font-medium text-slate-800 leading-tight whitespace-nowrap">
+            {dateLabel}: {formattedDateStr}{' '}
+            <span className="text-slate-500 font-normal">{durationStr}</span>
+          </span>
+        </div>
+      </div>
+
+      {/* ── Bottom Row: Slot Button (Bottom Left) + Quick Actions (Bottom Right) ── */}
+      <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100/90">
+        {/* Bottom Left Corner: Slot Button */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (typeof onOpenSlotModal === 'function') {
+              onOpenSlotModal(guest);
+            } else {
+              handleCardClick();
+            }
+          }}
+          className={`px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer whitespace-nowrap border shrink-0 ${
+            isSlotSelected
+              ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+              : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200/90'
+          }`}
+        >
+          <Calendar className="w-3.5 h-3.5" />
+          <span>Slot</span>
+        </button>
+
+        {/* Bottom Right Corner: Quick Action + View Details > Button */}
         <div className="flex items-center gap-2 shrink-0 ml-auto">
-          {/* Quick Action: Requests Approve */}
-          {subTab === 'requests' && !isCheckedIn && onApproveRequest && (
-            <button
-              type="button"
-              disabled={isLoading}
-              onClick={(e) => {
-                e.stopPropagation();
-                onApproveRequest(guest);
-              }}
-              className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold flex items-center gap-1 shadow-xs transition-all active:scale-95 cursor-pointer whitespace-nowrap"
-            >
-              <Check className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>{isLoading ? '...' : 'Approve'}</span>
-            </button>
+          {/* Quick Action: Accept UTR (once UTR is submitted) OR Approve Request */}
+          {subTab === 'requests' && !isCheckedIn && (
+            hasPendingUtr && onAcceptUtr ? (
+              <button
+                type="button"
+                disabled={isLoading}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAcceptUtr(guest);
+                }}
+                className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold flex items-center gap-1 shadow-xs transition-all active:scale-95 cursor-pointer whitespace-nowrap disabled:opacity-60"
+              >
+                <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>{isLoading ? '...' : 'Accept UTR'}</span>
+              </button>
+            ) : isPending && !isAwaitingPayment && !isPendingVerification && onApproveRequest ? (
+              <button
+                type="button"
+                disabled={isLoading}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onApproveRequest(guest);
+                }}
+                className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold flex items-center gap-1 shadow-xs transition-all active:scale-95 cursor-pointer whitespace-nowrap disabled:opacity-60"
+              >
+                <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>{isLoading ? '...' : 'Approve'}</span>
+              </button>
+            ) : null
           )}
 
           {/* Quick Action: Check In */}

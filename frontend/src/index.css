@@ -528,6 +528,108 @@ input:autofill:active {
   box-shadow: 0 10px 25px -3px rgba(37, 99, 235, 0.45), inset 0 1px 1.5px rgba(255, 255, 255, 0.3) !important;
 }
 
+/* Color interpolation space token with pre-2024 fallback */
+:root {
+  --in-oklab: ;
+}
+
+@supports (background: linear-gradient(in oklab, white, black)) {
+  :root {
+    --in-oklab: in oklab;
+  }
+}
+
+/* Hanging Stay In Shining Glass Capsule + Golden Chain */
+.stayin-hanging-assembly {
+  transform-origin: top center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .stayin-hanging-assembly {
+    animation: stayinPendulumSway 5.6s ease-in-out infinite;
+  }
+}
+
+.stayin-hanging-assembly:hover,
+.stayin-hanging-assembly:focus-within {
+  animation-play-state: paused;
+}
+
+@keyframes stayinPendulumSway {
+  0%, 100% {
+    transform: rotate(-1.5deg);
+  }
+  50% {
+    transform: rotate(1.5deg);
+  }
+}
+
+.stayin-golden-chain {
+  filter: drop-shadow(0 1.5px 2px rgba(120, 53, 15, 0.32));
+}
+
+.stayin-hand-shadow {
+  filter: drop-shadow(0 3px 6px rgba(15, 23, 42, 0.25));
+}
+
+.stayin-glass-capsule {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: linear-gradient(
+    135deg var(--in-oklab),
+    rgba(255, 255, 255, 0.58) 0%,
+    rgba(255, 255, 255, 0.28) 52%,
+    rgba(241, 245, 249, 0.50) 100%
+  );
+  backdrop-filter: blur(18px) saturate(190%);
+  -webkit-backdrop-filter: blur(18px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.74);
+  box-shadow:
+    0 10px 24px -5px rgba(15, 23, 42, 0.20),
+    0 2px 6px rgba(15, 23, 42, 0.08),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.94),
+    inset 0 -1.5px 2px rgba(255, 255, 255, 0.34);
+  transition: transform 160ms ease-out, box-shadow 180ms ease-out, border-color 180ms ease-out;
+}
+
+.stayin-glass-capsule::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    to bottom var(--in-oklab),
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.08) 48%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  pointer-events: none;
+}
+
+.stayin-glass-capsule:hover {
+  transform: translateY(-1px);
+  border-color: rgba(253, 224, 71, 0.78);
+  box-shadow:
+    0 12px 28px -4px rgba(15, 23, 42, 0.24),
+    0 0 12px rgba(251, 191, 36, 0.22),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.98),
+    inset 0 -1.5px 2px rgba(255, 255, 255, 0.42);
+}
+
+.stayin-glass-capsule:active {
+  transform: scale(0.96);
+}
+
+.stayin-glass-capsule:focus-visible {
+  outline: 2px solid #0f172a;
+  outline-offset: 3px;
+}
+
+.stayin-logo-crisp {
+  filter: drop-shadow(0 1px 1px rgba(255, 255, 255, 0.5));
+}
+
 /* Progressive Blur Navbar Backdrop: Dark black at top, seamlessly fading to transparent at bottom */
 .navbar-gradient-blur {
   background: linear-gradient(
@@ -965,6 +1067,37 @@ input:autofill:active {
   animation: requestedBadgeFlash 2.4s ease-in-out infinite;
 }
 
+/* Border-Only Blinking Highlight for Requested / Booked Slot Cards */
+@keyframes requestedBorderFlash {
+  0%, 100% {
+    border-color: #fef08a;
+    box-shadow: 0 0 0 0 rgba(250, 204, 21, 0);
+  }
+  45%, 55% {
+    border-color: #eab308;
+    box-shadow: 0 0 0 1px rgba(234, 179, 8, 0.25);
+  }
+}
+
+.animate-border-flash {
+  animation: requestedBorderFlash 1.8s ease-in-out infinite;
+}
+
+@keyframes bookedBorderFlash {
+  0%, 100% {
+    border-color: #a7f3d0;
+    box-shadow: 0 0 0 0 rgba(5, 150, 105, 0);
+  }
+  45%, 55% {
+    border-color: #059669;
+    box-shadow: 0 0 0 2.5px rgba(5, 150, 105, 0.25);
+  }
+}
+
+.animate-booked-border-flash {
+  animation: bookedBorderFlash 1.8s ease-in-out infinite;
+}
+
 /* Material Symbols Outlined font rules */
 .material-symbols-outlined {
   font-family: 'Material Symbols Outlined';
@@ -1242,7 +1375,7 @@ html.light {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   RoomScout Emerald Luxe Capsule Navbar
+   Stay In Emerald Luxe Capsule Navbar
    - Translucent pearl glass with soft emerald-teal ambient glow
    - Precision 1px emerald/teal border with subtle specular reflection
    - Elevated pure white / emerald active glider
@@ -1471,6 +1604,21 @@ html {
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+@keyframes dotGridWave {
+  0%, 100% {
+    transform: scale(0.42);
+    opacity: 0.25;
+  }
+  32% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-dot-grid-wave {
+  animation: dotGridWave 1.15s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 /* ══════════════════════════════════════════════════════════════════

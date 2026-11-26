@@ -1530,14 +1530,14 @@
     "line": 16,
     "type": "sub-14px font",
     "details": "text-xs",
-    "code": "<span className=\"text-xs font-extrabold tracking-widest uppercase text-slate-950\">ROOM-SCOUT</span>"
+    "code": "<span className=\"text-xs font-extrabold tracking-widest uppercase text-slate-950\">STAY IN</span>"
   },
   {
     "file": "components/homepage/HomepageFooter.jsx",
     "line": 16,
     "type": "ALL-CAPS with wide tracking",
     "details": "tracking-widest uppercase",
-    "code": "<span className=\"text-xs font-extrabold tracking-widest uppercase text-slate-950\">ROOM-SCOUT</span>"
+    "code": "<span className=\"text-xs font-extrabold tracking-widest uppercase text-slate-950\">STAY IN</span>"
   },
   {
     "file": "components/homepage/HomepageFooter.jsx",

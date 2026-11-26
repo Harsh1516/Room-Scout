@@ -1,6 +1,6 @@
 {
-  "short_name": "RoomScout",
-  "name": "RoomScout - Verified Living & Stays",
+  "short_name": "Stay In",
+  "name": "Stay In - Verified Living & Stays",
   "description": "Zero brokerage student and professional verified stays, PGs, flats, and hotels with direct owner contact.",
   "icons": [
     {
@@ -10,7 +10,7 @@
       "purpose": "any maskable"
     },
     {
-      "src": "/roomscout_logo.webp",
+      "src": "/stayin_logo.webp",
       "type": "image/webp",
       "sizes": "512x512",
       "purpose": "any"

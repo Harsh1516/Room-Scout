@@ -12,6 +12,7 @@ import { generateToken, isAdminUser, adminKeyIsValid } from '../middleware/authM
 import { uploadSecureImage } from '../utils/imageSecurity.js';
 import { isBookingRequestExpired } from './bookingController.js';
 import { sendPropertyApprovedToHostEmail } from '../services/emailService.js';
+import { generateUniqueBookingPassKey } from '../utils/passKeyGenerator.js';
 
 // @desc    Get all users list (Online Accounts + Offline Booking Occupants)
 // @route   GET /api/admin/users
@@ -457,11 +458,11 @@ export const createHost = async (req, res, next) => {
       const validImages = images.filter((img) => img && typeof img === 'string');
       processedImages = (
         await Promise.all(
-          validImages.map((img) => uploadSecureImage(img, 'roomscout/properties'))
+          validImages.map((img) => uploadSecureImage(img, 'stayin/properties'))
         )
       ).filter(Boolean);
     } else if (image && typeof image === 'string' && image.trim()) {
-      const cleanPrimaryImage = await uploadSecureImage(image.trim(), 'roomscout/properties');
+      const cleanPrimaryImage = await uploadSecureImage(image.trim(), 'stayin/properties');
       if (cleanPrimaryImage) processedImages = [cleanPrimaryImage];
     } else if (existingStay?.images?.length > 0) {
       processedImages = existingStay.images;
@@ -953,7 +954,7 @@ export const getHostGuests = async (req, res, next) => {
         (b.status === 'CONFIRMED' || b.status === 'CHECKED_IN' || b.upiPayment?.verificationStatus === 'VERIFIED') &&
         !b.checkInCode
       ) {
-        b.checkInCode = Math.floor(10000000 + Math.random() * 90000000).toString();
+        b.checkInCode = await generateUniqueBookingPassKey();
         Booking.findByIdAndUpdate(b._id, { $set: { checkInCode: b.checkInCode } }).catch(() => {});
       }
       if (isOfflineGuest && b.checkInCode) {
@@ -988,6 +989,8 @@ export const getHostGuests = async (req, res, next) => {
       userPhone: b.phone,
       guestAadhar: b.aadharNumber,
       aadharId: b.aadharNumber,
+      aadharPhoto: b.aadharPhoto || '',
+      guestAadharPhoto: b.aadharPhoto || '',
       personCount: b.personCount || 1,
       gender: b.gender,
       duration: b.durationDisplay || (b.rateUnit && b.rateUnit.includes('night') ? '1 Night' : '1 Month'),

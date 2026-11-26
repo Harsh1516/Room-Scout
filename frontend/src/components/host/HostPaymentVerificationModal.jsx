@@ -4,6 +4,7 @@ import { ZoomIn, Receipt, ExternalLink, X } from 'lucide-react';
 import { paymentsAPI } from '../../services/api';
 import { toast } from '../../context/ToastContext';
 import { broadcastBookingChange } from '../../utils/bookingPayment';
+import { formatUtrNumber } from '../../utils/bookingDetailsHelpers';
 
 export function HostPaymentVerificationModal({
  isOpen,
@@ -167,7 +168,7 @@ export function HostPaymentVerificationModal({
  </span>
  <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-white border border-slate-200 flex-wrap sm:flex-nowrap">
  <code className="text-xs sm:text-sm font-mono font-medium text-[#1f1b16] select-all break-all">
- {transactionRef || 'NO REFERENCE SUBMITTED'}
+ {formatUtrNumber(transactionRef) || 'NO REFERENCE SUBMITTED'}
  </code>
  {transactionRef && (
  <button
@@ -231,7 +232,7 @@ export function HostPaymentVerificationModal({
  <strong className="font-medium">Important Host Instruction: </strong>
  Open your Google Pay, PhonePe, Paytm, or bank app and confirm that{' '}
  <strong>₹{amount.toLocaleString('en-IN')}</strong> was credited with UTR reference{' '}
- <span className="font-mono font-medium">{transactionRef}</span>. Do not approve without verifying actual bank balance.
+ <span className="font-mono font-medium">{formatUtrNumber(transactionRef)}</span>. Do not approve without verifying actual bank balance.
  </div>
 
  {/* Reject Form Input */}
@@ -328,7 +329,7 @@ export function HostPaymentVerificationModal({
  Payment Screenshot / Receipt
  </span>
  <span className="text-[11px] font-mono text-slate-400 block font-normal">
- UTR: <strong className="text-white">{transactionRef || 'N/A'}</strong> • Amount:{' '}
+ UTR: <strong className="text-white">{formatUtrNumber(transactionRef) || 'N/A'}</strong> • Amount:{' '}
  <strong className="text-emerald-400">₹{amount.toLocaleString('en-IN')}</strong>
  </span>
  </div>

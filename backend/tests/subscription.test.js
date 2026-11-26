@@ -12,14 +12,14 @@ describe('Host Subscription System Tests', () => {
     it('should generate a valid UPI URI with platform UPI ID, payee name, and amount', () => {
       const uri = buildPlatformUpiUri({
         upiId: 'platform@upi',
-        payeeName: 'Room Scout Admin',
+        payeeName: 'Stay In Admin',
         amount: 600,
         hostNote: 'Host Subscription',
       });
 
       assert.ok(uri.startsWith('upi://pay?'));
       assert.ok(uri.includes('pa=platform%40upi') || uri.includes('pa=platform@upi'));
-      assert.ok(uri.includes('pn=Room+Scout+Admin') || uri.includes('pn=Room%20Scout%20Admin'));
+      assert.ok(uri.includes('pn=Stay+In+Admin') || uri.includes('pn=Stay%20In%20Admin'));
       assert.ok(uri.includes('am=600'));
       assert.ok(uri.includes('cu=INR'));
     });

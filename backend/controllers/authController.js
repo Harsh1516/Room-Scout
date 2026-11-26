@@ -37,7 +37,7 @@ function generateRandom10DigitPassword() {
 function setAuthCookie(res, token) {
   try {
     const isProduction = process.env.NODE_ENV === 'production';
-    res.cookie('roomscout_token', token, {
+    res.cookie('stayin_token', token, {
       httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? 'none' : 'lax',
@@ -635,7 +635,7 @@ export const googleAuth = async (req, res, next) => {
 
     const googleEmail = payload.email.toLowerCase().trim();
     const googleId = payload.sub;
-    const name = payload.name || payload.given_name || 'Room Scout User';
+    const name = payload.name || payload.given_name || 'Stay In User';
     const avatar = payload.picture || (targetRole === 'host' ? 'HO' : 'US');
 
     let authenticatedAccount = null;
@@ -817,12 +817,12 @@ export const forgotPassword = async (req, res, next) => {
     if (transporter) {
       try {
         await transporter.sendMail({
-          from: `"RoomScout Support" <${process.env.EMAIL_USER}>`,
+          from: `"Stay In Support" <${process.env.EMAIL_USER}>`,
           to: cleanEmail,
-          subject: 'Your RoomScout Temporary Password',
+          subject: 'Your Stay In Temporary Password',
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
-              <h2 style="color: #0f172a; margin-top: 0; font-size: 20px;">RoomScout Password Reset</h2>
+              <h2 style="color: #0f172a; margin-top: 0; font-size: 20px;">Stay In Password Reset</h2>
               <p style="color: #475569; font-size: 14px; line-height: 1.5;">Hello ${userName},</p>
               <p style="color: #475569; font-size: 14px; line-height: 1.5;">We received a request to reset the password for your ${isHostTarget ? 'Host' : 'Guest'} account. Use the temporary password below to sign in:</p>
               <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px 20px; font-size: 20px; font-weight: bold; letter-spacing: 2px; color: #15803d; border-radius: 10px; text-align: center; margin: 20px 0;">
@@ -894,7 +894,7 @@ export const updateUserProfile = async (req, res, next) => {
     if (avatar && typeof avatar === 'string' && avatar.trim()) {
       const trimmedAv = avatar.trim();
       if (trimmedAv.startsWith('data:image/') || trimmedAv.startsWith('http://') || trimmedAv.startsWith('https://')) {
-        cleanAvatar = await uploadSecureImage(trimmedAv, 'roomscout/avatars');
+        cleanAvatar = await uploadSecureImage(trimmedAv, 'stayin/avatars');
       } else if (trimmedAv.length <= 4) {
         cleanAvatar = trimmedAv.toUpperCase();
       }
@@ -1201,7 +1201,7 @@ export const testEmailService = async (req, res, next) => {
 export const logoutUser = async (req, res) => {
   try {
     const isProduction = process.env.NODE_ENV === 'production';
-    res.clearCookie('roomscout_token', {
+    res.clearCookie('stayin_token', {
       httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? 'none' : 'lax',

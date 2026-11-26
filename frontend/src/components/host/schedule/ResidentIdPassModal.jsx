@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { generateEntryPassPdf } from '../../../utils/entryPassPdf';
+import { computeDuration, formatBookedMonths, formatEntryPassCode } from '../../../utils/bookingDetailsHelpers';
+import { bookingsAPI } from '../../../services/api';
 
 export function ResidentIdPassModal({
  selectedOccupantForModal,
@@ -33,6 +34,53 @@ export function ResidentIdPassModal({
  handleStartEditFromModal,
 }) {
  const [previewAadharPhoto, setPreviewAadharPhoto] = useState('');
+ const [fetchedPhotosById, setFetchedPhotosById] = useState({});
+ const [isLoadingAadharPhoto, setIsLoadingAadharPhoto] = useState(false);
+ const [aadharPhotoError, setAadharPhotoError] = useState('');
+
+ const occForLookup = selectedOccupantForModal || {};
+ const bookingLookupId =
+ occForLookup._id ||
+ occForLookup.bookingId ||
+ occForLookup.bookingReferenceId ||
+ occForLookup.id ||
+ '';
+ const directAadharPhoto =
+ occForLookup.aadharPhoto ||
+ occForLookup.guestAadharPhoto ||
+ occForLookup.booking?.aadharPhoto ||
+ occForLookup.booking?.guestAadharPhoto ||
+ '';
+ const isOnlineOccupant = Boolean(
+ (occForLookup.isOnline === true ||
+ occForLookup.bookingSource === 'ONLINE' ||
+ occForLookup.bookingSource === 'ONLINE_USER' ||
+ (occForLookup.source === 'booking' && occForLookup.bookingSource !== 'OFFLINE_HOST')) &&
+ occForLookup.bookingSource !== 'OFFLINE_HOST' &&
+ occForLookup.source !== 'offline' &&
+ occForLookup.isOnline !== false
+ );
+
+ useEffect(() => {
+ if (!selectedOccupantForModal || !isOnlineOccupant || directAadharPhoto || !bookingLookupId) return;
+ if (fetchedPhotosById[bookingLookupId] !== undefined) return;
+ let cancelled = false;
+ bookingsAPI
+ .getBookingById(bookingLookupId)
+ .then((res) => {
+ if (cancelled) return;
+ const url =
+ res?.booking?.aadharPhoto ||
+ res?.booking?.guestAadharPhoto ||
+ res?.aadharPhoto ||
+ '';
+ setFetchedPhotosById((prev) => ({ ...prev, [bookingLookupId]: url }));
+ })
+ .catch(() => {});
+ return () => {
+ cancelled = true;
+ };
+ }, [selectedOccupantForModal, isOnlineOccupant, directAadharPhoto, bookingLookupId, fetchedPhotosById]);
 
  if (!selectedOccupantForModal) return null;
 
@@ -89,6 +137,17 @@ export function ResidentIdPassModal({
  '';
  const cleanPhoneDigits = String(occupantRawPhone).replace(/\D/g, '').slice(-10);
 
+ const occupantRawEmail =
+ selectedOccupantForModal.email ||
+ selectedOccupantForModal.userEmail ||
+ selectedOccupantForModal.guestEmail ||
+ modalEmail ||
+ '';
+ const cleanEmail =
+ occupantRawEmail && !String(occupantRawEmail).toLowerCase().includes('@stayhub.local')
+ ? String(occupantRawEmail).trim()
+ : '';
+
  // Status badge styling
  let statusBadgeLabel = selectedOccupantForModal.status || 'CONFIRMED';
  let statusBadgeStyle =
@@ -132,11 +191,7 @@ export function ResidentIdPassModal({
  if (isPendingApproval) {
  amountFieldLabel = 'TOTAL PAYABLE (PENDING APPROVAL)';
  amountTextColor = 'text-amber-600';
- amountStatusPill = (
- <span className="text-[11px] sm:text-[11.5px] font-medium px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/80">
- UNPAID • NOT APPROVED
- </span>
- );
+ amountStatusPill = null;
  } else if (isAwaitingPayment) {
  amountFieldLabel = 'AMOUNT DUE (UNPAID)';
  amountTextColor = 'text-amber-600';
@@ -163,24 +218,122 @@ export function ResidentIdPassModal({
  );
  }
 
- const handleDownloadPdf = () => {
+ const aadharPhotoUrl = directAadharPhoto || (bookingLookupId ? fetchedPhotosById[bookingLookupId] || '' : '');
+
+ const handleViewAadharPic = async () => {
+ setAadharPhotoError('');
+ if (aadharPhotoUrl) {
+ setPreviewAadharPhoto(aadharPhotoUrl);
+ return;
+ }
+ if (!bookingLookupId) {
+ setAadharPhotoError('No Aadhar photo uploaded by this user.');
+ setPreviewAadharPhoto('__MISSING__');
+ return;
+ }
+ setIsLoadingAadharPhoto(true);
  try {
- generateEntryPassPdf({
- booking: selectedOccupantForModal,
- stay: modalStayInfo || {
- title: selectedOccupantForModal?.stayTitle || selectedOccupantForModal?.propertyName,
- location: selectedOccupantForModal?.location || selectedOccupantForModal?.address,
- },
- host: {
- name: selectedOccupantForModal?.hostName,
- phone: selectedOccupantForModal?.hostPhone,
- email: selectedOccupantForModal?.hostEmail,
- },
- });
- } catch (err) {
- console.error('PDF generation error:', err);
+ const res = await bookingsAPI.getBookingById(bookingLookupId);
+ const url =
+ res?.booking?.aadharPhoto ||
+ res?.booking?.guestAadharPhoto ||
+ res?.aadharPhoto ||
+ '';
+ setFetchedPhotosById((prev) => ({ ...prev, [bookingLookupId]: url }));
+ if (url) {
+ setPreviewAadharPhoto(url);
+ } else {
+ setAadharPhotoError('No Aadhar photo was uploaded for this booking.');
+ setPreviewAadharPhoto('__MISSING__');
+ }
+ } catch {
+ setAadharPhotoError('Unable to load Aadhar photo right now.');
+ setPreviewAadharPhoto('__MISSING__');
+ } finally {
+ setIsLoadingAadharPhoto(false);
  }
  };
+
+ const bookedSummaryText = (() => {
+ const occ = selectedOccupantForModal;
+ const isMonthlyOcc =
+ Boolean(isMonthly) ||
+ String(occ.rateUnit || '').toLowerCase().includes('month') ||
+ (Array.isArray(occ.bookedMonths) && occ.bookedMonths.length > 0) ||
+ Number(occ.durationMonths) > 0;
+
+ const durationText =
+ modalStayInfo?.durationLabel ||
+ computeDuration(occ) ||
+ (isMonthlyOcc ? '1 Month' : '1 Night');
+
+ if (isMonthlyOcc) {
+ let monthKeys = Array.isArray(occ.bookedMonths) && occ.bookedMonths.length > 0
+ ? occ.bookedMonths
+ : [];
+
+ if (monthKeys.length === 0) {
+ const rawIn = occ.checkInISO || occ.checkIn;
+ const rawOut = occ.checkOutISO || occ.checkOut;
+ if (rawIn) {
+ const inD = new Date(rawIn);
+ const outD = rawOut ? new Date(rawOut) : inD;
+ if (!isNaN(inD.getTime())) {
+ const endD = !isNaN(outD.getTime()) ? outD : inD;
+ let curr = new Date(Date.UTC(inD.getUTCFullYear(), inD.getUTCMonth(), 1));
+ const last = new Date(Date.UTC(endD.getUTCFullYear(), endD.getUTCMonth(), 1));
+ while (curr <= last && monthKeys.length < 24) {
+ monthKeys.push(`${curr.getUTCFullYear()}-${String(curr.getUTCMonth() + 1).padStart(2, '0')}`);
+ curr.setUTCMonth(curr.getUTCMonth() + 1);
+ }
+ }
+ }
+ }
+
+ const formattedMonths = formatBookedMonths(monthKeys);
+ if (formattedMonths) {
+ return durationText ? `${formattedMonths} (${durationText})` : formattedMonths;
+ }
+ }
+
+ // Nightly / daily booking formatting
+ if (Array.isArray(occ.bookedDates) && occ.bookedDates.length > 0) {
+ const formattedDays = occ.bookedDates
+ .map((dStr) => {
+ const d = new Date(dStr);
+ if (isNaN(d.getTime())) return String(dStr);
+ return d.toLocaleDateString('en-IN', {
+ day: 'numeric',
+ month: 'short',
+ timeZone: 'UTC',
+ });
+ })
+ .filter(Boolean)
+ .join(', ');
+ if (formattedDays) {
+ return durationText ? `${formattedDays} (${durationText})` : formattedDays;
+ }
+ }
+
+ const rawIn = occ.checkInISO || occ.checkIn;
+ if (rawIn) {
+ const inD = new Date(rawIn);
+ if (!isNaN(inD.getTime())) {
+ const dayLabel = inD.toLocaleDateString('en-IN', {
+ day: 'numeric',
+ month: 'short',
+ timeZone: 'UTC',
+ });
+ return durationText ? `${dayLabel} (${durationText})` : dayLabel;
+ }
+ }
+
+ if (modalStayInfo?.datesList) {
+ return durationText ? `${modalStayInfo.datesList} (${durationText})` : modalStayInfo.datesList;
+ }
+
+ return durationText || '—';
+ })();
 
  if (typeof document === 'undefined') return null;
 
@@ -296,13 +449,18 @@ export function ResidentIdPassModal({
  <div className="p-4 sm:p-5 space-y-3 max-h-[75vh] overflow-y-auto custom-scrollbar">
  {/* Occupant Header Card */}
  <div className="p-3.5 rounded-2xl bg-slate-100/90 border border-slate-200/90 flex items-center justify-between gap-2.5">
+ <div className="min-w-0">
  <h4 className="text-[15px] sm:text-[16px] font-medium text-[#1f1b16] truncate leading-snug">
  {selectedOccupantForModal.name || 'Guest'}
  </h4>
- <span className={`text-[10px] sm:text-[10.5px] font-medium px-2.5 py-0.5 rounded-full border whitespace-nowrap ${
- isOnline
- ? 'text-purple-600 bg-purple-50/80 border-purple-200/80'
- : 'text-[#9c6644] bg-[#9c6644]/10 border-[#9c6644]/25'
+ {cleanEmail && (
+ <span className="text-[11.5px] sm:text-xs text-slate-500 block truncate mt-0.5">
+ {cleanEmail}
+ </span>
+ )}
+ </div>
+ <span className={`text-[11px] sm:text-xs font-semibold whitespace-nowrap shrink-0 ${
+ isOnline ? 'text-purple-600' : 'text-[#9c6644]'
  }`}>
  {isOnline ? 'Online' : 'Offline'}
  </span>
@@ -323,24 +481,39 @@ export function ResidentIdPassModal({
  <span className="text-[11.5px] sm:text-xs font-medium text-slate-400 block">
  Aadhar ID
  </span>
- <span className="font-medium text-[#1f1b16] mt-0.5 block text-[13px] sm:text-[14px]">
+ <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+ <span className="font-medium text-[#1f1b16] text-[13px] sm:text-[14px]">
  {formatAadharNumber(selectedOccupantForModal.aadhar) || 'N/A'}
  </span>
- {(selectedOccupantForModal.aadharPhoto || selectedOccupantForModal.guestAadharPhoto) && (
+ {(aadharPhotoUrl || isOnline) && (
  <button
  type="button"
- onClick={() => setPreviewAadharPhoto(selectedOccupantForModal.aadharPhoto || selectedOccupantForModal.guestAadharPhoto)}
- className="mt-1.5 inline-flex items-center gap-2 p-1.5 pr-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 transition-colors cursor-pointer active:scale-95"
- title="Open Aadhar card photo"
+ disabled={isLoadingAadharPhoto}
+ onClick={handleViewAadharPic}
+ className="inline-flex items-center gap-1 px-2 py-[2px] rounded-full bg-white/95 hover:bg-[#1f1b16] text-slate-700 hover:text-white border border-slate-200/90 hover:border-[#1f1b16] shadow-[0_1px_2px_rgba(15,23,42,0.06)] text-[10.5px] font-semibold tracking-wide transition-all duration-150 cursor-pointer active:scale-95 shrink-0 disabled:opacity-50"
+ title="View uploaded Aadhar photo"
  >
- <img
- src={selectedOccupantForModal.aadharPhoto || selectedOccupantForModal.guestAadharPhoto}
- alt="Guest Aadhar Card"
- className="w-9 h-7 rounded-md object-cover border border-slate-200"
- />
- <span className="text-[11px] font-semibold text-blue-600">View Aadhar Photo</span>
+ {isLoadingAadharPhoto ? (
+ <span className="w-2.5 h-2.5 border-[1.5px] border-slate-300 border-t-slate-700 rounded-full animate-spin shrink-0" />
+ ) : (
+ <svg
+ className="w-2.5 h-2.5 shrink-0"
+ viewBox="0 0 24 24"
+ fill="none"
+ stroke="currentColor"
+ strokeWidth="1.9"
+ strokeLinecap="round"
+ strokeLinejoin="round"
+ >
+ <rect x="3" y="3" width="18" height="18" rx="2.5" ry="2.5" />
+ <circle cx="8.5" cy="8.5" r="1.4" />
+ <polyline points="21 15 16 10 5 21" />
+ </svg>
+ )}
+ <span>Pic</span>
  </button>
  )}
+ </div>
  </div>
 
  <div>
@@ -383,104 +556,26 @@ export function ResidentIdPassModal({
  (Verify face-)
  </span>
  </div>
- <div className="flex items-center gap-2 shrink-0">
- <span className="font-mono text-xs sm:text-[13px] font-medium text-emerald-900 bg-emerald-500/20 px-2.5 py-1 rounded-lg border border-emerald-500/40 select-all">
- {code}
+ <span className="font-mono text-xs sm:text-[13px] font-semibold text-emerald-900 select-all shrink-0">
+ {formatEntryPassCode(code)}
  </span>
- <button
- type="button"
- onClick={handleDownloadPdf}
- title="Download Official Resident Entry Pass PDF"
- className="h-8 px-3 rounded-full bg-[#0f766e] hover:bg-emerald-500 text-white text-xs font-medium flex items-center gap-1 shadow-xs transition-all active:scale-95 cursor-pointer"
- >
- <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
- <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
- </svg>
- <span>PDF</span>
- </button>
- </div>
  </div>
  );
  })()}
 
- {/* Stay Duration Info */}
- {modalStayInfo && (() => {
- const parseDateAndTiming = (val, explicitTime) => {
- if (explicitTime) {
- return {
- date: typeof val === 'string' ? val.replace(/\s*\([^)]*\)/, '').trim() : String(val || ''),
- timing: explicitTime,
- };
- }
- if (!val) return { date: '', timing: '' };
- const str = String(val).trim();
- const match = str.match(/^(.*?)(?:\s*\((.*?)\))$/);
- if (match && match[2]) {
- return {
- date: match[1].trim(),
- timing: match[2].trim(),
- };
- }
- return { date: str, timing: '' };
- };
-
- const inInfo = parseDateAndTiming(
- modalStayInfo.checkInDate || modalStayInfo.checkInFormatted,
- modalStayInfo.checkInTime
- );
- const outInfo = parseDateAndTiming(
- modalStayInfo.checkOutDate || modalStayInfo.checkOutFormatted,
- modalStayInfo.checkOutTime
- );
-
- return (
- <div className="p-3.5 rounded-2xl bg-slate-100/90 border border-slate-200/90 text-xs shadow-2xs">
- <div className="flex items-center justify-between text-xs">
- <div>
- <span className="text-[11.5px] sm:text-xs font-medium text-slate-400 block">
- Check-In
+ {/* Booked Duration Info (Pic 2 format) */}
+ {(bookedSummaryText || modalStayInfo) && (
+ <div className="p-3.5 rounded-2xl bg-slate-100/90 border border-slate-200/90 shadow-2xs">
+ <div className="flex items-center justify-between gap-3">
+ <span className="text-[11.5px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider shrink-0">
+ Booked:
  </span>
- <span className="font-medium text-[#1f1b16] text-[13px] sm:text-[14px] block leading-tight mt-0.5">
- {inInfo.date}
+ <span className="text-[13.5px] sm:text-[15px] font-bold text-[#1f1b16] text-right">
+ {bookedSummaryText}
  </span>
- {inInfo.timing && (
- <span className="text-[11.5px] sm:text-xs text-slate-500 font-medium block leading-tight mt-0.5">
- ({inInfo.timing})
- </span>
+ </div>
+ </div>
  )}
- </div>
-
- <div className="text-center px-1 shrink-0">
- <span
- className={`text-[11px] sm:text-[11.5px] font-medium px-2.5 py-0.5 rounded-full border ${
- isPendingApproval
- ? 'text-amber-700 bg-amber-50 border-amber-200/80'
- : isUpiVerificationPending
- ? 'text-violet-700 bg-violet-50 border-violet-200/80'
- : 'text-emerald-700 bg-emerald-50 border-emerald-200/80'
- }`}
- >
- {modalStayInfo.durationLabel}
- </span>
- </div>
-
- <div className="text-right">
- <span className="text-[11.5px] sm:text-xs font-medium text-slate-400 block">
- Check-Out
- </span>
- <span className="font-medium text-[#1f1b16] text-[13px] sm:text-[14px] block leading-tight mt-0.5">
- {outInfo.date}
- </span>
- {outInfo.timing && (
- <span className="text-[11.5px] sm:text-xs text-slate-500 font-medium block leading-tight mt-0.5">
- ({outInfo.timing})
- </span>
- )}
- </div>
- </div>
- </div>
- );
- })()}
 
  {/* Modal Actions */}
  <div className="flex items-center justify-between gap-2.5 pt-3.5 border-t border-slate-100">
@@ -580,12 +675,21 @@ export function ResidentIdPassModal({
  <line x1="6" y1="6" x2="18" y2="18" />
  </svg>
  </button>
+ {previewAadharPhoto === '__MISSING__' ? (
+ <div
+ onClick={(e) => e.stopPropagation()}
+ className="px-6 py-5 rounded-2xl bg-white text-slate-800 text-sm font-medium shadow-2xl border border-slate-200 cursor-default"
+ >
+ {aadharPhotoError || 'No Aadhar photo uploaded.'}
+ </div>
+ ) : (
  <img
  src={previewAadharPhoto}
  alt="Guest Aadhar Card Full View"
  onClick={(e) => e.stopPropagation()}
  className="max-h-[82vh] max-w-[92vw] object-contain rounded-2xl shadow-2xl border border-white/20 bg-white cursor-default"
  />
+ )}
  </div>
  )}
  </div>,

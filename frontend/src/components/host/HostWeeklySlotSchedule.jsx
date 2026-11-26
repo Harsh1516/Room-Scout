@@ -1093,6 +1093,18 @@ export default function HostWeeklySlotSchedule({
  matchedGuest?.aadharNumber ||
  matchedGuest?.aadhar ||
  '',
+ aadharPhoto:
+ occupant.aadharPhoto ||
+ occupant.guestAadharPhoto ||
+ matchedGuest?.aadharPhoto ||
+ matchedGuest?.guestAadharPhoto ||
+ '',
+ guestAadharPhoto:
+ occupant.guestAadharPhoto ||
+ occupant.aadharPhoto ||
+ matchedGuest?.guestAadharPhoto ||
+ matchedGuest?.aadharPhoto ||
+ '',
  totalAmount:
  occupant.totalAmount !== undefined
  ? occupant.totalAmount

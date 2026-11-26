@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, memo } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 
 /**
- * Responsive Scroll-Triggered Reveal Component for RoomScout
+ * Responsive Scroll-Triggered Reveal Component for Stay In
  *
  * Responsiveness & Performance:
  * - Desktop: Smooth 20px upward translation, 0.5s–0.6s easing [0.16, 1, 0.3, 1], with card stagger.

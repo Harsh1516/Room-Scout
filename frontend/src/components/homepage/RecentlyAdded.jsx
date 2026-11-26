@@ -4,6 +4,7 @@ import { staysAPI } from '../../services/api';
 import { PropertyCard } from '../common/PropertyCard';
 import { HorizontalCarousel } from '../common/HorizontalCarousel';
 import { ScrollReveal } from '../common/ScrollReveal';
+import { triggerGlobalLoader } from '../common/DotGridWaveLoader';
 
 export function RecentlyAdded({ onStayClick, onBookClick }) {
   const navigate = useNavigate();
@@ -70,7 +71,13 @@ export function RecentlyAdded({ onStayClick, onBookClick }) {
   }, []);
 
   return (
-    <section className="w-full bg-white rounded-t-[36px] sm:rounded-t-[48px] shadow-[0_-12px_36px_rgba(0,0,0,0.08),0_-4px_14px_rgba(0,0,0,0.04)] pt-6 sm:pt-10 pb-8 sm:pb-16 px-4 sm:px-8 lg:px-16 2xl:px-24 relative z-20" id="listings">
+    <section className="w-full bg-white rounded-t-[36px] sm:rounded-t-[48px] shadow-[0_-12px_36px_rgba(0,0,0,0.08),0_-4px_14px_rgba(0,0,0,0.04)] pt-3.5 sm:pt-5 pb-8 sm:pb-16 px-4 sm:px-8 lg:px-16 2xl:px-24 relative z-20" id="listings">
+      {/* Top-Center Sheet Grabber Bar */}
+      <div
+        aria-hidden="true"
+        className="mx-auto w-12 sm:w-14 h-1.5 rounded-full bg-slate-300/90 mb-3.5 sm:mb-5"
+      />
+
       {/* Section Header with Scroll-Triggered Reveal */}
       <ScrollReveal desktopOffset={20} mobileOffset={12} desktopDuration={0.5} mobileDuration={0.35}>
         <div className="flex items-center justify-center mb-5 sm:mb-8 w-full text-center">
@@ -128,7 +135,10 @@ export function RecentlyAdded({ onStayClick, onBookClick }) {
             rightAction={
               <button
                 type="button"
-                onClick={() => navigate('/search')}
+                onClick={() => {
+                  triggerGlobalLoader();
+                  navigate('/search');
+                }}
                 className="text-[17px] sm:text-[19px] md:text-[20px] font-bold text-slate-900 hover:text-slate-700 underline underline-offset-4 decoration-2 decoration-slate-900/60 hover:decoration-slate-900 transition-colors cursor-pointer shrink-0 active:opacity-70 py-1"
               >
                 View all

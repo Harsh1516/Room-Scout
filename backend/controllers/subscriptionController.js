@@ -227,7 +227,7 @@ export async function getSubscriptionPlans(req, res, next) {
         const authHeader = req.headers?.authorization;
         if (authHeader && authHeader.startsWith('Bearer ')) {
           const token = authHeader.split(' ')[1];
-          const decoded = jwt.verify(token, process.env.JWT_SECRET || 'roomscout_secret_fallback');
+          const decoded = jwt.verify(token, process.env.JWT_SECRET || 'stayin_secret_fallback');
           if (decoded && decoded.id) {
             const stay = await Stay.findOne({ hostId: decoded.id }).select('type rooms').lean();
             if (stay) {
@@ -257,7 +257,7 @@ export async function getSubscriptionPlans(req, res, next) {
     if (settings.upiId) {
       const upiUri = buildPlatformUpiUri({
         upiId: settings.upiId,
-        payeeName: settings.payeeName || 'Room Scout Platform',
+        payeeName: settings.payeeName || 'Stay In Platform',
         hostNote: 'Host Subscription',
       });
       try {
@@ -281,9 +281,9 @@ export async function getSubscriptionPlans(req, res, next) {
         if (settings.upiId && priceNum > 0) {
           planUpiUri = buildPlatformUpiUri({
             upiId: settings.upiId,
-            payeeName: settings.payeeName || 'Room Scout Platform',
+            payeeName: settings.payeeName || 'Stay In Platform',
             amount: priceNum,
-            hostNote: `RoomScout ${p.label || p.code} Subscription`,
+            hostNote: `Stay In ${p.label || p.code} Subscription`,
           });
           try {
             planQr = await QRCode.toDataURL(planUpiUri, {
@@ -593,7 +593,7 @@ export async function submitHostSubscriptionPayment(req, res, next) {
     let finalReceiptUrl = '';
     if (receiptImage && typeof receiptImage === 'string') {
       try {
-        finalReceiptUrl = await uploadSecureImage(receiptImage, 'roomscout/subscriptions');
+        finalReceiptUrl = await uploadSecureImage(receiptImage, 'stayin/subscriptions');
       } catch (uploadErr) {
         console.warn('Subscription receipt upload failed, fallback:', uploadErr.message);
         if (receiptImage.startsWith('data:image/') || receiptImage.startsWith('http')) {
