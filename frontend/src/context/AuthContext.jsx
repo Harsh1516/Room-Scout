@@ -1,5 +1,5 @@
 import { authenticateSocket, getSocket } from '../services/socket';
-import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { authAPI, adminAPI } from '../services/api';
 import { clearAllHostCaches } from '../hooks/host/useHostDashboardData';
 import { clearImagesFromIndexedDB } from '../utils/draftStorage';
@@ -154,11 +154,15 @@ export function AuthProvider({ children }) {
  });
 
  // Sync token and user to localStorage and manage state
+ const authEpochRef = useRef(0);
+
  const syncAuthState = useCallback((userData, jwtToken) => {
  try {
+ authEpochRef.current += 1;
  // Auto-purge any legacy keys from storage
  localStorage.removeItem('mal_practice_user');
  localStorage.removeItem('stayhub_jwt_token');
+ localStorage.removeItem('stayhub_auth_user');
 
  if (jwtToken) {
  localStorage.setItem('stayin_token', jwtToken);
@@ -199,6 +203,10 @@ export function AuthProvider({ children }) {
         setUser(cleanUser);
       } else {
         localStorage.removeItem('stayin_user');
+        localStorage.removeItem('stayhub_host_subscription_cache');
+        try {
+          sessionStorage.removeItem('stayhub_recent_bookings');
+        } catch {}
         setUser(null);
         clearAllHostCaches();
         try {
@@ -291,13 +299,18 @@ export function AuthProvider({ children }) {
  return;
  }
 
+ const verifyEpoch = authEpochRef.current;
  try {
  const profile = await authAPI.getProfile();
+ if (authEpochRef.current !== verifyEpoch || !localStorage.getItem('stayin_token')) {
+ return;
+ }
  const resolvedProfile = profile?.user || profile;
 
  if (resolvedProfile && (resolvedProfile._id || resolvedProfile.email)) {
          const cleanProfile = sanitizeUserSession(resolvedProfile);
         setUser((prev) => {
+          if (authEpochRef.current !== verifyEpoch) return prev;
           const updated = sanitizeUserSession({ ...(prev || {}), ...cleanProfile });
           try {
             localStorage.setItem('stayin_user', JSON.stringify(updated));
@@ -307,9 +320,10 @@ export function AuthProvider({ children }) {
 
         if (cleanProfile?.email) {
           adminAPI.getHostByEmail(cleanProfile.email).then((hCheck) => {
+            if (authEpochRef.current !== verifyEpoch || !localStorage.getItem('stayin_token')) return;
             if (hCheck?.hasProperty || hCheck?.host?.status === 'Approved') {
               setUser((prev) => {
-                if (!prev) return prev;
+                if (!prev || authEpochRef.current !== verifyEpoch) return prev;
                 const nextUser = {
                   ...prev,
                   role: 'host',
@@ -461,11 +475,13 @@ export function AuthProvider({ children }) {
       const authToken = data.token || (data.user && data.user.token);
       if (authToken) {
         syncAuthState(data, authToken);
+        const loginEpoch = authEpochRef.current;
         if (data?.email) {
           adminAPI.getHostByEmail(data.email).then((hCheck) => {
+            if (authEpochRef.current !== loginEpoch || !localStorage.getItem('stayin_token')) return;
             if (hCheck?.hasProperty || hCheck?.host?.status === 'Approved') {
               setUser((prev) => {
-                if (!prev) return prev;
+                if (!prev || authEpochRef.current !== loginEpoch) return prev;
                 const nextUser = {
                   ...prev,
                   role: 'host',
@@ -522,16 +538,17 @@ export function AuthProvider({ children }) {
  }, [user, effectiveUser]);
 
  const logout = useCallback(async () => {
-   try {
-     await authAPI.logout();
-   } catch {}
+   syncAuthState(null, null);
    try {
      document.cookie = 'stayin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
      document.cookie = 'stayhub_jwt_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
    } catch {}
-   syncAuthState(null, null);
+   authenticateSocket(null);
    window.dispatchEvent(new Event('auth:logout'));
    window.dispatchEvent(new Event('stayhub_auth_changed'));
+   try {
+     await authAPI.logout();
+   } catch {}
  }, [syncAuthState]);
 
  const updateUserSession = useCallback((updatedUser, newToken) => {

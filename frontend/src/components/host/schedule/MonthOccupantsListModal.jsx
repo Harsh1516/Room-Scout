@@ -236,7 +236,7 @@ export function MonthOccupantsListModal({
  </div>
 
  {/* Footer: Book Bed button */}
- {remainingSlots > 0 && typeof onBookOpenSlot === 'function' && (
+ {!monthData?.hideBookFooter && remainingSlots > 0 && typeof onBookOpenSlot === 'function' && (
  <div className="px-5 py-3.5 border-t border-slate-100 bg-white flex items-center justify-end">
  <button
  type="button"

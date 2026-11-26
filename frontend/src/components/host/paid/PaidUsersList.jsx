@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
+import { useState, useMemo, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
  Phone, Eye, LogOut, Calendar, BedDouble, CheckCircle2,
@@ -29,6 +29,7 @@ export function PaidUsersList({
  allGuests = [],
  setGuests = () => {},
  hostProperty,
+ setHostProperty = () => {},
  showToast = () => {},
  refreshGuests = () => {},
  broadcastStayUpdate = () => {},
@@ -46,26 +47,25 @@ export function PaidUsersList({
  const [showResetModal, setShowResetModal] = useState(false);
  const [isResettingRevenue, setIsResettingRevenue] = useState(false);
 
- // Revenue Reset State with LocalStorage and Stay settings fallback
+ // Revenue Reset State with Stay DB settings as primary source and localStorage fallback
  const storageKey = `stayin_rev_reset_${hostProperty?._id || 'default'}`;
- const [revenueReset, setRevenueReset] = useState(() => {
+ const [localRevenueReset, setLocalRevenueReset] = useState(() => {
  try {
  const saved = localStorage.getItem(storageKey);
  if (saved) return JSON.parse(saved);
- if (hostProperty?.revenueResetSettings?.resetAt) {
- return hostProperty.revenueResetSettings;
- }
  } catch {
  // fallback
  }
  return null;
  });
 
- useEffect(() => {
- if (hostProperty?.revenueResetSettings?.resetAt) {
- setRevenueReset(hostProperty.revenueResetSettings);
+ const revenueReset = useMemo(() => {
+ const remote = hostProperty?.revenueResetSettings;
+ if (remote !== undefined) {
+ return remote?.resetAt ? remote : null;
  }
- }, [hostProperty?.revenueResetSettings]);
+ return localRevenueReset?.resetAt ? localRevenueReset : null;
+ }, [hostProperty?.revenueResetSettings, localRevenueReset]);
 
  // Modal occupant state
  const [selectedOccupantForModal, setSelectedOccupantForModal] = useState(null);
@@ -321,7 +321,8 @@ export function PaidUsersList({
  });
  }
  localStorage.setItem(storageKey, JSON.stringify(resetData));
- setRevenueReset(resetData);
+ setLocalRevenueReset(resetData);
+ setHostProperty((prev) => (prev ? { ...prev, revenueResetSettings: resetData } : prev));
  showToast('Revenue counter reset', 'success');
  setShowResetModal(false);
  } catch (err) {
@@ -343,7 +344,20 @@ export function PaidUsersList({
  });
  }
  localStorage.removeItem(storageKey);
- setRevenueReset(null);
+ setLocalRevenueReset(null);
+ setHostProperty((prev) =>
+ prev
+ ? {
+ ...prev,
+ revenueResetSettings: {
+ resetAt: null,
+ baselineTotal: 0,
+ baselineOnline: 0,
+ baselineOffline: 0,
+ },
+ }
+ : prev
+ );
  showToast('Revenue restored', 'success');
  setShowResetModal(false);
  } catch (err) {
@@ -934,13 +948,11 @@ export function PaidUsersList({
  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
  {currentGuests.map((g, idx) => {
  const bookingId = g.bookingId || g._id || g.bookingReferenceId;
- const st = String(g.status || '').toUpperCase();
- const isCheckedOut = st === 'CHECKED_OUT' || st === 'COMPLETED';
  return (
  <VisitedGuestCard
  key={bookingId || idx}
  guest={g}
- subTab={isCheckedOut ? 'checkout' : 'checkin'}
+ subTab="paid"
  hostProperty={hostProperty}
  onOpenModal={handleOpenOccupantModal}
  onSelectSlot={(guestItem) => setSlotModalGuest(guestItem)}

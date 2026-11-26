@@ -40,15 +40,12 @@ export function Login({ onLoginClick, iconOnly = false }) {
  }, [dropdownOpen]);
 
 
- const handleLogout = async () => {
+ const handleLogout = () => {
     setActiveModal(null);
     setDropdownOpen(false);
-    window.dispatchEvent(new Event('auth:logout'));
-    try {
-      await logout();
-    } catch (e) {
+    logout().catch((e) => {
       console.warn('Logout error:', e);
-    }
+    });
     toast.info('You have been logged out.');
     navigate('/');
   };
@@ -259,6 +256,8 @@ export function Login({ onLoginClick, iconOnly = false }) {
                 role="dialog"
                 aria-modal="true"
                 data-modal="true"
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
                 className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-auto"
               >
  {/* Blurred Backdrop */}
@@ -276,6 +275,7 @@ export function Login({ onLoginClick, iconOnly = false }) {
  animate={{ opacity: 1, scale: 1, y: 0 }}
  exit={{ opacity: 0, scale: 0.92, y: -15 }}
  transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+ onClick={(e) => e.stopPropagation()}
  className="w-full max-w-sm rounded-3xl bg-white border border-slate-200 shadow-2xl p-6 sm:p-7 relative z-10 space-y-5 text-center"
  >
  <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center mx-auto border border-rose-500/20 shadow-inner">

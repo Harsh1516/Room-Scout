@@ -5,6 +5,7 @@ import { adminAPI, staysAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
 import { Left } from '../components/navbar/Left';
 import { Login } from '../components/navbar/Login';
+import { DotGridWaveLoader } from '../components/common/DotGridWaveLoader';
 
 export function HostRoomsPage() {
  const navigate = useNavigate();
@@ -217,11 +218,7 @@ export function HostRoomsPage() {
  };
 
  if (loading) {
- return (
- <div className="min-h-screen bg-[#f7f4ee] flex items-center justify-center">
- <div className="text-xs text-slate-500 font-medium">Loading room layout...</div>
- </div>
- );
+ return <DotGridWaveLoader />;
  }
 
  return (

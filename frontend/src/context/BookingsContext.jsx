@@ -102,6 +102,39 @@ export function BookingsProvider({ children }) {
     // ── Instant 0ms WebSocket Real-Time Listeners ──
     const socket = getSocket();
     const onRealtimeBookingChange = (payload) => {
+      if (payload && (payload.booking || payload.bookingId || payload.bookingReferenceId)) {
+        const targetIds = new Set(
+          [
+            payload.booking?._id,
+            payload.booking?.bookingReferenceId,
+            payload.bookingId,
+            payload.bookingReferenceId,
+          ]
+            .filter(Boolean)
+            .map(String)
+        );
+        if (targetIds.size > 0) {
+          setBookings((prev) =>
+            prev.map((item) => {
+              const itemId = String(item._id || '');
+              const itemRef = String(item.bookingReferenceId || '');
+              if (!targetIds.has(itemId) && !targetIds.has(itemRef)) return item;
+              return {
+                ...item,
+                ...(payload.booking || {}),
+                status: payload.status || payload.booking?.status || item.status,
+                paymentStatus: payload.paymentStatus || payload.booking?.paymentStatus || item.paymentStatus,
+                paymentDeadline:
+                  payload.paymentDeadline !== undefined
+                    ? payload.paymentDeadline
+                    : payload.booking?.paymentDeadline !== undefined
+                    ? payload.booking.paymentDeadline
+                    : item.paymentDeadline,
+              };
+            })
+          );
+        }
+      }
       fetchBookings();
       window.dispatchEvent(new CustomEvent('stayhub_my_bookings_updated', { detail: payload }));
     };

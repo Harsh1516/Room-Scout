@@ -130,7 +130,7 @@ export function HostUsersVisitedSection({
  const [confirmModalDelete, setConfirmModalDelete] = useState(false);
  const [isRemovingModalOccupant, setIsRemovingModalOccupant] = useState(false);
  const [verifyingPaymentBooking, setVerifyingPaymentBooking] = useState(null);
- const [checkingInBooking, setCheckingInBooking] = useState(null);
+ const [checkActionModal, setCheckActionModal] = useState(null);
 
  // Current Local Date ISO
  const todayISO = useMemo(() => {
@@ -342,8 +342,9 @@ export function HostUsersVisitedSection({
  const name = String(g.userName || g.fullName || g.guestName || '').toLowerCase();
  const phone = String(g.userPhone || g.phone || g.guestPhone || '').toLowerCase();
  const room = String(g.roomNumber || '').toLowerCase();
- const bId = String(g.bookingId || g._id || '').toLowerCase();
- if (!name.includes(q) && !phone.includes(q) && !room.includes(q) && !bId.includes(q)) {
+ const roomType = String(g.roomType || '').toLowerCase();
+ const bId = String(g.bookingId || g.bookingReferenceId || g._id || '').toLowerCase();
+ if (!name.includes(q) && !phone.includes(q) && !room.includes(q) && !roomType.includes(q) && !bId.includes(q)) {
  return false;
  }
  }
@@ -755,39 +756,12 @@ export function HostUsersVisitedSection({
 
  const handleMarkCheckIn = (booking) => {
  if (!booking) return;
- setCheckingInBooking(booking);
+ setCheckActionModal({ booking, mode: 'checkin' });
  };
 
- const handleMarkCheckOut = async (booking) => {
- const bookingId = booking.bookingId || booking._id;
- if (!bookingId) return;
- setActionLoadingId(bookingId);
- try {
- const targetId = (booking._id && /^[0-9a-fA-F]{24}$/.test(booking._id)) ? booking._id : bookingId;
- await bookingsAPI.updateBookingStatus(targetId, { status: 'CHECKED_OUT' });
- setGuests((prev) =>
- prev.map((item) => {
- const match =
- (item.bookingId && item.bookingId === booking.bookingId) ||
- (item._id && item._id === booking._id) ||
- (item.bookingReferenceId && item.bookingReferenceId === booking.bookingReferenceId);
- return match ? { ...item, status: 'CHECKED_OUT' } : item;
- })
- );
- const propId = hostProperty?._id;
- if (propId) broadcastStayUpdate(propId);
- ['stayhub_slots_updated', 'stayhub_rooms_updated', 'stayhub_admin_sync'].forEach((e) =>
- window.dispatchEvent(new CustomEvent(e, { detail: { sender: 'HostDashboard' } }))
- );
- localStorage.setItem('stayhub_admin_sync_ts', String(Date.now()));
- showToast('Guest checked out', 'info');
- refreshGuests();
- } catch (err) {
- console.error('Error updating check-out:', err);
- showToast('Failed to check out guest', 'error');
- } finally {
- setActionLoadingId(null);
- }
+ const handleMarkCheckOut = (booking) => {
+ if (!booking) return;
+ setCheckActionModal({ booking, mode: 'checkout' });
  };
 
  return (
@@ -882,15 +856,31 @@ export function HostUsersVisitedSection({
  />
  )}
 
- {/* Guest Check-In Verification Modal */}
- {checkingInBooking && (
+ {/* Guest Check-In / Check-Out Confirmation Modal */}
+ {checkActionModal?.booking && (
  <CheckInVerificationModal
- isOpen={Boolean(checkingInBooking)}
- booking={checkingInBooking}
- hostProperty={hostProperty}
- onClose={() => setCheckingInBooking(null)}
- onCheckInSuccess={() => {
- setCheckingInBooking(null);
+ isOpen={Boolean(checkActionModal?.booking)}
+ mode={checkActionModal.mode}
+ booking={checkActionModal.booking}
+ onClose={() => setCheckActionModal(null)}
+ onCheckInSuccess={(updatedBooking, nextStatus) => {
+ if (updatedBooking && nextStatus) {
+ setGuests((prev) =>
+ prev.map((item) => {
+ const match =
+ (item.bookingId && item.bookingId === updatedBooking.bookingId) ||
+ (item._id && item._id === updatedBooking._id) ||
+ (item.bookingReferenceId && item.bookingReferenceId === updatedBooking.bookingReferenceId);
+ return match ? { ...item, status: nextStatus } : item;
+ })
+ );
+ }
+ if (hostProperty?._id) broadcastStayUpdate(hostProperty._id);
+ ['stayhub_slots_updated', 'stayhub_rooms_updated', 'stayhub_admin_sync'].forEach((ev) =>
+ window.dispatchEvent(new CustomEvent(ev, { detail: { sender: 'HostDashboard' } }))
+ );
+ localStorage.setItem('stayhub_admin_sync_ts', String(Date.now()));
+ setCheckActionModal(null);
  refreshGuests();
  }}
  />

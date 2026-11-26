@@ -99,8 +99,17 @@ export function AdminPage() {
  const [loading, setLoading] = useState(true);
  const [searchQuery, setSearchQuery] = useState('');
 
- const [showFilterMenu, setShowFilterMenu] = useState(false);
- const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'name_asc' | 'name_desc'
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'name_asc' | 'name_desc'
+
+  useEffect(() => {
+    if (!showFilterMenu) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setShowFilterMenu(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showFilterMenu]);
 
  const [deletingUserId, setDeletingUserId] = useState(null);
  const [confirmDeleteUserId, setConfirmDeleteUserId] = useState(null);
@@ -802,785 +811,855 @@ export function AdminPage() {
  }
  };
 
- if (!isAdminAuthorized) {
- return (
- <div className="min-h-screen bg-[#f7f4ee] text-slate-800 flex flex-col items-center justify-center p-4">
- <motion.div
- initial={{ opacity: 0, scale: 0.95, y: 10 }}
- animate={{ opacity: 1, scale: 1, y: 0 }}
- transition={{ duration: 0.3 }}
- className="w-full max-w-md p-6 sm:p-8 rounded-3xl bg-white/80 border border-slate-200/80 shadow-2xl flex flex-col items-center text-center"
- >
- <div className="w-14 h-14 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-600 mb-4 shadow-inner">
- <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
- <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
- <path d="M7 11V7a5 5 0 0 1 10 0v4" />
- </svg>
- </div>
+  const adminTabs = [
+    {
+      id: 'users',
+      label: 'Users',
+      count: users.length,
+      icon: (
+        <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ),
+    },
+    {
+      id: 'hosts',
+      label: 'Hosts',
+      count: hosts.length,
+      icon: (
+        <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ),
+    },
+    {
+      id: 'subscriptions',
+      label: 'Subscriptions',
+      count: subscriptionCounts.pending > 0 ? subscriptionCounts.pending : subscriptions.length,
+      isAlert: subscriptionCounts.pending > 0,
+      icon: (
+        <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24" aria-hidden="true">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ),
+    },
+    {
+      id: 'upi',
+      label: 'UPI Settings',
+      count: null,
+      icon: (
+        <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="2" y="5" width="20" height="14" rx="2" />
+          <line x1="2" y1="10" x2="22" y2="10" />
+        </svg>
+      ),
+    },
+  ];
 
- <h2 className="text-xl sm:text-2xl font-normal text-[#1f1b16] mb-2">
- Administrator Access
- </h2>
- <p className="text-xs sm:text-sm text-slate-600 mb-6 font-normal">
- This management console requires verified admin credentials or your master security passkey.
- </p>
+  const handleTabKeyDown = (e, idx) => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    e.preventDefault();
+    const nextIdx = e.key === 'ArrowRight'
+      ? (idx + 1) % adminTabs.length
+      : (idx - 1 + adminTabs.length) % adminTabs.length;
+    const nextTab = adminTabs[nextIdx];
+    setActiveTab(nextTab.id);
+    setSearchQuery('');
+    const nextEl = document.getElementById(`admin-tab-${nextTab.id}`);
+    nextEl?.focus();
+  };
 
- <form onSubmit={handleVerifyPasskey} className="w-full flex flex-col gap-3">
- <input
- type="password"
- value={passkeyInput}
- onChange={(e) => {
- setPasskeyInput(e.target.value);
- setPasskeyError('');
- }}
- placeholder="Enter Master Admin Passkey..."
- className="w-full min-h-[52px] px-4 py-3.5 rounded-2xl bg-slate-100 border border-slate-200 text-[#1f1b16] placeholder-slate-400 text-base font-normal focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
- autoFocus
- />
+  const sectionMeta = {
+    users: {
+      title: 'Users Directory',
+      subtitle: `${onlineUsersList.length} registered accounts · ${offlineUsersList.length} offline guests`,
+    },
+    hosts: {
+      title: 'Property Hosts',
+      subtitle: `${approvedHostsCount} approved live · ${pendingHostsCount} awaiting review`,
+    },
+    subscriptions: {
+      title: 'Host Subscriptions',
+      subtitle: `${subscriptionCounts.pending || 0} pending UTR verification · ${subscriptionCounts.verified || 0} active`,
+    },
+    upi: {
+      title: 'UPI & Plan Pricing',
+      subtitle: 'Configure platform receiver VPA, per-room rates, and duration discounts',
+    },
+  }[activeTab] || { title: 'Admin Console', subtitle: '' };
 
- {passkeyError && (
- <p className="text-xs text-rose-500 font-normal text-left px-1">
- {passkeyError}
- </p>
- )}
+  if (!isAdminAuthorized) {
+    return (
+      <div className="min-h-screen bg-[#f7f4ee] text-[#1f1b16] flex flex-col items-center justify-center p-4 font-sans">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25 }}
+          className="w-full max-w-md p-7 sm:p-9 rounded-2xl bg-white border border-stone-200/90 shadow-sm flex flex-col items-center text-center"
+        >
+          <div className="w-12 h-12 rounded-xl bg-[#f7f4ee] border border-stone-200 flex items-center justify-center text-[#1f1b16] mb-5">
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </div>
 
- <button
- type="submit"
- disabled={isVerifyingKey || !passkeyInput.trim()}
- className="w-full min-h-[52px] py-3.5 px-4 rounded-2xl bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-base font-semibold transition-all cursor-pointer active:scale-[0.98] shadow-md shadow-purple-600/20 mt-1"
- >
- {isVerifyingKey ? 'Verifying credentials...' : 'Unlock dashboard'}
- </button>
- </form>
+          <span className="text-[11px] uppercase tracking-[0.12em] text-stone-500 font-medium mb-1.5">
+            Stay In · Console
+          </span>
+          <h1 className="text-2xl font-medium tracking-tight text-[#1f1b16] mb-2">
+            Administrator Access
+          </h1>
+          <p className="text-[13px] text-stone-500 mb-6 leading-relaxed">
+            Enter your verified master security passkey to unlock platform controls.
+          </p>
 
- <button
- type="button"
- onClick={() => navigate('/explore')}
- className="mt-4 min-h-[44px] flex items-center justify-center px-4 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
- >
- ← Return to Explore
- </button>
- </motion.div>
- </div>
- );
- }
+          <form onSubmit={handleVerifyPasskey} className="w-full flex flex-col gap-3">
+            <label htmlFor="admin-passkey-input" className="sr-only">
+              Master Admin Passkey
+            </label>
+            <input
+              id="admin-passkey-input"
+              type="password"
+              value={passkeyInput}
+              onChange={(e) => {
+                setPasskeyInput(e.target.value);
+                setPasskeyError('');
+              }}
+              placeholder="Enter master passkey..."
+              className="w-full min-h-[48px] px-4 py-3 rounded-xl bg-[#f7f4ee]/70 border border-stone-200 text-[#1f1b16] placeholder-stone-400 text-sm focus:outline-none focus:border-[#1f1b16] focus:bg-white transition-all"
+              autoFocus
+            />
 
- return (
- <div className="relative min-h-screen bg-[#f7f4ee] text-slate-800 antialiased selection:bg-purple-500 selection:text-white transition-colors duration-200 font-sans overflow-x-hidden">
- {/* ── AMBIENT RADIANT MESH GLOW BACKGROUND ── */}
- <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
- {/* Top Center Radiant Glow */}
- <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[650px] sm:w-[900px] h-[450px] /15 blur-3xl rounded-full" />
- {/* Top Left Subtle Cyan/Blue Aura */}
- <div className="absolute top-1/4 -left-48 w-96 h-96 bg-blue-600/[0.07] blur-[120px] rounded-full" />
- {/* Bottom Right Soft Violet Aura */}
- <div className="absolute top-2/3 -right-48 w-96 h-96 bg-purple-600/[0.08] blur-[120px] rounded-full" />
- {/* Subtle Micro-Dot Matrix Overlay for Depth */}
- <div className="absolute inset-0 bg-[radial-gradient(#0000000d_1px,transparent_1px)] [background-size:24px_24px] opacity-60" />
- </div>
+            {passkeyError && (
+              <p className="text-[12px] text-rose-600 text-left px-1 font-medium" role="alert">
+                {passkeyError}
+              </p>
+            )}
 
- {/* ===================================================================== */}
- {/* FLOATING LIQUID GLASS ADMIN NAVBAR */}
- {/* ===================================================================== */}
- <header className="relative w-full select-none z-50">
- {/* 1. LEFT: Brand & Quick Navigation Capsules */}
- <div className="fixed top-3.5 left-3 sm:top-5 sm:left-6 z-50 flex items-center gap-2 select-none">
- <button
- type="button"
- onClick={() => navigate('/explore')}
- className="apple-liquid-nav flex items-center justify-center p-2 sm:px-3 sm:py-1.5 gap-2 rounded-full border border-slate-200/80 bg-white/70 shadow-xs cursor-pointer hover:scale-105 active:scale-95 transition-all duration-200 hover:border-purple-500/50 focus:outline-none focus:ring-0"
- title="Return to Explore Stays"
- aria-label="Stay In Brand Home"
- >
- <div className="w-5 h-5 rounded-full r text-white flex items-center justify-center transition-transform duration-200 hover:rotate-12 shrink-0 shadow-xs">
- <svg
- className="w-3.5 h-3.5"
- viewBox="0 0 24 24"
- fill="none"
- stroke="currentColor"
- strokeWidth="2.5"
- strokeLinecap="round"
- strokeLinejoin="round"
- >
- <circle cx="12" cy="12" r="10" />
- <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" />
- </svg>
- </div>
- <span className="hidden sm:inline tracking-tight font-normal text-[#1f1b16] text-xs sm:text-sm">
- Stay In
- </span>
- <span className="hidden md:inline-flex text-[10px] font-normal px-2 py-0.5 rounded-full text-purple-700 border border-purple-500/30">
- Admin
- </span>
- </button>
+            <button
+              type="submit"
+              disabled={isVerifyingKey || !passkeyInput.trim()}
+              className="w-full min-h-[48px] py-3 px-4 rounded-xl bg-[#1f1b16] hover:bg-[#0f766e] disabled:opacity-45 text-white text-sm font-medium transition-colors cursor-pointer active:scale-[0.99] mt-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f1b16]"
+            >
+              {isVerifyingKey ? 'Verifying credentials…' : 'Unlock Console'}
+            </button>
+          </form>
 
- {/* Database Records Pill */}
- <button
- type="button"
- onClick={() => navigate('/data')}
- className="apple-liquid-nav hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-full border border-slate-200/80 bg-white/70 text-xs font-normal text-slate-700 hover:border-purple-500/50 hover:text-purple-400 transition-all cursor-pointer shadow-xs active:scale-95"
- title="View Raw Database Records"
- >
- <svg className="w-3.5 h-3.5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
- <ellipse cx="12" cy="5" rx="9" ry="3" />
- <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
- <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
- </svg>
- <span>Database</span>
- </button>
- </div>
+          <button
+            type="button"
+            onClick={() => navigate('/explore')}
+            className="mt-5 min-h-[40px] inline-flex items-center justify-center gap-1.5 px-4 text-[13px] font-medium text-stone-500 hover:text-[#1f1b16] transition-colors cursor-pointer"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span>Return to Explore</span>
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
 
- {/* 2. CENTER: Segmented Admin Console Capsule (Users / Hosts / Subscriptions / UPI) */}
- <div className="fixed top-3.5 sm:top-5 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[calc(100vw-96px)] sm:max-w-none flex justify-center select-none">
- <LayoutGroup id="admin-segmented-nav-capsule">
- <nav className="apple-liquid-nav relative flex items-center p-1 sm:p-1.5 rounded-full border border-slate-200/80 bg-white/70 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
- {/* Users Tab */}
- <button
- type="button"
- onClick={() => {
- setActiveTab('users');
- setSearchQuery('');
- }}
- className={`relative z-10 px-3 sm:px-4 py-1.5 rounded-full text-sm cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none font-semibold min-h-[44px] transition-colors duration-150 ${
- activeTab === 'users'
- ? 'text-[#1f1b16]'
- : 'text-slate-600 hover:text-[#1f1b16]'
- }`}
- >
- {activeTab === 'users' && (
- <motion.div
- layoutId="admin-nav-pill-indicator"
- className="absolute inset-0 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-slate-200/80 z-0 pointer-events-none"
- transition={{
- type: 'spring',
- stiffness: 450,
- damping: 32,
- mass: 0.8,
- }}
- />
- )}
- <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'users' ? 'text-purple-600' : 'text-slate-400'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
- <path d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" strokeLinecap="round" strokeLinejoin="round" />
- </svg>
- <span className="relative z-10 tracking-tight font-normal">Users</span>
- <span
- className={`relative z-10 text-xs px-2 py-0.5 rounded-full font-bold leading-none transition-colors ${
- activeTab === 'users'
- ? 'bg-purple-500/15 text-purple-700'
- : 'bg-slate-200/80 text-slate-600'
- }`}
- >
- {users.length}
- </span>
- </button>
+  return (
+    <div className="relative min-h-screen w-full bg-white text-[#1f1b16] antialiased selection:bg-[#1f1b16] selection:text-white font-sans flex flex-col">
+      {/* ===================================================================== */}
+      {/* FULL-WIDTH STICKY ADMIN TOPBAR */}
+      {/* ===================================================================== */}
+      <header className="sticky top-0 z-40 w-full bg-[#faf8f4]/95 backdrop-blur-md border-b border-stone-200/80">
+        <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+          {/* LEFT: Brand & Database Shortcut */}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => navigate('/explore')}
+              className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-white border border-stone-200/90 hover:border-stone-300 transition-colors cursor-pointer active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f1b16]"
+              title="Return to Explore Stays"
+              aria-label="Stay In Brand Home"
+            >
+              <span className="w-6 h-6 rounded-full bg-[#1f1b16] text-white flex items-center justify-center shrink-0">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" />
+                  <polygon points="15.5 8.5 13.8 13.8 8.5 15.5 10.2 10.2 15.5 8.5" fill="currentColor" stroke="none" />
+                </svg>
+              </span>
+              <span className="hidden sm:inline text-[13px] font-medium tracking-tight text-[#1f1b16]">
+                Stay In
+              </span>
+              <span className="hidden md:inline-flex text-[10px] uppercase tracking-[0.08em] font-medium px-2 py-0.5 rounded-full bg-[#f7f4ee] text-stone-600 border border-stone-200/80">
+                Admin
+              </span>
+            </button>
 
- {/* Hosts Tab */}
- <button
- type="button"
- onClick={() => {
- setActiveTab('hosts');
- setSearchQuery('');
- }}
- className={`relative z-10 px-3 sm:px-4 py-1.5 rounded-full text-sm cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none font-semibold min-h-[44px] transition-colors duration-150 ${
- activeTab === 'hosts'
- ? 'text-[#1f1b16]'
- : 'text-slate-600 hover:text-[#1f1b16]'
- }`}
- >
- {activeTab === 'hosts' && (
- <motion.div
- layoutId="admin-nav-pill-indicator"
- className="absolute inset-0 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-slate-200/80 z-0 pointer-events-none"
- transition={{
- type: 'spring',
- stiffness: 450,
- damping: 32,
- mass: 0.8,
- }}
- />
- )}
- <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'hosts' ? 'text-purple-600' : 'text-slate-400'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
- <path d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" strokeLinecap="round" strokeLinejoin="round" />
- </svg>
- <span className="relative z-10 tracking-tight font-normal">Hosts</span>
- <span
- className={`relative z-10 text-xs px-2 py-0.5 rounded-full font-bold leading-none transition-colors ${
- activeTab === 'hosts'
- ? 'bg-purple-500/15 text-purple-700'
- : 'bg-slate-200/80 text-slate-600'
- }`}
- >
- {hosts.length}
- </span>
- </button>
+            <button
+              type="button"
+              onClick={() => navigate('/data')}
+              className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/70 hover:bg-white border border-stone-200/80 hover:border-stone-300 text-[12px] font-medium text-stone-600 hover:text-[#1f1b16] transition-colors cursor-pointer active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f1b16]"
+              title="View Stays Database"
+            >
+              <svg className="w-3.5 h-3.5 text-stone-500" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                <ellipse cx="12" cy="5" rx="9" ry="3" />
+                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+              </svg>
+              <span>Database</span>
+            </button>
+          </div>
 
- {/* Subscriptions Tab */}
- <button
- type="button"
- onClick={() => {
- setActiveTab('subscriptions');
- setSearchQuery('');
- }}
- className={`relative z-10 px-3 sm:px-4 py-1.5 rounded-full text-sm cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none font-semibold min-h-[44px] transition-colors duration-150 ${
- activeTab === 'subscriptions'
- ? 'text-[#1f1b16]'
- : 'text-slate-600 hover:text-[#1f1b16]'
- }`}
- >
- {activeTab === 'subscriptions' && (
- <motion.div
- layoutId="admin-nav-pill-indicator"
- className="absolute inset-0 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-slate-200/80 z-0 pointer-events-none"
- transition={{
- type: 'spring',
- stiffness: 450,
- damping: 32,
- mass: 0.8,
- }}
- />
- )}
- <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'subscriptions' ? 'text-purple-600' : 'text-slate-400'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
- <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
- </svg>
- <span className="relative z-10 tracking-tight font-normal">Subscriptions</span>
- {subscriptionCounts.pending > 0 ? (
- <span className="relative z-10 text-xs px-2 py-0.5 rounded-full font-bold leading-none bg-amber-500 text-[#1f1b16] ">
- {subscriptionCounts.pending}
- </span>
- ) : (
- <span
- className={`relative z-10 text-xs px-2 py-0.5 rounded-full font-bold leading-none transition-colors ${
- activeTab === 'subscriptions'
- ? 'bg-purple-500/15 text-purple-700'
- : 'bg-slate-200/80 text-slate-600'
- }`}
- >
- {subscriptions.length}
- </span>
- )}
- </button>
+          {/* CENTER: Segmented Tab Switcher (Desktop) */}
+          <div className="hidden md:flex items-center justify-center min-w-0">
+            <LayoutGroup id="admin-segmented-nav-capsule">
+              <div
+                role="tablist"
+                aria-label="Admin sections"
+                className="relative flex items-center p-1 rounded-full bg-stone-200/60 border border-stone-200/90"
+              >
+                {adminTabs.map((tab, idx) => {
+                  const isSelected = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      id={`admin-tab-${tab.id}`}
+                      type="button"
+                      role="tab"
+                      aria-selected={isSelected}
+                      tabIndex={isSelected ? 0 : -1}
+                      onKeyDown={(e) => handleTabKeyDown(e, idx)}
+                      onClick={() => {
+                        setActiveTab(tab.id);
+                        setSearchQuery('');
+                      }}
+                      className={`relative z-10 px-3.5 py-1.5 rounded-full text-[13px] cursor-pointer flex items-center gap-1.5 select-none whitespace-nowrap transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f1b16] ${
+                        isSelected
+                          ? 'text-[#1f1b16] font-medium'
+                          : 'text-stone-600 hover:text-[#1f1b16] font-normal'
+                      }`}
+                    >
+                      {isSelected && (
+                        <motion.span
+                          layoutId="admin-nav-pill-indicator"
+                          className="absolute inset-0 rounded-full bg-white shadow-xs border border-stone-200/90 z-0 pointer-events-none"
+                          transition={{ type: 'spring', stiffness: 450, damping: 35, mass: 0.7 }}
+                        />
+                      )}
+                      <span className={`relative z-10 transition-colors ${isSelected ? 'text-[#0f766e]' : 'text-stone-400'}`}>
+                        {tab.icon}
+                      </span>
+                      <span className="relative z-10 tracking-tight">{tab.label}</span>
+                      {tab.count !== null && (
+                        <span
+                          className={`relative z-10 text-[11px] px-1.5 py-0.5 rounded-full font-medium tabular-nums leading-none transition-colors ${
+                            tab.isAlert
+                              ? 'bg-amber-500 text-white'
+                              : isSelected
+                              ? 'bg-[#f7f4ee] text-[#1f1b16] border border-stone-200/80'
+                              : 'bg-stone-200/70 text-stone-600'
+                          }`}
+                        >
+                          {tab.count}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </LayoutGroup>
+          </div>
 
- {/* UPI Settings Tab (With layoutId spring pill) */}
- <button
- type="button"
- onClick={() => {
- setActiveTab('upi');
- setSearchQuery('');
- }}
- className={`relative z-10 px-3 sm:px-4 py-1.5 rounded-full text-sm cursor-pointer flex items-center gap-1.5 sm:gap-2 select-none font-semibold min-h-[44px] transition-colors duration-150 ${
- activeTab === 'upi'
- ? 'text-[#1f1b16]'
- : 'text-slate-600 hover:text-[#1f1b16]'
- }`}
- >
- {activeTab === 'upi' && (
- <motion.div
- layoutId="admin-nav-pill-indicator"
- className="absolute inset-0 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-slate-200/80 z-0 pointer-events-none"
- transition={{
- type: 'spring',
- stiffness: 450,
- damping: 32,
- mass: 0.8,
- }}
- />
- )}
- <svg className={`relative z-10 w-3.5 h-3.5 transition-colors ${activeTab === 'upi' ? 'text-purple-600' : 'text-slate-400'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
- <rect x="2" y="5" width="20" height="14" rx="2" />
- <line x1="2" y1="10" x2="22" y2="10" />
- </svg>
- <span className="relative z-10 tracking-tight font-normal">UPI Settings</span>
- </button>
- </nav>
- </LayoutGroup>
- </div>
+          {/* RIGHT: Explore & Lock Actions */}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => navigate('/explore')}
+              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white hover:bg-[#1f1b16] text-[#1f1b16] hover:text-white border border-stone-200/90 hover:border-[#1f1b16] text-[12px] font-medium transition-colors cursor-pointer select-none active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f1b16]"
+              title="Return to User Explore Stays"
+            >
+              <span>Explore Stays</span>
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M7 17L17 7M7 7h10v10" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
 
- {/* 3. RIGHT: Actions & Profile Cluster */}
- <div className="fixed top-3.5 right-3 sm:top-5 sm:right-6 z-50 flex items-center gap-1.5 sm:gap-2.5">
- {/* Explore Stays Switcher Button */}
- <button
- type="button"
- onClick={() => navigate('/explore')}
- className="apple-liquid-nav hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-full bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 border border-purple-500/30 text-xs font-normal transition-all shadow-xs cursor-pointer select-none active:scale-95"
- title="Return to User Explore Stays"
- >
- <span></span>
- <span>Explore Stays</span>
- </button>
+            <button
+              type="button"
+              onClick={() => {
+                adminAPI.setAdminKey(null);
+                setIsAdminAuthorized(false);
+                toast.info('Admin console locked');
+              }}
+              className="relative w-9 h-9 rounded-full bg-[#1f1b16] hover:bg-[#0f766e] text-white font-medium text-[12px] flex items-center justify-center cursor-pointer active:scale-95 transition-colors select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f1b16]"
+              title="Lock Administrator Console"
+              aria-label="Lock Admin Console"
+            >
+              <span>{user?.name ? user.name.slice(0, 2).toUpperCase() : 'AD'}</span>
+              <span
+                className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-white text-[#1f1b16] border border-stone-300 flex items-center justify-center"
+                aria-hidden="true"
+              >
+                <svg className="w-2 h-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <rect x="3" y="11" width="18" height="11" rx="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              </span>
+            </button>
+          </div>
+        </div>
 
- 
- {/* Admin Avatar & Lock Button */}
- <button
- type="button"
- onClick={() => {
- adminAPI.setAdminKey(null);
- setIsAdminAuthorized(false);
- toast.info('Admin console locked');
- }}
- className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full r text-white font-normal text-xs sm:text-sm shadow-xs border border-purple-400/30 flex items-center justify-center cursor-pointer active:scale-95 transition-all select-none group"
- title="Lock Administrator Console (Click to lock)"
- aria-label="Lock Admin Console"
- >
- <span>{user?.name ? user.name.slice(0, 2).toUpperCase() : 'AD'}</span>
- <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-purple-400 text-[#1f1b16] font-normal flex items-center justify-center text-[7px] border-2 border-white shadow-xs">
- 
- </span>
- </button>
- </div>
- </header>
+        {/* MOBILE TAB BAR (Single scrollable row, zero wrapping or overlap) */}
+        <div className="md:hidden border-t border-stone-200/70 bg-[#f7f4ee]/95 px-4 py-2 overflow-x-auto no-scrollbar">
+          <div role="tablist" aria-label="Admin sections mobile" className="flex items-center gap-1.5 w-max">
+            {adminTabs.map((tab, idx) => {
+              const isSelected = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isSelected}
+                  onKeyDown={(e) => handleTabKeyDown(e, idx)}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    setSearchQuery('');
+                  }}
+                  className={`flex-none px-3 py-1.5 rounded-full text-[12px] flex items-center gap-1.5 whitespace-nowrap transition-colors cursor-pointer ${
+                    isSelected
+                      ? 'bg-[#1f1b16] text-white font-medium'
+                      : 'bg-white text-stone-600 border border-stone-200/80 font-normal'
+                  }`}
+                >
+                  {tab.icon}
+                  <span>{tab.label}</span>
+                  {tab.count !== null && (
+                    <span
+                      className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium tabular-nums leading-none ${
+                        tab.isAlert
+                          ? 'bg-amber-500 text-white'
+                          : isSelected
+                          ? 'bg-white/20 text-white'
+                          : 'bg-stone-100 text-stone-600'
+                      }`}
+                    >
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </header>
 
- {/* BEGIN: MainContent */}
- <main className="flex-1 w-full mx-auto px-3 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-8 flex flex-col gap-5">
- {/* 1. UPI Tab Panel */}
- <div className={activeTab === 'upi' ? 'block w-full' : 'hidden'}>
- <PlatformPaymentSettingsPage />
- </div>
+      {/* BEGIN: MainContent */}
+      <main className="relative z-10 w-full flex-1 flex flex-col">
+        {/* Clean Full-Width Editorial Section Heading */}
+        <div className="w-full px-4 sm:px-6 lg:px-8 pt-6 pb-4 border-b border-stone-200/80 flex flex-col sm:flex-row sm:items-end justify-between gap-2 bg-white">
+          <div>
+            <h1 className="text-2xl sm:text-[26px] font-medium tracking-tight text-[#1f1b16] leading-tight">
+              {sectionMeta.title}
+            </h1>
+            <p className="text-[13px] text-stone-500 mt-0.5">
+              {sectionMeta.subtitle}
+            </p>
+          </div>
 
- {/* 2. Users Tab Panel */}
- <div className={activeTab === 'users' ? 'block space-y-5 w-full' : 'hidden'}>
- {/* BEGIN: FilterAndSearchToolbar */}
- <section className="bg-white/80 rounded-3xl border border-slate-200/80 shadow-xl p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4" data-purpose="toolbar">
- <div className="flex items-center flex-wrap gap-2">
- {/* Online Users Button */}
- <button
- type="button"
- onClick={() => {
- setUserSubTab('online');
- setSearchQuery('');
- }}
- className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-normal transition-all shadow-xs active:scale-95 cursor-pointer ${
- userSubTab === 'online'
- ? 'bg-emerald-500/15 text-emerald-700 border border-emerald-500/40 ring-1 ring-emerald-500/20'
- : 'text-slate-600 bg-white/60 border border-slate-200/80 hover:bg-slate-100 hover:text-[#1f1b16]'
- }`}
- >
- <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-400/50 " />
- <span>Online Users</span>
- <span className={`px-2 py-0.5 rounded-lg text-[10.5px] font-normal border ${
- userSubTab === 'online'
- ? 'bg-white text-emerald-800 border-emerald-500/30'
- : 'bg-slate-100 text-slate-700 border-transparent'
- }`}>
- {onlineUsersList.length}
- </span>
- </button>
+          <div className="hidden sm:flex items-center gap-2 text-[12px] text-stone-500">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#faf8f4] border border-stone-200/80">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+              <span>Live sync</span>
+            </span>
+          </div>
+        </div>
 
- {/* Offline Users Button */}
- <button
- type="button"
- onClick={() => {
- setUserSubTab('offline');
- setSearchQuery('');
- }}
- className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-normal transition-all shadow-xs active:scale-95 cursor-pointer ${
- userSubTab === 'offline'
- ? 'bg-amber-500/15 text-amber-700 border border-amber-500/40 ring-1 ring-amber-500/20'
- : 'text-slate-600 bg-white/60 border border-slate-200/80 hover:bg-slate-100 hover:text-[#1f1b16]'
- }`}
- >
- <span className="w-2 h-2 rounded-full bg-amber-500 ring-2 ring-amber-400/50" />
- <span>Offline Users</span>
- <span className={`px-2 py-0.5 rounded-lg text-[10.5px] font-normal border ${
- userSubTab === 'offline'
- ? 'bg-white text-amber-800 border-amber-500/30'
- : 'bg-slate-100 text-slate-700 border-transparent'
- }`}>
- {offlineUsersList.length}
- </span>
- </button>
+        {/* 1. UPI Tab Panel */}
+        <div
+          role="tabpanel"
+          aria-labelledby="admin-tab-upi"
+          hidden={activeTab !== 'upi'}
+          className={activeTab === 'upi' ? 'block w-full' : 'hidden'}
+        >
+          <PlatformPaymentSettingsPage />
+        </div>
 
- {/* All Accounts Button */}
- <button
- type="button"
- onClick={() => {
- setUserSubTab('all');
- setSearchQuery('');
- }}
- className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-normal transition-all shadow-xs active:scale-95 cursor-pointer ${
- userSubTab === 'all'
- ? 'bg-purple-500/15 text-purple-700 border border-purple-500/40 ring-1 ring-purple-500/20'
- : 'text-slate-600 bg-white/60 border border-slate-200/80 hover:bg-slate-100 hover:text-[#1f1b16]'
- }`}
- >
- <span>All Accounts</span>
- <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-lg text-[10.5px] font-normal">
- {users.length}
- </span>
- </button>
- </div>
+        {/* 2. Users Tab Panel */}
+        <div
+          role="tabpanel"
+          aria-labelledby="admin-tab-users"
+          hidden={activeTab !== 'users'}
+          className={activeTab === 'users' ? 'block w-full' : 'hidden'}
+        >
+          {/* BEGIN: FilterAndSearchToolbar */}
+          <section className="w-full bg-white border-b border-stone-200/80 px-4 sm:px-6 lg:px-8 py-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3" data-purpose="toolbar">
+            <div className="flex items-center flex-wrap gap-1.5 p-1 rounded-xl bg-[#f7f4ee] border border-stone-200/70 w-fit">
+              {/* Online Users Button */}
+              <button
+                type="button"
+                aria-pressed={userSubTab === 'online'}
+                onClick={() => {
+                  setUserSubTab('online');
+                  setSearchQuery('');
+                }}
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] transition-all cursor-pointer ${
+                  userSubTab === 'online'
+                    ? 'bg-white text-[#1f1b16] font-medium shadow-2xs border border-stone-200/80'
+                    : 'text-stone-600 hover:text-[#1f1b16] font-normal border border-transparent'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+                <span>Online Users</span>
+                <span className={`px-1.5 py-0.5 rounded-md text-[11px] tabular-nums leading-none ${
+                  userSubTab === 'online'
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : 'bg-stone-200/60 text-stone-600'
+                }`}>
+                  {onlineUsersList.length}
+                </span>
+              </button>
 
- {/* Search, Filter & Export */}
- <div className="flex items-center gap-2.5 flex-1 max-w-lg lg:justify-end">
- <div className="relative w-full max-w-md group">
- <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-purple-500 transition-colors">
- <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
- <circle cx="11" cy="11" r="8" />
- <line x1="21" y1="21" x2="16.65" y2="16.65" />
- </svg>
- </div>
- <input
- type="search"
- value={searchQuery}
- onChange={(e) => setSearchQuery(e.target.value)}
- placeholder={
- userSubTab === 'online'
- ? 'Search online name, email, or phone...'
- : userSubTab === 'offline'
- ? 'Search offline guest, phone, stay...'
- : 'Search all users...'
- }
- className="w-full pl-9 pr-7 py-2 text-xs font-normal bg-[#f7f4ee]/80 border border-slate-200/90 focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 text-[#1f1b16] rounded-xl focus:outline-none transition-all placeholder:text-slate-400 shadow-inner"
- />
- {searchQuery && (
- <button
- type="button"
- onClick={() => setSearchQuery('')}
- className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 cursor-pointer"
- >
- 
- </button>
- )}
- </div>
+              {/* Offline Users Button */}
+              <button
+                type="button"
+                aria-pressed={userSubTab === 'offline'}
+                onClick={() => {
+                  setUserSubTab('offline');
+                  setSearchQuery('');
+                }}
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] transition-all cursor-pointer ${
+                  userSubTab === 'offline'
+                    ? 'bg-white text-[#1f1b16] font-medium shadow-2xs border border-stone-200/80'
+                    : 'text-stone-600 hover:text-[#1f1b16] font-normal border border-transparent'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
+                <span>Offline Guests</span>
+                <span className={`px-1.5 py-0.5 rounded-md text-[11px] tabular-nums leading-none ${
+                  userSubTab === 'offline'
+                    ? 'bg-amber-50 text-amber-700'
+                    : 'bg-stone-200/60 text-stone-600'
+                }`}>
+                  {offlineUsersList.length}
+                </span>
+              </button>
 
- <div className="relative">
- <button
- type="button"
- onClick={() => setShowFilterMenu((prev) => !prev)}
- className="p-2 rounded-xl text-slate-600 hover:text-[#1f1b16] bg-[#f7f4ee]/80 border border-slate-200/90 shadow-xs hover:border-purple-500/40 transition-all shrink-0 cursor-pointer active:scale-95"
- title="Apply Custom Filters"
- >
- <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
- <path d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" strokeLinecap="round" strokeLinejoin="round" />
- </svg>
- </button>
+              {/* All Accounts Button */}
+              <button
+                type="button"
+                aria-pressed={userSubTab === 'all'}
+                onClick={() => {
+                  setUserSubTab('all');
+                  setSearchQuery('');
+                }}
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] transition-all cursor-pointer ${
+                  userSubTab === 'all'
+                    ? 'bg-white text-[#1f1b16] font-medium shadow-2xs border border-stone-200/80'
+                    : 'text-stone-600 hover:text-[#1f1b16] font-normal border border-transparent'
+                }`}
+              >
+                <span>All Accounts</span>
+                <span className={`px-1.5 py-0.5 rounded-md text-[11px] tabular-nums leading-none ${
+                  userSubTab === 'all'
+                    ? 'bg-stone-100 text-[#1f1b16]'
+                    : 'bg-stone-200/60 text-stone-600'
+                }`}>
+                  {users.length}
+                </span>
+              </button>
+            </div>
 
- <AnimatePresence>
- {showFilterMenu && (
- <motion.div
- initial={{ opacity: 0, y: 5 }}
- animate={{ opacity: 1, y: 0 }}
- exit={{ opacity: 0, y: 5 }}
- className="absolute right-0 mt-2 w-48 bg-white/95 rounded-2xl shadow-2xl border border-slate-200/80 py-2 z-50 text-xs "
- >
- <div className="px-3.5 py-1 font-normal text-slate-400 text-xs">Sort by</div>
- <button
- type="button"
- onClick={() => { setSortBy('newest'); setShowFilterMenu(false); }}
- className={`w-full text-left px-3.5 py-2 hover:bg-slate-100 flex items-center justify-between cursor-pointer ${
- sortBy === 'newest' ? 'font-normal text-purple-600' : 'text-slate-700'
- }`}
- >
- <span>Newest First</span>
- {sortBy === 'newest' && <span></span>}
- </button>
- <button
- type="button"
- onClick={() => { setSortBy('oldest'); setShowFilterMenu(false); }}
- className={`w-full text-left px-3.5 py-2 hover:bg-slate-100 flex items-center justify-between cursor-pointer ${
- sortBy === 'oldest' ? 'font-normal text-purple-600' : 'text-slate-700'
- }`}
- >
- <span>Oldest First</span>
- {sortBy === 'oldest' && <span></span>}
- </button>
- <button
- type="button"
- onClick={() => { setSortBy('name_asc'); setShowFilterMenu(false); }}
- className={`w-full text-left px-3.5 py-2 hover:bg-slate-100 flex items-center justify-between cursor-pointer ${
- sortBy === 'name_asc' ? 'font-normal text-purple-600' : 'text-slate-700'
- }`}
- >
- <span>Name (A - Z)</span>
- {sortBy === 'name_asc' && <span></span>}
- </button>
- <button
- type="button"
- onClick={() => { setSortBy('name_desc'); setShowFilterMenu(false); }}
- className={`w-full text-left px-3.5 py-2 hover:bg-slate-100 flex items-center justify-between cursor-pointer ${
- sortBy === 'name_desc' ? 'font-normal text-purple-600' : 'text-slate-700'
- }`}
- >
- <span>Name (Z - A)</span>
- {sortBy === 'name_desc' && <span></span>}
- </button>
- </motion.div>
- )}
- </AnimatePresence>
- </div>
+            {/* Search, Filter & Export */}
+            <div className="flex items-center gap-2 flex-1 max-w-lg lg:justify-end">
+              <div className="relative w-full max-w-sm group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400 group-focus-within:text-[#1f1b16] transition-colors">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                </div>
+                <label htmlFor="admin-users-search" className="sr-only">
+                  Search users
+                </label>
+                <input
+                  id="admin-users-search"
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={
+                    userSubTab === 'online'
+                      ? 'Search name, email, or phone…'
+                      : userSubTab === 'offline'
+                      ? 'Search guest, phone, or stay…'
+                      : 'Search all accounts…'
+                  }
+                  className="w-full pl-8.5 pr-8 py-2 text-[13px] bg-[#f7f4ee]/65 border border-stone-200 focus:border-[#1f1b16] focus:bg-white text-[#1f1b16] rounded-xl focus:outline-none transition-colors placeholder:text-stone-400"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    aria-label="Clear search"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center text-stone-400 hover:text-[#1f1b16] hover:bg-stone-200/60 cursor-pointer transition-colors"
+                  >
+                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                )}
+              </div>
 
- <button
- type="button"
- onClick={() => handleExportCSV(filteredUsers, 'stayin-users.csv')}
- className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-normal text-slate-700 bg-[#f7f4ee]/80 hover:bg-slate-100 border border-slate-200/90 shadow-xs hover:border-purple-500/40 transition-all shrink-0 active:scale-95 cursor-pointer"
- title="Export as CSV"
- >
- <svg className="w-3.5 h-3.5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
- <path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" strokeLinecap="round" strokeLinejoin="round" />
- </svg>
- <span>Export</span>
- </button>
- </div>
- </section>
- {/* END: FilterAndSearchToolbar */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowFilterMenu((prev) => !prev)}
+                  aria-expanded={showFilterMenu}
+                  aria-haspopup="menu"
+                  aria-label="Sort users"
+                  className={`p-2 rounded-xl border transition-colors shrink-0 cursor-pointer active:scale-95 ${
+                    showFilterMenu
+                      ? 'bg-[#1f1b16] text-white border-[#1f1b16]'
+                      : 'text-stone-600 hover:text-[#1f1b16] bg-[#f7f4ee]/65 border-stone-200 hover:border-stone-300'
+                  }`}
+                  title="Sort options"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
 
- {/* BEGIN: UsersTableContainer */}
- <AdminUsersTable
- users={filteredUsers}
- loading={loading}
- isOfflineView={userSubTab === 'offline'}
- formatDateTime={formatDateTime}
- onOpenUserPortal={handleOpenUserPortal}
- onDeleteUser={handleDeleteUser}
- deletingUserId={deletingUserId}
- confirmDeleteUserId={confirmDeleteUserId}
- setConfirmDeleteUserId={setConfirmDeleteUserId}
- />
- {/* END: UsersTableContainer */}
- </div>
+                <AnimatePresence>
+                  {showFilterMenu && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setShowFilterMenu(false)}
+                        aria-hidden="true"
+                      />
+                      <motion.div
+                        role="menu"
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 4 }}
+                        transition={{ duration: 0.14 }}
+                        className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-stone-200/90 py-1.5 z-50 text-[13px]"
+                      >
+                        <div className="px-3.5 py-1 text-[11px] uppercase tracking-wider text-stone-400 font-medium">
+                          Sort by
+                        </div>
+                        {[
+                          { key: 'newest', label: 'Newest First' },
+                          { key: 'oldest', label: 'Oldest First' },
+                          { key: 'name_asc', label: 'Name (A – Z)' },
+                          { key: 'name_desc', label: 'Name (Z – A)' },
+                        ].map((opt) => (
+                          <button
+                            key={opt.key}
+                            type="button"
+                            role="menuitemradio"
+                            aria-checked={sortBy === opt.key}
+                            onClick={() => {
+                              setSortBy(opt.key);
+                              setShowFilterMenu(false);
+                            }}
+                            className={`w-full text-left px-3.5 py-2 hover:bg-[#f7f4ee] flex items-center justify-between cursor-pointer transition-colors ${
+                              sortBy === opt.key ? 'font-medium text-[#0f766e]' : 'text-stone-700'
+                            }`}
+                          >
+                            <span>{opt.label}</span>
+                            {sortBy === opt.key && (
+                              <svg className="w-3.5 h-3.5 text-[#0f766e]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            )}
+                          </button>
+                        ))}
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
 
- {/* 3. Hosts Tab Panel */}
- {/* 3. Hosts Tab Panel */}
- <div className={activeTab === 'hosts' ? 'block space-y-4 w-full' : 'hidden'}>
- {/* Toolbar for Hosts */}
- <section className="bg-white/80 rounded-3xl border border-slate-200/80 shadow-xl p-3.5 sm:p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 relative overflow-hidden">
- <div className="flex items-center gap-3">
- <div className="text-xs text-slate-600 font-normal">
- Showing <span className="text-[#1f1b16] font-medium">{filteredHosts.length}</span> of <span className="text-[#1f1b16] font-medium">{hosts.length}</span> property hosts
- </div>
+              <button
+                type="button"
+                onClick={() => handleExportCSV(filteredUsers, 'stayin-users.csv')}
+                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-medium text-[#1f1b16] bg-[#f7f4ee]/65 hover:bg-stone-100 border border-stone-200 hover:border-stone-300 transition-colors shrink-0 active:scale-95 cursor-pointer"
+                title="Export as CSV"
+              >
+                <svg className="w-3.5 h-3.5 text-stone-500" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>Export</span>
+              </button>
+            </div>
+          </section>
+          {/* END: FilterAndSearchToolbar */}
 
- {selectedHostIds.length > 0 && (
- <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-500/15 text-purple-700 border border-purple-500/30 ">
- <span>{selectedHostIds.length} selected</span>
- </span>
- )}
- </div>
+          {/* BEGIN: UsersTableContainer */}
+          <AdminUsersTable
+            users={filteredUsers}
+            loading={loading}
+            isOfflineView={userSubTab === 'offline'}
+            formatDateTime={formatDateTime}
+            onOpenUserPortal={handleOpenUserPortal}
+            onDeleteUser={handleDeleteUser}
+            deletingUserId={deletingUserId}
+            confirmDeleteUserId={confirmDeleteUserId}
+            setConfirmDeleteUserId={setConfirmDeleteUserId}
+          />
+          {/* END: UsersTableContainer */}
+        </div>
 
- {/* Center Filter Segment: All / Approved / Pending */}
- <div className="flex items-center justify-center p-1 rounded-2xl bg-slate-100/90 border border-slate-200/90 shadow-inner self-center">
- <button
- type="button"
- onClick={() => setHostStatusFilter('all')}
- className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer select-none ${
- hostStatusFilter === 'all'
- ? 'bg-white text-[#1f1b16] shadow-xs'
- : 'text-slate-600 hover:text-[#1f1b16]'
- }`}
- >
- <span>All</span>
- <span className={`px-1.5 py-0.2 text-[10.5px] rounded-md font-mono ${
- hostStatusFilter === 'all'
- ? 'bg-slate-100 text-slate-800'
- : 'bg-slate-200/60 text-slate-500'
- }`}>
- {hosts.length}
- </span>
- </button>
+        {/* 3. Hosts Tab Panel */}
+        <div
+          role="tabpanel"
+          aria-labelledby="admin-tab-hosts"
+          hidden={activeTab !== 'hosts'}
+          className={activeTab === 'hosts' ? 'block w-full' : 'hidden'}
+        >
+          {/* Toolbar for Hosts */}
+          <section className="w-full bg-white border-b border-stone-200/80 px-4 sm:px-6 lg:px-8 py-3 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+            <div className="flex items-center flex-wrap gap-3">
+              {/* Filter Segment: All / Approved / Pending */}
+              <div className="flex items-center p-1 rounded-xl bg-[#f7f4ee] border border-stone-200/70">
+                <button
+                  type="button"
+                  aria-pressed={hostStatusFilter === 'all'}
+                  onClick={() => setHostStatusFilter('all')}
+                  className={`px-3 py-1.5 rounded-lg text-[12px] transition-all flex items-center gap-1.5 cursor-pointer select-none ${
+                    hostStatusFilter === 'all'
+                      ? 'bg-white text-[#1f1b16] font-medium shadow-2xs border border-stone-200/80'
+                      : 'text-stone-600 hover:text-[#1f1b16] border border-transparent'
+                  }`}
+                >
+                  <span>All</span>
+                  <span className="px-1.5 py-0.5 text-[11px] rounded-md bg-stone-200/60 text-stone-700 tabular-nums leading-none">
+                    {hosts.length}
+                  </span>
+                </button>
 
- <button
- type="button"
- onClick={() => setHostStatusFilter('approved')}
- className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer select-none ${
- hostStatusFilter === 'approved'
- ? 'bg-emerald-500/15 text-emerald-700 border border-emerald-500/30 shadow-xs font-semibold'
- : 'text-slate-600 hover:text-emerald-600'
- }`}
- >
- <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
- <span>Approved</span>
- <span className={`px-1.5 py-0.2 text-[10.5px] rounded-md font-mono ${
- hostStatusFilter === 'approved'
- ? 'bg-emerald-500/20 text-emerald-700 font-medium'
- : 'bg-slate-200/60 text-slate-500'
- }`}>
- {approvedHostsCount}
- </span>
- </button>
+                <button
+                  type="button"
+                  aria-pressed={hostStatusFilter === 'approved'}
+                  onClick={() => setHostStatusFilter('approved')}
+                  className={`px-3 py-1.5 rounded-lg text-[12px] transition-all flex items-center gap-1.5 cursor-pointer select-none ${
+                    hostStatusFilter === 'approved'
+                      ? 'bg-white text-[#1f1b16] font-medium shadow-2xs border border-stone-200/80'
+                      : 'text-stone-600 hover:text-[#1f1b16] border border-transparent'
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" aria-hidden="true" />
+                  <span>Approved</span>
+                  <span className={`px-1.5 py-0.5 text-[11px] rounded-md tabular-nums leading-none ${
+                    hostStatusFilter === 'approved'
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : 'bg-stone-200/60 text-stone-600'
+                  }`}>
+                    {approvedHostsCount}
+                  </span>
+                </button>
 
- <button
- type="button"
- onClick={() => setHostStatusFilter('pending')}
- className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer select-none ${
- hostStatusFilter === 'pending'
- ? 'bg-amber-500/15 text-amber-700 border border-amber-500/30 shadow-xs font-semibold'
- : 'text-slate-600 hover:text-amber-600'
- }`}
- >
- <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0 " />
- <span>Pending</span>
- <span className={`px-1.5 py-0.2 text-[10.5px] rounded-md font-mono ${
- hostStatusFilter === 'pending'
- ? 'bg-amber-500/20 text-amber-700 font-medium'
- : 'bg-slate-200/60 text-slate-500'
- }`}>
- {pendingHostsCount}
- </span>
- </button>
- </div>
+                <button
+                  type="button"
+                  aria-pressed={hostStatusFilter === 'pending'}
+                  onClick={() => setHostStatusFilter('pending')}
+                  className={`px-3 py-1.5 rounded-lg text-[12px] transition-all flex items-center gap-1.5 cursor-pointer select-none ${
+                    hostStatusFilter === 'pending'
+                      ? 'bg-white text-[#1f1b16] font-medium shadow-2xs border border-stone-200/80'
+                      : 'text-stone-600 hover:text-[#1f1b16] border border-transparent'
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" aria-hidden="true" />
+                  <span>Pending</span>
+                  <span className={`px-1.5 py-0.5 text-[11px] rounded-md tabular-nums leading-none ${
+                    hostStatusFilter === 'pending'
+                      ? 'bg-amber-50 text-amber-700'
+                      : 'bg-stone-200/60 text-stone-600'
+                  }`}>
+                    {pendingHostsCount}
+                  </span>
+                </button>
+              </div>
 
- {/* Right: Multi-select Action (when selected) + Search + Export */}
- <div className="flex items-center gap-2.5 flex-wrap justify-end">
- {selectedHostIds.length > 0 && (
- <div className="flex items-center gap-1.5 animate-fadeIn">
- <button
- type="button"
- onClick={handleBulkApproveHosts}
- disabled={isBulkApproving}
- className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-[#0f766e] hover:bg-[#115e59] text-white shadow-md shadow-emerald-600/20 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
- title={`Approve all ${selectedHostIds.length} selected hosts`}
- >
- {isBulkApproving ? (
- <>
- <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
- <span>Approving...</span>
- </>
- ) : (
- <>
- <svg className="w-3.5 h-3.5 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
- <polyline points="20 6 9 17 4 12" />
- </svg>
- <span>Approve all ({selectedHostIds.length})</span>
- </>
- )}
- </button>
+              <span className="text-[12px] text-stone-500">
+                <span className="text-[#1f1b16] font-medium tabular-nums">{filteredHosts.length}</span> of{' '}
+                <span className="text-[#1f1b16] font-medium tabular-nums">{hosts.length}</span> hosts
+              </span>
+            </div>
 
- <button
- type="button"
- onClick={handleClearHostSelection}
- className="px-2 py-2 text-xs text-slate-500 hover:text-slate-700 transition-colors cursor-pointer"
- title="Clear selection"
- >
- Clear
- </button>
- </div>
- )}
+            {/* Right: Multi-select Action + Search + Export */}
+            <div className="flex items-center gap-2 flex-wrap justify-end">
+              {selectedHostIds.length > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={handleBulkApproveHosts}
+                    disabled={isBulkApproving}
+                    className="px-3.5 py-2 rounded-xl text-[12px] font-medium bg-[#0f766e] hover:bg-[#115e59] text-white active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    title={`Approve all ${selectedHostIds.length} selected hosts`}
+                  >
+                    {isBulkApproving ? (
+                      <>
+                        <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Approving…</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-3.5 h-3.5 stroke-[2.2]" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        <span>Approve ({selectedHostIds.length})</span>
+                      </>
+                    )}
+                  </button>
 
- <div className="relative w-full sm:w-64 group">
- <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-purple-500 transition-colors">
- <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
- <circle cx="11" cy="11" r="8" />
- <line x1="21" y1="21" x2="16.65" y2="16.65" />
- </svg>
- </div>
- <input
- type="search"
- value={searchQuery}
- onChange={(e) => setSearchQuery(e.target.value)}
- placeholder="Search host, property, status..."
- className="w-full pl-9 pr-7 py-2 text-xs font-normal bg-[#f7f4ee]/80 border border-slate-200/90 focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 text-[#1f1b16] rounded-xl focus:outline-none transition-all placeholder:text-slate-400 shadow-inner"
- />
- {searchQuery && (
- <button
- type="button"
- onClick={() => setSearchQuery('')}
- className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 cursor-pointer"
- >
- 
- </button>
- )}
- </div>
+                  <button
+                    type="button"
+                    onClick={handleClearHostSelection}
+                    className="px-2.5 py-2 text-[12px] text-stone-500 hover:text-[#1f1b16] transition-colors cursor-pointer"
+                    title="Clear selection"
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
 
- <button
- type="button"
- onClick={() => handleExportCSV(filteredHosts, 'stayin-hosts.csv')}
- className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-normal text-slate-700 bg-[#f7f4ee]/80 hover:bg-slate-100 border border-slate-200/90 shadow-xs hover:border-purple-500/40 transition-all shrink-0 active:scale-95 cursor-pointer"
- title="Export Hosts as CSV"
- >
- <svg className="w-3.5 h-3.5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
- <path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" strokeLinecap="round" strokeLinejoin="round" />
- </svg>
- <span>Export</span>
- </button>
- </div>
- </section>
+              <div className="relative w-full sm:w-64 group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400 group-focus-within:text-[#1f1b16] transition-colors">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                </div>
+                <label htmlFor="admin-hosts-search" className="sr-only">
+                  Search hosts
+                </label>
+                <input
+                  id="admin-hosts-search"
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search host, property, status…"
+                  className="w-full pl-8.5 pr-8 py-2 text-[13px] bg-[#f7f4ee]/65 border border-stone-200 focus:border-[#1f1b16] focus:bg-white text-[#1f1b16] rounded-xl focus:outline-none transition-colors placeholder:text-stone-400"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    aria-label="Clear search"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center text-stone-400 hover:text-[#1f1b16] hover:bg-stone-200/60 cursor-pointer transition-colors"
+                  >
+                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                )}
+              </div>
 
- <div className="bg-white/80 rounded-3xl border border-slate-200/80 shadow-xl overflow-hidden relative">
- <div className="absolute inset-x-0 top-0 h-[1px] pointer-events-none" />
- <AdminHostsTable
- hosts={filteredHosts}
- loading={loading}
- formatDateTime={formatDateTime}
- onOpenHostPortal={handleOpenHostPortal}
- onApproveHost={handleApproveHost}
- onDeleteHost={handleDeleteHost}
- approvingHostId={approvingHostId}
- deletingHostId={deletingHostId}
- confirmDeleteHostId={confirmDeleteHostId}
- setConfirmDeleteHostId={setConfirmDeleteHostId}
- selectedHostIds={selectedHostIds}
- onToggleSelectHost={handleToggleSelectHost}
- onSelectAllHosts={handleSelectAllHosts}
- onClearSelection={handleClearHostSelection}
- onBulkApprove={handleBulkApproveHosts}
- isBulkApproving={isBulkApproving}
- />
- </div>
+              <button
+                type="button"
+                onClick={() => handleExportCSV(filteredHosts, 'stayin-hosts.csv')}
+                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-medium text-[#1f1b16] bg-[#f7f4ee]/65 hover:bg-stone-100 border border-stone-200 hover:border-stone-300 transition-colors shrink-0 active:scale-95 cursor-pointer"
+                title="Export Hosts as CSV"
+              >
+                <svg className="w-3.5 h-3.5 text-stone-500" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>Export</span>
+              </button>
+            </div>
+          </section>
 
- {/* Floating Bulk Action Bar */}
- <AnimatePresence>
- {selectedHostIds.length > 0 && (
- <motion.div
- initial={{ opacity: 0, y: 20 }}
- animate={{ opacity: 1, y: 0 }}
- exit={{ opacity: 0, y: 20 }}
- className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700/80 flex items-center gap-4"
- >
- <span className="text-xs font-medium">
- <span className="font-medium text-purple-400">{selectedHostIds.length}</span> host{selectedHostIds.length === 1 ? '' : 's'} selected
- </span>
- <button
- type="button"
- onClick={handleBulkApproveHosts}
- disabled={isBulkApproving}
- className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#0f766e] hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/30 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
- >
- {isBulkApproving ? (
- <>
- <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
- <span>Approving...</span>
- </>
- ) : (
- <>
- <svg className="w-3.5 h-3.5 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
- <polyline points="20 6 9 17 4 12" />
- </svg>
- <span>Approve all ({selectedHostIds.length})</span>
- </>
- )}
- </button>
- <button
- type="button"
- onClick={handleClearHostSelection}
- className="text-xs text-slate-400 hover:text-white transition-colors cursor-pointer"
- >
- Deselect
- </button>
- </motion.div>
- )}
- </AnimatePresence>
- </div>
+          <div className="w-full bg-white">
+            <AdminHostsTable
+              hosts={filteredHosts}
+              loading={loading}
+              formatDateTime={formatDateTime}
+              onOpenHostPortal={handleOpenHostPortal}
+              onApproveHost={handleApproveHost}
+              onDeleteHost={handleDeleteHost}
+              approvingHostId={approvingHostId}
+              deletingHostId={deletingHostId}
+              confirmDeleteHostId={confirmDeleteHostId}
+              setConfirmDeleteHostId={setConfirmDeleteHostId}
+              selectedHostIds={selectedHostIds}
+              onToggleSelectHost={handleToggleSelectHost}
+              onSelectAllHosts={handleSelectAllHosts}
+              onClearSelection={handleClearHostSelection}
+              onBulkApprove={handleBulkApproveHosts}
+              isBulkApproving={isBulkApproving}
+            />
+          </div>
 
- {/* 4. Subscriptions Tab Panel */}
- <div className={activeTab === 'subscriptions' ? 'block w-full' : 'hidden'}>
- <AdminSubscriptionsView
- requests={subscriptions}
- counts={subscriptionCounts}
- loading={loadingSubscriptions}
- onRefresh={() => fetchSubscriptions(true)}
- onVerify={handleVerifySubscription}
- onReject={handleRejectSubscription}
- onDelete={handleDeleteSubscription}
- onDeleteAll={handleDeleteAllSubscriptions}
- onBulkVerify={handleBulkVerifySubscriptions}
- onBulkReject={handleBulkRejectSubscriptions}
- onManualActivate={handleManualActivateHostSubscription}
- hosts={hosts}
- formatDateTime={formatDateTime}
- />
- </div>
- </main>
- {/* END: MainContent */}
- </div>
- );
+          {/* Floating Bulk Action Bar */}
+          <AnimatePresence>
+            {selectedHostIds.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 16 }}
+                className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#1f1b16] text-white px-4 py-2.5 rounded-full shadow-lg border border-stone-700/80 flex items-center gap-3.5"
+              >
+                <span className="text-[12px] font-normal pl-1 tabular-nums">
+                  <span className="font-semibold text-white">{selectedHostIds.length}</span> host{selectedHostIds.length === 1 ? '' : 's'} selected
+                </span>
+                <button
+                  type="button"
+                  onClick={handleBulkApproveHosts}
+                  disabled={isBulkApproving}
+                  className="px-3.5 py-1.5 rounded-full text-[12px] font-medium bg-[#0f766e] hover:bg-emerald-600 text-white active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  {isBulkApproving ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Approving…</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-3.5 h-3.5 stroke-[2.2]" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                      <span>Approve all ({selectedHostIds.length})</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClearHostSelection}
+                  className="text-[12px] text-stone-400 hover:text-white pr-1 transition-colors cursor-pointer"
+                >
+                  Deselect
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* 4. Subscriptions Tab Panel */}
+        <div
+          role="tabpanel"
+          aria-labelledby="admin-tab-subscriptions"
+          hidden={activeTab !== 'subscriptions'}
+          className={activeTab === 'subscriptions' ? 'block w-full' : 'hidden'}
+        >
+          <AdminSubscriptionsView
+            requests={subscriptions}
+            counts={subscriptionCounts}
+            loading={loadingSubscriptions}
+            onRefresh={() => fetchSubscriptions(true)}
+            onVerify={handleVerifySubscription}
+            onReject={handleRejectSubscription}
+            onDelete={handleDeleteSubscription}
+            onDeleteAll={handleDeleteAllSubscriptions}
+            onBulkVerify={handleBulkVerifySubscriptions}
+            onBulkReject={handleBulkRejectSubscriptions}
+            onManualActivate={handleManualActivateHostSubscription}
+            hosts={hosts}
+            formatDateTime={formatDateTime}
+          />
+        </div>
+      </main>
+      {/* END: MainContent */}
+    </div>
+  );
 }
 
 export default AdminPage;

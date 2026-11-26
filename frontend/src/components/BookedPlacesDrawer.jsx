@@ -4,44 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { useBookings } from '../context/BookingsContext';
 import { useAuth } from '../context/AuthContext';
 import { toast } from '../context/ToastContext';
-import {
-  calculateRemainingSeconds,
-  formatCountdown,
-} from '../utils/bookingPayment';
 import { isBookingRequestExpired } from '../utils/dateUtils';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
+import { LivePaymentTimer } from './common/LivePaymentTimer';
 
 /* ─────────────────────────────── helpers ─────────────────────────────── */
-
-function AwaitingPaymentCountdown({ deadline }) {
-  const [sec, setSec] = useState(() => calculateRemainingSeconds(deadline));
-  useEffect(() => {
-    if (!deadline) return;
-    const timer = setInterval(() => {
-      const s = calculateRemainingSeconds(deadline);
-      setSec(s);
-      if (s <= 0) {
-        clearInterval(timer);
-        window.dispatchEvent(new Event('stayhub_slots_updated'));
-        window.dispatchEvent(new Event('stayhub_my_bookings_updated'));
-      }
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [deadline]);
-
-  if (sec <= 0) return <span className="text-[10px] font-semibold text-rose-500">Expired</span>;
-  return (
-    <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wide ${
-        sec <= 120
-          ? 'bg-rose-500/10 text-rose-600'
-          : 'bg-amber-500/10 text-amber-700'
-      }`}
-    >
-      {formatCountdown(sec)}
-    </span>
-  );
-}
 
 function formatShortDate(iso) {
   if (!iso) return '';
@@ -403,7 +370,7 @@ export function BookedPlacesDrawer({ onLoginClick }) {
 
                             <div className="flex items-center gap-2 shrink-0">
                               {status.type === 'approved' && item.paymentDeadline && (
-                                <AwaitingPaymentCountdown deadline={item.paymentDeadline} />
+                                <LivePaymentTimer deadline={item.paymentDeadline} />
                               )}
                               {(status.type === 'completed' || status.type === 'rejected' || status.type === 'cancelled' || status.type === 'expired' || String(item.status || '').toUpperCase() === 'CHECKED_OUT') && (
                                 <button

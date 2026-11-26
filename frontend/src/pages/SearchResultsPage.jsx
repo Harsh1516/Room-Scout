@@ -9,10 +9,10 @@ const SearchInteractiveMap = lazy(() =>
 
 function MapSkeletonLoader() {
  return (
- <div className="w-full h-full min-h-[360px] sm:min-h-[380px] rounded-3xl bg-slate-200/70 border border-slate-300/40 flex flex-col items-center justify-center gap-3">
- <div className="w-9 h-9 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin" />
- <span className="text-sm font-medium text-slate-600">Loading map...</span>
- </div>
+ <DotGridWaveLoader
+ fullScreen={false}
+ className="h-full min-h-[360px] sm:min-h-[380px] rounded-3xl"
+ />
  );
 }
 

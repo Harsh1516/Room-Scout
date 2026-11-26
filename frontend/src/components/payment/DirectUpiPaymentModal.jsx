@@ -7,6 +7,7 @@ import {
  submitBookingUpiPayment,
 } from '../../utils/bookingPayment';
 import { formatUtrNumber } from '../../utils/bookingDetailsHelpers';
+import { DotGridWaveLoader } from '../common/DotGridWaveLoader';
 
 export function DirectUpiPaymentModal({
  isOpen,
@@ -182,10 +183,7 @@ export function DirectUpiPaymentModal({
 
  <div className="p-4 sm:p-6 max-h-[85vh] overflow-y-auto space-y-4 sm:space-y-5">
  {loading ? (
- <div className="py-12 flex flex-col items-center justify-center gap-3 text-slate-500">
- <div className="w-8 h-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin" />
- <p className="text-sm">Fetching verified host UPI details...</p>
- </div>
+ <DotGridWaveLoader fullScreen={false} className="min-h-[180px]" />
  ) : statusState === 'NOT_CONFIGURED' ? (
  /* Host has not configured UPI */
  <div className="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 space-y-3 text-center">

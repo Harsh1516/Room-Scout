@@ -1,7 +1,6 @@
 import { memo } from 'react';
 import {
   User,
-  Bed,
   Calendar,
   CheckCircle2,
   ChevronRight,
@@ -12,6 +11,8 @@ import {
   LogOut,
 } from 'lucide-react';
 import { formatUtrNumber } from '../../../utils/bookingDetailsHelpers';
+import { isPaidGuest } from '../../../utils/guestFilters';
+import { LivePaymentTimer } from '../../common/LivePaymentTimer';
 
 function formatCleanDate(rawDate) {
   if (!rawDate) return '';
@@ -97,7 +98,6 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
   onMarkCheckOut,
   onVerifyPayment,
   isSlotSelected = false,
-  hostProperty,
 }) {
   if (!guest) return null;
 
@@ -109,6 +109,15 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
   const submittedUtr = String(guest.upiPayment?.transactionRef || guest.transactionRef || '').trim();
   const isPendingVerification = guest.upiPayment?.verificationStatus === 'PENDING_VERIFICATION';
   const hasPendingUtr = isPendingVerification && Boolean(submittedUtr);
+  const showPaymentTimer = Boolean(
+    isOnline &&
+    isAwaitingPayment &&
+    !isPendingVerification &&
+    !hasPendingUtr &&
+    !isCheckedIn &&
+    !isCheckedOut &&
+    guest.paymentDeadline
+  );
   const isPending =
     (rawStatus.includes('PENDING') || guest.status === 'Pending Host Approval' || rawStatus === 'DRAFT') &&
     !isCheckedIn &&
@@ -125,22 +134,22 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
     guest.name ||
     'Rohit Sharma';
 
-  // 2. Room & Property Info
+  // 2. Room & Payment Info
   const roomType = guest.roomType || 'Deluxe Room';
   const roomNumber = guest.roomNumber ? String(guest.roomNumber).replace(/\D/g, '') : '';
   const roomTitle = roomNumber ? `Room ${roomNumber} • ${roomType}` : roomType;
-  const propertyTitle =
-    hostProperty?.title ||
-    hostProperty?.name ||
-    hostProperty?.address ||
-    guest.propertyName ||
-    guest.stayTitle ||
-    'Sunrise PG, Bhimtal';
+  const amountValue = Number(guest.totalAmount ?? guest.paidAmount ?? guest.price ?? 0) || 0;
+  const isPaid =
+    isPaidGuest(guest) ||
+    guest.isPaid === true ||
+    String(guest.paymentStatus || '').toUpperCase() === 'PAID';
+  const amountLabel = isPaid ? 'Paid' : 'Payable';
+  const formattedAmount = `₹${amountValue.toLocaleString('en-IN')}`;
 
   // 3. Date & Duration Info
   let dateLabel = 'Check-in';
   let targetDate = guest.checkInISO || guest.checkIn || guest.createdAt || new Date();
-  if (subTab === 'checkout') {
+  if (subTab === 'checkout' || (subTab === 'paid' && isCheckedOut)) {
     dateLabel = 'Check-out';
     targetDate = guest.checkOutISO || guest.checkOut || guest.checkInISO || guest.checkIn || new Date();
   }
@@ -155,7 +164,30 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
     </span>
   );
 
-  if (hasPendingUtr) {
+  if (subTab === 'paid') {
+    if (isCheckedOut) {
+      statusBadge = (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+          <CheckCircle2 className="w-4 h-4 text-purple-600" />
+          <span>Checked Out</span>
+        </span>
+      );
+    } else if (isCheckedIn) {
+      statusBadge = (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#eaf8ee] text-[#1e8346] border border-[#c7efd3]">
+          <CheckCircle2 className="w-4 h-4 text-[#1e8346] fill-[#1e8346] text-white" />
+          <span>Checked In</span>
+        </span>
+      );
+    } else {
+      statusBadge = (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+          <Clock className="w-4 h-4 text-amber-600" />
+          <span>Waiting for Check-in</span>
+        </span>
+      );
+    }
+  } else if (hasPendingUtr) {
     const formattedUtr = formatUtrNumber(submittedUtr);
     statusBadge = (
       <span
@@ -233,48 +265,59 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
           : ''
       }`}
     >
-      {/* ── Top Row: User Avatar + Name & Room/Category on Left, Status Badge on Right ── */}
-      <div className="flex items-start sm:items-center justify-between gap-3">
+      {/* ── Top Row: User Avatar + Name & Room/Category on Left, Live Timer in Center, Status Badge on Right ── */}
+      <div className="flex items-center justify-between gap-2 sm:gap-3">
         {/* Left: User Identity */}
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#dbeafe] text-[#3b82f6] flex items-center justify-center shrink-0 shadow-2xs">
-            <User className="w-6 h-6 text-[#3b82f6]" />
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#dbeafe] text-[#3b82f6] flex items-center justify-center shrink-0 shadow-2xs">
+            <User className="w-5 h-5 sm:w-6 sm:h-6 text-[#3b82f6]" />
           </div>
           <div className="flex flex-col min-w-0">
-            <h3 className="text-[15.5px] sm:text-[16.5px] font-bold text-slate-900 tracking-tight leading-tight truncate">
+            <h3 className="text-[15px] sm:text-[16.5px] font-bold text-slate-900 tracking-tight leading-tight truncate">
               {displayName}
             </h3>
-            <span className="text-xs sm:text-[13px] text-slate-500 font-medium leading-tight mt-1 truncate">
+            <span className="text-xs sm:text-[13px] text-slate-500 font-medium leading-tight mt-0.5 sm:mt-1 truncate">
               {roomTitle}
             </span>
           </div>
         </div>
 
+        {/* Center: Live Payment Timer (heading center when awaiting online payment) */}
+        {showPaymentTimer && (
+          <div className="shrink-0 flex items-center justify-center">
+            <LivePaymentTimer deadline={guest.paymentDeadline} />
+          </div>
+        )}
+
         {/* Right: Status Pill */}
         <div className="shrink-0">{statusBadge}</div>
       </div>
 
-      {/* ── Middle Info Row: Property & Check-in Dates ── */}
-      <div className="flex items-center gap-3 sm:gap-4 flex-wrap sm:flex-nowrap min-w-0 pt-0.5">
-        {/* Bed Icon & Property */}
-        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#eff4fc] text-[#3b82f6] flex items-center justify-center shrink-0">
-            <Bed className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#3b82f6]" />
-          </div>
-          <span className="text-xs sm:text-[13px] font-medium text-slate-700 leading-tight truncate">
-            {propertyTitle}
-          </span>
-        </div>
-
-        {/* Vertical Divider */}
-        <div className="h-6 w-px bg-slate-200 shrink-0 hidden sm:block" />
-
-        {/* Calendar & Check-in info */}
-        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+      {/* ── Middle Info Row: Check-in Dates & Paid Amount ── */}
+      <div className="flex items-center justify-between gap-2.5 sm:gap-4 flex-wrap sm:flex-nowrap min-w-0 pt-0.5">
+        {/* Left: Calendar & Check-in info */}
+        <div className="flex items-center gap-2 min-w-0">
           <Calendar className="w-4 h-4 text-slate-500 shrink-0" />
           <span className="text-xs sm:text-[13px] font-medium text-slate-800 leading-tight whitespace-nowrap">
             {dateLabel}: {formattedDateStr}{' '}
             <span className="text-slate-500 font-normal">{durationStr}</span>
+          </span>
+        </div>
+
+        {/* Vertical Divider */}
+        <div className="h-5 w-px bg-slate-200 shrink-0 hidden sm:block" />
+
+        {/* Right: Paid / Payable Amount */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="text-xs sm:text-[13px] font-medium text-slate-500 leading-tight whitespace-nowrap">
+            {amountLabel}:
+          </span>
+          <span
+            className={`text-xs sm:text-[13px] font-semibold font-mono leading-tight whitespace-nowrap ${
+              isPaid ? 'text-emerald-700' : 'text-amber-700'
+            }`}
+          >
+            {formattedAmount}
           </span>
         </div>
       </div>

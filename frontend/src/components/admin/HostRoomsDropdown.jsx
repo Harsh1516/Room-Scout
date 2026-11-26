@@ -53,47 +53,47 @@ export const HostRoomsDropdown = React.memo(function HostRoomsDropdown({ host })
  });
  }, [host]);
 
- if (!categories || categories.length === 0) {
- return (
- <div className="flex items-center justify-center py-2">
- <span className="inline-block px-3 py-1 rounded-lg bg-slate-100/90 text-slate-400 border border-slate-200 text-[11px] font-medium shadow-2xs select-none">
- No room categories
- </span>
- </div>
- );
- }
+  if (!categories || categories.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-2">
+        <span className="inline-block px-2.5 py-0.5 rounded-md bg-[#f7f4ee] text-stone-500 border border-stone-200/80 text-[11px] select-none">
+          No room categories
+        </span>
+      </div>
+    );
+  }
 
- return (
- <div className="w-full divide-y divide-slate-200/80 px-1">
- {categories.map((cat, idx) => (
- <div
- key={cat._id || idx}
- className="grid grid-cols-12 items-center gap-1.5 py-2 px-1 text-xs"
- >
- {/* Left Side: Room Category Name */}
- <div
- className="col-span-5 text-left font-normal text-[#1f1b16] truncate"
- title={cat.type}
- >
- {cat.type}
- </div>
+  return (
+    <div className="w-full divide-y divide-stone-100 px-1">
+      {categories.map((cat, idx) => (
+        <div
+          key={cat._id || idx}
+          className="grid grid-cols-12 items-center gap-1.5 py-1.5 px-1 text-[12px]"
+        >
+          {/* Left Side: Room Category Name */}
+          <div
+            className="col-span-5 text-left font-medium text-[#1f1b16] truncate"
+            title={cat.type}
+          >
+            {cat.type}
+          </div>
 
- {/* Mid Side: Price Details with Billing Cycle */}
- <div className="col-span-4 text-center font-normal text-slate-800 whitespace-nowrap">
- <span>{cat.price}</span>
- <span className="text-[10px] font-normal text-slate-500 ml-0.5">
- {cat.rateUnit}
- </span>
- </div>
+          {/* Mid Side: Price Details with Billing Cycle */}
+          <div className="col-span-4 text-center font-mono text-stone-700 tabular-nums whitespace-nowrap">
+            <span>{cat.price}</span>
+            <span className="text-[10px] font-sans text-stone-500 ml-0.5">
+              {cat.rateUnit}
+            </span>
+          </div>
 
- {/* Right Side: Room Count inside Category */}
- <div className="col-span-3 text-right whitespace-nowrap">
- <span className="inline-block px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200/60 text-[10px] font-normal">
- {cat.count} {cat.count === 1 ? 'Room' : 'Rooms'}
- </span>
- </div>
- </div>
- ))}
- </div>
- );
+          {/* Right Side: Room Count inside Category */}
+          <div className="col-span-3 text-right whitespace-nowrap">
+            <span className="inline-block px-2 py-0.5 rounded-full bg-[#f7f4ee] text-stone-700 border border-stone-200/80 text-[10px] font-medium tabular-nums">
+              {cat.count} {cat.count === 1 ? 'Room' : 'Rooms'}
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 });

@@ -16,6 +16,8 @@ import {
   Globe,
   Store,
   RotateCcw,
+  Search,
+  X,
 } from 'lucide-react';
 import { isOnlineGuest } from '../../../utils/guestFilters';
 import { RoomCategoryCarousel } from './RoomCategoryCarousel';
@@ -34,6 +36,7 @@ export function VisitedRequestsView({
  selectedRoomNumber = 'ALL',
  onSelectRoom = () => {},
  searchQuery = '',
+ setSearchQuery = () => {},
  actionLoadingId,
  onOpenModal,
  onSelectUserRequest,
@@ -706,6 +709,36 @@ export function VisitedRequestsView({
           </div>
         </div>
 
+        {/* Search Input below Online/Offline Capsule */}
+        <div className="px-1 sm:px-2 mb-4 shrink-0">
+          <div className="relative w-full">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(0);
+              }}
+              placeholder="Search guest, phone, room..."
+              className="w-full pl-10 pr-9 py-2.5 rounded-2xl text-xs sm:text-sm bg-white text-[#1f1b16] border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 placeholder:text-slate-400 transition-all shadow-2xs"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setCurrentPage(0);
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-0.5"
+                title="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Cards Area */}
         <div className="px-1 sm:px-2">
           {filteredGuests.length === 0 ? (
@@ -741,12 +774,26 @@ export function VisitedRequestsView({
                   : 'No offline counter bookings'}
               </h3>
               <p className="text-xs text-slate-400 max-w-sm mt-1 leading-relaxed">
-                {subTab === 'checkout'
+                {searchQuery
+                  ? `No results match "${searchQuery}".`
+                  : subTab === 'checkout'
                   ? 'When guests are due for check-out or departure, they will appear here.'
                   : subTab === 'checkin'
                   ? 'When guests are scheduled to arrive and check in, they will appear here.'
                   : 'When prospective guests submit online booking requests, they will appear here for review and confirmation.'}
               </p>
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setCurrentPage(0);
+                  }}
+                  className="mt-4 px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer transition-all shadow-xs"
+                >
+                  Clear Search Filter
+                </button>
+              )}
             </div>
           ) : (
             <div className="flex flex-col gap-3 w-full pb-2">

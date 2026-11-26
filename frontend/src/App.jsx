@@ -42,6 +42,7 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then((m) => ({ de
 
 // Dynamic Lazy-Loaded Interaction Modals & Drawers (Downloaded strictly on first user interaction)
 const LoginModal = lazy(() => import('./components/LoginModal').then((m) => ({ default: m.LoginModal })));
+const BecomeHostSlideModal = lazy(() => import('./components/modals/BecomeHostSlideModal').then((m) => ({ default: m.BecomeHostSlideModal })));
 const PropertyModal = lazy(() => import('./components/PropertyModal').then((m) => ({ default: m.PropertyModal })));
 const BookingModal = lazy(() => import('./components/BookingModal').then((m) => ({ default: m.BookingModal })));
 const WishlistDrawer = lazy(() => import('./components/WishlistDrawer').then((m) => ({ default: m.WishlistDrawer })));
@@ -77,6 +78,7 @@ function AppContent() {
  const { bookings, addBooking, setIsBookingsOpen, isBookingsOpen } = useBookings();
  const { isWishlistOpen } = useWishlist();
  const [isLoginOpen, setIsLoginOpen] = useState(false);
+ const [isBecomeHostOpen, setIsBecomeHostOpen] = useState(false);
  const [loginRole, setLoginRole] = useState('user');
  const [loginPromptMessage, setLoginPromptMessage] = useState('');
  const [pendingAction, setPendingAction] = useState(null);
@@ -98,6 +100,10 @@ function AppContent() {
 	const [hasLoadedLogin, setHasLoadedLogin] = useState(false);
 	if (isLoginOpen && !hasLoadedLogin) {
 		setHasLoadedLogin(true);
+	}
+	const [hasLoadedBecomeHost, setHasLoadedBecomeHost] = useState(false);
+	if (isBecomeHostOpen && !hasLoadedBecomeHost) {
+		setHasLoadedBecomeHost(true);
 	}
 
 	const [hasLoadedPropertyModal, setHasLoadedPropertyModal] = useState(false);
@@ -147,8 +153,7 @@ function AppContent() {
  if (!isAuthenticated || !pendingAction) return;
 
  if (pendingAction === 'host-upload') {
- // Only redirect if the authenticated user has host privileges
- // Allow any authenticated account to become a host
+ if (user?.role !== 'host' && user?.role !== 'admin') return;
 
  setIsLoginOpen(false);
 				if (user?.hasProperty) {
@@ -201,11 +206,8 @@ function AppContent() {
 
  // Handler for Tab 1: Upload Your Property Online (HOST ONLY)
   const proceedToHostUpload = () => {
-    if (!isAuthenticated) {
-      setLoginRole('host');
-      setLoginPromptMessage('');
-      setPendingAction('host-upload');
-      setIsLoginOpen(true);
+    if (!isAuthenticated || (user?.role !== 'host' && user?.role !== 'admin')) {
+      setIsBecomeHostOpen(true);
       return;
     }
 
@@ -449,6 +451,24 @@ function AppContent() {
  }}
  initialRole={loginRole}
  promptMessage={loginPromptMessage}
+ />
+ </ErrorBoundary>
+ </Suspense>
+ )}
+
+ {hasLoadedBecomeHost && (
+ <Suspense fallback={null}>
+ <ErrorBoundary fallback={null}>
+ <BecomeHostSlideModal
+ isOpen={isBecomeHostOpen}
+ onClose={() => setIsBecomeHostOpen(false)}
+ onConfirmHost={() => {
+ setIsBecomeHostOpen(false);
+ setLoginRole('host');
+ setLoginPromptMessage('');
+ setPendingAction('host-upload');
+ setIsLoginOpen(true);
+ }}
  />
  </ErrorBoundary>
  </Suspense>

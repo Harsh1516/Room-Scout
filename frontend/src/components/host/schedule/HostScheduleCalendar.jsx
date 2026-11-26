@@ -141,6 +141,7 @@ export function HostScheduleCalendar({
 }) {
  const [activeMonthModalKey, setActiveMonthModalKey] = useState(null);
  const [activeDateModalISO, setActiveDateModalISO] = useState(null);
+ const [isRoomOccupantsModalOpen, setIsRoomOccupantsModalOpen] = useState(false);
 
 	const cleanRoomNum = useMemo(() => {
 		const raw = selectedRoomCard?.roomNumber || (typeof roomDisplay === 'string' ? roomDisplay : '');
@@ -258,7 +259,31 @@ export function HostScheduleCalendar({
  };
  }, [activeDateModalISO, roomOccupantsList, guests, selectedRoomCard, activeCategory, upcomingWeek]);
 
- const activeOccupantsModalData = activeDateOccupantsModal || activeMonthOccupantsModal;
+ const activeRoomOccupantsModal = useMemo(() => {
+ if (!isRoomOccupantsModalOpen) return null;
+
+ const roomCapacity = Math.max(
+ 1,
+ Math.min(10, Number(selectedRoomCard?.capacity) || Number(activeCategory?.capacity) || 1)
+ );
+
+ const allOccupants = Array.isArray(roomOccupantsList) ? roomOccupantsList : [];
+ const occupiedCount = allOccupants.reduce((sum, g) => sum + (Number(g.personCount) || 1), 0);
+
+ return {
+ monthKey: 'room-occupants',
+ dateTitle: 'All Occupants',
+ occupiedCount,
+ roomCapacity,
+ occupants: allOccupants,
+ isFullyBooked: false,
+ isPartiallyBooked: false,
+ isDaily: !isMonthly,
+ hideBookFooter: true,
+ };
+ }, [isRoomOccupantsModalOpen, selectedRoomCard, activeCategory, roomOccupantsList, isMonthly]);
+
+ const activeOccupantsModalData = activeRoomOccupantsModal || activeDateOccupantsModal || activeMonthOccupantsModal;
 
  const selectedISOSet = useMemo(() => {
  const set = new Set();
@@ -500,26 +525,53 @@ export function HostScheduleCalendar({
  ref={calendarCardRef}
  className={`w-full flex-1 flex flex-col select-none relative min-h-0 bg-transparent border-0 shadow-none ${forceLight ? 'pb-2' : 'pb-20 sm:pb-24'}`}
  >
- {/* Room Detail Banner & Add Guest Action */}
+		{/* Room Detail Banner & Occupant + Add Guest Actions */}
 		<div className={`px-2.5 sm:px-4 py-2 sm:py-2.5 border-b relative z-10 w-full ${forceLight ? 'border-slate-100 bg-transparent' : 'max-xl:border-slate-100 max-xl:bg-transparent xl:border-white/15 xl:bg-white/10'}`}>
 			<div className="flex items-center justify-between w-full gap-2">
-				<div className="inline-flex items-center justify-center py-1 select-none">
-					<h2 className="text-[16px] sm:text-lg md:text-xl font-black tracking-tight leading-none flex items-center gap-1.5">
+				<div className="inline-flex items-center justify-center py-1 select-none min-w-0">
+					<h2 className="text-[16px] sm:text-lg md:text-xl font-black tracking-tight leading-none flex items-center gap-1.5 truncate">
 						<span className={forceLight ? 'text-black' : 'max-xl:text-black xl:text-white'}>Room No.</span>
 						<span className={`${forceLight ? 'text-slate-400' : 'max-xl:text-slate-400 xl:text-sky-100'} font-semibold`}>{cleanRoomNum || 'Room'}</span>
 					</h2>
 				</div>
 
 				{typeof onOpenAddGuestModal === 'function' && (
-					<button
-						type="button"
-						onClick={onOpenAddGuestModal}
-						className="inline-flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#1f1b16] hover:bg-black text-white font-medium text-xs sm:text-[13.5px] shadow-sm border border-white/20 transition-all active:scale-95 cursor-pointer shrink-0"
-						title="Add a new guest to this room"
-					>
-						<span className="material-symbols-outlined text-[17px] sm:text-[18px] text-emerald-400 font-medium">person_add</span>
-						<span className="leading-none tracking-tight">Add Guest</span>
-					</button>
+					<div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+						<button
+							type="button"
+							onClick={() => setIsRoomOccupantsModalOpen(true)}
+							className={`inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full font-medium text-xs sm:text-[13.5px] shadow-sm border transition-all active:scale-95 cursor-pointer shrink-0 ${
+								forceLight
+									? 'bg-white hover:bg-slate-50 text-slate-800 border-slate-200'
+									: 'max-xl:bg-white max-xl:hover:bg-slate-50 max-xl:text-slate-800 max-xl:border-slate-200 xl:bg-white/15 xl:hover:bg-white/25 xl:text-white xl:border-white/25'
+							}`}
+							title="View occupants for this room"
+						>
+							<span className="material-symbols-outlined text-[16px] sm:text-[17px]">group</span>
+							<span className="leading-none tracking-tight">Occupant</span>
+							{roomOccupantsList.length > 0 && (
+								<span
+									className={`min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-mono font-semibold inline-flex items-center justify-center leading-none ${
+										forceLight
+											? 'bg-slate-900 text-white'
+											: 'max-xl:bg-slate-900 max-xl:text-white xl:bg-white/25 xl:text-white'
+									}`}
+								>
+									{roomOccupantsList.length}
+								</span>
+							)}
+						</button>
+
+						<button
+							type="button"
+							onClick={onOpenAddGuestModal}
+							className="inline-flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#1f1b16] hover:bg-black text-white font-medium text-xs sm:text-[13.5px] shadow-sm border border-white/20 transition-all active:scale-95 cursor-pointer shrink-0"
+							title="Add a new guest to this room"
+						>
+							<span className="material-symbols-outlined text-[17px] sm:text-[18px] text-emerald-400 font-medium">person_add</span>
+							<span className="leading-none tracking-tight">Add Guest</span>
+						</button>
+					</div>
 				)}
 			</div>
 		</div>
@@ -833,9 +885,9 @@ export function HostScheduleCalendar({
  <button
  type="button"
  key={m.monthKey}
- disabled={(!isFullyBooked && !isPartiallyBooked && (!isPropertyApproved || !isRoomSavedToDb)) || (isUserRequestSelection && !isFullyBooked && !isPartiallyBooked)}
+ disabled={(!isFullyBooked && (!isPropertyApproved || !isRoomSavedToDb)) || (isUserRequestSelection && !isFullyBooked && !isPartiallyBooked)}
  onClick={() => {
- if (isFullyBooked || isPartiallyBooked) {
+ if (isFullyBooked) {
  setActiveMonthModalKey(m.monthKey);
  } else if (!isUserRequestSelection) {
  handleToggleSlotMonth(m.index);
@@ -874,17 +926,11 @@ export function HostScheduleCalendar({
  }`}
  >
  <span
- onClick={(e) => {
- if (isPartiallyBooked) {
- e.stopPropagation();
- setActiveMonthModalKey(m.monthKey);
- }
- }}
  title={
- isPartiallyBooked
+ isFullyBooked
  ? 'Click to view occupants list'
- : isFullyBooked
- ? 'Click to view occupants list'
+ : isPartiallyBooked
+ ? 'Click to select remaining available bed'
  : undefined
  }
  className={`text-[11px] sm:text-[12px] font-semibold px-1.5 sm:px-2 py-0.5 rounded-full tracking-tight truncate max-w-[95%] leading-snug ${
@@ -1227,6 +1273,7 @@ export function HostScheduleCalendar({
  roomTypeDisplay={roomTypeDisplay}
  isOccupantModalOpen={isOccupantModalOpen}
  onClose={() => {
+ setIsRoomOccupantsModalOpen(false);
  setActiveMonthModalKey(null);
  setActiveDateModalISO(null);
  }}

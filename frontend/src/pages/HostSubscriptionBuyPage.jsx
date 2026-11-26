@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { subscriptionsAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
 import { Left } from '../components/navbar/Left';
+import { DotGridWaveLoader } from '../components/common/DotGridWaveLoader';
 
 export const getMonthDetails = () => {
  const now = new Date();
@@ -243,7 +244,11 @@ export function HostSubscriptionBuyPage() {
  }
  };
 
-   return (
+  if (loading && !plansData) {
+    return <DotGridWaveLoader />;
+  }
+
+  return (
     <div className="min-h-screen bg-[#eceef1] md:bg-[#f5f2ea] text-slate-900 md:text-[#1f1b16] flex flex-col font-tech-minimal md:font-sans selection:bg-slate-900/10 md:selection:bg-purple-500/20 host-page-scope relative overflow-x-hidden">
       {/* ── Ambient High-Tech Contour Curves (Pic 2 inspired - Mobile only) ── */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none md:hidden z-0">

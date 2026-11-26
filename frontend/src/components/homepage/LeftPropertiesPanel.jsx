@@ -2,6 +2,7 @@ import { getSocket } from '../../services/socket';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Upload } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { staysAPI, adminAPI } from '../../services/api';
 
@@ -104,7 +105,11 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory, onSele
     };
   }, [isAuthenticated, user?.email, user?.hasProperty, user?.role, isHost]);
 
-  const isHostWithProperty = Boolean(hasHostProperty || user?.hasProperty || isHost);
+  const isHostWithProperty = Boolean(
+    isAuthenticated &&
+    (user?.role === 'host' || user?.role === 'admin') &&
+    (hasHostProperty || user?.hasProperty)
+  );
  const [isOpen, setIsOpen] = useState(false);
  const [activeCategories, setActiveCategories] = useState(ALL_CATEGORIES);
  const [typeCounts, setTypeCounts] = useState({});
@@ -349,6 +354,27 @@ export function LeftPropertiesPanel({ onSelectCategory, selectedCategory, onSele
  </div>
  );
  })}
+ </div>
+
+ {/* Bottom Host CTA Footer */}
+ <div className="px-3.5 py-3 border-t border-slate-100 bg-white shrink-0">
+ <button
+ type="button"
+ onClick={handleHostAction}
+ className="w-full min-h-[44px] px-4 py-2.5 rounded-2xl bg-[#1f1b16] hover:bg-black text-white text-[13px] font-semibold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98] cursor-pointer"
+ >
+ {isHostWithProperty ? (
+ <>
+ <LayoutDashboard className="w-4 h-4 text-emerald-400 shrink-0" />
+ <span>Host Dashboard</span>
+ </>
+ ) : (
+ <>
+ <Upload className="w-4 h-4 text-emerald-400 shrink-0" />
+ <span>Upload Your Property</span>
+ </>
+ )}
+ </button>
  </div>
 </motion.div>
  </div>

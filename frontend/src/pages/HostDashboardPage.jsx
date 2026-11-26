@@ -6,6 +6,7 @@ import { adminAPI, subscriptionsAPI } from '../services/api';
 import { getSocket } from '../services/socket';
 import HostDashboardNavbar from '../components/host/HostDashboardNavbar';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
+import { DotGridWaveLoader } from '../components/common/DotGridWaveLoader';
 import { HostRoomsTab } from '../components/host/tabs/HostRoomsTab';
 
 // Custom Hooks for Modular Architecture
@@ -30,14 +31,7 @@ const PropertyArchitecturalBackground = lazy(() =>
 );
 
 function DashboardSkeletonLoader() {
- return (
- <div className="w-full min-h-[320px] rounded-2xl bg-white/60 border border-slate-200 flex flex-col items-center justify-center gap-3 p-8">
- <div className="w-8 h-8 rounded-full border-2 border-slate-200 border-t-[#9333ea] animate-spin" />
- <span className="text-xs font-mono text-slate-400">
- Loading Panel Content...
- </span>
- </div>
- );
+ return <DotGridWaveLoader fullScreen={false} className="min-h-[320px]" />;
 }
 
 export function HostDashboardPage() {
@@ -335,8 +329,11 @@ export function HostDashboardPage() {
  }`}
  >
 
- {/* Primary Host Console Navbar */}
- <HostDashboardNavbar
+  {/* High-intensity blurred wave loader during initial host data fetch */}
+  {loading && !hostProperty?._id && <DotGridWaveLoader />}
+
+  {/* Primary Host Console Navbar */}
+  <HostDashboardNavbar
  activeTab={activeTab}
  setActiveTab={handleTabSwitch}
  isApproved={isApproved}
@@ -503,6 +500,7 @@ export function HostDashboardPage() {
  allGuests={guests}
  setGuests={setGuests}
  hostProperty={hostProperty}
+ setHostProperty={setHostProperty}
  showToast={showToast}
  refreshGuests={refreshGuests}
  broadcastStayUpdate={broadcastStayUpdate}

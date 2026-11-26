@@ -191,328 +191,351 @@ export function DataPage({ onStayClick, onBookClick }) {
 
  const categories = ['All', 'PG', 'Flat', 'Hotel', 'Independent Room'];
 
- return (
- <div className="min-h-screen bg-[#f7f4ee] text-[#1f1b16] transition-colors duration-300 font-sans">
- {/* Top Fixed Header */}
- <header className="sticky top-0 z-40 w-full bg-white/85 border-b border-slate-200 shadow-xs">
- <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between relative">
- {/* Left: Back Button */}
- <div className="flex items-center">
- <button
- type="button"
- onClick={() => navigate('/')}
- className="apple-liquid-nav flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-slate-200/80 hover:border-blue-500/40 hover:bg-white/40 text-[#1f1b16] text-xs sm:text-sm font-medium transition-all cursor-pointer shadow-xs active:scale-95"
- title="Back to Home"
- >
- <svg
- className="w-4 h-4 text-blue-600"
- viewBox="0 0 24 24"
- fill="none"
- stroke="currentColor"
- strokeWidth="2.5"
- strokeLinecap="round"
- strokeLinejoin="round"
- >
- <line x1="19" y1="12" x2="5" y2="12" />
- <polyline points="12 19 5 12 12 5" />
- </svg>
- <span>Back</span>
- </button>
- </div>
+  return (
+    <div className="min-h-screen w-full bg-white text-[#1f1b16] antialiased selection:bg-[#1f1b16] selection:text-white font-sans flex flex-col">
+      {/* Top Sticky Full-Width Header */}
+      <header className="sticky top-0 z-40 w-full bg-[#faf8f4]/95 backdrop-blur-md border-b border-stone-200/80">
+        <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between relative gap-3">
+          {/* Left: Back Button */}
+          <div className="flex items-center">
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white border border-stone-200/90 hover:border-[#1f1b16] text-[#1f1b16] text-[12.5px] font-medium transition-colors cursor-pointer active:scale-95"
+              title="Back to Home"
+            >
+              <svg
+                className="w-3.5 h-3.5 text-[#1f1b16]"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <line x1="19" y1="12" x2="5" y2="12" />
+                <polyline points="12 19 5 12 12 5" />
+              </svg>
+              <span>Back</span>
+            </button>
+          </div>
 
- {/* Center: Centered Stays Database Header Badge */}
- <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full bg-slate-100/90 border border-slate-200/80 shadow-xs select-none">
- <div className="w-6 h-6 rounded-lg bg-blue-600/10 text-blue-600 flex items-center justify-center">
- <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
- <ellipse cx="12" cy="5" rx="9" ry="3" />
- <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
- <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
- </svg>
- </div>
- <h1 className="text-xs sm:text-sm font-medium text-[#1f1b16] flex items-center gap-2">
- <span>Stays Database</span>
- <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 border border-blue-500/20">
- {filteredStays.length} Stays
- </span>
- </h1>
- </div>
+          {/* Center: Centered Stays Database Header Badge */}
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-stone-200/90 select-none">
+            <span className="w-5 h-5 rounded-full bg-[#1f1b16] text-white flex items-center justify-center shrink-0">
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <ellipse cx="12" cy="5" rx="9" ry="3" />
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
+              </svg>
+            </span>
+            <span className="text-[13px] font-medium text-[#1f1b16] flex items-center gap-2 whitespace-nowrap">
+              <span>Stays Database</span>
+              <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#f7f4ee] text-stone-700 border border-stone-200/80 tabular-nums leading-none">
+                {filteredStays.length} {filteredStays.length === 1 ? 'Stay' : 'Stays'}
+              </span>
+            </span>
+          </div>
 
- {/* Right: Actions */}
- <div className="flex items-center gap-2 ml-auto">
- <button
- type="button"
- onClick={handleRefresh}
- disabled={isRefreshing}
- className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all border border-slate-200 flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-50"
- title="Refresh Stays Data"
- >
- <svg
- className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-blue-600' : ''}`}
- viewBox="0 0 24 24"
- fill="none"
- stroke="currentColor"
- strokeWidth="2"
- >
- <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
- </svg>
- </button>
+          {/* Right: Refresh Action */}
+          <div className="flex items-center gap-2 ml-auto">
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              aria-label="Refresh Stays Data"
+              className="w-9 h-9 rounded-full bg-white hover:bg-stone-100 text-[#1f1b16] transition-colors border border-stone-200/90 flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-50"
+              title="Refresh Stays Data"
+            >
+              <svg
+                className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#0f766e]' : ''}`}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                aria-hidden="true"
+              >
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </header>
 
+      {/* Main Content Area (Full-width, windowless) */}
+      <main className="w-full flex-1 flex flex-col">
+        {/* Clean Editorial Section Heading */}
+        <div className="w-full px-4 sm:px-6 lg:px-8 pt-6 pb-4 border-b border-stone-200/80 flex flex-col sm:flex-row sm:items-end justify-between gap-3 bg-white">
+          <div>
+            <h1 className="text-2xl sm:text-[26px] font-medium tracking-tight text-[#1f1b16] leading-tight">
+              Stays &amp; Live Properties
+            </h1>
+            <p className="text-[13px] text-stone-500 mt-0.5">
+              Browse all registered accommodation units, student PGs, flats, and hotels with live rates and host records.
+            </p>
+          </div>
 
- </div>
- </div>
+          <div className="flex items-center gap-2 flex-wrap text-[12px]">
+            <span className="px-2.5 py-1 rounded-full bg-[#faf8f4] border border-stone-200/80 text-stone-600 tabular-nums">
+              Total: <span className="font-medium text-[#1f1b16]">{stays.length}</span>
+            </span>
+            <span className="px-2.5 py-1 rounded-full bg-[#faf8f4] border border-stone-200/80 text-stone-600 tabular-nums">
+              Matching: <span className="font-medium text-[#0f766e]">{filteredStays.length}</span>
+            </span>
+          </div>
+        </div>
 
- {/* Filter & Search Bar */}
- <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-3">
- <div className="relative w-full md:w-80">
- <svg
- className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
- viewBox="0 0 24 24"
- fill="none"
- stroke="currentColor"
- strokeWidth="2"
- >
- <circle cx="11" cy="11" r="8" />
- <path d="m21 21-4.35-4.35" />
- </svg>
- <input
- type="text"
- value={searchQuery}
- onChange={(e) => setSearchQuery(e.target.value)}
- placeholder="Search by stay, location, host..."
- className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-100/80 border border-slate-200 text-xs text-[#1f1b16] placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500 transition-all"
- />
- {searchQuery && (
- <button
- type="button"
- onClick={() => setSearchQuery('')}
- className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
- >
- 
- </button>
- )}
- </div>
+        {/* Full-Width Filter & Search Bar */}
+        <section className="w-full px-4 sm:px-6 lg:px-8 py-3 bg-white border-b border-stone-200/80 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3" data-purpose="toolbar">
+          <div className="relative w-full lg:w-80 group">
+            <svg
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone-400 group-focus-within:text-[#1f1b16] transition-colors pointer-events-none"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              aria-hidden="true"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            <label htmlFor="data-stays-search" className="sr-only">
+              Search stays
+            </label>
+            <input
+              id="data-stays-search"
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by stay, location, host…"
+              className="w-full pl-8.5 pr-8 py-2 rounded-xl bg-[#f7f4ee]/65 border border-stone-200 text-[13px] text-[#1f1b16] placeholder:text-stone-400 focus:outline-none focus:border-[#1f1b16] focus:bg-white transition-colors"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center text-stone-400 hover:text-[#1f1b16] hover:bg-stone-200/60 cursor-pointer transition-colors"
+              >
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            )}
+          </div>
 
- <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-none">
- {categories.map((cat) => (
- <button
- key={cat}
- type="button"
- onClick={() => setSelectedCategory(cat)}
- className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
- selectedCategory === cat
- ? 'bg-blue-600 text-white shadow-xs shadow-blue-500/20'
- : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
- }`}
- >
- {cat}
- </button>
- ))}
- </div>
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-[#f7f4ee] border border-stone-200/70 overflow-x-auto w-fit max-w-full no-scrollbar">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                aria-pressed={selectedCategory === cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3 py-1.5 rounded-lg text-[12px] whitespace-nowrap transition-all cursor-pointer ${
+                  selectedCategory === cat
+                    ? 'bg-white text-[#1f1b16] font-medium shadow-2xs border border-stone-200/80'
+                    : 'text-stone-600 hover:text-[#1f1b16] font-normal border border-transparent'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
 
- <div className="flex items-center gap-2 w-full md:w-auto justify-end">
- <span className="text-xs text-slate-400 font-medium whitespace-nowrap">Sort:</span>
- <select
- value={sortOrder}
- onChange={(e) => setSortOrder(e.target.value)}
- className="px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-medium text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-blue-500 cursor-pointer"
- >
- <option value="recent-first"> Recently Added First</option>
- <option value="price-asc"> Price: Low to High</option>
- <option value="price-desc"> Price: High to Low</option>
- <option value="rating-desc"> Top Rated</option>
- <option value="title-asc"> Title: A-Z</option>
- </select>
- </div>
- </div>
- </header>
+          <div className="flex items-center gap-2 lg:justify-end">
+            <label htmlFor="data-sort-select" className="text-[12px] text-stone-500 font-medium whitespace-nowrap">
+              Sort:
+            </label>
+            <select
+              id="data-sort-select"
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              className="px-3 py-1.5 rounded-xl bg-[#f7f4ee]/65 border border-stone-200 text-[12.5px] font-medium text-[#1f1b16] focus:outline-none focus:border-[#1f1b16] cursor-pointer"
+            >
+              <option value="recent-first">Recently Added First</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              <option value="rating-desc">Top Rated</option>
+              <option value="title-asc">Title: A–Z</option>
+            </select>
+          </div>
+        </section>
 
- {/* Main Content Area */}
- <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
- <div className="mb-6 /10 border border-blue-500/20 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
- <div>
- <h2 className="text-base sm:text-lg font-medium text-[#1f1b16] flex items-center gap-2">
- <span>All Added Stays & Live Properties</span>
- <span className="text-xs px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 font-semibold border border-emerald-500/20">
- Sorted: Recently Added First
- </span>
- </h2>
- <p className="text-xs text-slate-500 mt-1">
- Browse through all registered accommodation units, student PGs, hostels, luxury villas, and hotels with live rates and host records.
- </p>
- </div>
+        {loading && <DotGridWaveLoader />}
 
- <div className="flex items-center gap-2 flex-wrap">
- <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-white/80 border border-slate-200 text-slate-700">
- Total: {stays.length}
- </span>
- <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-white/80 border border-slate-200 text-slate-700">
- Matching: {filteredStays.length}
- </span>
- </div>
- </div>
+        {!loading && filteredStays.length === 0 && (
+          <div className="w-full py-20 px-4 text-center flex flex-col items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-[#f7f4ee] border border-stone-200/90 flex items-center justify-center mx-auto mb-3 text-stone-500">
+              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" x2="16.65" y1="21" y2="16.65" />
+              </svg>
+            </div>
+            <h2 className="text-base font-medium text-[#1f1b16]">No properties found</h2>
+            <p className="text-[13px] text-stone-500 mt-1 max-w-sm mx-auto">
+              No stays match your current filter query. Try clearing the search term or resetting category filters.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedCategory('All');
+                setSelectedGender('All');
+              }}
+              className="mt-4 px-4 py-2 rounded-xl bg-[#1f1b16] text-white text-[12.5px] font-medium hover:bg-[#0f766e] transition-colors cursor-pointer"
+            >
+              Reset Filters
+            </button>
+          </div>
+        )}
 
- {loading && <DotGridWaveLoader />}
+        {!loading && filteredStays.length > 0 && (
+          <div className="w-full bg-white">
+            <div
+              tabIndex={0}
+              role="region"
+              aria-label="Stays database table"
+              className="overflow-x-auto w-full focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#1f1b16]"
+            >
+              <table className="w-full text-left border-collapse min-w-[780px]">
+                <caption className="sr-only">All added stays and live properties</caption>
+                <thead>
+                  <tr className="border-b border-stone-200/80 bg-[#faf8f4] text-[11px] uppercase tracking-[0.07em] font-medium text-stone-500">
+                    <th scope="col" className="py-3 pl-4 sm:pl-6 lg:pl-8 pr-4 font-medium">Property</th>
+                    <th scope="col" className="py-3 px-4 font-medium">Type / Gender</th>
+                    <th scope="col" className="py-3 px-4 font-medium">Location</th>
+                    <th scope="col" className="py-3 px-4 font-medium">Room rate</th>
+                    <th scope="col" className="py-3 px-4 font-medium">Rating</th>
+                    <th scope="col" className="py-3 px-4 font-medium">Date added</th>
+                    <th scope="col" className="py-3 pr-4 sm:pr-6 lg:pr-8 pl-4 text-right font-medium">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-100">
+                  {filteredStays.map((stay, idx) => {
+                    const stayId = stay._id;
+                    const dateLabel = formatStayDate(stay, idx);
+                    const cleanPrice = parseNumericPrice(stay.price);
+                    const roomsCount =
+                      Array.isArray(stay.rooms) && stay.rooms.length > 0
+                        ? stay.rooms.length
+                        : (stay.totalRooms || stay.availableRooms || 0);
+                    const hasReviews = Array.isArray(stay.reviews) && stay.reviews.length > 0;
+                    const stayRating = hasReviews
+                      ? (stay.reviews.reduce((acc, r) => acc + (Number(r.rating) || 5), 0) / stay.reviews.length).toFixed(1)
+                      : (stay.reviewsCount > 0 && stay.rating ? Number(stay.rating).toFixed(1) : null);
 
- {!loading && filteredStays.length === 0 && (
- <div className="py-20 text-center bg-white rounded-2xl border border-slate-200 p-8">
- <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3 text-slate-400">
- <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
- <circle cx="11" cy="11" r="8" />
- <line x1="21" x2="16.65" y1="21" y2="16.65" />
- </svg>
- </div>
- <h3 className="text-base font-medium text-[#1f1b16]">No properties found</h3>
- <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
- No stays match your current filter query. Try clearing the search term or resetting category filters.
- </p>
- <button
- type="button"
- onClick={() => {
- setSearchQuery('');
- setSelectedCategory('All');
- setSelectedGender('All');
- }}
- className="mt-4 px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors"
- >
- Reset Filters
- </button>
- </div>
- )}
+                    return (
+                      <tr
+                        key={stayId || idx}
+                        className="hover:bg-[#faf8f4]/80 transition-colors"
+                      >
+                        <td className="py-3.5 pl-4 sm:pl-6 lg:pl-8 pr-4 align-middle">
+                          <div className="flex items-center gap-3">
+                            <img
+                              decoding="async"
+                              loading="lazy"
+                              src={stay.image || (stay.images && stay.images[0]) || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80'}
+                              alt={stay.title || 'Property'}
+                              className="w-10 h-10 rounded-lg object-cover bg-stone-100 border border-stone-200/80 shrink-0"
+                            />
+                            <div className="min-w-0">
+                              <div className="font-medium text-[13.5px] text-[#1f1b16] line-clamp-1">
+                                {stay.title || stay.propertyName || 'Property Stay'}
+                              </div>
+                              <div className="text-[12px] text-stone-500 flex items-center gap-2 mt-0.5 flex-wrap">
+                                <span>{stay.hostName || stay.host?.name ? `Host: ${stay.hostName || stay.host?.name}` : 'Stay In Verified'}</span>
+                                {roomsCount > 0 && (
+                                  <span className="text-[11px] px-1.5 py-0.5 rounded bg-[#f7f4ee] text-stone-700 font-medium border border-stone-200/80 tabular-nums leading-none">
+                                    {roomsCount} {roomsCount === 1 ? 'Room' : 'Rooms'}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
 
- {!loading && filteredStays.length > 0 && (
- <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
- <div className="overflow-x-auto">
- <table className="w-full text-left border-collapse">
- <thead>
- <tr className="border-b border-slate-200 bg-[#f7f4ee]/75 text-[11px] font-medium text-slate-500 ">
- <th className="py-3.5 px-4"># Property</th>
- <th className="py-3.5 px-4">Type / Gender</th>
- <th className="py-3.5 px-4">Location</th>
- <th className="py-3.5 px-4">Room Rate</th>
- <th className="py-3.5 px-4">Rating</th>
- <th className="py-3.5 px-4">Date Added</th>
- <th className="py-3.5 px-4 text-right">Actions</th>
- </tr>
- </thead>
- <tbody className="divide-y divide-slate-100 text-xs">
- {filteredStays.map((stay, idx) => {
- const stayId = stay._id;
- const dateLabel = formatStayDate(stay, idx);
- const cleanPrice = parseNumericPrice(stay.price);
- const roomsCount =
- Array.isArray(stay.rooms) && stay.rooms.length > 0
- ? stay.rooms.length
- : (stay.totalRooms || stay.availableRooms || 0);
- const hasReviews = Array.isArray(stay.reviews) && stay.reviews.length > 0;
- const stayRating = hasReviews
- ? (stay.reviews.reduce((acc, r) => acc + (Number(r.rating) || 5), 0) / stay.reviews.length).toFixed(1)
- : (stay.reviewsCount > 0 && stay.rating ? Number(stay.rating).toFixed(1) : null);
+                        <td className="py-3.5 px-4 align-middle">
+                          <div className="flex flex-col gap-1 items-start">
+                            <span className="px-2 py-0.5 rounded-md bg-[#f7f4ee] border border-stone-200/80 text-[#1f1b16] font-medium text-[11px]">
+                              {stay.type || stay.propertyType || 'PG'}
+                            </span>
+                            {(stay.genderType || stay.gender) && (
+                              <span className="text-[11.5px] text-stone-500">
+                                {stay.genderType || stay.gender}
+                              </span>
+                            )}
+                          </div>
+                        </td>
 
- return (
- <tr
- key={stayId || idx}
- className="hover:bg-[#f7f4ee]/80 transition-colors"
- >
- <td className="py-3 px-4">
- <div className="flex items-center gap-3">
- <img decoding="async" loading="lazy"
- src={stay.image || (stay.images && stay.images[0]) || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80'}
- alt={stay.title || 'Property'}
- className="w-10 h-10 rounded-lg object-cover bg-slate-100 flex-shrink-0"
- />
- <div>
- <div className="font-medium text-[#1f1b16] line-clamp-1">
- {stay.title || stay.propertyName || 'Property Stay'}
- </div>
- <div className="text-[11px] text-slate-400 flex items-center gap-2">
- <span>{stay.hostName || stay.host?.name ? `Host: ${stay.hostName || stay.host?.name}` : 'Stay In Verified'}</span>
- {roomsCount > 0 && (
- <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-slate-100 text-slate-600 font-semibold border border-slate-200">
- {roomsCount} {roomsCount === 1 ? 'Room' : 'Rooms'}
- </span>
- )}
- </div>
- </div>
- </div>
- </td>
+                        <td className="py-3.5 px-4 text-[13px] text-stone-600 align-middle">
+                          {stay.location || (stay.city && stay.state ? `${stay.city}, ${stay.state}` : (stay.city || stay.address || '—'))}
+                        </td>
 
- <td className="py-3 px-4">
- <div className="flex flex-col gap-1 items-start">
- <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-semibold text-[10px]">
- {stay.type || stay.propertyType || 'PG'}
- </span>
- {(stay.genderType || stay.gender) && (
- <span className="text-[10px] text-slate-400">
- {stay.genderType || stay.gender}
- </span>
- )}
- </div>
- </td>
+                        <td className="py-3.5 px-4 align-middle">
+                          <div className="flex flex-col items-start">
+                            <div className="flex items-baseline gap-1">
+                              <span className="font-mono font-medium text-[13.5px] text-[#1f1b16] tabular-nums">
+                                ₹{cleanPrice.toLocaleString('en-IN')}
+                              </span>
+                              <span className="text-[11px] text-stone-500">
+                                {stay.rateUnit || stay.roomRates?.[0]?.rateUnit || '/month'}
+                              </span>
+                            </div>
+                            {stay.roomRates?.[0]?.type && (
+                              <span className="text-[11px] text-[#0f766e] font-medium mt-0.5">
+                                {stay.roomRates[0].type}
+                              </span>
+                            )}
+                          </div>
+                        </td>
 
- <td className="py-3 px-4 text-slate-600">
- {stay.location || (stay.city && stay.state ? `${stay.city}, ${stay.state}` : (stay.city || stay.address || '—'))}
- </td>
+                        <td className="py-3.5 px-4 align-middle">
+                          {stayRating ? (
+                            <span className="font-medium text-[12.5px] text-[#1f1b16] inline-flex items-center gap-1 tabular-nums">
+                              <svg className="w-3.5 h-3.5 text-amber-500 fill-amber-500" viewBox="0 0 24 24" aria-hidden="true">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                              </svg>
+                              <span>{stayRating}</span>
+                              <span className="text-[11px] text-stone-500 font-normal">
+                                ({stay.reviews?.length || stay.reviewsCount || 0})
+                              </span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-mono font-medium text-[10.5px] border border-emerald-200/80">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" aria-hidden="true" />
+                              NEW
+                            </span>
+                          )}
+                        </td>
 
- <td className="py-3 px-4">
- <div className="flex flex-col items-start">
- <div className="flex items-baseline gap-1">
- <span className="font-medium text-[#1f1b16]">
- ₹{cleanPrice.toLocaleString('en-IN')}
- </span>
- <span className="text-[10px] text-slate-400 font-medium">
- {stay.rateUnit || stay.roomRates?.[0]?.rateUnit || '/month'}
- </span>
- </div>
- {stay.roomRates?.[0]?.type && (
- <span className="text-[10px] text-blue-600 font-medium">
- {stay.roomRates[0].type}
- </span>
- )}
- </div>
- </td>
+                        <td className="py-3.5 px-4 text-[12px] font-mono text-stone-500 whitespace-nowrap tabular-nums align-middle">
+                          {dateLabel}
+                        </td>
 
- <td className="py-3 px-4">
- {stayRating ? (
- <span className="font-medium text-amber-500 flex items-center gap-1">
- <span> {stayRating}</span>
- <span className="text-[10px] text-slate-400 font-normal">
- ({stay.reviews?.length || stay.reviewsCount || 0})
- </span>
- </span>
- ) : (
- <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-mono font-medium text-[10px] border border-slate-200">
- <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
- NEW
- </span>
- )}
- </td>
-
- <td className="py-3 px-4 text-slate-500">
- {dateLabel}
- </td>
-
- <td className="py-3 px-4 text-right">
- <div className="flex items-center justify-end">
- <button
- type="button"
- onClick={() => onStayClick && onStayClick(stay)}
- className="px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors cursor-pointer"
- >
- Details
- </button>
- </div>
- </td>
- </tr>
- );
- })}
- </tbody>
- </table>
- </div>
- </div>
- )}
- </main>
- </div>
- );
+                        <td className="py-3.5 pr-4 sm:pr-6 lg:pr-8 pl-4 text-right align-middle">
+                          <div className="flex items-center justify-end">
+                            <button
+                              type="button"
+                              onClick={() => onStayClick && onStayClick(stay)}
+                              className="px-3 py-1.5 rounded-lg bg-white hover:bg-[#1f1b16] text-[#1f1b16] hover:text-white border border-stone-200 hover:border-[#1f1b16] text-[12px] font-medium transition-colors cursor-pointer"
+                            >
+                              Details
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
 }
 
 export default DataPage;

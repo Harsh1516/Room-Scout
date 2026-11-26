@@ -176,6 +176,14 @@ export function isHostPropertyEqual(prev, next) {
  if (prev.latitude !== next.latitude || prev.longitude !== next.longitude) return false;
  if (prev.image !== next.image) return false;
  if (prev.rating !== next.rating) return false;
+ if (
+ String(prev.revenueResetSettings?.resetAt || '') !== String(next.revenueResetSettings?.resetAt || '') ||
+ Number(prev.revenueResetSettings?.baselineTotal || 0) !== Number(next.revenueResetSettings?.baselineTotal || 0) ||
+ Number(prev.revenueResetSettings?.baselineOnline || 0) !== Number(next.revenueResetSettings?.baselineOnline || 0) ||
+ Number(prev.revenueResetSettings?.baselineOffline || 0) !== Number(next.revenueResetSettings?.baselineOffline || 0)
+ ) {
+ return false;
+ }
 
  const prevImages = prev.images || [];
  const nextImages = next.images || [];
@@ -268,6 +276,7 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
  g._id === nextG._id &&
  g.status === nextG.status &&
  g.paymentStatus === nextG.paymentStatus &&
+ (g.paymentDeadline || '') === (nextG.paymentDeadline || '') &&
  g.updatedAt === nextG.updatedAt &&
  (g.upiPayment?.verificationStatus || '') === (nextG.upiPayment?.verificationStatus || '') &&
  (g.upiPayment?.transactionRef || g.transactionRef || '') === (nextG.upiPayment?.transactionRef || nextG.transactionRef || '') &&
@@ -317,6 +326,7 @@ export function useHostDashboardData({ user, updateUserSession, locationState, a
  g._id === nextG._id &&
  g.status === nextG.status &&
  g.paymentStatus === nextG.paymentStatus &&
+ (g.paymentDeadline || '') === (nextG.paymentDeadline || '') &&
  g.updatedAt === nextG.updatedAt &&
  (g.upiPayment?.verificationStatus || '') === (nextG.upiPayment?.verificationStatus || '') &&
  (g.upiPayment?.transactionRef || g.transactionRef || '') === (nextG.upiPayment?.transactionRef || nextG.transactionRef || '') &&

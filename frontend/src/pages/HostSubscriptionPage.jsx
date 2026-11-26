@@ -4,6 +4,7 @@ import { subscriptionsAPI, API_BASE_URL } from '../services/api';
 import { toast } from '../context/ToastContext';
 import { Left } from '../components/navbar/Left';
 import { getSocket } from '../services/socket';
+import { DotGridWaveLoader } from '../components/common/DotGridWaveLoader';
 
 // Local storage caching helpers to prevent any reload, flash, or blank frame
 const getStoredSubscriptionInfo = () => {
@@ -210,7 +211,11 @@ export function HostSubscriptionPage() {
  navigate('/host/dashboard');
  };
 
-   return (
+  if (loading && !subscriptionInfo) {
+    return <DotGridWaveLoader />;
+  }
+
+  return (
     <div className="min-h-screen bg-[#eceef1] md:bg-[#f5f2ea] text-slate-900 md:text-[#1f1b16] flex flex-col font-tech-minimal md:font-sans selection:bg-slate-900/10 md:selection:bg-purple-500/20 host-page-scope relative overflow-x-hidden">
       {/* ── Ambient High-Tech Contour Curves (Pic 2 inspired - Mobile only) ── */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none md:hidden z-0">

@@ -2,16 +2,10 @@ import { Suspense } from 'react';
 import { motion } from 'framer-motion';
 import HostRoomCategories from '../HostRoomCategories';
 import { ErrorBoundary } from '../../common/ErrorBoundary';
+import { DotGridWaveLoader } from '../../common/DotGridWaveLoader';
 
 function DashboardSkeletonLoader() {
-	return (
-		<div className="w-full min-h-[320px] rounded-2xl bg-white/60 border border-slate-200 flex flex-col items-center justify-center gap-3 p-8">
-			<div className="w-8 h-8 rounded-full border-2 border-slate-200 border-t-[#9333ea] animate-spin" />
-			<span className="text-xs font-mono text-slate-400">
-				Loading Panel Content...
-			</span>
-		</div>
-	);
+	return <DotGridWaveLoader fullScreen={false} className="min-h-[320px]" />;
 }
 
 export function HostRoomsTab({

@@ -47,14 +47,26 @@ export function DotGridWaveLoader({ fullScreen = true, className = '' }) {
 
   if (!fullScreen) {
     return (
-      <div className="w-full min-h-[240px] flex items-center justify-center">
+      <div
+        className={`w-full min-h-[240px] flex items-center justify-center rounded-2xl bg-[#f6f5f2]/45 ${className}`.trim()}
+        style={{
+          backdropFilter: 'blur(20px) saturate(140%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(140%)',
+        }}
+      >
         {grid}
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-[#f6f5f2]/65 backdrop-blur-md pointer-events-auto select-none">
+    <div
+      className={`fixed inset-0 z-[10000] flex items-center justify-center bg-[#f6f5f2]/45 pointer-events-auto select-none ${className}`.trim()}
+      style={{
+        backdropFilter: 'blur(28px) saturate(150%)',
+        WebkitBackdropFilter: 'blur(28px) saturate(150%)',
+      }}
+    >
       {grid}
     </div>
   );
