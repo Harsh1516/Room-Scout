@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 
 const ROWS = 3;
@@ -31,12 +32,12 @@ export function DotGridWaveLoader({ fullScreen = true, className = '' }) {
       role="status"
       aria-live="polite"
       aria-label="Loading"
-      className={`grid grid-cols-4 gap-2.5 sm:gap-3 p-4 ${className}`}
+      className="grid grid-cols-4 place-items-center gap-2.5 sm:gap-3 shrink-0"
     >
       {DOTS.map(({ row, col }) => (
         <span
           key={`${row}-${col}`}
-          className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-[#141414] animate-dot-grid-wave will-change-transform"
+          className="block w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-[#141414] origin-center animate-dot-grid-wave will-change-transform"
           style={{
             animationDelay: `${(row + col) * 0.1}s`,
           }}
@@ -59,9 +60,9 @@ export function DotGridWaveLoader({ fullScreen = true, className = '' }) {
     );
   }
 
-  return (
+  const overlay = (
     <div
-      className={`fixed inset-0 z-[10000] flex items-center justify-center bg-[#f6f5f2]/45 pointer-events-auto select-none ${className}`.trim()}
+      className={`fixed inset-0 z-[10050] w-screen h-[100dvh] flex items-center justify-center bg-[#f6f5f2]/45 pointer-events-auto select-none ${className}`.trim()}
       style={{
         backdropFilter: 'blur(28px) saturate(150%)',
         WebkitBackdropFilter: 'blur(28px) saturate(150%)',
@@ -70,6 +71,12 @@ export function DotGridWaveLoader({ fullScreen = true, className = '' }) {
       {grid}
     </div>
   );
+
+  if (typeof document !== 'undefined') {
+    return createPortal(overlay, document.body);
+  }
+
+  return overlay;
 }
 
 /**

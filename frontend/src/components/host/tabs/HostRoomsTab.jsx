@@ -5,7 +5,7 @@ import { ErrorBoundary } from '../../common/ErrorBoundary';
 import { DotGridWaveLoader } from '../../common/DotGridWaveLoader';
 
 function DashboardSkeletonLoader() {
-	return <DotGridWaveLoader fullScreen={false} className="min-h-[320px]" />;
+	return <DotGridWaveLoader fullScreen={false} className="flex-1 min-h-[calc(100dvh-10rem)]" />;
 }
 
 export function HostRoomsTab({
