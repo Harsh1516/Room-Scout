@@ -1,3 +1,5 @@
+import { getConsoleSegmentClassName } from './segmentButtonClass';
+
 const OCCUPANCY_OPTIONS = [
   { id: 'Male', label: 'Male' },
   { id: 'Female', label: 'Female' },
@@ -32,7 +34,7 @@ export function WhoControl({
   };
 
   return (
-    <div className="z-20">
+    <div className="z-20 h-full">
       {/* Trigger Pill */}
       <button
         type="button"
@@ -41,14 +43,10 @@ export function WhoControl({
           e.stopPropagation();
           onToggle();
         }}
-        className={`flex items-center justify-center px-5 sm:px-6 h-11 sm:h-12 min-w-[78px] sm:min-w-[92px] rounded-full text-[14px] sm:text-[15px] font-bold tracking-tight leading-none transition-all duration-150 cursor-pointer select-none active:scale-95 border focus:outline-none focus:ring-0 focus-visible:outline-none shadow-xs ${
-          isWhoActive
-            ? 'bg-[#0078d4] hover:bg-[#006bbd] text-white border-[#0078d4] font-bold'
-            : 'bg-[#2b2c37] text-white hover:bg-[#343542] border-[#3b3d4d]'
-        }`}
+        className={getConsoleSegmentClassName(isWhoActive, 'rounded-r-full rounded-l-none')}
         title="Select occupancy and gender preference"
       >
-        <span className="max-w-18 sm:max-w-26 truncate text-center font-bold text-[14px] sm:text-[15px] tracking-tight leading-none text-white">{displayLabel}</span>
+        <span className="max-w-18 sm:max-w-26 truncate text-center font-bold text-[14px] sm:text-[15px] tracking-tight leading-none">{displayLabel}</span>
       </button>
 
       {/* Minimal Pop-up Tab (Just Male, Female, Both - No extra text) */}

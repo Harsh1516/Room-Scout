@@ -28,6 +28,15 @@ export function Console({
  const navigate = useNavigate();
  const consoleRef = useRef(null);
  const [isExpanded, setIsExpanded] = useState(false);
+  const [isDrawerMounted, setIsDrawerMounted] = useState(false);
+  const isExpandedRef = useRef(false);
+
+  useEffect(() => {
+    isExpandedRef.current = isExpanded;
+    if (isExpanded) {
+      setIsDrawerMounted(true);
+    }
+  }, [isExpanded]);
 
  // Notify parent whenever search console active state changes
   useEffect(() => {
@@ -87,11 +96,18 @@ export function Console({
  return (
  <div ref={consoleRef} className="relative select-none w-max">
  <nav
-        className={`relative flex items-center p-1 sm:p-1.5 ${isExpanded ? "pl-2 sm:pl-2.5" : ""} rounded-full bg-white border border-slate-200/90 shadow-sm backdrop-blur-md select-none ${!isExpanded ? "max-w-[calc(100vw-96px)] min-w-[130px] sm:min-w-[145px]" : "max-w-[calc(100vw-16px)] w-max"} sm:max-w-none h-[54px] sm:h-[56px] min-h-[54px] transition-all`}
+        className="relative flex items-center p-1 rounded-full bg-white/50 border border-white/65 shadow-sm backdrop-blur-md select-none max-w-[calc(100vw-16px)] sm:max-w-none w-max min-w-[130px] sm:min-w-[145px] h-[54px] sm:h-[56px] min-h-[54px] transition-shadow"
  style={{ borderRadius: 9999 }}
  >
  {/* 1. Expandable 3-Segment Controls (What, Where, Who) */}
- <AnimatePresence initial={false}>
+ <AnimatePresence
+ initial={false}
+ onExitComplete={() => {
+ if (!isExpandedRef.current) {
+ setIsDrawerMounted(false);
+ }
+ }}
+ >
  {isExpanded && (
  <motion.div
  key="controls-drawer"
@@ -99,7 +115,7 @@ export function Console({
  animate={{
  width: 'auto',
  opacity: 1,
- marginRight: 4,
+ marginRight: 10,
  transitionEnd: { overflow: 'visible' },
  }}
  exit={{
@@ -109,9 +125,9 @@ export function Console({
  overflow: 'hidden',
  }}
  transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
- className="flex items-center shrink-0"
+ className="flex items-center h-full shrink-0"
  >
- <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+ <div className="flex items-center h-full bg-[#e5e5e5] rounded-full shrink-0">
  {/* 1. What: Stay Type Selector */}
  <WhatControl
  selectedType={selectedType}
@@ -124,6 +140,8 @@ export function Console({
  }}
  onClose={() => setShowWhatPicker(false)}
  />
+
+ <span aria-hidden="true" className="w-px h-5 sm:h-6 bg-black/15 shrink-0 pointer-events-none" />
 
  {/* 2. Where: Destination & Map Selector */}
  <WhereControl
@@ -138,6 +156,8 @@ export function Console({
  onClose={() => setShowWherePicker(false)}
  onOpenMapModal={onOpenMapModal}
  />
+
+ <span aria-hidden="true" className="w-px h-5 sm:h-6 bg-black/15 shrink-0 pointer-events-none" />
 
  {/* 3. Who: Occupancy & Gender Selector */}
  <WhoControl
@@ -168,15 +188,11 @@ export function Console({
             }
           }}
           title={!isExpanded ? 'Click to expand search options' : (canSearch ? 'Search verified stays' : 'Select filters or search')}
-          className={`relative font-bold ${
-            !isExpanded
-              ? "w-full min-w-[125px] sm:min-w-[140px] px-4 sm:px-5 h-12 min-h-[48px] text-slate-900 hover:text-black"
-              : "px-4 sm:px-5 h-11 sm:h-12 bg-[#0078d4] hover:bg-[#006bbd] active:bg-[#005ba3] text-white border border-[#0078d4] shadow-xs"
-          } rounded-full shrink-0 select-none flex items-center justify-center gap-2 sm:gap-2.5 cursor-pointer active:scale-95 focus:outline-none transition-all duration-150 whitespace-nowrap`}
+          className="relative font-bold min-w-[125px] sm:min-w-[140px] h-full px-4 sm:px-5 bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF] text-white border border-[#2563EB] shadow-xs rounded-full shrink-0 select-none flex items-center justify-center gap-2 sm:gap-2.5 cursor-pointer active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2 transition-[background-color,border-color,color,transform,box-shadow] duration-150 whitespace-nowrap"
         >
           {/* Search Magnifying Glass or Spinner */}
           <svg
-            className={`w-5 h-5 sm:w-[20px] sm:h-[20px] shrink-0 ${isExpanded ? 'text-white' : 'text-slate-900'} stroke-[2.5] ${isSearching ? 'animate-spin' : ''}`}
+            className={`w-5 h-5 sm:w-[20px] sm:h-[20px] shrink-0 text-white stroke-[2.5] ${isSearching ? 'animate-spin' : ''}`}
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -194,17 +210,17 @@ export function Console({
           </svg>
 
           {/* Label */}
-          <span className={`font-bold tracking-tight text-[14px] sm:text-[15px] ${isExpanded ? 'text-white' : 'text-slate-900'} whitespace-nowrap leading-none`}>
+          <span className="font-bold tracking-tight text-[14px] sm:text-[15px] text-white whitespace-nowrap leading-none">
             {isSearching ? '...' : 'Search'}
           </span>
 
           {/* Quick Active Filter Preview or Prompt */}
-          {!isExpanded && activeSummary ? (
-            <span className="max-w-32 sm:max-w-44 truncate text-xs font-semibold bg-blue-50 text-[#005ba3] border border-[#0078d4]/30 px-2.5 py-0.5 rounded-full shadow-2xs">
+          {!isDrawerMounted && activeSummary ? (
+            <span className="max-w-32 sm:max-w-44 truncate text-xs font-semibold bg-white text-[#1D4ED8] border border-white/80 px-2.5 py-0.5 rounded-full shadow-2xs">
               {activeSummary}
             </span>
-          ) : !isExpanded ? (
-            <span className="hidden sm:inline text-xs font-medium text-slate-500 pl-0.5">
+          ) : !isDrawerMounted ? (
+            <span className="hidden sm:inline text-xs font-medium text-white pl-0.5">
               Stays
             </span>
           ) : null}
