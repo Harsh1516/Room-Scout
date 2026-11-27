@@ -34,7 +34,6 @@ export function UserMonthlySlotCard({
   stay,
   WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'],
   selectedRoomFreeStat,
-  onOpenGuestDetails,
   personCount = 1,
 }) {
   const monthGroups = useMemo(() => groupDaysByMonth(upcomingWeek), [upcomingWeek]);
@@ -474,23 +473,6 @@ export function UserMonthlySlotCard({
                 </div>
               </motion.div>
             </div>
-          </div>
-        )}
-
-        {/* Add Detail Console Button (Gray console, fully rounded, matched to Request Slot size) */}
-        {onOpenGuestDetails && (
-          <div className="pt-2 sm:pt-3">
-            <button
-              type="button"
-              onClick={onOpenGuestDetails}
-              className="w-full min-h-[58px] sm:min-h-[64px] py-4.5 sm:py-5 px-7 rounded-full bg-neutral-700 hover:bg-neutral-600 active:scale-[0.98] text-white font-black text-xl sm:text-2xl tracking-wide shadow-xl shadow-neutral-700/20 transition-all flex items-center justify-center gap-3 cursor-pointer select-none"
-            >
-              <span>Add Detail</span>
-              <svg className="w-6 h-6 stroke-[2.8] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12" />
-                <polyline points="12 5 19 12 12 19" />
-              </svg>
-            </button>
           </div>
         )}
       </div>

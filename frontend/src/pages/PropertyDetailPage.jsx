@@ -356,14 +356,14 @@ export function PropertyDetailPage({ onLoginClick }) {
 
         {/* 2. Hybrid Capsule Dock: Bottom Floating Dock on Mobile (< md), Top Center on Desktop (md+) */}
         <div className="fixed bottom-5 sm:bottom-6 md:bottom-auto md:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center pointer-events-auto select-none w-max max-w-[calc(100vw-24px)] md:max-w-none h-[54px] sm:h-[56px]">
-          <nav className="relative flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-full bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.12)] md:shadow-sm select-none w-fit">
+          <nav className="relative flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-full bg-white/50 backdrop-blur-md border border-white/65 shadow-[0_8px_30px_rgba(0,0,0,0.12)] md:shadow-sm select-none w-fit">
             <button
               type="button"
               onClick={() => setActiveCenterTab('property')}
               className={`relative h-[42px] sm:h-[44px] md:h-[38px] min-w-[78px] sm:min-w-[100px] md:min-w-[130px] px-3.5 sm:px-5 md:px-8 rounded-full text-[13px] sm:text-sm font-semibold tracking-tight transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
                 activeCenterTab === 'property'
                   ? 'text-white'
-                  : 'text-slate-700 hover:text-[#1f1b16]'
+                  : 'text-slate-900 hover:text-black'
               }`}
             >
               {activeCenterTab === 'property' && (
@@ -386,7 +386,7 @@ export function PropertyDetailPage({ onLoginClick }) {
               className={`relative h-[42px] sm:h-[44px] md:h-[38px] min-w-[70px] sm:min-w-[90px] md:min-w-[120px] px-3.5 sm:px-5 md:px-8 rounded-full text-[13px] sm:text-sm font-semibold tracking-tight transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
                 activeCenterTab === 'host'
                   ? 'text-white'
-                  : 'text-slate-700 hover:text-[#1f1b16]'
+                  : 'text-slate-900 hover:text-black'
               }`}
             >
               {activeCenterTab === 'host' && (
@@ -409,7 +409,7 @@ export function PropertyDetailPage({ onLoginClick }) {
               className={`relative h-[42px] sm:h-[44px] md:h-[38px] min-w-[88px] sm:min-w-[110px] md:min-w-[150px] px-3.5 sm:px-5 md:px-8 rounded-full text-[13px] sm:text-sm font-semibold tracking-tight transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 select-none shrink-0 whitespace-nowrap active:scale-95 ${
                 activeCenterTab === 'reviews'
                   ? 'text-white'
-                  : 'text-slate-700 hover:text-[#1f1b16]'
+                  : 'text-slate-900 hover:text-black'
               }`}
             >
               {activeCenterTab === 'reviews' && (

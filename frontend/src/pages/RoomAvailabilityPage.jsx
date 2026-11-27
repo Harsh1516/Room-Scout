@@ -1164,7 +1164,7 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  </header>
 
  {/* MAIN CONTAINER */}
- <main className="flex-1 w-full flex flex-col justify-center my-auto min-h-0 overflow-y-auto xl:overflow-y-visible pt-24 sm:pt-24 xl:pt-16 pb-4 relative z-10">
+ <main className="flex-1 w-full flex flex-col justify-center my-auto min-h-0 overflow-y-auto xl:overflow-y-visible pt-24 sm:pt-24 xl:pt-16 pb-28 xl:pb-4 relative z-10">
  <div className="w-full max-w-[1680px] mx-auto px-0 sm:px-6 lg:px-8 py-0 sm:py-3 flex-1 flex flex-col justify-center my-auto min-h-0 space-y-3 sm:space-y-4">
  {/* 3-COLUMN OR 2-COLUMN ARCHITECTURE (VERTICALLY CENTERED) */}
  <div className={`grid grid-cols-1 ${
@@ -1222,7 +1222,6 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  selectedMonthIndices={selectedMonthIndices}
  onToggleSlotMonth={handleToggleSlotMonth}
  stay={stay}
- onOpenGuestDetails={() => setIsGuestDetailsModalOpen(true)}
  />
  </AnimatePresence>
  </div>
@@ -1317,6 +1316,21 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  </div>
  </div>
  </main>
+
+ {/* Fixed Bottom Footer CTA for Mobile/Tablet */}
+ <footer className="xl:hidden fixed bottom-[max(0.875rem,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 w-max max-w-[calc(100vw-24px)] p-1.5 rounded-full bg-white/65 backdrop-blur-md border border-white/80 shadow-[0_10px_28px_rgba(0,0,0,0.14)]">
+   <button
+     type="button"
+     onClick={() => setIsGuestDetailsModalOpen(true)}
+     className="w-auto inline-flex items-center justify-center gap-3 min-h-[52px] sm:min-h-[56px] py-3 sm:py-3.5 px-8 sm:px-10 rounded-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 active:scale-[0.98] text-white font-black text-xl sm:text-2xl tracking-wide shadow-lg shadow-emerald-600/25 transition-all cursor-pointer select-none whitespace-nowrap"
+   >
+     <span>Add Detail</span>
+     <svg className="w-6 h-6 stroke-[2.8] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+       <line x1="5" y1="12" x2="19" y2="12" />
+       <polyline points="12 5 19 12 12 19" />
+     </svg>
+   </button>
+ </footer>
  </div>
  );
 }

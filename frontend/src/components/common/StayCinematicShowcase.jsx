@@ -857,37 +857,72 @@ export function StayCinematicShowcase({
 
           {/* Right: Host Name, Joined Date & Avg Response Pills */}
           <div className="flex-1 min-w-0 flex flex-col gap-2.5">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center px-4 py-1.5 sm:px-5 sm:py-2 rounded-full bg-slate-100 text-slate-800 font-bold text-base sm:text-lg md:text-xl border border-slate-300/90 truncate max-w-full">
-                {hostDisplayName}
-              </span>
-              <span className="inline-flex items-center px-4 py-1.5 sm:px-5 sm:py-2 rounded-full bg-slate-100 text-slate-700 font-bold text-base sm:text-lg md:text-xl border border-slate-300/90 truncate max-w-full">
-                {formattedJoinedDate}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span
-                className={`inline-flex items-center gap-1.5 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full font-bold text-base sm:text-lg md:text-xl border truncate max-w-full ${
-                  formattedResponseTime.isMeasured
-                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200/90'
-                    : 'bg-slate-100 text-slate-700 border-slate-300/90'
-                }`}
-              >
-                <svg
-                  className={`w-4 h-4 shrink-0 ${formattedResponseTime.isMeasured ? 'text-emerald-600' : 'text-slate-500'}`}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 6 12 12 16 14" />
-                </svg>
-                <span className="truncate">{formattedResponseTime.text}</span>
-              </span>
-            </div>
+            {(() => {
+              const glassPillBase =
+                'inline-flex items-center gap-2 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full backdrop-blur-md border shadow-[0_4px_14px_rgba(15,23,42,0.05),inset_0_1px_1px_rgba(255,255,255,0.85)] font-bold text-base sm:text-lg md:text-xl truncate max-w-full';
+
+              return (
+                <>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`${glassPillBase} bg-sky-500/15 border-sky-400/35 text-slate-900`}>
+                      <svg
+                        className="w-4 h-4 shrink-0 text-sky-600"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                      </svg>
+                      <span className="truncate">{hostDisplayName}</span>
+                    </span>
+                    <span className={`${glassPillBase} bg-indigo-500/15 border-indigo-400/35 text-slate-800`}>
+                      <svg
+                        className="w-4 h-4 shrink-0 text-indigo-600"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                      </svg>
+                      <span className="truncate">{formattedJoinedDate}</span>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span
+                      className={
+                        formattedResponseTime.isMeasured
+                          ? `${glassPillBase} bg-emerald-500/15 border-emerald-400/35 text-emerald-900`
+                          : `${glassPillBase} bg-amber-500/15 border-amber-400/35 text-slate-800`
+                      }
+                    >
+                      <svg
+                        className={`w-4 h-4 shrink-0 ${formattedResponseTime.isMeasured ? 'text-emerald-600' : 'text-amber-600'}`}
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </svg>
+                      <span className="truncate">{formattedResponseTime.text}</span>
+                    </span>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>
 
