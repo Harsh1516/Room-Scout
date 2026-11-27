@@ -391,6 +391,10 @@ export const createHost = async (req, res, next) => {
     let host = await Host.findOne({ email: cleanEmail });
 
     if (!host) {
+      // Security: Only admins may set initial approval status directly; non-admins always start Pending Approval
+      const initialStatus = isAdmin && status && ['Active', 'Pending Approval', 'Approved', 'Rejected', 'Draft'].includes(status)
+        ? status
+        : 'Pending Approval';
       host = await Host.create({
         name: (name || 'Host').trim(),
         email: cleanEmail,
@@ -398,7 +402,7 @@ export const createHost = async (req, res, next) => {
         phone: phone ? phone.trim() : '',
         role: 'host',
         avatar: (name || 'HO').trim().slice(0, 2).toUpperCase(),
-        status: status || 'Pending Approval',
+        status: initialStatus,
       });
     } else {
       if (name) host.name = name.trim();
@@ -408,7 +412,7 @@ export const createHost = async (req, res, next) => {
       if (wasAlreadyApproved) {
         // One-Time Approval: Once an admin approves the host, they retain Approved status permanently across all room additions and property updates
         host.status = 'Approved';
-      } else if (status && ['Active', 'Pending Approval', 'Approved', 'Rejected', 'Draft'].includes(status)) {
+      } else if (isAdmin && status && ['Active', 'Pending Approval', 'Approved', 'Rejected', 'Draft'].includes(status)) {
         host.status = status;
       } else if (!host.status) {
         host.status = 'Pending Approval';
@@ -1003,6 +1007,8 @@ export const getHostGuests = async (req, res, next) => {
       paymentMethod: b.paymentMethod || (b.bookingSource === 'ONLINE' ? 'ONLINE' : 'OFFLINE'),
       bookingSource: b.bookingSource,
       upiPayment: b.upiPayment || null,
+      activeExtension: b.activeExtension || null,
+      paymentHistory: Array.isArray(b.paymentHistory) ? b.paymentHistory : [],
       transactionRef: b.upiPayment?.transactionRef || b.transactionRef || '',
       receiptUrl: b.upiPayment?.receiptUrl || b.receiptUrl || '',
       paymentDeadline: b.paymentDeadline || null,
@@ -1078,9 +1084,9 @@ export const getStats = async (req, res, next) => {
 // @access  Public / Admin
 export const impersonateAccount = async (req, res, next) => {
   try {
-    const { email, role, id, _id } = req.body;
-    const cleanEmail = email ? email.toLowerCase().trim() : '';
-    const isHost = role === 'host';
+    const { email, targetEmail, role, targetRole, id, _id } = req.body;
+    const cleanEmail = (targetEmail || email || '').toLowerCase().trim();
+    const isHost = (targetRole || role) === 'host';
     const targetId = id || _id;
 
     let targetAccount = null;

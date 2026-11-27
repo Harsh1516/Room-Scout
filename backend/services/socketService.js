@@ -1,5 +1,10 @@
 import { Server } from 'socket.io';
+import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
+import { createCorsOriginChecker } from '../utils/corsConfig.js';
+import { adminKeyIsValid } from '../middleware/authMiddleware.js';
+import { User } from '../models/User.js';
+import { Host } from '../models/Host.js';
 
 let ioInstance = null;
 
@@ -8,30 +13,9 @@ let ioInstance = null;
  * @param {import('http').Server} httpServer
  */
 export function initSocketServer(httpServer) {
-  const configuredOrigins = env.ALLOWED_ORIGINS
-    ? env.ALLOWED_ORIGINS.split(',').map((origin) => origin.trim())
-    : ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'];
-
   const io = new Server(httpServer, {
     cors: {
-      origin: (origin, callback) => {
-        if (!origin) return callback(null, true);
-        if (
-          configuredOrigins.includes(origin) ||
-          (env.CLIENT_URL && origin === env.CLIENT_URL) ||
-          origin.endsWith('.vercel.app') ||
-          origin.endsWith('.onrender.com') ||
-          origin.startsWith('http://localhost:') ||
-          origin.startsWith('http://127.0.0.1:') ||
-          origin.startsWith('http://192.168.') ||
-          origin.startsWith('http://10.') ||
-          origin.startsWith('http://172.') ||
-          origin.includes('.local')
-        ) {
-          return callback(null, true);
-        }
-        callback(null, true); // Fallback allow in dev
-      },
+      origin: createCorsOriginChecker(),
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE'],
     },
@@ -44,44 +28,103 @@ export function initSocketServer(httpServer) {
     // Automatically join global broadcast channel
     socket.join('room:global');
 
-    // Handle client authentication and private room mapping
-    socket.on('authenticate', (authData = {}) => {
+    // Handle client authentication and private room mapping (strictly verify JWT or ADMIN_KEY)
+    socket.on('authenticate', async (authData = {}) => {
       try {
-        const { email, userId, role } = authData;
+        const { token, adminKey } = authData || {};
+        let isVerifiedAdmin = false;
 
-        if (email && typeof email === 'string') {
-          const cleanEmail = email.trim().toLowerCase();
-          socket.join(`host:${cleanEmail}`);
-          socket.join(`user:${cleanEmail}`);
-          socket.data.email = cleanEmail;
+        if (adminKey && typeof adminKey === 'string') {
+          if (adminKeyIsValid({ headers: { 'x-admin-key': adminKey } })) {
+            socket.join('room:admin');
+            socket.data.isAdmin = true;
+            isVerifiedAdmin = true;
+          }
         }
 
-        if (userId) {
-          const cleanId = String(userId).trim();
-          socket.join(`user:${cleanId}`);
-          socket.join(`host:${cleanId}`);
-          socket.data.userId = cleanId;
+        if (token && typeof token === 'string' && env.JWT_SECRET) {
+          try {
+            const decoded = jwt.verify(token, env.JWT_SECRET);
+            const rawId = decoded.userId || decoded.id || decoded._id;
+            const decodedEmail = decoded.email ? String(decoded.email).trim().toLowerCase() : '';
+            const account =
+              decoded.role === 'host'
+                ? (rawId ? await Host.findById(rawId).select('_id email role').lean() : null) ||
+                  (decodedEmail ? await Host.findOne({ email: decodedEmail }).select('_id email role').lean() : null)
+                : (rawId ? await User.findById(rawId).select('_id email role isAdmin hostId').lean() : null) ||
+                  (decodedEmail ? await User.findOne({ email: decodedEmail }).select('_id email role isAdmin hostId').lean() : null);
+
+            if (account) {
+              const verifiedId = String(account._id);
+              const verifiedEmail = (account.email || decodedEmail).trim().toLowerCase();
+              const verifiedRole = account.role || decoded.role || 'user';
+
+              socket.data.isAuthenticated = true;
+              socket.data.userId = verifiedId;
+              socket.data.email = verifiedEmail;
+              socket.data.role = verifiedRole;
+
+              if (verifiedEmail) {
+                socket.join(`user:${verifiedEmail}`);
+                if (verifiedRole === 'host' || account.hostId) {
+                  socket.join(`host:${verifiedEmail}`);
+                }
+              }
+              socket.join(`user:${verifiedId}`);
+              if (verifiedRole === 'host') {
+                socket.join(`host:${verifiedId}`);
+              } else if (account.hostId) {
+                const linkedHostId = String(account.hostId);
+                socket.data.hostId = linkedHostId;
+                socket.join(`host:${linkedHostId}`);
+              }
+
+              if (verifiedRole === 'admin' || account.isAdmin) {
+                socket.join('room:admin');
+                socket.data.isAdmin = true;
+                isVerifiedAdmin = true;
+              }
+            }
+          } catch (jwtErr) {
+            console.warn('[Socket JWT Auth Error]:', jwtErr.message);
+          }
         }
 
-        if (role === 'admin' || authData.isAdmin || authData.adminKey) {
-          socket.join('room:admin');
-          socket.data.isAdmin = true;
-        }
-
-        socket.emit('authenticated', { success: true, socketId: socket.id });
+        socket.emit('authenticated', {
+          success: Boolean(socket.data.isAuthenticated || isVerifiedAdmin),
+          socketId: socket.id,
+        });
       } catch (err) {
         console.warn('[Socket Auth Error]:', err.message);
       }
     });
 
-    socket.on('join_admin_room', () => {
-      socket.join('room:admin');
-      socket.data.isAdmin = true;
+    socket.on('join_admin_room', (payload = {}) => {
+      const hasValidKey =
+        payload?.adminKey &&
+        typeof payload.adminKey === 'string' &&
+        adminKeyIsValid({ headers: { 'x-admin-key': payload.adminKey } });
+      if (socket.data.isAdmin || hasValidKey) {
+        socket.join('room:admin');
+        socket.data.isAdmin = true;
+      }
     });
 
     socket.on('join_host_room', ({ email, hostId } = {}) => {
-      if (email) socket.join(`host:${String(email).trim().toLowerCase()}`);
-      if (hostId) socket.join(`host:${String(hostId).trim()}`);
+      if (socket.data.isAdmin) {
+        if (email) socket.join(`host:${String(email).trim().toLowerCase()}`);
+        if (hostId) socket.join(`host:${String(hostId).trim()}`);
+        return;
+      }
+      if (!socket.data.isAuthenticated) return;
+      const reqEmail = email ? String(email).trim().toLowerCase() : '';
+      const reqHostId = hostId ? String(hostId).trim() : '';
+      if (reqEmail && socket.data.email && reqEmail === socket.data.email) {
+        socket.join(`host:${reqEmail}`);
+      }
+      if (reqHostId && (reqHostId === socket.data.userId || reqHostId === socket.data.hostId)) {
+        socket.join(`host:${reqHostId}`);
+      }
     });
 
     socket.on('disconnect', (reason) => {

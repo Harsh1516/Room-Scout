@@ -1318,7 +1318,7 @@ export function RoomAvailabilityPage({ onLoginClick }) {
  </main>
 
  {/* Fixed Bottom Footer CTA for Mobile/Tablet */}
- <footer className="xl:hidden fixed bottom-[max(0.875rem,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 w-max max-w-[calc(100vw-24px)] p-1.5 rounded-full bg-white/65 backdrop-blur-md border border-white/80 shadow-[0_10px_28px_rgba(0,0,0,0.14)]">
+ <footer className="xl:hidden fixed bottom-[max(0.875rem,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-40 w-max max-w-[calc(100vw-24px)] p-1.5 rounded-full bg-white/50 border border-white/65 shadow-[0_10px_28px_rgba(0,0,0,0.14)]">
    <button
      type="button"
      onClick={() => setIsGuestDetailsModalOpen(true)}

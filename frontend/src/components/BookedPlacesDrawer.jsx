@@ -7,6 +7,9 @@ import { toast } from '../context/ToastContext';
 import { isBookingRequestExpired } from '../utils/dateUtils';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 import { LivePaymentTimer } from './common/LivePaymentTimer';
+import { getExtendValidityInfo } from '../utils/bookingExtension';
+import { wasBookingApprovedForPayment } from '../utils/bookingDetailsHelpers';
+import { ExtendValidityModal } from './booking/ExtendValidityModal';
 
 /* ─────────────────────────────── helpers ─────────────────────────────── */
 
@@ -112,6 +115,7 @@ function getStatusMeta(status, booking) {
 
   if (
     !booking?.paymentReRequested &&
+    wasBookingApprovedForPayment(booking) &&
     (st === 'EXPIRED' || (booking && isBookingRequestExpired(booking))) &&
     upiVerification !== 'PENDING_VERIFICATION' &&
     upiVerification !== 'VERIFIED'
@@ -231,6 +235,7 @@ export function BookedPlacesDrawer({ onLoginClick }) {
   const { isAuthenticated } = useAuth();
   const [bookingToDelete, setBookingToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [extendBookingTarget, setExtendBookingTarget] = useState(null);
   const navigate = useNavigate();
 
   const handleOpenBookingDetails = (item) => {
@@ -353,6 +358,7 @@ export function BookedPlacesDrawer({ onLoginClick }) {
                           : item.propertyName || item.title || 'Stay';
 
                       const totalAmount = item.totalAmount || item.amount || 0;
+                      const extendInfo = getExtendValidityInfo(item);
 
                       return (
                         <div
@@ -420,8 +426,8 @@ export function BookedPlacesDrawer({ onLoginClick }) {
                             </div>
                           </div>
 
-                          {/* 3. Price on bottom left, view button on bottom right with black capsule */}
-                          <div className="w-full px-4 py-3 flex items-center justify-between bg-white border-t border-slate-100">
+                          {/* 3. Price on bottom left, actions on bottom right */}
+                          <div className="w-full px-4 py-3 flex items-center justify-between gap-2 bg-white border-t border-slate-100 flex-wrap">
                             <div className="flex flex-col min-w-0">
                               <span className="text-[10px] sm:text-[11px] uppercase font-bold tracking-wider text-slate-400 leading-none">
                                 Price
@@ -431,13 +437,42 @@ export function BookedPlacesDrawer({ onLoginClick }) {
                               </span>
                             </div>
 
-                            <button
-                              type="button"
-                              onClick={() => handleOpenBookingDetails(item)}
-                              className="min-h-[44px] h-[46px] px-7 rounded-full bg-[#1f1b16] hover:bg-[#0f766e] active:scale-95 text-white text-[16px] sm:text-[17px] font-bold tracking-tight transition-all shadow-xs flex items-center justify-center cursor-pointer shrink-0"
-                            >
-                              View
-                            </button>
+                            <div className="flex items-center gap-2 shrink-0 ml-auto">
+                              {extendInfo.isExtensionPending ? (
+                                <span className="px-3 py-1.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200 text-[11px] font-semibold whitespace-nowrap">
+                                  Extending · Verifying UTR
+                                </span>
+                              ) : extendInfo.showButton ? (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setExtendBookingTarget(item);
+                                  }}
+                                  className={`min-h-[44px] h-[46px] px-3.5 rounded-full text-xs font-bold tracking-tight transition-all shadow-xs flex flex-col items-center justify-center leading-tight cursor-pointer shrink-0 active:scale-95 ${
+                                    extendInfo.isLastDay
+                                      ? 'bg-rose-600 hover:bg-rose-700 text-white'
+                                      : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                                  }`}
+                                  title="Pay & submit 12-digit UTR to extend for next month"
+                                >
+                                  <span>Extend Validity</span>
+                                  {extendInfo.countdownLabel && (
+                                    <span className="text-[9.5px] font-semibold opacity-90">
+                                      {extendInfo.countdownLabel}
+                                    </span>
+                                  )}
+                                </button>
+                              ) : null}
+
+                              <button
+                                type="button"
+                                onClick={() => handleOpenBookingDetails(item)}
+                                className="min-h-[44px] h-[46px] px-6 rounded-full bg-[#1f1b16] hover:bg-[#0f766e] active:scale-95 text-white text-[15px] sm:text-[16px] font-bold tracking-tight transition-all shadow-xs flex items-center justify-center cursor-pointer shrink-0"
+                              >
+                                View
+                              </button>
+                            </div>
                           </div>
                         </div>
                       );
@@ -461,6 +496,13 @@ export function BookedPlacesDrawer({ onLoginClick }) {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Extend Validity QR & UTR Modal */}
+      <ExtendValidityModal
+        isOpen={Boolean(extendBookingTarget)}
+        onClose={() => setExtendBookingTarget(null)}
+        booking={extendBookingTarget}
+      />
 
       {/* Remove Booking Confirmation Modal */}
       {bookingToDelete && (

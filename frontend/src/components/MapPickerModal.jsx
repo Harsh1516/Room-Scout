@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 // Famous Cities with Coordinates for Uttarakhand & North India
 const CITY_HOTSPOTS = [
@@ -17,6 +17,14 @@ export function MapPickerModal({ isOpen, onClose, onSelectLocation }) {
   const [extractedCity, setExtractedCity] = useState('Nainital');
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [leafletLoaded, setLeafletLoaded] = useState(false);
+
+  const mapRef = useRef(null);
+  const markerRef = useRef(null);
+  const latestSelectionRef = useRef({ cityName: 'Nainital', coords: { lat: 29.3803, lon: 79.4636 } });
+
+  useEffect(() => {
+    latestSelectionRef.current = { cityName: extractedCity, coords: pinPos };
+  }, [extractedCity, pinPos]);
 
   // Dynamically load Leaflet script & CSS if not present
   useEffect(() => {
@@ -78,7 +86,7 @@ export function MapPickerModal({ isOpen, onClose, onSelectLocation }) {
 
     // Initial marker
     let marker = window.L.marker([pinPos.lat, pinPos.lon], { draggable: true }).addTo(map);
-    const getPopupHtml = (cName, lPos) => `
+    const buildPopupHtml = (cName, lPos) => `
       <div style="min-width: 130px; padding: 4px; font-family: inherit;">
         <b style="font-size: 13px; color: #0f172a; display: block; margin-bottom: 2px;">${cName}</b>
         <div style="font-size: 10px; color: #64748b; margin-bottom: 8px;">${lPos.lat.toFixed(3)}, ${lPos.lon.toFixed(3)}</div>
@@ -87,26 +95,31 @@ export function MapPickerModal({ isOpen, onClose, onSelectLocation }) {
         </button>
       </div>
     `;
-    marker.bindPopup(getPopupHtml(extractedCity, pinPos)).openPopup();
 
-    // Attach click handler to popup select button
-    const wirePopupBtn = (currentCName, currentPos) => {
+    mapRef.current = map;
+    markerRef.current = marker;
+    marker.bindPopup(buildPopupHtml(latestSelectionRef.current.cityName, latestSelectionRef.current.coords)).openPopup();
+
+    // Attach click handler to popup select button using live selection ref (never stale closure)
+    const wirePopupBtn = () => {
       setTimeout(() => {
         const btn = document.getElementById('leaflet-popup-select-btn');
         if (btn) {
           btn.onclick = () => {
-            handleApply(currentCName, currentPos);
+            const { cityName, coords } = latestSelectionRef.current;
+            handleApply(cityName, coords);
           };
         }
       }, 50);
     };
 
-    wirePopupBtn(extractedCity, pinPos);
-    map.on('popupopen', () => wirePopupBtn(extractedCity, pinPos));
+    wirePopupBtn();
+    map.on('popupopen', wirePopupBtn);
 
     // Reverse geocode handler
     const handleLocationSelect = async (lat, lon) => {
-      setPinPos({ lat, lon });
+      const nextCoords = { lat, lon };
+      setPinPos(nextCoords);
       setIsGeocoding(true);
 
       // Check closest city hotspot first
@@ -137,11 +150,12 @@ export function MapPickerModal({ isOpen, onClose, onSelectLocation }) {
         console.warn('Reverse geocoding fallback:', e);
       }
 
+      latestSelectionRef.current = { cityName, coords: nextCoords };
       setExtractedCity(cityName);
       setIsGeocoding(false);
       marker.setLatLng([lat, lon]);
-      marker.bindPopup(getPopupHtml(cityName, { lat, lon })).openPopup();
-      wirePopupBtn(cityName, { lat, lon });
+      marker.bindPopup(buildPopupHtml(cityName, nextCoords)).openPopup();
+      wirePopupBtn();
     };
 
     // Click map event
@@ -162,6 +176,8 @@ export function MapPickerModal({ isOpen, onClose, onSelectLocation }) {
 
     return () => {
       clearTimeout(resizeTimer);
+      mapRef.current = null;
+      markerRef.current = null;
       map.remove();
     };
   }, [isOpen, leafletLoaded]);
@@ -169,8 +185,25 @@ export function MapPickerModal({ isOpen, onClose, onSelectLocation }) {
   if (!isOpen) return null;
 
   const handleSelectHotspot = (city) => {
-    setPinPos({ lat: city.lat, lon: city.lon });
+    const nextCoords = { lat: city.lat, lon: city.lon };
+    latestSelectionRef.current = { cityName: city.name, coords: nextCoords };
+    setPinPos(nextCoords);
     setExtractedCity(city.name);
+
+    if (mapRef.current && markerRef.current) {
+      mapRef.current.setView([city.lat, city.lon], 12, { animate: true });
+      markerRef.current.setLatLng([city.lat, city.lon]);
+      markerRef.current.setPopupContent(`
+        <div style="min-width: 130px; padding: 4px; font-family: inherit;">
+          <b style="font-size: 13px; color: #0f172a; display: block; margin-bottom: 2px;">${city.name}</b>
+          <div style="font-size: 10px; color: #64748b; margin-bottom: 8px;">${city.lat.toFixed(3)}, ${city.lon.toFixed(3)}</div>
+          <button id="leaflet-popup-select-btn" style="width: 100%; padding: 6px 12px; background: #2b2c37; color: #fff; font-size: 11px; font-weight: 600; border-radius: 9999px; border: 1px solid #3b3d4d; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+            <span>Confirm This Point</span>
+          </button>
+        </div>
+      `);
+      markerRef.current.openPopup();
+    }
   };
 
   return (

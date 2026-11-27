@@ -16,8 +16,10 @@ import errorMiddleware from './middleware/errorMiddleware.js';
 import { apiLimiter } from './middleware/rateLimitMiddleware.js';
 import { sanitizeInput } from './middleware/sanitizeMiddleware.js';
 import { autoExpireBookings } from './controllers/bookingController.js';
+import { processExtendValidityNotifications } from './services/renewalNotificationService.js';
 import './config/env.js';
 import { env } from './config/env.js';
+import { createCorsOriginChecker } from './utils/corsConfig.js';
 
 const app = express();
 
@@ -107,32 +109,8 @@ app.use(
 );
 
 // CORS Configuration
-const configuredOrigins = env.ALLOWED_ORIGINS
-  ? env.ALLOWED_ORIGINS.split(',').map((origin) => origin.trim())
-  : ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'];
-
 const corsOptions = {
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-
-    if (
-      configuredOrigins.includes(origin) ||
-      (env.CLIENT_URL && origin === env.CLIENT_URL) ||
-      origin.endsWith('.vercel.app') ||
-      origin.endsWith('.onrender.com') ||
-      origin.startsWith('http://localhost:') ||
-      origin.startsWith('http://127.0.0.1:') ||
-      origin.startsWith('http://192.168.') ||
-      origin.startsWith('http://10.') ||
-      origin.startsWith('http://172.') ||
-      origin.includes('.local')
-    ) {
-      return callback(null, true);
-    }
-
-    console.warn(`Blocked by CORS: ${origin}`);
-    callback(new Error(`CORS Error: Origin ${origin} not allowed by CORS policy`));
-  },
+  origin: createCorsOriginChecker(),
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: [
@@ -223,10 +201,17 @@ connectDB().then(() => {
     console.log(`Backend Server running on port ${PORT} with real-time WebSockets`);
   });
 
-  // Run initial booking request expiry check & schedule recurring 60s background sweep
+  // Run initial booking request expiry check & schedule recurring background sweep
   autoExpireBookings().catch((err) => console.error('Initial auto-expire error:', err));
+  processExtendValidityNotifications().catch((err) => console.error('Initial renewal reminder error:', err));
+  let renewalTick = 0;
   setInterval(() => {
     autoExpireBookings().catch((err) => console.error('Interval auto-expire error:', err));
+    renewalTick += 1;
+    // Check extend-validity email reminders every 15 minutes
+    if (renewalTick % 15 === 0) {
+      processExtendValidityNotifications().catch((err) => console.error('Interval renewal reminder error:', err));
+    }
   }, 60 * 1000);
 });
 

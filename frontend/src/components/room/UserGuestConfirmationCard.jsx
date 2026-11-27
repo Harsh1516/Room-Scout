@@ -709,7 +709,6 @@ export function UserGuestConfirmationCard({
                 <button
                   type="submit"
                   disabled={submitting || selectedCount === 0}
-                  onClick={handleFormSubmit}
                   className={`w-auto shrink-0 h-11 sm:h-12 px-7 sm:px-8 rounded-full font-semibold text-sm shadow-md active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
                     selectedCount > 0
                       ? 'bg-[#0f766e] hover:bg-emerald-500 text-white shadow-emerald-700/25'

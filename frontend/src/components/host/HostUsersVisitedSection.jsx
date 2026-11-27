@@ -163,8 +163,11 @@ export function HostUsersVisitedSection({
 
  const pendingRequests = useMemo(() => {
  return mergedGuests.filter((g) => {
- const gRoomNum = String(g.roomNumber || '').replace(/[^0-9]/g, '');
+ const isPendingExt = g.activeExtension?.status === 'PENDING_VERIFICATION';
+ const effectiveRoom = isPendingExt ? (g.activeExtension?.targetRoomNumber || g.roomNumber) : g.roomNumber;
+ const gRoomNum = String(effectiveRoom || '').replace(/[^0-9]/g, '');
  if (activeRoomNumbers.size > 0 && (!gRoomNum || !activeRoomNumbers.has(gRoomNum))) return false;
+ if (isPendingExt) return true;
  const st = String(g.status || '').toUpperCase();
  if (st === 'REJECTED' || st === 'CANCELLED' || st === 'EXPIRED' || st === 'CONFIRMED' || st === 'CHECKED_IN') return false;
  return (
@@ -182,7 +185,11 @@ export function HostUsersVisitedSection({
 
  const todayPendingRequests = useMemo(() => {
  return pendingRequests.filter((g) => {
- const dKey = extractDateKey(g.createdAt || g.checkInISO || g.checkIn || g.date);
+ const rawDt =
+ g.activeExtension?.status === 'PENDING_VERIFICATION'
+ ? (g.activeExtension.submittedAt || g.createdAt || g.date)
+ : (g.createdAt || g.checkInISO || g.checkIn || g.date);
+ const dKey = extractDateKey(rawDt);
  return dKey === todayISO;
  });
  }, [pendingRequests, todayISO]);
@@ -355,8 +362,11 @@ export function HostUsersVisitedSection({
  const isDuplicateRoomNum = cleanSelectedRoom && (activeRoomCategoryMap.get(cleanSelectedRoom)?.size || 0) > 1;
 
  const filtered = activeSubTabGuests.filter((g) => {
- const gRoomType = (g.roomType || 'Standard').trim().toLowerCase();
- const gRoomNumber = String(g.roomNumber || '').replace(/[^0-9]/g, '');
+ const useExtTarget = activeSubTab === 'requests' && g.activeExtension?.status === 'PENDING_VERIFICATION';
+ const effectiveRoomType = useExtTarget ? (g.activeExtension?.targetRoomType || g.roomType) : g.roomType;
+ const effectiveRoomNumber = useExtTarget ? (g.activeExtension?.targetRoomNumber || g.roomNumber) : g.roomNumber;
+ const gRoomType = (effectiveRoomType || 'Standard').trim().toLowerCase();
+ const gRoomNumber = String(effectiveRoomNumber || '').replace(/[^0-9]/g, '');
 
  if (activeRoomNumbers.size > 0 && (!gRoomNumber || !activeRoomNumbers.has(gRoomNumber))) return false;
  if (selectedRoomNumber !== 'ALL') {
@@ -694,6 +704,7 @@ export function HostUsersVisitedSection({
  const handleAcceptUtr = async (request) => {
  const mongoBookingId = request._id || request.bookingId;
  const actionKey = request.bookingId || request._id;
+ const isExt = request.activeExtension?.status === 'PENDING_VERIFICATION';
  if (!mongoBookingId) return;
  setActionLoadingId(actionKey);
 
@@ -701,10 +712,13 @@ export function HostUsersVisitedSection({
  const res = await paymentsAPI.verifyReference({
  bookingId: mongoBookingId,
  action: 'VERIFY',
- verificationNote: 'Verified UTR and accepted by host',
+ verificationNote: isExt
+ ? 'Verified Extend Validity UTR by host'
+ : 'Verified UTR and accepted by host',
  });
 
- const passKey = res?.checkInCode || res?.booking?.checkInCode || request.checkInCode || '';
+ const updatedServerBooking = res?.booking || null;
+ const passKey = res?.checkInCode || updatedServerBooking?.checkInCode || request.checkInCode || '';
 
  setGuests((prev) =>
  prev.map((item) => {
@@ -712,6 +726,15 @@ export function HostUsersVisitedSection({
  (item._id && item._id === request._id) ||
  (item.bookingId && item.bookingId === request.bookingId);
  if (!isTarget) return item;
+ if (updatedServerBooking) {
+ return {
+ ...item,
+ ...updatedServerBooking,
+ bookingId: updatedServerBooking._id || item.bookingId,
+ userName: updatedServerBooking.fullName || item.userName,
+ guestAadhar: updatedServerBooking.aadharNumber || item.guestAadhar,
+ };
+ }
  return {
  ...item,
  status: 'CONFIRMED',
@@ -729,7 +752,7 @@ export function HostUsersVisitedSection({
  if (propId) broadcastStayUpdate(propId);
  broadcastBookingChange({
  bookingId: mongoBookingId,
- status: 'CONFIRMED',
+ status: updatedServerBooking?.status || 'CONFIRMED',
  paymentStatus: 'PAID',
  verificationStatus: 'VERIFIED',
  checkInCode: passKey,
@@ -738,7 +761,9 @@ export function HostUsersVisitedSection({
  });
 
  showToast(
- passKey
+ res?.isExtension
+ ? res?.message || `Validity extended for Room ${updatedServerBooking?.roomNumber || request.roomNumber}`
+ : passKey
  ? `UTR accepted! Confirmation & Pass Key (${passKey}) sent`
  : `UTR accepted! Room ${request.roomNumber} confirmed`,
  'success'
@@ -755,8 +780,46 @@ export function HostUsersVisitedSection({
 
  const handleRejectRequest = async (request) => {
  const bookingId = request.bookingId || request._id;
+ const mongoBookingId = request._id || request.bookingId;
  if (!bookingId) return;
  setActionLoadingId(bookingId);
+
+ // If rejecting an Extend Validity UTR, only reject activeExtension (keep active/checked-out stay intact!)
+ if (request.activeExtension?.status === 'PENDING_VERIFICATION') {
+ setGuests((prev) =>
+ prev.map((item) =>
+ (item.bookingId || item._id) === bookingId
+ ? {
+ ...item,
+ activeExtension: {
+ ...(item.activeExtension || {}),
+ status: 'REJECTED',
+ rejectionReason: 'Extension UTR could not be verified in host bank statement',
+ },
+ }
+ : item
+ )
+ );
+ try {
+ await paymentsAPI.verifyReference({
+ bookingId: mongoBookingId,
+ action: 'REJECT',
+ rejectionReason: 'Extension UTR could not be verified in host bank statement',
+ });
+ const propId = hostProperty?._id;
+ if (propId) broadcastStayUpdate(propId);
+ showToast('Extension UTR flagged — resident can re-submit a valid 12-digit UTR', 'info');
+ refreshGuests();
+ } catch (err) {
+ console.error('Error rejecting extension UTR:', err);
+ showToast(err?.message || 'Failed to reject extension UTR', 'error');
+ refreshGuests();
+ } finally {
+ setActionLoadingId(null);
+ }
+ return;
+ }
+
  // Optimistically update status to REJECTED so request card immediately animates and disappears
  setGuests((prev) =>
  prev.map((item) => ((item.bookingId || item._id) === bookingId ? { ...item, status: 'REJECTED' } : item))

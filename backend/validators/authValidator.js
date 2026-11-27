@@ -40,6 +40,11 @@ export const signupSchema = z
         invalid_type_error: 'Role must be user or host',
       })
       .default('user'),
+    otp: z
+      .string()
+      .trim()
+      .regex(/^\d{6}$/, { message: 'Verification code must contain 6 numeric digits' })
+      .optional(),
   })
   .strict({ message: 'Unrecognized fields submitted in registration payload' });
 
@@ -59,6 +64,11 @@ export const loginSchema = z
       .max(128, { message: 'Password length is invalid' }),
     requiredRole: z.enum(['user', 'host', 'admin']).optional(),
     role: z.enum(['user', 'host', 'admin']).optional(),
+    otp: z
+      .string()
+      .trim()
+      .regex(/^\d{6}$/, { message: 'Verification code must contain 6 numeric digits' })
+      .optional(),
   })
   .strict({ message: 'Unrecognized fields submitted in login payload' });
 

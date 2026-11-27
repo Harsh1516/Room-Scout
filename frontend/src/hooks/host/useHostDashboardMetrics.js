@@ -135,6 +135,8 @@ export function useHostDashboardMetrics({ hostProperty, guests }) {
  return (Array.isArray(guests) ? guests : []).filter((g) => {
  const gRoomNum = String(g.roomNumber || '').replace(/[^0-9]/g, '');
  if (activeRoomNumbersSet.size > 0 && (!gRoomNum || !activeRoomNumbersSet.has(gRoomNum))) return false;
+ const isPendingExt = g.activeExtension?.status === 'PENDING_VERIFICATION';
+ if (isPendingExt) return true;
  const st = String(g.status || '').toUpperCase();
  if (st === 'REJECTED' || st === 'CANCELLED' || st === 'EXPIRED' || st === 'CONFIRMED' || st === 'CHECKED_IN') return false;
  return (

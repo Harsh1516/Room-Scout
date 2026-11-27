@@ -20,10 +20,14 @@ import {
   formatRequestedTiming,
   formatBookedMonths,
   getBookingStatusMeta,
+  wasBookingApprovedForPayment,
   formatEntryPassCode,
+  formatUtrNumber,
 } from '../utils/bookingDetailsHelpers';
+import { getExtendValidityInfo, getBookingPaymentLedger } from '../utils/bookingExtension';
 import { BookingPaymentSection } from '../components/booking/BookingPaymentSection';
 import { BookingCancelModal } from '../components/booking/BookingCancelModal';
+import { ExtendValidityModal } from '../components/booking/ExtendValidityModal';
 
 export function BookingDetailsPage({ onLoginClick }) {
   const { id } = useParams();
@@ -46,6 +50,7 @@ export function BookingDetailsPage({ onLoginClick }) {
   const [isCancelling, setIsCancelling] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isReRequesting, setIsReRequesting] = useState(false);
+  const [showExtendModal, setShowExtendModal] = useState(false);
 
   // Countdown timer for awaiting payment
   const [countdownSec, setCountdownSec] = useState(0);
@@ -92,22 +97,30 @@ export function BookingDetailsPage({ onLoginClick }) {
 
           setBooking(res.booking);
 
-          if (res.booking.upiPayment?.transactionRef) {
+          if (!isBackground && res.booking.upiPayment?.transactionRef) {
             setTransactionRef(res.booking.upiPayment.transactionRef);
+          } else {
+            setTransactionRef((prev) => prev || res.booking.upiPayment?.transactionRef || '');
           }
-          if (res.booking.upiPayment?.receiptUrl) {
+          if (!isBackground && res.booking.upiPayment?.receiptUrl) {
             setReceiptPreview(res.booking.upiPayment.receiptUrl);
+          } else {
+            setReceiptPreview((prev) => prev || res.booking.upiPayment?.receiptUrl || '');
           }
 
           try {
             const upiRes = await paymentsAPI.getBookingUpiDetails(id);
             if (upiRes.success) {
               setUpiDetails(upiRes);
-              if (upiRes.submittedReference) {
+              if (!isBackground && upiRes.submittedReference) {
                 setTransactionRef(upiRes.submittedReference);
+              } else if (upiRes.submittedReference) {
+                setTransactionRef((prev) => prev || upiRes.submittedReference);
               }
-              if (upiRes.receiptUrl) {
+              if (!isBackground && upiRes.receiptUrl) {
                 setReceiptPreview(upiRes.receiptUrl);
+              } else if (upiRes.receiptUrl) {
+                setReceiptPreview((prev) => prev || upiRes.receiptUrl);
               }
             }
           } catch (upiErr) {
@@ -278,6 +291,7 @@ export function BookingDetailsPage({ onLoginClick }) {
     const st = String(booking.status || '').toUpperCase().trim();
     const upiVerification = String(booking.upiPayment?.verificationStatus || '').toUpperCase();
     if (upiVerification === 'PENDING_VERIFICATION' || upiVerification === 'VERIFIED') return false;
+    if (!wasBookingApprovedForPayment(booking)) return false;
 
     if (st === 'EXPIRED') return true;
     if (isBookingRequestExpired(booking)) return true;
@@ -340,6 +354,9 @@ export function BookingDetailsPage({ onLoginClick }) {
     stayData?.image ||
     booking?.image ||
     null;
+
+  const extendInfo = useMemo(() => getExtendValidityInfo(booking), [booking]);
+  const paymentLedger = useMemo(() => getBookingPaymentLedger(booking), [booking]);
 
   const totalAmount = Number(
     upiDetails?.totalAmount || booking?.totalAmount || booking?.price || 0
@@ -571,7 +588,7 @@ export function BookingDetailsPage({ onLoginClick }) {
             </button>
             <button
               type="button"
-              onClick={loadBookingData}
+              onClick={() => loadBookingData(false)}
               className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#0f766e] text-white hover:bg-[#115e59] transition-colors cursor-pointer"
             >
               Retry
@@ -917,6 +934,136 @@ export function BookingDetailsPage({ onLoginClick }) {
             </div>
           </div>
         )}
+
+        {/* Extend Validity Banner (5 days before checkout through 7 days post checkout) */}
+        {(extendInfo.showButton || extendInfo.isExtensionPending || extendInfo.isExtensionRejected) && (
+          <div className="w-full space-y-3 pt-2">
+            <hr className="border-black border-t" />
+
+            <span className="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-wider block px-1">
+              # Extend Validity
+            </span>
+
+            {extendInfo.isExtensionPending ? (
+              <div className="rounded-3xl border border-teal-200 bg-teal-50/70 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-600 text-white">
+                      Extending Validity
+                    </span>
+                    <span className="text-sm font-bold text-[#1f1b16]">
+                      {extendInfo.nextMonthLabel} · Room {extendInfo.pendingExtension?.targetRoomNumber || booking.roomNumber}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 font-medium">
+                    Renewal UTR{' '}
+                    <span className="font-mono font-bold text-[#1f1b16]">
+                      {formatUtrNumber(extendInfo.pendingExtension?.transactionRef || '')}
+                    </span>{' '}
+                    has been sent to the host for verification.
+                  </p>
+                </div>
+                <span className="text-base font-black text-emerald-700 font-mono shrink-0">
+                  ₹{Number(extendInfo.pendingExtension?.amount || 0).toLocaleString('en-IN')}
+                </span>
+              </div>
+            ) : (
+              <div className="rounded-3xl border border-indigo-200/90 bg-indigo-50/60 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-base sm:text-lg font-black text-[#1f1b16]">
+                      Extend Stay for {extendInfo.nextMonthLabel}
+                    </h3>
+                    {extendInfo.countdownLabel && (
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                          extendInfo.isLastDay
+                            ? 'bg-rose-600 text-white'
+                            : 'bg-indigo-600 text-white'
+                        }`}
+                      >
+                        {extendInfo.countdownLabel}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-600 font-medium">
+                    Pay rent via UPI QR and enter your 12-digit UTR only — your profile and Aadhaar are already saved.
+                  </p>
+                  {extendInfo.isExtensionRejected && extendInfo.rejectionReason && (
+                    <p className="text-xs font-semibold text-rose-700 pt-1">
+                      Previous UTR rejected: {extendInfo.rejectionReason}
+                    </p>
+                  )}
+                </div>
+
+                {extendInfo.showButton && (
+                  <button
+                    type="button"
+                    onClick={() => setShowExtendModal(true)}
+                    className={`min-h-[46px] px-6 py-2.5 rounded-full font-bold text-sm text-white shadow-md active:scale-95 transition-all cursor-pointer shrink-0 ${
+                      extendInfo.isLastDay
+                        ? 'bg-rose-600 hover:bg-rose-700'
+                        : 'bg-[#1f1b16] hover:bg-indigo-700'
+                    }`}
+                  >
+                    {extendInfo.isExtensionRejected ? 'Retry Extension UTR →' : 'Extend Validity →'}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Monthly Payment History List (Shown at the very end) */}
+        {paymentLedger.length > 0 && (
+          <div className="w-full space-y-3 pt-2">
+            <hr className="border-black border-t" />
+
+            <span className="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-wider block px-1">
+              # Monthly Payment History
+            </span>
+
+            <div className="rounded-3xl bg-white border border-slate-200/90 shadow-xs overflow-hidden divide-y divide-slate-100">
+              {paymentLedger.map((entry, idx) => (
+                <div
+                  key={`${entry.monthKey || idx}-${entry.transactionRef || idx}`}
+                  className="px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-bold text-[#1f1b16]">
+                        Room {entry.roomNumber || booking.roomNumber}
+                      </span>
+                      <span className="text-xs font-semibold text-slate-500">•</span>
+                      <span className="text-sm font-semibold text-slate-700">
+                        {entry.monthLabel}
+                      </span>
+                      {entry.isExtension && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                          Extended
+                        </span>
+                      )}
+                    </div>
+                    {entry.transactionRef && (
+                      <span className="text-[11px] font-mono text-slate-400 block mt-0.5">
+                        UTR: {formatUtrNumber(entry.transactionRef)}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="text-right shrink-0">
+                    <span className="text-base font-black text-emerald-700 font-mono block">
+                      ₹{Number(entry.amount || 0).toLocaleString('en-IN')}
+                    </span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">
+                      {entry.status || 'VERIFIED'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Fixed Bottom Footer Action Bar */}
@@ -946,6 +1093,17 @@ export function BookingDetailsPage({ onLoginClick }) {
           )}
         </div>
       </footer>
+
+      {/* Extend Validity QR + UTR Modal */}
+      <ExtendValidityModal
+        isOpen={showExtendModal}
+        onClose={() => setShowExtendModal(false)}
+        booking={booking}
+        onExtendedSuccess={(updatedBooking) => {
+          if (updatedBooking) setBooking(updatedBooking);
+          loadBookingData(true);
+        }}
+      />
 
       {/* Cancel Confirmation Modal */}
       <BookingCancelModal

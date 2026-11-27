@@ -141,6 +141,14 @@ const bookingSchema = new mongoose.Schema(
       default: 'CONFIRMED',
       index: true,
     },
+    checkedOutAt: {
+      type: Date,
+      default: null,
+    },
+    lastPaymentVerifiedAt: {
+      type: Date,
+      default: null,
+    },
     paymentDeadline: {
       type: Date,
       default: null,
@@ -209,6 +217,47 @@ const bookingSchema = new mongoose.Schema(
       recipientPayeeName: { type: String, default: '' },
       snapshotAt: { type: Date, default: Date.now },
     },
+    paymentHistory: [
+      {
+        monthKey: { type: String, trim: true, default: '' },
+        monthLabel: { type: String, trim: true, default: '' },
+        roomNumber: { type: String, trim: true, default: '' },
+        roomType: { type: String, trim: true, default: 'Standard' },
+        amount: { type: Number, default: 0 },
+        transactionRef: { type: String, trim: true, uppercase: true, default: '' },
+        paymentMethod: { type: String, default: 'UPI' },
+        status: { type: String, default: 'VERIFIED' },
+        verifiedAt: { type: Date, default: Date.now },
+        verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Host', default: null },
+        isExtension: { type: Boolean, default: false },
+      },
+    ],
+    activeExtension: {
+      status: {
+        type: String,
+        enum: ['NONE', 'PENDING_PAYMENT', 'PENDING_VERIFICATION', 'REJECTED'],
+        default: 'NONE',
+      },
+      targetMonths: { type: [String], default: [] },
+      targetMonthLabel: { type: String, trim: true, default: '' },
+      targetRoomNumber: { type: String, trim: true, default: '' },
+      targetRoomType: { type: String, trim: true, default: '' },
+      targetCheckIn: { type: Date, default: null },
+      targetCheckOut: { type: Date, default: null },
+      amount: { type: Number, default: 0 },
+      transactionRef: { type: String, trim: true, uppercase: true, default: '' },
+      rejectionReason: { type: String, trim: true, default: '' },
+      submittedAt: { type: Date, default: null },
+      requestedAt: { type: Date, default: null },
+      submissionCount: { type: Number, default: 0 },
+    },
+    renewalNotifications: {
+      cycleKey: { type: String, default: '' },
+      pre5DaySent: { type: Boolean, default: false },
+      pre5DaySentAt: { type: Date, default: null },
+      postDaysSent: { type: [Number], default: [] },
+      lastSentAt: { type: Date, default: null },
+    },
     auditLog: [
       {
         action: { type: String, required: true },
@@ -254,5 +303,8 @@ bookingSchema.index({ hostId: 1, status: 1, createdAt: -1 });
 bookingSchema.index({ userId: 1, createdAt: -1 });
 bookingSchema.index({ userId: 1, status: 1, createdAt: -1 });
 bookingSchema.index({ 'upiPayment.transactionRef': 1 }, { sparse: true });
+bookingSchema.index({ 'paymentHistory.transactionRef': 1 }, { sparse: true });
+bookingSchema.index({ 'activeExtension.status': 1, hostId: 1 });
+bookingSchema.index({ status: 1, checkOut: 1 });
 
 export const Booking = mongoose.model('Booking', bookingSchema);

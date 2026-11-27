@@ -93,8 +93,6 @@ export function SearchInteractiveMap({
  onStayClick,
  onStayHover,
 }) {
- if (typeof window === 'undefined') return null;
-
  const mapContainerRef = useRef(null);
  const mapInstanceRef = useRef(null);
  const markersRef = useRef({});
@@ -329,6 +327,8 @@ export function SearchInteractiveMap({
  resizeObserver.disconnect();
  };
  }, []);
+
+ if (typeof window === 'undefined') return null;
 
  return (
  <div className="relative w-full h-full rounded-2xl overflow-hidden isolate z-0">

@@ -73,7 +73,7 @@ export function HostRoomsPage() {
  (s.email && s.email.toLowerCase() === hostEmail.toLowerCase()) ||
  (s.ownerEmail && s.ownerEmail.toLowerCase() === hostEmail.toLowerCase()) ||
  (s.hostEmail && s.hostEmail.toLowerCase() === hostEmail.toLowerCase())
- ) || staysList[0];
+ );
 
  if (match) {
  setHostProperty(match);
@@ -193,6 +193,11 @@ export function HostRoomsPage() {
  };
 
  const handleBackToDashboard = async () => {
+ if (!hostProperty) {
+ navigate('/host/dashboard', { state: { tab: 'room' } });
+ return;
+ }
+
  const totalCount = rooms.length;
  const availCount = rooms.filter((r) => r.status === 'Available').length;
 

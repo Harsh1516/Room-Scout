@@ -104,6 +104,19 @@ export function formatBookedMonths(monthsArr) {
     .join(', ');
 }
 
+export function wasBookingApprovedForPayment(booking) {
+  if (!booking) return false;
+  const st = String(booking.status || '').toUpperCase().trim();
+  return Boolean(
+    booking.approvedAt ||
+    booking.paymentDeadline ||
+    st === 'AWAITING_PAYMENT' ||
+    st === 'PAYMENT_PENDING' ||
+    st === 'APPROVED - PAYMENT PENDING' ||
+    st === 'APPROVED'
+  );
+}
+
 export function getBookingStatusMeta(rawStatus, booking = null) {
   const st = String(rawStatus || '').toUpperCase().trim();
   const upiVerification = String(booking?.upiPayment?.verificationStatus || '').toUpperCase();
@@ -167,6 +180,7 @@ export function getBookingStatusMeta(rawStatus, booking = null) {
 
   if (
     !booking?.paymentReRequested &&
+    wasBookingApprovedForPayment(booking) &&
     (st === 'EXPIRED' || (booking && isBookingRequestExpired(booking))) &&
     upiVerification !== 'PENDING_VERIFICATION' &&
     upiVerification !== 'VERIFIED'

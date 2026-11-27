@@ -723,41 +723,41 @@ export default function HostWeeklySlotSchedule({
  if (isUserRequestSelection && isExpiredRequest) {
  showToast('Booking request expired', 'error');
  if (onClearRequestedBooking) onClearRequestedBooking();
- return;
+ return false;
  }
  if (!isPropertyApproved) {
  showToast('Slots locked: Approval pending', 'error');
- return;
+ return false;
  }
  if (!isRoomSavedToDb) {
  showToast('Update room category first', 'error');
- return;
+ return false;
  }
  if (!selectedRoomCard || selectedSlotIndices.length === 0) {
  showToast(isMonthly ? 'Select a month' : 'Select a date slot', 'error');
- return;
+ return false;
  }
 
  const cleanName = hostUserName.trim();
  if (!cleanName) {
  showToast('Enter guest name', 'error');
- return;
+ return false;
  }
  if (!/^[a-zA-Z\s]{2,50}$/.test(cleanName)) {
  showToast('Name must be letters only', 'error');
- return;
+ return false;
  }
 
  const cleanPhone = hostUserPhone.trim().replace(/\D/g, '');
  if (!cleanPhone || cleanPhone.length !== 10) {
  showToast('Enter valid 10-digit mobile', 'error');
- return;
+ return false;
  }
 
  const cleanAadhar = hostUserAadhar.trim().replace(/\D/g, '');
  if (!cleanAadhar || cleanAadhar.length !== 12) {
  showToast('Enter valid 12-digit Aadhaar', 'error');
- return;
+ return false;
  }
 
  const isDuplicatePhone = roomOccupantsList.some((occ) => {
@@ -773,7 +773,7 @@ export default function HostWeeklySlotSchedule({
  });
  if (isDuplicatePhone) {
  showToast(`Phone already booked in Room ${selectedRoomCard.roomNumber}`, 'error');
- return;
+ return false;
  }
 
  const parsedPaid = parseInt(String(hostPaidAmount).replace(/\D/g, ''), 10);
@@ -792,9 +792,11 @@ export default function HostWeeklySlotSchedule({
  if (activeRequestedBooking?._id) {
  const bookingId = activeRequestedBooking._id;
  const isOnline = activeRequestedBooking.bookingSource === 'ONLINE' || activeRequestedBooking.isOnline === true;
+ const isPayOnArrival = ['PAY_ON_ARRIVAL', 'OFFLINE', 'CASH'].includes(String(activeRequestedBooking.paymentMethod || '').toUpperCase());
+ const needsOnlinePayment = isOnline && !isPayOnArrival;
  const deadline = new Date(Date.now() + 10 * 60 * 1000);
  await bookingsAPI.updateBookingStatus(bookingId, {
- status: isOnline ? 'AWAITING_PAYMENT' : 'CONFIRMED',
+ status: needsOnlinePayment ? 'AWAITING_PAYMENT' : 'CONFIRMED',
  totalAmount: finalAmount,
  fullName: cleanName,
  phone: cleanPhone,
@@ -803,8 +805,8 @@ export default function HostWeeklySlotSchedule({
  personCount: hostPersonCount,
  gender: hostGender || 'Other',
  approvedAt: new Date().toISOString(),
- paymentDeadline: isOnline ? deadline.toISOString() : null,
- paymentStatus: isOnline ? 'UNPAID' : 'PAID',
+ paymentDeadline: needsOnlinePayment ? deadline.toISOString() : null,
+ paymentStatus: needsOnlinePayment || isPayOnArrival ? 'UNPAID' : 'PAID',
  });
  } else {
  await bookingsAPI.createOfflineBooking({
@@ -829,7 +831,7 @@ export default function HostWeeklySlotSchedule({
  console.error('Booking collection write error:', apiErr);
  showToast(apiErr.message || 'Failed to save booking', 'error');
  setIsUpdatingSlot(false);
- return;
+ return false;
  }
 
  // Booking is saved to single source of truth (bookings collection)
@@ -860,13 +862,14 @@ export default function HostWeeklySlotSchedule({
  if (typeof onRefreshBookings === 'function') {
  onRefreshBookings();
  }
+ return true;
  } catch (err) {
  console.error('Error marking room as booked:', err);
  showToast('Could not book month', 'error');
+ return false;
  } finally {
  setIsUpdatingSlot(false);
  }
- return;
  }
 
  // --- NIGHTLY RESERVATION FLOW ---
@@ -880,9 +883,12 @@ export default function HostWeeklySlotSchedule({
  try {
  if (activeRequestedBooking?._id) {
  const bookingId = activeRequestedBooking._id;
+ const isOnline = activeRequestedBooking.bookingSource === 'ONLINE' || activeRequestedBooking.isOnline === true;
+ const isPayOnArrival = ['PAY_ON_ARRIVAL', 'OFFLINE', 'CASH'].includes(String(activeRequestedBooking.paymentMethod || '').toUpperCase());
+ const needsOnlinePayment = isOnline && !isPayOnArrival;
  const deadline = new Date(Date.now() + 10 * 60 * 1000);
  await bookingsAPI.updateBookingStatus(bookingId, {
- status: 'AWAITING_PAYMENT',
+ status: needsOnlinePayment ? 'AWAITING_PAYMENT' : 'CONFIRMED',
  totalAmount: finalAmount,
  fullName: cleanName,
  phone: cleanPhone,
@@ -891,7 +897,8 @@ export default function HostWeeklySlotSchedule({
  personCount: hostPersonCount,
  gender: hostGender || 'Other',
  approvedAt: new Date().toISOString(),
- paymentDeadline: deadline.toISOString(),
+ paymentDeadline: needsOnlinePayment ? deadline.toISOString() : null,
+ paymentStatus: needsOnlinePayment || isPayOnArrival ? 'UNPAID' : 'PAID',
  });
  } else {
  await bookingsAPI.createOfflineBooking({
@@ -916,7 +923,7 @@ export default function HostWeeklySlotSchedule({
  console.error('Booking collection write error:', apiErr);
  showToast(apiErr.message || 'Failed to save booking', 'error');
  setIsUpdatingSlot(false);
- return;
+ return false;
  }
 
  // Booking is saved to single source of truth (bookings collection)
@@ -947,9 +954,11 @@ export default function HostWeeklySlotSchedule({
  if (typeof onRefreshBookings === 'function') {
  onRefreshBookings();
  }
+ return true;
  } catch (err) {
  console.error('Error marking room as booked:', err);
  showToast('Could not book slot', 'error');
+ return false;
  } finally {
  setIsUpdatingSlot(false);
  }
@@ -1665,8 +1674,8 @@ export default function HostWeeklySlotSchedule({
  isUpdatingSlot={isUpdatingSlot}
  sortedSelected={sortedSelected}
  handleHostMarkSlotBooked={async () => {
- await handleHostMarkSlotBooked();
- setIsAddGuestModalOpen(false);
+ const ok = await handleHostMarkSlotBooked();
+ if (ok) setIsAddGuestModalOpen(false);
  }}
  isUserRequestSelection={isUserRequestSelection}
  isExpiredRequest={isExpiredRequest}

@@ -189,18 +189,23 @@ export function buildPlatformUpiUri({ upiId, payeeName, amount, hostNote = '' })
   return `upi://pay?${params.toString()}`;
 }
 
-// Helper: Retain only the latest 3 subscription payment records for a host; delete all previous records from DB
+// Helper: Retain only the latest 3 rejected records cleanly; never delete PENDING/VERIFIED UTR records so uniqueness remains enforced
 export async function pruneHostSubscriptionHistory(hostId) {
   if (!hostId) return;
   try {
     const allRecords = await HostSubscriptionPayment.find({ hostId })
       .sort({ createdAt: -1 })
-      .select('_id')
+      .select('_id status')
       .lean();
 
     if (allRecords.length > 3) {
-      const idsToDelete = allRecords.slice(3).map((r) => r._id);
-      await HostSubscriptionPayment.deleteMany({ _id: { $in: idsToDelete } });
+      const idsToDelete = allRecords
+        .slice(3)
+        .filter((r) => r.status === 'REJECTED')
+        .map((r) => r._id);
+      if (idsToDelete.length > 0) {
+        await HostSubscriptionPayment.deleteMany({ _id: { $in: idsToDelete } });
+      }
     }
   } catch (err) {
     console.error('Error pruning host subscription history:', err.message);
@@ -406,7 +411,8 @@ export async function getHostSubscriptionStatus(req, res, next) {
       const fallbackPlanCode = host.subscription?.planCode || 'monthly';
       const fallbackDuration = Number(host.subscription?.durationMonths) || 1;
       const fallbackPlanLabel = host.subscription?.planLabel || `${fallbackDuration} Month(s)`;
-      const fallbackRef = host.subscription?.lastPaymentRef || 'ADMIN_VERIFIED';
+      const suffix = `${host._id.toString().slice(-6).toUpperCase()}_${Date.now().toString(36).toUpperCase()}`;
+      const fallbackRef = host.subscription?.lastPaymentRef || `ADMIN_VERIFIED_${suffix}`;
 
       try {
         const createdRecord = await HostSubscriptionPayment.create({
@@ -589,16 +595,16 @@ export async function submitHostSubscriptionPayment(req, res, next) {
       });
     }
 
-    // Upload receipt image if provided
+    // Upload & validate receipt image if provided
     let finalReceiptUrl = '';
-    if (receiptImage && typeof receiptImage === 'string') {
+    if (receiptImage && typeof receiptImage === 'string' && receiptImage.trim()) {
       try {
         finalReceiptUrl = await uploadSecureImage(receiptImage, 'stayin/subscriptions');
       } catch (uploadErr) {
-        console.warn('Subscription receipt upload failed, fallback:', uploadErr.message);
-        if (receiptImage.startsWith('data:image/') || receiptImage.startsWith('http')) {
-          finalReceiptUrl = receiptImage;
-        }
+        return res.status(400).json({
+          success: false,
+          message: uploadErr.message || 'Invalid subscription receipt image format.',
+        });
       }
     }
 
@@ -774,6 +780,112 @@ export async function getAdminSubscriptionRequests(req, res, next) {
   }
 }
 
+// Shared helper: compute expiration dates, apply verified subscription to Host & Stay, and dispatch notifications
+async function applyVerifiedSubscriptionToHost({
+  host,
+  request,
+  durationMonths,
+  adminIdentifier,
+  adminNotes,
+  now = new Date(),
+}) {
+  const monthsToAdd = Number(durationMonths) || Number(request.durationMonths) || 1;
+  let newStartDate = now;
+  let newExpiresAt = null;
+
+  if (request.startOption === 'NEXT') {
+    const nextMonthFirst = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0);
+    if (
+      host.subscription?.status === 'ACTIVE' &&
+      host.subscription?.expiresAt &&
+      new Date(host.subscription.expiresAt) > nextMonthFirst
+    ) {
+      newStartDate = host.subscription.startDate || nextMonthFirst;
+      const currentExp = new Date(host.subscription.expiresAt);
+      newExpiresAt = calculateExpirationDate(currentExp, monthsToAdd);
+    } else {
+      newStartDate = nextMonthFirst;
+      newExpiresAt = calculateExpirationDate(nextMonthFirst, monthsToAdd);
+    }
+  } else {
+    if (
+      host.subscription?.status === 'ACTIVE' &&
+      host.subscription?.expiresAt &&
+      new Date(host.subscription.expiresAt) > now
+    ) {
+      newStartDate = host.subscription.startDate || now;
+      const currentExp = new Date(host.subscription.expiresAt);
+      newExpiresAt = calculateExpirationDate(currentExp, monthsToAdd);
+    } else {
+      newStartDate = now;
+      newExpiresAt = calculateExpirationDate(now, monthsToAdd);
+    }
+  }
+
+  request.status = 'VERIFIED';
+  request.durationMonths = monthsToAdd;
+  request.verifiedAt = now;
+  request.verifiedBy = adminIdentifier;
+  request.activatedStartDate = newStartDate;
+  request.activatedExpiresAt = newExpiresAt;
+  if (adminNotes && String(adminNotes).trim()) {
+    request.adminNotes = String(adminNotes).trim();
+  }
+  await request.save();
+
+  host.subscription = {
+    planCode: request.planCode,
+    planLabel: request.planLabel,
+    durationMonths: monthsToAdd,
+    amountPaid: request.amount,
+    startDate: newStartDate,
+    expiresAt: newExpiresAt,
+    status: 'ACTIVE',
+    lastPaymentRef: request.transactionRef,
+    lastVerifiedAt: now,
+  };
+  await host.save();
+
+  const isApprovedHost = host.status === 'Approved';
+  await Stay.updateMany(
+    { hostId: host._id },
+    {
+      $set: {
+        isApproved: isApprovedHost,
+        isPublished: isApprovedHost,
+        'subscription.status': 'ACTIVE',
+        'subscription.planCode': request.planCode,
+        'subscription.planLabel': request.planLabel,
+        'subscription.expiresAt': newExpiresAt,
+      },
+    }
+  );
+
+  notifyHostSubscriptionVerified(host._id, {
+    planCode: request.planCode,
+    planLabel: request.planLabel,
+    expiresAt: newExpiresAt,
+    status: 'ACTIVE',
+  });
+
+  if (host.email) {
+    sendSubscriptionActivatedToHostEmail({
+      hostEmail: host.email,
+      hostName: host.name || 'Host Partner',
+      planLabel: request.planLabel,
+      durationMonths: monthsToAdd,
+      amount: request.amount,
+      transactionRef: request.transactionRef,
+      validUntil: formatValidityDate(newExpiresAt),
+      isApprovedHost,
+    }).catch((err) => {
+      console.warn('[Email Warning] Subscription activation email failed:', err.message);
+    });
+  }
+
+  return { monthsToAdd, newExpiresAt, isApprovedHost };
+}
+
 // @desc    Admin verifies or rejects a host subscription request
 // @route   POST /api/enter/subscriptions/:id/verify
 // @access  Private (Admin)
@@ -782,9 +894,31 @@ export async function verifySubscriptionRequest(req, res, next) {
     const { id } = req.params;
     const { action, durationMonths, rejectionReason, adminNotes } = req.body || {};
 
-    const request = await HostSubscriptionPayment.findById(id);
+    if (action !== 'VERIFY' && action !== 'REJECT') {
+      return res.status(400).json({ success: false, message: 'Invalid action: must be VERIFY or REJECT.' });
+    }
+
+    const now = new Date();
+    const adminIdentifier =
+      req.user?._id?.toString() || req.user?.email || (req.isAdminKey ? 'ADMIN' : 'SYSTEM');
+
+    // Atomically transition PENDING -> VERIFIED/REJECTED to prevent duplicate re-verification grants
+    const nextStatus = action === 'VERIFY' ? 'VERIFIED' : 'REJECTED';
+    const request = await HostSubscriptionPayment.findOneAndUpdate(
+      { _id: id, status: 'PENDING' },
+      { $set: { status: nextStatus, verifiedAt: now, verifiedBy: adminIdentifier } },
+      { new: true }
+    );
+
     if (!request) {
-      return res.status(404).json({ success: false, message: 'Subscription request not found.' });
+      const existing = await HostSubscriptionPayment.findById(id).select('status').lean();
+      if (!existing) {
+        return res.status(404).json({ success: false, message: 'Subscription request not found.' });
+      }
+      return res.status(409).json({
+        success: false,
+        message: `Subscription request has already been ${String(existing.status).toLowerCase()}.`,
+      });
     }
 
     const host = await Host.findById(request.hostId);
@@ -793,109 +927,14 @@ export async function verifySubscriptionRequest(req, res, next) {
     }
 
     if (action === 'VERIFY') {
-      const monthsToAdd = Number(durationMonths) || Number(request.durationMonths) || 1;
-      const now = new Date();
-
-      let newStartDate = now;
-      let newExpiresAt = null;
-
-      if (request.startOption === 'NEXT') {
-        const nextMonthFirst = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0);
-        if (
-          host.subscription?.status === 'ACTIVE' &&
-          host.subscription?.expiresAt &&
-          new Date(host.subscription.expiresAt) > nextMonthFirst
-        ) {
-          newStartDate = host.subscription.startDate || nextMonthFirst;
-          const currentExp = new Date(host.subscription.expiresAt);
-          newExpiresAt = calculateExpirationDate(currentExp, monthsToAdd);
-        } else {
-          newStartDate = nextMonthFirst;
-          newExpiresAt = calculateExpirationDate(nextMonthFirst, monthsToAdd);
-        }
-      } else {
-        if (
-          host.subscription?.status === 'ACTIVE' &&
-          host.subscription?.expiresAt &&
-          new Date(host.subscription.expiresAt) > now
-        ) {
-          newStartDate = host.subscription.startDate || now;
-          const currentExp = new Date(host.subscription.expiresAt);
-          newExpiresAt = calculateExpirationDate(currentExp, monthsToAdd);
-        } else {
-          newStartDate = now;
-          newExpiresAt = calculateExpirationDate(now, monthsToAdd);
-        }
-      }
-
-      const adminIdentifier =
-        req.user?._id?.toString() || req.user?.email || (req.isAdminKey ? 'ADMIN' : 'SYSTEM');
-
-      // Update payment record
-      request.status = 'VERIFIED';
-      request.durationMonths = monthsToAdd;
-      request.verifiedAt = now;
-      request.verifiedBy = adminIdentifier;
-      request.activatedStartDate = newStartDate;
-      request.activatedExpiresAt = newExpiresAt;
-      if (adminNotes && String(adminNotes).trim()) {
-        request.adminNotes = String(adminNotes).trim();
-      }
-      await request.save();
-
-      // Update Host subscription
-      host.subscription = {
-        planCode: request.planCode,
-        planLabel: request.planLabel,
-        durationMonths: monthsToAdd,
-        amountPaid: request.amount,
-        startDate: newStartDate,
-        expiresAt: newExpiresAt,
-        status: 'ACTIVE',
-        lastPaymentRef: request.transactionRef,
-        lastVerifiedAt: now,
-      };
-      await host.save();
-
-      // Update Stay records for this host: if stay was approved by admin, make it live!
-      const isApprovedHost = host.status === 'Approved';
-      await Stay.updateMany(
-        { hostId: host._id },
-        {
-          $set: {
-            isApproved: isApprovedHost,
-            isPublished: isApprovedHost,
-            'subscription.status': 'ACTIVE',
-            'subscription.planCode': request.planCode,
-            'subscription.planLabel': request.planLabel,
-            'subscription.expiresAt': newExpiresAt,
-          },
-        }
-      );
-
-      // Notify host instantly via Server-Sent Events (SSE)
-      notifyHostSubscriptionVerified(host._id, {
-        planCode: request.planCode,
-        planLabel: request.planLabel,
-        expiresAt: newExpiresAt,
-        status: 'ACTIVE',
+      const { newExpiresAt, isApprovedHost } = await applyVerifiedSubscriptionToHost({
+        host,
+        request,
+        durationMonths,
+        adminIdentifier,
+        adminNotes,
+        now,
       });
-
-      // Send branded activation email to host
-      if (host.email) {
-        sendSubscriptionActivatedToHostEmail({
-          hostEmail: host.email,
-          hostName: host.name || 'Host Partner',
-          planLabel: request.planLabel,
-          durationMonths: monthsToAdd,
-          amount: request.amount,
-          transactionRef: request.transactionRef,
-          validUntil: formatValidityDate(newExpiresAt),
-          isApprovedHost,
-        }).catch((err) => {
-          console.warn('[Email Warning] Could not send subscription activation email to host:', err.message);
-        });
-      }
 
       return res.json({
         success: true,
@@ -904,17 +943,13 @@ export async function verifySubscriptionRequest(req, res, next) {
           : `Plan verified! Host has active subscription Until ${formatValidityDate(newExpiresAt)}. Stay will go live once approved by admin.`,
         subscription: host.subscription,
       });
-    } else if (action === 'REJECT') {
-      const adminIdentifier =
-        req.user?._id?.toString() || req.user?.email || (req.isAdminKey ? 'ADMIN' : 'SYSTEM');
-      request.status = 'REJECTED';
-      request.rejectionReason = String(rejectionReason || 'UTR did not match bank statement records.').trim();
-      request.verifiedAt = new Date();
-      request.verifiedBy = adminIdentifier;
-      if (adminNotes && String(adminNotes).trim()) {
-        request.adminNotes = String(adminNotes).trim();
-      }
-      await request.save();
+    }
+
+    request.rejectionReason = String(rejectionReason || 'UTR did not match bank statement records.').trim();
+    if (adminNotes && String(adminNotes).trim()) {
+      request.adminNotes = String(adminNotes).trim();
+    }
+    await request.save();
 
       // If host was pending verification and doesn't have an active plan, mark as expired/none
       if (host.subscription?.status === 'PENDING_VERIFICATION') {
@@ -953,9 +988,6 @@ export async function verifySubscriptionRequest(req, res, next) {
         message: 'Subscription request rejected.',
         rejectionReason: request.rejectionReason,
       });
-    } else {
-      return res.status(400).json({ success: false, message: 'Invalid action: must be VERIFY or REJECT.' });
-    }
   } catch (error) {
     return next(error);
   }
@@ -998,6 +1030,8 @@ export async function manualActivateSubscription(req, res, next) {
     else if (monthsToAdd === 6) code = 'halfYearly';
     else if (monthsToAdd === 12) code = 'yearly';
 
+    const manualRef = `ADMIN_GRANTED_${host._id.toString().slice(-6).toUpperCase()}_${Date.now().toString(36).toUpperCase()}`;
+
     host.subscription = {
       planCode: code,
       planLabel: String(planLabel || `${monthsToAdd} Month(s)`).trim(),
@@ -1006,7 +1040,7 @@ export async function manualActivateSubscription(req, res, next) {
       startDate: newStartDate,
       expiresAt: newExpiresAt,
       status: 'ACTIVE',
-      lastPaymentRef: 'ADMIN_GRANTED',
+      lastPaymentRef: manualRef,
       lastVerifiedAt: now,
     };
     await host.save();
@@ -1021,7 +1055,7 @@ export async function manualActivateSubscription(req, res, next) {
         planLabel: host.subscription.planLabel,
         durationMonths: monthsToAdd,
         amount: 0,
-        transactionRef: 'ADMIN_GRANTED',
+        transactionRef: manualRef,
         startOption: 'CURRENT',
         status: 'VERIFIED',
         verifiedAt: now,
@@ -1064,7 +1098,7 @@ export async function manualActivateSubscription(req, res, next) {
         planLabel: host.subscription.planLabel,
         durationMonths: monthsToAdd,
         amount: 0,
-        transactionRef: 'ADMIN_GRANTED',
+        transactionRef: manualRef,
         validUntil: formatValidityDate(newExpiresAt),
         isApprovedHost,
       }).catch((err) => {
@@ -1212,77 +1246,16 @@ export async function bulkVerifySubscriptions(req, res, next) {
       const host = await Host.findById(request.hostId);
       if (!host) continue;
 
-      const monthsToAdd = Number(durationMonths) || Number(request.durationMonths) || 1;
-      let newStartDate = now;
-      let newExpiresAt = null;
-
-      if (request.startOption === 'NEXT') {
-        const nextMonthFirst = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0);
-        if (
-          host.subscription?.status === 'ACTIVE' &&
-          host.subscription?.expiresAt &&
-          new Date(host.subscription.expiresAt) > nextMonthFirst
-        ) {
-          newStartDate = host.subscription.startDate || nextMonthFirst;
-          const currentExp = new Date(host.subscription.expiresAt);
-          newExpiresAt = calculateExpirationDate(currentExp, monthsToAdd);
-        } else {
-          newStartDate = nextMonthFirst;
-          newExpiresAt = calculateExpirationDate(nextMonthFirst, monthsToAdd);
-        }
-      } else {
-        if (
-          host.subscription?.status === 'ACTIVE' &&
-          host.subscription?.expiresAt &&
-          new Date(host.subscription.expiresAt) > now
-        ) {
-          newStartDate = host.subscription.startDate || now;
-          const currentExp = new Date(host.subscription.expiresAt);
-          newExpiresAt = calculateExpirationDate(currentExp, monthsToAdd);
-        } else {
-          newStartDate = now;
-          newExpiresAt = calculateExpirationDate(now, monthsToAdd);
-        }
-      }
-
       const adminIdentifier =
         req.user?._id?.toString() || req.user?.email || (req.isAdminKey ? 'ADMIN' : 'SYSTEM');
-      request.status = 'VERIFIED';
-      request.durationMonths = monthsToAdd;
-      request.verifiedAt = now;
-      request.verifiedBy = adminIdentifier;
-      request.activatedStartDate = newStartDate;
-      request.activatedExpiresAt = newExpiresAt;
-      request.adminNotes = 'Bulk verified via bank statement reconciliation';
-      await request.save();
-
-      host.subscription = {
-        planCode: request.planCode,
-        planLabel: request.planLabel,
-        durationMonths: monthsToAdd,
-        amountPaid: request.amount,
-        startDate: newStartDate,
-        expiresAt: newExpiresAt,
-        status: 'ACTIVE',
-        lastPaymentRef: request.transactionRef,
-        lastVerifiedAt: now,
-      };
-      await host.save();
-
-      const isApprovedHost = host.status === 'Approved';
-      await Stay.updateMany(
-        { hostId: host._id },
-        {
-          $set: {
-            isApproved: isApprovedHost,
-            isPublished: isApprovedHost,
-            'subscription.status': 'ACTIVE',
-            'subscription.planCode': request.planCode,
-            'subscription.planLabel': request.planLabel,
-            'subscription.expiresAt': newExpiresAt,
-          },
-        }
-      );
+      const { newExpiresAt } = await applyVerifiedSubscriptionToHost({
+        host,
+        request,
+        durationMonths,
+        adminIdentifier,
+        adminNotes: 'Bulk verified via bank statement reconciliation',
+        now,
+      });
 
       verifiedRecords.push({
         id: request._id,
@@ -1290,30 +1263,6 @@ export async function bulkVerifySubscriptions(req, res, next) {
         hostName: host.name,
         expiresAt: newExpiresAt,
       });
-
-      // Notify host in real-time
-      notifyHostSubscriptionVerified(host._id, {
-        planCode: request.planCode,
-        planLabel: request.planLabel,
-        expiresAt: newExpiresAt,
-        status: 'ACTIVE',
-      });
-
-      // Send branded activation email to host
-      if (host.email) {
-        sendSubscriptionActivatedToHostEmail({
-          hostEmail: host.email,
-          hostName: host.name || 'Host Partner',
-          planLabel: request.planLabel,
-          durationMonths: monthsToAdd,
-          amount: request.amount,
-          transactionRef: request.transactionRef,
-          validUntil: formatValidityDate(newExpiresAt),
-          isApprovedHost,
-        }).catch((err) => {
-          console.warn('[Email Warning] Bulk subscription activation email failed:', err.message);
-        });
-      }
     }
 
     emitToAdmin('admin:subscription_verified', { count: verifiedRecords.length });

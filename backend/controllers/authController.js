@@ -7,7 +7,7 @@ import { Booking } from '../models/Booking.js';
 import { Payment } from '../models/Payment.js';
 import { Wishlist } from '../models/Wishlist.js';
 import { generateToken } from '../middleware/authMiddleware.js';
-import { sendPasswordResetEmail, testEmailConnection, sendEmailVerificationOtp } from '../services/emailService.js';
+import { sendPasswordResetEmail, testEmailConnection, sendEmailVerificationOtp, getTransporter } from '../services/emailService.js';
 import { EmailOtp } from '../models/EmailOtp.js';
 import { uploadSecureImage } from '../utils/imageSecurity.js';
 import { OAuth2Client } from 'google-auth-library';
@@ -31,6 +31,60 @@ function generateRandom10DigitPassword() {
     password += chars[Math.floor(Math.random() * chars.length)];
   }
   return password.split('').sort(() => 0.5 - Math.random()).join('');
+}
+
+// Atomically check attempt limits and consume a valid EmailOtp record without brute-force races
+async function verifyAndConsumeEmailOtp(cleanEmail, cleanOtp, purpose) {
+  const now = new Date();
+  const otpRecord = await EmailOtp.findOneAndUpdate(
+    {
+      email: cleanEmail,
+      purpose,
+      expiresAt: { $gt: now },
+      attempts: { $lt: 5 },
+    },
+    { $inc: { attempts: 1 } },
+    { new: false }
+  );
+
+  if (!otpRecord) {
+    const maxedOut = await EmailOtp.findOneAndDelete({
+      email: cleanEmail,
+      purpose,
+      expiresAt: { $gt: now },
+      attempts: { $gte: 5 },
+    });
+    if (maxedOut) {
+      return {
+        errorStatus: 429,
+        errorMessage: 'Too many incorrect attempts. Please request a new verification code.',
+      };
+    }
+    return {
+      errorStatus: 400,
+      errorMessage: 'Verification code has expired or is invalid. Please request a new code.',
+    };
+  }
+
+  if (otpRecord.otp !== cleanOtp) {
+    if ((otpRecord.attempts || 0) + 1 >= 5) {
+      await EmailOtp.deleteOne({ _id: otpRecord._id });
+    }
+    return {
+      errorStatus: 400,
+      errorMessage: 'Incorrect verification code. Please check your email and try again.',
+    };
+  }
+
+  const consumed = await EmailOtp.findOneAndDelete({ _id: otpRecord._id, otp: cleanOtp });
+  if (!consumed) {
+    return {
+      errorStatus: 400,
+      errorMessage: 'Verification code has expired or is invalid. Please request a new code.',
+    };
+  }
+
+  return { otpRecord: consumed };
 }
 
 // Issue httpOnly, Secure cookie
@@ -78,6 +132,7 @@ export const sendRegisterOtp = async (req, res, next) => {
     }
 
     const otp = generate6DigitOtp();
+    const hashedPassword = await bcrypt.hash(password, 10);
     await EmailOtp.deleteMany({ email: cleanEmail, purpose: 'register' });
     await EmailOtp.create({
       email: cleanEmail,
@@ -87,7 +142,7 @@ export const sendRegisterOtp = async (req, res, next) => {
       tempData: {
         name: name.trim(),
         email: cleanEmail,
-        password,
+        password: hashedPassword,
         phone: phone ? phone.trim() : '',
         role: cleanRole,
       },
@@ -128,31 +183,9 @@ export const verifyRegisterOtp = async (req, res, next) => {
     const cleanEmail = email.toLowerCase().trim();
     const cleanOtp = otp.toString().trim();
 
-    const otpRecord = await EmailOtp.findOne({
-      email: cleanEmail,
-      purpose: 'register',
-      expiresAt: { $gt: new Date() },
-    });
-
-    if (!otpRecord) {
-      return res.status(400).json({
-        message: 'Verification code has expired or is invalid. Please request a new code.',
-      });
-    }
-
-    if (otpRecord.attempts >= 5) {
-      await EmailOtp.deleteOne({ _id: otpRecord._id });
-      return res.status(429).json({
-        message: 'Too many incorrect attempts. Please request a new verification code.',
-      });
-    }
-
-    if (otpRecord.otp !== cleanOtp) {
-      otpRecord.attempts += 1;
-      await otpRecord.save();
-      return res.status(400).json({
-        message: 'Incorrect verification code. Please check your email and try again.',
-      });
+    const { otpRecord, errorStatus, errorMessage } = await verifyAndConsumeEmailOtp(cleanEmail, cleanOtp, 'register');
+    if (errorStatus) {
+      return res.status(errorStatus).json({ message: errorMessage });
     }
 
     const { name, password, phone, role } = otpRecord.tempData || {};
@@ -381,31 +414,9 @@ export const verifyLoginOtp = async (req, res, next) => {
       return res.status(400).json({ message: 'Email and 6-digit verification code are required.' });
     }
 
-    const otpRecord = await EmailOtp.findOne({
-      email: cleanEmail,
-      purpose: 'login',
-      expiresAt: { $gt: new Date() },
-    });
-
-    if (!otpRecord) {
-      return res.status(400).json({
-        message: 'Verification code has expired or is invalid. Please request a new code.',
-      });
-    }
-
-    if (otpRecord.attempts >= 5) {
-      await EmailOtp.deleteOne({ _id: otpRecord._id });
-      return res.status(429).json({
-        message: 'Too many incorrect attempts. Please request a new verification code.',
-      });
-    }
-
-    if (otpRecord.otp !== cleanOtp) {
-      otpRecord.attempts += 1;
-      await otpRecord.save();
-      return res.status(400).json({
-        message: 'Incorrect verification code. Please check your email and try again.',
-      });
+    const { otpRecord, errorStatus, errorMessage } = await verifyAndConsumeEmailOtp(cleanEmail, cleanOtp, 'login');
+    if (errorStatus) {
+      return res.status(errorStatus).json({ message: errorMessage });
     }
 
     let authenticatedAccount = null;
@@ -633,6 +644,10 @@ export const googleAuth = async (req, res, next) => {
       return res.status(400).json({ message: 'Unable to retrieve verified email from Google.' });
     }
 
+    if (payload.email_verified !== true && payload.verified_email !== true) {
+      return res.status(403).json({ message: 'Google account email must be verified before signing in.' });
+    }
+
     const googleEmail = payload.email.toLowerCase().trim();
     const googleId = payload.sub;
     const name = payload.name || payload.given_name || 'Stay In User';
@@ -813,7 +828,7 @@ export const forgotPassword = async (req, res, next) => {
     let emailSent = false;
     let deliveryError = null;
 
-    const transporter = getMailTransporter();
+    const transporter = await getTransporter();
     if (transporter) {
       try {
         await transporter.sendMail({

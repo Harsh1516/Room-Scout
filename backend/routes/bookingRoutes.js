@@ -15,6 +15,8 @@ import {
   deleteBooking,
   reRequestPayment,
   markBookingTimedOut,
+  getBookingExtendInfo,
+  submitBookingExtension,
 } from '../controllers/bookingController.js';
 import { protect, optionalProtect, requireHost, requireSelfHostOrAdmin } from '../middleware/authMiddleware.js';
 import { bookingLimiter } from '../middleware/rateLimitMiddleware.js';
@@ -25,6 +27,7 @@ import {
   createOfflineBookingSchema,
   updateBookingStatusSchema,
   bookingIdParamSchema,
+  submitExtendValiditySchema,
 } from '../validators/bookingValidator.js';
 
 const router = express.Router();
@@ -33,7 +36,7 @@ router.post('/', bookingLimiter, optionalProtect, validate(createBookingSchema),
 router.post('/offline', bookingLimiter, protect, requireHost, validate(createOfflineBookingSchema), createOfflineBooking);
 
 router.get('/check-availability', checkStayAvailability);
-router.get('/stay/:stayId', validate({ params: stayIdParamSchema }), getBookingsByStayId);
+router.get('/stay/:stayId', optionalProtect, validate({ params: stayIdParamSchema }), getBookingsByStayId);
 
 router.get('/host-bookings', protect, requireHost, getHostBookings);
 router.get('/host/:email', protect, requireHost, requireSelfHostOrAdmin, getHostBookings);
@@ -41,6 +44,8 @@ router.get('/my-bookings', protect, getMyBookings);
 router.get('/:id', protect, validate({ params: bookingIdParamSchema }), getBookingById);
 
 router.patch('/:id/status', protect, validate({ params: bookingIdParamSchema, body: updateBookingStatusSchema }), updateBookingStatus);
+router.get('/:id/extend-info', protect, validate({ params: bookingIdParamSchema }), getBookingExtendInfo);
+router.post('/:id/extend-submit', protect, validate({ params: bookingIdParamSchema, body: submitExtendValiditySchema }), submitBookingExtension);
 router.post('/:id/re-request-payment', protect, validate({ params: bookingIdParamSchema }), reRequestPayment);
 router.post('/:id/timeout', protect, validate({ params: bookingIdParamSchema }), markBookingTimedOut);
 router.post('/:id/checkout', protect, validate({ params: bookingIdParamSchema }), checkoutBooking);

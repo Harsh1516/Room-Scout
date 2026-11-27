@@ -257,7 +257,7 @@ export function SearchResultsPage({
     <button
       type="button"
       onClick={() => setIsFilterModalOpen((prev) => !prev)}
-      className="fixed bottom-6 left-4 sm:left-6 z-40 w-14 h-14 sm:w-16 sm:h-16 rounded-full border border-white/65 bg-white/50 hover:bg-white/70 text-slate-900 shadow-[0_8px_30px_rgba(0,0,0,0.14)] backdrop-blur-md transition-all cursor-pointer select-none active:scale-95 hover:scale-105 flex items-center justify-center"
+      className="fixed bottom-6 left-4 sm:left-6 z-40 w-14 h-14 sm:w-16 sm:h-16 rounded-full border border-white/65 bg-white/50 hover:bg-white/70 text-slate-900 shadow-[0_8px_30px_rgba(0,0,0,0.14)] transition-all cursor-pointer select-none active:scale-95 hover:scale-105 flex items-center justify-center"
       title="Filter Stays"
       aria-label="Open Filters"
     >
@@ -509,7 +509,7 @@ export function SearchResultsPage({
         <button
           type="button"
           onClick={() => setIsMapModalOpen(true)}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 h-14 sm:h-16 inline-flex items-center justify-center gap-3 px-8 sm:px-10 rounded-full border border-white/65 bg-white/50 hover:bg-white/70 text-slate-900 text-base sm:text-lg font-black shadow-[0_8px_30px_rgba(0,0,0,0.14)] backdrop-blur-md transition-all cursor-pointer select-none active:scale-95 hover:scale-105"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 h-14 sm:h-16 inline-flex items-center justify-center gap-3 px-8 sm:px-10 rounded-full border border-white/65 bg-white/50 hover:bg-white/70 text-slate-900 text-base sm:text-lg font-black shadow-[0_8px_30px_rgba(0,0,0,0.14)] transition-all cursor-pointer select-none active:scale-95 hover:scale-105"
           title="Open Map View"
         >
           <svg className="w-5.5 h-5.5 sm:w-6 sm:h-6 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -6,21 +6,29 @@ import { toast } from '../../context/ToastContext';
 import { broadcastBookingChange } from '../../utils/bookingPayment';
 import { formatUtrNumber } from '../../utils/bookingDetailsHelpers';
 
-export function HostPaymentVerificationModal({
- isOpen,
- onClose,
- booking,
- onSuccess,
-}) {
- const [isVerifying, setIsVerifying] = useState(false);
- const [isRejecting, setIsRejecting] = useState(false);
- const [showRejectInput, setShowRejectInput] = useState(false);
- const [rejectionReason, setRejectionReason] = useState('');
- const [verificationNote, setVerificationNote] = useState('');
- const [copiedRef, setCopiedRef] = useState(false);
- const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+export function HostPaymentVerificationModal(props) {
+  if (!props.isOpen || !props.booking) return null;
+  const bookingKey = props.booking._id || props.booking.bookingId || 'verify';
+  return <HostPaymentVerificationModalContent key={bookingKey} {...props} />;
+}
 
- useEffect(() => {
+function HostPaymentVerificationModalContent({
+  isOpen,
+  onClose,
+  booking,
+  onSuccess,
+}) {
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [showRejectInput, setShowRejectInput] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [verificationNote, setVerificationNote] = useState('');
+  const [copiedRef, setCopiedRef] = useState(false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+
+  const bookingId = booking?._id || booking?.bookingId;
+
+  useEffect(() => {
  const handleKeyDown = (e) => {
  if (e.key === 'Escape') {
  if (isLightboxOpen) {
@@ -34,10 +42,9 @@ export function HostPaymentVerificationModal({
  return () => window.removeEventListener('keydown', handleKeyDown);
  }, [isLightboxOpen, onClose]);
 
- if (!isOpen || !booking) return null;
+  if (!isOpen || !booking) return null;
 
- const bookingId = booking._id || booking.bookingId;
- const transactionRef = booking.upiPayment?.transactionRef || booking.transactionRef || '';
+  const transactionRef = booking.upiPayment?.transactionRef || booking.transactionRef || '';
  const amount = Number(booking.totalAmount || booking.paidAmount || booking.amount || 0);
  const guestName = booking.fullName || booking.userName || booking.guestName || 'Guest';
  const roomNumber = booking.roomNumber || 'Room';

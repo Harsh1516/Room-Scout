@@ -92,7 +92,7 @@ export function Login({ onLoginClick, iconOnly = false }) {
  <button
  type="button"
  onClick={handleLoginClick}
- className="bg-white/50 hover:bg-white/70 border border-white/65 backdrop-blur-md text-[#1f1b16] font-medium text-[14px] sm:text-[15px] md:text-[16px] h-12 sm:h-13 px-5 sm:px-6 rounded-full shadow-[0_4px_16px_rgba(0,0,0,0.14)] hover:shadow-[0_6px_22px_rgba(0,0,0,0.22)] transition-colors cursor-pointer flex items-center gap-2 select-none active:scale-95 focus:outline-none focus:ring-0"
+ className="bg-white/50 hover:bg-white/70 border border-white/65 text-[#1f1b16] font-medium text-[14px] sm:text-[15px] md:text-[16px] h-12 sm:h-13 px-5 sm:px-6 rounded-full shadow-[0_4px_16px_rgba(0,0,0,0.14)] hover:shadow-[0_6px_22px_rgba(0,0,0,0.22)] transition-colors cursor-pointer flex items-center gap-2 select-none active:scale-95 focus:outline-none focus:ring-0"
  >
  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 " />
  <span>LOGIN</span>

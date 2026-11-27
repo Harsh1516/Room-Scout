@@ -23,6 +23,7 @@ export { isOnlineGuest, isPaidGuest };
 const getRecordTimestamp = (g) => {
   if (!g) return 0;
   const rawDate =
+    g.lastPaymentVerifiedAt ||
     g.upiPayment?.verifiedAt ||
     g.paidAt ||
     g.createdAt ||

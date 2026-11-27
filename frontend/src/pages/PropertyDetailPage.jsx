@@ -356,7 +356,7 @@ export function PropertyDetailPage({ onLoginClick }) {
 
         {/* 2. Hybrid Capsule Dock: Bottom Floating Dock on Mobile (< md), Top Center on Desktop (md+) */}
         <div className="fixed bottom-5 sm:bottom-6 md:bottom-auto md:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center pointer-events-auto select-none w-max max-w-[calc(100vw-24px)] md:max-w-none h-[54px] sm:h-[56px]">
-          <nav className="relative flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-full bg-white/50 backdrop-blur-md border border-white/65 shadow-[0_8px_30px_rgba(0,0,0,0.12)] md:shadow-sm select-none w-fit">
+          <nav className="relative flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-full bg-white/50 border border-white/65 shadow-[0_8px_30px_rgba(0,0,0,0.12)] md:shadow-sm select-none w-fit">
             <button
               type="button"
               onClick={() => setActiveCenterTab('property')}

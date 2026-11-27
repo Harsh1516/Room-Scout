@@ -9,6 +9,8 @@ import {
   Check,
   Key,
   LogOut,
+  RefreshCw,
+  X,
 } from 'lucide-react';
 import { formatUtrNumber } from '../../../utils/bookingDetailsHelpers';
 import { isPaidGuest } from '../../../utils/guestFilters';
@@ -103,13 +105,20 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
 
   const rawStatus = String(guest.status || '').toUpperCase();
   const isOnline = guest.bookingSource === 'ONLINE' || guest.isOnline === true;
+  const isExtensionPending =
+    subTab === 'requests' && guest.activeExtension?.status === 'PENDING_VERIFICATION';
+  const extInfo = isExtensionPending ? guest.activeExtension : null;
   const isCheckedOut = rawStatus === 'CHECKED_OUT' || rawStatus === 'COMPLETED';
   const isCheckedIn = !isCheckedOut && (rawStatus === 'CHECKED_IN' || (!isOnline && rawStatus === 'CONFIRMED'));
   const isAwaitingPayment = rawStatus === 'AWAITING_PAYMENT' || rawStatus === 'PAYMENT_PENDING';
-  const submittedUtr = String(guest.upiPayment?.transactionRef || guest.transactionRef || '').trim();
-  const isPendingVerification = guest.upiPayment?.verificationStatus === 'PENDING_VERIFICATION';
+  const submittedUtr = isExtensionPending
+    ? String(extInfo?.transactionRef || '').trim()
+    : String(guest.upiPayment?.transactionRef || guest.transactionRef || '').trim();
+  const isPendingVerification =
+    isExtensionPending || guest.upiPayment?.verificationStatus === 'PENDING_VERIFICATION';
   const hasPendingUtr = isPendingVerification && Boolean(submittedUtr);
   const showPaymentTimer = Boolean(
+    !isExtensionPending &&
     isOnline &&
     isAwaitingPayment &&
     !isPendingVerification &&
@@ -135,26 +144,36 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
     'Rohit Sharma';
 
   // 2. Room & Payment Info
-  const roomType = guest.roomType || 'Deluxe Room';
-  const roomNumber = guest.roomNumber ? String(guest.roomNumber).replace(/\D/g, '') : '';
+  const roomType = (isExtensionPending ? extInfo?.targetRoomType : null) || guest.roomType || 'Deluxe Room';
+  const rawRoomVal = (isExtensionPending ? extInfo?.targetRoomNumber : null) || guest.roomNumber;
+  const roomNumber = rawRoomVal ? String(rawRoomVal).replace(/\D/g, '') : '';
   const roomTitle = roomNumber ? `Room ${roomNumber} • ${roomType}` : roomType;
-  const amountValue = Number(guest.totalAmount ?? guest.paidAmount ?? guest.price ?? 0) || 0;
+  const amountValue = isExtensionPending
+    ? Number(extInfo?.amount ?? 0)
+    : Number(guest.totalAmount ?? guest.paidAmount ?? guest.price ?? 0) || 0;
   const isPaid =
-    isPaidGuest(guest) ||
-    guest.isPaid === true ||
-    String(guest.paymentStatus || '').toUpperCase() === 'PAID';
-  const amountLabel = isPaid ? 'Paid' : 'Payable';
+    !isExtensionPending &&
+    (isPaidGuest(guest) ||
+      guest.isPaid === true ||
+      String(guest.paymentStatus || '').toUpperCase() === 'PAID');
+  const amountLabel = isExtensionPending ? 'Extend Payable' : isPaid ? 'Paid' : 'Payable';
   const formattedAmount = `₹${amountValue.toLocaleString('en-IN')}`;
 
   // 3. Date & Duration Info
   let dateLabel = 'Check-in';
   let targetDate = guest.checkInISO || guest.checkIn || guest.createdAt || new Date();
-  if (subTab === 'checkout' || (subTab === 'paid' && isCheckedOut)) {
+  if (isExtensionPending) {
+    dateLabel = 'Extending';
+    targetDate = extInfo?.targetCheckIn || targetDate;
+  } else if (subTab === 'checkout' || (subTab === 'paid' && isCheckedOut)) {
     dateLabel = 'Check-out';
     targetDate = guest.checkOutISO || guest.checkOut || guest.checkInISO || guest.checkIn || new Date();
   }
-  const formattedDateStr = formatCleanDate(targetDate) || '25 Nov 2026';
-  const durationStr = getStayDurationText(guest);
+  const formattedDateStr =
+    isExtensionPending && extInfo?.targetMonthLabel
+      ? extInfo.targetMonthLabel
+      : formatCleanDate(targetDate) || '25 Nov 2026';
+  const durationStr = isExtensionPending ? '(1 Month)' : getStayDurationText(guest);
 
   // 4. Status Badge matching user mockup
   let statusBadge = (
@@ -187,6 +206,25 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
         </span>
       );
     }
+  } else if (isExtensionPending) {
+    const formattedUtr = formatUtrNumber(submittedUtr);
+    statusBadge = (
+      <div className="flex items-center gap-1.5 flex-wrap justify-end">
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+          <RefreshCw className="w-3 h-3 shrink-0" />
+          <span>Extending Validity</span>
+        </span>
+        {submittedUtr && (
+          <span
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-300"
+            title={`Submitted 12-digit UTR: ${formattedUtr}`}
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <span className="font-mono">UTR: {formattedUtr}</span>
+          </span>
+        )}
+      </div>
+    );
   } else if (hasPendingUtr) {
     const formattedUtr = formatUtrNumber(submittedUtr);
     statusBadge = (
@@ -348,20 +386,37 @@ export const VisitedGuestCard = memo(function VisitedGuestCard({
         {/* Bottom Right Corner: Quick Action + View Details > Button */}
         <div className="flex items-center gap-2 shrink-0 ml-auto">
           {/* Quick Action: Accept UTR (once UTR is submitted) OR Approve Request */}
-          {subTab === 'requests' && !isCheckedIn && (
+          {subTab === 'requests' && (!isCheckedIn || isExtensionPending) && (
             hasPendingUtr && onAcceptUtr ? (
-              <button
-                type="button"
-                disabled={isLoading}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAcceptUtr(guest);
-                }}
-                className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold flex items-center gap-1 shadow-xs transition-all active:scale-95 cursor-pointer whitespace-nowrap disabled:opacity-60"
-              >
-                <Check className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>{isLoading ? '...' : 'Accept UTR'}</span>
-              </button>
+              <div className="flex items-center gap-1.5">
+                {isExtensionPending && onRejectRequest && (
+                  <button
+                    type="button"
+                    disabled={isLoading}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRejectRequest(guest);
+                    }}
+                    className="px-2.5 py-1.5 sm:py-2 rounded-full border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold flex items-center gap-1 transition-all active:scale-95 cursor-pointer whitespace-nowrap disabled:opacity-60"
+                    title="Flag incorrect extension UTR"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Flag UTR</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  disabled={isLoading}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAcceptUtr(guest);
+                  }}
+                  className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold flex items-center gap-1 shadow-xs transition-all active:scale-95 cursor-pointer whitespace-nowrap disabled:opacity-60"
+                >
+                  <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>{isLoading ? '...' : 'Accept UTR'}</span>
+                </button>
+              </div>
             ) : isPending && !isAwaitingPayment && !isPendingVerification && onApproveRequest ? (
               <button
                 type="button"

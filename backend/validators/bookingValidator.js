@@ -180,3 +180,15 @@ export const bookingIdParamSchema = z
   })
   .strict();
 
+// Extend Validity UTR Submission Schema (No screenshot upload required)
+export const submitExtendValiditySchema = z.object({
+  transactionRef: z
+    .string({ required_error: '12-digit UPI UTR number is required' })
+    .trim()
+    .transform((v) => v.replace(/\D/g, ''))
+    .refine((v) => v.length === 12, {
+      message: 'Please enter a valid 12-digit numeric UPI UTR reference',
+    }),
+  targetRoomNumber: z.string().trim().optional(),
+});
+

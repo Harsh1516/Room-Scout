@@ -1,11 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { ImagePlus, X } from 'lucide-react';
 import { bookingsAPI } from '../services/api';
 import { toast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { DirectUpiPaymentModal } from './payment/DirectUpiPaymentModal';
+import { compressImage } from '../utils/imageUtils';
 
 export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
  const { user } = useAuth();
+ const aadharInputRef = useRef(null);
 
  const isMonthly = !String(stay?.rateUnit || '').toLowerCase().includes('night');
 
@@ -16,7 +19,10 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
  moveInDate: new Date().toISOString().split('T')[0],
  durationUnits: isMonthly ? 3 : 1,
  sharingType: stay?.sharingType || 'double',
+ aadharNumber: '',
+ aadharPhoto: '',
  });
+ const [compressingAadhar, setCompressingAadhar] = useState(false);
 
  const [paymentMethod, setPaymentMethod] = useState('UPI');
  const [bookingConfirmed, setBookingConfirmed] = useState(false);
@@ -45,25 +51,11 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
  const rawBase = parseInt(String(stay.calculatedPrice || stay.price || 3000).replace(/[^0-9]/g, ''), 10) || 3000;
  const unitCount = formData.durationUnits || 1;
 
- let basePrice = rawBase;
- let deposit = 0;
- let maintenance = 0;
- let gst = 0;
- let totalAmount = 0;
-
- if (isMonthly) {
- basePrice = rawBase;
- deposit = rawBase; // 1 month refundable security deposit
- maintenance = 500;
- gst = Math.round(rawBase * 0.05);
- totalAmount = basePrice + deposit + maintenance + gst;
- } else {
- basePrice = rawBase * unitCount;
- deposit = 0;
- maintenance = 200;
- gst = Math.round(basePrice * 0.05);
- totalAmount = basePrice + maintenance + gst;
- }
+ const basePrice = rawBase * unitCount;
+ const deposit = 0;
+ const maintenance = 0;
+ const gst = 0;
+ const totalAmount = basePrice;
 
  // Exact UTC Boundary Scheduler
  const computeExactSchedule = () => {
@@ -92,8 +84,37 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
  return { startDate, endDate, durationDisplay };
  };
 
+ const handleAadharFileChange = async (e) => {
+ const file = e.target.files?.[0];
+ e.target.value = '';
+ if (!file) return;
+ if (!file.type.startsWith('image/')) {
+ toast.error('Please upload an image file for your Aadhar card.');
+ return;
+ }
+ try {
+ setCompressingAadhar(true);
+ const compressed = await compressImage(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.8 });
+ setFormData((prev) => ({ ...prev, aadharPhoto: compressed }));
+ } catch {
+ toast.error('Failed to process Aadhar card photo.');
+ } finally {
+ setCompressingAadhar(false);
+ }
+ };
+
  const handleSubmit = async (e) => {
  e.preventDefault();
+ const cleanAadharDigits = String(formData.aadharNumber || '').replace(/\D/g, '');
+ if (cleanAadharDigits.length !== 12) {
+ toast.error('Please enter a valid 12-digit Aadhar number.');
+ return;
+ }
+ if (!formData.aadharPhoto) {
+ toast.error('Please upload your Aadhar card photo.');
+ return;
+ }
+
  setIsSubmitting(true);
  setPaymentStepNotice('');
 
@@ -110,6 +131,8 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
  fullName: formData.fullName,
  phone: formData.phone,
  email: formData.email,
+ aadharNumber: cleanAadharDigits,
+ aadharPhoto: formData.aadharPhoto,
  checkIn: schedule.startDate.toISOString(),
  checkOut: schedule.endDate.toISOString(),
  durationMonths: isMonthly ? formData.durationUnits : 0,
@@ -386,6 +409,78 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
  </div>
  </div>
 
+ {/* Aadhar ID & Photo Verification */}
+ <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+ <div>
+ <label className="block text-xs font-medium text-slate-700 mb-1">
+ 12-Digit Aadhar Number *
+ </label>
+ <input
+ type="text"
+ inputMode="numeric"
+ required
+ maxLength={14}
+ placeholder="1234 5678 9012"
+ value={formData.aadharNumber}
+ onChange={(e) => {
+ const digits = e.target.value.replace(/\D/g, '').slice(0, 12);
+ const formatted = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+ setFormData((prev) => ({ ...prev, aadharNumber: formatted }));
+ }}
+ className="w-full min-h-[50px] sm:min-h-[52px] p-3 text-base rounded-xl bg-[#f7f4ee] border border-slate-200 text-[#1f1b16] focus:outline-none focus:ring-2 focus:ring-emerald-500"
+ />
+ </div>
+
+ <div>
+ <label className="block text-xs font-medium text-slate-700 mb-1">
+ Aadhar Card Photo *
+ </label>
+ <input
+ ref={aadharInputRef}
+ type="file"
+ accept="image/*"
+ onChange={handleAadharFileChange}
+ disabled={compressingAadhar}
+ className="hidden"
+ />
+ <div
+ role="button"
+ tabIndex={0}
+ onClick={() => !compressingAadhar && aadharInputRef.current?.click()}
+ onKeyDown={(e) => {
+ if ((e.key === 'Enter' || e.key === ' ') && !compressingAadhar) {
+ aadharInputRef.current?.click();
+ }
+ }}
+ className="w-full min-h-[50px] sm:min-h-[52px] px-3 py-2 rounded-xl bg-[#f7f4ee] border border-slate-200 flex items-center justify-between gap-2 cursor-pointer hover:border-slate-300"
+ >
+ <div className="flex items-center gap-2 min-w-0">
+ {formData.aadharPhoto ? (
+ <img src={formData.aadharPhoto} alt="Aadhar preview" className="w-7 h-7 rounded-lg object-cover border border-slate-300 shrink-0" />
+ ) : (
+ <ImagePlus className="w-4 h-4 text-slate-500 shrink-0" />
+ )}
+ <span className={`text-xs truncate ${formData.aadharPhoto ? 'font-medium text-[#1f1b16]' : 'text-slate-400'}`}>
+ {compressingAadhar ? 'Processing...' : formData.aadharPhoto ? 'Aadhar added' : 'Upload photo'}
+ </span>
+ </div>
+ {formData.aadharPhoto && (
+ <button
+ type="button"
+ onClick={(e) => {
+ e.stopPropagation();
+ setFormData((prev) => ({ ...prev, aadharPhoto: '' }));
+ }}
+ className="w-6 h-6 rounded-full bg-slate-200 hover:bg-rose-100 text-slate-600 hover:text-rose-600 flex items-center justify-center shrink-0"
+ aria-label="Remove Aadhar photo"
+ >
+ <X className="w-3.5 h-3.5" />
+ </button>
+ )}
+ </div>
+ </div>
+ </div>
+
  {/* Payment Method Selector */}
  <div className="space-y-2 pt-1">
  <label className="block text-xs font-medium text-slate-700">
@@ -469,22 +564,12 @@ export function BookingModal({ stay, isOpen, onClose, onBookingCreated }) {
  </h4>
 
  <div className="flex items-center justify-between text-slate-600">
- <span>{isMonthly ? 'Monthly Rent' : `Room Rate (${unitCount} Night${unitCount > 1 ? 's' : ''})`}</span>
+ <span>{isMonthly ? `Monthly Rent (${unitCount} Month${unitCount > 1 ? 's' : ''})` : `Room Rate (${unitCount} Night${unitCount > 1 ? 's' : ''})`}</span>
  <span>₹{basePrice.toLocaleString('en-IN')}</span>
  </div>
- {isMonthly && (
  <div className="flex items-center justify-between text-slate-600">
- <span>Refundable Security Deposit</span>
- <span>₹{deposit.toLocaleString('en-IN')}</span>
- </div>
- )}
- <div className="flex items-center justify-between text-slate-600">
- <span>{isMonthly ? 'Setup & Onboarding' : 'Service Fee'}</span>
- <span>₹{maintenance.toLocaleString('en-IN')}</span>
- </div>
- <div className="flex items-center justify-between text-slate-600">
- <span>GST & Platform Handling (5%)</span>
- <span>₹{gst.toLocaleString('en-IN')}</span>
+ <span>Platform / Handling Fees</span>
+ <span className="text-emerald-600 font-medium">₹0</span>
  </div>
 
  <div className="pt-2 border-t border-slate-200 flex items-center justify-between font-medium text-[#1f1b16] text-sm">

@@ -334,6 +334,19 @@ export const bookingsAPI = {
  method: 'POST',
  }),
 
+ getExtendInfo: (id, roomNumber = '') =>
+ request(
+ `/bookings/${encodeURIComponent(id)}/extend-info${
+ roomNumber ? `?roomNumber=${encodeURIComponent(roomNumber)}` : ''
+ }`
+ ),
+
+ submitExtendValidity: (id, payload) =>
+ request(`/bookings/${encodeURIComponent(id)}/extend-submit`, {
+ method: 'POST',
+ body: JSON.stringify(payload),
+ }),
+
  markTimedOut: (id) =>
  request(`/bookings/${encodeURIComponent(id)}/timeout`, {
  method: 'POST',

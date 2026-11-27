@@ -784,8 +784,8 @@ input:autofill:active {
   .backdrop-blur-xl,
   .backdrop-blur-2xl,
   .backdrop-blur-3xl {
-    backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
   }
 
   /* Solid crisp glass fallbacks for instant zero-lag mobile rendering */

@@ -94,6 +94,29 @@ export function sanitizeUserSession(rawUserData) {
  return sessionUser;
 }
 
+// Shared helper to derive host approval strictly from verified host.status (never from hasProperty alone)
+function mergeHostApprovalFromCheck(prev, hCheck) {
+  if (!prev || !hCheck) return prev;
+  const hasHostRecord = Boolean(hCheck?.host);
+  const hostStatus = hasHostRecord
+    ? hCheck.host.status || 'Pending Approval'
+    : prev.status || 'Pending Approval';
+  const isApproved = hostStatus === 'Approved';
+  const hasProperty = Boolean(hCheck?.hasProperty);
+
+  if (!hasHostRecord && !hasProperty) {
+    return prev;
+  }
+
+  return {
+    ...prev,
+    role: hasHostRecord ? 'host' : prev.role,
+    status: hasHostRecord ? hostStatus : prev.status,
+    isApproved: hasHostRecord ? isApproved : prev.isApproved,
+    hasProperty,
+  };
+}
+
 export function AuthProvider({ children }) {
  const [token, setToken] = useState(() => {
  try {
@@ -182,6 +205,9 @@ export function AuthProvider({ children }) {
             const nextEmail = (cleanUser.email || '').trim().toLowerCase();
             if (prevEmail && nextEmail && prevEmail !== nextEmail) {
               clearAllHostCaches();
+              try {
+                sessionStorage.removeItem('stayhub_recent_bookings');
+              } catch { /* ignore */ }
               localStorage.removeItem('stayin_host_upload_draft');
               localStorage.removeItem('stayin_upload_draft_guest');
               const keysToRemove = [];
@@ -273,7 +299,7 @@ export function AuthProvider({ children }) {
  ].forEach((k) => localStorage.removeItem(k));
 
  Object.keys(localStorage).forEach((key) => {
- if (key.startsWith('stayhub_') && key !== 'stayhub_jwt_token') {
+ if (key.startsWith('stayhub_') && key !== 'stayhub_jwt_token' && key !== 'stayhub_host_subscription_cache') {
  // Migrate old approval notification flag to stayin_ prefix
  if (key.startsWith('stayhub_approved_notified_')) {
  const newKey = key.replace('stayhub_', 'stayin_');
@@ -321,16 +347,10 @@ export function AuthProvider({ children }) {
         if (cleanProfile?.email) {
           adminAPI.getHostByEmail(cleanProfile.email).then((hCheck) => {
             if (authEpochRef.current !== verifyEpoch || !localStorage.getItem('stayin_token')) return;
-            if (hCheck?.hasProperty || hCheck?.host?.status === 'Approved') {
+            if (hCheck?.hasProperty || hCheck?.host) {
               setUser((prev) => {
                 if (!prev || authEpochRef.current !== verifyEpoch) return prev;
-                const nextUser = {
-                  ...prev,
-                  role: 'host',
-                  status: 'Approved',
-                  isApproved: true,
-                  hasProperty: true,
-                };
+                const nextUser = mergeHostApprovalFromCheck(prev, hCheck);
                 try {
                   localStorage.setItem('stayin_user', JSON.stringify(nextUser));
                 } catch {}
@@ -476,19 +496,14 @@ export function AuthProvider({ children }) {
       if (authToken) {
         syncAuthState(data, authToken);
         const loginEpoch = authEpochRef.current;
-        if (data?.email) {
-          adminAPI.getHostByEmail(data.email).then((hCheck) => {
+        const googleEmail = data?.email || data?.user?.email;
+        if (googleEmail) {
+          adminAPI.getHostByEmail(googleEmail).then((hCheck) => {
             if (authEpochRef.current !== loginEpoch || !localStorage.getItem('stayin_token')) return;
-            if (hCheck?.hasProperty || hCheck?.host?.status === 'Approved') {
+            if (hCheck?.hasProperty || hCheck?.host) {
               setUser((prev) => {
                 if (!prev || authEpochRef.current !== loginEpoch) return prev;
-                const nextUser = {
-                  ...prev,
-                  role: 'host',
-                  status: 'Approved',
-                  isApproved: true,
-                  hasProperty: true,
-                };
+                const nextUser = mergeHostApprovalFromCheck(prev, hCheck);
                 try {
                   localStorage.setItem('stayin_user', JSON.stringify(nextUser));
                 } catch {}

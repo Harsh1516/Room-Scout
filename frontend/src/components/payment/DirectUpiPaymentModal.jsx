@@ -9,26 +9,32 @@ import {
 import { formatUtrNumber } from '../../utils/bookingDetailsHelpers';
 import { DotGridWaveLoader } from '../common/DotGridWaveLoader';
 
-export function DirectUpiPaymentModal({
- isOpen,
- onClose,
- booking,
- onPaymentSubmitted,
+export function DirectUpiPaymentModal(props) {
+  if (!props.isOpen) return null;
+  const bookingKey = props.booking?._id || props.booking?.bookingReferenceId || 'upi';
+  return <DirectUpiPaymentModalContent key={bookingKey} {...props} />;
+}
+
+function DirectUpiPaymentModalContent({
+  isOpen,
+  onClose,
+  booking,
+  onPaymentSubmitted,
 }) {
- const [loading, setLoading] = useState(true);
- const [details, setDetails] = useState(null);
- const [transactionRef, setTransactionRef] = useState('');
- const [receiptImage, setReceiptImage] = useState('');
- const [receiptPreview, setReceiptPreview] = useState('');
- const [isSubmitting, setIsSubmitting] = useState(false);
- const [copiedUpi, setCopiedUpi] = useState(false);
- const [statusState, setStatusState] = useState('UNSUBMITTED');
- const [errorMsg, setErrorMsg] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [details, setDetails] = useState(null);
+  const [transactionRef, setTransactionRef] = useState('');
+  const [receiptImage, setReceiptImage] = useState('');
+  const [receiptPreview, setReceiptPreview] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [copiedUpi, setCopiedUpi] = useState(false);
+  const [statusState, setStatusState] = useState('UNSUBMITTED');
+  const [errorMsg, setErrorMsg] = useState('');
 
- const bookingId = booking?._id || booking?.bookingReferenceId;
+  const bookingId = booking?._id || booking?.bookingReferenceId;
 
- useEffect(() => {
- if (!isOpen || !bookingId) return;
+  useEffect(() => {
+    if (!isOpen || !bookingId) return;
 
  let isMounted = true;
  setLoading(true);

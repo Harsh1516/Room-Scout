@@ -11,6 +11,11 @@ import { sendBookingConfirmedEmail, sendPaymentSubmittedToHostEmail, getPublicCl
 import { uploadSecureImage } from '../utils/imageSecurity.js';
 import { emitToHost, emitToUser, emitToGlobal } from '../services/socketService.js';
 import { generateUniqueBookingPassKey } from '../utils/passKeyGenerator.js';
+import {
+  buildSeededPaymentHistory,
+  computeNextExtensionPeriod,
+  formatMonthKeyLabel,
+} from '../utils/bookingExtensionHelpers.js';
 
 // Normalizes UPI transaction references (UTR / RRN)
 export function normalizeTransactionRef(raw) {
@@ -228,10 +233,19 @@ export const submitUpiPayment = async (req, res, next) => {
     }
 
     const duplicateBooking = await Booking.findOne({
-      'upiPayment.transactionRef': normalizedRef,
       _id: { $ne: booking._id },
-      status: { $in: ['CONFIRMED', 'AWAITING_PAYMENT', 'CHECKED_IN'] },
-      'upiPayment.verificationStatus': { $in: ['PENDING_VERIFICATION', 'VERIFIED'] },
+      $or: [
+        {
+          'upiPayment.transactionRef': normalizedRef,
+          status: { $in: ['CONFIRMED', 'AWAITING_PAYMENT', 'CHECKED_IN'] },
+          'upiPayment.verificationStatus': { $in: ['PENDING_VERIFICATION', 'VERIFIED'] },
+        },
+        { 'paymentHistory.transactionRef': normalizedRef },
+        {
+          'activeExtension.transactionRef': normalizedRef,
+          'activeExtension.status': 'PENDING_VERIFICATION',
+        },
+      ],
     }).lean();
 
     if (duplicateBooking) {
@@ -241,16 +255,17 @@ export const submitUpiPayment = async (req, res, next) => {
       });
     }
 
-    // Optional receipt upload via existing secure Cloudinary image utility
-    let finalReceiptUrl = receiptUrl || '';
-    if (receiptImage && typeof receiptImage === 'string') {
+    // Optional receipt upload/validation via secure Cloudinary image utility
+    const rawReceiptInput = (receiptImage || receiptUrl || '').trim();
+    let finalReceiptUrl = '';
+    if (rawReceiptInput) {
       try {
-        finalReceiptUrl = await uploadSecureImage(receiptImage, 'stayin/receipts');
+        finalReceiptUrl = await uploadSecureImage(rawReceiptInput, 'stayin/receipts');
       } catch (uploadErr) {
-        console.warn('Receipt upload failed, using direct payload fallback:', uploadErr.message);
-        if (receiptImage.startsWith('data:image/') || receiptImage.startsWith('http')) {
-          finalReceiptUrl = receiptImage;
-        }
+        return res.status(400).json({
+          success: false,
+          message: uploadErr.message || 'Invalid receipt image or URL format.',
+        });
       }
     }
 
@@ -450,10 +465,183 @@ export const verifyHostPayment = async (req, res, next) => {
 
     const hostUser = req.user?._id || booking.hostId;
     const now = new Date();
+    const isExtensionPending = booking.activeExtension?.status === 'PENDING_VERIFICATION';
 
     if (action === 'VERIFY') {
+      if (isExtensionPending) {
+        const ext = booking.activeExtension;
+        const baseHistory = buildSeededPaymentHistory(booking);
+        const extMonths = Array.isArray(ext.targetMonths) && ext.targetMonths.length > 0
+          ? ext.targetMonths
+          : computeNextExtensionPeriod(booking, 1).targetMonths;
+        const extMonthKey = extMonths[0] || '';
+        const extMonthLabel = ext.targetMonthLabel || extMonths.map(formatMonthKeyLabel).join(', ');
+        const extAmount = Number(ext.amount || 0);
+        const extRoomNumber = String(ext.targetRoomNumber || booking.roomNumber || '').trim();
+        const extRoomType = String(ext.targetRoomType || booking.roomType || 'Standard').trim();
+        const extUtr = String(ext.transactionRef || '').trim();
+
+        baseHistory.push({
+          monthKey: extMonthKey,
+          monthLabel: extMonthLabel,
+          roomNumber: extRoomNumber,
+          roomType: extRoomType,
+          amount: extAmount,
+          transactionRef: extUtr,
+          paymentMethod: 'UPI',
+          status: 'VERIFIED',
+          verifiedAt: now,
+          verifiedBy: hostUser,
+          isExtension: true,
+        });
+
+        const existingMonths = Array.isArray(booking.bookedMonths) ? [...booking.bookedMonths] : [];
+        const updatedMonths = Array.from(new Set([...existingMonths, ...extMonths])).sort();
+        const wasCheckedOut = ['CHECKED_OUT', 'COMPLETED'].includes(String(booking.status || '').toUpperCase());
+
+        booking.paymentHistory = baseHistory;
+        booking.bookedMonths = updatedMonths;
+        if (ext.targetCheckOut) {
+          booking.checkOut = new Date(ext.targetCheckOut);
+        }
+        booking.roomNumber = extRoomNumber || booking.roomNumber;
+        booking.roomType = extRoomType || booking.roomType;
+        booking.durationDisplay = `${updatedMonths.length} Month${updatedMonths.length > 1 ? 's' : ''}`;
+        booking.totalAmount = Number(booking.totalAmount || 0) + extAmount;
+        booking.paymentStatus = 'PAID';
+        booking.lastPaymentVerifiedAt = now;
+        if (wasCheckedOut) {
+          booking.status = 'CONFIRMED';
+          booking.checkedOutAt = null;
+        } else if (booking.status !== 'CHECKED_IN') {
+          booking.status = 'CONFIRMED';
+        }
+        if (!booking.checkInCode) {
+          booking.checkInCode = await generateUniqueBookingPassKey();
+        }
+        if (extUtr) {
+          booking.transactionRef = extUtr;
+        }
+
+        booking.activeExtension = {
+          status: 'NONE',
+          targetMonths: [],
+          targetMonthLabel: '',
+          targetRoomNumber: '',
+          targetRoomType: '',
+          targetCheckIn: null,
+          targetCheckOut: null,
+          amount: 0,
+          transactionRef: '',
+          rejectionReason: '',
+          submittedAt: null,
+          requestedAt: null,
+          submissionCount: 0,
+        };
+
+        const nextCycleKey = booking.checkOut ? new Date(booking.checkOut).toISOString().slice(0, 10) : '';
+        booking.renewalNotifications = {
+          cycleKey: nextCycleKey,
+          pre5DaySent: false,
+          pre5DaySentAt: null,
+          postDaysSent: [],
+          lastSentAt: null,
+        };
+
+        booking.auditLog.push({
+          action: 'VALIDITY_EXTENDED',
+          performedBy: hostUser,
+          performerRole: 'host',
+          timestamp: now,
+          details: {
+            monthKey: extMonthKey,
+            monthLabel: extMonthLabel,
+            roomNumber: extRoomNumber,
+            transactionRef: extUtr,
+            amount: extAmount,
+          },
+          note: `Host verified Extend Validity UTR for ${extMonthLabel} (Room ${extRoomNumber})`,
+        });
+
+        await booking.save();
+
+        // Append dedicated Payment ledger entry without overwriting original month payment record
+        try {
+          await Payment.create({
+            bookingId: booking._id,
+            bookingReferenceId: booking.bookingReferenceId,
+            stayId: booking.stayId,
+            hostId: booking.hostId,
+            userId: booking.userId || null,
+            amount: extAmount,
+            currency: 'INR',
+            paymentMethod: 'UPI',
+            paymentStatus: 'COMPLETED',
+            transactionId: `EXT-${extUtr || Date.now().toString().slice(-8)}`,
+            transactionRef: extUtr,
+            verificationStatus: 'VERIFIED',
+            verifiedBy: hostUser,
+            verifiedAt: now,
+            auditNotes: `Validity extension verified for ${extMonthLabel}`,
+          });
+        } catch (payCreateErr) {
+          console.warn('Extension Payment record note:', payCreateErr.message);
+        }
+
+        if (booking.email) {
+          sendBookingConfirmedEmail({
+            guestEmail: booking.email,
+            guestName: booking.fullName,
+            stayTitle: booking.stayTitle,
+            roomNumber: booking.roomNumber,
+            totalAmount: extAmount,
+            checkInCode: booking.checkInCode || booking.bookingReferenceId,
+            bookingId: booking._id,
+            bookingReferenceId: booking.bookingReferenceId,
+          }).catch((err) => {
+            console.warn('[Email Warning] Could not send extension confirmation email:', err.message);
+          });
+        }
+
+        emitToUser([booking.userId, booking.email], 'payment:verified', {
+          bookingId: booking._id,
+          bookingReferenceId: booking.bookingReferenceId,
+          bookingStatus: booking.status,
+          checkInCode: booking.checkInCode,
+          isExtension: true,
+          booking,
+        });
+        emitToUser([booking.userId, booking.email], 'booking:confirmed', {
+          bookingId: booking._id,
+          bookingReferenceId: booking.bookingReferenceId,
+          checkInCode: booking.checkInCode,
+          booking,
+        });
+        emitToHost([booking.hostId], 'booking:updated', {
+          bookingId: booking._id,
+          bookingReferenceId: booking.bookingReferenceId,
+          status: booking.status,
+          paymentStatus: 'PAID',
+          isExtension: true,
+          booking,
+        });
+        emitToGlobal('stay:availability_changed', {
+          stayId: booking.stayId,
+          roomNumber: booking.roomNumber,
+        });
+
+        return res.json({
+          success: true,
+          message: `Validity extended for ${extMonthLabel} (₹${extAmount.toLocaleString('en-IN')}).`,
+          checkInCode: booking.checkInCode,
+          booking,
+          isExtension: true,
+        });
+      }
+
       booking.paymentStatus = 'PAID';
       booking.status = 'CONFIRMED';
+      booking.lastPaymentVerifiedAt = now;
       if (!booking.checkInCode) {
         booking.checkInCode = await generateUniqueBookingPassKey();
       }
@@ -468,6 +656,9 @@ export const verifyHostPayment = async (req, res, next) => {
       }
       if (booking.upiPayment.receiptUrl) {
         booking.receiptUrl = booking.upiPayment.receiptUrl;
+      }
+      if (!Array.isArray(booking.paymentHistory) || booking.paymentHistory.length === 0) {
+        booking.paymentHistory = buildSeededPaymentHistory(booking);
       }
 
       booking.auditLog.push({
@@ -562,6 +753,50 @@ export const verifyHostPayment = async (req, res, next) => {
 
     if (action === 'REJECT' || action === 'REQUEST_RECHECK') {
       const cleanReason = String(rejectionReason || 'Payment could not be verified in host bank account').trim();
+
+      // Rejecting an Extend Validity UTR MUST NOT cancel or alter the existing verified stay
+      if (isExtensionPending) {
+        booking.activeExtension.status = 'REJECTED';
+        booking.activeExtension.rejectionReason = cleanReason;
+        booking.auditLog.push({
+          action: 'EXTENSION_PAYMENT_REJECTED',
+          performedBy: hostUser,
+          performerRole: 'host',
+          timestamp: now,
+          details: {
+            transactionRef: booking.activeExtension.transactionRef,
+            rejectionReason: cleanReason,
+          },
+          note: `Host rejected Extend Validity UTR without affecting active stay: ${cleanReason}`,
+        });
+        await booking.save();
+
+        emitToUser([booking.userId, booking.email], 'payment:rejected', {
+          bookingId: booking._id,
+          bookingReferenceId: booking.bookingReferenceId,
+          rejectionReason: cleanReason,
+          canResubmit: true,
+          isExtension: true,
+          booking,
+        });
+        emitToHost([booking.hostId], 'booking:updated', {
+          bookingId: booking._id,
+          bookingReferenceId: booking.bookingReferenceId,
+          booking,
+        });
+        emitToGlobal('stay:availability_changed', {
+          stayId: booking.stayId,
+          roomNumber: booking.activeExtension?.targetRoomNumber || booking.roomNumber,
+        });
+
+        return res.json({
+          success: true,
+          message: 'Extension UTR rejected. Guest can submit a valid 12-digit UTR within the grace window.',
+          booking,
+          canResubmit: true,
+          isExtension: true,
+        });
+      }
 
       if (!booking.upiPayment) booking.upiPayment = {};
       const currentCount = Number(booking.upiPayment.submissionCount || 0);

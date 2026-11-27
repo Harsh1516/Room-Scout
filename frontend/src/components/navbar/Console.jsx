@@ -96,7 +96,7 @@ export function Console({
  return (
  <div ref={consoleRef} className="relative select-none w-max">
  <nav
-        className="relative flex items-center p-1 rounded-full bg-white/50 border border-white/65 shadow-sm backdrop-blur-md select-none max-w-[calc(100vw-16px)] sm:max-w-none w-max min-w-[130px] sm:min-w-[145px] h-[54px] sm:h-[56px] min-h-[54px] transition-shadow"
+        className="relative flex items-center p-1 rounded-full bg-white/50 border border-white/65 shadow-sm select-none max-w-[calc(100vw-16px)] sm:max-w-none w-max min-w-[130px] sm:min-w-[145px] h-[54px] sm:h-[56px] min-h-[54px] transition-shadow"
  style={{ borderRadius: 9999 }}
  >
  {/* 1. Expandable 3-Segment Controls (What, Where, Who) */}

@@ -282,14 +282,17 @@ export function VisitedRequestsView({
  : [];
  const counts = new Map();
  for (const g of source) {
- const gRoom = String(g.roomNumber || '').replace(/[^0-9]/g, '');
+ const isExt = subTab === 'requests' && g.activeExtension?.status === 'PENDING_VERIFICATION';
+ const rNumRaw = isExt ? (g.activeExtension?.targetRoomNumber || g.roomNumber) : g.roomNumber;
+ const rTypeRaw = isExt ? (g.activeExtension?.targetRoomType || g.roomType) : g.roomType;
+ const gRoom = String(rNumRaw || '').replace(/[^0-9]/g, '');
  if (!gRoom) continue;
- const catKey = g.roomType ? `${gRoom}_${g.roomType.trim().toLowerCase()}` : null;
+ const catKey = rTypeRaw ? `${gRoom}_${rTypeRaw.trim().toLowerCase()}` : null;
  if (catKey) counts.set(catKey, (counts.get(catKey) || 0) + 1);
  counts.set(gRoom, (counts.get(gRoom) || 0) + 1);
  }
  return counts;
- }, [allRequests, displayedGuests]);
+ }, [allRequests, displayedGuests, subTab]);
 
  const getRoomRequestCount = useCallback((roomNumber, catType) => {
  const cleanRoom = String(roomNumber || '').replace(/[^0-9]/g, '');

@@ -53,16 +53,8 @@ if (process.env.REDIS_URL) {
  * x-real-ip) before falling back to req.ip and socket addresses.
  */
 export const getClientIp = (req) => {
-  // Cloudflare direct visitor header (most trusted when behind Cloudflare proxy)
-  const cfIp = req.headers?.['cf-connecting-ip'];
-  if (cfIp) return String(cfIp).trim();
-
-  // Nginx / Standard reverse-proxy single client IP header
-  const realIp = req.headers?.['x-real-ip'];
-  if (realIp) return String(realIp).trim();
-
-  // Express resolved IP (works seamlessly with app.set('trust proxy', ...))
-  if (req.ip) return req.ip;
+  // Rely on Express's trust proxy resolution rather than raw client-controlled headers
+  if (req.ip) return String(req.ip).trim();
 
   // Direct socket connection fallback
   return req.socket?.remoteAddress || '127.0.0.1';

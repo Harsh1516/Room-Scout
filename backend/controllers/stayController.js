@@ -1,12 +1,63 @@
 import mongoose from 'mongoose';
+import dns from 'node:dns/promises';
+import net from 'node:net';
 import { v2 as cloudinary } from 'cloudinary';
 import { Stay, computeLowestStartingPrice } from '../models/Stay.js';
 import { Host } from '../models/Host.js';
 import { Booking } from '../models/Booking.js';
-import { isAdminUser, idsMatch } from '../middleware/authMiddleware.js';
+import { isAdminUser, idsMatch, assertSelfHostOrAdmin } from '../middleware/authMiddleware.js';
 import { uploadSecureImage } from '../utils/imageSecurity.js';
 import { sendPropertySubmissionToAdminEmail } from '../services/emailService.js';
 import { emitToAdmin, emitToGlobal } from '../services/socketService.js';
+
+function escapeRegex(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function isPrivateOrLocalIp(ip) {
+  if (!ip) return true;
+  const clean = ip.replace(/^::ffff:/i, '').toLowerCase();
+  if (clean === '::1' || clean === '::' || clean === 'localhost') return true;
+  if (net.isIPv4(clean)) {
+    const parts = clean.split('.').map(Number);
+    const [a, b] = parts;
+    if (a === 0 || a === 10 || a === 127) return true;
+    if (a === 169 && b === 254) return true;
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 100 && b >= 64 && b <= 127) return true;
+    return false;
+  }
+  if (net.isIPv6(clean)) {
+    if (clean.startsWith('fc') || clean.startsWith('fd') || clean.startsWith('fe8') || clean.startsWith('fe9') || clean.startsWith('fea') || clean.startsWith('feb')) {
+      return true;
+    }
+    return false;
+  }
+  return true;
+}
+
+function isAllowedGoogleHost(hostname) {
+  const h = String(hostname || '').toLowerCase().replace(/\.$/, '');
+  if (!h) return false;
+  if (h === 'goo.gl' || h === 'maps.app.goo.gl' || h === 'g.page') return true;
+  return /^(?:[a-z0-9-]+\.)*google\.(?:com|co\.[a-z]{2}|com\.[a-z]{2}|[a-z]{2,3})$/i.test(h);
+}
+
+async function assertSafeGoogleUrl(rawUrl) {
+  const parsed = new URL(rawUrl);
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+    throw new Error('Disallowed URL protocol');
+  }
+  if (!isAllowedGoogleHost(parsed.hostname)) {
+    throw new Error('Only verified Google Maps URLs are permitted');
+  }
+  const records = await dns.lookup(parsed.hostname, { all: true });
+  if (!records || records.length === 0 || records.some((r) => isPrivateOrLocalIp(r.address))) {
+    throw new Error('Disallowed internal or private IP resolution');
+  }
+  return parsed;
+}
 
 /**
  * Computes and attaches each host's average online booking approval response time (in ms)
@@ -104,14 +155,14 @@ export const getAllStays = async (req, res, next) => {
     }
 
     if (city && typeof city === 'string') {
-      mongoFilter.city = { $regex: new RegExp(city.trim(), 'i') };
+      mongoFilter.city = { $regex: new RegExp(escapeRegex(city.trim()), 'i') };
     }
     if (type && typeof type === 'string' && type !== 'All' && type !== 'All Types') {
       const t = type.toLowerCase().trim();
       if (t === 'flat') {
         mongoFilter.type = { $in: ['PG', 'Flat', 'Apartment'] };
       } else {
-        mongoFilter.type = { $regex: new RegExp(`^${t}$`, 'i') };
+        mongoFilter.type = { $regex: new RegExp(`^${escapeRegex(t)}$`, 'i') };
       }
     }
     if (gender && typeof gender === 'string' && gender !== 'All') {
@@ -133,7 +184,7 @@ export const getAllStays = async (req, res, next) => {
       mongoFilter.rating = { $gte: Number(minRating) };
     }
     if (query && typeof query === 'string') {
-      const qRegex = { $regex: new RegExp(query.trim(), 'i') };
+      const qRegex = { $regex: new RegExp(escapeRegex(query.trim()), 'i') };
       mongoFilter.$or = [
         { title: qRegex },
         { location: qRegex },
@@ -146,9 +197,9 @@ export const getAllStays = async (req, res, next) => {
     if (amenities) {
       const amenityArr = Array.isArray(amenities)
         ? amenities
-        : amenities.split(',').map((a) => a.trim());
+        : amenities.split(',').map((a) => a.trim()).filter(Boolean);
       if (amenityArr.length > 0) {
-        mongoFilter.facilities = { $all: amenityArr.map((a) => new RegExp(a, 'i')) };
+        mongoFilter.facilities = { $all: amenityArr.map((a) => new RegExp(escapeRegex(a), 'i')) };
       }
     }
 
@@ -549,10 +600,9 @@ export const updateReviewInStay = async (req, res, next) => {
     const callerId = req.user?._id?.toString();
     const callerName = (req.user?.name || '').toLowerCase().trim();
     const revUserId = (rev.userId?._id || rev.userId || rev.user)?.toString();
-    const isAuthor =
-      (revUserId && callerId && revUserId === callerId) ||
-      idsMatch(revUserId, callerId) ||
-      (rev.userName && rev.userName.toLowerCase().trim() === callerName);
+    const isAuthor = revUserId
+      ? (callerId && revUserId === callerId) || idsMatch(revUserId, callerId)
+      : Boolean(rev.userName && callerName && rev.userName.toLowerCase().trim() === callerName);
 
     if (!isCallerAdmin && !isAuthor) {
       return res.status(403).json({
@@ -592,10 +642,9 @@ export const deleteReviewFromStay = async (req, res, next) => {
     const callerId = req.user?._id?.toString();
     const callerName = (req.user?.name || '').toLowerCase().trim();
     const revUserId = (rev.userId?._id || rev.userId || rev.user)?.toString();
-    const isAuthor =
-      (revUserId && callerId && revUserId === callerId) ||
-      idsMatch(revUserId, callerId) ||
-      (rev.userName && rev.userName.toLowerCase().trim() === callerName);
+    const isAuthor = revUserId
+      ? (callerId && revUserId === callerId) || idsMatch(revUserId, callerId)
+      : Boolean(rev.userName && callerName && rev.userName.toLowerCase().trim() === callerName);
 
     if (!isCallerAdmin && !isAuthor) {
       return res.status(403).json({
@@ -736,125 +785,100 @@ export const resolveMapLink = async (req, res) => {
     const cleanUrl = urlExtractMatch ? urlExtractMatch[0].replace(/[.,;:)\]}>]+$/, '') : trimmed;
     let parsedUrl;
     try {
-      parsedUrl = new URL(cleanUrl);
-    } catch {
-      return res.status(400).json({ success: false, message: 'Please enter a valid Google Maps link or coordinates (e.g. 29°22\'29.4"N 79°31\'39.9"E)' });
+      parsedUrl = await assertSafeGoogleUrl(cleanUrl);
+    } catch (urlErr) {
+      const msg = urlErr?.message?.includes('Only verified')
+        ? 'Only verified Google Maps URLs are permitted'
+        : urlErr?.message?.includes('Disallowed')
+        ? urlErr.message
+        : 'Please enter a valid Google Maps link or coordinates (e.g. 29°22\'29.4"N 79°31\'39.9"E)';
+      return res.status(400).json({ success: false, message: msg });
     }
 
     const hostname = parsedUrl.hostname.toLowerCase();
-    const isGoogle =
-      hostname === 'goo.gl' ||
-      hostname.endsWith('.goo.gl') ||
-      hostname === 'g.page' ||
-      hostname.endsWith('.g.page') ||
-      hostname.includes('google.');
-
-    if (!isGoogle) {
-      return res.status(400).json({ success: false, message: 'Only verified Google Maps URLs are permitted' });
-    }
-
     let targetUrl = cleanUrl;
     let fetchedHtml = '';
     const allSeenUrls = [cleanUrl];
-    const isShortUrl =
-      hostname.includes('goo.gl') ||
-      hostname === 'g.page' ||
-      hostname.endsWith('.g.page') ||
-      targetUrl.includes('/url?');
 
-    if (isShortUrl) {
-      let currentHopUrl = cleanUrl;
-      const MAX_HOPS = 6;
+    let currentHopUrl = cleanUrl;
+    const MAX_HOPS = 6;
 
-      for (let hop = 0; hop < MAX_HOPS; hop++) {
-        try {
-          const curObj = new URL(currentHopUrl);
-          if (curObj.hostname.includes('consent.google.') || curObj.pathname === '/url') {
-            const cont =
-              curObj.searchParams.get('continue') ||
-              curObj.searchParams.get('q') ||
-              curObj.searchParams.get('url');
-            if (cont && cont.startsWith('http')) {
-              currentHopUrl = decodeURIComponent(cont);
-              allSeenUrls.push(currentHopUrl);
-            }
-          }
-        } catch {}
-
-        try {
-          const redirectRes = await fetch(currentHopUrl, {
-            method: 'GET',
-            redirect: 'manual',
-            headers: {
-              'User-Agent':
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-              'Accept':
-                'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-              'Accept-Language': 'en-US,en;q=0.9',
-            },
-            signal: AbortSignal.timeout(10000),
-          });
-
-          if (redirectRes.status >= 300 && redirectRes.status < 400) {
-            let loc = redirectRes.headers.get('location');
-            if (loc) {
-              if (loc.startsWith('/')) {
-                const curObj = new URL(currentHopUrl);
-                loc = `${curObj.protocol}//${curObj.host}${loc}`;
-              }
-              currentHopUrl = loc;
-              targetUrl = loc;
-              allSeenUrls.push(loc);
-              continue;
-            }
-          }
-
-          if (redirectRes.ok) {
-            targetUrl = redirectRes.url || currentHopUrl;
-            allSeenUrls.push(targetUrl);
-            fetchedHtml = await redirectRes.text();
-
-            const metaRefreshMatch = fetchedHtml.match(
-              /<meta[^>]*http-equiv=["']?refresh["']?[^>]*content=["']?[^"'>]*url=['"]?([^"'>\s]+)['"]?/i
-            );
-            if (metaRefreshMatch && metaRefreshMatch[1]) {
-              let nextUrl = metaRefreshMatch[1];
-              if (nextUrl.startsWith('/')) {
-                const curObj = new URL(currentHopUrl);
-                nextUrl = `${curObj.protocol}//${curObj.host}${nextUrl}`;
-              }
-              currentHopUrl = nextUrl;
-              targetUrl = nextUrl;
-              allSeenUrls.push(nextUrl);
-              continue;
-            }
-            break;
-          } else {
-            break;
-          }
-        } catch (redirectErr) {
-          console.warn('Google Maps redirect error:', redirectErr.message);
-          break;
-        }
-      }
-    } else {
+    for (let hop = 0; hop < MAX_HOPS; hop++) {
       try {
-        const directRes = await fetch(cleanUrl, {
+        const curObj = new URL(currentHopUrl);
+        if (curObj.hostname.includes('consent.google.') || curObj.pathname === '/url') {
+          const cont =
+            curObj.searchParams.get('continue') ||
+            curObj.searchParams.get('q') ||
+            curObj.searchParams.get('url');
+          if (cont && cont.startsWith('http')) {
+            const decodedCont = decodeURIComponent(cont);
+            await assertSafeGoogleUrl(decodedCont);
+            currentHopUrl = decodedCont;
+            allSeenUrls.push(currentHopUrl);
+          }
+        }
+      } catch (hopErr) {
+        if (hopErr?.message?.includes('Disallowed') || hopErr?.message?.includes('Only verified')) break;
+      }
+
+      try {
+        await assertSafeGoogleUrl(currentHopUrl);
+        const redirectRes = await fetch(currentHopUrl, {
           method: 'GET',
-          redirect: 'follow',
+          redirect: 'manual',
           headers: {
             'User-Agent':
               'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept':
+              'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
           },
           signal: AbortSignal.timeout(10000),
         });
-        if (directRes.ok) {
-          targetUrl = directRes.url || cleanUrl;
-          allSeenUrls.push(targetUrl);
-          fetchedHtml = await directRes.text();
+
+        if (redirectRes.status >= 300 && redirectRes.status < 400) {
+          let loc = redirectRes.headers.get('location');
+          if (loc) {
+            if (loc.startsWith('/')) {
+              const curObj = new URL(currentHopUrl);
+              loc = `${curObj.protocol}//${curObj.host}${loc}`;
+            }
+            allSeenUrls.push(loc);
+            await assertSafeGoogleUrl(loc);
+            currentHopUrl = loc;
+            targetUrl = loc;
+            continue;
+          }
         }
-      } catch (err) {
-        console.warn('Direct URL fetch warning:', err.message);
+
+        if (redirectRes.ok) {
+          targetUrl = redirectRes.url || currentHopUrl;
+          allSeenUrls.push(targetUrl);
+          fetchedHtml = await redirectRes.text();
+
+          const metaRefreshMatch = fetchedHtml.match(
+            /<meta[^>]*http-equiv=["']?refresh["']?[^>]*content=["']?[^"'>]*url=['"]?([^"'>\s]+)['"]?/i
+          );
+          if (metaRefreshMatch && metaRefreshMatch[1]) {
+            let nextUrl = metaRefreshMatch[1];
+            if (nextUrl.startsWith('/')) {
+              const curObj = new URL(currentHopUrl);
+              nextUrl = `${curObj.protocol}//${curObj.host}${nextUrl}`;
+            }
+            allSeenUrls.push(nextUrl);
+            await assertSafeGoogleUrl(nextUrl);
+            currentHopUrl = nextUrl;
+            targetUrl = nextUrl;
+            continue;
+          }
+          break;
+        } else {
+          break;
+        }
+      } catch (redirectErr) {
+        console.warn('Google Maps redirect error:', redirectErr.message);
+        break;
       }
     }
 
@@ -1312,6 +1336,10 @@ export const resetStayRevenue = async (req, res, next) => {
     const stay = await Stay.findById(stayId);
     if (!stay) {
       return res.status(404).json({ success: false, message: 'Stay not found.' });
+    }
+
+    if (!assertSelfHostOrAdmin(req, { hostId: stay.hostId, hostEmail: stay.email || stay.hostEmail })) {
+      return res.status(403).json({ success: false, message: 'Access denied: You do not own this property.' });
     }
 
     if (restoreAllTime) {

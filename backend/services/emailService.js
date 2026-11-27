@@ -11,7 +11,7 @@ dotenv.config();
 let cachedTransporter = null;
 
 // Initialize or return Nodemailer Transporter
-async function getTransporter() {
+export async function getTransporter() {
   if (cachedTransporter) return cachedTransporter;
 
   const emailUser = process.env.EMAIL_USER;
@@ -1258,6 +1258,8 @@ export async function sendPaymentSubmittedToHostEmail({
   transactionRef,
   bookingId,
   dashboardUrl: customDashboardUrl,
+  isExtension = false,
+  targetMonthLabel = '',
 }) {
   if (!hostEmail) return { success: false, reason: 'No host email address provided' };
 
@@ -1305,22 +1307,28 @@ export async function sendPaymentSubmittedToHostEmail({
       : (transactionRef || '');
 
     const htmlContent = buildBrandedEmailHtml({
-      badgeText: 'Payment Verification Required',
-      title: `Guest Payment Submitted for Room ${roomNumber}`,
-      subtitle: `Guest <strong>${guestName}</strong> has submitted direct UPI transfer of <strong>₹${Number(amount || 0).toLocaleString('en-IN')}</strong> for <strong>Room ${roomNumber}</strong> (${resolvedCategory}). Please check your bank account or UPI app (PhonePe, GPay, Paytm) and verify to unlock the guest pass.`,
+      badgeText: isExtension ? 'Extending Validity · Verify UTR' : 'Payment Verification Required',
+      title: isExtension
+        ? `Validity Extension UTR Submitted for Room ${roomNumber}`
+        : `Guest Payment Submitted for Room ${roomNumber}`,
+      subtitle: isExtension
+        ? `Existing resident <strong>${guestName}</strong> is <strong>Extending Validity</strong>${targetMonthLabel ? ` for <strong>${targetMonthLabel}</strong>` : ''} and submitted UPI payment of <strong>₹${Number(amount || 0).toLocaleString('en-IN')}</strong> (Room ${roomNumber} · ${resolvedCategory}). Verify the 12-digit UTR in your bank app to extend their stay.`
+        : `Guest <strong>${guestName}</strong> has submitted direct UPI transfer of <strong>₹${Number(amount || 0).toLocaleString('en-IN')}</strong> for <strong>Room ${roomNumber}</strong> (${resolvedCategory}). Please check your bank account or UPI app (PhonePe, GPay, Paytm) and verify to unlock the guest pass.`,
       detailsRows: [
         { label: 'User Name', value: guestName || 'Guest' },
         { label: 'Room Category', value: resolvedCategory },
         { label: 'Room No.', value: `Room ${roomNumber}` },
-        { label: 'Duration', value: durationDisplay || (isMonthly ? '1 Month' : '1 Night') },
-        { label: accommodationTimingLabel, value: accommodationTimingValue },
+        { label: 'Duration', value: isExtension ? targetMonthLabel || 'Next Month' : (durationDisplay || (isMonthly ? '1 Month' : '1 Night')) },
+        { label: accommodationTimingLabel, value: targetMonthLabel || accommodationTimingValue },
         { label: 'Paid Amount', value: `₹${Number(amount || 0).toLocaleString('en-IN')}` },
         { label: 'UPI Reference (UTR)', value: formattedUtr || 'N/A' },
-        { label: 'Status', value: 'Pending Your Confirmation' },
+        { label: 'Status', value: isExtension ? 'Extending Validity (Verify UTR)' : 'Pending Your Confirmation' },
       ],
-      ctaText: 'Verify Payment & Unlock Pass',
+      ctaText: isExtension ? 'Verify Extension Payment' : 'Verify Payment & Unlock Pass',
       ctaUrl: hostDashboardUrl,
-      footerNote: 'Once you verify this payment in your Host Dashboard, the guest\'s official Check-In Pass Code is automatically generated and active.',
+      footerNote: isExtension
+        ? 'Once you verify this UTR in Requests, the booking extends automatically for the next month and updates the Resident ID Pass.'
+        : 'Once you verify this payment in your Host Dashboard, the guest\'s official Check-In Pass Code is automatically generated and active.',
     });
 
     if (!transporter) {
@@ -1331,8 +1339,10 @@ export async function sendPaymentSubmittedToHostEmail({
     const mailOptions = {
       from: fromAddress,
       to: hostEmail,
-      subject: `Payment Submitted: ₹${amount} for Room ${roomNumber} by ${guestName} (UTR: ${formattedUtr})`,
-      text: `Hello ${hostName},\n\nGuest ${guestName} has submitted UPI payment of ₹${amount} for Room ${roomNumber} (${resolvedCategory}).\nDuration: ${durationDisplay || ''}\n${accommodationTimingLabel}: ${accommodationTimingValue}\nUTR: ${formattedUtr}\n\nVerify and Confirm at: ${hostDashboardUrl}\n\nStay In Team`,
+      subject: isExtension
+        ? `Extending Validity: ₹${amount} UTR for Room ${roomNumber} (${targetMonthLabel || 'Next Month'}) - ${guestName}`
+        : `Payment Submitted: ₹${amount} for Room ${roomNumber} by ${guestName} (UTR: ${formattedUtr})`,
+      text: `Hello ${hostName},\n\nGuest ${guestName} has submitted UPI payment of ₹${amount} for Room ${roomNumber} (${resolvedCategory})${isExtension ? ` [Extending Validity: ${targetMonthLabel}]` : ''}.\nDuration: ${durationDisplay || ''}\n${accommodationTimingLabel}: ${targetMonthLabel || accommodationTimingValue}\nUTR: ${formattedUtr}\n\nVerify and Confirm at: ${hostDashboardUrl}\n\nStay In Team`,
       html: htmlContent,
     };
 
@@ -1341,6 +1351,95 @@ export async function sendPaymentSubmittedToHostEmail({
     return { success: true, messageId: info.messageId };
   } catch (err) {
     console.error(`❌ Failed to send host payment submission alert to [${hostEmail}]:`, err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * 10. Send Extend Validity Reminder Email to Resident
+ * Supports PRE_5_DAY (sent once 5 days before checkout), POST_DAILY (days 1-6), and LAST_DAY (day 7).
+ */
+export async function sendExtendValidityReminderEmail({
+  guestEmail,
+  guestName = 'Guest',
+  stayTitle,
+  roomNumber,
+  roomType = 'Room',
+  nextMonthLabel,
+  amount = 0,
+  bookingId,
+  type = 'PRE_5_DAY',
+  daysLeft = 7,
+  daysUntilEnd = 5,
+  dashboardUrl: customUrl,
+}) {
+  if (!guestEmail) return { success: false, reason: 'No guest email address provided' };
+
+  try {
+    const transporter = await getTransporter();
+    const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Stay In Renewals" <noreply@stayin.com>';
+    const targetUrl = customUrl || `${getPublicClientBaseUrl()}/booking-details/${bookingId}`;
+
+    let badgeText = 'Extend Validity Reminder';
+    let title = `Extend Your Stay at ${stayTitle}`;
+    let subtitle = '';
+    let subject = '';
+    let timeRemainingText = '';
+
+    if (type === 'PRE_5_DAY') {
+      badgeText = 'Ending in 5 Days';
+      title = `Renew Your Stay for ${nextMonthLabel}`;
+      subject = `Reminder: Your stay at ${stayTitle} ends soon — Extend for ${nextMonthLabel}`;
+      timeRemainingText = daysUntilEnd <= 1 ? 'Ending tomorrow' : `${daysUntilEnd} days left in current month`;
+      subtitle = `Hi <strong>${guestName}</strong>, your monthly stay in <strong>Room ${roomNumber}</strong> (${roomType}) at <strong>${stayTitle}</strong> is ending soon. You can extend for <strong>${nextMonthLabel}</strong> in 1 tap by paying the rent &amp; submitting your UTR — no forms or Aadhaar re-upload needed.`;
+    } else if (type === 'LAST_DAY') {
+      badgeText = 'Last Day to Extend Validity';
+      title = `Last Day to Extend Room ${roomNumber}`;
+      subject = `Last day to extend validity — ${stayTitle} (Room ${roomNumber})`;
+      timeRemainingText = 'Last day today (expires tonight)';
+      subtitle = `Hi <strong>${guestName}</strong>, today is the <strong>last day to extend validity</strong> for <strong>Room ${roomNumber}</strong> at <strong>${stayTitle}</strong> (${nextMonthLabel}) without re-filling any booking details or uploading Aadhaar again.`;
+    } else {
+      badgeText = `${daysLeft} Days Left to Extend`;
+      title = `Extend Validity — ${daysLeft} Days Left`;
+      subject = `Extend validity for ${stayTitle} (${daysLeft} day${daysLeft === 1 ? '' : 's'} left)`;
+      timeRemainingText = `${daysLeft} day${daysLeft === 1 ? '' : 's'} remaining`;
+      subtitle = `Hi <strong>${guestName}</strong>, your booked month at <strong>${stayTitle}</strong> (Room ${roomNumber}) has ended. You still have <strong>${daysLeft} day${daysLeft === 1 ? '' : 's'} left</strong> to extend for <strong>${nextMonthLabel}</strong> with just UPI payment + 12-digit UTR.`;
+    }
+
+    const htmlContent = buildBrandedEmailHtml({
+      badgeText,
+      title,
+      subtitle,
+      detailsRows: [
+        { label: 'Property', value: stayTitle || 'Stay In Property' },
+        { label: 'Room No.', value: `Room ${roomNumber} (${roomType})` },
+        { label: 'Next Month', value: nextMonthLabel || 'Next Month' },
+        { label: 'Monthly Rent', value: `₹${Number(amount || 0).toLocaleString('en-IN')}` },
+        { label: 'Window Status', value: timeRemainingText },
+      ],
+      ctaText: 'Extend Validity Now',
+      ctaUrl: targetUrl,
+      footerNote: 'No personal details or Aadhaar photo re-upload needed — just scan QR and submit your 12-digit UTR.',
+    });
+
+    if (!transporter) {
+      console.log(`[LOCAL EMAIL SIMULATOR] Extend Validity (${type}) email to: ${guestEmail} | Subject: ${subject}`);
+      return { success: true, simulated: true };
+    }
+
+    const mailOptions = {
+      from: fromAddress,
+      to: guestEmail,
+      subject,
+      text: `${subject}\n\nHello ${guestName},\nProperty: ${stayTitle}\nRoom: Room ${roomNumber} (${roomType})\nNext Month: ${nextMonthLabel}\nRent: ₹${amount}\nStatus: ${timeRemainingText}\n\nExtend now at: ${targetUrl}\n\nStay In Team`,
+      html: htmlContent,
+    };
+
+    const info = await sendRawMail(mailOptions);
+    console.log(`✅ Extend Validity Email (${type}) sent to [${guestEmail}] (ID: ${info.messageId})`);
+    return { success: true, messageId: info.messageId };
+  } catch (err) {
+    console.error(`❌ Failed to send extend validity email to [${guestEmail}]:`, err.message);
     return { success: false, error: err.message };
   }
 }

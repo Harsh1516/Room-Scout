@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import QRCode from 'qrcode';
 import { Booking } from '../models/Booking.js';
 import { Stay } from '../models/Stay.js';
 import { Host } from '../models/Host.js';
@@ -10,10 +11,22 @@ import {
   sendBookingApprovedToGuestEmail,
   sendBookingRejectedToGuestEmail,
   sendBookingConfirmedEmail,
+  sendPaymentSubmittedToHostEmail,
+  getPublicClientBaseUrl,
 } from '../services/emailService.js';
 import { emitToHost, emitToUser, emitToGlobal } from '../services/socketService.js';
 import { uploadSecureImage } from '../utils/imageSecurity.js';
 import { generateUniqueBookingPassKey } from '../utils/passKeyGenerator.js';
+import {
+  buildExtensionUpiUri,
+  computeExtensionRoomAmount,
+  computeNextExtensionPeriod,
+  getExtendValidityState,
+  getRoomOccupancyForTargetMonth,
+  isPerPersonRoomPricing,
+  isValidUpiVpa,
+  resolveRoomMonthlyPrice,
+} from '../utils/bookingExtensionHelpers.js';
 
 const BOOKING_STATUS_ENUM = [
   'PENDING',
@@ -395,50 +408,9 @@ export const computeBookingTimings = ({
   }
 };
 
-// Helper to determine if pricing should be per person
-// Rule: For PG, Hostel, and Independent Rooms category, pricing must be per person (online and offline).
+// Helper to determine if pricing should be per person (shared utility in bookingExtensionHelpers)
 function isPerPersonPricing(stayOrProperty, categoryOrRoom) {
-  const pType = String(
-    (typeof stayOrProperty === 'string'
-      ? stayOrProperty
-      : (stayOrProperty?.propertyType || stayOrProperty?.type || stayOrProperty?.category)) || ''
-  ).trim().toLowerCase();
-
-  const rType = String(
-    (typeof categoryOrRoom === 'string'
-      ? categoryOrRoom
-      : (categoryOrRoom?.type || categoryOrRoom?.categoryName || categoryOrRoom?.name)) || ''
-  ).trim().toLowerCase();
-
-  const isHotelOrFlat = (pType === 'hotel' || pType === 'flat') && !pType.includes('independent') && !rType.includes('independent');
-  if (isHotelOrFlat) {
-    return false;
-  }
-
-  if (
-    pType === 'pg' ||
-    pType === 'hostel' ||
-    pType === 'independent room' ||
-    pType === 'independent_room' ||
-    pType === 'independent' ||
-    pType.includes('pg') ||
-    pType.includes('independent') ||
-    rType === 'pg' ||
-    rType === 'hostel' ||
-    rType === 'independent room' ||
-    rType === 'independent_room' ||
-    rType === 'independent' ||
-    rType.includes('independent') ||
-    rType.includes('pg')
-  ) {
-    return true;
-  }
-
-  if (!pType && !rType) {
-    return true;
-  }
-
-  return false;
+  return isPerPersonRoomPricing(stayOrProperty, categoryOrRoom);
 }
 
 // @desc    Create a new online booking
@@ -477,7 +449,28 @@ export const createBooking = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'roomNumber is required.' });
     }
 
-    const rateUnit = String(body.rateUnit || stay.rateUnit || '/month');
+    const targetRoom = (stay.rooms || []).find((r) => String(r.roomNumber).trim() === roomNumber);
+    if (Array.isArray(stay.rooms) && stay.rooms.length > 0 && !targetRoom) {
+      return res.status(400).json({
+        success: false,
+        message: `Room '${roomNumber}' does not exist in this property.`,
+      });
+    }
+
+    const rateMatch = (stay.roomRates || []).find(
+      (r) => String(r?.type || '').trim().toLowerCase() === String(targetRoom?.type || '').trim().toLowerCase()
+    );
+    const rateUnit = String(targetRoom?.rateUnit || rateMatch?.rateUnit || stay.rateUnit || '/month');
+
+    const safePersons = Math.max(1, Number(body.personCount) || 1);
+    const configuredCapacity = Number(targetRoom?.capacity || rateMatch?.capacity || 0);
+    if (configuredCapacity > 0 && safePersons > configuredCapacity) {
+      return res.status(400).json({
+        success: false,
+        message: `Guest count (${safePersons}) exceeds Room ${roomNumber} maximum capacity (${configuredCapacity}).`,
+      });
+    }
+
     const timings = computeBookingTimings({
       rateUnit,
       bookedDates: body.bookedDates,
@@ -516,17 +509,14 @@ export const createBooking = async (req, res, next) => {
     // Exact Server-side Price Calculation from Trusted Database Stay Records
     const isMonthly = rateUnit.includes('month');
     const unitCount = isMonthly ? (timings.durationMonths || 1) : (timings.durationDays || 1);
-    const targetRoom = (stay.rooms || []).find((r) => String(r.roomNumber).trim() === roomNumber);
-    const rawPrice = targetRoom?.price || stay.price || 0;
+    const rawPrice = targetRoom?.price || rateMatch?.price || stay.price || 0;
     const roomBaseRate = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/[^0-9]/g, '')) || 0;
 
-    const safePersons = Math.max(1, Number(body.personCount) || 1);
-    const isPerPerson = isPerPersonPricing(stay, targetRoom);
+    const isPerPerson = isPerPersonPricing(stay, targetRoom || rateMatch);
     const effectiveMultiplier = isPerPerson ? safePersons : 1;
     const baseAmount = roomBaseRate * unitCount * effectiveMultiplier;
-    const serverTotal = (typeof body.totalAmount === 'number' && body.totalAmount >= 0)
-      ? body.totalAmount
-      : baseAmount;
+    // Security: Always enforce server-computed room total instead of trusting client-supplied totalAmount
+    const serverTotal = baseAmount;
 
     const deposit = 0;
     const maintenance = 0;
@@ -1114,12 +1104,13 @@ export const getMyBookings = async (req, res, next) => {
   try {
     const userId = req.user?._id;
     const userEmail = req.user?.email ? req.user.email.toLowerCase().trim() : '';
-    const userPhone = req.user?.phone ? String(req.user.phone).replace(/\D/g, '').slice(-10) : '';
+    const rawPhoneDigits = req.user?.phone ? String(req.user.phone).replace(/\D/g, '') : '';
+    const userPhone = rawPhoneDigits.length >= 10 ? rawPhoneDigits.slice(-10) : '';
 
     const query = [];
     if (userId && mongoose.Types.ObjectId.isValid(userId)) query.push({ userId });
     if (userEmail) query.push({ email: userEmail });
-    if (userPhone) query.push({ phone: { $regex: userPhone + '$' } });
+    if (userPhone) query.push({ userId: null, phone: { $regex: userPhone + '$' } });
 
     if (query.length === 0) {
       return res.json({ success: true, count: 0, bookings: [] });
@@ -1212,12 +1203,15 @@ export const getBookingById = async (req, res, next) => {
 
     const callerId = req.user?._id?.toString();
     const callerEmail = req.user?.email ? req.user.email.toLowerCase().trim() : '';
-    const callerPhone = req.user?.phone ? String(req.user.phone).replace(/\D/g, '').slice(-10) : '';
+    const rawCallerDigits = req.user?.phone ? String(req.user.phone).replace(/\D/g, '') : '';
+    const callerPhone = rawCallerDigits.length >= 10 ? rawCallerDigits.slice(-10) : '';
+    const bookingPhoneDigits = booking.phone ? String(booking.phone).replace(/\D/g, '') : '';
+    const bookingPhone10 = bookingPhoneDigits.length >= 10 ? bookingPhoneDigits.slice(-10) : '';
 
     const isOwner =
       Boolean(callerId && booking.userId && idsMatch(booking.userId, callerId)) ||
       Boolean(callerEmail && booking.email && booking.email.toLowerCase().trim() === callerEmail) ||
-      Boolean(callerPhone && booking.phone && String(booking.phone).replace(/\D/g, '').endsWith(callerPhone));
+      Boolean(!booking.userId && callerPhone && bookingPhone10 && bookingPhone10 === callerPhone);
 
     const isPropertyHost =
       Boolean(callerId && booking.hostId && (idsMatch(booking.hostId, callerId) || idsMatch(booking.hostId?._id, callerId))) ||
@@ -1313,13 +1307,27 @@ export const updateBookingStatus = async (req, res, next) => {
         });
       }
 
-      // Cancellation State Lock: Guests can only cancel if current booking status is PENDING, AWAITING_PAYMENT, or CONFIRMED
+      // Cancellation & Expiry State Locks:
       const nonCancellableStatuses = ['CHECKED_IN', 'CHECKED_OUT', 'COMPLETED', 'CANCELLED', 'REJECTED', 'EXPIRED'];
       if (requestedStatus === 'CANCELLED' && nonCancellableStatuses.includes(booking.status)) {
         return res.status(400).json({
           success: false,
           message: `This booking cannot be cancelled because its current status is '${booking.status}'. Guests may only cancel pending or confirmed reservations.`,
         });
+      }
+
+      if (requestedStatus === 'EXPIRED') {
+        const expirableStatuses = ['PENDING', 'AWAITING_PAYMENT', 'PAYMENT_PENDING', 'EXPIRED'];
+        const currentUp = String(booking.status || '').toUpperCase().trim();
+        const isVerificationInProgress = ['PENDING_VERIFICATION', 'VERIFIED'].includes(
+          String(booking.upiPayment?.verificationStatus || '').toUpperCase()
+        );
+        if (!expirableStatuses.includes(currentUp) || booking.paymentStatus === 'PAID' || isVerificationInProgress) {
+          return res.status(400).json({
+            success: false,
+            message: `This booking cannot be marked expired because its current status is '${booking.status}'.`,
+          });
+        }
       }
     }
 
@@ -1340,11 +1348,21 @@ export const updateBookingStatus = async (req, res, next) => {
           status: 'EXPIRED',
         });
       }
+    }
 
-      // Guard: Ensure room is not already booked by another confirmed reservation (serialized with concurrency lock)
-      let releaseApprovalLock;
-      try {
-        releaseApprovalLock = await acquireRoomLock(booking.stayId, booking.roomNumber);
+    // Hold room concurrency lock across BOTH overlap verification AND MongoDB persistence to prevent TOCTOU double-bookings
+    let releaseApprovalLock = null;
+    let updatedBooking = null;
+    try {
+      if (isApprovalAction) {
+        try {
+          releaseApprovalLock = await acquireRoomLock(booking.stayId, booking.roomNumber);
+        } catch (lockErr) {
+          if (lockErr.statusCode) {
+            return res.status(lockErr.statusCode).json({ success: false, message: lockErr.message });
+          }
+          throw lockErr;
+        }
         const confirmedOverlap = await findRoomOverlap({
           stayId: booking.stayId,
           roomNumber: booking.roomNumber,
@@ -1358,15 +1376,7 @@ export const updateBookingStatus = async (req, res, next) => {
             message: `Cannot approve: Room ${booking.roomNumber} is already booked for these dates (Booking: ${confirmedOverlap.bookingReferenceId}).`,
           });
         }
-      } catch (lockErr) {
-        if (lockErr.statusCode) {
-          return res.status(lockErr.statusCode).json({ success: false, message: lockErr.message });
-        }
-        throw lockErr;
-      } finally {
-        if (releaseApprovalLock) releaseApprovalLock();
       }
-    }
 
     const updateFields = {};
     const allowedFields = isOwner && !isPropertyHost && !isAdmin
@@ -1392,6 +1402,7 @@ export const updateBookingStatus = async (req, res, next) => {
     });
 
     const isOnlineBooking = booking.bookingSource === 'ONLINE' || booking.isOnline === true;
+    const isPayOnArrival = ['PAY_ON_ARRIVAL', 'OFFLINE', 'CASH'].includes(String(booking.paymentMethod || '').toUpperCase());
     const isUnpaid = booking.paymentStatus !== 'PAID' && req.body.paymentStatus !== 'PAID';
 
     // Check-in Authorization Guard: Require valid confirmed booking and verified payment
@@ -1408,9 +1419,14 @@ export const updateBookingStatus = async (req, res, next) => {
       }
     }
 
-    // If an online booking is approved by the host, it transitions to AWAITING_PAYMENT with payment instructions
-    // It transitions to CONFIRMED once host verifies the direct guest UPI payment.
-    if (isOnlineBooking && isUnpaid && (req.body.status === 'CONFIRMED' || req.body.status === 'AWAITING_PAYMENT')) {
+    // Pay on Arrival bookings confirm directly without getting trapped by an online UPI payment timer;
+    // Online UPI bookings transition to AWAITING_PAYMENT until host verifies direct UPI receipt.
+    if (isOnlineBooking && isPayOnArrival && (req.body.status === 'CONFIRMED' || req.body.status === 'AWAITING_PAYMENT')) {
+      req.body.status = 'CONFIRMED';
+      updateFields.status = 'CONFIRMED';
+      updateFields.approvedAt = req.body.approvedAt ? new Date(req.body.approvedAt) : (booking.approvedAt || new Date());
+      updateFields.paymentDeadline = null;
+    } else if (isOnlineBooking && isUnpaid && (req.body.status === 'CONFIRMED' || req.body.status === 'AWAITING_PAYMENT')) {
       req.body.status = 'AWAITING_PAYMENT';
       updateFields.status = 'AWAITING_PAYMENT';
       updateFields.paymentStatus = 'UNPAID';
@@ -1451,6 +1467,7 @@ export const updateBookingStatus = async (req, res, next) => {
     }
 
     if (req.body.status === 'CHECKED_OUT') {
+      const checkedOutAt = new Date();
       if (booking.stayId && booking.roomNumber) {
         const remainingActive = await Booking.countDocuments({
           stayId: booking.stayId,
@@ -1465,23 +1482,51 @@ export const updateBookingStatus = async (req, res, next) => {
           ).catch(() => {});
         }
       }
-      await Booking.findByIdAndDelete(booking._id);
-      await Payment.deleteMany({
-        $or: [{ bookingId: booking._id }, { bookingReferenceId: booking.bookingReferenceId }],
-      }).catch(() => {});
+
+      // Preserve booking & payment ledger permanently so Paid Users revenue & post-checkout Extend Validity stay intact
+      const updatedCheckedOut = await Booking.findByIdAndUpdate(
+        booking._id,
+        {
+          $set: {
+            status: 'CHECKED_OUT',
+            checkedOutAt,
+            isOccupied: false,
+          },
+          $push: {
+            auditLog: {
+              action: 'GUEST_CHECKED_OUT',
+              performedBy: actorId(req) || null,
+              performerRole: 'host',
+              timestamp: checkedOutAt,
+              note: 'Guest checked out; record retained in Paid Users history',
+            },
+          },
+        },
+        { new: true }
+      );
 
       if (booking.hostId) {
-        emitToHost([booking.hostId], 'booking:updated', { bookingId: booking._id, action: 'CHECKED_OUT' });
+        emitToHost([booking.hostId], 'booking:updated', {
+          bookingId: booking._id,
+          action: 'CHECKED_OUT',
+          status: 'CHECKED_OUT',
+          booking: updatedCheckedOut,
+        });
       }
       if (booking.userId || booking.email) {
-        emitToUser([booking.userId, booking.email], 'booking:checked_out', { bookingId: booking._id, bookingReferenceId: booking.bookingReferenceId });
+        emitToUser([booking.userId, booking.email], 'booking:checked_out', {
+          bookingId: booking._id,
+          bookingReferenceId: booking.bookingReferenceId,
+          status: 'CHECKED_OUT',
+          booking: updatedCheckedOut,
+        });
       }
       emitToGlobal('stay:availability_changed', { stayId: booking.stayId, roomNumber: booking.roomNumber });
 
       return res.json({
         success: true,
-        message: 'Booking checked out and removed from database successfully.',
-        booking: null,
+        message: 'Guest successfully checked out.',
+        booking: updatedCheckedOut,
       });
     }
 
@@ -1508,7 +1553,10 @@ export const updateBookingStatus = async (req, res, next) => {
       }
     }
 
-    const updatedBooking = await Booking.findByIdAndUpdate(booking._id, { $set: updateFields }, { new: true });
+    updatedBooking = await Booking.findByIdAndUpdate(booking._id, { $set: updateFields }, { new: true });
+    } finally {
+      if (releaseApprovalLock) releaseApprovalLock();
+    }
 
     // Send automated Email alerts based on host status action
     if (updatedBooking) {
@@ -1807,10 +1855,19 @@ export const checkoutOccupant = async (req, res, next) => {
     }
 
     const bookingIds = matchingBookings.map((b) => b._id);
+    const checkedOutAt = new Date();
 
-    // Check-out occupant: remove booking completely from database and free room slots
-    await Booking.deleteMany({ _id: { $in: bookingIds } });
-    await Payment.deleteMany({ bookingId: { $in: bookingIds } }).catch(() => {});
+    // Check-out occupant: update status cleanly and free room slots while keeping Paid Users & payment records intact
+    await Booking.updateMany(
+      { _id: { $in: bookingIds } },
+      {
+        $set: {
+          status: 'CHECKED_OUT',
+          checkedOutAt,
+          isOccupied: false,
+        },
+      }
+    );
 
     // Real-time WebSockets dispatch to Host & Global availability
     const hostTargets = [...new Set(matchingBookings.map((b) => b.hostId?.toString()).filter(Boolean))];
@@ -1917,17 +1974,36 @@ export const checkoutBooking = async (req, res, next) => {
       }
     }
 
-    await Booking.findByIdAndDelete(booking._id);
-    await Payment.deleteMany({
-      $or: [{ bookingId: booking._id }, { bookingReferenceId: booking.bookingReferenceId }],
-    }).catch(() => {});
+    // Preserve booking & payment history in DB for Paid Users revenue and post-checkout validity grace
+    const checkedOutAt = new Date();
+    const updatedBooking = await Booking.findByIdAndUpdate(
+      booking._id,
+      {
+        $set: {
+          status: 'CHECKED_OUT',
+          checkedOutAt,
+          isOccupied: false,
+        },
+      },
+      { new: true }
+    );
 
     // Real-time WebSockets dispatch
     if (booking.hostId) {
-      emitToHost([booking.hostId], 'booking:updated', { bookingId: booking._id, action: 'CHECKED_OUT' });
+      emitToHost([booking.hostId], 'booking:updated', {
+        bookingId: booking._id,
+        action: 'CHECKED_OUT',
+        status: 'CHECKED_OUT',
+        booking: updatedBooking,
+      });
     }
     if (booking.userId || booking.email) {
-      emitToUser([booking.userId, booking.email], 'booking:checked_out', { bookingId: booking._id, bookingReferenceId: booking.bookingReferenceId });
+      emitToUser([booking.userId, booking.email], 'booking:checked_out', {
+        bookingId: booking._id,
+        bookingReferenceId: booking.bookingReferenceId,
+        status: 'CHECKED_OUT',
+        booking: updatedBooking,
+      });
     }
     if (booking.stayId) {
       emitToGlobal('stay:availability_changed', { stayId: booking.stayId, roomNumber: booking.roomNumber });
@@ -1935,8 +2011,8 @@ export const checkoutBooking = async (req, res, next) => {
 
     return res.json({
       success: true,
-      message: 'Guest successfully checked out and removed from database.',
-      booking: null,
+      message: 'Guest successfully checked out. Record retained in payment history.',
+      booking: updatedBooking,
     });
   } catch (error) {
     console.error('Error during checkout booking:', error);
@@ -1959,19 +2035,30 @@ export const cascadeDeleteRoomBookings = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'roomNumber, roomNumbers, roomId, or categoryType is required.' });
     }
 
-    // Resolve stayId if missing
+    // Resolve and verify targetStayId belongs to caller (or admin)
+    const isAdmin = isAdminUser(req) || Boolean(req.isAdminKey);
     let targetStayId = stayId;
-    if (!targetStayId || !mongoose.Types.ObjectId.isValid(targetStayId)) {
-      const email = hostEmail || req.user?.email;
+    let targetStay = null;
+
+    if (targetStayId && mongoose.Types.ObjectId.isValid(targetStayId)) {
+      targetStay = await Stay.findById(targetStayId).select('hostId email hostEmail').lean();
+    } else {
+      const email = (isAdmin && hostEmail ? hostEmail : req.user?.email || '').toLowerCase().trim();
       if (email) {
-        const HostModel = mongoose.model('Host');
-        const host = await HostModel.findOne({ email }).lean();
+        const host = await Host.findOne({ email }).select('_id').lean();
         if (host?._id) {
-          const StayModel = mongoose.model('Stay');
-          const stay = await StayModel.findOne({ hostId: host._id }).lean();
-          if (stay?._id) targetStayId = stay._id;
+          targetStay = await Stay.findOne({ hostId: host._id }).select('_id hostId email hostEmail').lean();
+          if (targetStay?._id) targetStayId = targetStay._id;
         }
       }
+    }
+
+    if (!targetStay || !targetStayId || !mongoose.Types.ObjectId.isValid(targetStayId)) {
+      return res.status(404).json({ success: false, message: 'Target property not found for cascade deletion.' });
+    }
+
+    if (!isAdmin && !assertSelfHostOrAdmin(req, { hostId: targetStay.hostId, hostEmail: targetStay.email || targetStay.hostEmail })) {
+      return res.status(403).json({ success: false, message: 'Access denied: You do not own this property.' });
     }
 
     const queryOr = [];
@@ -1992,7 +2079,7 @@ export const cascadeDeleteRoomBookings = async (req, res, next) => {
     }
 
     if (categoryType && typeof categoryType === 'string' && categoryType.trim()) {
-      const cleanCat = categoryType.trim();
+      const cleanCat = categoryType.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       queryOr.push({ roomType: { $regex: `^${cleanCat}$`, $options: 'i' } });
       queryOr.push({ category: { $regex: `^${cleanCat}$`, $options: 'i' } });
     }
@@ -2001,10 +2088,7 @@ export const cascadeDeleteRoomBookings = async (req, res, next) => {
       return res.json({ success: true, message: 'No target rooms specified for cascade deletion.', deletedCount: 0 });
     }
 
-    const matchQuery = { $or: queryOr };
-    if (targetStayId && mongoose.Types.ObjectId.isValid(targetStayId)) {
-      matchQuery.stayId = targetStayId;
-    }
+    const matchQuery = { stayId: targetStayId, $or: queryOr };
 
     // Find matching bookings to clean up both bookings and payments
     const matchingBookings = await Booking.find(matchQuery).select('_id');
@@ -2129,15 +2213,32 @@ export const getBookingsByStayId = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Valid stayId is required.' });
     }
 
+    const callerId = req.user?._id?.toString();
+    const callerEmail = req.user?.email ? req.user.email.toLowerCase().trim() : '';
+    const isAdmin = isAdminUser(req) || Boolean(req.isAdminKey);
+
+    let canViewFullPII = isAdmin;
+    if (!canViewFullPII && req.user) {
+      const stay = await Stay.findById(stayId).select('hostId email hostEmail').lean();
+      if (stay && assertSelfHostOrAdmin(req, { hostId: stay.hostId, hostEmail: stay.email || stay.hostEmail })) {
+        canViewFullPII = true;
+      }
+    }
+
     await autoExpireAwaitingBookings({ stayId });
+
+    const selectFields = canViewFullPII
+      ? 'stayId roomNumber roomType checkIn checkOut status fullName durationDisplay rateUnit userId phone email bookedDates bookedMonths personCount paymentDeadline approvedAt paymentStatus paymentMethod bookingSource source upiPayment.verificationStatus activeExtension totalAmount bookingReferenceId slotBookingId guestType'
+      : 'stayId roomNumber roomType checkIn checkOut status durationDisplay rateUnit bookedDates bookedMonths personCount paymentMethod bookingSource source activeExtension.status activeExtension.targetMonths';
 
     const bookings = await Booking.find({
       stayId,
-      status: { $nin: ['CANCELLED', 'REJECTED', 'CHECKED_OUT', 'EXPIRED'] },
+      $or: [
+        { status: { $nin: ['CANCELLED', 'REJECTED', 'CHECKED_OUT', 'EXPIRED'] } },
+        { 'activeExtension.status': 'PENDING_VERIFICATION' },
+      ],
     })
-      .select(
-        'stayId roomNumber roomType checkIn checkOut status fullName durationDisplay rateUnit userId phone email bookedDates bookedMonths personCount paymentDeadline approvedAt paymentStatus paymentMethod bookingSource source upiPayment.verificationStatus totalAmount bookingReferenceId slotBookingId guestType'
-      )
+      .select(selectFields)
       .lean();
 
     const enrichedBookings = bookings.map((b) => {
@@ -2200,6 +2301,15 @@ export const getBookingsByStayId = async (req, res, next) => {
         }
       }
 
+      if (
+        b.activeExtension?.status === 'PENDING_VERIFICATION' &&
+        Array.isArray(b.activeExtension.targetMonths) &&
+        b.activeExtension.targetMonths.length > 0 &&
+        (!b.activeExtension.targetRoomNumber || b.activeExtension.targetRoomNumber === b.roomNumber)
+      ) {
+        bMonths = Array.from(new Set([...bMonths, ...b.activeExtension.targetMonths])).sort();
+      }
+
       return {
         ...b,
         bookedDates: bDates,
@@ -2239,12 +2349,15 @@ export const reRequestPayment = async (req, res, next) => {
 
     const callerId = req.user?._id?.toString();
     const callerEmail = req.user?.email ? req.user.email.toLowerCase().trim() : '';
-    const callerPhone = req.user?.phone ? String(req.user.phone).replace(/\D/g, '').slice(-10) : '';
+    const rawCallerDigits = req.user?.phone ? String(req.user.phone).replace(/\D/g, '') : '';
+    const callerPhone = rawCallerDigits.length >= 10 ? rawCallerDigits.slice(-10) : '';
+    const bookingPhoneDigits = booking.phone ? String(booking.phone).replace(/\D/g, '') : '';
+    const bookingPhone10 = bookingPhoneDigits.length >= 10 ? bookingPhoneDigits.slice(-10) : '';
 
     const isOwner =
       Boolean(callerId && booking.userId && idsMatch(booking.userId, callerId)) ||
       Boolean(callerEmail && booking.email && booking.email.toLowerCase().trim() === callerEmail) ||
-      Boolean(callerPhone && booking.phone && String(booking.phone).replace(/\D/g, '').endsWith(callerPhone));
+      Boolean(!booking.userId && callerPhone && bookingPhone10 && bookingPhone10 === callerPhone);
 
     const isAdmin = isAdminUser(req) || req.isAdminKey;
 
@@ -2271,6 +2384,25 @@ export const reRequestPayment = async (req, res, next) => {
       return res.status(400).json({
         success: false,
         message: 'This booking has already been verified and confirmed.',
+      });
+    }
+
+    const curStatus = String(booking.status || '').toUpperCase().trim();
+    const wasPreviouslyApproved = Boolean(
+      booking.approvedAt ||
+      booking.paymentDeadline ||
+      curStatus === 'AWAITING_PAYMENT' ||
+      curStatus === 'PAYMENT_PENDING' ||
+      curStatus === 'APPROVED' ||
+      curStatus === 'APPROVED - PAYMENT PENDING'
+    );
+    if (
+      ['CANCELLED', 'REJECTED', 'CHECKED_OUT', 'COMPLETED'].includes(curStatus) ||
+      !wasPreviouslyApproved
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Payment re-request is only available after host approval.',
       });
     }
 
@@ -2346,6 +2478,27 @@ export const markBookingTimedOut = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Booking reservation not found' });
     }
 
+    const callerId = req.user?._id?.toString();
+    const callerEmail = req.user?.email ? req.user.email.toLowerCase().trim() : '';
+    const isAdmin = isAdminUser(req) || Boolean(req.isAdminKey);
+    const isOwner =
+      Boolean(callerId && booking.userId && idsMatch(booking.userId, callerId)) ||
+      Boolean(callerEmail && booking.email && booking.email.toLowerCase().trim() === callerEmail);
+    const isPropertyHost = assertSelfHostOrAdmin(req, { hostId: booking.hostId });
+
+    if (!isAdmin && !isOwner && !isPropertyHost) {
+      return res.status(403).json({ success: false, message: 'Unauthorized to timeout this booking.' });
+    }
+
+    // Only AWAITING_PAYMENT online bookings whose deadline has elapsed may be timed out
+    if (booking.status !== 'AWAITING_PAYMENT' || booking.bookingSource === 'OFFLINE_HOST' || booking.paymentMethod === 'PAY_ON_ARRIVAL') {
+      return res.json({ success: true, booking, isTimedOut: false });
+    }
+
+    if (!isAdmin && booking.paymentDeadline && Date.now() + 5000 < new Date(booking.paymentDeadline).getTime()) {
+      return res.status(400).json({ success: false, message: 'Payment deadline has not expired yet.' });
+    }
+
     // If payment reference is already submitted for verification, do not timeout!
     if (
       booking.upiPayment?.verificationStatus === 'PENDING_VERIFICATION' ||
@@ -2375,6 +2528,386 @@ export const markBookingTimedOut = async (req, res, next) => {
     });
   } catch (error) {
     console.error('Error marking booking timed out:', error);
+    return next(error);
+  }
+};
+
+// @desc    Get Extend Validity info (next month, slot availability, price, Host UPI QR — no forms/Aadhaar needed)
+// @route   GET /api/bookings/:id/extend-info
+// @access  Private
+export const getBookingExtendInfo = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const query = mongoose.Types.ObjectId.isValid(id)
+      ? { $or: [{ _id: id }, { bookingReferenceId: id }, { slotBookingId: id }] }
+      : { $or: [{ bookingReferenceId: id }, { slotBookingId: id }] };
+
+    const booking = await Booking.findOne(query).lean();
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking reservation not found.' });
+    }
+
+    const callerId = req.user?._id?.toString();
+    const callerEmail = req.user?.email?.toLowerCase().trim();
+    const isGuest =
+      idsMatch(callerId, booking.userId) ||
+      (callerEmail && booking.email && callerEmail === booking.email.toLowerCase().trim());
+    const isPropertyHost =
+      idsMatch(callerId, booking.hostId) ||
+      idsMatch(req.hostAccount?._id, booking.hostId);
+    if (!isGuest && !isPropertyHost && !isAdminUser(req)) {
+      return ownershipForbidden(res);
+    }
+
+    const extensionState = getExtendValidityState(booking);
+    const stay = await Stay.findById(booking.stayId)
+      .select('title propertyName rooms roomRates price upiSettings hostId')
+      .lean();
+    if (!stay) {
+      return res.status(404).json({ success: false, message: 'Property listing not found.' });
+    }
+
+    const period = computeNextExtensionPeriod(booking, 1);
+    const stayBookings = await Booking.find({
+      stayId: stay._id,
+      $or: [
+        { status: { $in: ['CONFIRMED', 'CHECKED_IN', 'AWAITING_PAYMENT'] } },
+        { 'activeExtension.status': 'PENDING_VERIFICATION' },
+      ],
+    })
+      .select('_id roomNumber status bookedMonths checkIn checkOut personCount activeExtension')
+      .lean();
+
+    const safePersons = Math.max(1, Number(booking.personCount) || 1);
+    const preferredRoom = String(req.query?.roomNumber || booking.roomNumber || '').trim();
+    const {
+      unitPrice,
+      roomType,
+      roomFound,
+      exactAmount,
+    } = computeExtensionRoomAmount(stay, preferredRoom, safePersons, booking.totalAmount);
+
+    if (req.query?.roomNumber && Array.isArray(stay.rooms) && stay.rooms.length > 0 && !roomFound) {
+      return res.status(400).json({
+        success: false,
+        message: `Room '${preferredRoom}' does not exist in this property.`,
+      });
+    }
+
+    const roomOccupancy = getRoomOccupancyForTargetMonth(
+      stay,
+      preferredRoom,
+      period.targetMonthKey,
+      stayBookings,
+      booking._id
+    );
+    const isSameRoomAvailable = roomOccupancy.availableSeats >= safePersons;
+
+    const availableAlternativeRooms = [];
+    for (const rm of stay.rooms || []) {
+      const rmNum = String(rm?.roomNumber || '').trim();
+      if (!rmNum) continue;
+      const occ = getRoomOccupancyForTargetMonth(stay, rmNum, period.targetMonthKey, stayBookings, booking._id);
+      if (occ.availableSeats >= safePersons) {
+        const rmPricing = computeExtensionRoomAmount(stay, rmNum, safePersons, booking.totalAmount);
+        availableAlternativeRooms.push({
+          roomNumber: rmNum,
+          roomType: rmPricing.roomType,
+          unitPrice: rmPricing.unitPrice,
+          amount: rmPricing.exactAmount,
+          availableSeats: occ.availableSeats,
+        });
+      }
+    }
+
+    const host = await Host.findById(booking.hostId).select('name upiSettings').lean();
+    const hostUpi = stay?.upiSettings?.upiId || host?.upiSettings?.upiId || '';
+    const payeeName = stay?.upiSettings?.payeeName || host?.upiSettings?.payeeName || host?.name || stay?.title || 'Stay In Host';
+
+    let upiUri = '';
+    let qrCodeDataUrl = '';
+    const isConfigured = Boolean(hostUpi && isValidUpiVpa(hostUpi));
+
+    if (isConfigured) {
+      upiUri = buildExtensionUpiUri({
+        upiId: hostUpi,
+        payeeName,
+        amount: exactAmount,
+        note: `EXT-${booking.bookingReferenceId || booking._id}-${period.targetMonthKey}`,
+      });
+      try {
+        qrCodeDataUrl = await QRCode.toDataURL(upiUri, {
+          errorCorrectionLevel: 'M',
+          margin: 2,
+          width: 300,
+          color: { dark: '#030712', light: '#ffffff' },
+        });
+      } catch (qrErr) {
+        console.warn('Extend QR generation note:', qrErr.message);
+      }
+    }
+
+    return res.json({
+      success: true,
+      extensionState,
+      isConfigured,
+      targetMonthKey: period.targetMonthKey,
+      targetMonthLabel: period.targetMonthLabel,
+      targetCheckIn: period.targetCheckIn,
+      targetCheckOut: period.targetCheckOut,
+      targetRoomNumber: preferredRoom,
+      targetRoomType: booking.roomType || roomType,
+      unitPrice,
+      personCount: safePersons,
+      totalAmount: exactAmount,
+      isSameRoomAvailable,
+      availableSeats: roomOccupancy.availableSeats,
+      availableAlternativeRooms,
+      recipientUpiId: hostUpi,
+      recipientPayeeName: payeeName,
+      upiUri,
+      qrCodeDataUrl,
+    });
+  } catch (error) {
+    console.error('Get Booking Extend Info Error:', error);
+    return next(error);
+  }
+};
+
+// @desc    Submit 12-digit UPI UTR for Extend Validity (NO screenshot, reuses stored guest/Aadhaar profile)
+// @route   POST /api/bookings/:id/extend-submit
+// @access  Private
+export const submitBookingExtension = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { transactionRef, targetRoomNumber: requestedRoomNumber } = req.body;
+
+    const query = mongoose.Types.ObjectId.isValid(id)
+      ? { $or: [{ _id: id }, { bookingReferenceId: id }, { slotBookingId: id }] }
+      : { $or: [{ bookingReferenceId: id }, { slotBookingId: id }] };
+
+    const booking = await Booking.findOne(query);
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking reservation not found.' });
+    }
+
+    const callerId = req.user?._id?.toString();
+    const callerEmail = req.user?.email?.toLowerCase().trim();
+    const isGuest =
+      idsMatch(callerId, booking.userId) ||
+      (callerEmail && booking.email && callerEmail === booking.email.toLowerCase().trim());
+    if (!isGuest && !isAdminUser(req)) {
+      return ownershipForbidden(res);
+    }
+
+    const extState = getExtendValidityState(booking);
+    if (extState.isExtensionPending) {
+      return res.status(409).json({
+        success: false,
+        message: 'Your renewal UTR is already submitted and waiting for host verification.',
+      });
+    }
+    if (!extState.eligible) {
+      return res.status(400).json({
+        success: false,
+        message: 'Extend validity window is not currently open for this booking.',
+      });
+    }
+
+    const normalizedRef = String(transactionRef || '').replace(/\D/g, '').trim();
+    if (!/^\d{12}$/.test(normalizedRef)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please enter a valid 12-digit numeric UPI UTR reference.',
+      });
+    }
+
+    const stay = await Stay.findById(booking.stayId).lean();
+    if (!stay) {
+      return res.status(404).json({ success: false, message: 'Property listing not found.' });
+    }
+
+    const targetRoomNumber = String(requestedRoomNumber || booking.roomNumber || '').trim();
+    const {
+      roomType,
+      roomFound,
+      exactAmount,
+    } = computeExtensionRoomAmount(stay, targetRoomNumber, booking.personCount, booking.totalAmount);
+
+    if (Array.isArray(stay.rooms) && stay.rooms.length > 0 && !roomFound) {
+      return res.status(400).json({
+        success: false,
+        message: `Room '${targetRoomNumber}' does not exist in this property.`,
+      });
+    }
+
+    const period = computeNextExtensionPeriod(booking, 1);
+
+    let releaseLock;
+    try {
+      releaseLock = await acquireRoomLock(stay._id, targetRoomNumber);
+    } catch (lErr) {
+      return res.status(409).json({
+        success: false,
+        message: lErr.message || `Room ${targetRoomNumber} is busy. Please retry.`,
+      });
+    }
+
+    try {
+      // Check room availability for the target month inside lock
+      const stayBookings = await Booking.find({
+        stayId: stay._id,
+        $or: [
+          { status: { $in: ['CONFIRMED', 'CHECKED_IN', 'AWAITING_PAYMENT'] } },
+          { 'activeExtension.status': 'PENDING_VERIFICATION' },
+        ],
+      })
+        .select('_id roomNumber status bookedMonths checkIn checkOut personCount activeExtension')
+        .lean();
+
+      const safePersons = Math.max(1, Number(booking.personCount) || 1);
+      const occupancy = getRoomOccupancyForTargetMonth(
+        stay,
+        targetRoomNumber,
+        period.targetMonthKey,
+        stayBookings,
+        booking._id
+      );
+      if (occupancy.availableSeats < safePersons) {
+        return res.status(409).json({
+          success: false,
+          message: `Room ${targetRoomNumber} is already full for ${period.targetMonthLabel}. Please select another available room.`,
+        });
+      }
+
+      // Enforce global UTR uniqueness across Payment ledger and Bookings (including paymentHistory & extensions)
+      const [dupPayment, dupBooking] = await Promise.all([
+        Payment.findOne({ transactionRef: normalizedRef }).select('_id').lean(),
+        Booking.findOne({
+          $or: [
+            { 'upiPayment.transactionRef': normalizedRef, 'upiPayment.verificationStatus': { $in: ['PENDING_VERIFICATION', 'VERIFIED'] } },
+            { 'paymentHistory.transactionRef': normalizedRef },
+            { 'activeExtension.transactionRef': normalizedRef, 'activeExtension.status': 'PENDING_VERIFICATION' },
+          ],
+        })
+          .select('_id')
+          .lean(),
+      ]);
+
+      if (dupPayment || dupBooking) {
+        return res.status(409).json({
+          success: false,
+          message: 'This 12-digit UTR has already been used for another payment. Please check your UPI transaction reference.',
+        });
+      }
+
+      const now = new Date();
+      const prevSubCount = Number(booking.activeExtension?.submissionCount || 0);
+
+      booking.activeExtension = {
+        status: 'PENDING_VERIFICATION',
+        targetMonths: period.targetMonths,
+        targetMonthLabel: period.targetMonthLabel,
+        targetRoomNumber,
+        targetRoomType: roomType || booking.roomType || 'Standard',
+        targetCheckIn: period.targetCheckIn,
+        targetCheckOut: period.targetCheckOut,
+        amount: exactAmount,
+        transactionRef: normalizedRef,
+        rejectionReason: '',
+        submittedAt: now,
+        requestedAt: booking.activeExtension?.requestedAt || now,
+        submissionCount: prevSubCount + 1,
+      };
+
+      booking.auditLog.push({
+        action: 'EXTENSION_REFERENCE_SUBMITTED',
+        performedBy: req.user?._id || null,
+        performerRole: 'guest',
+        timestamp: now,
+        details: {
+          transactionRef: normalizedRef,
+          targetMonths: period.targetMonths,
+          targetMonthLabel: period.targetMonthLabel,
+          targetRoomNumber,
+          amount: exactAmount,
+        },
+        note: `Guest submitted Extend Validity UTR (${normalizedRef}) for ${period.targetMonthLabel}`,
+      });
+
+      await booking.save();
+
+      // Alert Host via Email & WebSockets
+      try {
+        const hostDoc = await Host.findById(booking.hostId).select('name email').lean();
+        if (hostDoc?.email) {
+          const clientBaseUrl = getPublicClientBaseUrl(req);
+          sendPaymentSubmittedToHostEmail({
+            hostEmail: hostDoc.email,
+            hostName: hostDoc.name || 'Host Partner',
+            guestName: booking.fullName,
+            roomCategory: roomType || booking.roomType || 'Standard',
+            roomType: roomType || booking.roomType || 'Standard',
+            roomNumber: targetRoomNumber,
+            durationDisplay: period.targetMonthLabel,
+            rateUnit: '/month',
+            bookedMonths: period.targetMonths,
+            checkIn: period.targetCheckIn,
+            checkOut: period.targetCheckOut,
+            amount: exactAmount,
+            transactionRef: normalizedRef,
+            bookingId: booking._id,
+            dashboardUrl: `${clientBaseUrl}/host-dashboard?tab=visited`,
+            isExtension: true,
+            targetMonthLabel: period.targetMonthLabel,
+          }).catch((err) => console.warn('[Email Warning] Host extension alert:', err.message));
+        }
+      } catch (emailErr) {
+        console.warn('[Email Warning] Host extension alert lookup:', emailErr.message);
+      }
+
+      emitToHost([booking.hostId], 'payment:submitted', {
+        bookingId: booking._id,
+        bookingReferenceId: booking.bookingReferenceId,
+        transactionRef: normalizedRef,
+        guestName: booking.fullName,
+        amount: exactAmount,
+        stayTitle: booking.stayTitle,
+        roomNumber: targetRoomNumber,
+        verificationStatus: 'PENDING_VERIFICATION',
+        isExtension: true,
+      });
+      emitToHost([booking.hostId], 'booking:updated', {
+        bookingId: booking._id,
+        bookingReferenceId: booking.bookingReferenceId,
+        isExtension: true,
+        booking,
+      });
+      emitToUser([booking.userId, booking.email], 'payment:status_updated', {
+        bookingId: booking._id,
+        bookingReferenceId: booking.bookingReferenceId,
+        verificationStatus: 'PENDING_VERIFICATION',
+        transactionRef: normalizedRef,
+        isExtension: true,
+        booking,
+      });
+      emitToGlobal('stay:availability_changed', {
+        stayId: booking.stayId,
+        roomNumber: targetRoomNumber,
+      });
+
+      return res.json({
+        success: true,
+        message: `Renewal UTR submitted for ${period.targetMonthLabel}! The host will verify it shortly.`,
+        booking,
+        targetMonthLabel: period.targetMonthLabel,
+        amount: exactAmount,
+      });
+    } finally {
+      if (releaseLock) releaseLock();
+    }
+  } catch (error) {
+    console.error('Submit Booking Extension Error:', error);
     return next(error);
   }
 };

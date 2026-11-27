@@ -199,7 +199,7 @@ export function AdminPage() {
       role: 'admin',
       adminKey: adminAPI.getAdminKey(),
     });
-    socket.emit('join_admin_room');
+    socket.emit('join_admin_room', { adminKey: adminAPI.getAdminKey() });
 
     const handleHostApproved = (payload) => {
       const hId = payload?.hostId;
@@ -374,7 +374,7 @@ export function AdminPage() {
  const res = await adminAPI.impersonate({
  email: targetUser.email,
  role: 'user',
- _id: targetUser._id,
+ id: targetUser._id,
  });
  if (res?.token && res?.user) {
  updateUserSession(res.user, res.token);
@@ -382,21 +382,11 @@ export function AdminPage() {
  navigate('/explore');
  return;
  }
+ toast.error('Failed to impersonate user session');
  } catch (err) {
  console.warn('Impersonate API error:', err.message);
+ toast.error(err.message || 'Failed to impersonate user session');
  }
-
- const fallbackUser = {
- __id: targetUser._id,
- name: targetUser.name,
- email: targetUser.email,
- phone: targetUser.phone,
- avatar: targetUser.avatar || targetUser.name?.slice(0, 2).toUpperCase(),
- role: 'user',
- };
- updateUserSession(fallbackUser, 'admin_impersonate_token');
- toast.success(`Admin accessed User Portal: ${targetUser.name}`);
- navigate('/explore');
  };
 
  const handleOpenHostPortal = async (targetHost) => {
@@ -405,7 +395,6 @@ export function AdminPage() {
  email: targetHost.email,
  role: 'host',
  id: targetHost._id,
- _id: targetHost._id,
  });
  if (res?.token && res?.user) {
  if (typeof window !== 'undefined' && window.sessionStorage) {
@@ -421,32 +410,11 @@ export function AdminPage() {
  });
  return;
  }
+ toast.error('Failed to impersonate host session');
  } catch (err) {
  console.warn('Impersonate API error:', err.message);
+ toast.error(err.message || 'Failed to impersonate host session');
  }
-
- const fallbackHost = {
- _id: targetHost._id,
- id: targetHost._id,
- name: targetHost.name,
- email: targetHost.email,
- phone: targetHost.phone,
- avatar: targetHost.avatar || targetHost.name?.slice(0, 2).toUpperCase(),
- role: 'host',
- status: targetHost.status,
- isApproved: targetHost.status === 'Approved',
- };
- if (typeof window !== 'undefined' && window.sessionStorage) {
- window.sessionStorage.removeItem('stayin_host_active_tab');
- }
- updateUserSession(fallbackHost, 'admin_impersonate_token');
- toast.success(`Admin accessed Host Portal: ${targetHost.name}`);
- navigate('/host/dashboard', {
- state: {
- updatedHost: targetHost,
- targetEmail: targetHost.email,
- },
- });
  };
 
  const showToast = (msg, type = 'info') => {

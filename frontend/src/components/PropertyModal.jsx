@@ -85,6 +85,7 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
  });
  }
  } catch (err) {
+ setReviews((prev) => prev.filter((r) => r.id !== newRev.id));
  console.warn('Failed to persist review to database:', err.message);
  }
  };
@@ -122,24 +123,29 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
  </div>
 
  <div className="flex items-center gap-2">
- <button
- onClick={() => toggleWishlist(stay)}
- className={`p-2.5 rounded-xl border transition-colors flex items-center gap-1.5 text-xs font-medium ${
- isSaved
- ? 'bg-rose-500 text-white border-rose-500'
- : 'bg-slate-100 text-slate-600 border-slate-200 hover:text-rose-500'
- }`}
- >
- <span>{isSaved ? '' : ''}</span>
- <span>{isSaved ? 'Saved' : 'Save'}</span>
- </button>
+              <button
+                type="button"
+                onClick={() => toggleWishlist(stay)}
+                className={`p-2.5 rounded-xl border transition-colors flex items-center gap-1.5 text-xs font-medium ${
+                  isSaved
+                    ? 'bg-rose-500 text-white border-rose-500'
+                    : 'bg-slate-100 text-slate-600 border-slate-200 hover:text-rose-500'
+                }`}
+              >
+                <span aria-hidden="true">{isSaved ? '♥' : '♡'}</span>
+                <span>{isSaved ? 'Saved' : 'Save'}</span>
+              </button>
 
- <button
- onClick={onClose}
- className="w-11 h-11 sm:w-12 sm:h-12 rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-200/70 flex items-center justify-center transition-colors"
- >
- 
- </button>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close modal"
+                className="w-11 h-11 sm:w-12 sm:h-12 rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-200/70 flex items-center justify-center transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
  </div>
  </div>
 
@@ -377,41 +383,42 @@ export function PropertyModal({ stay, isOpen, onClose, onBookClick }) {
  <p className="text-[11px] mt-0.5">Be the first guest to share your experience!</p>
  </div>
  )}
- {reviews.map((rev) => (
- <div
- key={rev.id}
- className="p-4 rounded-2xl bg-[#f7f4ee] border border-slate-200"
- >
- <div className="flex items-center justify-between mb-1">
- <span className="font-medium text-sm text-[#1f1b16]">
- {rev.author}
- </span>
- <span className="text-xs text-amber-500 font-medium">
- {''.repeat(rev.rating)}
- </span>
- </div>
- <span className="text-[11px] text-slate-400 block mb-2">{rev.date}</span>
- <p className="text-xs text-slate-600">{rev.text}</p>
- </div>
- ))}
- </div>
+              {reviews.map((rev, idx) => (
+                <div
+                  key={rev._id || rev.id || idx}
+                  className="p-4 rounded-2xl bg-[#f7f4ee] border border-slate-200"
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-medium text-sm text-[#1f1b16]">
+                      {rev.author}
+                    </span>
+                    <span className="text-xs text-amber-500 font-medium">
+                      {'★'.repeat(Math.max(1, Math.min(5, Number(rev.rating) || 5)))}
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-slate-400 block mb-2">{rev.date}</span>
+                  <p className="text-xs text-slate-600">{rev.text}</p>
+                </div>
+              ))}
+            </div>
 
- {/* Write a Review */}
- <form onSubmit={handleAddReview} className="p-4 rounded-2xl border border-slate-200 bg-[#f7f4ee]/50 space-y-3">
- <h4 className="font-medium text-sm text-[#1f1b16]">Write a Guest Review</h4>
- <div className="flex items-center gap-2">
- <span className="text-xs font-semibold text-slate-500">Rating:</span>
- {[1, 2, 3, 4, 5].map((star) => (
- <button
- type="button"
- key={star}
- onClick={() => setNewRating(star)}
- className={`text-lg transition-transform ${star <= newRating ? 'text-amber-400 scale-110' : 'text-slate-300'}`}
- >
- 
- </button>
- ))}
- </div>
+            {/* Write a Review */}
+            <form onSubmit={handleAddReview} className="p-4 rounded-2xl border border-slate-200 bg-[#f7f4ee]/50 space-y-3">
+              <h4 className="font-medium text-sm text-[#1f1b16]">Write a Guest Review</h4>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-slate-500">Rating:</span>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    type="button"
+                    key={star}
+                    aria-label={`Rate ${star} stars`}
+                    onClick={() => setNewRating(star)}
+                    className={`text-lg transition-transform ${star <= newRating ? 'text-amber-400 scale-110' : 'text-slate-300'}`}
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
  <textarea
  rows="2"
  placeholder="Share your experience staying at this property..."

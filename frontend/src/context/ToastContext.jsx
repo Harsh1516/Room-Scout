@@ -12,6 +12,7 @@ export const toast = {
   error: (msg) => notify(msg, 'error'),
   info: (msg) => notify(msg, 'info'),
   warn: (msg) => notify(msg, 'warn'),
+  warning: (msg) => notify(msg, 'warn'),
 };
 
 function condenseToastMessage(raw) {

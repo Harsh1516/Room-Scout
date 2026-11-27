@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { computeDuration, formatBookedMonths, formatEntryPassCode } from '../../../utils/bookingDetailsHelpers';
+import { computeDuration, formatBookedMonths, formatEntryPassCode, formatUtrNumber } from '../../../utils/bookingDetailsHelpers';
+import { getBookingPaymentLedger } from '../../../utils/bookingExtension';
 import { bookingsAPI } from '../../../services/api';
 
 export function ResidentIdPassModal({
@@ -576,6 +577,53 @@ export function ResidentIdPassModal({
  </div>
  </div>
  )}
+
+ {/* Monthly Payment Records Saved on Resident ID Pass (Room No., Month, Payment Price) */}
+ {(() => {
+   const paymentLedger = getBookingPaymentLedger(selectedOccupantForModal);
+   if (!paymentLedger || paymentLedger.length === 0) return null;
+   return (
+     <div className="p-3.5 rounded-2xl bg-slate-100/90 border border-slate-200/90 space-y-2 shadow-2xs">
+       <div className="flex items-center justify-between">
+         <span className="text-[11.5px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
+           Payment Records
+         </span>
+         <span className="text-[10.5px] font-semibold text-slate-500">
+           {paymentLedger.length} {paymentLedger.length === 1 ? 'Month' : 'Months'}
+         </span>
+       </div>
+       <div className="space-y-1.5 max-h-36 overflow-y-auto pr-0.5">
+         {paymentLedger.map((entry, idx) => (
+           <div
+             key={`${entry.monthKey || idx}-${entry.transactionRef || idx}`}
+             className="px-2.5 py-2 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between gap-2 text-xs"
+           >
+             <div className="min-w-0">
+               <div className="flex items-center gap-1.5 flex-wrap font-semibold text-[#1f1b16]">
+                 <span>Room {entry.roomNumber || selectedOccupantForModal.roomNumber}</span>
+                 <span className="text-slate-300">•</span>
+                 <span>{entry.monthLabel}</span>
+                 {entry.isExtension && (
+                   <span className="px-1.5 py-[1px] rounded-full text-[9.5px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                     Extended
+                   </span>
+                 )}
+               </div>
+               {entry.transactionRef && (
+                 <span className="text-[10px] font-mono text-slate-400 block mt-0.5">
+                   UTR: {formatUtrNumber(entry.transactionRef)}
+                 </span>
+               )}
+             </div>
+             <span className="font-mono font-bold text-emerald-700 shrink-0">
+               ₹{Number(entry.amount || 0).toLocaleString('en-IN')}
+             </span>
+           </div>
+         ))}
+       </div>
+     </div>
+   );
+ })()}
 
  {/* Modal Actions */}
  <div className="flex items-center justify-between gap-2.5 pt-3.5 border-t border-slate-100">
