@@ -60,14 +60,14 @@ export function PropertyMediaSection({
                   setActivePhotoIdx?.((prev) => (prev <= 0 ? allImages.length - 1 : prev - 1));
                 }}
                 aria-label="Previous photo"
-                className="pointer-events-auto w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-950/80 hover:bg-slate-950 text-white shadow-[0_2px_14px_rgba(0,0,0,0.35)] backdrop-blur-md border border-white/25 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-95 hover:scale-105 select-none"
+                className="pointer-events-auto w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-slate-950/80 hover:bg-slate-950 text-white shadow-[0_2px_14px_rgba(0,0,0,0.35)] backdrop-blur-md border border-white/25 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-95 hover:scale-105 select-none"
               >
-                <svg className="w-4 h-4 stroke-[2.4]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="w-6 h-6 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="15 18 9 12 15 6" />
                 </svg>
               </button>
             ) : (
-              <span className="w-9 h-9 sm:w-10 sm:h-10" />
+              <span className="w-12 h-12" />
             )}
 
             <button
@@ -102,14 +102,14 @@ export function PropertyMediaSection({
                   setActivePhotoIdx?.((prev) => (prev >= allImages.length - 1 ? 0 : prev + 1));
                 }}
                 aria-label="Next photo"
-                className="pointer-events-auto w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-950/80 hover:bg-slate-950 text-white shadow-[0_2px_14px_rgba(0,0,0,0.35)] backdrop-blur-md border border-white/25 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-95 hover:scale-105 select-none"
+                className="pointer-events-auto w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-slate-950/80 hover:bg-slate-950 text-white shadow-[0_2px_14px_rgba(0,0,0,0.35)] backdrop-blur-md border border-white/25 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-95 hover:scale-105 select-none"
               >
-                <svg className="w-4 h-4 stroke-[2.4]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="w-6 h-6 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="9 18 15 12 9 6" />
                 </svg>
               </button>
             ) : (
-              <span className="w-9 h-9 sm:w-10 sm:h-10" />
+              <span className="w-12 h-12" />
             )}
           </div>
 

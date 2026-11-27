@@ -43,7 +43,7 @@ export function Right({ onLoginClick, onOpenBookings, bookingsCount, isHidden = 
  <button
  type="button"
  onClick={() => setIsWishlistOpen(true)}
- className="apple-liquid-nav relative w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] rounded-full text-slate-700 border border-slate-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0"
+ className="relative w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] rounded-full bg-white/50 hover:bg-white/70 text-slate-700 border border-white/65 shadow-sm backdrop-blur-md flex items-center justify-center transition-colors cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0"
  title="Saved Wishlist"
  aria-label="Open Wishlist"
  >
@@ -70,7 +70,7 @@ export function Right({ onLoginClick, onOpenBookings, bookingsCount, isHidden = 
  <button
  type="button"
  onClick={() => (typeof onOpenBookings === 'function' ? onOpenBookings() : setIsBookingsOpen(true))}
- className="apple-liquid-nav relative w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] rounded-full text-slate-700 border border-slate-200/80 shadow-xs flex items-center justify-center transition-none cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0"
+ className="relative w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] rounded-full bg-white/50 hover:bg-white/70 text-slate-700 border border-white/65 shadow-sm backdrop-blur-md flex items-center justify-center transition-colors cursor-pointer select-none active:scale-95 focus:outline-none focus:ring-0 shrink-0"
  title="Booked Places"
  aria-label="Open Booked Places"
  >
@@ -108,7 +108,7 @@ export function Right({ onLoginClick, onOpenBookings, bookingsCount, isHidden = 
  <button
  type="button"
  onClick={() => setMobileMenuOpen((prev) => !prev)}
- className="relative w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] min-w-[54px] min-h-[54px] rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-sm flex items-center justify-center font-medium transition-all cursor-pointer active:scale-95 shrink-0 hover:bg-[#f7f4ee]"
+ className="relative w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] min-w-[54px] min-h-[54px] rounded-full bg-white/50 hover:bg-white/70 text-slate-800 border border-white/65 shadow-sm backdrop-blur-md flex items-center justify-center font-medium transition-all cursor-pointer active:scale-95 shrink-0"
  title="Toggle Navigation Menu"
  >
  {wishlist.length > 0 && !mobileMenuOpen && (
@@ -148,7 +148,7 @@ export function Right({ onLoginClick, onOpenBookings, bookingsCount, isHidden = 
  animate={{ opacity: 1, y: 0, scale: 1 }}
  exit={{ opacity: 0, y: -8, scale: 0.96 }}
  transition={{ duration: 0.15, ease: "easeOut" }}
- className="md:hidden absolute top-[62px] sm:top-[64px] left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-3 sm:gap-3.5 px-1.5 py-2.5 sm:px-2 sm:py-3 rounded-full bg-white border border-slate-200/90 shadow-2xl"
+ className="md:hidden absolute top-[62px] sm:top-[64px] left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-3 sm:gap-3.5 px-1.5 py-2.5 sm:px-2 sm:py-3 rounded-full bg-white/50 border border-white/65 backdrop-blur-md shadow-2xl"
  >
  {/* 1. Profile / Login Button (TOP POSITION - Blue & Visible) */}
  <Login

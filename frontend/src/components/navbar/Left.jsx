@@ -83,7 +83,7 @@ export function Left({
           type="button"
           onClick={handleBack}
           data-no-hover="true"
-          className="w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] min-w-[54px] min-h-[54px] rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-sm flex items-center justify-center font-medium transition-all cursor-pointer active:scale-95 shrink-0 hover:bg-[#f7f4ee]"
+          className="w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] min-w-[54px] min-h-[54px] rounded-full bg-white/50 hover:bg-white/70 text-slate-800 border border-white/65 shadow-sm backdrop-blur-md flex items-center justify-center font-medium transition-all cursor-pointer active:scale-95 shrink-0"
           title="Go Back"
           aria-label="Go Back"
         >
@@ -134,7 +134,7 @@ export function Left({
               onClick={() => window.dispatchEvent(new CustomEvent('leftpanel:toggle_request'))}
               onMouseEnter={() => charmRef.current?.poke()}
               data-no-hover="true"
-              className="relative z-10 w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] min-w-[54px] min-h-[54px] rounded-full bg-white hover:bg-[#f7f4ee] text-slate-800 border border-slate-200/90 shadow-sm flex items-center justify-center font-medium transition-all cursor-pointer active:scale-95 shrink-0"
+              className="relative z-10 w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] min-w-[54px] min-h-[54px] rounded-full bg-white/50 hover:bg-white/70 text-slate-800 border border-white/65 shadow-sm backdrop-blur-md flex items-center justify-center font-medium transition-all cursor-pointer active:scale-95 shrink-0"
               title="Explore Stays Categories"
               aria-label="Open Stays Categories"
             >
@@ -158,7 +158,7 @@ export function Left({
               type="button"
               onClick={() => navigate('/host/dashboard')}
               data-no-hover="true"
-              className="hidden md:inline-flex items-center justify-center h-[54px] sm:h-[56px] px-4 sm:px-5 gap-2.5 rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-sm cursor-pointer focus:outline-none focus:ring-0 select-none shrink-0 active:scale-95 hover:bg-[#f7f4ee] transition-colors"
+              className="hidden md:inline-flex items-center justify-center h-[54px] sm:h-[56px] px-4 sm:px-5 gap-2.5 rounded-full bg-white/50 hover:bg-white/70 text-slate-800 border border-white/65 shadow-sm backdrop-blur-md cursor-pointer focus:outline-none focus:ring-0 select-none shrink-0 active:scale-95 transition-colors"
               title="Host Dashboard"
             >
               <div className="w-6 h-6 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
@@ -176,7 +176,7 @@ export function Left({
               type="button"
               onClick={handleUpload}
               data-no-hover="true"
-              className="hidden md:inline-flex items-center justify-center h-[54px] sm:h-[56px] px-4 sm:px-5 gap-2.5 rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-sm cursor-pointer focus:outline-none focus:ring-0 select-none shrink-0 active:scale-95 hover:bg-[#f7f4ee] transition-colors"
+              className="hidden md:inline-flex items-center justify-center h-[54px] sm:h-[56px] px-4 sm:px-5 gap-2.5 rounded-full bg-white/50 hover:bg-white/70 text-slate-800 border border-white/65 shadow-sm backdrop-blur-md cursor-pointer focus:outline-none focus:ring-0 select-none shrink-0 active:scale-95 transition-colors"
               title="Upload Your Property"
             >
               <div className="w-6 h-6 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
@@ -203,7 +203,7 @@ export function Left({
         type="button"
         onClick={handleBack}
         data-no-hover="true"
-        className="w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] min-w-[54px] min-h-[54px] rounded-full bg-white text-slate-800 border border-slate-200/90 shadow-sm flex items-center justify-center font-medium transition-all cursor-pointer active:scale-95 shrink-0 hover:bg-[#f7f4ee]"
+        className="w-[54px] h-[54px] sm:w-[56px] sm:h-[56px] min-w-[54px] min-h-[54px] rounded-full bg-white/50 hover:bg-white/70 text-slate-800 border border-white/65 shadow-sm backdrop-blur-md flex items-center justify-center font-medium transition-all cursor-pointer active:scale-95 shrink-0"
         title="Go Back"
         aria-label="Go Back"
       >
